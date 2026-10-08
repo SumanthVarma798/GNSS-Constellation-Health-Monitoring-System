@@ -4,7 +4,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
-from check_satellite_ids import current_prn, parse_metadata, sinex_date
+from check_satellite_ids import current_prn, parse_metadata
+from evidence.igs_metadata import sinex_date
 
 SAMPLE = """\
 +SATELLITE/IDENTIFIER

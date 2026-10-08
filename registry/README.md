@@ -1,11 +1,20 @@
 # Satellite registry
 
-Which satellite is which. Built from the International GNSS Service (IGS) satellite
-metadata file by `scripts/build_registry.py`. **Do not edit these files by hand**: a
-change arrives as a pull request that a person reviews.
+Which satellite is which. `satellites.csv` and `signal_ids.csv` are built from the
+International GNSS Service (IGS) satellite metadata file by `scripts/build_registry.py`.
+**Do not edit those two by hand**: a change arrives as a pull request that a person reviews.
 
     python scripts/build_registry.py
     git diff registry/        # the change report; empty means nothing changed at the source
+
+| File | Kept by | What it holds |
+|---|---|---|
+| `satellites.csv` | the build script | One row per physical satellite |
+| `signal_ids.csv` | the build script | One row per satellite per signal-ID period |
+| `constellations.csv` | a person | Which system each SVN letter stands for |
+
+Code that reads or writes these tables goes through `evidence/registry_tables.py`,
+so file names and column names are written down once.
 
 ## satellites.csv: one row per physical satellite
 
@@ -31,6 +40,16 @@ change arrives as a pull request that a person reviews.
 
 A signal ID can pass from one satellite to another, so join signal data on the
 signal ID **and** the time, never on the signal ID alone.
+
+## constellations.csv: one row per navigation system
+
+| Column | Meaning |
+|---|---|
+| `svn_letter` | The first letter of every SVN in that system. |
+| `constellation` | The system's name as shown to readers. |
+
+If the IGS file ever lists a system whose letter is not here, the build stops and
+says so. A person adds the row after looking.
 
 ## What these tables do not say
 

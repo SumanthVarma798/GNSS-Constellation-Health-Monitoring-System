@@ -1,19 +1,16 @@
 """The registry tables: built correctly from a sample, and sound as committed."""
-import csv
 import sys
 from collections import Counter
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "scripts"))
+import pytest
 
-from build_registry import SATELLITE_COLUMNS, SIGNAL_ID_COLUMNS, build_tables, sinex_time
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+
+from build_registry import build_tables
+from evidence.igs_metadata import sinex_time
+from evidence.registry_tables import SATELLITE_COLUMNS, SATELLITES, SIGNAL_ID_COLUMNS, SIGNAL_IDS, read_table
 from test_check_satellite_ids import SAMPLE
-
-
-def read(name):
-    with open(ROOT / "registry" / name, newline="", encoding="utf-8") as handle:
-        return list(csv.DictReader(handle))
 
 
 def test_tables_from_sample():
@@ -32,13 +29,18 @@ def test_tables_from_sample():
     ]
 
 
+def test_an_unknown_system_stops_the_build():
+    with pytest.raises(ValueError, match="system letter 'S'"):
+        build_tables(SAMPLE.replace(" C006 2010-057A", " S006 2010-057A"))
+
+
 def test_sinex_time():
     assert sinex_time("2024:366:86399") == "2024-12-31T23:59:59Z"
     assert sinex_time("0000:000:00000") == ""
 
 
 def test_committed_tables_are_sound():
-    satellites, signal_ids = read("satellites.csv"), read("signal_ids.csv")
+    satellites, signal_ids = read_table(SATELLITES), read_table(SIGNAL_IDS)
 
     assert list(satellites[0]) == SATELLITE_COLUMNS and list(signal_ids[0]) == SIGNAL_ID_COLUMNS
     assert [row["svn"] for row in satellites] == sorted({row["svn"] for row in satellites})  # sorted, no repeats
@@ -52,6 +54,6 @@ def test_committed_tables_are_sound():
 def test_every_dashboard_satellite_is_in_the_registry():
     from config.config import BEIDOU3_SATS, NAVIK_SATS, QZSS_SATS
 
-    known = {int(row["catalogue_no"]) for row in read("satellites.csv")}
+    known = {int(row["catalogue_no"]) for row in read_table(SATELLITES)}
     tracked = {**NAVIK_SATS, **QZSS_SATS, **BEIDOU3_SATS}
-    assert {name for name, norad in tracked.items() if norad not in known} == set()
+    assert {name for name, catalogue_no in tracked.items() if catalogue_no not in known} == set()
