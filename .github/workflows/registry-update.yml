@@ -1,0 +1,64 @@
+# Rebuilds the satellite registry from the IGS file once a week.
+# If the tables changed, it proposes the change as a pull request for a person
+# to review. It never writes to main.
+
+name: Registry update
+
+on:
+  schedule:
+    - cron: '30 2 * * 1'  # Mondays 02:30 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write        # to push the proposal branch
+  pull-requests: write   # to open the pull request
+
+jobs:
+  propose:
+    # Only in the private working copy. Anyone who copies this file elsewhere must opt in.
+    if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'  # matches runtime.txt
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements-dev.txt
+
+      - name: Rebuild the tables and describe what changed
+        run: python scripts/build_registry.py --report "$RUNNER_TEMP/registry-changes.md"
+
+      - name: Did anything change?
+        id: tables
+        run: |
+          if git diff --quiet -- registry/; then
+            echo "Nothing changed at the source. No proposal needed."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run the tests on the new tables
+        if: steps.tables.outputs.changed == 'true'
+        run: python -m pytest -q
+
+      - name: Open or update the proposal
+        if: steps.tables.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C registry-update
+          git add registry/
+          git commit -m "Registry update from the IGS satellite metadata file"
+          git push --force origin registry-update
+          if [ -n "$(gh pr list --head registry-update --state open --json number --jq '.[].number')" ]; then
+            gh pr edit registry-update --body-file "$RUNNER_TEMP/registry-changes.md"
+          else
+            gh pr create --base main --head registry-update \
+              --title "Registry update from the IGS satellite metadata file" --body-file "$RUNNER_TEMP/registry-changes.md"
+          fi
