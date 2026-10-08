@@ -2,6 +2,7 @@
 
     python scripts/build_registry.py                      # download the IGS file
     python scripts/build_registry.py --metadata FILE.snx  # use a local copy
+    python scripts/build_registry.py --report CHANGES.md  # also describe what changed
 
 Writes registry/satellites.csv (one row per physical satellite) and
 registry/signal_ids.csv (one row per satellite per signal-ID period).
@@ -15,8 +16,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from evidence.igs_metadata import OPEN_END, block_rows, read_metadata, sinex_time
+from evidence.registry_changes import change_report, describe_satellite_changes, describe_signal_id_changes
 from evidence.registry_tables import (CONSTELLATIONS, REGISTRY_DIR, SATELLITE_COLUMNS, SATELLITES,
-                                      SIGNAL_ID_COLUMNS, SIGNAL_IDS, constellation_names, write_table)
+                                      SIGNAL_ID_COLUMNS, SIGNAL_IDS, constellation_names, read_table, write_table)
 
 
 def build_tables(text):
@@ -49,14 +51,22 @@ def build_tables(text):
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--metadata", help="local copy of the IGS file (default: download it)")
+    parser.add_argument("--report", help="write a plain-language description of what changed to this file")
     args = parser.parse_args()
 
-    satellites, signal_ids = build_tables(read_metadata(args.metadata))
+    text = read_metadata(args.metadata)
+    satellites, signal_ids = build_tables(text)
     if not satellites or not signal_ids:
         sys.exit("No satellites or no signal IDs found: the file layout may have changed. Nothing written.")
+    before = read_table(SATELLITES), read_table(SIGNAL_IDS)
     write_table(SATELLITES, SATELLITE_COLUMNS, satellites)
     write_table(SIGNAL_IDS, SIGNAL_ID_COLUMNS, signal_ids)
     print(f"{len(satellites)} satellites, {len(signal_ids)} signal-ID periods written to {REGISTRY_DIR}")
+    if args.report:
+        after = read_table(SATELLITES), read_table(SIGNAL_IDS)
+        Path(args.report).write_text(change_report(text.splitlines()[0].strip(),
+                                                   describe_satellite_changes(before[0], after[0]),
+                                                   describe_signal_id_changes(before[1], after[1])))
 
 
 if __name__ == "__main__":
