@@ -15,7 +15,6 @@ until its maintainer has been told (see the galmon snapshots issue).
 """
 import argparse
 import datetime
-import re
 import sys
 from pathlib import Path
 
@@ -23,38 +22,24 @@ import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-IGS_URL = "https://files.igs.org/pub/station/general/igs_satellite_metadata.snx"
-CELESTRAK_URL = "https://celestrak.org/NORAD/elements/gp.php?GROUP=beidou&FORMAT=json"
-GALMON_URL = "https://galmon.eu/svs.json"
-OPEN_END = "0000:000:00000"
+from evidence.igs_metadata import OPEN_END, block_rows, read_metadata, sinex_date
+from evidence.sources import CELESTRAK_BEIDOU_URL, GALMON_SATELLITES_URL
+
 # Satellite blocks the GEO/IGSO dashboard is meant to cover.
 TRACKED_BLOCKS = ("IRS-", "QZS-", "BDS-3G", "BDS-3I")
-
-
-def sinex_date(stamp):
-    """'2026:111:43200' -> '2026-04-21'; the open-ended marker -> None."""
-    if stamp == OPEN_END:
-        return None
-    year, day, _ = stamp.split(":")
-    return (datetime.date(int(year), 1, 1) + datetime.timedelta(int(day) - 1)).isoformat()
-
-
-def _rows(text, block):
-    body = re.search(rf"^\+SATELLITE/{block}\s*$(.*?)^-SATELLITE/{block}", text, re.S | re.M)
-    return [line for line in body.group(1).splitlines() if re.match(r" [A-Z]\d{3} ", line)]
 
 
 def parse_metadata(text):
     """Return (by_norad, prn_history, slot) from the IGS metadata text."""
     by_norad, prn_history, slot = {}, {}, {}
-    for line in _rows(text, "IDENTIFIER"):
+    for line in block_rows(text, "IDENTIFIER"):
         svn, cospar, norad, block, *comment = line.split(None, 4)
         by_norad[int(norad)] = {"svn": svn, "cospar": cospar, "block": block,
                                 "comment": comment[0].strip() if comment else ""}
-    for line in _rows(text, "PRN"):
+    for line in block_rows(text, "PRN"):
         svn, start, end, prn = line.split()[:4]
         prn_history.setdefault(svn, []).append((sinex_date(start), sinex_date(end), prn))
-    for line in _rows(text, "PLANE"):
+    for line in block_rows(text, "PLANE"):
         parts = line.split()
         if parts[2] == OPEN_END and len(parts) > 4 and not parts[4].startswith("["):
             slot[parts[0]] = parts[4]
@@ -96,8 +81,8 @@ def signals_report(by_norad, prn_history):
     from skyfield.framelib import itrs
 
     ts = load.timescale()
-    catalogue = requests.get(CELESTRAK_URL, timeout=60).json()
-    signals = requests.get(GALMON_URL, timeout=60).json()
+    catalogue = requests.get(CELESTRAK_BEIDOU_URL, timeout=60).json()
+    signals = requests.get(GALMON_SATELLITES_URL, timeout=60).json()
     now = ts.now()
     # Position of every catalogued BeiDou object, in the Earth-fixed frame galmon uses.
     objects = [(sat["OBJECT_NAME"], int(sat["NORAD_CAT_ID"]),
@@ -135,12 +120,7 @@ def main():
     parser.add_argument("--signals", action="store_true", help="also check BeiDou against CelesTrak and galmon (tell galmon's maintainer first)")
     args = parser.parse_args()
 
-    if args.metadata:
-        text = Path(args.metadata).read_text()
-    else:
-        response = requests.get(IGS_URL, timeout=60)
-        response.raise_for_status()
-        text = response.text
+    text = read_metadata(args.metadata)
     print(f"# Satellite identity check, {datetime.date.today().isoformat()}\n")
     print(f"Reference: {text.splitlines()[0].strip()}\n")
     meta = parse_metadata(text)
