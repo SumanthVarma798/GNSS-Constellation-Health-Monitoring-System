@@ -9,6 +9,9 @@ The IGS file maps each physical satellite (SVN) to its catalogue number
     python scripts/check_satellite_ids.py --metadata igs_satellite_metadata.snx
 
 Read-only: prints a Markdown report, changes nothing.
+
+--signals reads galmon's public feed, a volunteer-run service. Do not run it
+until its maintainer has been told (see the galmon snapshots issue).
 """
 import argparse
 import datetime
@@ -129,7 +132,7 @@ def signals_report(by_norad, prn_history):
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--metadata", help="local copy of the IGS file (default: download it)")
-    parser.add_argument("--signals", action="store_true", help="also check BeiDou against CelesTrak and galmon")
+    parser.add_argument("--signals", action="store_true", help="also check BeiDou against CelesTrak and galmon (tell galmon's maintainer first)")
     args = parser.parse_args()
 
     if args.metadata:
