@@ -46,3 +46,9 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Local credentials and the local orbit database (never commit)
+.env
+.env.*
+!.env.example
+data/*.sqlite3*

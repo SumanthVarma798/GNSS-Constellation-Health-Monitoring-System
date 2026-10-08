@@ -1,3 +1,19 @@
+> **Private working copy.** This repository is Sumanth Varma's private mirror of the team's
+> project at `ElectricPlant19/GNSS-Constellation-Health-Monitoring-System`. The team's
+> repository has no licence file, so this copy must stay private and must not be
+> redistributed. Nothing here has been agreed with the team.
+>
+> - **Remotes:** `origin` is this mirror. `upstream` is the team's repository and is
+>   fetch-only: its push address is set to `DISABLED`. After a fresh clone, run
+>   `git remote set-url --push upstream DISABLED` before anything else.
+> - **Syncing:** `git fetch upstream`, then merge `upstream/main` into `main` through a pull request.
+> - **Tests:** `pip install -r requirements-dev.txt`, then `python -m pytest -q`. The same
+>   command runs on every pull request.
+> - **Credentials:** only in a git-ignored `.env` (copy `.env.example`) or in GitHub Actions secrets.
+> - **Line endings:** some files use Windows (CRLF) endings and some Unix (LF). Keep each
+>   file as it is; check with `git ls-files --eol` before editing.
+> - **The team's weekly data job** (`update-tle-data.yml`) is switched off in this copy.
+
 # 🛰️ GNSS Constellation Health Monitoring System
 
 A comprehensive real-time monitoring and analysis system for multiple Global Navigation Satellite System (GNSS) constellations including **NavIC (IRNSS)**, **QZSS (Michibiki)**, and **BeiDou-3**. This application provides satellite health assessment, orbital drift analysis, maneuver detection, longitude slot deviation tracking, and Dilution of Precision (DOP) calculations through an interactive Streamlit web interface.
