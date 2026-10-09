@@ -1,13 +1,24 @@
 # Keeps a raw copy of every archived source whenever it changes.
 # Writes to the private archive repository only, and only when something changed.
-# "Last checked" is the time of this job's last successful run.
+# "Last checked" is the time of this job's last successful run for that group.
+#
+# CADENCE IS SET HERE. Each group of sources (see evidence/sources.py) has one
+# schedule line below. To change how often a group is fetched, change its line
+# AND the matching line in the "Which group is due?" step; a test checks the
+# two agree. Times are UTC. GitHub may start a run some minutes late.
 
 name: Archive sources
 
 on:
   schedule:
-    - cron: '17 */6 * * *'  # four times a day, at 17 minutes past
+    - cron: '17 1 * * *'  # documents: once a day, 01:17
   workflow_dispatch:
+    inputs:
+      group:
+        description: Which group to fetch
+        type: choice
+        options: [all, documents, orbital, news]
+        default: all
 
 permissions:
   contents: read  # this repository is only read; the archive is written through its own key
@@ -36,10 +47,31 @@ jobs:
       - name: Install the one library the archive needs
         run: pip install "$(grep '^requests==' requirements.txt)"
 
-      - name: Fetch every source and keep what changed
+      - name: Which group is due?
+        id: due
+        env:
+          SCHEDULE: ${{ github.event.schedule }}  # the schedule line that started this run; empty when started by hand
+          CHOSEN: ${{ inputs.group }}
+        run: |
+          case "$SCHEDULE" in
+            '17 1 * * *') group=documents ;;
+            '') group="${CHOSEN:-all}" ;;
+            *) echo "No group is assigned to the schedule '$SCHEDULE'. Add it to this step."; exit 1 ;;
+          esac
+          echo "Fetching: $group"
+          echo "group=$group" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch the group and keep what changed
         id: fetch
         continue-on-error: true  # keep what did change, then fail below so the failure is noticed
-        run: python scripts/archive_sources.py --archive archive
+        env:
+          GROUP: ${{ steps.due.outputs.group }}
+        run: |
+          if [ "$GROUP" = all ]; then
+            python scripts/archive_sources.py --archive archive
+          else
+            python scripts/archive_sources.py --archive archive --group "$GROUP"
+          fi
 
       - name: Save the changes to the archive
         working-directory: archive
