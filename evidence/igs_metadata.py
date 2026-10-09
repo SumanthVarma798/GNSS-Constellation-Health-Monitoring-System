@@ -10,6 +10,7 @@ from pathlib import Path
 
 import requests
 
+from evidence.settings import REQUEST_TIMEOUT_SECONDS
 from evidence.sources import IGS_SATELLITE_METADATA_URL
 
 OPEN_END = "0000:000:00000"  # the file's marker for "still valid"
@@ -19,7 +20,7 @@ def read_metadata(path=None):
     """The file's text: from a local copy if a path is given, otherwise downloaded."""
     if path:
         return Path(path).read_text()
-    response = requests.get(IGS_SATELLITE_METADATA_URL, timeout=60)
+    response = requests.get(IGS_SATELLITE_METADATA_URL, timeout=REQUEST_TIMEOUT_SECONDS)
     response.raise_for_status()
     return response.text
 

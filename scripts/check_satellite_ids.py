@@ -23,10 +23,8 @@ import requests
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from evidence.igs_metadata import OPEN_END, block_rows, read_metadata, sinex_date
+from evidence.settings import DASHBOARD_BLOCKS, REQUEST_TIMEOUT_SECONDS
 from evidence.sources import CELESTRAK_BEIDOU_URL, GALMON_SATELLITES_URL
-
-# Satellite blocks the GEO/IGSO dashboard is meant to cover.
-TRACKED_BLOCKS = ("IRS-", "QZS-", "BDS-3G", "BDS-3I")
 
 
 def parse_metadata(text):
@@ -69,7 +67,7 @@ def config_report(by_norad, prn_history, slot):
 
     print("\n## In the IGS file, same satellite families, not tracked\n")
     for norad, sat in by_norad.items():
-        if sat["block"].startswith(TRACKED_BLOCKS) and norad not in tracked.values():
+        if sat["block"].startswith(DASHBOARD_BLOCKS) and norad not in tracked.values():
             prn = current_prn(prn_history.get(sat["svn"], []))
             print(f"- {sat['svn']} (catalogue no. {norad}, signal ID {prn or 'none'}): {sat['comment']}")
 
@@ -81,8 +79,8 @@ def signals_report(by_norad, prn_history):
     from skyfield.framelib import itrs
 
     ts = load.timescale()
-    catalogue = requests.get(CELESTRAK_BEIDOU_URL, timeout=60).json()
-    signals = requests.get(GALMON_SATELLITES_URL, timeout=60).json()
+    catalogue = requests.get(CELESTRAK_BEIDOU_URL, timeout=REQUEST_TIMEOUT_SECONDS).json()
+    signals = requests.get(GALMON_SATELLITES_URL, timeout=REQUEST_TIMEOUT_SECONDS).json()
     now = ts.now()
     # Position of every catalogued BeiDou object, in the Earth-fixed frame galmon uses.
     objects = [(sat["OBJECT_NAME"], int(sat["NORAD_CAT_ID"]),

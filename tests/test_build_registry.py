@@ -9,7 +9,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 from build_registry import build_tables
 from evidence.igs_metadata import sinex_time
-from evidence.registry_tables import SATELLITE_COLUMNS, SATELLITES, SIGNAL_ID_COLUMNS, SIGNAL_IDS, read_table
+from evidence.registry_tables import read_table
+from evidence.settings import (REGISTRY_SATELLITE_COLUMNS, REGISTRY_SATELLITES_FILE, REGISTRY_SIGNAL_ID_COLUMNS,
+                               REGISTRY_SIGNAL_IDS_FILE)
 from test_check_satellite_ids import SAMPLE
 
 
@@ -40,9 +42,9 @@ def test_sinex_time():
 
 
 def test_committed_tables_are_sound():
-    satellites, signal_ids = read_table(SATELLITES), read_table(SIGNAL_IDS)
+    satellites, signal_ids = read_table(REGISTRY_SATELLITES_FILE), read_table(REGISTRY_SIGNAL_IDS_FILE)
 
-    assert list(satellites[0]) == SATELLITE_COLUMNS and list(signal_ids[0]) == SIGNAL_ID_COLUMNS
+    assert list(satellites[0]) == REGISTRY_SATELLITE_COLUMNS and list(signal_ids[0]) == REGISTRY_SIGNAL_ID_COLUMNS
     assert [row["svn"] for row in satellites] == sorted({row["svn"] for row in satellites})  # sorted, no repeats
     assert {row["svn"] for row in signal_ids} <= {row["svn"] for row in satellites}
     # A signal ID belongs to one satellite at a time, and a satellite has one at a time.
@@ -54,6 +56,6 @@ def test_committed_tables_are_sound():
 def test_every_dashboard_satellite_is_in_the_registry():
     from config.config import BEIDOU3_SATS, NAVIK_SATS, QZSS_SATS
 
-    known = {int(row["catalogue_no"]) for row in read_table(SATELLITES)}
+    known = {int(row["catalogue_no"]) for row in read_table(REGISTRY_SATELLITES_FILE)}
     tracked = {**NAVIK_SATS, **QZSS_SATS, **BEIDOU3_SATS}
     assert {name for name, catalogue_no in tracked.items() if catalogue_no not in known} == set()
