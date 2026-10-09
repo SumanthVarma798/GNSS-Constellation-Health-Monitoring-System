@@ -31,6 +31,8 @@ REGISTRY_SIGNAL_IDS_FILE = "signal_ids.csv"
 REGISTRY_SIGNAL_ID_COLUMNS = ["svn", "signal_id", "valid_from", "valid_to", "note"]
 
 REGISTRY_CONSTELLATIONS_FILE = "constellations.csv"  # kept by hand: system letter -> constellation
+# Kept by hand: which satellites the dashboard tracks, in display order, and its name for each.
+REGISTRY_DASHBOARD_SATELLITES_FILE = "dashboard_satellites.csv"
 
 # Column name -> how to say it to a reader who does not write software.
 REGISTRY_COLUMN_PLAIN_NAMES = {
