@@ -69,8 +69,8 @@ Solid arrows carry data today. Dotted arrows are not wired yet.
 
 ```mermaid
 pie showData title Estimated hours, all guesses
-  "Built" : 33
-  "Remaining" : 187
+  "Built" : 35
+  "Remaining" : 185
 ```
 
 | Issue | What | Hours (guess) | State |
@@ -82,9 +82,9 @@ pie showData title Estimated hours, all guesses
 | 30 | A schedule per group of sources | 3 | Built |
 | 11 | Evidence model and query store | 4 | Built |
 | 12 | Source table, the bar, the labels | 6 | Built |
-| 35 | This page | 2 | In review |
-| 18 | Dashboard reads identity from the registry | 8 | Next candidates |
-| 10 | Notices ledger: GPS advisories | 10 | Next candidates |
+| 35 | This page | 2 | Built |
+| 18 | Dashboard reads identity from the registry | 8 | Part 1 of 2 in review: today's scores recorded as tests |
+| 10 | Notices ledger: GPS advisories | 10 | Next candidate |
 | 13 | News, official pages, linked social posts | 14 | Waiting on a list of sources |
 | 14 | Agency and status per satellite | 3 | Open |
 | 15 | Claim extraction | 20 | Waiting on a model and a spending ceiling |
