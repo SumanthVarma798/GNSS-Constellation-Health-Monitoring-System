@@ -53,9 +53,31 @@ def test_committed_tables_are_sound():
     assert max(Counter(row["svn"] for row in held_now).values()) == 1
 
 
-def test_every_dashboard_satellite_is_in_the_registry():
-    from config.config import BEIDOU3_SATS, NAVIK_SATS, QZSS_SATS
+# What config/config.py held, typed by hand, before the dashboard read the registry.
+# Order matters: it is the order the dashboard shows them in.
+DASHBOARD_SATELLITES_BEFORE_THE_SWITCH = {
+    "NAVIK_SATS": {"IRNSS-1B": 39635, "IRNSS-1C": 40269, "IRNSS-1D": 40547, "IRNSS-1E": 41241,
+                   "IRNSS-1F": 41384, "IRNSS-1G": 41469, "IRNSS-1I": 43286, "NVS-01": 56759},
+    "QZSS_SATS": {"QZS-1R (Michibiki-1R)": 49336, "QZS-2 (Michibiki-2)": 42738, "QZS-3 (Michibiki-3)": 42917,
+                  "QZS-4 (Michibiki-4)": 42965, "QZS-6 (Michibiki-6)": 62876},
+    "BEIDOU3_SATS": {"BeiDou-3 G1": 43683, "BeiDou-3 G2": 45344, "BeiDou-3 G3": 45807, "BeiDou-3 G4": 56564,
+                     "BeiDou-3 I1": 44204, "BeiDou-3 I2": 44337, "BeiDou-3 I3": 44709},
+}
 
-    known = {int(row["catalogue_no"]) for row in read_table(REGISTRY_SATELLITES_FILE)}
-    tracked = {**NAVIK_SATS, **QZSS_SATS, **BEIDOU3_SATS}
-    assert {name for name, catalogue_no in tracked.items() if catalogue_no not in known} == set()
+
+@pytest.mark.parametrize("list_name", DASHBOARD_SATELLITES_BEFORE_THE_SWITCH)
+def test_dashboard_lists_did_not_change(list_name):
+    import config.config
+
+    now, before = getattr(config.config, list_name), DASHBOARD_SATELLITES_BEFORE_THE_SWITCH[list_name]
+    assert list(now.items()) == list(before.items())
+
+
+def test_a_tracked_satellite_missing_from_the_registry_stops_the_dashboard(monkeypatch):
+    from evidence import registry_tables
+    from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE
+
+    tables = {REGISTRY_DASHBOARD_SATELLITES_FILE: [{"svn": "I999", "dashboard_name": "NVS-99"}]}
+    monkeypatch.setattr(registry_tables, "read_table", lambda name: tables.get(name) or read_table(name))
+    with pytest.raises(ValueError, match="NVS-99: I999"):
+        registry_tables.dashboard_satellites("NavIC")

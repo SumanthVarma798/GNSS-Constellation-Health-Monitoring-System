@@ -3,6 +3,8 @@ Configuration file for NavIC Comprehensive Monitoring System
 Contains all constants, satellite data, and configuration parameters
 """
 
+from evidence.registry_tables import dashboard_satellites
+
 # Constants
 MU = 398600.4418  # km^3/s^2
 R_EARTH = 6371.0  # km
@@ -14,17 +16,10 @@ GEO_ALTITUDE_TOLERANCE = 100.0  # Normal operational tolerance (±100 km)
 GRAVEYARD_ORBIT_THRESHOLD = 36000.0  # Altitude above which satellite is likely in graveyard orbit
 GRAVEYARD_ORBIT_MIN = 35986.0  # Minimum graveyard orbit altitude (GEO + 200 km)
 
-# NavIC Satellite NORAD IDs
-NAVIK_SATS = {
-    "IRNSS-1B": 39635,
-    "IRNSS-1C": 40269,
-    "IRNSS-1D": 40547,
-    "IRNSS-1E": 41241,
-    "IRNSS-1F": 41384,
-    "IRNSS-1G": 41469,
-    "IRNSS-1I": 43286,
-    "NVS-01": 56759
-}
+# Which satellites the dashboard tracks, and their NORAD IDs, come from the registry:
+# registry/dashboard_satellites.csv (names, kept by a person) and
+# registry/satellites.csv (NORAD IDs, built from the IGS satellite metadata file).
+NAVIK_SATS = dashboard_satellites("NavIC")
 
 # India's extreme geographical points for DOP analysis
 INDIA_EXTREME_POINTS = {
@@ -72,14 +67,7 @@ NAVIK_SERVICE_REQUIREMENTS = {
     "NVS-01": {"longitude": 131.5, "inclination": 5.0}         # GEO
 }
 
-# QZSS Satellite NORAD IDs (fill correct NORAD_CAT_ID values)
-QZSS_SATS = {
-    "QZS-1R (Michibiki-1R)": 49336,
-    "QZS-2 (Michibiki-2)": 42738,    
-    "QZS-3 (Michibiki-3)": 42917,     
-    "QZS-4 (Michibiki-4)": 42965,   
-    "QZS-6 (Michibiki-6)": 62876      
-}
+QZSS_SATS = dashboard_satellites("QZSS")
 
 # QZSS service/target requirements (per provided specifications)
 # Semi-major axis 42164 km ±10 km, eccentricity < 0.099, period ≈ 23h56m
@@ -201,15 +189,7 @@ QZSS_MAINTENANCE_NOTE = "Orbit correction maneuvers occur roughly once every six
 # }
 
 
-BEIDOU3_SATS = {
-    "BeiDou-3 G1": 43683,
-    "BeiDou-3 G2": 45344,
-    "BeiDou-3 G3": 45807,
-    "BeiDou-3 G4": 56564,
-    "BeiDou-3 I1": 44204,
-    "BeiDou-3 I2": 44337,
-    "BeiDou-3 I3": 44709,
-}
+BEIDOU3_SATS = dashboard_satellites("BeiDou")
 
 BEIDOU3_SERVICE_REQUIREMENTS = {
     "BeiDou-3 I1": {

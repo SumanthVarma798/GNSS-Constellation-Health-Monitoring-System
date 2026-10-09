@@ -37,7 +37,7 @@ flowchart TB
   bar -.-> trigger["Trigger rule"]:::planned
   trigger -.-> pr
   store -.-> pages["History and scoreboard pages"]:::planned
-  registry -.-> orbit["Orbit health dashboard"]:::built
+  registry --> orbit["Orbit health dashboard"]:::built
   admin["Admin page"]:::later -.-> pr
 
   classDef built fill:#d4edda,stroke:#2e7d32,color:#1b1b1b
@@ -63,14 +63,14 @@ Solid arrows carry data today. Dotted arrows are not wired yet.
 | Registry | Plain-text tables saying which satellite is which |
 | Query store | A small database rebuilt from the archive and the registry on every run |
 | Bar and labels | Decides whether an item is confirmed, probable or unconfirmed (section 6) |
-| Orbit health dashboard | The team's existing app. It does not read the registry yet. |
+| Orbit health dashboard | The team's existing app. It reads which satellites to track, and their catalogue numbers, from the registry. Which are in service is still typed by hand (issue 14). |
 
 ## 3. How far along
 
 ```mermaid
 pie showData title Estimated hours, all guesses
-  "Built" : 35
-  "Remaining" : 185
+  "Built" : 43
+  "Remaining" : 177
 ```
 
 | Issue | What | Hours (guess) | State |
@@ -83,10 +83,10 @@ pie showData title Estimated hours, all guesses
 | 11 | Evidence model and query store | 4 | Built |
 | 12 | Source table, the bar, the labels | 6 | Built |
 | 35 | This page | 2 | Built |
-| 18 | Dashboard reads identity from the registry | 8 | Part 1 of 2 in review: today's scores recorded as tests |
+| 18 | Dashboard reads identity from the registry | 8 | Built |
 | 10 | Notices ledger: GPS advisories | 10 | Next candidate |
 | 13 | News, official pages, linked social posts | 14 | Waiting on a list of sources |
-| 14 | Agency and status per satellite | 3 | Open |
+| 14 | Agency and status per satellite; dashboard reads status from the registry | 3 | Open |
 | 15 | Claim extraction | 20 | Waiting on a model and a spending ceiling |
 | 16 | Change proposals from claims | 12 | Open |
 | 6 | Internet Archive capture | 3 | Later |

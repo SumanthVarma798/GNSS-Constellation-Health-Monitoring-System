@@ -12,6 +12,7 @@ International GNSS Service (IGS) satellite metadata file by `scripts/build_regis
 | `satellites.csv` | the build script | One row per physical satellite |
 | `signal_ids.csv` | the build script | One row per satellite per signal-ID period |
 | `constellations.csv` | a person | Which system each SVN letter stands for |
+| `dashboard_satellites.csv` | a person | Which satellites the dashboard tracks, and its name for each |
 
 Code reads and writes these tables through `evidence/registry_tables.py`; file names
 and column names are written down once, in `evidence/settings.py`.
@@ -50,6 +51,17 @@ signal ID **and** the time, never on the signal ID alone.
 
 If the IGS file ever lists a system whose letter is not here, the build stops and
 says so. A person adds the row after looking.
+
+## dashboard_satellites.csv: one row per satellite the dashboard tracks
+
+| Column | Meaning |
+|---|---|
+| `svn` | The satellite. Its catalogue number and constellation are looked up in `satellites.csv`. |
+| `dashboard_name` | The name the dashboard shows. Orbit data, service requirements and recorded scores are all keyed by it, so changing one is a change to the dashboard, not a correction. |
+
+Row order is the order the dashboard shows them in. `config/config.py` builds its three
+satellite lists from this table. If a row names an SVN that `satellites.csv` does not
+have, the dashboard stops and says so. Adding a satellite here is the team's decision.
 
 ## What these tables do not say
 
