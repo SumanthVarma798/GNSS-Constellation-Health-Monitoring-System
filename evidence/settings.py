@@ -44,6 +44,11 @@ REGISTRY_COLUMN_PLAIN_NAMES = {
     "note": "note",
 }
 
+# --- The query store ---
+
+STORE_SCHEMA_FILE = Path(__file__).resolve().parent / "store_schema.sql"  # the evidence model, in one file
+STORE_FILE = Path(__file__).resolve().parent.parent / "data" / "evidence.sqlite3"  # rebuilt each run; git-ignored
+
 # --- The identity check ---
 
 # Satellite blocks the GEO/IGSO dashboard is meant to cover.
