@@ -40,3 +40,8 @@ def test_report_says_nothing_changed_rather_than_leaving_a_gap():
     assert "- C217 (BeiDou): signal ID was C62, now C04." in report
     assert "- Nothing." in report
     assert "Nothing changes until a person approves it" in report
+
+
+def test_report_names_the_copy_it_was_built_from():
+    assert "Read straight from the IGS website" in change_report("%=SNX 2.02", [], [])
+    assert "SHA-256 `abc`" in change_report("%=SNX 2.02", [], [], "The copy used is in the private archive: SHA-256 `abc`.")

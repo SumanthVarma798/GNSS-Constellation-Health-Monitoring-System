@@ -1,4 +1,4 @@
-# Rebuilds the satellite registry from the IGS file once a week.
+# Rebuilds the satellite registry once a week from the archived copy of the IGS file.
 # If the tables changed, it proposes the change as a pull request for a person
 # to review. It never writes to main.
 
@@ -21,6 +21,12 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - name: Check out the archive
+        uses: actions/checkout@v4
+        with:
+          repository: SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive
+          ssh-key: ${{ secrets.ARCHIVE_DEPLOY_KEY }}
+          path: archive
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'  # matches runtime.txt
@@ -29,7 +35,7 @@ jobs:
       - run: pip install -r requirements-dev.txt
 
       - name: Rebuild the tables and describe what changed
-        run: python scripts/build_registry.py --report "$RUNNER_TEMP/registry-changes.md"
+        run: python scripts/build_registry.py --archive archive --report "$RUNNER_TEMP/registry-changes.md"
 
       - name: Did anything change?
         id: tables
