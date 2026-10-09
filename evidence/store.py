@@ -11,6 +11,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from evidence.archive import read_versions
+from evidence.confidence import read_source_grades
 from evidence.registry_tables import read_table
 from evidence.settings import (REGISTRY_CONSTELLATIONS_FILE, REGISTRY_SATELLITES_FILE, REGISTRY_SIGNAL_IDS_FILE,
                                STORE_SCHEMA_FILE)
@@ -36,15 +37,23 @@ def load_registry(store):
         store.executemany(f"INSERT INTO {table} VALUES ({', '.join('?' * len(rows[0]))})", rows)
 
 
+def load_sources(store):
+    """Every source a person has graded, from the source table."""
+    store.executemany("INSERT INTO source (id, name, reliability) VALUES (?, ?, ?)",
+                      [(row["source_id"], row["name"], row["reliability"]) for row in read_source_grades()])
+
+
 def load_documents(store, archive):
-    """One document row per row of the archive's change log, and one source per host name.
+    """One document row per row of the archive's change log.
+
+    A source that is not in the source table yet is added under its host
+    name, with no grade.
 
     A document's id is its row number in that log. The log is only ever added
     to, so the id is the same on every rebuild.
     """
     for number, row in enumerate(read_versions(archive), start=1):
         host = urlsplit(row["address"]).hostname
-        # ponytail: a source is named by its host until the graded source table exists.
         store.execute("INSERT OR IGNORE INTO source (id, name) VALUES (?, ?)", (host, host))
         store.execute("INSERT INTO document VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                       (number, host, row["address"], row["fetched_at"], int(row["status"]), row["sha256"] or None,
@@ -59,5 +68,6 @@ def build_store(path, archive):
     store = new_store(path)
     with store:
         load_registry(store)
+        load_sources(store)
         load_documents(store, archive)
     return store

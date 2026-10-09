@@ -101,7 +101,9 @@ def test_the_store_is_built_from_the_archive_and_the_registry(tmp_path):
 
     documents = store.execute("SELECT id, source_id, status, sha256 IS NULL, bytes FROM document ORDER BY id").fetchall()
     assert documents == [(1, "operator.example", 200, 0, 12), (2, "operator.example", 200, 0, 13), (3, "operator.example", 404, 1, 0)]
-    assert store.execute("SELECT id, name, reliability FROM source").fetchall() == [("operator.example", "operator.example", None)]
+    # A source nobody has graded yet goes in under its host name, with no grade; graded ones come from the source table.
+    assert store.execute("SELECT name, reliability FROM source WHERE id = 'operator.example'").fetchall() == [("operator.example", None)]
+    assert store.execute("SELECT name, reliability FROM source WHERE id = 'files.igs.org'").fetchall() == [("International GNSS Service (IGS)", "B")]
     assert store.execute("SELECT COUNT(*) FROM satellite").fetchone() == (len(read_table(REGISTRY_SATELLITES_FILE)),)
     assert store.execute("SELECT signal_id_now, slot FROM satellite WHERE svn = 'C217'").fetchone() == ("C04", "140E")
     assert store.execute("PRAGMA foreign_key_check").fetchall() == []

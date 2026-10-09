@@ -52,8 +52,8 @@ original is fetched once, when someone opens that one document.
 
 ## What is not here yet
 
-- **Grades.** The reliability and credibility columns exist but are empty until a person has
-  graded the sources.
+- **Credibility grades.** Sources are graded by a person in `evidence/source_grades.csv`.
+  The credibility of single statements is empty until statements are being extracted.
 - **Claims and events from real documents.** The tables are ready; nothing fills them yet.
 - **A database server.** The store is a single file today. The same table definitions are
   written to serve a server database later, when a backend exists to use one.
