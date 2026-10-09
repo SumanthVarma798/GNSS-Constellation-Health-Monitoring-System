@@ -1,0 +1,2 @@
+source_id,name,reliability,graded_by,graded_on,reason
+files.igs.org,International GNSS Service (IGS),B,Sumanth Varma (awaiting Adithya's review),2026-10-09,"A scientific body; its satellite metadata file is maintained for it by the German Aerospace Center (DLR)"

@@ -44,6 +44,34 @@ REGISTRY_COLUMN_PLAIN_NAMES = {
     "note": "note",
 }
 
+# --- Confidence: the grades, the bar and the labels ---
+
+# The source table: one row per source, graded by a person. Changed only through review.
+SOURCE_GRADES_FILE = Path(__file__).resolve().parent / "source_grades.csv"
+SOURCE_GRADE_COLUMNS = ["source_id", "name", "reliability", "graded_by", "graded_on", "reason"]
+
+# Source reliability, from the Admiralty code. The grade belongs to the source.
+RELIABILITY_GRADES = {
+    "A": "operator advisories and official documents",
+    "B": "intergovernmental and scientific bodies",
+    "C": "specialist press",
+    "D": "general news",
+    "E": "social media",
+    "F": "unattributed posts",
+}
+
+# THE BAR an item must clear to reach the dashboard. A starting proposal, set by
+# Sumanth on 8 Oct 2026, to be confirmed with Adithya. Each line is one rule.
+GRADES_THAT_CLEAR_ALONE = ("A",)                 # the operator's own word is enough
+GRADES_LIFTED_BY_A_SECOND_SOURCE = ("B",)        # clears when a second independent source agrees
+GRADES_LIFTED_BY_OBSERVATION = ("B",)            # clears when our own orbit or signal data agrees
+GRADES_THAT_COUNT_AS_A_SECOND_SOURCE = ("A", "B", "C", "D")  # social media and unattributed posts do not corroborate
+
+# What a reader sees. Three levels, in words.
+LABEL_CONFIRMED = "confirmed"
+LABEL_PROBABLE = "probable"
+LABEL_UNCONFIRMED = "unconfirmed"
+
 # --- The query store ---
 
 STORE_SCHEMA_FILE = Path(__file__).resolve().parent / "store_schema.sql"  # the evidence model, in one file
