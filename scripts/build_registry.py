@@ -2,6 +2,7 @@
 
     python scripts/build_registry.py                      # download the IGS file
     python scripts/build_registry.py --metadata FILE.snx  # use a local copy
+    python scripts/build_registry.py --archive FOLDER     # use the newest archived copy
     python scripts/build_registry.py --report CHANGES.md  # also describe what changed
 
 Writes registry/satellites.csv (one row per physical satellite) and
@@ -15,9 +16,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from evidence.archive import latest_version, object_path
 from evidence.igs_metadata import OPEN_END, block_rows, read_metadata, sinex_time
 from evidence.registry_changes import change_report, describe_satellite_changes, describe_signal_id_changes
 from evidence.registry_tables import constellation_names, read_table, write_table
+from evidence.sources import IGS_SATELLITE_METADATA_URL
 from evidence.settings import (REGISTRY_CONSTELLATIONS_FILE, REGISTRY_DIR, REGISTRY_SATELLITE_COLUMNS,
                                REGISTRY_SATELLITES_FILE, REGISTRY_SIGNAL_ID_COLUMNS, REGISTRY_SIGNAL_IDS_FILE)
 
@@ -51,10 +54,20 @@ def build_tables(text):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--metadata", help="local copy of the IGS file (default: download it)")
+    source = parser.add_mutually_exclusive_group()
+    source.add_argument("--metadata", help="local copy of the IGS file (default: download it)")
+    source.add_argument("--archive", help="archive folder: build from its newest copy of the IGS file")
     parser.add_argument("--report", help="write a plain-language description of what changed to this file")
     args = parser.parse_args()
 
+    copy_used = ""
+    if args.archive:
+        kept = latest_version(args.archive, IGS_SATELLITE_METADATA_URL)
+        if not kept or not kept["sha256"]:
+            sys.exit("The archive holds no current copy of the IGS file (never fetched, or gone). Nothing written.")
+        args.metadata = object_path(args.archive, kept["sha256"])
+        copy_used = (f"The copy used is in the private archive: fetched {kept['fetched_at']}, "
+                     f"SHA-256 `{kept['sha256']}`.")
     text = read_metadata(args.metadata)
     satellites, signal_ids = build_tables(text)
     if not satellites or not signal_ids:
@@ -67,7 +80,8 @@ def main():
         after = read_table(REGISTRY_SATELLITES_FILE), read_table(REGISTRY_SIGNAL_IDS_FILE)
         Path(args.report).write_text(change_report(text.splitlines()[0].strip(),
                                                    describe_satellite_changes(before[0], after[0]),
-                                                   describe_signal_id_changes(before[1], after[1])))
+                                                   describe_signal_id_changes(before[1], after[1]),
+                                                   copy_used))
 
 
 if __name__ == "__main__":

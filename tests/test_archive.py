@@ -3,7 +3,7 @@ import hashlib
 
 import pytest
 
-from evidence.archive import FetchFailed, object_path, read_versions, record
+from evidence.archive import FetchFailed, latest_version, object_path, read_versions, record
 from evidence.settings import MAX_COPY_BYTES
 
 ADDRESS = "https://example.org/notice"
@@ -65,3 +65,13 @@ def test_sources_are_tracked_separately(tmp_path):
 
     assert record(tmp_path, "https://example.org/other", "2026-10-08T10:00:00Z", 200, b"same") is not None
     assert len(list((tmp_path / "objects").rglob("*"))) == 2  # one folder, one copy: stored once
+
+
+def test_latest_version_is_the_newest_row_even_when_the_page_is_gone(tmp_path):
+    assert latest_version(tmp_path, ADDRESS) is None
+
+    record(tmp_path, ADDRESS, "2026-10-08T10:00:00Z", 200, b"here")
+    assert latest_version(tmp_path, ADDRESS)["fetched_at"] == "2026-10-08T10:00:00Z"
+
+    record(tmp_path, ADDRESS, "2026-10-09T10:00:00Z", 404)
+    assert (latest_version(tmp_path, ADDRESS)["status"], latest_version(tmp_path, ADDRESS)["sha256"]) == ("404", "")

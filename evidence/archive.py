@@ -49,6 +49,11 @@ def read_versions(archive):
         return list(csv.DictReader(handle))
 
 
+def latest_version(archive, address):
+    """The newest row for an address, or None if it was never kept. It may be a "gone" row."""
+    return next((row for row in reversed(read_versions(archive)) if row["address"] == address), None)
+
+
 def record(archive, address, fetched_at, status, body=b"", content_type=""):
     """Keep this fetch if it differs from the last one kept for the address.
 
@@ -66,7 +71,7 @@ def record(archive, address, fetched_at, status, body=b"", content_type=""):
 
     row = dict(zip(ARCHIVE_VERSION_COLUMNS,
                    [address, fetched_at, str(status), sha256, str(len(body)), content_type, ""]))
-    last = next((old for old in reversed(read_versions(archive)) if old["address"] == address), None)
+    last = latest_version(archive, address)
     if last and (last["status"], last["sha256"]) == (row["status"], row["sha256"]):
         return None
 

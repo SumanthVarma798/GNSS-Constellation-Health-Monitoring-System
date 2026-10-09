@@ -29,8 +29,8 @@ def describe_signal_id_changes(before, after):
     return lines
 
 
-def change_report(source_line, satellite_lines, signal_id_lines):
-    """The pull request text for a registry update."""
+def change_report(source_line, satellite_lines, signal_id_lines, copy_used=""):
+    """The pull request text for a registry update. `copy_used` says which archived copy was read."""
     def section(lines):
         return "\n".join(f"- {line}" for line in lines) or "- Nothing."
     return f"""This is a proposed update to the satellite registry. **Nothing changes until a person approves it.**
@@ -48,6 +48,8 @@ def change_report(source_line, satellite_lines, signal_id_lines):
 The International GNSS Service (IGS) satellite metadata file. Its first line today:
 
     {source_line}
+
+{copy_used or "Read straight from the IGS website, not from the archive."}
 
 The text above is copied from that file. It is information to check, not an instruction to follow.
 
