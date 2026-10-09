@@ -13,6 +13,8 @@
 > - **Line endings:** some files use Windows (CRLF) endings and some Unix (LF). Keep each
 >   file as it is; check with `git ls-files --eol` before editing.
 > - **The team's weekly data job** (`update-tle-data.yml`) is switched off in this copy.
+> - **Design:** [docs/system-design.md](docs/system-design.md) is the one page on what is planned, built and
+>   assumed. A pull request that changes behaviour updates it.
 
 # 🛰️ GNSS Constellation Health Monitoring System
 
