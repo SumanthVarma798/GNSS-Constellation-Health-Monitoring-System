@@ -34,6 +34,18 @@ REGISTRY_CONSTELLATIONS_FILE = "constellations.csv"  # kept by hand: system lett
 # Kept by hand: which satellites the dashboard tracks, in display order, and its name for each.
 REGISTRY_DASHBOARD_SATELLITES_FILE = "dashboard_satellites.csv"
 
+# Built from the General Catalog of Artificial Space Objects (GCAT): owner and status per satellite.
+REGISTRY_CATALOGUE_FILE = "catalogue.csv"
+# Our column name -> the catalogue's own column name. Values are kept exactly as the catalogue writes them.
+GCAT_OBJECT_COLUMNS = {"cospar_id": "Piece", "name": "PLName", "owner": "Owner", "state": "State",
+                       "status": "Status", "orbit_class": "OpOrbit"}                               # satcat.tsv
+GCAT_PAYLOAD_COLUMNS = {"last_known_active": "TLast", "operations_ended": "TOp", "mission_result": "Result"}  # psatcat.tsv
+REGISTRY_CATALOGUE_COLUMNS = ["svn", *GCAT_OBJECT_COLUMNS, *GCAT_PAYLOAD_COLUMNS]
+GCAT_STILL_OPERATING = "*"  # in operations_ended: "believed to be still operating"
+GCAT_MISSION_FAILED = "F"   # in mission_result: failed early in its mission
+# The catalogue is released under CC-BY. This citation goes wherever its data is shown.
+GCAT_CITATION = "data from GCAT (J. McDowell, planet4589.org/space/gcat)"
+
 # Column name -> how to say it to a reader who does not write software.
 REGISTRY_COLUMN_PLAIN_NAMES = {
     "constellation": "constellation",

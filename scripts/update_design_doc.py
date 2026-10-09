@@ -23,10 +23,10 @@ END = "<!-- constants: end -->"
 JOBS = ROOT / ".github" / "workflows"
 
 
-def schedule(job_file):
-    """The schedule line of one job file, and the comment that explains it."""
+def schedule(job_file, which=0):
+    """One schedule line of a job file (the first unless told otherwise), and the comment that explains it."""
     lines = (JOBS / job_file).read_text().splitlines()
-    index = next(number for number, line in enumerate(lines) if "- cron:" in line)
+    index = [number for number, line in enumerate(lines) if "- cron:" in line][which]
     cron, _, same_line = lines[index].partition("#")
     above = []
     while index > 0 and lines[index - 1].strip().startswith("#"):
@@ -41,6 +41,7 @@ def constants_table():
     megabytes = settings.MAX_COPY_BYTES // (1024 * 1024)
     rows = [
         ("Documents are fetched", schedule("archive.yml"), "`.github/workflows/archive.yml`"),
+        ("Catalogues are fetched", schedule("archive.yml", 1), "`.github/workflows/archive.yml`"),
         ("The registry is rebuilt", schedule("registry-update.yml"), "`.github/workflows/registry-update.yml`"),
         ("Sources archived, by group", ", ".join(f"{group}: {len(found)}" for group, found in ARCHIVED_SOURCES.items()),
          "`evidence/sources.py`"),
