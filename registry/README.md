@@ -13,8 +13,8 @@ International GNSS Service (IGS) satellite metadata file by `scripts/build_regis
 | `signal_ids.csv` | the build script | One row per satellite per signal-ID period |
 | `constellations.csv` | a person | Which system each SVN letter stands for |
 
-Code that reads or writes these tables goes through `evidence/registry_tables.py`,
-so file names and column names are written down once.
+Code reads and writes these tables through `evidence/registry_tables.py`; file names
+and column names are written down once, in `evidence/settings.py`.
 
 ## satellites.csv: one row per physical satellite
 

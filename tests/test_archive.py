@@ -3,7 +3,8 @@ import hashlib
 
 import pytest
 
-from evidence.archive import MAX_BYTES, FetchFailed, object_path, read_versions, record
+from evidence.archive import FetchFailed, object_path, read_versions, record
+from evidence.settings import MAX_COPY_BYTES
 
 ADDRESS = "https://example.org/notice"
 
@@ -55,7 +56,7 @@ def test_a_failed_fetch_is_never_recorded_as_a_change(tmp_path, status):
 
 def test_an_oversized_copy_is_refused(tmp_path):
     with pytest.raises(FetchFailed, match="over the"):
-        record(tmp_path, ADDRESS, "2026-10-08T10:00:00Z", 200, b"x" * (MAX_BYTES + 1))
+        record(tmp_path, ADDRESS, "2026-10-08T10:00:00Z", 200, b"x" * (MAX_COPY_BYTES + 1))
     assert read_versions(tmp_path) == []
 
 

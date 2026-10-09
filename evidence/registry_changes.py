@@ -1,16 +1,5 @@
 """Describing a change to the registry tables in plain words, for the person who reviews it."""
-
-# Column name -> how to say it to a reader who does not write software.
-PLAIN_NAMES = {
-    "constellation": "constellation",
-    "block": "design generation",
-    "cospar_id": "launch designator",
-    "catalogue_no": "catalogue number",
-    "signal_id_now": "signal ID",
-    "plane": "plane",
-    "slot": "slot",
-    "note": "note",
-}
+from evidence.settings import REGISTRY_COLUMN_PLAIN_NAMES
 
 
 def describe_satellite_changes(before, after):
@@ -23,7 +12,7 @@ def describe_satellite_changes(before, after):
     for svn in sorted(old.keys() - new.keys()):
         lines.append(f"Satellite {svn} ({old[svn]['constellation']}) is no longer in the IGS file.")
     for svn in sorted(old.keys() & new.keys()):
-        for column, name in PLAIN_NAMES.items():
+        for column, name in REGISTRY_COLUMN_PLAIN_NAMES.items():
             was, now = old[svn][column], new[svn][column]
             if was != now:
                 lines.append(f"{svn} ({new[svn]['constellation']}): {name} was {was or 'blank'}, now {now or 'blank'}.")
