@@ -1,0 +1,61 @@
+# Keeps a raw copy of every archived source whenever it changes.
+# Writes to the private archive repository only, and only when something changed.
+# "Last checked" is the time of this job's last successful run.
+
+name: Archive sources
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'  # four times a day, at 17 minutes past
+  workflow_dispatch:
+
+permissions:
+  contents: read  # this repository is only read; the archive is written through its own key
+
+concurrency:
+  group: archive-sources  # two runs at once would race to push the same rows
+  cancel-in-progress: false
+
+jobs:
+  archive:
+    # Only in the private working copy. Anyone who copies this file elsewhere must opt in.
+    if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out the archive
+        uses: actions/checkout@v4
+        with:
+          repository: SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive
+          ssh-key: ${{ secrets.ARCHIVE_DEPLOY_KEY }}
+          path: archive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'  # matches runtime.txt
+      - name: Install the one library the archive needs
+        run: pip install "$(grep '^requests==' requirements.txt)"
+
+      - name: Fetch every source and keep what changed
+        id: fetch
+        continue-on-error: true  # keep what did change, then fail below so the failure is noticed
+        run: python scripts/archive_sources.py --archive archive
+
+      - name: Save the changes to the archive
+        working-directory: archive
+        run: |
+          git add --all
+          if git diff --cached --quiet; then
+            echo "Nothing changed at any source. Nothing saved."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --quiet -m "Archive update, new copies: $(git diff --cached --name-only -- objects | wc -l | tr -d ' ')"
+          git push --quiet
+
+      - name: Fail if any source could not be fetched
+        if: steps.fetch.outcome == 'failure'
+        run: |
+          echo "At least one source could not be fetched. See the step above."
+          exit 1
