@@ -7,7 +7,7 @@ GNSS is Global Navigation Satellite System. IGS is the International GNSS Servic
 A *pull request* is a proposed change that a person reviews and approves.
 
 > **Standing of this page.** Everything here was decided by Sumanth Varma alone, in a private
-> working copy. The team has agreed to none of it yet. Items marked "to confirm with Adithya"
+> working copy. The team has agreed to none of it yet. Items marked "to confirm with the team"
 > are open.
 
 ## 1. What it is for
@@ -175,7 +175,7 @@ flowchart TD
 | A newspaper, and our own data agrees | unconfirmed |
 | Something we measured that nobody announced | unconfirmed |
 
-The last two rows are known consequences of the bar as it stands, to raise with Adithya.
+The last two rows are known consequences of the bar as it stands, to raise with the team.
 
 ## 7. Constants
 
@@ -205,7 +205,7 @@ Produced from the code. A test fails if this table and the code disagree.
 | 1 | Where the work lives | A private copy of the team's repository; the team's is read-only from here |
 | 2 | Where raw copies live | A second private repository; Internet Archive capture later |
 | 3 | Evidence model | Source, document, claim, event; observation kept apart from claims |
-| 4 | Confidence | Two grades stored, three labels shown; the bar in section 6. **To confirm with Adithya.** |
+| 4 | Confidence | Two grades stored, three labels shown; the bar in section 6. **To confirm with the team.** |
 | 5 | Sources for version one | Official pages, press feeds, and social posts only when they contain a link |
 | 6 | Claim extraction | A language model in the scheduled job; model and spending ceiling chosen after a test |
 | 7 | When to propose a change | A claim clears the bar and implies a registry change |
@@ -231,20 +231,19 @@ Produced from the code. A test fails if this table and the code disagree.
 
 ## 10. Open questions
 
-**For Adithya, on Sat 17 Oct 2026**
+These are for the team to settle together. The next team call is Sat 17 Oct 2026.
 
-- Is the bar in section 6 right? In particular, should our own measurement lift a news report?
-- Are the source grades in section 6 right?
-- May we read galmon's public feed, and who should email its maintainer?
-- Will the team add a licence to its repository?
-- Which database does the team's planned backend use?
-
-**For Sumanth**
-
-- Should something we measured that nobody announced get its own marking, not "unconfirmed"?
-- Which publications, subreddits and pages are on the first news list?
-- Which language model, and what monthly ceiling?
-- Should a second source check the registry every week?
+| Topic | Question | Holds up |
+|---|---|---|
+| Confidence | Is the bar in section 6 right? In particular, should our own measurement lift a news report? | - |
+| Confidence | Are the source grades in section 6 right? | - |
+| Confidence | Should something we measured that nobody announced get its own marking, not "unconfirmed"? | - |
+| Registry | Should a second source check the registry every week? | - |
+| Sources | Which publications, subreddits and pages are on the first news list? | Issue 13 |
+| Sources | May we read galmon's public feed, and who emails its maintainer? | Issue 7 |
+| Extraction | Which language model, and what monthly spending ceiling? | Issue 15 |
+| Repository | Will the team add a licence to its repository? | - |
+| Backend | Which database does the team's planned backend use? | - |
 
 ## 11. Keeping this page true
 

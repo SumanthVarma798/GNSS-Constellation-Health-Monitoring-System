@@ -33,7 +33,8 @@ def schedule(job_file):
         index -= 1
         above.insert(0, lines[index].strip().lstrip("# "))
     note = same_line.strip() or " ".join(above)
-    return f"`{re.search(r"'([^']+)'", cron).group(1)}` ({note.rstrip('.')})"
+    schedule = re.search(r"'([^']+)'", cron).group(1)
+    return f"`{schedule}` ({note.rstrip('.')})"
 
 
 def constants_table():
