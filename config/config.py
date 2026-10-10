@@ -3,7 +3,7 @@ Configuration file for NavIC Comprehensive Monitoring System
 Contains all constants, satellite data, and configuration parameters
 """
 
-from evidence.registry_tables import dashboard_satellites
+from evidence.registry_tables import dashboard_satellites, dashboard_satellites_not_in_registry
 
 # Constants
 MU = 398600.4418  # km^3/s^2
@@ -20,6 +20,14 @@ GRAVEYARD_ORBIT_MIN = 35986.0  # Minimum graveyard orbit altitude (GEO + 200 km)
 # registry/dashboard_satellites.csv (names, kept by a person) and
 # registry/satellites.csv (NORAD IDs, built from the IGS satellite metadata file).
 NAVIK_SATS = dashboard_satellites("NavIC")
+
+# Tracked satellites the registry does not list, by the constellation name the dashboard
+# shows. Normally empty. The dashboard runs without them and says so in a notice.
+TRACKED_NOT_IN_REGISTRY = {
+    "NavIC": dashboard_satellites_not_in_registry("NavIC"),
+    "QZSS": dashboard_satellites_not_in_registry("QZSS"),
+    "BeiDou-3": dashboard_satellites_not_in_registry("BeiDou"),
+}
 
 # India's extreme geographical points for DOP analysis
 INDIA_EXTREME_POINTS = {

@@ -29,20 +29,30 @@ def constellation_names():
     return {row["svn_letter"]: row["constellation"] for row in read_table(REGISTRY_CONSTELLATIONS_FILE)}
 
 
+def _tracked(constellation):
+    """(dashboard name, registry row or None) for each satellite the dashboard tracks in
+    one constellation, in display order. The constellation is read from the SVN's letter,
+    so it is known even for a satellite the registry does not list."""
+    registry = {row["svn"]: row for row in read_table(REGISTRY_SATELLITES_FILE)}
+    letters = constellation_names()
+    return [(row["dashboard_name"], registry.get(row["svn"])) for row in read_table(REGISTRY_DASHBOARD_SATELLITES_FILE)
+            if letters.get(row["svn"][:1]) == constellation]
+
+
 def dashboard_satellites(constellation):
     """{'IRNSS-1B': 39635, ...}: the dashboard's name for each satellite it tracks in one
     constellation, to its catalogue number, in display order.
 
     A person chooses which satellites are tracked and what they are called. The
     catalogue number is looked up in the registry by physical-satellite number.
+    A tracked satellite the registry does not list is left out here and named by
+    dashboard_satellites_not_in_registry(): the two tables are approved by a person
+    at different times, so the dashboard must run while one is behind the other.
     """
-    registry = {row["svn"]: row for row in read_table(REGISTRY_SATELLITES_FILE)}
-    tracked = {}
-    for row in read_table(REGISTRY_DASHBOARD_SATELLITES_FILE):
-        if row["svn"] not in registry:
-            # Dropping a tracked satellite silently would be worse than stopping.
-            raise ValueError(f"{row['dashboard_name']}: {row['svn']} is in registry/"
-                             f"{REGISTRY_DASHBOARD_SATELLITES_FILE} but not in registry/{REGISTRY_SATELLITES_FILE}")
-        if registry[row["svn"]]["constellation"] == constellation:
-            tracked[row["dashboard_name"]] = int(registry[row["svn"]]["catalogue_no"])
-    return tracked
+    return {name: int(found["catalogue_no"]) for name, found in _tracked(constellation) if found}
+
+
+def dashboard_satellites_not_in_registry(constellation):
+    """Names of tracked satellites the registry does not list. Normally none; a test
+    keeps it so at the point of approval. The dashboard shows these in a notice."""
+    return [name for name, found in _tracked(constellation) if not found]

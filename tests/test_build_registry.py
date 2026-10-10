@@ -73,11 +73,23 @@ def test_dashboard_lists_did_not_change(list_name):
     assert list(now.items()) == list(before.items())
 
 
-def test_a_tracked_satellite_missing_from_the_registry_stops_the_dashboard(monkeypatch):
+def test_a_tracked_satellite_missing_from_the_registry_is_left_out_and_named(monkeypatch):
+    # The tracked list and the registry are each approved by a person, at different
+    # times. While one is behind, the dashboard runs without that satellite and says so.
     from evidence import registry_tables
     from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE
 
-    tables = {REGISTRY_DASHBOARD_SATELLITES_FILE: [{"svn": "I999", "dashboard_name": "NVS-99"}]}
+    tracked = [{"svn": "I002", "dashboard_name": "IRNSS-1B"}, {"svn": "I999", "dashboard_name": "NVS-99"}]
+    tables = {REGISTRY_DASHBOARD_SATELLITES_FILE: tracked}
     monkeypatch.setattr(registry_tables, "read_table", lambda name: tables.get(name) or read_table(name))
-    with pytest.raises(ValueError, match="NVS-99: I999"):
-        registry_tables.dashboard_satellites("NavIC")
+
+    assert registry_tables.dashboard_satellites("NavIC") == {"IRNSS-1B": 39635}
+    assert registry_tables.dashboard_satellites_not_in_registry("NavIC") == ["NVS-99"]
+    assert registry_tables.dashboard_satellites_not_in_registry("QZSS") == []
+
+
+def test_every_tracked_satellite_is_in_the_committed_registry():
+    # Strict where a person approves: a proposal that would leave a tracked satellite out fails here.
+    import config.config
+
+    assert config.config.TRACKED_NOT_IN_REGISTRY == {"NavIC": [], "QZSS": [], "BeiDou-3": []}

@@ -12,7 +12,7 @@ from skyfield.api import load
 from config.config import (
     NAVIK_SATS, NAVIK_SERVICE_REQUIREMENTS, INDIA_EXTREME_POINTS, JAPAN_KEY_POINTS, CHINA_KEY_POINTS, INACTIVE_SATELLITES, DEFAULT_PARAMS,
     QZSS_SATS, QZSS_SERVICE_REQUIREMENTS,
-    BEIDOU3_SATS, BEIDOU3_SERVICE_REQUIREMENTS,
+    BEIDOU3_SATS, BEIDOU3_SERVICE_REQUIREMENTS, TRACKED_NOT_IN_REGISTRY,
     GRAVEYARD_ORBIT_MIN, GEO_NOMINAL_ALTITUDE, GEO_ALTITUDE_TOLERANCE
 )
 from api.spacetrack_api import fetch_and_classify_satellite, fetch_multiple_tles
@@ -428,6 +428,13 @@ else:  # BeiDou-3
         st.markdown(BEIDOU3_SLOT_SWAP_NOTE)
         st.caption("See the Health Overview tab for full details.")
 
+# A tracked satellite the registry does not list is left out, and said so here, so
+# that a reader can tell "left out" from "nothing wrong". Normally there are none.
+if TRACKED_NOT_IN_REGISTRY[constellation]:
+    st.warning(f"⚠️ **Left out, awaiting a registry update:** {', '.join(TRACKED_NOT_IN_REGISTRY[constellation])}. "
+               "The dashboard tracks them, but the satellite registry does not list them yet, "
+               "so they are missing from everything below.")
+
 st.sidebar.markdown("---")
 
 # Date Range - Always visible
@@ -820,6 +827,16 @@ if st.session_state.get('analysis_complete', False):
         st.info(f"📦 **Data Source**: Bundled cache from {format_timestamp_for_display(data_timestamp)}")
     elif data_source == 'api':
         st.info(f"📡 **Data Source**: Live API fetch from {format_timestamp_for_display(data_timestamp)}")
+
+    # Tracked satellites with no orbit records in the data loaded. Without this notice
+    # they would simply be absent from every table and chart below.
+    if system_label == constellation:  # the data loaded is for the constellation selected
+        without_data = [name for name in SAT_DICT
+                        if name not in set(df_all['satellite']) and name not in graveyard_sats]
+        if without_data:
+            st.warning(f"⚠️ **No orbit data for {len(without_data)} tracked satellite(s):** {', '.join(without_data)}. "
+                       "The data loaded has no records for them in this period, "
+                       "so they are missing from every table and chart below.")
     
     # BeiDou-3 G1/G4 slot swap notification
     if constellation == "BeiDou-3":

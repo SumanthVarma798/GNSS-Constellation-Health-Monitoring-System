@@ -88,8 +88,11 @@ The report lists where this table and `satellites.csv` disagree, and picks no wi
 | `dashboard_name` | The name the dashboard shows. Orbit data, service requirements and recorded scores are all keyed by it, so changing one is a change to the dashboard, not a correction. |
 
 Row order is the order the dashboard shows them in. `config/config.py` builds its three
-satellite lists from this table. If a row names an SVN that `satellites.csv` does not
-have, the dashboard stops and says so. Adding a satellite here is the team's decision.
+satellite lists from this table. Adding a satellite here is the team's decision.
+
+This table and `satellites.csv` are each approved by a person, at different times. If a
+row names an SVN that `satellites.csv` does not have, the dashboard runs without that
+satellite and shows a notice naming it. A test fails on any proposal that would cause it.
 
 ## What these tables do not say
 
