@@ -22,6 +22,7 @@ approve. It never changes reference data by itself.
 ```mermaid
 flowchart TB
   igs["IGS satellite file"]:::built --> fetch["Archive job"]:::built
+  gcat["Catalogue of space objects"]:::built --> fetch
   more["Notices, news, orbital and signal data"]:::planned -.-> fetch
   galmon["Galmon"]:::hold -.-> fetch
   fetch --> archive[("Archive")]:::built
@@ -60,7 +61,7 @@ Solid arrows carry data today. Dotted arrows are not wired yet.
 | Archive job | Fetches each source, and keeps a raw copy only when it has changed |
 | Registry job | Rebuilds the table of satellites from the archived copy, and proposes any change to a person |
 | Archive | A private repository of raw copies, each named by its hash and never overwritten |
-| Registry | Plain-text tables saying which satellite is which |
+| Registry | Plain-text tables saying which satellite is which, and what a second source (the catalogue) says about its owner and status |
 | Query store | A small database rebuilt from the archive and the registry on every run |
 | Bar and labels | Decides whether an item is confirmed, probable or unconfirmed (section 6) |
 | Orbit health dashboard | The team's existing app. It reads which satellites to track, and their catalogue numbers, from the registry. Which are in service is still typed by hand (issue 14). |
@@ -69,8 +70,8 @@ Solid arrows carry data today. Dotted arrows are not wired yet.
 
 ```mermaid
 pie showData title Estimated hours, all guesses
-  "Built" : 43
-  "Remaining" : 177
+  "Built" : 46
+  "Remaining" : 174
 ```
 
 | Issue | What | Hours (guess) | State |
@@ -86,7 +87,7 @@ pie showData title Estimated hours, all guesses
 | 18 | Dashboard reads identity from the registry | 8 | Built |
 | 10 | Notices ledger: GPS advisories | 10 | Next candidate |
 | 13 | News, official pages, linked social posts | 14 | Waiting on a list of sources |
-| 14 | Agency and status per satellite; dashboard reads status from the registry | 3 | Open |
+| 14 | Owner and status per satellite, from a second source | 3 | Built; joining the weekly proposal is a follow-up |
 | 15 | Claim extraction | 20 | Waiting on a model and a spending ceiling |
 | 16 | Change proposals from claims | 12 | Open |
 | 6 | Internet Archive capture | 3 | Later |
@@ -161,7 +162,7 @@ flowchart TD
 |---|---|---|
 | A | The operator: advisories and official documents | none |
 | B | Intergovernmental and scientific bodies | International GNSS Service |
-| C | Specialist press | none |
+| C | Specialist press and expert catalogues | General Catalog of Artificial Space Objects (proposed) |
 | D | General news | none |
 | E, F | Social media; unattributed posts | none |
 
@@ -185,8 +186,9 @@ Produced from the code. A test fails if this table and the code disagree.
 | Constant | Value today | Set in |
 |---|---|---|
 | Documents are fetched | `30 0 * * *` (documents: once a day, 00:30 UTC = 06:00 India time) | `.github/workflows/archive.yml` |
+| Catalogues are fetched | `45 0 * * *` (catalogues: once a day, 00:45 UTC = 06:15 India time, after the catalogue's own daily rebuild) | `.github/workflows/archive.yml` |
 | The registry is rebuilt | `0 1 * * 0` (Sundays 01:00 UTC = 06:30 India time: half an hour after that day's documents fetch (see archive.yml), so the registry builds from a fresh copy) | `.github/workflows/registry-update.yml` |
-| Sources archived, by group | documents: 1, orbital: 0, news: 0 | `evidence/sources.py` |
+| Sources archived, by group | documents: 1, catalogues: 2, orbital: 0, news: 0 | `evidence/sources.py` |
 | Grades that clear the bar alone | A | `evidence/settings.py` |
 | Grades lifted by a second source | B | `evidence/settings.py` |
 | Grades lifted by our own data | B | `evidence/settings.py` |
@@ -215,18 +217,19 @@ Produced from the code. A test fails if this table and the code disagree.
 | - | Archive layout | Each copy named by its hash, never overwritten |
 | - | What the archive records | Only changes. "Last checked" is the last successful run of the job. |
 | - | Storage rule | The database keeps a reference to a document, never the document |
-| - | Cadence | Documents daily at 6 AM India time; registry on Sundays at 6:30 AM |
+| - | Cadence | Documents daily at 6 AM India time; catalogues daily at 6:15 AM; registry on Sundays at 6:30 AM. Short cadences first, accepting the storage; lengthen them as the product matures. |
+| - | Parts out of step | Anything a person approves arrives late. Every part must keep working, and say so visibly, while another part is behind. Tests are strict at the point of approval; the running system is tolerant. |
 
 ## 9. Assumptions
 
 | Assumption | Standing |
 |---|---|
-| The IGS file is right about which satellite is which | Checked once against live signals for BeiDou, 8 Oct 2026. No second source checks it routinely. |
+| The IGS file is right about which satellite is which | Checked once against live signals for BeiDou, 8 Oct 2026. The catalogue agrees on the launch designator of 292 of 294 satellites, 9 Oct 2026; the other two are not in it yet. |
 | GitHub runs scheduled jobs close to on time | One slot was missed on 9 Oct 2026. To watch. |
 | GitHub keeps a job's run history for about 90 days | Read, not verified. Beyond that, "last checked" rests on the schedule. |
 | The archive's change log is only ever added to | True by construction today. Document numbers depend on it. |
 | A source can be told apart by its website's host name | True for the one source so far. |
-| Volumes stay small enough for a git repository | A guess: a few hundred changed pages a month. |
+| Volumes stay small enough for a git repository | A guess: a few hundred changed pages a month. The catalogue alone adds about 24 MB a day before compression, perhaps 1.2 GB a year after (guess). GitHub advises keeping a repository under about 1 GB (source summary), so this cadence has roughly a year before it must change or the copies must move. |
 | Hours in section 3 | All guesses. |
 
 ## 10. Open questions
@@ -238,7 +241,9 @@ These are for the team to settle together. The next team call is Sat 17 Oct 2026
 | Confidence | Is the bar in section 6 right? In particular, should our own measurement lift a news report? | - |
 | Confidence | Are the source grades in section 6 right? | - |
 | Confidence | Should something we measured that nobody announced get its own marking, not "unconfirmed"? | - |
-| Registry | Should a second source check the registry every week? | - |
+| Registry | Should the catalogue's disagreements with the IGS file join the weekly proposal? | Follow-up to issue 14 |
+| Confidence | Is grade C right for the catalogue of space objects? | - |
+| Dashboard | Which source decides that a satellite is "inactive"? Today it is a hand-typed list; the catalogue, the IGS file and orbit data each mean something different by it. | - |
 | Sources | Which publications, subreddits and pages are on the first news list? | Issue 13 |
 | Sources | May we read galmon's public feed, and who emails its maintainer? | Issue 7 |
 | Extraction | Which language model, and what monthly spending ceiling? | Issue 15 |

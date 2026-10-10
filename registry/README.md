@@ -12,6 +12,7 @@ International GNSS Service (IGS) satellite metadata file by `scripts/build_regis
 | `satellites.csv` | the build script | One row per physical satellite |
 | `signal_ids.csv` | the build script | One row per satellite per signal-ID period |
 | `constellations.csv` | a person | Which system each SVN letter stands for |
+| `catalogue.csv` | its own build script | Owner and status of each satellite, as a second source states them |
 | `dashboard_satellites.csv` | a person | Which satellites the dashboard tracks, and its name for each |
 
 Code reads and writes these tables through `evidence/registry_tables.py`; file names
@@ -52,6 +53,33 @@ signal ID **and** the time, never on the signal ID alone.
 If the IGS file ever lists a system whose letter is not here, the build stops and
 says so. A person adds the row after looking.
 
+## catalogue.csv: one row per satellite, from a second source
+
+Built by `scripts/build_catalogue_table.py` from the General Catalog of Artificial Space
+Objects (GCAT) by Jonathan McDowell, matched to `satellites.csv` by catalogue number.
+**Do not edit by hand.** Values are kept exactly as the catalogue writes them. The
+catalogue is released under CC-BY: wherever its data is shown, cite it as
+"data from GCAT (J. McDowell, planet4589.org/space/gcat)".
+
+| Column | Meaning |
+|---|---|
+| `svn` | The satellite. |
+| `cospar_id` | International launch designator, as the catalogue gives it. Compare with the one in `satellites.csv`. |
+| `name` | The catalogue's name for the payload. |
+| `owner`, `state` | The catalogue's codes for the owner or operator, and for its country or organisation. |
+| `status` | The catalogue's status code. `O` is in orbit. `N` means its name or owner changed on some date and the later record is kept elsewhere in the catalogue. |
+| `orbit_class` | The kind of orbit early in its working life, not necessarily today's. |
+| `last_known_active` | When the catalogue's author last knew it to be active. He says he updates this patchily. |
+| `operations_ended` | When regular operations ended. `*` means it is believed to be still operating. |
+| `mission_result` | `S` success, `F` failed early, `U` unknown. |
+
+A row of blanks means the catalogue does not list that satellite yet. The two sources are
+kept by different people, so they are never guaranteed to be in step.
+
+    python scripts/build_catalogue_table.py --archive FOLDER --report DISAGREEMENTS.md
+
+The report lists where this table and `satellites.csv` disagree, and picks no winner.
+
 ## dashboard_satellites.csv: one row per satellite the dashboard tracks
 
 | Column | Meaning |
@@ -65,4 +93,6 @@ have, the dashboard stops and says so. Adding a satellite here is the team's dec
 
 ## What these tables do not say
 
-Whether a satellite is healthy or in service. The IGS file does not carry that.
+Whether a satellite is providing a navigation service. The IGS file does not carry that,
+and the catalogue's "still operating" is not the same thing: a satellite can be operated
+without providing one.

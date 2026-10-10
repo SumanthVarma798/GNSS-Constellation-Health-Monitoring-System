@@ -2,13 +2,15 @@
 import re
 from pathlib import Path
 
-from evidence.sources import ARCHIVED_SOURCES, GALMON_SATELLITES_URL, IGS_SATELLITE_METADATA_URL, archived_addresses
+from evidence.sources import (ARCHIVED_SOURCES, GALMON_SATELLITES_URL, GCAT_OBJECTS_URL, GCAT_PAYLOADS_URL,
+                              IGS_SATELLITE_METADATA_URL, archived_addresses)
 
 JOB = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "archive.yml").read_text()
 
 
 def test_addresses_by_group():
     assert archived_addresses("documents") == [IGS_SATELLITE_METADATA_URL]
+    assert archived_addresses("catalogues") == [GCAT_OBJECTS_URL, GCAT_PAYLOADS_URL]
     assert archived_addresses("news") == []
     assert archived_addresses() == [address for group in ARCHIVED_SOURCES.values() for address in group]
 
