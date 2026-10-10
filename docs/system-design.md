@@ -64,14 +64,14 @@ Solid arrows carry data today. Dotted arrows are not wired yet.
 | Registry | Plain-text tables saying which satellite is which, and what a second source (the catalogue) says about its owner and status |
 | Query store | A small database rebuilt from the archive and the registry on every run |
 | Bar and labels | Decides whether an item is confirmed, probable or unconfirmed (section 6) |
-| Orbit health dashboard | The team's existing app. It reads which satellites to track, and their catalogue numbers, from the registry. Which are in service is still typed by hand (issue 14). |
+| Orbit health dashboard | The team's existing app. It reads which satellites to track, and their catalogue numbers, from the registry, and shows a notice for any tracked satellite it has to leave out. Which are in service is still typed by hand. |
 
 ## 3. How far along
 
 ```mermaid
 pie showData title Estimated hours, all guesses
   "Built" : 46
-  "Remaining" : 174
+  "Remaining" : 180
 ```
 
 | Issue | What | Hours (guess) | State |
@@ -85,6 +85,7 @@ pie showData title Estimated hours, all guesses
 | 12 | Source table, the bar, the labels | 6 | Built |
 | 35 | This page | 2 | Built |
 | 18 | Dashboard reads identity from the registry | 8 | Built |
+| 39 | Parts out of step: keep working, and say so visibly | 6 | Part 1 of 2 in review: notices for satellites left out |
 | 10 | Notices ledger: GPS advisories | 10 | Next candidate |
 | 13 | News, official pages, linked social posts | 14 | Waiting on a list of sources |
 | 14 | Owner and status per satellite, from a second source | 3 | Built; joining the weekly proposal is a follow-up |
