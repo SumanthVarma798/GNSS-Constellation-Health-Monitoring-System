@@ -837,6 +837,12 @@ if st.session_state.get('analysis_complete', False):
             st.warning(f"⚠️ **No orbit data for {len(without_data)} tracked satellite(s):** {', '.join(without_data)}. "
                        "The data loaded has no records for them in this period, "
                        "so they are missing from every table and chart below.")
+
+    # Satellites set aside for their orbit. The notice shown when the data is loaded
+    # disappears on the next click; this one stays for as long as the results do.
+    if graveyard_sats:
+        st.info(f"⚪ **Set aside, in a graveyard orbit:** {', '.join(sorted(graveyard_sats))}. "
+                "They are tracked and have orbit data, but are left out of the scores, tables and charts below.")
     
     # BeiDou-3 G1/G4 slot swap notification
     if constellation == "BeiDou-3":
@@ -1275,6 +1281,16 @@ if st.session_state.get('analysis_complete', False):
             st.warning(f"Could not calculate longitude deviations: {e}")
         
         
+        # A satellite with a target longitude but no current orbit record is scored on four
+        # parts, not five. Said here so that its score is not read as like for like.
+        if 'Lon Deviation Score' in health_df.columns and 'Designated Lon (°)' in health_df.columns:
+            _no_lon_score = pd.to_numeric(health_df['Lon Deviation Score'], errors='coerce').isna()
+            without_longitude = health_df.loc[_no_lon_score & (health_df['Designated Lon (°)'] != "N/A"), 'Satellite'].tolist()
+            if without_longitude:
+                st.warning(f"⚠️ **Scored without the longitude part:** {', '.join(without_longitude)}. "
+                           "There is no current orbit record for them, so their position against their slot "
+                           "could not be worked out. Their overall score uses the other four parts only.")
+
         # Health summary metrics
         st.markdown("### 📊 Overall Health Summary")
         col1, col2, col3, col4 = st.columns(4)

@@ -90,6 +90,11 @@ The report lists where this table and `satellites.csv` disagree, and picks no wi
 Row order is the order the dashboard shows them in. `config/config.py` builds its three
 satellite lists from this table. Adding a satellite here is the team's decision.
 
+**Adding or removing a row can move other satellites' scores**, even when the new satellite
+has no orbit data: the dashboard takes the size of a constellation to be the number of
+rows here. The recorded-score tests fail on any proposal that moves a score, so a proposal
+to add or remove a satellite must say which scores move, and re-record them on approval.
+
 This table and `satellites.csv` are each approved by a person, at different times. If a
 row names an SVN that `satellites.csv` does not have, the dashboard runs without that
 satellite and shows a notice naming it. A test fails on any proposal that would cause it.
