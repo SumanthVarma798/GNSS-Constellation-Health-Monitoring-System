@@ -186,7 +186,7 @@ Produced from the code. A test fails if this table and the code disagree.
 | Constant | Value today | Set in |
 |---|---|---|
 | Documents are fetched | `30 0 * * *` (documents: once a day, 00:30 UTC = 06:00 India time) | `.github/workflows/archive.yml` |
-| Catalogues are fetched | `45 0 * * 0` (catalogues: Sundays 00:45 UTC = 06:15 India time, before the registry is rebuilt) | `.github/workflows/archive.yml` |
+| Catalogues are fetched | `45 0 * * *` (catalogues: once a day, 00:45 UTC = 06:15 India time, after the catalogue's own daily rebuild) | `.github/workflows/archive.yml` |
 | The registry is rebuilt | `0 1 * * 0` (Sundays 01:00 UTC = 06:30 India time: half an hour after that day's documents fetch (see archive.yml), so the registry builds from a fresh copy) | `.github/workflows/registry-update.yml` |
 | Sources archived, by group | documents: 1, catalogues: 2, orbital: 0, news: 0 | `evidence/sources.py` |
 | Grades that clear the bar alone | A | `evidence/settings.py` |
@@ -217,7 +217,7 @@ Produced from the code. A test fails if this table and the code disagree.
 | - | Archive layout | Each copy named by its hash, never overwritten |
 | - | What the archive records | Only changes. "Last checked" is the last successful run of the job. |
 | - | Storage rule | The database keeps a reference to a document, never the document |
-| - | Cadence | Documents daily at 6 AM India time; catalogues on Sundays at 6:15 AM; registry on Sundays at 6:30 AM |
+| - | Cadence | Documents daily at 6 AM India time; catalogues daily at 6:15 AM; registry on Sundays at 6:30 AM. Short cadences first, accepting the storage; lengthen them as the product matures. |
 | - | Parts out of step | Anything a person approves arrives late. Every part must keep working, and say so visibly, while another part is behind. Tests are strict at the point of approval; the running system is tolerant. |
 
 ## 9. Assumptions
@@ -229,7 +229,7 @@ Produced from the code. A test fails if this table and the code disagree.
 | GitHub keeps a job's run history for about 90 days | Read, not verified. Beyond that, "last checked" rests on the schedule. |
 | The archive's change log is only ever added to | True by construction today. Document numbers depend on it. |
 | A source can be told apart by its website's host name | True for the one source so far. |
-| Volumes stay small enough for a git repository | A guess: a few hundred changed pages a month. The catalogue alone adds about 24 MB a week before compression, perhaps 180 MB a year after (guess). |
+| Volumes stay small enough for a git repository | A guess: a few hundred changed pages a month. The catalogue alone adds about 24 MB a day before compression, perhaps 1.2 GB a year after (guess). GitHub advises keeping a repository under about 1 GB (source summary), so this cadence has roughly a year before it must change or the copies must move. |
 | Hours in section 3 | All guesses. |
 
 ## 10. Open questions

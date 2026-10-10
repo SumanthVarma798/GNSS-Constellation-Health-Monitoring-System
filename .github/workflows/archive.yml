@@ -13,7 +13,7 @@ name: Archive sources
 on:
   schedule:
     - cron: '30 0 * * *'  # documents: once a day, 00:30 UTC = 06:00 India time
-    - cron: '45 0 * * 0'  # catalogues: Sundays 00:45 UTC = 06:15 India time, before the registry is rebuilt
+    - cron: '45 0 * * *'  # catalogues: once a day, 00:45 UTC = 06:15 India time, after the catalogue's own daily rebuild
   workflow_dispatch:
     inputs:
       group:
@@ -57,7 +57,7 @@ jobs:
         run: |
           case "$SCHEDULE" in
             '30 0 * * *') group=documents ;;
-            '45 0 * * 0') group=catalogues ;;
+            '45 0 * * *') group=catalogues ;;
             '') group="${CHOSEN:-all}" ;;
             *) echo "No group is assigned to the schedule '$SCHEDULE'. Add it to this step."; exit 1 ;;
           esac

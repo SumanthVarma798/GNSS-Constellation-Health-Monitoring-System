@@ -29,7 +29,8 @@ ARCHIVED_SOURCES = {
         IGS_SATELLITE_METADATA_URL,
     ],
     # Whole catalogues. Large, and regenerated daily with a new date line, so every
-    # fetch is a new copy. Fetched weekly to keep the archive small.
+    # fetch is a new copy: about 24 MB a day. Fetched daily for now, by decision;
+    # make it less often in archive.yml when the archive's size starts to matter.
     "catalogues": [
         GCAT_OBJECTS_URL,
         GCAT_PAYLOADS_URL,
