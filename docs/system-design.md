@@ -1,6 +1,6 @@
 # GNSS evidence pipeline: system design
 
-**As of 9 Oct 2026.** The one page that says what the plan is, what is built, what remains,
+**As of 10 Oct 2026.** The one page that says what the plan is, what is built, what remains,
 and what is assumed. A pull request that changes any of this changes this page too.
 
 GNSS is Global Navigation Satellite System. IGS is the International GNSS Service.
@@ -70,8 +70,8 @@ Solid arrows carry data today. Dotted arrows are not wired yet.
 
 ```mermaid
 pie showData title Estimated hours, all guesses
-  "Built" : 46
-  "Remaining" : 180
+  "Built" : 50
+  "Remaining" : 189
 ```
 
 | Issue | What | Hours (guess) | State |
@@ -85,8 +85,10 @@ pie showData title Estimated hours, all guesses
 | 12 | Source table, the bar, the labels | 6 | Built |
 | 35 | This page | 2 | Built |
 | 18 | Dashboard reads identity from the registry | 8 | Built |
-| 39 | Parts out of step: keep working, and say so visibly | 6 | Part 1 built. Part 2 of 3 in review: notices for satellites set aside or partly scored. Part 3, dates and a staleness check, waits on issue 42. |
-| 42 | Decide where scheduled jobs run and where raw copies are kept | not sized | A decision to take; options and a recommendation are in the issue |
+| 39 | Parts out of step: keep working, and say so visibly | 6 | Parts 1 and 2 built (about 4 hours): notices for every satellite left out, set aside or partly scored. Part 3, dates and a staleness check, is open. |
+| 42 | Decide where scheduled jobs run and where raw copies are kept | not sized | Scheduler decided. Where it runs is open: local for now, unless a free host is chosen. |
+| 44 | Scheduled jobs in one container image, run by Kubernetes CronJob locally | 8 | Next candidate. Needs Kubernetes switched on in Docker Desktop. |
+| 45 | Archive writes through one interface: a folder today, an object store later | 5 | Open |
 | 10 | Notices ledger: GPS advisories | 10 | Next candidate |
 | 13 | News, official pages, linked social posts | 14 | Waiting on a list of sources |
 | 14 | Owner and status per satellite, from a second source | 3 | Built; joining the weekly proposal is a follow-up |
@@ -221,7 +223,8 @@ Produced from the code. A test fails if this table and the code disagree.
 | - | Storage rule | The database keeps a reference to a document, never the document |
 | - | Cadence | Documents daily at 6 AM India time; catalogues daily at 6:15 AM; registry on Sundays at 6:30 AM. Short cadences first, accepting the storage; lengthen them as the product matures. |
 | - | Changes on the dashboard | Always shown visually, with colour. If there is too much to show, add filters. A satellite is added or removed only with approval and a traceable record. |
-| - | GitHub-only is temporary | Scheduled jobs and raw copies will move to a hosted scheduler and a storage service (issue 42). Code, registry tables and approvals stay on GitHub. |
+| - | GitHub-only is temporary | Scheduled jobs and raw copies will move off GitHub (issue 42). Code, registry tables and approvals stay on GitHub. |
+| - | Scheduler | Kubernetes CronJob first; Argo Workflows when a job first needs steps that wait on each other or on a person. On a local cluster for now, with GitHub's timer still running, until a host is chosen. |
 | - | Parts out of step | Anything a person approves arrives late. Every part must keep working, and say so visibly, while another part is behind. Tests are strict at the point of approval; the running system is tolerant. |
 
 ## 9. Assumptions
@@ -229,7 +232,7 @@ Produced from the code. A test fails if this table and the code disagree.
 | Assumption | Standing |
 |---|---|
 | The IGS file is right about which satellite is which | Checked once against live signals for BeiDou, 8 Oct 2026. The catalogue agrees on the launch designator of 292 of 294 satellites, 9 Oct 2026; the other two are not in it yet. |
-| GitHub runs scheduled jobs close to on time | **Not holding.** No scheduled run has ever started in this repository (checked 10 Oct 2026); started by hand, the jobs succeed. Cause not known. See issues 39 and 42. |
+| GitHub runs scheduled jobs close to on time | **Not holding.** The first scheduled run started 5 hours 47 minutes late: the documents fetch due at 00:30 UTC ran at 06:17 UTC on 10 Oct 2026 (checked). Late, not broken. A daily fetch tolerates that; nothing may depend on two jobs running in a set order. |
 | GitHub keeps a job's run history for about 90 days | Read, not verified. Beyond that, "last checked" rests on the schedule. |
 | The archive's change log is only ever added to | True by construction today. Document numbers depend on it. |
 | A source can be told apart by its website's host name | True for the one source so far. |
@@ -247,7 +250,7 @@ These are for the team to settle together. The next team call is Sat 17 Oct 2026
 | Confidence | Should something we measured that nobody announced get its own marking, not "unconfirmed"? | - |
 | Registry | Should the catalogue's disagreements with the IGS file join the weekly proposal? | Follow-up to issue 14 |
 | Confidence | Is grade C right for the catalogue of space objects? | - |
-| Running | Where will the scheduled jobs run, and where will raw copies be kept? | Issue 42, and part 3 of issue 39 |
+| Running | Which host will the scheduled jobs run on once they leave this machine, and which store will hold raw copies? | Issues 42 and 45 |
 | Dashboard | Should the size of a constellation be the number of satellites tracked, or the number with data? Today it is the number tracked, so tracking three more NavIC satellites moves IRNSS-1G from healthy to fair. | - |
 | Dashboard | Which source decides that a satellite is "inactive"? Today it is a hand-typed list; the catalogue, the IGS file and orbit data each mean something different by it. | - |
 | Sources | Which publications, subreddits and pages are on the first news list? | Issue 13 |
