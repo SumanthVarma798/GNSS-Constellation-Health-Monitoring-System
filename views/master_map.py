@@ -1,6 +1,6 @@
 """The master map page: which spacecraft is which, under every identifier.
 
-Run it alone with: streamlit run pages/master_map.py
+Run it alone with: streamlit run views/master_map.py
 It only composes parts: the theme, ui.surfaces, the figures and Streamlit widgets.
 """
 import sys
@@ -31,11 +31,12 @@ def _disagrees(line):
 
 def _table_row(line, satellite, entry, names):
     svn = line["svn"]
+    # The two readings come early: they are what the page is about, and must not be cut off.
     return {"Master ID": svn, "Name": names[svn], "Constellation": line["constellation"],
-            SCHEME_NORAD: satellite["catalogue_no"], SCHEME_COSPAR: satellite["cospar_id"],
+            "Identity reading": line["identity"], "Service reading": line["service"],
             SCHEME_SIGNAL_ID: satellite["signal_id_now"], "Orbital slot": satellite["slot"],
-            "Owner": entry.get("owner", ""), "Identity reading": line["identity"],
-            "Service reading": line["service"]}
+            "Owner": entry.get("owner", ""), SCHEME_NORAD: satellite["catalogue_no"],
+            SCHEME_COSPAR: satellite["cospar_id"]}
 
 
 def _show_spacecraft(svn, names, data, today):

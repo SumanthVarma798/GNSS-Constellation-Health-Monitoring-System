@@ -12,7 +12,7 @@ from evidence.registry_tables import read_table
 from evidence.settings import (IDENTITY_DIFFER, REGISTRY_CATALOGUE_FILE, REGISTRY_DASHBOARD_SATELLITES_FILE,
                                REGISTRY_SATELLITES_FILE, SERVICE_DISAGREE)
 
-PAGE = str(Path(__file__).resolve().parent.parent / "pages" / "master_map.py")
+PAGE = str(Path(__file__).resolve().parent.parent / "views" / "master_map.py")
 LINES = agreement(read_table(REGISTRY_SATELLITES_FILE), read_table(REGISTRY_CATALOGUE_FILE))
 TRACKED = {row["svn"] for row in read_table(REGISTRY_DASHBOARD_SATELLITES_FILE)}
 NOTICE = "No spacecraft match these filters"
