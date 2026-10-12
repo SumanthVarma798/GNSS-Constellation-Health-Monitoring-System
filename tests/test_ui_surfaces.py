@@ -77,3 +77,17 @@ def test_theme_takes_its_colours_from_the_palette():
 def test_stylesheet_rules_use_variables_not_colours():
     rules = theme_css().split("}", 1)[1]  # everything after the :root block
     assert not re.findall(r"#[0-9a-fA-F]{3,8}\b", rules)
+
+
+def test_the_framework_theme_file_matches_the_palette():
+    # .streamlit/config.toml cannot import Python, so its colours are typed again there.
+    # This keeps the two from drifting apart.
+    import tomllib
+    from pathlib import Path
+
+    from ui import palette
+
+    typed = tomllib.loads((Path(__file__).resolve().parent.parent / ".streamlit" / "config.toml").read_text())["theme"]
+
+    assert typed == {"base": "dark", "primaryColor": palette.ACCENT, "backgroundColor": palette.PLATFORM,
+                     "secondaryBackgroundColor": palette.WELL, "textColor": palette.INK}
