@@ -58,7 +58,7 @@ def feed_line(feed_name, history=HISTORY, **given):
     ([tracked("X1", "Dashboard X")], [entry("X1")], "Launched 2018; Note Name", "Dashboard X"),
     ([], [entry("X1")], "Launched 2018; Note Name", "Beidou-3 G1Q"),
     ([], [blank_entry("X1")], "Launched 2018; Note Name", "Note Name"),
-    ([], [], "Launched 2018; first name; Last Name ", "Last Name"),
+    ([], [], "Launched 2025-01-29; NVS-02; GTO", "NVS-02"),  # the name follows the first semicolon, not the last
     ([], [], "Launched 2018", "X1"),
     ([], [], "Launched 2018; ", "X1"),
 ])

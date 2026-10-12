@@ -50,7 +50,7 @@ def _name(svn, satellite, entry, tracked_row):
     if entry and entry["name"]:
         return entry["name"]
     if satellite and ";" in satellite["note"]:
-        named = satellite["note"].rsplit(";", 1)[1].strip()
+        named = satellite["note"].split(";")[1].strip()
         if named:
             return named
     return svn
@@ -58,7 +58,7 @@ def _name(svn, satellite, entry, tracked_row):
 
 def display_name(svn, satellites, catalogue, tracked):
     """The name to show for a spacecraft: the dashboard's own name, else the catalogue's,
-    else the part of the IGS note after its last semicolon, else the SVN itself."""
+    else the part of the IGS note right after its first semicolon, else the SVN itself."""
     return _name(svn, _by_svn(satellites).get(svn), _by_svn(catalogue).get(svn), _by_svn(tracked).get(svn))
 
 
