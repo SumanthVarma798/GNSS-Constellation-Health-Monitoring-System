@@ -1,0 +1,117 @@
+/* The dashboard's look: dark and neumorphic, after CRED's Synth, written by hand.
+   One platform colour, a light shadow up and to the left, a dark one down and to the right.
+   Variables are defined in ui/theme.py from ui/palette.py. This file holds rules only. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* ---- page ---- */
+html, body, .stApp, [data-testid="stApp"] { background: var(--platform); color: var(--ink); }
+[data-testid="stHeader"] { background: var(--platform); }
+[data-testid="stMain"], [data-testid="stMain"] p, [data-testid="stMain"] li, [data-testid="stMarkdownContainer"] { color: var(--ink); }
+[data-testid="stMain"] .block-container, [data-testid="stMainBlockContainer"] { max-width: 1120px; padding: 32px 20px 90px; }
+h1, h2, h3, h4, h5, h6, [data-testid="stHeading"] { color: var(--ink); letter-spacing: -.01em; }
+h1 { font-size: 30px; line-height: 1.15; }
+h2 { font-size: 22px; }
+h3 { font-size: 18px; }
+a { color: var(--accent); }
+hr { border-color: var(--edge); }
+code { color: var(--accent); background: var(--well); border-radius: 8px; }
+[data-testid="stCaptionContainer"], .stCaption, small { color: var(--muted); }
+
+/* ---- sidebar ---- */
+[data-testid="stSidebar"] { background: var(--platform); border-right: 1px solid var(--edge); box-shadow: var(--raised-sm); }
+[data-testid="stSidebar"] * { color: var(--ink); }
+
+/* ---- buttons: raised, pressed on click, visible ring on keyboard focus ---- */
+[data-testid="stButton"] button, [data-testid="stDownloadButton"] button, [data-testid="stFormSubmitButton"] button {
+  background: var(--platform); color: var(--ink); border: 1px solid var(--edge); border-radius: 999px;
+  box-shadow: var(--raised-sm); padding: 7px 20px; font-weight: 600;
+}
+[data-testid="stButton"] button:hover, [data-testid="stDownloadButton"] button:hover { color: var(--accent); border-color: var(--accent); }
+[data-testid="stButton"] button:active, [data-testid="stDownloadButton"] button:active, [data-testid="stFormSubmitButton"] button:active {
+  box-shadow: var(--pressed); background: var(--well); color: var(--accent); transform: translateY(1px);
+}
+button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+[data-testid="stButton"] button:focus:not(:focus-visible) { box-shadow: var(--raised-sm); }
+
+/* ---- tabs ---- */
+[data-testid="stTabs"] [role="tablist"] { gap: 10px; border-bottom: 0; padding: 6px 4px 12px; }
+[data-testid="stTabs"] [role="tab"] {
+  color: var(--muted); background: var(--platform); border: 1px solid var(--edge); border-radius: 999px;
+  box-shadow: var(--raised-sm); padding: 7px 16px; height: auto;
+}
+[data-testid="stTabs"] [role="tab"][aria-selected="true"], [data-testid="stTabs"] [role="tab"][aria-selected="true"] p { color: var(--accent); background: var(--well); box-shadow: var(--pressed); }
+[data-testid="stTabs"] [role="tab"] p { color: inherit; }
+[data-testid="stTabs"] [data-baseweb="tab-highlight"], [data-testid="stTabs"] [data-baseweb="tab-border"] { display: none; }
+
+/* ---- metrics ---- */
+[data-testid="stMetric"] { background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); padding: 16px 20px; }
+[data-testid="stMetricLabel"], [data-testid="stMetricLabel"] p { color: var(--muted); }
+[data-testid="stMetricValue"] { color: var(--ink); font-weight: 700; }
+
+/* ---- expanders ---- */
+[data-testid="stExpander"] { background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised-sm); overflow: hidden; }
+[data-testid="stExpander"] details, [data-testid="stExpander"] summary { background: transparent; color: var(--ink); border: 0; }
+[data-testid="stExpander"] summary:hover { color: var(--accent); }
+[data-testid="stExpander"] details[open] > summary { box-shadow: var(--pressed); background: var(--well); }
+
+/* ---- alerts: Streamlit paints the colour on an inner element, so the rules go there too ---- */
+[data-testid="stAlert"], [data-testid="stAlert"] > div { background: transparent; color: var(--ink); }
+[data-testid="stAlert"] [data-baseweb="notification"] { background: var(--well); background-color: var(--well); color: var(--ink); }
+[data-testid="stAlert"] [data-baseweb="notification"] { border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--pressed); }
+[data-testid="stAlert"] p { color: var(--ink); }
+[data-testid="stAlert"] [data-baseweb="notification"]:has([data-testid="stAlertContentWarning"]) { border-left: 4px solid var(--warn); }
+[data-testid="stAlert"] [data-baseweb="notification"]:has([data-testid="stAlertContentInfo"]) { border-left: 4px solid var(--accent); }
+[data-testid="stAlert"] [data-baseweb="notification"]:has([data-testid="stAlertContentError"]) { border-left: 4px solid var(--bad); }
+[data-testid="stAlert"] [data-baseweb="notification"]:has([data-testid="stAlertContentSuccess"]) { border-left: 4px solid var(--ok); }
+
+/* ---- text inputs and select boxes: pressed into the page, visible edge, ring on focus ---- */
+[data-testid="stTextInput"] label, [data-testid="stSelectbox"] label, [data-testid="stWidgetLabel"] { color: var(--muted); }
+[data-testid="stTextInput"] [data-baseweb="input"], [data-testid="stTextInput"] [data-baseweb="base-input"],
+[data-testid="stSelectbox"] [data-baseweb="select"] > div {
+  background: var(--well); border: 1px solid var(--edge); border-radius: 14px; box-shadow: var(--pressed); color: var(--ink);
+}
+[data-testid="stTextInput"] input, [data-testid="stSelectbox"] input, [data-testid="stSelectbox"] [data-baseweb="select"] div { color: var(--ink); background: transparent; }
+[data-testid="stTextInput"] [data-baseweb="input"]:focus-within, [data-testid="stSelectbox"] [data-baseweb="select"] > div:focus-within {
+  outline: 2px solid var(--accent); outline-offset: 2px; border-color: var(--accent);
+}
+[data-baseweb="popover"] ul, [data-baseweb="menu"] { background: var(--platform); color: var(--ink); border-radius: 14px; }
+[data-baseweb="popover"] li:hover, [data-baseweb="popover"] li[aria-selected="true"] { background: var(--well); color: var(--accent); }
+
+/* ---- tables ---- */
+[data-testid="stDataFrame"] { border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--pressed); overflow: hidden; }
+
+/* ---- our own parts ---- */
+.small { font-size: 14px; color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; }
+
+.raised { background: var(--platform); border-radius: var(--r); box-shadow: var(--raised); border: 1px solid var(--edge); padding: 18px 20px; color: var(--ink); }
+.well { background: var(--well); border-radius: var(--r); box-shadow: var(--pressed); border: 1px solid transparent; padding: 17px 19px; color: var(--ink); }
+.part-title { font-size: 16px; font-weight: 600; margin: 0 0 6px; color: var(--ink); }
+
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 3px 11px; border-radius: 999px; box-shadow: var(--pressed); background: var(--well); white-space: nowrap; }
+.chip.ok { color: var(--ok); } .chip.warn { color: var(--warn); } .chip.bad { color: var(--bad); } .chip.idle { color: var(--idle); } .chip.accent { color: var(--accent); }
+
+.notice { background: var(--well); color: var(--ink); border-radius: var(--r); box-shadow: var(--pressed); padding: 12px 18px; border-left: 4px solid var(--idle); }
+.notice.ok { border-left-color: var(--ok); } .notice.warn { border-left-color: var(--warn); } .notice.bad { border-left-color: var(--bad); }
+.notice.idle { border-left-color: var(--idle); } .notice.accent { border-left-color: var(--accent); }
+
+.big { font-size: 34px; font-weight: 700; line-height: 1.05; color: var(--ink); }
+.big-number .small { margin-top: 4px; }
+
+/* hover legend: collapsed until the pointer is over it or it holds keyboard focus */
+.legend { position: relative; display: inline-block; font-size: 14px; color: var(--ink); }
+.legend-label { display: inline-block; padding: 6px 16px; border-radius: 999px; border: 1px solid var(--edge); box-shadow: var(--raised-sm); background: var(--platform); cursor: default; }
+.legend:hover .legend-label, .legend:focus-within .legend-label { box-shadow: var(--pressed); background: var(--well); color: var(--accent); }
+.legend ul { display: none; position: absolute; z-index: 20; left: 0; top: calc(100% + 8px); min-width: 220px; margin: 0; padding: 12px 16px; list-style: none; background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); }
+.legend:hover ul, .legend:focus-within ul { display: block; }
+.legend li { display: flex; align-items: center; gap: 10px; margin: 6px 0; white-space: nowrap; }
+.swatch { display: inline-block; width: 14px; height: 14px; border-radius: 999px; box-shadow: var(--raised-sm); border: 1px solid var(--edge); flex: none; }
+
+/* ---- calm motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  [data-testid="stButton"] button:active { transform: none; }
+}
