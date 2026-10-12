@@ -32,7 +32,8 @@ IDLE = "#8d96a5"
 SLOT_IN = "in slot"
 SLOT_OFF = "off its slot"
 SLOT_LEFT = "left its slot"
-SLOT_COLOURS = {SLOT_IN: OK, SLOT_OFF: WARN, SLOT_LEFT: BAD}
+SLOT_UNKNOWN = "position not known"
+SLOT_COLOURS = {SLOT_IN: OK, SLOT_OFF: WARN, SLOT_LEFT: BAD, SLOT_UNKNOWN: IDLE}
 SLOT_EMPTY = BAD       # a slot whose own satellite is not on it
 
 FONT = '"Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif'
