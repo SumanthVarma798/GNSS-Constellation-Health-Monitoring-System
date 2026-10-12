@@ -25,6 +25,7 @@ ROW_PX = 16                       # height of one row of labels
 CHAR_PX = 6.8                     # rough width of one character at the label size
 LABEL_SIZE = 12
 EDGE_PX = 4
+EMPTY_STATES = (palette.SLOT_OFF, palette.SLOT_LEFT)   # the satellite is known not to be on its slot
 
 
 def _lon_text(lon):
@@ -72,19 +73,29 @@ def _text(x, y, content, fill, size=LABEL_SIZE, anchor="middle"):
 
 
 def _slot_groups(rows):
-    """One entry per slot longitude: {lon, owners: [(name, empty)]}, west to east."""
+    """One entry per slot longitude: {lon, owners: [(name, state)]}, west to east."""
     groups = {}
     for row in rows:
         if row["slot_lon"] is not None:
             owners = groups.setdefault(round(row["slot_lon"], 2), [])
-            owners.append((row["name"], row["state"] != palette.SLOT_IN))
+            owners.append((row["name"], row["state"]))
     return [{"lon": lon, "owners": owners} for lon, owners in sorted(groups.items())]
 
 
+def _owners_in(group, states):
+    return [name for name, state in group["owners"] if state in states]
+
+
 def _slot_label(group):
-    empty = [name for name, is_empty in group["owners"] if is_empty]
+    """The longitude, then who the slot belongs to if its satellite is gone or not known."""
+    empty = _owners_in(group, EMPTY_STATES)
+    unknown = _owners_in(group, (palette.SLOT_UNKNOWN,))
     text = f"{group['lon']:g}"
-    return f"{text}, empty slot of {' and '.join(empty)}" if empty else text
+    if empty:
+        text += f", empty slot of {' and '.join(empty)}"
+    if unknown:
+        text += f", slot of {' and '.join(unknown)}, position not known"
+    return text
 
 
 def _satellite_label(group):
@@ -107,12 +118,29 @@ def _note_for(row, low, high):
     return None
 
 
-def _ring(cx, cy, radius, empty, group_lon, owner, title):
-    colour = palette.SLOT_EMPTY if empty else palette.ACCENT
+def _ring_title(lon, owner, state):
+    if state == palette.SLOT_UNKNOWN:
+        return f"Slot {_lon_text(lon)}: belongs to {owner}, whose position is not known"
+    if state in EMPTY_STATES:
+        return f"Slot {_lon_text(lon)}: empty, it belongs to {owner}"
+    return f"Slot {_lon_text(lon)}: {owner} is on it"
+
+
+def _ring(cx, cy, radius, state, group_lon, owner, title):
+    """A hollow ring for a slot: dashed and in the empty colour, in the idle colour if its owner is not known, else blue."""
+    empty, unknown = state in EMPTY_STATES, state == palette.SLOT_UNKNOWN
+    colour = palette.SLOT_EMPTY if empty else palette.SLOT_COLOURS[state] if unknown else palette.ACCENT
     dashes = ' stroke-dasharray="4 3"' if empty else ""
     return (f'<circle cx="{cx:.1f}" cy="{cy}" r="{radius}" fill="none" stroke="{colour}" stroke-width="2.5"{dashes} '
-            f'data-slot-lon="{group_lon:g}" data-owner="{escape(owner)}" data-empty="{str(empty).lower()}">'
-            f'<title>{escape(title)}</title></circle>')
+            f'data-slot-lon="{group_lon:g}" data-owner="{escape(owner)}" data-empty="{str(empty).lower()}" '
+            f'data-unknown="{str(unknown).lower()}"><title>{escape(title)}</title></circle>')
+
+
+def _group_colour(group):
+    states = {state for _, state in group["owners"]}
+    if states & set(EMPTY_STATES):
+        return palette.SLOT_EMPTY
+    return palette.SLOT_COLOURS[palette.SLOT_UNKNOWN] if palette.SLOT_UNKNOWN in states else palette.MUTED
 
 
 def _aria(rows, low, high):
@@ -146,12 +174,11 @@ def slot_belt(rows, caption=""):
 
     ring_radius = {}
     for group, (lx, row_no, text) in zip(groups, slot_labels):
-        empty = any(is_empty for _, is_empty in group["owners"])
-        out.append(_text(lx, ideal_y - 24 - ROW_PX * row_no, text, palette.SLOT_EMPTY if empty else palette.MUTED))
-        for k, (owner, is_empty) in enumerate(group["owners"]):
+        out.append(_text(lx, ideal_y - 24 - ROW_PX * row_no, text, _group_colour(group)))
+        for k, (owner, state) in enumerate(group["owners"]):
             ring_radius[owner] = RING_RADIUS + 4 * k
-            title = f"Slot {_lon_text(group['lon'])}: " + (f"empty, it belongs to {owner}" if is_empty else f"{owner} is on it")
-            out.append(_ring(x_of(group["lon"]), ideal_y, ring_radius[owner], is_empty, group["lon"], owner, title))
+            out.append(_ring(x_of(group["lon"]), ideal_y, ring_radius[owner], state, group["lon"], owner,
+                             _ring_title(group["lon"], owner, state)))
 
     out += [_tie(row, x_of, ring_radius, ideal_y, actual_y) for row in visible if row["slot_lon"] is not None]
     out += [_dot(row, x_of(row["actual_lon"]), actual_y) for row in visible]
@@ -197,12 +224,17 @@ def _dot(row, x, actual_y):
             f'<title>{escape(state_words(row))}</title></circle>')
 
 
+def _note_colour(row):
+    """The idle colour for a satellite whose position is not known, the empty colour otherwise."""
+    return palette.SLOT_COLOURS[palette.SLOT_UNKNOWN] if row["state"] == palette.SLOT_UNKNOWN else palette.SLOT_EMPTY
+
+
 def _notes(rows, low, high, x_of, ideal_y):
     """A note beside each empty slot whose satellite is gone, not known, or off the picture."""
-    wanted = [(x_of(r["slot_lon"]), note) for r in rows
+    wanted = [(x_of(r["slot_lon"]), note, _note_colour(r)) for r in rows
               if r["slot_lon"] is not None and (note := _note_for(r, low, high))]
     boxes, anchors = [], []
-    for x, note in wanted:
+    for x, note, _ in wanted:
         width = len(note) * CHAR_PX
         # Beside the slot, on the side with more room, so the note stays clear of the lines.
         east = x < (PLOT_LEFT + PLOT_RIGHT) / 2
@@ -210,5 +242,5 @@ def _notes(rows, low, high, x_of, ideal_y):
         anchors.append("start" if east else "end")
     row_numbers, _ = _stack(boxes)
     return [_text(left if anchor == "start" else left + width, ideal_y + 36 + ROW_PX * row_no, note,
-                  palette.SLOT_EMPTY, anchor=anchor)
-            for (left, width), anchor, row_no, (_, note) in zip(boxes, anchors, row_numbers, wanted)]
+                  colour, anchor=anchor)
+            for (left, width), anchor, row_no, (_, note, colour) in zip(boxes, anchors, row_numbers, wanted)]

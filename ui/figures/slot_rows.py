@@ -79,14 +79,24 @@ def slot_rows(health_rows, set_aside=()):
     return rows
 
 
+def _slots_with_owner_in(rows, states):
+    return [{"slot_lon": row["slot_lon"], "owner": row["name"]}
+            for row in rows if row["slot_lon"] is not None and row["state"] in states]
+
+
 def empty_slots(rows):
-    """Slots to draw as empty: one per row that has a slot but is not on it.
+    """Slots to draw as empty: one per row whose satellite is known to be off its slot or to have left.
 
     Even if another satellite happens to sit on the spot, the slot is empty because
-    its own satellite is not there.
+    its own satellite is not there. A satellite whose position is not known does not
+    make its slot empty: see unknown_slots.
     """
-    return [{"slot_lon": row["slot_lon"], "owner": row["name"]}
-            for row in rows if row["slot_lon"] is not None and row["state"] != palette.SLOT_IN]
+    return _slots_with_owner_in(rows, (palette.SLOT_OFF, palette.SLOT_LEFT))
+
+
+def unknown_slots(rows):
+    """Slots whose own satellite has no current position, so nobody can say whether it is there."""
+    return _slots_with_owner_in(rows, (palette.SLOT_UNKNOWN,))
 
 
 def deviation_of(row):
