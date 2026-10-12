@@ -64,14 +64,14 @@ Solid arrows carry data today. Dotted arrows are not wired yet.
 | Registry | Plain-text tables saying which satellite is which, and what a second source (the catalogue) says about its owner and status. The master map page shows it: every identifier of a spacecraft resolved to one master ID, and who held each signal ID when. |
 | Query store | A small database rebuilt from the archive and the registry on every run |
 | Bar and labels | Decides whether an item is confirmed, probable or unconfirmed (section 6) |
-| Orbit health dashboard | The team's existing app. It reads which satellites to track, and their catalogue numbers, from the registry, and shows a notice for any tracked satellite it has to leave out. Which are in service is still typed by hand. |
+| Orbit health dashboard | The team's existing app. It reads which satellites to track, and their catalogue numbers, from the registry, and shows a notice for any tracked satellite it has to leave out. It draws each satellite against its own slot: flat, in 3D, and as a bar of score parts. Which are in service is still typed by hand. |
 
 ## 3. How far along
 
 ```mermaid
 pie showData title Estimated hours, all guesses
-  "Built" : 64
-  "Remaining" : 206
+  "Built" : 73
+  "Remaining" : 197
 ```
 
 | Issue | What | Hours (guess) | State |
@@ -92,7 +92,7 @@ pie showData title Estimated hours, all guesses
 | 47 | Demo for the team call, Sat 17 Oct 2026 | tracker | Items 48 to 51, and 23 |
 | 48 | Demo A. The look: one theme and reusable parts | 6 | Built |
 | 49 | Demo B. Master map page: many identifiers to one master ID | 8 | Built |
-| 50 | Demo C. Orbit pictures: slot belt, 3D view, score parts | 9 | Being built |
+| 50 | Demo C. Orbit pictures: slot belt, 3D view, score parts | 9 | Built |
 | 51 | Demo D. Menu, How it works page, new look on the existing tabs | 6 | Open; needs 48, 49 and 50 |
 | 10 | Notices ledger: GPS advisories | 10 | Open, after the call |
 | 13 | News, official pages, linked social posts | 14 | Waiting on a list of sources |
