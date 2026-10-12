@@ -3,6 +3,7 @@
 Text passed in is escaped, because titles and captions come from outside files.
 Only parameters whose names end in _html are trusted to be markup already.
 """
+import base64
 import re
 from html import escape
 
@@ -64,6 +65,28 @@ def hover_legend(entries, label="Legend"):
         f'<div class="legend" tabindex="0" role="group" aria-label="{escape(label, quote=True)}">'
         f'<span class="legend-label">{escape(label)}</span><ul>{rows}</ul></div>'
     )
+
+
+_SVG = re.compile(r"<svg\b([^>]*)>.*?</svg>", re.DOTALL)
+_LABEL = re.compile(r'aria-label="([^"]*)"')
+
+
+def picture(html):
+    """Turn each inline <svg> in a figure's HTML into an <img> that carries it as a data URI.
+
+    st.html drops svg elements, so a timeline would show as an empty box. The picture
+    keeps its words as the image's alt text; theme variables fall back to palette colours.
+    """
+    def as_image(found):
+        svg = found.group(0)
+        if "xmlns=" not in svg:
+            svg = svg.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"', 1)
+        label = _LABEL.search(found.group(1))
+        encoded = base64.b64encode(svg.encode("utf-8")).decode("ascii")
+        return (f'<img alt="{label.group(1) if label else ""}" src="data:image/svg+xml;base64,{encoded}" '
+                'style="display:block;width:100%;height:auto">')
+
+    return _SVG.sub(as_image, html)
 
 
 def show(html):
