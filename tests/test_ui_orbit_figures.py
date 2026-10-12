@@ -11,7 +11,7 @@ from ui import palette
 from ui.figures.constellation_3d import BELT_RADIUS, LEFT_RING_EXTRA, constellation_3d, slot_legend
 from ui.figures.score_parts import score_parts
 from ui.figures.slot_belt import slot_belt
-from ui.figures.slot_rows import empty_slots, last_known_position, slot_rows
+from ui.figures.slot_rows import empty_slots, last_known_position, slot_rows, unknown_slots
 
 NAN = float("nan")
 HISTORY = Path(__file__).resolve().parent.parent / "data" / "navic_gp_history.json"
@@ -85,7 +85,25 @@ def test_a_missing_score_is_never_called_in_slot(score):
 
 def test_empty_slots_name_their_owner(navic):
     empties = {(e["owner"], e["slot_lon"]) for e in empty_slots(navic)}
-    assert empties == {("IRNSS-1F", 32.5), ("NVS-01", 131.5), ("IRNSS-1D", 111.75)}
+    assert empties == {("NVS-01", 131.5), ("IRNSS-1D", 111.75)}
+
+
+def test_a_slot_whose_satellite_has_no_position_is_unknown_not_empty(navic):
+    assert "IRNSS-1F" not in {e["owner"] for e in empty_slots(navic)}
+    assert [(e["owner"], e["slot_lon"]) for e in unknown_slots(navic)] == [("IRNSS-1F", 32.5)]
+
+
+def test_belt_draws_that_slot_as_an_idle_hollow_ring_labelled_unknown_never_empty(navic):
+    svg = drawn(navic)
+    ring = find(svg, "circle", **{"data-owner": "IRNSS-1F"})[0]
+    assert (ring.get("data-empty"), ring.get("data-unknown")) == ("false", "true")
+    assert ring.get("stroke") == palette.SLOT_COLOURS[palette.SLOT_UNKNOWN] and ring.get("fill") == "none"
+    assert "whose position is not known" in ring.find("{*}title").text
+    texts = {t.text: t.get("fill") for t in svg.iter("text")}
+    idle = palette.SLOT_COLOURS[palette.SLOT_UNKNOWN]
+    assert texts["32.5, slot of IRNSS-1F, position not known"] == idle
+    assert texts["IRNSS-1F: position not known"] == idle
+    assert not any("empty slot of IRNSS-1F" in text for text in texts)
 
 
 def test_last_known_position_of_irnss_1d():
@@ -206,8 +224,9 @@ def test_3d_hover_says_every_state_in_words(navic):
     assert "IRNSS-1B: in slot" in hover
     assert "IRNSS-1D: left its slot, 136.85 degrees from its own slot" in hover
     unknown = constellation_3d(slot_rows(NAVIC_HEALTH[:1]))   # no position, so only its slot is drawn
-    assert "empty, it belongs to IRNSS-1F (position not known)" in " ".join(
-        " ".join(t.hovertext) for t in traces_by_mode(unknown) if t.hovertext is not None)
+    slots = next(t for t in traces_by_mode(unknown) if t.marker.symbol == "circle-open")
+    assert dict(zip(slots.hovertext, slots.marker.color)) == {
+        "Slot 32.5 degrees east: belongs to IRNSS-1F, whose position is not known": palette.SLOT_COLOURS[palette.SLOT_UNKNOWN]}
 
 
 def test_3d_slot_of_nvs_01_is_hollow_and_empty(navic):

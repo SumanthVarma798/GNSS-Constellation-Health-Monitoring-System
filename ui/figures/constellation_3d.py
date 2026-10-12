@@ -65,14 +65,26 @@ def _ties(rows, state, radius, dash):
     return _line(xs, ys, palette.SLOT_COLOURS[state], 2, dash)
 
 
+def _slot_owner_words(row):
+    if row["state"] == palette.SLOT_UNKNOWN:
+        return f"belongs to {row['name']}, whose position is not known"
+    if row["state"] == palette.SLOT_IN:
+        return f"{row['name']} is on it"
+    return f"empty, it belongs to {row['name']} ({row['state']})"
+
+
+def _slot_colour(row):
+    """Blue when its own satellite is on it, the idle colour when that satellite's position is not known, else the empty colour."""
+    if row["state"] == palette.SLOT_IN:
+        return palette.ACCENT
+    return palette.SLOT_COLOURS[palette.SLOT_UNKNOWN] if row["state"] == palette.SLOT_UNKNOWN else palette.SLOT_EMPTY
+
+
 def _slot_markers(rows):
     placed = [r for r in rows if r["slot_lon"] is not None]
     points = [_point(r["slot_lon"], BELT_RADIUS) for r in placed]
-    empty = [r["state"] != palette.SLOT_IN for r in placed]
-    hover = [escape(f"Slot {r['slot_lon']:g} degrees east: "
-                    + (f"empty, it belongs to {r['name']} ({r['state']})" if is_empty else f"{r['name']} is on it"))
-             for r, is_empty in zip(placed, empty)]
-    colours = [palette.SLOT_EMPTY if is_empty else palette.ACCENT for is_empty in empty]
+    hover = [escape(f"Slot {r['slot_lon']:g} degrees east: {_slot_owner_words(r)}") for r in placed]
+    colours = [_slot_colour(r) for r in placed]
     return go.Scatter3d(mode="markers", x=[p[0] for p in points], y=[p[1] for p in points], z=[0.0] * len(points),
                         hovertext=hover, hoverinfo="text",
                         marker={"size": 9, "symbol": "circle-open", "color": colours, "line": {"width": 3, "color": colours}})
