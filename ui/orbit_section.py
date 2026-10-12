@@ -165,7 +165,7 @@ def render_slot_pictures(health_df, set_aside_names, slot_of, history=None, cons
     title, legend = st.columns([3, 2])   # the legend opens to the right, over the cards and clear of the 3D view
     title.subheader(HEADING)
     title.write(SENTENCE)
-    legend.html(surfaces.hover_legend(slot_legend()))
+    legend.html(surfaces.hover_legend(slot_legend(), opens_left=True))
 
     positions, rows = _attempt("slot rows", _positions_and_rows, health_df, set_aside_names, slot_of, history) or ({}, None)
     if rows is None:

@@ -91,3 +91,10 @@ def test_the_framework_theme_file_matches_the_palette():
 
     assert typed == {"base": "dark", "primaryColor": palette.ACCENT, "backgroundColor": palette.PLATFORM,
                      "secondaryBackgroundColor": palette.WELL, "textColor": palette.INK}
+
+
+def test_a_legend_near_the_right_edge_can_open_leftwards():
+    from ui.surfaces import hover_legend
+
+    assert 'class="legend opens-left"' in hover_legend([("#74d6a0", "in slot")], opens_left=True)
+    assert 'class="legend"' in hover_legend([("#74d6a0", "in slot")])
