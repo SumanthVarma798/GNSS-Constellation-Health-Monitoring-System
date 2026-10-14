@@ -132,7 +132,7 @@ def _score_grid(health_df):
             column.html(_score_card(row))
 
 
-def _attempt(picture, draw, *args):
+def attempt(picture, draw, *args):
     """Run draw(*args). If it raises, show one notice saying why and return None."""
     try:
         return draw(*args)
@@ -141,9 +141,18 @@ def _attempt(picture, draw, *args):
         return None
 
 
-def _positions_and_rows(health_df, set_aside_names, slot_of, history):
+def positions_and_rows(health_df, set_aside_names, slot_of, history):
     positions = set_aside_positions(set_aside_names, history)
     return positions, slot_rows(health_df.to_dict("records"), set_aside_rows(positions, slot_of))
+
+
+def render_belt(rows, view="Flat"):
+    """The slot picture on its own: the flat belt, or with view="3D" the belt seen from above the pole."""
+    if view == "3D":
+        attempt("3D view", lambda: st.plotly_chart(constellation_3d(rows), use_container_width=True,
+                                                      config={"displayModeBar": False}))
+    else:
+        attempt("flat belt", lambda: surfaces.show(surfaces.raised(surfaces.picture(slot_belt(rows)))))
 
 
 def _top(rows, positions):
@@ -167,12 +176,12 @@ def render_slot_pictures(health_df, set_aside_names, slot_of, history=None, cons
     title.write(SENTENCE)
     legend.html(surfaces.hover_legend(slot_legend(), opens_left=True))
 
-    positions, rows = _attempt("slot rows", _positions_and_rows, health_df, set_aside_names, slot_of, history) or ({}, None)
+    positions, rows = attempt("slot rows", positions_and_rows, health_df, set_aside_names, slot_of, history) or ({}, None)
     if rows is None:
         return
     if not rows:
         st.html(surfaces.notice(f"No {constellation or 'tracked'} satellite has a slot to compare against.", "idle"))
         return
-    _attempt("3D view and status cards", _top, rows, positions)
-    _attempt("flat belt", lambda: surfaces.show(surfaces.raised(surfaces.picture(slot_belt(rows)))))
-    _attempt("score parts", _score_grid, health_df)
+    attempt("3D view and status cards", _top, rows, positions)
+    render_belt(rows)
+    attempt("score parts", _score_grid, health_df)
