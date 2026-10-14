@@ -52,6 +52,49 @@ def big_number(value, caption):
     )
 
 
+def band(score):
+    """ok from 80, warn from 60, else bad. The one place the score bands are set."""
+    return "ok" if score >= 80 else "warn" if score >= 60 else "bad"
+
+
+def tile(name, orbit="", score=None, status="", slot="", slot_status="idle", weakest=None):
+    """One satellite: its name and orbit type, overall score, status word, slot state, weakest part.
+
+    A score of None is a satellite set aside: the tile reads "set aside" and shows only the slot state.
+    weakest is (label, score) or None. The score decides the tile's colour; a satellite set aside takes the slot state's.
+    """
+    _check_status(slot_status)
+    edge = slot_status if score is None else band(score)
+    kind = f' <span class="muted">{escape(orbit)}</span>' if orbit else ""
+    big = ('<div class="s idle">set aside</div>' if score is None
+           else f'<div class="s num {edge}">{score:.1f}</div>')
+    chips = chip(slot, slot_status) if score is None else chip(status, edge) + chip(slot, slot_status)
+    low = f'<div class="small low">Weakest: {escape(weakest[0])} {weakest[1]:.0f}</div>' if weakest else ""
+    return f'<div class="tile {edge}"><div class="n">{escape(name)}{kind}</div>{big}<div class="r">{chips}</div>{low}</div>'
+
+
+def parts_matrix(rows):
+    """Score parts side by side: one line per part, one column per satellite. rows: (label, [score or None per satellite]).
+
+    Each score is coloured by its band and carries a bar, so a weak part stands out down its column.
+    The columns line up with the tiles of compare_grid.
+    """
+    lines = ""
+    for label, scores in rows:
+        cells = "".join(
+            '<div class="mc idle">&ndash;</div>' if s is None else
+            f'<div class="mc {band(s)}"><span class="num">{s:.0f}</span>'
+            f'<i style="width:{max(0.0, min(100.0, s)):g}%"></i></div>' for s in scores)
+        lines += f'<div class="mrow"><span class="ml">{escape(label)}</span>{cells}</div>'
+    return f'<div class="matrix" style="--n:{len(rows[0][1]) if rows else 0}">{lines}</div>'
+
+
+def compare_grid(tile_htmls, matrix_html):
+    """Tiles in a row with the score-part lines under them, in the same columns."""
+    return (f'<div class="tiles cmp" style="--n:{len(tile_htmls)}"><div></div>{"".join(tile_htmls)}</div>'
+            + matrix_html)
+
+
 def _legend_row(colour, text):
     if not _SWATCH.fullmatch(colour):
         raise ValueError(f"legend colour {colour!r} must be a hex colour or a var(--name)")
