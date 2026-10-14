@@ -10,11 +10,14 @@ import streamlit as st
 from config.config import DEFAULT_PARAMS
 from ui import data, surfaces
 
+# Pages with their own filters: the bar shows no constellation, window or thresholds there.
+OWN_FILTERS = {"Master map"}
+
 # The pages, in one place. Add a page by adding a line: (title, file).
 PAGES = [
     ("Overview", "views/overview.py"),
-    # ("Station-keeping", "views/station_keeping.py"),
-    # ("Master map", "views/master_map.py"),
+    ("Station-keeping", "views/station_keeping.py"),
+    ("Master map", "views/master_map.py"),
     # ("How it works", "views/how_it_works.py"),
 ]
 CONSTELLATIONS = ("NavIC", "QZSS", "BeiDou-3")
@@ -96,17 +99,28 @@ def _data_chip(scope, window_days, params):
 def top_bar(current):
     """Draw the bar and store the choices. `current` is the st.Page that is running."""
     with st.container(key="topbar"):
-        brand, nav, scope_box, window_box, chip_box, gear_box = st.columns(
-            [1.3, 1.5, 3.3, 1.9, 2.7, 0.55], vertical_alignment="center")
+        brand, scope_box, window_box, chip_box, gear_box = st.columns(
+            [1.4, 3.6, 1.8, 2.8, 0.5], vertical_alignment="center")
         brand.html('<b class="brand">GNSS Health</b>')
-        with nav:
-            st.session_state.setdefault("page", current.title)
-            if segment("page", [title for title, _ in PAGES], label="Page") != current.title:
-                st.switch_page(next(p for p in pages() if p.title == st.session_state["page"]))
-        with scope_box:
-            scope = segment("scope", list(SCOPES), label="Constellation")
-        with window_box:
-            window_days = segment("window_days", list(WINDOWS), WINDOWS, label="Window")
-        with gear_box, st.popover("", icon=":material/settings:", help="Detection thresholds"):
-            st.session_state["params"] = _thresholds(scope)
+        if current.title in OWN_FILTERS:
+            scope, window_days = st.session_state.get("scope", SCOPES[0]), st.session_state.get("window_days", 90)
+            st.session_state.setdefault("params", {})
+        else:
+            with scope_box:
+                scope = segment("scope", list(SCOPES), label="Constellation")
+            with window_box:
+                window_days = segment("window_days", list(WINDOWS), WINDOWS, label="Window")
+            with gear_box, st.popover("", icon=":material/settings:", help="Detection thresholds"):
+                st.session_state["params"] = _thresholds(scope)
         chip_box.html(_data_chip(scope, window_days, st.session_state["params"]))
+    _page_tabs(current)
+
+
+def _page_tabs(current):
+    """The pages sit under the bar, as tabs: there is room for more of them there."""
+    with st.container(key="pagetabs"):
+        if st.session_state.get("shown_page") != current.title:   # arrived by address or switch: tabs follow the page
+            st.session_state["page"] = current.title
+        st.session_state["shown_page"] = current.title
+        if segment("page", [title for title, _ in PAGES], label="Page") != current.title:
+            st.switch_page(next(p for p in pages() if p.title == st.session_state["page"]))

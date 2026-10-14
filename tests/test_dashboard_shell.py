@@ -144,3 +144,25 @@ def test_age_words():
     assert age_words(taken, now.replace(day=5)) == ("Orbit data 4 Oct, 1 day old", "ok")
     assert age_words(taken, now.replace(day=4)) == ("Orbit data 4 Oct, today", "ok")
     assert age_words("Unknown", now)[1] == "idle"
+
+
+def _on(page):
+    return lambda at: at.session_state.__setitem__("page", page)
+
+
+def test_station_keeping_shows_a_rhythm_card_per_satellite_and_two_charts():
+    at = run(_on("Station-keeping"))
+    cards = [b for body in htmls(at) for b in body.split('class="raised"')[1:]]
+
+    assert len(cards) == 8
+    assert len(at.get("plotly_chart")) == 2
+
+
+def test_the_master_map_draws_its_canvas_and_hides_the_constellation_controls():
+    with time_machine.travel(FROZEN, tick=False):
+        at = AppTest.from_file(str(ROOT / "dashboard.py"), default_timeout=600).run()
+        at.switch_page("views/master_map.py").run()
+    assert not at.exception, [e.value for e in at.exception]
+
+    labels = [getattr(w, "label", None) for w in at.get("button_group")]
+    assert "Constellation" not in labels and "Page" in labels
