@@ -131,3 +131,19 @@ ORBIT_FEED_FILES = "*_tles.json"  # in the bundled data folder: one file of elem
 BURN_MIN_FOR_PATTERN = 3           # fewer burns of one kind than this: "too few" to call a pattern
 BURN_REGULAR_MAX_IQR_SHARE = 0.25  # "regular" when the spread (IQR) is at most this share of the median interval
 BURN_TIMELINE_RECENT_DAYS = 90     # the burn timeline opens on this many days; the rest is a scroll away
+
+# --- The master map canvas ---
+
+# One letter on each leaf of a tree, per identifier scheme.
+SCHEME_TAGS = {SCHEME_NORAD: "N", SCHEME_COSPAR: "C", SCHEME_SIGNAL_ID: "P", SCHEME_GCAT: "G",
+               SCHEME_ORBIT_FEED: "F", SCHEME_DASHBOARD: "D"}
+
+# How the Sources filter words the two sources' readings of one spacecraft.
+SOURCES_AGREE = "agree"
+SOURCES_DISAGREE = "disagree"
+SOURCES_NOT_IN_CATALOGUE = "not in catalogue"
+
+# The catalogue's state codes (who owns the spacecraft), said in full.
+COUNTRY_NAMES = {"IN": "India", "CN": "China", "US": "United States", "J": "Japan", "RU": "Russia",
+                 "SU": "Soviet Union", "I-EU": "European Union", "I-ESA": "European Space Agency"}
+COUNTRY_NOT_GIVEN = "not given"
