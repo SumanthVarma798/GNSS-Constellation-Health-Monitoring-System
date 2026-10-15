@@ -25,8 +25,14 @@ code { color: var(--accent); background: var(--well); border-radius: 8px; }
 /* ---- buttons: raised, pressed on click, visible ring on keyboard focus ---- */
 [data-testid="stButton"] button, [data-testid="stDownloadButton"] button, [data-testid="stFormSubmitButton"] button {
   background: var(--platform); color: var(--ink); border: 1px solid var(--edge); border-radius: 999px;
-  box-shadow: var(--raised-sm); padding: 7px 20px; font-weight: 600;
+  box-shadow: var(--raised-sm); padding: 7px 20px; font-weight: 600; gap: 8px;
+  vertical-align: top;   /* a button without a tooltip sits in a line box; on the baseline it rode lower than its neighbours */
 }
+/* Icons and words in one control. Streamlit gives every button icon a right margin meant as the space before the
+   words, which pushes it off centre in an icon-only or reversed button; the gap above makes that space instead. */
+button span:has(> [data-testid="stIconMaterial"]), button [data-testid="stIconMaterial"] { margin: 0; }
+/* Streamlit fixes the size of a button's words on the words' own container, so the sizes set on buttons here did not take */
+button [data-testid="stMarkdownContainer"] { font-size: inherit; }
 [data-testid="stButton"] button:hover, [data-testid="stDownloadButton"] button:hover { color: var(--accent); border-color: var(--accent); }
 [data-testid="stButton"] button:active, [data-testid="stDownloadButton"] button:active, [data-testid="stFormSubmitButton"] button:active {
   box-shadow: var(--pressed); background: var(--well); color: var(--accent); transform: translateY(1px);
@@ -106,6 +112,9 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend
 .part-title { font-size: 16px; font-weight: 600; margin: 0 0 6px; color: var(--ink); }
 
 .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 3px 11px; border-radius: 999px; box-shadow: var(--pressed); background: var(--well); white-space: nowrap; }
+/* Avenir sits high in its line box, so the words rode about 1.5px above a chip's middle. Where the browser can, trim the
+   line box to the capitals and the baseline and let even padding centre them; elsewhere the plain padding above stands. */
+@supports (text-box: trim-both cap alphabetic) { .chip { display: inline-block; text-box: trim-both cap alphabetic; padding-block: .68em; } }
 .chip.ok { color: var(--ok); } .chip.warn { color: var(--warn); } .chip.bad { color: var(--bad); } .chip.idle { color: var(--idle); } .chip.accent { color: var(--accent); }
 
 .notice { background: var(--well); color: var(--ink); border-radius: var(--r); box-shadow: var(--pressed); padding: 12px 18px; border-left: 4px solid var(--idle); }
@@ -152,7 +161,7 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend
 [data-testid="stPopover"] button:hover { color: var(--accent); }
 [data-testid="stPopover"] button[aria-expanded="true"] { box-shadow: var(--pressed); background: var(--well); color: var(--accent); }
 [data-testid="stPopover"] button svg, [data-testid="stPopover"] button span { color: inherit; }
-[data-testid="stPopover"] button [data-testid="stMarkdownContainer"], [data-testid="stPopover"] button > div > :last-child:not(span) { display: none; }
+[data-testid="stPopover"] button > :not(:first-child) { display: none; }   /* only the gear: no words, no arrow (its margins pushed the gear sideways) */
 [data-testid="stPopoverBody"] { background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); color: var(--ink); }
 [data-testid="stNumberInput"] [data-baseweb="input"] { background: var(--well); border: 1px solid var(--edge); border-radius: 14px; box-shadow: var(--pressed); }
 [data-testid="stNumberInput"] [data-baseweb="base-input"] { background: transparent; border: 0; box-shadow: none; }
