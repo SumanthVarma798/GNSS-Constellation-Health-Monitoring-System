@@ -6,10 +6,13 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
+import requests
 import time_machine
 from streamlit.testing.v1 import AppTest
 from streamlit.testing.v1.element_tree import ButtonGroup
 
+from data import celestrak
+from test_celestrak import IRNSS_1B
 from test_golden_scores import GOLDEN
 from ui.shell import age_words
 
@@ -25,6 +28,13 @@ def segmented_controls_rerun(monkeypatch):
         chosen = self.value if isinstance(self.value, list) else [] if self.value is None else [self.value]
         return [self.options.index(self.format_func(v)) for v in chosen]
     monkeypatch.setattr(ButtonGroup, "indices", property(indices))
+
+
+@pytest.fixture(autouse=True)
+def celestrak_answers_with_nothing_new(monkeypatch):
+    """No network in tests: CelesTrak 'answers' with no rows unless a test says otherwise."""
+    monkeypatch.setattr(celestrak, "state", {"rows": {}, "tried": None, "fetched": None, "ok": True})
+    monkeypatch.setattr(celestrak, "fetch", lambda norads: {})
 
 
 def run(setup=lambda at: None, now=FROZEN):
@@ -79,21 +89,51 @@ def test_switching_to_qzss_shows_its_five():
     assert any(f"{healthy_in_slot('QZSS')} of 5</span>" in body for body in htmls(at))
 
 
-def test_compare_starts_empty_with_one_prompt():
-    at = run(lambda at: at.session_state.__setitem__("scope", "Compare"))
+def _compare(picks=None, constellations=None):
+    """Turn Compare on with its button, then set the picks and constellation chips (AppTest cannot click pills)."""
+    def setup(at):
+        at.button(key="compare_toggle").click().run()
+        if picks is not None:
+            at.session_state["compare_picks"] = picks
+        if constellations is not None:
+            at.session_state["compare_constellations"] = constellations
+        at.session_state["picker_open"] = True
+    return setup
 
+
+def _offered(at):
+    return [w.label for w in at.get("button_group") if w.label in ("NavIC", "QZSS", "BeiDou-3")]
+
+
+def test_compare_is_its_own_button_and_starts_empty_with_one_prompt():
+    at = run(_compare())
+
+    assert at.session_state["compare"] is True
+    labels = [getattr(w, "label", None) for w in at.get("button_group")]
+    assert "Constellations" in labels and "Constellation" not in labels   # the chips now take several
     assert tiles(at) == []
-    assert any("Pick satellites to compare" in body for body in htmls(at))
+    assert any("Add satellites to compare" in body for body in htmls(at))
+    assert _offered(at) == ["NavIC", "QZSS", "BeiDou-3"]                 # none chosen: all offered
+
+
+def test_the_list_opens_with_add_and_stays_open_while_picking():
+    at = run(lambda at: at.button(key="compare_toggle").click())
+    assert _offered(at) == []
+
+    at = run(lambda at: (at.button(key="compare_toggle").click().run(), at.button(key="picker_toggle").click()))
+    assert _offered(at) == ["NavIC", "QZSS", "BeiDou-3"]
+
+
+def test_the_picker_offers_only_the_constellations_chosen_and_drops_picks_from_the_others():
+    at = run(_compare(picks={"NavIC": ["IRNSS-1B"], "QZSS": ["QZS-3 (Michibiki-3)"]}, constellations=["QZSS"]))
+
+    assert _offered(at) == ["QZSS"]
+    assert at.session_state["compare_picks"] == {"QZSS": ["QZS-3 (Michibiki-3)"]}
+    assert len(tiles(at)) == 1
 
 
 def test_compare_two_satellites_from_different_constellations():
-    def pick(at):
-        at.session_state["scope"] = "Compare"
-        at.run()   # the pickers exist only once the scope is Compare
-        at.multiselect(key="pick_NavIC").set_value(["IRNSS-1B"])
-        at.multiselect(key="pick_QZSS").set_value(["QZS-3 (Michibiki-3)"])
-
-    at = run(pick)
+    at = run(_compare(picks={"NavIC": ["IRNSS-1B"], "QZSS": ["QZS-3 (Michibiki-3)"]}))
 
     assert len(tiles(at)) == 2
     matrix = next(body for body in htmls(at) if 'class="matrix"' in body)
@@ -101,15 +141,34 @@ def test_compare_two_satellites_from_different_constellations():
     assert matrix.count('class="mc ') == 10             # each for the two satellites
 
 
-def test_a_satellite_set_aside_has_no_scores_in_the_comparison():
-    def pick(at):
-        at.session_state["scope"] = "Compare"
+def test_clicking_a_picked_chip_removes_it():
+    def setup(at):
+        _compare(picks={"NavIC": ["IRNSS-1B", "IRNSS-1C"]})(at)
         at.run()
-        at.multiselect(key="pick_NavIC").set_value(["IRNSS-1B", "IRNSS-1D"])
+        at.button(key="drop_IRNSS-1B").click()
 
-    matrix = next(body for body in htmls(run(pick)) if 'class="matrix"' in body)
+    at = run(setup)
+
+    assert at.session_state["compare_picks"] == {"NavIC": ["IRNSS-1C"]}
+    assert len(tiles(at)) == 1
+
+
+def test_a_satellite_set_aside_has_no_scores_in_the_comparison():
+    matrix = next(body for body in htmls(run(_compare(picks={"NavIC": ["IRNSS-1B", "IRNSS-1D"]})))
+                  if 'class="matrix"' in body)
 
     assert matrix.count('class="mc idle"') == 5
+
+
+def test_station_keeping_under_compare_reads_the_same_picks():
+    def setup(at):
+        _compare(picks={"NavIC": ["IRNSS-1B"], "QZSS": ["QZS-3 (Michibiki-3)"]})(at)
+        at.session_state["page"] = "Station-keeping"
+
+    at = run(setup)
+    cards = [b for body in htmls(at) for b in body.split('class="raised"')[1:]]
+
+    assert len(cards) == 2
 
 
 def test_the_gear_thresholds_reach_params():
@@ -133,6 +192,28 @@ def test_the_data_chip_is_amber_after_a_week():
 
     assert 'class="chip ok">Orbit data 4 Oct, 2 days old' in fresh
     assert 'class="chip warn">Orbit data 4 Oct, 10 days old' in stale
+    assert "Refresh failed" not in fresh
+
+
+def test_rows_from_celestrak_make_the_chip_say_today_and_its_time(monkeypatch):
+    monkeypatch.setattr(celestrak, "fetch", lambda norads: {39635: celestrak.as_history_row(IRNSS_1B)})
+    at = run()
+    chips = " ".join(htmls(at))
+
+    assert 'class="chip ok">Orbit data 6 Oct 12:00' in chips   # the frozen clock's time, in UTC without a browser
+    assert len(tiles(at)) == 8
+
+
+def test_a_failed_refresh_keeps_the_archive_and_says_so(monkeypatch):
+    def down(norads):
+        raise requests.ConnectionError("no route")
+    monkeypatch.setattr(celestrak, "fetch", down)
+    at = run(lambda at: at.button(key="refresh_button").click())
+    chips = " ".join(htmls(at))
+
+    assert 'class="chip ok">Orbit data 4 Oct, 2 days old' in chips
+    assert 'class="chip warn">Refresh failed' in chips
+    assert len(tiles(at)) == 8
 
 
 def test_age_words():
@@ -142,7 +223,7 @@ def test_age_words():
     assert age_words(taken, now) == ("Orbit data 4 Oct, 10 days old", "warn")
     assert age_words(taken, now.replace(day=11)) == ("Orbit data 4 Oct, 7 days old", "ok")
     assert age_words(taken, now.replace(day=5)) == ("Orbit data 4 Oct, 1 day old", "ok")
-    assert age_words(taken, now.replace(day=4)) == ("Orbit data 4 Oct, today", "ok")
+    assert age_words(taken, now.replace(day=4)) == ("Orbit data 4 Oct 04:19", "ok")
     assert age_words("Unknown", now)[1] == "idle"
 
 

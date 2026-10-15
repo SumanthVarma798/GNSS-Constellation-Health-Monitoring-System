@@ -16,7 +16,7 @@ from datetime import timedelta, timezone
 
 import numpy as np
 import pandas as pd
-from skyfield.api import load, wgs84
+from skyfield.api import EarthSatellite, load, wgs84
 
 from analysis.dop_calculations import parse_tle_data
 from analysis.drift_analysis import calculate_longitudinal_drift
@@ -38,21 +38,22 @@ _CONSTELLATIONS = {
 _ts = load.timescale()
 
 
-def load_bundled_gp_as_dataframes(constellation_key: str, sat_dict: dict) -> list:
+def load_bundled_gp_as_dataframes(constellation_key: str, sat_dict: dict, fresh=None) -> list:
     """Copy of app.py's load_bundled_gp_as_dataframes (same behaviour); app.py cannot be
-    imported without running its Streamlit script."""
+    imported without running its Streamlit script. `fresh` ({norad: [rows]}, from data.celestrak)
+    is added to each satellite's bundled records, leaving out epochs already there."""
     bundled = load_bundled_gp_history(constellation_key)
     if not bundled or not bundled.get('satellites'):
         return []
 
     all_dfs = []
     sat_data = bundled.get('satellites', {})
+    fresh = fresh or {}
 
     for sat_name, norad_id in sat_dict.items():
-        if sat_name not in sat_data:
-            continue
-
-        records = sat_data[sat_name]
+        records = sat_data.get(sat_name, [])
+        held = {record.get('EPOCH') for record in records}
+        records = records + list({row['EPOCH']: row for row in fresh.get(norad_id, []) if row['EPOCH'] not in held}.values())
         if not records:
             continue
 
@@ -274,13 +275,16 @@ def _burns(df_all_full, p):
                                        'd_sma_km', 'd_inc_deg'])
 
 
-def assess_constellation(constellation, now, window_days=90, params=None):
+def assess_constellation(constellation, now, window_days=90, params=None, fresh=None):
     """Health of every tracked satellite of `constellation` as app.py shows it.
 
     `now` is a timezone-aware datetime. `params` overrides DEFAULT_PARAMS (app.py's
     sidebar defaults; QZSS's inclination tolerance defaults to 4.0 as in the sidebar).
     Dates follow app.py's, taken in UTC: the display range is the `window_days` days up to
     today, and pattern analysis uses the 365 days up to `now`.
+
+    `fresh` ({norad: [history rows]}, from data.celestrak) is merged onto the bundled history, and
+    the newest of those rows places the satellite for the longitude step.
 
     Returns {'health', 'set_aside', 'history', 'burns', 'data_time', 'warnings'}.
     Raises ValueError for an unknown constellation, no bundled data, or no records in the window.
@@ -299,7 +303,7 @@ def assess_constellation(constellation, now, window_days=90, params=None):
     gp_meta = get_gp_history_metadata(key)
     if not gp_meta['available']:
         raise ValueError(f"No bundled data for {constellation}")
-    all_dfs = load_bundled_gp_as_dataframes(key, sat_dict)
+    all_dfs = load_bundled_gp_as_dataframes(key, sat_dict, fresh)
     if not all_dfs:
         raise ValueError(f"Bundled data for {constellation} could not be loaded")
     df_all_full = pd.concat(all_dfs, ignore_index=True, sort=False)
@@ -389,12 +393,15 @@ def assess_constellation(constellation, now, window_days=90, params=None):
     health_df = pd.DataFrame(health_assessments)
 
     bundled_tles = load_bundled_tles(key)
-    if bundled_tles and bundled_tles.get('tle_data'):
-        satellites_dop = parse_tle_data(bundled_tles['tle_data'], sat_dict)
-        if satellites_dop:
-            _add_longitude(health_df, satellites_dop, now, warnings)
-        else:
-            warnings.append("Bundled TLEs hold none of the tracked satellites; longitude not calculated")
+    satellites_dop = parse_tle_data(bundled_tles['tle_data'], sat_dict) if bundled_tles.get('tle_data') else {}
+    for sat_name, norad_id in sat_dict.items():
+        if (fresh or {}).get(norad_id):
+            newest = max(fresh[norad_id], key=lambda row: row['EPOCH'])
+            satellites_dop[sat_name] = EarthSatellite(newest['TLE_LINE1'], newest['TLE_LINE2'], sat_name, _ts)
+    if satellites_dop:
+        _add_longitude(health_df, satellites_dop, now, warnings)
+    elif bundled_tles.get('tle_data'):
+        warnings.append("Bundled TLEs hold none of the tracked satellites; longitude not calculated")
     else:
         warnings.append("No bundled TLEs; longitude not calculated")
 

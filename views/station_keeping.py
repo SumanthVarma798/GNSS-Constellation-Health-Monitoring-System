@@ -12,12 +12,11 @@ CHART = {"use_container_width": True, "config": {"displayModeBar": False}}
 
 
 def _chosen():
-    """{constellation: [satellite, ...]} for the scope in the top bar. Compare reuses the Overview's picks."""
-    scope = st.session_state["scope"]
-    if scope != "Compare":
-        return {scope: None}
-    return {name: st.session_state.get(f"pick_{name}") for name in shell.CONSTELLATIONS
-            if st.session_state.get(f"pick_{name}")}
+    """{constellation: [satellite, ...]} for the top bar's choice. Compare reuses the picks (ui.picker)."""
+    if not st.session_state["compare"]:
+        return {st.session_state["scope"]: None}
+    picks = st.session_state.get("compare_picks", {})
+    return {name: picks[name] for name in shell.CONSTELLATIONS if picks.get(name)}
 
 
 def _days(value):
