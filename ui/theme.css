@@ -173,6 +173,44 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend
 [data-baseweb="popover"] li[role="option"] { background: transparent; color: var(--ink); border-radius: 12px; }
 [data-baseweb="popover"] li[role="option"]:hover, [data-baseweb="popover"] li[role="option"][aria-selected="true"] { background: var(--well); color: var(--accent); box-shadow: var(--pressed); }
 
+/* the data chip and the round refresh button; a thin ring round the button empties toward the next automatic refresh */
+/* the syntax is the percentage type, escaped: st.html drops a style block with a raw angle bracket in it */
+@property --left { syntax: "\3c percentage\3e"; inherits: false; initial-value: 0%; }
+.st-key-refresh { flex-direction: row; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: nowrap; }
+.st-key-refresh > div { width: auto !important; flex: 0 1 auto; min-width: 0; }
+.st-key-refresh .chip + .chip { margin-left: 6px; }
+.st-key-refresh_button button {
+  position: relative; width: 36px; height: 36px; min-height: 0; padding: 0; border-radius: 50%; color: var(--muted); overflow: visible;
+}
+.st-key-refresh_button button :is([data-testid="stMarkdownContainer"], p) {   /* the words stay for screen readers only */
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+.st-key-refresh_button button::before {
+  content: ""; position: absolute; inset: -5px; border-radius: 50%; pointer-events: none; opacity: .45;
+  background: conic-gradient(var(--ring, var(--accent)) var(--left), transparent 0);
+  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 2px), var(--ink) calc(100% - 2px));
+  mask: radial-gradient(closest-side, transparent calc(100% - 2px), var(--ink) calc(100% - 2px));
+}
+
+/* Compare stands apart from the constellation chips: raised when off, pressed in the accent colour when on */
+.st-key-compare_toggle button { padding: 5px 16px; min-height: 0; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.st-key-compare_toggle button[data-testid="stBaseButton-primary"] { background: var(--well); color: var(--accent); box-shadow: var(--pressed); border-color: var(--edge); }
+.st-key-compare_toggle button :is(p, span) { color: inherit; }
+
+/* the Compare picker: a pressed field of raised chips (click one to remove it), Add, and the list it opens */
+.st-key-picker { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px; margin-bottom: 18px;
+  background: var(--well); border-radius: 18px; box-shadow: var(--pressed); }
+.st-key-picker > div { width: auto !important; flex: 0 0 auto; }
+.st-key-picker [data-testid="stButton"] button { padding: 4px 12px; min-height: 0; font-size: 13px; color: var(--accent); flex-direction: row-reverse; gap: 6px; }
+.st-key-picker [data-testid="stButton"] button:hover { color: var(--bad); border-color: var(--bad); }
+.st-key-picker [data-testid="stButton"] button :is(p, span) { color: inherit; }
+.st-key-picker .st-key-picker_toggle button { flex-direction: row; color: var(--muted); }
+.st-key-picker .st-key-picker_toggle button:hover { color: var(--accent); border-color: var(--accent); }
+.st-key-picker > div:has(.st-key-picker_list) { flex: 1 0 100%; width: 100% !important; padding: 4px 8px 6px; }
+.st-key-picker_list [data-testid="stWidgetLabel"] p { color: var(--muted); font-size: 13px; }
+.st-key-picker_list [data-baseweb="button-group"] { flex-wrap: wrap; gap: 8px; padding: 2px; background: transparent; box-shadow: none; }
+.st-key-picker_list [data-testid="stBaseButton-pillsActive"] { border-color: var(--accent); }
+
 /* satellite tiles */
 .head { display: flex; align-items: baseline; gap: 14px; margin: 4px 0 14px; }
 .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 26px; }

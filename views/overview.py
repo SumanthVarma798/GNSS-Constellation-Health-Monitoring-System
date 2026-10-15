@@ -3,13 +3,13 @@ import re
 
 import streamlit as st
 
-from config.config import BEIDOU3_SATS, NAVIK_SATS, QZSS_SATS, TRACKED_NOT_IN_REGISTRY
+from config.config import TRACKED_NOT_IN_REGISTRY
 from ui import data, orbit_section, palette, shell, surfaces
+from ui.data import SATELLITES
 from ui.figures.constellation_3d import slot_legend
 from ui.figures.slot_rows import as_number, deviation_of
 from ui.orbit_section import CHIP_STATUS, PARTS
-
-SATELLITES = {"NavIC": NAVIK_SATS, "QZSS": QZSS_SATS, "BeiDou-3": BEIDOU3_SATS}
+from ui.picker import picker
 HEALTHY_FROM = 80
 
 
@@ -93,27 +93,22 @@ def constellation(name, window_days, params):
 
 def compare(window_days, params):
     """Satellites picked across constellations: their tiles side by side, then their score parts in step."""
-    picks = {name: column.multiselect(name, [s for s, norad in SATELLITES[name].items() if norad is not None],
-                                      key=f"pick_{name}", placeholder="Add")
-             for name, column in zip(shell.CONSTELLATIONS, st.columns(3))}
     chosen = []
-    for name, picked in picks.items():
-        if picked:
-            tiles, _ = _tiles(data.load(name, window_days, params))
-            chosen += [(s, *tiles[s]) for s in picked if s in tiles]
+    for name, picked in picker().items():
+        tiles, _ = _tiles(data.load(name, window_days, params))
+        chosen += [(s, *tiles[s]) for s in picked if s in tiles]
     if not chosen:
-        surfaces.show('<p class="small">Pick satellites to compare.</p>')
+        surfaces.show('<p class="small">Add satellites to compare.</p>')
         return
     scores = [[as_number(health.get(column)) if health else None for _, column in PARTS] for *_, health in chosen]
     rows = [(label, [column[i] for column in scores]) for i, (label, _) in enumerate(PARTS)]
     surfaces.show(surfaces.compare_grid([html for _, html, _, _ in chosen], surfaces.parts_matrix(rows)))
 
 
-scope = st.session_state["scope"]
 try:
-    if scope == "Compare":
+    if st.session_state["compare"]:
         compare(st.session_state["window_days"], st.session_state["params"])
     else:
-        constellation(scope, st.session_state["window_days"], st.session_state["params"])
+        constellation(st.session_state["scope"], st.session_state["window_days"], st.session_state["params"])
 except ValueError as error:
     surfaces.show(surfaces.notice(str(error), "warn"))
