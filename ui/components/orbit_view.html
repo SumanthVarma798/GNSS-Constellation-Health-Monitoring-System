@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orbits</title>
+<style>
+__ROOT__
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--platform); color: var(--ink); font: 13.5px/1.4 __FONT__; padding: 14px 18px 22px; overflow: hidden; }
+.card { height: 100%; border-radius: var(--r); background: var(--platform); border: 1px solid var(--edge); box-shadow: var(--raised); overflow: hidden; }
+#plot { width: 100%; height: 100%; }
+
+/* the hover card: raised off the page, words first, colour backing them up */
+.tip { position: fixed; z-index: 10; pointer-events: none; display: none; min-width: 190px; max-width: 280px; padding: 12px 16px;
+  background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); }
+.tip.on { display: block; }
+.tip .n { font-weight: 600; overflow-wrap: anywhere; }
+.tip .k { color: var(--muted); font-weight: 400; margin-left: 6px; }
+.tip .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
+.chip { display: inline-flex; font-size: 12.5px; font-weight: 600; padding: 3px 11px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); white-space: nowrap; }
+.s { font: 700 24px/1 __FONT_NUMBERS__; }
+.s small { font: 400 12px __FONT__; color: var(--muted); margin-left: 4px; }
+.ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); } .idle { color: var(--idle); }
+</style>
+</head>
+<body>
+<div class="card"><div id="plot"></div></div>
+<div class="tip" id="tip" role="status"></div>
+<script>__PLOTLY__</script>
+<script>
+const DATA = __DATA__;
+const DIM = 0.25;
+const plot = document.getElementById("plot"), tip = document.getElementById("tip");
+let current = null, mouse = [0, 0];
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text != null) node.textContent = text;   // textContent: names are never read as markup
+  return node;
+}
+
+function fill(sat) {
+  tip.replaceChildren();
+  const head = el("div", "n", sat.name);
+  if (sat.orbit) head.append(el("span", "k", sat.orbit));
+  const row = el("div", "row");
+  row.append(el("span", "chip " + sat.status, sat.slot));
+  if (sat.score != null) {
+    const score = el("span", "s " + sat.band, sat.score.toFixed(1));
+    score.append(el("small", null, "overall"));
+    row.append(score);
+  }
+  tip.append(head, row);
+}
+
+function place() {
+  const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = mouse[0] + pad, y = mouse[1] + pad;
+  if (x + w > innerWidth - 4) x = mouse[0] - pad - w;
+  if (y + h > innerHeight - 4) y = mouse[1] - pad - h;
+  tip.style.left = Math.max(4, x) + "px";
+  tip.style.top = Math.max(4, y) + "px";
+}
+
+function focus(index) {
+  if (index === current) return;
+  current = index;
+  const traces = [], opacity = [];
+  plot.data.forEach((trace, i) => {
+    if (trace.meta == null) return;   // Earth stays as it is
+    traces.push(i);
+    opacity.push(index == null || trace.meta === index ? 1 : DIM);
+  });
+  Plotly.restyle(plot, {opacity}, traces);
+  if (index == null) { tip.classList.remove("on"); return; }
+  fill(DATA.satellites[index]);
+  tip.classList.add("on");
+  place();
+}
+
+Plotly.newPlot(plot, DATA.figure.data, DATA.figure.layout, {displayModeBar: false, responsive: true, scrollZoom: false}).then(() => {
+  plot.on("plotly_hover", e => {
+    const meta = plot.data[e.points[0].curveNumber].meta;
+    focus(meta == null ? null : meta);
+  });
+  plot.on("plotly_unhover", () => focus(null));
+});
+plot.addEventListener("mousemove", e => { mouse = [e.clientX, e.clientY]; if (current != null) place(); });
+plot.addEventListener("mouseleave", () => focus(null));
+</script>
+</body>
+</html>

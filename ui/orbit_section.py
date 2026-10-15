@@ -146,11 +146,14 @@ def positions_and_rows(health_df, set_aside_names, slot_of, history):
     return positions, slot_rows(health_df.to_dict("records"), set_aside_rows(positions, slot_of))
 
 
-def render_belt(rows, view="Flat"):
-    """The slot picture on its own: the flat belt, or with view="3D" the belt seen from above the pole."""
+def render_belt(rows, view="Flat", history=None, health_df=None):
+    """The slot picture on its own: the flat belt, or with view="3D" each satellite's true orbit around Earth.
+
+    The 3D view takes each satellite's elements from history and its score from health_df.
+    """
     if view == "3D":
-        attempt("3D view", lambda: st.plotly_chart(constellation_3d(rows), use_container_width=True,
-                                                      config={"displayModeBar": False}))
+        from ui.components.orbit_view import orbit_view   # here, as orbit_view reads this module's states
+        attempt("3D view", orbit_view, rows, history, health_df)
     else:
         attempt("flat belt", lambda: surfaces.show(surfaces.raised(surfaces.picture(slot_belt(rows)))))
 

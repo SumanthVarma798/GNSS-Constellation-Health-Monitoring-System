@@ -106,6 +106,14 @@ def deviation_of(row):
     return angle_between(row["slot_lon"], row["actual_lon"])
 
 
+def slot_words(row):
+    """'in slot', 'off its slot, 2.08°', 'left its slot' or 'position not known' (also for no row)."""
+    if row is None:
+        return palette.SLOT_UNKNOWN
+    deviation = deviation_of(row)
+    return f"{row['state']}, {deviation:.2f}°" if row["state"] == palette.SLOT_OFF and deviation is not None else row["state"]
+
+
 def state_words(row):
     """One plain sentence about a satellite: its state in words, so colour is never the only signal."""
     deviation = deviation_of(row)

@@ -6,19 +6,12 @@ import streamlit as st
 from config.config import BEIDOU3_SATS, NAVIK_SATS, QZSS_SATS, TRACKED_NOT_IN_REGISTRY
 from ui import data, orbit_section, palette, shell, surfaces
 from ui.figures.constellation_3d import slot_legend
-from ui.figures.slot_rows import as_number, deviation_of
+from ui.figures.orbits_3d import orbit_legend
+from ui.figures.slot_rows import as_number, slot_words
 from ui.orbit_section import CHIP_STATUS, PARTS
 
 SATELLITES = {"NavIC": NAVIK_SATS, "QZSS": QZSS_SATS, "BeiDou-3": BEIDOU3_SATS}
 HEALTHY_FROM = 80
-
-
-def _slot_words(row):
-    """'in slot', 'off its slot, 2.08°', 'left its slot' or 'position not known'."""
-    if row is None:
-        return palette.SLOT_UNKNOWN
-    deviation = deviation_of(row)
-    return f"{row['state']}, {deviation:.2f}°" if row["state"] == palette.SLOT_OFF and deviation is not None else row["state"]
 
 
 def _tile(health, slot):
@@ -30,7 +23,7 @@ def _tile(health, slot):
     html = surfaces.tile(
         str(health["Satellite"]), str(health.get("Type", "")), score,
         re.sub(r"^[^A-Za-z]+", "", str(health.get("Health Status", ""))),
-        _slot_words(slot), CHIP_STATUS[state], min(scored, key=lambda part: part[1]) if scored else None)
+        slot_words(slot), CHIP_STATUS[state], min(scored, key=lambda part: part[1]) if scored else None)
     return html, score is not None and score >= HEALTHY_FROM and state == palette.SLOT_IN
 
 
@@ -69,13 +62,14 @@ def _gaps(constellation, result):
         surfaces.show(surfaces.notice(text, "warn"))
 
 
-def _slot_picture(rows):
+def _slot_picture(rows, result):
     """The slots against their satellites, flat or in 3D."""
     switch, legend = st.columns([1, 1], vertical_alignment="center")
     with switch:
         view = shell.segment("slot_view", ["Flat", "3D"], label="View")
-    legend.html(f'<div class="right">{surfaces.hover_legend(slot_legend(), opens_left=True)}</div>')
-    orbit_section.render_belt(rows, view)
+    entries = orbit_legend() if view == "3D" else slot_legend()
+    legend.html(f'<div class="right">{surfaces.hover_legend(entries, opens_left=True)}</div>')
+    orbit_section.render_belt(rows, view, result["history"], result["health"])
 
 
 def constellation(name, window_days, params):
@@ -88,7 +82,7 @@ def constellation(name, window_days, params):
     _gaps(name, result)
     _grid(html for html, _, _ in tiles.values())
     if rows:
-        _slot_picture(rows)
+        _slot_picture(rows, result)
 
 
 def compare(window_days, params):
