@@ -58,11 +58,15 @@ def _legend_row(colour, text):
     return f'<li><span class="swatch" style="background:{colour}"></span>{escape(text)}</li>'
 
 
-def hover_legend(entries, label="Legend"):
-    """A collapsed control that opens on hover or keyboard focus. entries: (colour, meaning) pairs."""
+def hover_legend(entries, label="Legend", opens_left=False):
+    """A collapsed control that opens on hover or keyboard focus. entries: (colour, meaning) pairs.
+
+    Set opens_left for a legend near the right edge of the page, so its list is not cut off.
+    """
     rows = "".join(_legend_row(colour, text) for colour, text in entries)
+    side = " opens-left" if opens_left else ""
     return (
-        f'<div class="legend" tabindex="0" role="group" aria-label="{escape(label, quote=True)}">'
+        f'<div class="legend{side}" tabindex="0" role="group" aria-label="{escape(label, quote=True)}">'
         f'<span class="legend-label">{escape(label)}</span><ul>{rows}</ul></div>'
     )
 

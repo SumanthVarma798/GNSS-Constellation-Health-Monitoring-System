@@ -91,6 +91,9 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend
 [data-baseweb="popover"] ul, [data-baseweb="menu"] { background: var(--platform); color: var(--ink); border-radius: 14px; }
 [data-baseweb="popover"] li:hover, [data-baseweb="popover"] li[aria-selected="true"] { background: var(--well); color: var(--accent); }
 
+/* ---- charts sit in a raised panel like everything else ---- */
+[data-testid="stPlotlyChart"] { background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); padding: 8px; overflow: hidden; }
+
 /* ---- tables ---- */
 [data-testid="stDataFrame"] { border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--pressed); overflow: hidden; }
 
@@ -118,7 +121,10 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend
 .legend:hover .legend-label, .legend:focus-within .legend-label { box-shadow: var(--pressed); background: var(--well); color: var(--accent); }
 .legend ul { display: none; position: absolute; z-index: 20; left: 0; top: calc(100% + 8px); min-width: 220px; margin: 0; padding: 12px 16px; list-style: none; background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); }
 .legend:hover ul, .legend:focus-within ul { display: block; }
-.legend li { display: flex; align-items: center; gap: 10px; margin: 6px 0; white-space: nowrap; }
+.legend ul { width: max-content; max-width: min(420px, 86vw); }
+.legend.opens-left ul { left: auto; right: 0; }   /* for a legend near the right edge of the page */
+.legend li { display: flex; align-items: flex-start; gap: 10px; margin: 6px 0; }
+.legend li .swatch { margin-top: 4px; }
 .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 999px; box-shadow: var(--raised-sm); border: 1px solid var(--edge); flex: none; }
 
 /* ---- calm motion ---- */

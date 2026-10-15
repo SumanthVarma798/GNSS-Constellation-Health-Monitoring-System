@@ -24,4 +24,4 @@ def test_text_and_status_colours_are_readable(name, surface):
 
 
 def test_every_slot_state_has_a_colour():
-    assert set(palette.SLOT_COLOURS) == {palette.SLOT_IN, palette.SLOT_OFF, palette.SLOT_LEFT}
+    assert set(palette.SLOT_COLOURS) == {palette.SLOT_IN, palette.SLOT_OFF, palette.SLOT_LEFT, palette.SLOT_UNKNOWN}

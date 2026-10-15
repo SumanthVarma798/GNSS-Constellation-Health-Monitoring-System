@@ -26,6 +26,7 @@ from data.tle_cache import (
     load_bundled_tles, load_bundled_gp_history, get_tle_metadata, 
     get_gp_history_metadata, format_timestamp_for_display
 )
+from ui import orbit_section, theme
 from visualizations.visualization import (
     plot_individual_satellites, plot_combined_drift, plot_bounding_boxes,
     plot_sky_plot, plot_animated_sky_plot, plot_dop_over_time, plot_combined_inclination,
@@ -180,6 +181,7 @@ st.set_page_config(
         'About': "# GNSS Health Monitor\nComprehensive satellite constellation monitoring and analysis system."
     }
 )
+theme.apply_theme()
 
 # Custom CSS for modern, professional UI
 st.markdown("""
@@ -1308,6 +1310,7 @@ if st.session_state.get('analysis_complete', False):
             st.metric("🟠 Degraded", degraded_count, help="Score 40-59")
         with col4:
             st.metric("🔴 Critical", critical_count, help="Score < 40")
+        orbit_section.render_slot_pictures(health_df, graveyard_sats, orbit_section.designated_longitude, st.session_state.get('df_all_full_bundled'), constellation)
         
         st.markdown("---")
         
