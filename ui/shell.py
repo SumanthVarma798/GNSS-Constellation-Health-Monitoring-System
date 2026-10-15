@@ -120,10 +120,10 @@ def _data_chip(names, window_days, params, live, now):
 
 
 def _next(live):
-    """'next 14:20': when the next automatic refresh is, in the viewer's time zone."""
+    """'next update 14:20': when the next automatic refresh is, in the viewer's time zone."""
     if not live["tried"]:
         return ""
-    return f'<span class="next">next {(live["tried"] + celestrak.EVERY).astimezone(_viewer_zone()):%H:%M}</span>'
+    return f'<span class="next">next update {(live["tried"] + celestrak.EVERY).astimezone(_viewer_zone()):%H:%M}</span>'
 
 
 def _ring(live, now):
