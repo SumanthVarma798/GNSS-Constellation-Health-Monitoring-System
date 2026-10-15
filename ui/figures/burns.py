@@ -8,6 +8,8 @@ burn_cadence     one small chart per satellite: days since the previous burn of 
                  same kind, at the date of each burn. A steady operator is a flat
                  line of points, an irregular one scatters, a gap is a tall point.
 cadence_summary  the same pattern as numbers and one word.
+rhythm           one line per satellite: how often it burns east-west, how far it is
+                 into the current cycle, and when the next burn is due.
 
 `burns` is a table with one row per detected manoeuvre: satellite, kind
 ("east-west" or "north-south"), window_start and window_end (UTC: the element sets
@@ -178,10 +180,11 @@ def burn_cadence(burns, satellites):
 
 
 def cadence_summary(burns, satellites):
-    """One dict per satellite and kind: count, median_days, iqr_days, longest_gap_days, pattern.
+    """One dict per satellite and kind: count, median_days, q1_days, q3_days, iqr_days, longest_gap_days,
+    pattern, and last (the middle of the latest burn's window, or None).
 
     Intervals are days between the middles of successive windows of the same kind.
-    The three numbers are None when there are fewer than two burns. The pattern is
+    The interval numbers are None when there are fewer than two burns. The pattern is
     "too few" under BURN_MIN_FOR_PATTERN burns, "regular" when the IQR is at most
     BURN_REGULAR_MAX_IQR_SHARE of the median, else "irregular".
     """
@@ -191,13 +194,36 @@ def cadence_summary(burns, satellites):
         for kind in KINDS:
             mine = b[(b["satellite"] == name) & (b["kind"] == kind)]
             gaps = mine["gap_days"].dropna().to_numpy()
-            row = {"satellite": name, "kind": kind, "count": len(mine),
-                   "median_days": None, "iqr_days": None, "longest_gap_days": None, "pattern": PATTERN_TOO_FEW}
+            row = {"satellite": name, "kind": kind, "count": len(mine), "median_days": None, "q1_days": None,
+                   "q3_days": None, "iqr_days": None, "longest_gap_days": None, "pattern": PATTERN_TOO_FEW,
+                   "last": mine["middle"].max() if len(mine) else None}
             if len(gaps):
                 q1, med, q3 = np.percentile(gaps, [25, 50, 75])
-                row.update(median_days=float(med), iqr_days=float(q3 - q1), longest_gap_days=float(gaps.max()))
+                row.update(median_days=float(med), q1_days=float(q1), q3_days=float(q3), iqr_days=float(q3 - q1),
+                           longest_gap_days=float(gaps.max()))
                 if len(mine) >= settings.BURN_MIN_FOR_PATTERN:
                     regular = q3 - q1 <= settings.BURN_REGULAR_MAX_IQR_SHARE * med
                     row["pattern"] = PATTERN_REGULAR if regular else PATTERN_IRREGULAR
             out.append(row)
+    return out
+
+
+def rhythm(burns, satellites, as_of):
+    """One dict per satellite, in the order given, for its east-west burns (the ones that keep it in its slot):
+    cadence_summary's numbers, plus since_days (days from the latest burn to as_of, the end of the data),
+    due_in_days (the median interval less since_days: below zero once the usual time has passed),
+    late (True once since_days passes the upper quartile, the end of the usual window) and ns_count.
+
+    Without a median interval since_days may still be known, and due_in_days and late are None.
+    """
+    as_of = _naive_utc(as_of)
+    rows = {(r["satellite"], r["kind"]): r for r in cadence_summary(burns, satellites)}
+    out = []
+    for name in satellites:
+        row = dict(rows[(name, EAST_WEST)], ns_count=rows[(name, NORTH_SOUTH)]["count"])
+        since = (as_of - row["last"]).total_seconds() / 86400 if row["last"] is not None else None
+        known = row["median_days"] is not None and since is not None
+        row.update(since_days=since, due_in_days=row["median_days"] - since if known else None,
+                   late=since > row["q3_days"] if known else None)
+        out.append(row)
     return out

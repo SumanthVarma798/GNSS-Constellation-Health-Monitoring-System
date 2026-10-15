@@ -150,11 +150,11 @@ def _on(page):
     return lambda at: at.session_state.__setitem__("page", page)
 
 
-def test_station_keeping_shows_a_rhythm_card_per_satellite_and_two_charts():
+def test_station_keeping_shows_a_rhythm_line_per_satellite_and_two_charts():
     at = run(_on("Station-keeping"))
-    cards = [b for body in htmls(at) for b in body.split('class="raised"')[1:]]
+    lines = [b for body in htmls(at) for b in body.split('<div class="rh">')[1:]]
 
-    assert len(cards) == 8
+    assert len(lines) == 8
     assert len(at.get("plotly_chart")) == 2
 
 

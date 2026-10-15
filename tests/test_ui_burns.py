@@ -192,3 +192,18 @@ def test_timeline_accepts_timezone_aware_times():
                          window_end=SMALL["window_end"].dt.tz_localize("UTC"))
     fig = B.burn_timeline(aware, SATS, T0.tz_localize("UTC"), END.tz_localize("UTC"))
     assert len(bars(fig, "east-west").y) == 4
+
+
+def test_rhythm_by_hand():
+    on_time, late = B.rhythm(SMALL, SATS, T0 + 50 * DAY), B.rhythm(SMALL, SATS, T0 + 70 * DAY)
+    a = on_time[0]
+    assert [r["satellite"] for r in on_time] == SATS
+    assert (a["median_days"], a["q1_days"], a["q3_days"]) == (20, 15, 25)   # gaps 10 and 30
+    assert a["since_days"] == 10 and a["due_in_days"] == 10 and a["late"] is False and a["ns_count"] == 2
+    assert late[0]["due_in_days"] == -10 and late[0]["late"] is True         # 30 days on, past the upper quartile
+
+
+def test_rhythm_without_an_interval():
+    _, b, c = B.rhythm(SMALL, SATS, (T0 + 13 * DAY).tz_localize("UTC"))
+    assert b["since_days"] == 10 and b["due_in_days"] is None and b["late"] is None   # one burn: no interval
+    assert c["since_days"] is None and c["count"] == 0
