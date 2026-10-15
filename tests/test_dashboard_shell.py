@@ -204,6 +204,12 @@ def test_rows_from_celestrak_make_the_chip_say_today_and_its_time(monkeypatch):
     assert len(tiles(at)) == 8
 
 
+def test_the_bar_says_when_the_next_automatic_refresh_is():
+    chips = " ".join(htmls(run()))
+
+    assert '<span class="next">next 14:00</span>' in chips   # tried at the frozen 12:00 UTC, every two hours
+
+
 def test_a_failed_refresh_keeps_the_archive_and_says_so(monkeypatch):
     def down(norads):
         raise requests.ConnectionError("no route")

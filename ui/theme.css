@@ -142,6 +142,10 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend
 .stApp:has(.st-key-topbar) [data-testid="stMainBlockContainer"] { padding-top: 22px; }
 .st-key-topbar { background: var(--platform); border: 1px solid var(--edge); border-radius: 18px; box-shadow: var(--raised); padding: 10px 16px; margin-bottom: 22px; }
 .st-key-topbar [data-testid="stColumn"] { min-width: 0; }
+@media (min-width: 640px) {   /* each group as wide as it needs, the room left shared out between them */
+  .st-key-topbar [data-testid="stHorizontalBlock"] { justify-content: space-between; gap: 12px; }
+  .st-key-topbar [data-testid="stColumn"] { flex: 0 1 auto !important; width: auto !important; }
+}
 .brand { font-size: 16px; letter-spacing: .01em; white-space: nowrap; }
 .right { display: flex; justify-content: flex-end; }
 
@@ -188,6 +192,8 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend
 .st-key-refresh { flex-direction: row; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: nowrap; }
 .st-key-refresh > div { width: auto !important; flex: 0 1 auto; min-width: 0; }
 .st-key-refresh .chip + .chip { margin-left: 6px; }
+.st-key-refresh .next { margin-left: 10px; font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+.st-key-refresh_button { margin-inline: 5px; }   /* room for the ring, so the gaps either side are even */
 .st-key-refresh_button button {
   position: relative; width: 36px; height: 36px; min-height: 0; padding: 0; border-radius: 50%; color: var(--muted); overflow: visible;
 }
