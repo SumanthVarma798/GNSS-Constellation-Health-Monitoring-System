@@ -70,8 +70,8 @@ Solid arrows carry data today. Dotted arrows are not wired yet.
 
 ```mermaid
 pie showData title Estimated hours, all guesses
-  "Built" : 50
-  "Remaining" : 189
+  "Built" : 56
+  "Remaining" : 214
 ```
 
 | Issue | What | Hours (guess) | State |
@@ -89,7 +89,12 @@ pie showData title Estimated hours, all guesses
 | 42 | Decide where scheduled jobs run and where raw copies are kept | not sized | Decided 12 Oct 2026: stay on GitHub while its timer works. |
 | 44 | Scheduled jobs in one container image, run by Kubernetes CronJob locally | 8 | Parked: not needed while GitHub's timer works |
 | 45 | Archive writes through one interface: a folder today, an object store later | 5 | Parked until the archive's size starts to matter |
-| 10 | Notices ledger: GPS advisories | 10 | Next candidate |
+| 47 | Demo for the team call, Sat 17 Oct 2026 | tracker | Items 48 to 51, and 23 |
+| 48 | Demo A. The look: one theme and reusable parts | 6 | Built |
+| 49 | Demo B. Master map page: many identifiers to one master ID | 8 | Being built |
+| 50 | Demo C. Orbit pictures: slot belt, 3D view, score parts | 9 | Being built |
+| 51 | Demo D. Menu, How it works page, new look on the existing tabs | 6 | Open; needs 48, 49 and 50 |
+| 10 | Notices ledger: GPS advisories | 10 | Open, after the call |
 | 13 | News, official pages, linked social posts | 14 | Waiting on a list of sources |
 | 14 | Owner and status per satellite, from a second source | 3 | Built; joining the weekly proposal is a follow-up |
 | 15 | Claim extraction | 20 | Waiting on a model and a spending ceiling |
@@ -101,7 +106,7 @@ pie showData title Estimated hours, all guesses
 | 19, 20 | Service column; announced versus observed | 25 | Open |
 | 21, 22 | Per-satellite history; scoreboard | 40 | Open |
 | 17 | Admin page | 15 | Later |
-| 23 | Team call, Sat 17 Oct 2026 | 3 | Open |
+| 23 | Team call, Sat 17 Oct 2026: run-through, handout, fallback pictures | 5 | Open |
 
 ## 4. How one item travels
 
@@ -225,6 +230,9 @@ Produced from the code. A test fails if this table and the code disagree.
 | - | Changes on the dashboard | Always shown visually, with colour. If there is too much to show, add filters. A satellite is added or removed only with approval and a traceable record. |
 | - | GitHub-only is temporary | Scheduled jobs and raw copies will move off GitHub (issue 42). Code, registry tables and approvals stay on GitHub. |
 | - | Scheduler | Stay on GitHub while its timer works; do not add complexity. If it stops working, the agreed next step is Kubernetes CronJob, then Argo Workflows when a job first needs steps that wait on each other or on a person. |
+| - | The dashboard's look | Neumorphic, after CRED's Synth: dark, one accent, pictures before text. Every colour is named once in `ui/palette.py`; pages compose reusable parts and carry no styling of their own. A status is always said in words as well as colour. |
+| - | A satellite and its slot | Each satellite is judged against its own slot, never the nearest one, so one that drifts onto another's slot still shows as drifted. |
+| - | How the work is run | One lead session talks to Sumanth, tracks progress, briefs helper sessions, reviews their work and is the only one that pushes. Sumanth approves every pull request. |
 | - | Parts out of step | Anything a person approves arrives late. Every part must keep working, and say so visibly, while another part is behind. Tests are strict at the point of approval; the running system is tolerant. |
 
 ## 9. Assumptions
