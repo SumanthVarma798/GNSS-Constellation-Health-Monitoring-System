@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 from evidence.master_map import agreement, display_name, identifiers, signal_ids_of
-from evidence.settings import COUNTRY_NAMES, COUNTRY_NOT_GIVEN, IDENTITY_DIFFER, SERVICE_DISAGREE
+from evidence.settings import COUNTRY_NAMES, COUNTRY_NOT_GIVEN, IDENTITY_DIFFER, SCHEME_SIGNAL_ID, SERVICE_DISAGREE
 from ui import palette
 from ui.theme import root_block
 
@@ -40,6 +40,8 @@ def master_map_records(data):
             "constellation": line["constellation"],
             "country": COUNTRY_NAMES.get(states.get(svn, ""), COUNTRY_NOT_GIVEN),
             "disagreement": _disagreement(line),
+            "identity": line["identity"],
+            "signal_id": next(item["value"] for item in found if item["scheme"] == SCHEME_SIGNAL_ID),
             "identifiers": found,
             "periods": signal_ids_of(svn, signal_ids),
         })

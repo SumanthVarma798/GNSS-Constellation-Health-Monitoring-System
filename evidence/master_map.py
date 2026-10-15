@@ -19,7 +19,8 @@ from evidence.settings import (GCAT_MISSION_FAILED, GCAT_STILL_OPERATING, IDENTI
                                ORBIT_FEED_FILES, SCHEME_COSPAR, SCHEME_DASHBOARD, SCHEME_GCAT, SCHEME_ISSUERS,
                                SCHEME_NORAD, SCHEME_ORBIT_FEED, SCHEME_SIGNAL_ID, SERVICE_AGREE_NOT_IN_SERVICE,
                                SERVICE_AGREE_OPERATING, SERVICE_DISAGREE, SERVICE_NOT_IN_CATALOGUE,
-                               SIGNAL_ID_ISSUERS)
+                               SIGNAL_ID_ISSUERS, SOURCE_DASHBOARD, SOURCE_GCAT, SOURCE_IGS, SOURCE_ORBIT_FEED,
+                               SOURCE_SILENT)
 
 NUMBER_WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
 SIGNAL_ID_IN_BRACKETS = re.compile(r"\(([^()\s]+)\)\s*$")  # "BEIDOU-3 G1 (C59)" -> "C59"
@@ -129,27 +130,38 @@ def _signal_id_identifier(satellite, periods):
             "remark": f"since {now[-1]['start']}"}
 
 
-def _feed_identifier(satellite, periods, feed_names, feed_checked):
+def _feed_identifier(feed_name, periods, checked):
     """The orbit feed's name for the spacecraft and the day it was fetched, or None when the feed does not carry it."""
-    number = int(satellite["catalogue_no"]) if satellite["catalogue_no"].isdigit() else None
-    feed_name = (feed_names or {}).get(number)
     if feed_name is None:
         return None
     status, remark = _feed_remark(feed_name, periods)
-    return {"scheme": SCHEME_ORBIT_FEED, "value": feed_name, "status": status, "remark": remark,
-            "checked": (feed_checked or {}).get(number, NOT_RECORDED)}
+    return {"scheme": SCHEME_ORBIT_FEED, "value": feed_name, "status": status, "remark": remark, "checked": checked}
+
+
+def _says(source, held, value):
+    """What one source holds for an identifier: the same value, another one, or nothing."""
+    if not held:
+        return {"source": source, "status": MAP_IDLE, "note": SOURCE_SILENT}
+    if held == value:
+        return {"source": source, "status": MAP_OK, "note": ""}
+    return {"source": source, "status": MAP_WARN, "note": f"says {held}"}
 
 
 def identifiers(svn, satellites, catalogue, tracked, signal_ids, feed_names=None, feed_checked=None):
     """Every identifier of one spacecraft, in a fixed order, each as
-    {"scheme", "value", "status", "remark", "issuer", "checked"}. feed_names is
+    {"scheme", "value", "status", "remark", "issuer", "checked", "sources"}. feed_names is
     orbit_feed_names(); without it the orbit feed line is left out. feed_checked is
     orbit_feed_checked(). Only the orbit feed records when it was last checked; every
-    other line says NOT_RECORDED. An unknown SVN gives an empty list."""
+    other line says NOT_RECORDED. "sources" lists each of our sources that keeps this kind
+    of identifier and whether it holds the same value, another, or none; a "none" line
+    lists no sources. An unknown SVN gives an empty list."""
     satellite = _by_svn(satellites).get(svn)
     if satellite is None:
         return []
     entry, tracked_row, periods = _by_svn(catalogue).get(svn), _by_svn(tracked).get(svn), signal_ids_of(svn, signal_ids)
+    number = int(satellite["catalogue_no"]) if satellite["catalogue_no"].isdigit() else None
+    feed_name = (feed_names or {}).get(number)
+    dashboard_name = tracked_row["dashboard_name"] if tracked_row else ""
     found = []
     if satellite["catalogue_no"]:
         found.append({"scheme": SCHEME_NORAD, "value": satellite["catalogue_no"], "status": MAP_OK, "remark": ""})
@@ -157,12 +169,24 @@ def identifiers(svn, satellites, catalogue, tracked, signal_ids, feed_names=None
         found.append({"scheme": SCHEME_COSPAR, "value": satellite["cospar_id"], "status": MAP_OK, "remark": ""})
     found.append(_catalogue_identifier(satellite, entry))
     found.append(_signal_id_identifier(satellite, periods))
-    found.append(_feed_identifier(satellite, periods, feed_names, feed_checked))
-    if tracked_row and tracked_row["dashboard_name"]:
-        found.append({"scheme": SCHEME_DASHBOARD, "value": tracked_row["dashboard_name"], "status": MAP_ACCENT,
-                      "remark": ""})
+    found.append(_feed_identifier(feed_name, periods, (feed_checked or {}).get(number, NOT_RECORDED)))
+    if dashboard_name:
+        found.append({"scheme": SCHEME_DASHBOARD, "value": dashboard_name, "status": MAP_ACCENT, "remark": ""})
     issuers = {**SCHEME_ISSUERS, SCHEME_SIGNAL_ID: SIGNAL_ID_ISSUERS.get(satellite["constellation"], NOT_RECORDED)}
-    return [{"issuer": issuers[item["scheme"]], "checked": NOT_RECORDED, **item} for item in found if item]
+    in_brackets = SIGNAL_ID_IN_BRACKETS.search(feed_name or "")
+    # Which of our sources hold each kind of identifier, and what each holds for this spacecraft.
+    held = {SCHEME_NORAD: [(SOURCE_IGS, satellite["catalogue_no"]),
+                           (SOURCE_ORBIT_FEED, satellite["catalogue_no"] if feed_name is not None else "")],
+            SCHEME_COSPAR: [(SOURCE_IGS, satellite["cospar_id"]), (SOURCE_GCAT, entry["cospar_id"] if entry else "")],
+            SCHEME_GCAT: [(SOURCE_GCAT, entry["name"] if _in_catalogue(entry) else "")],
+            SCHEME_SIGNAL_ID: [(SOURCE_IGS, satellite["signal_id_now"]),
+                               (SOURCE_ORBIT_FEED, in_brackets.group(1) if in_brackets else "")],
+            SCHEME_ORBIT_FEED: [(SOURCE_ORBIT_FEED, feed_name)],
+            SCHEME_DASHBOARD: [(SOURCE_DASHBOARD, dashboard_name)]}
+    return [{"issuer": issuers[item["scheme"]], "checked": NOT_RECORDED, **item,
+             "sources": [] if item["value"] == "none" else
+             [_says(source, value, item["value"]) for source, value in held[item["scheme"]]]}
+            for item in found if item]
 
 
 def _identity(satellite, entry):

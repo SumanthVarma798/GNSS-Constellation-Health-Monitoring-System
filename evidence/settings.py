@@ -146,6 +146,13 @@ SIGNAL_ID_ISSUERS = {"NavIC": "ISRO", "QZSS": "Cabinet Office of Japan", "BeiDou
 # Said instead of a date when the repository keeps no record of when a value was last checked.
 NOT_RECORDED = "not recorded"
 
+# Our sources, as the hover card names them, and what one says when it does not hold an identifier.
+SOURCE_IGS = "IGS satellite file"
+SOURCE_GCAT = "GCAT"
+SOURCE_ORBIT_FEED = "CelesTrak orbit feed"
+SOURCE_DASHBOARD = "our dashboard registry"
+SOURCE_SILENT = "does not carry it"
+
 # The catalogue's state codes (who owns the spacecraft), said in full.
 COUNTRY_NAMES = {"IN": "India", "CN": "China", "US": "United States", "J": "Japan", "RU": "Russia",
                  "SU": "Soviet Union", "I-EU": "European Union", "I-ESA": "European Space Agency"}

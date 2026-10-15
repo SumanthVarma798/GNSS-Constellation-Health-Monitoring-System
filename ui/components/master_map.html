@@ -68,6 +68,20 @@ button { font: inherit; color: inherit; }
 .timeline .bar-p { fill: var(--fill); }
 .timeline .bar-p.now { fill: var(--accent); }
 
+/* ---- the hover card: who an identifier belongs to and which sources hold it ---- */
+.tip { display: none; position: absolute; z-index: 20; width: max-content; max-width: min(300px, calc(100% - 16px)); padding: 12px 16px 14px;
+  background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); pointer-events: none; font-size: 12.5px; }
+.tip.on { display: block; }
+.tip h4 { margin: 0 0 8px; font-size: 13px; font-weight: 600; }
+.tip h4 b { margin-right: 8px; font-family: var(--mono); color: var(--accent); }
+.tip h4 span { color: var(--muted); font-weight: 400; }
+.tip dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; }
+.tip dt { color: var(--muted); }
+.tip dd { margin: 0; }
+.tip .src { display: block; }
+.tip .src i { display: inline-block; width: 14px; font-style: normal; font-weight: 700; }
+.tip .ok { color: var(--ok); } .tip .warn { color: var(--warn); } .tip .idle { color: var(--idle); }
+
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
@@ -77,6 +91,7 @@ button { font: inherit; color: inherit; }
   <canvas id="map" role="img" aria-label="Spacecraft identity cards. Drag to move, scroll or pinch to zoom; zoom in to read each card."></canvas>
   <div class="sr" id="cards" role="list" aria-label="Spacecraft"></div>
   <p class="totals" id="totals" aria-live="polite"></p>
+  <div class="tip" id="tip" aria-hidden="true"></div>
   <aside class="side" id="side" role="dialog" aria-label="Spacecraft detail"><button type="button" class="close" id="close" aria-label="Close">&times;</button><div id="side-body"></div></aside>
 </div>
 <script type="application/json" id="map-data">__DATA__</script>
@@ -119,19 +134,20 @@ function fit(text, font, width) {   // one line, shortened with an ellipsis if i
 }
 // level 1: shown from middle zoom; level 2: only when close.
 function layout(r) {
-  const lines = [], dots = []; let y = 46;
+  const lines = [], dots = [], rows = []; let y = 46;
   const add = (text, font, colour, level, x, step) => { y += step; lines.push({ text, font, colour, level, x, y }); };
   r.identifiers.forEach(it => {
-    const warn = it.status === "warn", x = PAD + INDENT;
+    const warn = it.status === "warn", x = PAD + INDENT, top = y + 4;
     y += 10;
     add(it.scheme, F.label, C.muted, 1, x, 10);
     dots.push({ y: y - 3.5, tone: STATUS[it.status] || C.idle });
     add(fit(it.value, F.value, TEXT_W), F.value, warn ? C.warn : C.ink, 1, x, 15);
     if (it.remark) wrap(it.remark, F.note, TEXT_W).forEach(t => add(t, F.note, warn ? C.warn : C.muted, 1, x, 12.5));
     wrap(`from ${it.issuer} · last checked: ${it.checked}`, F.small, TEXT_W).forEach(t => add(t, F.small, C.muted, 2, x, 12));
+    rows.push({ top, bottom: y + 4, it });
   });
   if (r.disagreement) { y += 12; wrap(r.disagreement, F.note, W - 2 * PAD).forEach(t => add(t, F.note, C.warn, 1, PAD, 12.5)); }
-  return { lines, dots, h: y + 14, name: fit(r.name, F.name, W - 2 * PAD - 22), chipName: fit(r.name, `20px ${SANS}`, W - 24),
+  return { lines, dots, rows, h: y + 14, name: fit(r.name, F.name, W - 2 * PAD - 22), chipName: fit(r.name, `20px ${SANS}`, W - 24),
            mark: !!r.disagreement || r.identifiers.some(it => it.status === "warn") };
 }
 const card = new Map(RECS.map(r => [r.svn, layout(r)]));
@@ -265,7 +281,7 @@ function fitTo(list, most = 1.4) {   // 24px of room on every side, and 34px mor
   return { k, x: b.width / 2 - (x0 + x1) / 2 * k, y: (b.height + 34) / 2 - (y0 + y1) / 2 * k };
 }
 function goTo(to) {
-  cancelAnimationFrame(flight);
+  cancelAnimationFrame(flight); hideTip();
   if (reduce.matches) { view = { ...to }; paint(); return; }
   const from = { ...view }, t0 = performance.now();
   const step = now => {
@@ -277,23 +293,66 @@ function goTo(to) {
 }
 const home = () => fitTo(RECS);   // open on every field at once; a filter then flies to its matches
 
-function cardAt(e) {
+function cardAt(e, where) {
   const b = rect(), wx = (e.clientX - b.left - view.x) / view.k, wy = (e.clientY - b.top - view.y) / view.k;
   for (let i = RECS.length - 1; i >= 0; i--) {
     const r = RECS[i], p = spot.get(r.svn);
-    if (wx >= p.x && wx <= p.x + W && wy >= p.y && wy <= p.y + p.h) return r.svn;
+    if (wx >= p.x && wx <= p.x + W && wy >= p.y && wy <= p.y + p.h) { if (where) where.y = wy - p.y; return r.svn; }
   }
   return null;
 }
+
+/* ---------- the hover card: a spacecraft from far, one identifier from middle zoom in ---------- */
+const tip = $("tip"); let tipKey = "";
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
+const MARKS = { ok: "✓", warn: "✗", idle: "–" };
+function fillTip(heading, sub, pairs) {
+  const h = el("h4"), dl = el("dl");
+  h.append(el("b", "", heading), el("span", "", sub));
+  pairs.forEach(([label, value]) => { const dd = el("dd"); dd.append(value); dl.append(el("dt", "", label), dd); });
+  tip.replaceChildren(h, dl);
+}
+function sourcesOf(it) {
+  const list = document.createDocumentFragment();
+  it.sources.forEach(s => { const line = el("span", "src"); line.append(el("i", s.status, MARKS[s.status]), `${s.source}${s.note ? " " + s.note : ""}`); list.append(line); });
+  return list;
+}
+function hideTip() { tip.classList.remove("on"); tipKey = ""; }
+function showTip(e) {
+  const where = {}, svn = cardAt(e, where);
+  if (!svn) return hideTip();
+  const r = RECS.find(x => x.svn === svn), c = card.get(svn), close = view.k >= .64;   // the card's rows are in from here
+  const row = close ? c.rows.find(o => where.y >= o.top && where.y < o.bottom) : null;
+  if (close && !row) return hideTip();
+  const key = svn + (row ? ":" + c.rows.indexOf(row) : "");
+  if (key !== tipKey) {
+    tipKey = key;
+    if (row) {
+      const it = row.it, pairs = [["Belongs to", `${r.svn} · ${r.name} · ${r.constellation}`], ["Issued by", it.issuer]];
+      if (it.sources.length) pairs.push(["Sources", sourcesOf(it)]);
+      pairs.push(["Last checked", it.checked]);
+      fillTip(it.value, it.scheme, pairs);
+    } else {
+      const look = r.identifiers.filter(it => it.status === "warn").length;
+      fillTip(r.svn, r.name, [["System", r.constellation], ["Signal ID today", r.signal_id],
+        ["Identifiers", `${r.identifiers.length} · ${look ? look + (look === 1 ? " needs" : " need") + " a look" : "none need a look"}`],
+        ["Sources", r.disagreement ? el("span", "warn", r.disagreement) : r.identity]]);   // matches the card's "!" mark
+    }
+    tip.classList.add("on");
+  }
+  const b = rect(), w = tip.offsetWidth, h = tip.offsetHeight, px = e.clientX - b.left, py = e.clientY - b.top;
+  const x = px + 16 + w > b.width - 8 ? px - 16 - w : px + 16;   // flip to the pointer's left near the right edge
+  tip.style.left = clamp(x, 8, b.width - w - 8) + "px"; tip.style.top = clamp(py + 16, 8, b.height - h - 8) + "px";
+}
 const pointers = new Map(); let travelled = 0, downOn = null;
 canvas.addEventListener("pointerdown", e => {
-  cancelAnimationFrame(flight); canvas.setPointerCapture(e.pointerId);
+  cancelAnimationFrame(flight); canvas.setPointerCapture(e.pointerId); hideTip();
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (pointers.size === 1) { travelled = 0; downOn = cardAt(e); canvas.classList.add("drag"); } else downOn = null;
 });
 canvas.addEventListener("pointermove", e => {
   const last = pointers.get(e.pointerId);
-  if (!last) { canvas.classList.toggle("over", !!cardAt(e)); return; }
+  if (!last) { canvas.classList.toggle("over", !!cardAt(e)); showTip(e); return; }
   const b = rect(), now = { x: e.clientX, y: e.clientY };
   if (pointers.size === 1) {
     view.x += now.x - last.x; view.y += now.y - last.y; travelled += Math.abs(now.x - last.x) + Math.abs(now.y - last.y); paint();
@@ -309,16 +368,17 @@ const lift = e => {
   if (!pointers.delete(e.pointerId)) return;
   if (!pointers.size) { canvas.classList.remove("drag"); if (e.type === "pointerup" && downOn && travelled < 6) select(downOn); downOn = null; }
 };
-canvas.addEventListener("pointerup", lift); canvas.addEventListener("pointercancel", lift);
+canvas.addEventListener("pointerup", lift); canvas.addEventListener("pointercancel", lift); canvas.addEventListener("pointerleave", hideTip);
 canvas.addEventListener("wheel", e => {
-  e.preventDefault(); cancelAnimationFrame(flight);
+  e.preventDefault(); cancelAnimationFrame(flight); hideTip();
   const b = rect(), dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
   zoomAt(e.clientX - b.left, e.clientY - b.top, Math.exp(-dy * (e.ctrlKey ? .01 : .0015)));
 }, { passive: false });
 
 /* ---------- keyboard and screen readers: one hidden button per card, in registry order ---------- */
 $("cards").innerHTML = RECS.map(r => `<div role="listitem"><button type="button" data-svn="${esc(r.svn)}">${esc(r.svn + ", " + r.name + ". "
-  + r.identifiers.map(it => `${it.scheme}: ${it.value}${it.remark ? " (" + it.remark + ")" : ""}, from ${it.issuer}, last checked ${it.checked}`).join(". ")
+  + r.identifiers.map(it => `${it.scheme}: ${it.value}${it.remark ? " (" + it.remark + ")" : ""}, from ${it.issuer}, last checked ${it.checked}`
+    + it.sources.map(s => `, ${s.source} ${s.note || "agrees"}`).join("")).join(". ")
   + (r.disagreement ? ". " + r.disagreement : ""))}</button></div>`).join("");
 const buttons = new Map([...$("cards").querySelectorAll("button")].map(el => [el.dataset.svn, el]));
 $("cards").addEventListener("focusin", e => {

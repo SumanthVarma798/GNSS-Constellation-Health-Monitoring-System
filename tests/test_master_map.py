@@ -85,7 +85,8 @@ def test_identifiers_come_in_the_stated_order_with_plain_scheme_names():
         "Signal ID today (PRN)", "Orbit feed name (CelesTrak)", "Dashboard name"]
     assert [line["value"] for line in lines][:2] == ["43683", "2018-085A"]
     assert lines[-1] == {"scheme": "Dashboard name", "value": "Dash", "status": MAP_ACCENT, "remark": "",
-                         "issuer": "this project's registry", "checked": NOT_RECORDED}
+                         "issuer": "this project's registry", "checked": NOT_RECORDED,
+                         "sources": [{"source": "our dashboard registry", "status": MAP_OK, "note": ""}]}
 
 
 def test_each_identifier_says_who_issued_it_and_only_the_orbit_feed_has_a_checked_day():
@@ -107,6 +108,41 @@ def test_a_signal_id_is_issued_by_its_systems_operator(constellation, issuer):
 def test_an_orbit_feed_line_without_a_fetch_day_says_not_recorded():
     line = lines_of(feed_names={43683: "BEIDOU-3 G1 (C04)"})[4]
     assert line["scheme"].startswith("Orbit feed") and line["checked"] == NOT_RECORDED
+
+
+def sources(line):
+    """(source, status, note) for each of our sources on one identifier line."""
+    return [(s["source"], s["status"], s["note"]) for s in line["sources"]]
+
+
+def test_every_source_that_holds_the_same_value_confirms_it():
+    lines = lines_of(feed_names={43683: "BEIDOU-3 G1 (C04)"})
+    assert [sources(line) for line in lines] == [
+        [("IGS satellite file", MAP_OK, ""), ("CelesTrak orbit feed", MAP_OK, "")],
+        [("IGS satellite file", MAP_OK, ""), ("GCAT", MAP_OK, "")],
+        [("GCAT", MAP_OK, "")],
+        [("IGS satellite file", MAP_OK, ""), ("CelesTrak orbit feed", MAP_OK, "")],
+        [("CelesTrak orbit feed", MAP_OK, "")]]
+
+
+def test_a_source_that_holds_another_value_says_which():
+    lines = lines_of(catalogue=[entry("X1", cospar_id="2018-085B")], feed_names={43683: "BEIDOU-3 G1 (C59)"})
+    assert sources(lines[1])[1] == ("GCAT", MAP_WARN, "says 2018-085B")
+    assert sources(lines[3])[1] == ("CelesTrak orbit feed", MAP_WARN, "says C59")
+
+
+def test_a_source_that_does_not_hold_the_identifier_says_so():
+    lines = lines_of(catalogue=[blank_entry("X1")], feed_names={11111: "OTHER (C01)"})
+    assert sources(lines[0])[1] == ("CelesTrak orbit feed", MAP_IDLE, "does not carry it")
+    assert sources(lines[1])[1] == ("GCAT", MAP_IDLE, "does not carry it")
+    assert sources(lines[3])[1] == ("CelesTrak orbit feed", MAP_IDLE, "does not carry it")
+    no_brackets = lines_of(feed_names={43683: "BEIDOU-3 G1"})[3]
+    assert sources(no_brackets)[1] == ("CelesTrak orbit feed", MAP_IDLE, "does not carry it")
+
+
+def test_a_none_line_lists_no_sources():
+    lines = lines_of(satellite={"signal_id_now": ""}, catalogue=[blank_entry("X1")])
+    assert [(line["value"], line["sources"]) for line in lines[2:]] == [("none", []), ("none", [])]
 
 
 def test_catalogue_line_agrees_when_the_launch_designators_match():
@@ -368,6 +404,13 @@ def test_real_c217_orbit_feed_name_is_two_signal_ids_out_of_date(real):
     feed = next(line for line in lines if line["scheme"] == "Orbit feed name (CelesTrak)")
     assert (feed["value"], feed["status"], feed["remark"]) == ("BEIDOU-3 G1 (C59)", MAP_WARN,
                                                                "two signal IDs out of date")
+
+
+def test_real_c217_signal_id_is_confirmed_by_the_igs_file_and_contradicted_by_the_orbit_feed(real):
+    lines = identifiers("C217", real["satellites"], real["catalogue"], real["tracked"], real["signal_ids"], real["feeds"])
+    signal = next(line for line in lines if line["scheme"] == "Signal ID today (PRN)")
+    assert (signal["value"], sources(signal)) == ("C04", [("IGS satellite file", MAP_OK, ""),
+                                                          ("CelesTrak orbit feed", MAP_WARN, "says C59")])
 
 
 def test_real_agreement_for_the_three_spacecraft_the_brief_names(real):
