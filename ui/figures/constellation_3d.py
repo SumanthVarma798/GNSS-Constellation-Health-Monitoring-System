@@ -73,7 +73,7 @@ def _slot_owner_words(row):
     return f"empty, it belongs to {row['name']} ({row['state']})"
 
 
-def _slot_colour(row):
+def slot_colour(row):
     """Blue when its own satellite is on it, the idle colour when that satellite's position is not known, else the empty colour."""
     if row["state"] == palette.SLOT_IN:
         return palette.ACCENT
@@ -84,7 +84,7 @@ def _slot_markers(rows):
     placed = [r for r in rows if r["slot_lon"] is not None]
     points = [_point(r["slot_lon"], BELT_RADIUS) for r in placed]
     hover = [escape(f"Slot {r['slot_lon']:g} degrees east: {_slot_owner_words(r)}") for r in placed]
-    colours = [_slot_colour(r) for r in placed]
+    colours = [slot_colour(r) for r in placed]
     return go.Scatter3d(mode="markers", x=[p[0] for p in points], y=[p[1] for p in points], z=[0.0] * len(points),
                         hovertext=hover, hoverinfo="text",
                         marker={"size": 9, "symbol": "circle-open", "color": colours, "line": {"width": 3, "color": colours}})
