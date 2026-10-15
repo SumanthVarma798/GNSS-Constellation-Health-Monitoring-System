@@ -13,9 +13,10 @@ body { --mono: __FONT_NUMBERS__; background: var(--platform); color: var(--ink);
 button { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-/* ---- the three dropdowns ---- */
+/* ---- the dropdowns ---- */
 .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; position: relative; z-index: 30; }
 .dd { position: relative; }
+.dd[hidden] { display: none; }
 .pill { display: inline-flex; align-items: center; gap: 9px; padding: 8px 18px; border-radius: 999px; border: 1px solid var(--edge);
   background: var(--platform); color: var(--muted); box-shadow: var(--raised-sm); cursor: pointer; font-weight: 600; }
 .pill:hover { color: var(--accent); }
@@ -32,7 +33,7 @@ button { font: inherit; color: inherit; }
 .panel li:hover, .panel li.active { background: var(--well); box-shadow: var(--pressed); }
 .panel:focus-visible li.active { outline: 2px solid var(--accent); outline-offset: -2px; }
 .box { flex: none; width: 18px; height: 18px; border-radius: 7px; background: var(--well); box-shadow: var(--pressed); display: grid; place-items: center; }
-.panel li[aria-selected="true"] .box::after { content: ""; width: 8px; height: 8px; border-radius: 3px; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+.panel li[aria-selected="true"] .box::after { content: ""; width: 8px; height: 8px; border-radius: 3px; background: var(--accent); }
 .panel li .count { margin-left: auto; padding-left: 16px; color: var(--muted); font-family: var(--mono); font-size: 12px; }
 .clear { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--edge); background: var(--platform); box-shadow: var(--raised-sm); color: var(--muted); cursor: pointer; }
 .clear:hover { color: var(--accent); }
@@ -42,47 +43,15 @@ button { font: inherit; color: inherit; }
 /* ---- the canvas ---- */
 .stage { position: relative; flex: 1; min-height: 0; border-radius: var(--r); background: var(--well); box-shadow: var(--pressed); overflow: hidden; }
 #map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+#map.over { cursor: pointer; }
 #map.drag { cursor: grabbing; }
-.tree { cursor: pointer; transition: opacity .35s ease; }
-.tree:focus { outline: none; }
-.tree.dim { opacity: .15; }
-.tree.dim:hover { opacity: .55; }
-.halo { opacity: 0; transition: opacity .35s ease; pointer-events: none; }
-.tree.hit .halo { opacity: 1; }
-.ring { fill: none; stroke: var(--accent); stroke-width: 1.6; opacity: 0; }
-.tree.sel .ring, .tree:focus-visible .ring { opacity: 1; }
-.link { stroke: var(--track); stroke-width: 1.1; }
-.link.warn { stroke: var(--warn); }
-.hub { fill: var(--well); stroke: var(--accent); stroke-width: 1.5; }
-.leaf { fill: var(--platform); stroke: var(--track); stroke-width: 1.1; }
-.leaf.warn { stroke: var(--warn); }
-.leaf.accent { stroke: var(--accent); }
-.id { fill: var(--accent); font-size: 9.5px; font-weight: 700; text-anchor: middle; }
-.tag { fill: var(--muted); font-size: 8.5px; font-weight: 600; text-anchor: middle; }
-.tag.warn, .val.warn { fill: var(--warn); }
-.val { fill: var(--ink); font-family: var(--mono); font-size: 7.6px; }
-.field-name { fill: var(--muted); font-weight: 600; text-anchor: middle; pointer-events: none; }
-#map.far .val { display: none; }
-#map.afar .tag, #map.afar .id { display: none; }
-#map.afar .hub { transform: scale(2.4); }   /* zoomed far out, each tree is a dot you can still see */
-#map.afar .halo { transform: scale(1.5); }
-.totals { position: absolute; left: 18px; bottom: 14px; margin: 0; color: var(--muted); font-size: 13px; pointer-events: none; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.totals { position: absolute; left: 14px; bottom: 14px; margin: 0; padding: 5px 14px; border-radius: 999px; border: 1px solid var(--edge); background: var(--platform); box-shadow: var(--raised-sm); color: var(--muted); font-size: 13px; pointer-events: none; }
 .totals b { color: var(--ink); font-family: var(--mono); font-weight: 600; }
+.mark { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--warn); color: var(--platform); font-size: 11px; font-weight: 700; vertical-align: -3px; }
 
-/* ---- legend: collapsed until hover or keyboard focus ---- */
-.legend { position: absolute; right: 18px; bottom: 14px; z-index: 5; }
-.legend-label { display: inline-block; padding: 6px 16px; border-radius: 999px; border: 1px solid var(--edge); background: var(--platform); box-shadow: var(--raised-sm); color: var(--muted); cursor: default; }
-.legend:hover .legend-label, .legend:focus-within .legend-label { background: var(--well); box-shadow: var(--pressed); color: var(--accent); }
-.legend ul { display: none; position: absolute; right: 0; bottom: calc(100% + 10px); width: max-content; max-width: min(360px, 80vw); margin: 0; padding: 12px 16px; list-style: none;
-  background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); }
-.legend:hover ul, .legend:focus-within ul { display: block; }
-.legend li { display: flex; align-items: center; gap: 10px; margin: 6px 0; }
-.legend .dot, .dot { flex: none; display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--track); background: var(--platform); box-shadow: var(--raised-sm); font-size: 10.5px; font-weight: 700; color: var(--muted); }
-.dot.warn { border-color: var(--warn); color: var(--warn); }
-.has-side .legend { display: none; }
-
-/* ---- the side panel ---- */
-.side { display: none; position: absolute; top: 14px; right: 14px; bottom: 14px; z-index: 10; width: min(350px, calc(100% - 28px)); overflow-y: auto; padding: 20px 20px 22px;
+/* ---- the side panel: one spacecraft's signal IDs over time ---- */
+.side { display: none; position: absolute; top: 14px; right: 14px; z-index: 10; width: min(350px, calc(100% - 28px)); max-height: calc(100% - 28px); overflow-y: auto; padding: 20px 20px 22px;
   background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); scrollbar-width: thin; scrollbar-color: var(--track) transparent; }
 .has-side .side { display: block; }
 .side h2 { margin: 0; padding-right: 40px; font-family: var(--mono); font-size: 24px; color: var(--accent); }
@@ -91,14 +60,6 @@ button { font: inherit; color: inherit; }
 .close { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--edge); background: var(--platform); box-shadow: var(--raised-sm); color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; }
 .close:hover { color: var(--accent); }
 .close:active { box-shadow: var(--pressed); background: var(--well); }
-.side dl { margin: 18px 0 0; }
-.side .row { display: grid; grid-template-columns: 22px 1fr; column-gap: 12px; margin: 0 0 14px; }
-.side dt { grid-row: span 3; margin-top: 2px; }
-.side .scheme { color: var(--muted); font-size: 12.5px; }
-.side dd { margin: 0; }
-.side .value { font-family: var(--mono); font-size: 14px; overflow-wrap: anywhere; }
-.side .remark { font-size: 12.5px; color: var(--muted); }
-.side .remark.warn { color: var(--warn); }
 .side h3 { margin: 22px 0 8px; font-size: 13px; color: var(--muted); font-weight: 600; }
 .quiet { margin: 0; color: var(--muted); }
 .timeline { display: block; width: 100%; height: auto; }
@@ -113,9 +74,9 @@ button { font: inherit; color: inherit; }
 <body>
 <div class="bar" id="bar"><button type="button" class="clear" id="clear" hidden>Clear</button></div>
 <div class="stage" id="stage">
-  <svg id="map" role="group" aria-label="Spacecraft and their identifiers"><defs><radialGradient id="glow"><stop offset="0" style="stop-color:var(--accent);stop-opacity:.22"/><stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/></radialGradient></defs><g id="world"></g></svg>
+  <canvas id="map" role="img" aria-label="Spacecraft identity cards. Drag to move, scroll or pinch to zoom; zoom in to read each card."></canvas>
+  <div class="sr" id="cards" role="list" aria-label="Spacecraft"></div>
   <p class="totals" id="totals" aria-live="polite"></p>
-  <div class="legend" tabindex="0" id="legend"><span class="legend-label">Key</span><ul id="legend-list"></ul></div>
   <aside class="side" id="side" role="dialog" aria-label="Spacecraft detail"><button type="button" class="close" id="close" aria-label="Close">&times;</button><div id="side-body"></div></aside>
 </div>
 <script type="application/json" id="map-data">__DATA__</script>
@@ -127,107 +88,181 @@ const RECS = DATA.records;
 const $ = id => document.getElementById(id);
 const esc = v => String(v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const ramp = (v, lo, hi) => clamp((v - lo) / (hi - lo), 0, 1);
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
-const svg = $("map"), world = $("world"), stage = $("stage");
+const canvas = $("map"), ctx = canvas.getContext("2d"), stage = $("stage");
+
+/* ---------- colours and type, all from the page's palette ---------- */
+const css = getComputedStyle(document.documentElement);
+const C = Object.fromEntries(["platform", "well", "track", "fill", "ink", "muted", "accent", "ok", "warn", "idle", "edge"].map(n => [n, css.getPropertyValue("--" + n).trim()]));
+const STATUS = { ok: C.ok, warn: C.warn, idle: C.idle, accent: C.accent };
+const SANS = getComputedStyle(document.body).fontFamily, MONO = getComputedStyle(document.body).getPropertyValue("--mono").trim();
+const F = { id: `700 15px ${SANS}`, name: `12px ${SANS}`, label: `600 9.5px ${SANS}`, value: `12px ${MONO}`, note: `9.5px ${SANS}`, small: `9px ${SANS}` };
+const hueOf = r => DATA.colours[r.constellation] || C.fill;
+
+/* ---------- each card's lines, laid out once in plane units ---------- */
+const W = 220, PAD = 12, INDENT = 12, TEXT_W = W - 2 * PAD - INDENT;
+function wrap(text, font, width) {
+  ctx.font = font;
+  const out = []; let line = "";
+  for (const word of String(text).split(" ")) {
+    const next = line ? line + " " + word : word;
+    if (line && ctx.measureText(next).width > width) { out.push(line); line = word; } else line = next;
+  }
+  return line ? [...out, line] : out;
+}
+function fit(text, font, width) {   // one line, shortened with an ellipsis if it would overflow
+  ctx.font = font; text = String(text);
+  if (ctx.measureText(text).width <= width) return text;
+  while (text && ctx.measureText(text + "…").width > width) text = text.slice(0, -1);
+  return text + "…";
+}
+// level 1: shown from middle zoom; level 2: only when close.
+function layout(r) {
+  const lines = [], dots = []; let y = 46;
+  const add = (text, font, colour, level, x, step) => { y += step; lines.push({ text, font, colour, level, x, y }); };
+  r.identifiers.forEach(it => {
+    const warn = it.status === "warn", x = PAD + INDENT;
+    y += 10;
+    add(it.scheme, F.label, C.muted, 1, x, 10);
+    dots.push({ y: y - 3.5, tone: STATUS[it.status] || C.idle });
+    add(fit(it.value, F.value, TEXT_W), F.value, warn ? C.warn : C.ink, 1, x, 15);
+    if (it.remark) wrap(it.remark, F.note, TEXT_W).forEach(t => add(t, F.note, warn ? C.warn : C.muted, 1, x, 12.5));
+    wrap(`from ${it.issuer} · last checked: ${it.checked}`, F.small, TEXT_W).forEach(t => add(t, F.small, C.muted, 2, x, 12));
+  });
+  if (r.disagreement) { y += 12; wrap(r.disagreement, F.note, W - 2 * PAD).forEach(t => add(t, F.note, C.warn, 1, PAD, 12.5)); }
+  return { lines, dots, h: y + 14, name: fit(r.name, F.name, W - 2 * PAD - 22), chipName: fit(r.name, `20px ${SANS}`, W - 24),
+           mark: !!r.disagreement || r.identifiers.some(it => it.status === "warn") };
+}
+const card = new Map(RECS.map(r => [r.svn, layout(r)]));
 
 /* ---------- seeded randomness: the same spacecraft always lands in the same place ---------- */
 const seedOf = text => { let h = 2166136261; for (const c of text) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
 const random = seed => () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 
-/* ---------- layout: one loose blob per constellation, trees scattered inside, none touching ---------- */
-const SX = 140, SY = 100;      // two trees need this much room across and down
-const ROOM = 26000;           // plane area given to each tree: loose, not packed
+/* ---------- layout: one loose field per constellation, cards scattered inside, none touching ---------- */
+const GAP = 36, maxH = Math.max(...[...card.values()].map(c => c.h)), avgH = [...card.values()].reduce((s, c) => s + c.h, 0) / card.size;
+const SX = W + GAP, SY = maxH + GAP, ROOM = SX * (avgH + GAP) * 1.4;   // plane area per card: loose, not packed
 const groups = new Map();
 RECS.forEach(r => { if (!groups.has(r.constellation)) groups.set(r.constellation, []); groups.get(r.constellation).push(r); });
 const fields = [...groups].map(([name, list]) => {
   const roll = random(seedOf(name)), radius = Math.sqrt(list.length * ROOM / Math.PI);
   return { name, list, radius, angle: roll() * 6.2832, p1: roll() * 6.2832, p2: roll() * 6.2832, cx: 0, cy: 0 };
 }).sort((a, b) => b.list.length - a.list.length);
-const reach = f => f.radius * 1.25 + 90;
+const reach = f => f.radius * 1.2 + 160;
 const placed = [];
-fields.forEach(f => {
-  for (let d = placed.length ? 200 : 0; ; d += 40) {
-    f.cx = Math.cos(f.angle) * d; f.cy = Math.sin(f.angle) * d;
-    if (placed.every(o => Math.hypot(o.cx - f.cx, o.cy - f.cy) >= reach(o) + reach(f))) break;
+const clear = f => placed.every(o => Math.hypot(o.cx - f.cx, o.cy - f.cy) >= reach(o) + reach(f));
+fields.forEach(f => {   // each field takes the nearest free place to the middle, starting from its own seeded direction
+  search: for (let d = 0; ; d += 60) for (let turn = 0; turn < 24; turn++) {
+    const a = f.angle + turn * 6.2832 / 24;
+    f.cx = Math.cos(a) * d * 1.6; f.cy = Math.sin(a) * d;   // wider than tall, like the screen
+    if (clear(f)) break search;
   }
   placed.push(f);
 });
 const cells = new Map(), spot = new Map();
 const cellKey = (i, j) => i + "," + j;
-const free = (x, y) => {
-  const i = Math.floor(x / SX), j = Math.floor(y / SX);
+const free = (x, y, h) => {
+  const i = Math.floor(x / SX), j = Math.floor(y / SY);
   for (let a = i - 1; a <= i + 1; a++) for (let b = j - 1; b <= j + 1; b++)
-    for (const o of cells.get(cellKey(a, b)) || []) if (((o[0] - x) / SX) ** 2 + ((o[1] - y) / SY) ** 2 < 1) return false;
+    for (const o of cells.get(cellKey(a, b)) || []) if (Math.abs(o.x - x) < SX && y < o.y + o.h + GAP && o.y < y + h + GAP) return false;
   return true;
 };
 fields.forEach(f => {
   f.list.forEach(r => {
-    const roll = random(seedOf(r.svn));
+    const roll = random(seedOf(r.svn)), h = card.get(r.svn).h;
     let grow = 1, x, y;
     for (let tries = 0; ; tries++) {
       const a = roll() * 6.2832, edge = f.radius * grow * (1 + .14 * Math.sin(2 * a + f.p1) + .08 * Math.sin(3 * a + f.p2)), d = edge * Math.sqrt(roll());
-      x = f.cx + Math.cos(a) * d; y = f.cy + Math.sin(a) * d;
-      if (free(x, y)) break;
+      x = f.cx + Math.cos(a) * d - W / 2; y = f.cy + Math.sin(a) * d - h / 2;
+      if (free(x, y, h)) break;
       if (tries % 40 === 39) grow *= 1.06;   // a crowded field widens a little rather than overlap
     }
-    const k = cellKey(Math.floor(x / SX), Math.floor(y / SX));
+    const k = cellKey(Math.floor(x / SX), Math.floor(y / SY)), at = { x, y, h };
     if (!cells.has(k)) cells.set(k, []);
-    cells.get(k).push([x, y]);
-    spot.set(r.svn, { x, y, turn: roll() * 6.2832 });
+    cells.get(k).push(at); spot.set(r.svn, at);
   });
+  const xs = f.list.map(r => spot.get(r.svn).x);
+  f.labelX = (Math.min(...xs) + Math.max(...xs) + W) / 2; f.top = Math.min(...f.list.map(r => spot.get(r.svn).y));
 });
 
-/* ---------- drawing ---------- */
-const LEAF_R = 36, HUB_R = 15;
-const short = v => { v = String(v); return v.length > 11 ? v.slice(0, 10) + "…" : v; };
-function drawTree(r) {
-  const { x, y, turn } = spot.get(r.svn), n = r.identifiers.length;
-  let s = `<g class="tree" data-svn="${esc(r.svn)}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})" tabindex="0" role="button" aria-label="${esc(r.svn + ", " + r.name)}"><title>${esc(r.svn + " " + r.name)}</title>`;
-  s += `<circle class="halo" r="105" fill="url(#glow)"/><circle class="ring" r="23"/>`;
-  r.identifiers.forEach((it, k) => {
-    const a = turn + k * 6.2832 / n, c = Math.cos(a), sn = Math.sin(a), lx = c * LEAF_R, ly = sn * LEAF_R, bad = it.status === "warn" ? " warn" : "";
-    const cls = bad || (it.status === "accent" ? " accent" : ""), anchor = c > .35 ? "start" : c < -.35 ? "end" : "middle";
-    const tx = lx + c * 12.5, ty = ly + sn * 12.5 + (sn > .35 ? 6 : sn < -.35 ? -1 : 2.6);
-    s += `<line class="link${bad}" x1="0" y1="0" x2="${lx.toFixed(1)}" y2="${ly.toFixed(1)}"/>`
-       + `<circle class="leaf${cls}" cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="8"><title>${esc(it.scheme + ": " + it.value)}</title></circle>`
-       + `<text class="tag${bad}" x="${lx.toFixed(1)}" y="${(ly + 3).toFixed(1)}">${esc(it.tag)}</text>`
-       + `<text class="val${bad}" x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" text-anchor="${anchor}">${esc(short(it.value))}</text>`;
-  });
-  return s + `<circle class="hub" r="${HUB_R}"/><text class="id" y="3.4">${esc(r.svn)}</text></g>`;
+/* ---------- drawing: far is a chip, middle lists the identifiers, close adds who issued each and when we last checked ---------- */
+const KMIN = .04, KMAX = 5;
+let view = { x: 0, y: 0, k: 1 }, flight = 0, queued = 0, dpr = 1;
+let state = new Map();   // svn -> "dim" | "hit"; absent means normal
+let current = null, focused = null, returning = false;   // returning: focus coming back from the side panel, so the view stays put
+function box(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+function drawCard(r, a0, a1, a2) {
+  const { x, y, h } = spot.get(r.svn), c = card.get(r.svn), k = view.k, s = state.get(r.svn), dim = s === "dim";
+  const hue = dim ? C.track : hueOf(r);
+  ctx.globalAlpha = dim ? .18 : 1;
+  const base = ctx.globalAlpha;
+  box(x, y, W, h, 14); ctx.fillStyle = C.platform; ctx.fill();
+  ctx.globalAlpha = base * (.07 + .2 * a0); ctx.fillStyle = hue; ctx.fill();
+  ctx.globalAlpha = base;
+  const ringed = s === "hit" || r.svn === current || r.svn === focused;
+  ctx.lineWidth = (ringed ? 1.5 : 1) / k; ctx.strokeStyle = ringed ? C.accent : hue; ctx.stroke();
+  const mark = (cx, cy, rad) => {
+    ctx.beginPath(); ctx.arc(cx, cy, rad, 0, 6.2832); ctx.fillStyle = dim ? C.idle : C.warn; ctx.fill();
+    ctx.fillStyle = C.platform; ctx.font = `700 ${rad * 1.3}px ${SANS}`; ctx.textAlign = "center"; ctx.fillText("!", cx, cy + rad * .45); ctx.textAlign = "left";
+  };
+  if (a0 > 0) {   // the chip
+    ctx.globalAlpha = base * a0; ctx.textAlign = "center";
+    if (56 * k >= 5) { ctx.fillStyle = C.ink; ctx.font = `700 56px ${MONO}`; ctx.fillText(r.svn, x + W / 2, y + h / 2 + 4); }
+    if (20 * k >= 5) { ctx.fillStyle = C.muted; ctx.font = `20px ${SANS}`; ctx.fillText(c.chipName, x + W / 2, y + h / 2 + 40); }
+    ctx.textAlign = "left";
+    if (c.mark) { const rad = clamp(6 / k, 15, 70); mark(x + W - rad - 10, y + rad + 10, rad); }   // stays visible from far away
+  }
+  if (a1 > 0) {   // the card
+    ctx.globalAlpha = base * a1;
+    ctx.fillStyle = C.ink; ctx.font = F.id; ctx.fillText(r.svn, x + PAD, y + 24);
+    ctx.fillStyle = C.muted; ctx.font = F.name; ctx.fillText(c.name, x + PAD, y + 40);
+    if (c.mark) mark(x + W - 20, y + 20, 8);
+    c.dots.forEach(d => { ctx.beginPath(); ctx.arc(x + PAD + 3.5, y + d.y, 3.5, 0, 6.2832); ctx.fillStyle = dim ? C.idle : d.tone; ctx.fill(); });
+    let font = "";
+    c.lines.forEach(l => {
+      const a = l.level === 2 ? a1 * a2 : a1;
+      if (!a) return;
+      ctx.globalAlpha = base * a;
+      if (l.font !== font) { ctx.font = font = l.font; }
+      ctx.fillStyle = dim ? C.muted : l.colour; ctx.fillText(l.text, x + l.x, y + l.y);
+    });
+  }
 }
-world.innerHTML = RECS.map(drawTree).join("");
-const trees = new Map([...world.querySelectorAll(".tree")].map(el => [el.dataset.svn, el]));
-
-const labelEls = fields.map(f => {
-  const ys = f.list.map(r => spot.get(r.svn).y), top = Math.min(...ys), xs = f.list.map(r => spot.get(r.svn).x);
-  const el = document.createElementNS(svg.namespaceURI, "text");
-  el.setAttribute("class", "field-name");
-  el.setAttribute("x", ((Math.min(...xs) + Math.max(...xs)) / 2).toFixed(1)); el.setAttribute("y", (top - 95).toFixed(1));
-  el.textContent = f.name; world.appendChild(el); return el;
-});
+function draw() {
+  queued = 0;
+  const { width, height } = canvas, k = view.k;
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, width, height);
+  ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * view.x, dpr * view.y);
+  ctx.textBaseline = "alphabetic";
+  const a0 = 1 - ramp(k, .5, .62), a1 = ramp(k, .56, .72), a2 = ramp(k, 1.25, 1.6);   // chip out, card in, then who and when
+  const x0 = -view.x / k, y0 = -view.y / k, x1 = x0 + width / dpr / k, y1 = y0 + height / dpr / k;
+  const size = 14 / k;   // field names stay 14px on screen at any zoom
+  ctx.globalAlpha = 1; ctx.fillStyle = C.muted; ctx.font = `600 ${size}px ${SANS}`; ctx.textAlign = "center";
+  fields.forEach(f => ctx.fillText(f.name, f.labelX, f.top - size * .9));
+  ctx.textAlign = "left";
+  const order = RECS.filter(r => state.get(r.svn) === "dim").concat(RECS.filter(r => state.get(r.svn) !== "dim"));   // matches on top
+  order.forEach(r => { const p = spot.get(r.svn); if (p.x < x1 && p.x + W > x0 && p.y < y1 && p.y + p.h > y0) drawCard(r, a0, a1, a2); });
+  ctx.globalAlpha = 1;
+}
+const paint = () => { if (!queued) queued = requestAnimationFrame(draw); };
+function resize() {
+  const b = stage.getBoundingClientRect(); dpr = devicePixelRatio || 1;
+  canvas.width = Math.round(b.width * dpr); canvas.height = Math.round(b.height * dpr);
+}
 
 /* ---------- the view: pan, zoom, and animated moves ---------- */
-const KMIN = .06, KMAX = 4;
-let view = { x: 0, y: 0, k: 1 }, flight = 0;
-function paint() {
-  world.setAttribute("transform", `translate(${view.x.toFixed(2)} ${view.y.toFixed(2)}) scale(${view.k.toFixed(4)})`);
-  svg.classList.toggle("far", view.k < .5); svg.classList.toggle("afar", view.k < .22);
-  const size = (15 / clamp(view.k, .25, 1)).toFixed(1);
-  labelEls.forEach(el => el.setAttribute("font-size", size));
-}
-const box = () => stage.getBoundingClientRect();
+const rect = () => stage.getBoundingClientRect();
 function zoomAt(px, py, factor) {
   const k = clamp(view.k * factor, KMIN, KMAX), r = k / view.k;
   view.x = px - (px - view.x) * r; view.y = py - (py - view.y) * r; view.k = k; paint();
 }
-function fitTo(list) {
-  const pts = list.map(r => spot.get(r.svn)), b = box();
-  const x0 = Math.min(...pts.map(p => p.x)) - 100, x1 = Math.max(...pts.map(p => p.x)) + 100;
-  let y0 = Math.min(...pts.map(p => p.y)) - 115; const y1 = Math.max(...pts.map(p => p.y)) + 70;
-  let k = clamp(Math.min(b.width / (x1 - x0), b.height / (y1 - y0)), KMIN, 1.4);
-  y0 -= 30 / k;   // room above the field's name, which is 15px tall on screen
-  k = clamp(Math.min(b.width / (x1 - x0), b.height / (y1 - y0)), KMIN, 1.4);
-  return { k, x: b.width / 2 - (x0 + x1) / 2 * k, y: b.height / 2 - (y0 + y1) / 2 * k };
+function fitTo(list, most = 1.4) {   // 24px of room on every side, and 34px more on top for the field's name
+  const pts = list.map(r => spot.get(r.svn)), b = rect();
+  const x0 = Math.min(...pts.map(p => p.x)), x1 = Math.max(...pts.map(p => p.x)) + W;
+  const y0 = Math.min(...pts.map(p => p.y)), y1 = Math.max(...pts.map(p => p.y + p.h));
+  const k = clamp(Math.min((b.width - 48) / (x1 - x0), (b.height - 82) / (y1 - y0)), KMIN, most);
+  return { k, x: b.width / 2 - (x0 + x1) / 2 * k, y: (b.height + 34) / 2 - (y0 + y1) / 2 * k };
 }
 function goTo(to) {
   cancelAnimationFrame(flight);
@@ -236,21 +271,30 @@ function goTo(to) {
   const step = now => {
     const p = Math.min(1, (now - t0) / 600), e = 1 - Math.pow(1 - p, 3);
     view = { k: from.k * Math.pow(to.k / from.k, e), x: from.x + (to.x - from.x) * e, y: from.y + (to.y - from.y) * e };
-    paint(); if (p < 1) flight = requestAnimationFrame(step);
+    draw(); if (p < 1) flight = requestAnimationFrame(step);
   };
   flight = requestAnimationFrame(step);
 }
-const home = () => fitTo(DATA.records);   // open on every field at once; a filter then flies to its matches
+const home = () => fitTo(RECS);   // open on every field at once; a filter then flies to its matches
 
+function cardAt(e) {
+  const b = rect(), wx = (e.clientX - b.left - view.x) / view.k, wy = (e.clientY - b.top - view.y) / view.k;
+  for (let i = RECS.length - 1; i >= 0; i--) {
+    const r = RECS[i], p = spot.get(r.svn);
+    if (wx >= p.x && wx <= p.x + W && wy >= p.y && wy <= p.y + p.h) return r.svn;
+  }
+  return null;
+}
 const pointers = new Map(); let travelled = 0, downOn = null;
-svg.addEventListener("pointerdown", e => {
-  cancelAnimationFrame(flight); svg.setPointerCapture(e.pointerId);
+canvas.addEventListener("pointerdown", e => {
+  cancelAnimationFrame(flight); canvas.setPointerCapture(e.pointerId);
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  if (pointers.size === 1) { travelled = 0; downOn = e.target.closest(".tree"); svg.classList.add("drag"); } else downOn = null;
+  if (pointers.size === 1) { travelled = 0; downOn = cardAt(e); canvas.classList.add("drag"); } else downOn = null;
 });
-svg.addEventListener("pointermove", e => {
-  const last = pointers.get(e.pointerId); if (!last) return;
-  const b = box(), now = { x: e.clientX, y: e.clientY };
+canvas.addEventListener("pointermove", e => {
+  const last = pointers.get(e.pointerId);
+  if (!last) { canvas.classList.toggle("over", !!cardAt(e)); return; }
+  const b = rect(), now = { x: e.clientX, y: e.clientY };
   if (pointers.size === 1) {
     view.x += now.x - last.x; view.y += now.y - last.y; travelled += Math.abs(now.x - last.x) + Math.abs(now.y - last.y); paint();
   } else if (pointers.size === 2) {
@@ -263,28 +307,45 @@ svg.addEventListener("pointermove", e => {
 });
 const lift = e => {
   if (!pointers.delete(e.pointerId)) return;
-  if (!pointers.size) { svg.classList.remove("drag"); if (e.type === "pointerup" && downOn && travelled < 6) select(downOn.dataset.svn); downOn = null; }
+  if (!pointers.size) { canvas.classList.remove("drag"); if (e.type === "pointerup" && downOn && travelled < 6) select(downOn); downOn = null; }
 };
-svg.addEventListener("pointerup", lift); svg.addEventListener("pointercancel", lift);
-svg.addEventListener("wheel", e => {
+canvas.addEventListener("pointerup", lift); canvas.addEventListener("pointercancel", lift);
+canvas.addEventListener("wheel", e => {
   e.preventDefault(); cancelAnimationFrame(flight);
-  const b = box(), dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+  const b = rect(), dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
   zoomAt(e.clientX - b.left, e.clientY - b.top, Math.exp(-dy * (e.ctrlKey ? .01 : .0015)));
 }, { passive: false });
-svg.addEventListener("keydown", e => {
-  const el = e.target.closest && e.target.closest(".tree");
-  if (el && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); select(el.dataset.svn); }
-});
 
-/* ---------- the three dropdowns ---------- */
-const FILTERS = [["constellation", "Constellation"], ["country", "Country"], ["sources", "Sources"]];
-const SOURCES_ORDER = ["agree", "disagree", "not in catalogue"];
+/* ---------- keyboard and screen readers: one hidden button per card, in registry order ---------- */
+$("cards").innerHTML = RECS.map(r => `<div role="listitem"><button type="button" data-svn="${esc(r.svn)}">${esc(r.svn + ", " + r.name + ". "
+  + r.identifiers.map(it => `${it.scheme}: ${it.value}${it.remark ? " (" + it.remark + ")" : ""}, from ${it.issuer}, last checked ${it.checked}`).join(". ")
+  + (r.disagreement ? ". " + r.disagreement : ""))}</button></div>`).join("");
+const buttons = new Map([...$("cards").querySelectorAll("button")].map(el => [el.dataset.svn, el]));
+$("cards").addEventListener("focusin", e => {
+  const svn = e.target.dataset.svn; if (!svn) return;
+  focused = svn; if (returning) { returning = false; paint(); return; }
+  const k = Math.max(view.k, 1.7), p = spot.get(svn), b = rect();
+  goTo({ k, x: b.width / 2 - (p.x + W / 2) * k, y: b.height / 2 - (p.y + p.h / 2) * k });
+});
+$("cards").addEventListener("focusout", () => { focused = null; paint(); });
+$("cards").addEventListener("click", e => { if (e.target.dataset.svn) select(e.target.dataset.svn); });
+
+/* ---------- the dropdowns: each offers only what the other choices still allow ---------- */
+const FILTERS = [["constellation", "Constellation"], ["country", "Country"]];
 const chosen = Object.fromEntries(FILTERS.map(([key]) => [key, new Set()]));
+const matches = (r, skip) => FILTERS.every(([key]) => key === skip || !chosen[key].size || chosen[key].has(r[key]));
 const menus = [];
 function optionsOf(key) {
-  const counts = new Map(); RECS.forEach(r => counts.set(r[key], (counts.get(r[key]) || 0) + 1));
-  const list = [...counts].map(([value, count]) => ({ value, count }));
-  return key === "sources" ? list.sort((a, b) => SOURCES_ORDER.indexOf(a.value) - SOURCES_ORDER.indexOf(b.value)) : list.sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
+  const counts = new Map();
+  RECS.forEach(r => { if (matches(r, key)) counts.set(r[key], (counts.get(r[key]) || 0) + 1); });
+  chosen[key].forEach(v => { if (!counts.has(v)) counts.set(v, 0); });   // a choice no longer possible stays, so it can be undone
+  return [...counts].map(([value, count]) => ({ value, count })).sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
+}
+function fill(m) {
+  m.options = optionsOf(m.key);
+  m.list.innerHTML = m.options.map((o, i) => `<li role="option" id="opt-${m.key}-${i}" aria-selected="${chosen[m.key].has(o.value)}"><span class="box"></span><span>${esc(o.value)}</span><span class="count">${o.count}</span></li>`).join("");
+  m.items = [...m.list.children];
+  if (m.root.hasAttribute("data-open")) setActive(m, m.at);
 }
 function openMenu(m, on) {
   if (on) menus.forEach(o => o !== m && openMenu(o, false));
@@ -300,22 +361,21 @@ function setActive(m, at) {
 function toggle(m, i) {
   const value = m.options[i].value, set = chosen[m.key];
   set.has(value) ? set.delete(value) : set.add(value);
-  m.items[i].setAttribute("aria-selected", set.has(value));
   refresh(true);
+  setActive(m, m.options.findIndex(o => o.value === value));
 }
 FILTERS.forEach(([key, label]) => {
-  const options = optionsOf(key), root = document.createElement("div");
+  const root = document.createElement("div");
   root.className = "dd";
   root.innerHTML = `<button type="button" class="pill" aria-haspopup="listbox" aria-expanded="false" aria-controls="list-${key}"><span class="t">${label}</span><span class="n" hidden></span><i class="caret"></i></button>`
-    + `<ul class="panel" id="list-${key}" role="listbox" aria-multiselectable="true" aria-label="${label}" tabindex="-1">`
-    + options.map((o, i) => `<li role="option" id="opt-${key}-${i}" aria-selected="false"><span class="box"></span><span>${esc(o.value)}</span><span class="count">${o.count}</span></li>`).join("") + `</ul>`;
+    + `<ul class="panel" id="list-${key}" role="listbox" aria-multiselectable="true" aria-label="${label}" tabindex="-1"></ul>`;
   $("bar").insertBefore(root, $("clear"));
-  const m = { key, root, options, pill: root.querySelector(".pill"), list: root.querySelector(".panel"), badge: root.querySelector(".n"), items: [...root.querySelectorAll("li")], at: 0 };
+  const m = { key, root, pill: root.querySelector(".pill"), list: root.querySelector(".panel"), badge: root.querySelector(".n"), options: [], items: [], at: 0 };
   menus.push(m);
   m.pill.addEventListener("click", () => openMenu(m, !root.hasAttribute("data-open")));
   m.pill.addEventListener("keydown", e => { if (e.key === "ArrowDown") { e.preventDefault(); openMenu(m, true); } });
   m.list.addEventListener("mousedown", e => e.preventDefault());
-  m.items.forEach((li, i) => li.addEventListener("click", () => { setActive(m, i); toggle(m, i); }));
+  m.list.addEventListener("click", e => { const i = m.items.indexOf(e.target.closest("li")); if (i >= 0) toggle(m, i); });
   m.list.addEventListener("keydown", e => {
     const move = { ArrowDown: m.at + 1, ArrowUp: m.at - 1, Home: 0, End: m.items.length - 1 }[e.key];
     if (move !== undefined) { e.preventDefault(); setActive(m, move); }
@@ -325,71 +385,68 @@ FILTERS.forEach(([key, label]) => {
   });
 });
 document.addEventListener("pointerdown", e => menus.forEach(m => { if (!m.root.contains(e.target)) openMenu(m, false); }));
+const countryMenu = menus.find(m => m.key === "country");
 
 /* ---------- focus and context ---------- */
-const shownTotal = RECS.length;
 function refresh(move) {
-  const active = FILTERS.map(([key]) => key).filter(key => chosen[key].size);
-  const hits = RECS.filter(r => active.every(key => chosen[key].has(r[key])));
-  const hitSet = new Set(hits.map(r => r.svn)), filtered = active.length > 0;
-  trees.forEach((el, svn) => {
-    const on = !filtered || hitSet.has(svn);
-    el.classList.toggle("dim", !on); el.classList.toggle("hit", filtered && on); el.setAttribute("tabindex", on ? "0" : "-1");
-  });
-  menus.forEach(m => { const n = chosen[m.key].size; m.pill.classList.toggle("on", n > 0); m.badge.hidden = !n; m.badge.textContent = n; });
+  const implied = chosen.constellation.size === 1;   // one constellation already says its country
+  if (implied) { chosen.country.clear(); openMenu(countryMenu, false); }
+  countryMenu.root.hidden = implied;
+  const filtered = FILTERS.some(([key]) => chosen[key].size), hits = RECS.filter(r => matches(r));
+  const hitSet = new Set(hits.map(r => r.svn));
+  state = new Map(filtered ? RECS.map(r => [r.svn, hitSet.has(r.svn) ? "hit" : "dim"]) : []);
+  buttons.forEach((el, svn) => { el.tabIndex = !filtered || hitSet.has(svn) ? 0 : -1; });
+  menus.forEach(m => { fill(m); const n = chosen[m.key].size; m.pill.classList.toggle("on", n > 0); m.badge.hidden = !n; m.badge.textContent = n; });
   $("clear").hidden = !filtered;
-  $("totals").innerHTML = `<b>${hits.length}</b> / ${shownTotal} shown · <b>${hits.filter(r => r.sources === "disagree").length}</b> disagree`;
-  if (move) { if (!filtered) goTo(home()); else if (hits.length) goTo(fitTo(hits)); }
+  const look = hits.filter(r => card.get(r.svn).mark).length;
+  $("totals").innerHTML = `<b>${hits.length}</b> / ${RECS.length} shown · <span class="mark" aria-hidden="true">!</span> <b>${look}</b> worth a look`;
+  if (move) goTo(!filtered ? home() : hits.length ? fitTo(hits) : view);
+  paint();
 }
-$("clear").addEventListener("click", () => {
-  FILTERS.forEach(([key]) => chosen[key].clear()); menus.forEach(m => m.items.forEach(li => li.setAttribute("aria-selected", "false"))); refresh(true);
-});
+$("clear").addEventListener("click", () => { FILTERS.forEach(([key]) => chosen[key].clear()); refresh(true); });
 
-/* ---------- the side panel ---------- */
-let current = null;
+/* ---------- the side panel: what the card cannot show, the signal IDs over time ---------- */
 function timeline(periods) {
   if (!periods.length) return `<p class="quiet">None on record</p>`;
-  const today = new Date().toISOString().slice(0, 10), W = 300, pad = 8;
+  const today = new Date().toISOString().slice(0, 10), TW = 300, pad = 8;
   const from = Date.parse(periods[0].start), to = Math.max(...periods.map(p => Date.parse(p.end || today)));
-  const at = d => pad + (Date.parse(d) - from) / Math.max(1, to - from) * (W - 2 * pad);
+  const at = d => pad + (Date.parse(d) - from) / Math.max(1, to - from) * (TW - 2 * pad);
   let bars = "", marks = "", edge = -99, label = -99, lift = false;
   periods.forEach(p => {
     const x0 = at(p.start), x1 = at(p.end || today), mid = (x0 + x1) / 2, half = p.label.length * 3;
     lift = mid - half < label + 4 ? !lift : false; label = mid + half;
     bars += `<rect class="bar-p${p.current ? " now" : ""}" x="${x0.toFixed(1)}" y="34" width="${Math.max(3, x1 - x0).toFixed(1)}" height="11" rx="5"><title>${esc(p.label + ": " + p.start + " to " + (p.end || "now"))}</title></rect>`
           + `<text class="lab" x="${mid.toFixed(1)}" y="${lift ? 12 : 26}">${esc(p.label)}</text>`;
-    if (x0 - edge >= 34 && x0 < W - pad - 34) { marks += `<text x="${x0.toFixed(1)}" y="61">${esc(p.start.slice(0, 4))}</text>`; edge = x0; }
+    if (x0 - edge >= 34 && x0 < TW - pad - 34) { marks += `<text x="${x0.toFixed(1)}" y="61">${esc(p.start.slice(0, 4))}</text>`; edge = x0; }
   });
   const last = periods[periods.length - 1];
-  marks += `<text x="${W - pad}" y="61" text-anchor="end">${last.end ? esc(last.end.slice(0, 4)) : "now"}</text>`;
+  marks += `<text x="${TW - pad}" y="61" text-anchor="end">${last.end ? esc(last.end.slice(0, 4)) : "now"}</text>`;
   const said = periods.map(p => `${p.label} from ${p.start}${p.end ? " to " + p.end : ", current"}`).join("; ");
-  return `<svg class="timeline" viewBox="0 0 ${W} 68" role="img" aria-label="${esc(said)}">${bars}${marks}</svg>`;
+  return `<svg class="timeline" viewBox="0 0 ${TW} 68" role="img" aria-label="${esc(said)}">${bars}${marks}</svg>`;
 }
 function select(svn) {
   const r = RECS.find(x => x.svn === svn); if (!r) return;
-  if (current) trees.get(current).classList.remove("sel");
-  current = svn; trees.get(svn).classList.add("sel");
+  current = svn; paint();
   $("side-body").innerHTML = `<h2>${esc(r.svn)}</h2><p class="name">${esc(r.name)}</p><p class="where">${esc(r.constellation)} · ${esc(r.country)}</p>`
-    + `<dl>${r.identifiers.map(it => `<div class="row"><dt><span class="dot${it.status === "warn" ? " warn" : ""}">${esc(it.tag)}</span></dt><dd class="scheme">${esc(it.scheme)}</dd><dd class="value">${esc(it.value)}</dd>`
-      + (it.remark ? `<dd class="remark${it.status === "warn" ? " warn" : ""}">${esc(it.remark)}</dd>` : "") + `</div>`).join("")}</dl>`
     + `<h3>Signal IDs over time</h3>${timeline(r.periods)}`;
   stage.classList.add("has-side"); $("side").scrollTop = 0; $("close").focus({ preventScroll: true });
 }
 function deselect() {
   if (!current) return;
-  trees.get(current).classList.remove("sel"); stage.classList.remove("has-side");
-  const el = trees.get(current); current = null; el.focus({ preventScroll: true });
+  const svn = current; current = null; stage.classList.remove("has-side"); paint();
+  returning = true; buttons.get(svn).focus({ preventScroll: true });
 }
 $("close").addEventListener("click", deselect);
 document.addEventListener("keydown", e => { if (e.key === "Escape" && current) { e.preventDefault(); deselect(); } });
 
-/* ---------- the legend ---------- */
-$("legend-list").innerHTML = DATA.tags.map(t => `<li><span class="dot">${esc(t.tag)}</span>${esc(t.scheme)}</li>`).join("")
-  + `<li><span class="dot warn">!</span>Worth a person's look</li>`;
-
 /* ---------- start ---------- */
-view = home(); paint(); refresh(false);
-addEventListener("resize", () => { view = current || FILTERS.some(([key]) => chosen[key].size) ? view : home(); paint(); });
+let started = false;
+new ResizeObserver(() => {
+  resize();
+  if (!started || !(current || FILTERS.some(([key]) => chosen[key].size))) view = home();
+  started = true; draw();
+}).observe(stage);
+refresh(false);
 })();
 </script>
 </body>

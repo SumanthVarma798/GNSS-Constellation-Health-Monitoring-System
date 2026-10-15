@@ -6,11 +6,11 @@ import pytest
 
 from evidence.registry_tables import read_table
 from evidence.settings import (COUNTRY_NAMES, COUNTRY_NOT_GIVEN, MAP_WARN, REGISTRY_CATALOGUE_FILE,
-                               REGISTRY_SATELLITES_FILE, SCHEME_ORBIT_FEED, SOURCES_AGREE, SOURCES_DISAGREE,
-                               SOURCES_NOT_IN_CATALOGUE)
+                               REGISTRY_SATELLITES_FILE, SCHEME_ORBIT_FEED)
+from ui import palette
 from ui.components.master_map import PAGE_FILE, master_map_html, master_map_records
 from ui.pages_data import DATA_DIR
-from evidence.master_map import orbit_feed_names
+from evidence.master_map import orbit_feed_checked, orbit_feed_names
 from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_SIGNAL_IDS_FILE
 
 HOSTILE = "</script><script>alert(1)</script>"
@@ -20,7 +20,8 @@ HOSTILE = "</script><script>alert(1)</script>"
 def real():
     return {"satellites": read_table(REGISTRY_SATELLITES_FILE), "catalogue": read_table(REGISTRY_CATALOGUE_FILE),
             "tracked": read_table(REGISTRY_DASHBOARD_SATELLITES_FILE),
-            "signal_ids": read_table(REGISTRY_SIGNAL_IDS_FILE), "feed_names": orbit_feed_names(DATA_DIR)}
+            "signal_ids": read_table(REGISTRY_SIGNAL_IDS_FILE), "feed_names": orbit_feed_names(DATA_DIR),
+            "feed_checked": orbit_feed_checked(DATA_DIR)}
 
 
 @pytest.fixture(scope="module")
@@ -36,7 +37,8 @@ def test_one_record_per_spacecraft(records, real):
 def test_c217_carries_the_out_of_date_orbit_feed_name(records):
     c217 = next(r for r in records if r["svn"] == "C217")
     feed = [i for i in c217["identifiers"] if i["scheme"] == SCHEME_ORBIT_FEED]
-    assert len(feed) == 1 and feed[0]["status"] == MAP_WARN and feed[0]["tag"] == "F"
+    assert len(feed) == 1 and feed[0]["status"] == MAP_WARN
+    assert (feed[0]["issuer"], feed[0]["checked"]) == ("CelesTrak", "2026-10-04")
     assert len(c217["periods"]) >= 2
 
 
@@ -47,9 +49,15 @@ def test_countries_are_named_in_full(records, real):
     assert {r["country"] for r in records} >= {"India", "China", "United States", "Russia"}
 
 
-def test_sources_reading_is_one_of_three(records):
-    assert {r["sources"] for r in records} <= {SOURCES_AGREE, SOURCES_DISAGREE, SOURCES_NOT_IN_CATALOGUE}
-    assert SOURCES_AGREE in {r["sources"] for r in records}
+def test_a_card_says_why_the_two_sources_disagree_and_is_silent_otherwise(records):
+    said = {r["svn"]: r["disagreement"] for r in records}
+    assert said["I004"] and said["I011"]        # the catalogue and the IGS file differ on whether they are in service
+    assert said["J008"] == "" and said["C217"] == ""   # one source only is not a disagreement
+    assert sum(bool(text) for text in said.values()) == 30
+
+
+def test_every_constellation_on_the_map_has_a_colour(records):
+    assert {r["constellation"] for r in records} <= set(palette.CONSTELLATION_COLOURS)
 
 
 def test_a_hostile_name_cannot_break_out_of_the_script(real):

@@ -36,6 +36,11 @@ SLOT_UNKNOWN = "position not known"
 SLOT_COLOURS = {SLOT_IN: OK, SLOT_OFF: WARN, SLOT_LEFT: BAD, SLOT_UNKNOWN: IDLE}
 SLOT_EMPTY = BAD       # a slot whose own satellite is not on it
 
+# One quiet colour per navigation system, for the master map's cards. Never text, and
+# never a status: a card that needs a look also carries a marked sign.
+CONSTELLATION_COLOURS = {"GPS": "#8f9cf0", "Galileo": "#6fc3cf", "GLONASS": "#d98f7a", "BeiDou": "#d3b56b",
+                         "NavIC": "#8fcf8a", "QZSS": "#d58fc6"}
+
 FONT = '"Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif'
 FONT_NUMBERS = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace'
 RADIUS_PX = 20         # surfaces; chips and buttons are fully rounded

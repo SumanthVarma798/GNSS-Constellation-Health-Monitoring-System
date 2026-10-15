@@ -134,14 +134,17 @@ BURN_TIMELINE_RECENT_DAYS = 90     # the burn timeline opens on this many days; 
 
 # --- The master map canvas ---
 
-# One letter on each leaf of a tree, per identifier scheme.
-SCHEME_TAGS = {SCHEME_NORAD: "N", SCHEME_COSPAR: "C", SCHEME_SIGNAL_ID: "P", SCHEME_GCAT: "G",
-               SCHEME_ORBIT_FEED: "F", SCHEME_DASHBOARD: "D"}
-
-# How the Sources filter words the two sources' readings of one spacecraft.
-SOURCES_AGREE = "agree"
-SOURCES_DISAGREE = "disagree"
-SOURCES_NOT_IN_CATALOGUE = "not in catalogue"
+# Who issues each kind of identifier, as a card says it when zoomed close.
+SCHEME_ISSUERS = {SCHEME_NORAD: "the US Space Force space catalogue, via Space-Track",
+                  SCHEME_COSPAR: "COSPAR",
+                  SCHEME_GCAT: "GCAT, Jonathan McDowell",
+                  SCHEME_ORBIT_FEED: "CelesTrak",
+                  SCHEME_DASHBOARD: "this project's registry"}
+# A signal ID is issued by the operator of its system. Keyed by constellation name, as in constellations.csv.
+SIGNAL_ID_ISSUERS = {"NavIC": "ISRO", "QZSS": "Cabinet Office of Japan", "BeiDou": "China Satellite Navigation Office",
+                     "GPS": "US Space Force", "Galileo": "European Union (EUSPA)", "GLONASS": "Roscosmos"}
+# Said instead of a date when the repository keeps no record of when a value was last checked.
+NOT_RECORDED = "not recorded"
 
 # The catalogue's state codes (who owns the spacecraft), said in full.
 COUNTRY_NAMES = {"IN": "India", "CN": "China", "US": "United States", "J": "Japan", "RU": "Russia",
