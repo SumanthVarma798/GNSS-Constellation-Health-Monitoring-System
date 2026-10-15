@@ -1,4 +1,4 @@
-"""The 3D orbit view: true orbit planes from the bundled elements, colours from the rows, and a page safe to embed."""
+"""The 3D orbit view: true orbit planes from the bundled elements, plain numbers for the page, and a page safe to embed."""
 import json
 import math
 
@@ -9,16 +9,22 @@ import pytest
 from analysis.bundled_run import load_bundled_gp_as_dataframes
 from config.config import BEIDOU3_SATS
 from ui import palette
-from ui.components.orbit_view import hover_cards, orbit_view_html
-from ui.figures.orbits_3d import LAND_FILE, latest_elements, orbit_points, orbits_3d, position_at
+from ui.components.orbit_view import hover_cards, orbit_view_html, orbit_view_payload
+from ui.figures.constellation_3d import BELT_RADIUS
+from ui.figures.orbits_3d import LAND_FILE, ORBIT_POINTS, latest_elements, orbit_points, position_at
 from ui.figures.slot_rows import slot_rows
 
 HOSTILE = "</script><script>alert(1)</script>"
 
 
 @pytest.fixture(scope="module")
-def beidou():
-    return latest_elements(pd.concat(load_bundled_gp_as_dataframes("beidou3", BEIDOU3_SATS), ignore_index=True))
+def history():
+    return pd.concat(load_bundled_gp_as_dataframes("beidou3", BEIDOU3_SATS), ignore_index=True)
+
+
+@pytest.fixture(scope="module")
+def beidou(history):
+    return latest_elements(history)
 
 
 def normal(el):
@@ -52,21 +58,18 @@ def test_a_geo_orbit_lies_in_the_equator_plane_at_geostationary_height(beidou):
     assert abs(np.linalg.norm(here) - 6.61) < 0.05 and abs(here[2]) < 0.3
 
 
-def test_each_satellite_its_orbit_and_its_slot_share_one_meta_and_take_the_rows_colours(beidou):
+def test_the_payload_has_one_entry_per_row_with_its_loop_position_slot_and_card(history):
     rows = slot_rows([{"Satellite": "BeiDou-3 G4", "Designated Lon (°)": 140.0, "Current Mean Lon (°)": 142.0,
-                       "Lon Slot Deviation (°)": 2.0, "Lon Deviation Score": 50.0}])
-    figure = orbits_3d(rows, beidou)
-    mine = [t for t in figure.data if t.meta == 0]
-    assert len(mine) == 3   # slot, orbit, satellite
-    orbit = next(t for t in mine if t.mode == "lines")
-    assert orbit.line.color == palette.SLOT_COLOURS[palette.SLOT_OFF]
-    assert next(t for t in mine if t.marker.symbol == "circle-open").marker.color == palette.SLOT_EMPTY
-
-
-def test_a_satellite_with_no_elements_keeps_only_its_slot():
-    rows = slot_rows([{"Satellite": "NO-ELEMENTS", "Designated Lon (°)": 10.0}])
-    figure = orbits_3d(rows, {})
-    assert [t.meta for t in figure.data if t.meta is not None] == [0]
+                       "Lon Slot Deviation (°)": 2.0, "Lon Deviation Score": 50.0},
+                      {"Satellite": "NO-ELEMENTS", "Designated Lon (°)": 10.0}])
+    scene = orbit_view_payload(rows, history, None)
+    geo, missing = scene["satellites"]
+    assert len(geo["loop"]) == ORBIT_POINTS and all(len(p) == 3 for p in geo["loop"])
+    assert abs(math.hypot(*geo["at"]) - 6.61) < 0.05
+    assert geo["slot_at"][2] == 0 and abs(math.hypot(*geo["slot_at"]) - BELT_RADIUS) < 0.01
+    assert geo["state"] == palette.SLOT_OFF and geo["slot"] == "off its slot, 2.00°" and geo["name"] == "BeiDou-3 G4"
+    assert missing["loop"] is None and missing["at"] is None and missing["slot_at"] is not None
+    assert scene["land"] and all(abs(math.hypot(*p) - 1) < 0.01 for p in scene["land"])
 
 
 def test_hover_cards_say_the_state_in_words_and_band_the_score():
@@ -79,12 +82,11 @@ def test_hover_cards_say_the_state_in_words_and_band_the_score():
     assert b["orbit"] == "set aside, graveyard orbit" and b["score"] is None and b["status"] == "bad"
 
 
-def test_the_page_carries_plotly_and_no_raw_hostile_name():
+def test_names_stay_out_of_the_markup_and_nothing_is_fetched():
     rows = slot_rows([{"Satellite": HOSTILE, "Designated Lon (°)": 10.0}])
     page = orbit_view_html(rows, None, None)
-    assert HOSTILE not in page
-    assert "<script src" not in page   # plotly is inline: the demo may be offline
-    assert "Plotly" in page and "__DATA__" not in page and "__PLOTLY__" not in page
+    assert HOSTILE not in page and "\\u003c/script\\u003e" in page
+    assert "<script src" not in page and "__DATA__" not in page and "__ROOT__" not in page
 
 
 def test_the_land_file_is_small_and_names_its_source():

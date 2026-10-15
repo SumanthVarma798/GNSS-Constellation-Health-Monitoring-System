@@ -7,7 +7,6 @@ from config.config import TRACKED_NOT_IN_REGISTRY
 from ui import data, orbit_section, palette, shell, surfaces
 from ui.data import SATELLITES
 from ui.figures.constellation_3d import slot_legend
-from ui.figures.orbits_3d import orbit_legend
 from ui.figures.slot_rows import as_number, slot_words
 from ui.orbit_section import CHIP_STATUS, PARTS
 from ui.picker import picker
@@ -67,8 +66,8 @@ def _slot_picture(rows, result):
     switch, legend = st.columns([1, 1], vertical_alignment="center")
     with switch:
         view = shell.segment("slot_view", ["Flat", "3D"], label="View")
-    entries = orbit_legend() if view == "3D" else slot_legend()
-    legend.html(f'<div class="right">{surfaces.hover_legend(entries, opens_left=True)}</div>')
+    if view == "Flat":   # the 3D view carries its own key under the picture
+        legend.html(f'<div class="right">{surfaces.hover_legend(slot_legend(), opens_left=True)}</div>')
     orbit_section.render_belt(rows, view, result["history"], result["health"])
 
 

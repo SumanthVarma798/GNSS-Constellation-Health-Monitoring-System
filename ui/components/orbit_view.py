@@ -1,28 +1,21 @@
-"""The 3D orbit view with its own hover: one satellite, its orbit and its slot stand out, the rest dim.
+"""The 3D orbit view, drawn on a canvas: hover a satellite, its orbit or its chip, and it stands out while the rest dim.
 
-The page is ui/components/orbit_view.html. Plotly's script is put in from the installed
-package, so nothing is fetched from the network. Hover cards are built with textContent,
-so names are never read as markup. Inside WebGL there is no keyboard focus per satellite.
+The page is ui/components/orbit_view.html (plain JavaScript, no network). Python works out
+the orbits (ui/figures/orbits_3d.py); the page only turns, projects and draws them. Names
+reach the page as JSON escaped by embed() and are put in with textContent, so they are
+never read as markup. Each satellite also has a real button below the picture, so the
+keyboard reaches every one.
 """
-import json
-from functools import cache
 from pathlib import Path
-
-from plotly.offline import get_plotlyjs
 
 from ui import palette, surfaces
 from ui.components.master_map import embed
-from ui.figures.orbits_3d import latest_elements, orbits_3d
+from ui.figures.orbits_3d import latest_elements, orbit_scene
 from ui.figures.slot_rows import as_number, slot_words
 from ui.orbit_section import CHIP_STATUS
 from ui.theme import root_block
 
 PAGE_FILE = Path(__file__).with_name("orbit_view.html")
-
-
-@cache
-def _plotly_js():
-    return get_plotlyjs()
 
 
 def hover_cards(rows, health_df):
@@ -38,16 +31,20 @@ def hover_cards(rows, health_df):
     return cards
 
 
+def orbit_view_payload(rows, history, health_df):
+    """The scene with each satellite's card facts merged in, one entry per row."""
+    scene = orbit_scene(rows, latest_elements(history) if history is not None else {})
+    scene["satellites"] = [{**card, **drawn} for card, drawn in zip(hover_cards(rows, health_df), scene["satellites"])]
+    return scene
+
+
 def orbit_view_html(rows, history, health_df):
-    """The finished page. Plotly's script goes in before the data, so the data is never searched for placeholders."""
-    figure = orbits_3d(rows, latest_elements(history) if history is not None else {})
+    """The finished page: colours and fonts first, the data last so it is never searched for placeholders."""
     page = PAGE_FILE.read_text(encoding="utf-8")
     for placeholder, text in {"__ROOT__": root_block(), "__FONT__": palette.FONT,
                               "__FONT_NUMBERS__": palette.FONT_NUMBERS}.items():
         page = page.replace(placeholder, text)
-    page = page.replace("__PLOTLY__", _plotly_js(), 1)
-    payload = {"figure": json.loads(figure.to_json()), "satellites": hover_cards(rows, health_df)}
-    return page.replace("const DATA = __DATA__;", f"const DATA = {embed(payload)};", 1)
+    return page.replace("const DATA = __DATA__;", f"const DATA = {embed(orbit_view_payload(rows, history, health_df))};", 1)
 
 
 def orbit_view(rows, history, health_df, height=600):
