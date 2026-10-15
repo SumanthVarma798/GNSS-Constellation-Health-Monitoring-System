@@ -95,3 +95,32 @@ STORE_FILE = Path(__file__).resolve().parent.parent / "data" / "evidence.sqlite3
 
 # Satellite blocks the GEO/IGSO dashboard is meant to cover.
 DASHBOARD_BLOCKS = ("IRS-", "QZS-", "BDS-3G", "BDS-3I")
+
+# --- The master map: which spacecraft is which, under every identifier ---
+
+# How each identifier scheme is named to a reader.
+SCHEME_NORAD = "US catalogue number (NORAD)"
+SCHEME_COSPAR = "Launch designator (COSPAR)"
+SCHEME_GCAT = "Catalogue of space objects (GCAT)"
+SCHEME_SIGNAL_ID = "Signal ID today (PRN)"
+SCHEME_ORBIT_FEED = "Orbit feed name (CelesTrak)"
+SCHEME_DASHBOARD = "Dashboard name"
+
+# The state of one identifier, as the page colours it.
+MAP_OK = "ok"          # fine, or agrees with the other source
+MAP_WARN = "warn"      # worth a person's look
+MAP_IDLE = "idle"      # nothing to say yet
+MAP_ACCENT = "accent"  # this dashboard's own choice
+
+# Whether the two sources agree about who a spacecraft is.
+IDENTITY_AGREE = "two sources agree"
+IDENTITY_ONE_SOURCE = "one source only"
+IDENTITY_DIFFER = "sources differ"
+
+# Whether the two sources agree about it being in service.
+SERVICE_AGREE_OPERATING = "agree: operating"
+SERVICE_AGREE_NOT_IN_SERVICE = "agree: not in service"
+SERVICE_DISAGREE = "disagree"
+SERVICE_NOT_IN_CATALOGUE = "not in the catalogue yet"
+
+ORBIT_FEED_FILES = "*_tles.json"  # in the bundled data folder: one file of element sets per system

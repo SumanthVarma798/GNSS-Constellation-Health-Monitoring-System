@@ -36,6 +36,17 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend
 }
 [data-testid="stButton"] button:focus:not(:focus-visible) { box-shadow: var(--raised-sm); }
 
+/* ---- pills: one-of-several filters. Raised when off, pressed in the accent colour when on ---- */
+[data-testid="stButtonGroup"] button {
+  background: var(--platform); color: var(--muted); border: 1px solid var(--edge); border-radius: 999px;
+  box-shadow: var(--raised-sm); padding: 5px 16px;
+}
+[data-testid="stButtonGroup"] button:hover { color: var(--accent); border-color: var(--accent); }
+[data-testid="stButtonGroup"] [data-testid="stBaseButton-pillsActive"] {
+  color: var(--accent); background: var(--well); box-shadow: var(--pressed); border-color: var(--edge);
+}
+[data-testid="stButtonGroup"] button p { color: inherit; }
+
 /* ---- tabs ---- */
 [data-testid="stTabs"] [role="tablist"] { gap: 10px; border-bottom: 0; padding: 6px 4px 12px; }
 [data-testid="stTabs"] [role="tab"] {

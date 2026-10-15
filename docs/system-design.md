@@ -61,7 +61,7 @@ Solid arrows carry data today. Dotted arrows are not wired yet.
 | Archive job | Fetches each source, and keeps a raw copy only when it has changed |
 | Registry job | Rebuilds the table of satellites from the archived copy, and proposes any change to a person |
 | Archive | A private repository of raw copies, each named by its hash and never overwritten |
-| Registry | Plain-text tables saying which satellite is which, and what a second source (the catalogue) says about its owner and status |
+| Registry | Plain-text tables saying which satellite is which, and what a second source (the catalogue) says about its owner and status. The master map page shows it: every identifier of a spacecraft resolved to one master ID, and who held each signal ID when. |
 | Query store | A small database rebuilt from the archive and the registry on every run |
 | Bar and labels | Decides whether an item is confirmed, probable or unconfirmed (section 6) |
 | Orbit health dashboard | The team's existing app. It reads which satellites to track, and their catalogue numbers, from the registry, and shows a notice for any tracked satellite it has to leave out. Which are in service is still typed by hand. |
@@ -70,8 +70,8 @@ Solid arrows carry data today. Dotted arrows are not wired yet.
 
 ```mermaid
 pie showData title Estimated hours, all guesses
-  "Built" : 56
-  "Remaining" : 214
+  "Built" : 64
+  "Remaining" : 206
 ```
 
 | Issue | What | Hours (guess) | State |
@@ -91,7 +91,7 @@ pie showData title Estimated hours, all guesses
 | 45 | Archive writes through one interface: a folder today, an object store later | 5 | Parked until the archive's size starts to matter |
 | 47 | Demo for the team call, Sat 17 Oct 2026 | tracker | Items 48 to 51, and 23 |
 | 48 | Demo A. The look: one theme and reusable parts | 6 | Built |
-| 49 | Demo B. Master map page: many identifiers to one master ID | 8 | Being built |
+| 49 | Demo B. Master map page: many identifiers to one master ID | 8 | Built |
 | 50 | Demo C. Orbit pictures: slot belt, 3D view, score parts | 9 | Being built |
 | 51 | Demo D. Menu, How it works page, new look on the existing tabs | 6 | Open; needs 48, 49 and 50 |
 | 10 | Notices ledger: GPS advisories | 10 | Open, after the call |
