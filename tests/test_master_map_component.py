@@ -42,6 +42,12 @@ def test_c217_carries_the_out_of_date_orbit_feed_name(records):
     assert len(c217["periods"]) >= 2
 
 
+def test_a_record_carries_what_the_far_hover_card_says(records):
+    found = {r["svn"]: r for r in records}
+    assert (found["C217"]["signal_id"], found["C217"]["identity"]) == ("C04", "two sources agree")
+    assert found["J008"]["identity"] == "one source only"
+
+
 def test_countries_are_named_in_full(records, real):
     states = {row["svn"]: row["state"] for row in real["catalogue"]}
     for record in records:
