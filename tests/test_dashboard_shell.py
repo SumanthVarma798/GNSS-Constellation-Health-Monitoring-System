@@ -166,9 +166,9 @@ def test_station_keeping_under_compare_reads_the_same_picks():
         at.session_state["page"] = "Station-keeping"
 
     at = run(setup)
-    cards = [b for body in htmls(at) for b in body.split('class="raised"')[1:]]
+    lines = [b for body in htmls(at) for b in body.split('<div class="rh">')[1:]]
 
-    assert len(cards) == 2
+    assert len(lines) == 2
 
 
 def test_the_gear_thresholds_reach_params():
