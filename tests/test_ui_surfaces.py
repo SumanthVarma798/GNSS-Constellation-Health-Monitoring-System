@@ -79,6 +79,17 @@ def test_stylesheet_rules_use_variables_not_colours():
     assert not re.findall(r"#[0-9a-fA-F]{3,8}\b", rules)
 
 
+
+def test_theme_keeps_icons_and_words_centred_in_controls():
+    # Measured in the browser (issue 57): Streamlit's icon margin pushed icon-only buttons 4px sideways, the gear's
+    # hidden arrow pushed it 1.5px, and Avenir rode 1.4px high in chips. These rules are the fix; keep them.
+    css = theme_css()
+    assert 'button span:has(> [data-testid="stIconMaterial"]), button [data-testid="stIconMaterial"] { margin: 0; }' in css
+    assert '[data-testid="stPopover"] button > :not(:first-child) { display: none; }' in css
+    assert "text-box: trim-both cap alphabetic" in css
+    assert 'button [data-testid="stMarkdownContainer"] { font-size: inherit; }' in css
+
+
 def test_the_framework_theme_file_matches_the_palette():
     # .streamlit/config.toml cannot import Python, so its colours are typed again there.
     # This keeps the two from drifting apart.
