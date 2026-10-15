@@ -124,3 +124,29 @@ SERVICE_DISAGREE = "disagree"
 SERVICE_NOT_IN_CATALOGUE = "not in the catalogue yet"
 
 ORBIT_FEED_FILES = "*_tles.json"  # in the bundled data folder: one file of element sets per system
+
+# --- Burns: how often a satellite's orbit is corrected ---
+
+# A FIRST PROPOSAL for the team to tune: how the cadence picture names a burn pattern.
+BURN_MIN_FOR_PATTERN = 3           # fewer burns of one kind than this: "too few" to call a pattern
+BURN_REGULAR_MAX_IQR_SHARE = 0.25  # "regular" when the spread (IQR) is at most this share of the median interval
+BURN_TIMELINE_RECENT_DAYS = 90     # the burn timeline opens on this many days; the rest is a scroll away
+
+# --- The master map canvas ---
+
+# Who issues each kind of identifier, as a card says it when zoomed close.
+SCHEME_ISSUERS = {SCHEME_NORAD: "the US Space Force space catalogue, via Space-Track",
+                  SCHEME_COSPAR: "COSPAR",
+                  SCHEME_GCAT: "GCAT, Jonathan McDowell",
+                  SCHEME_ORBIT_FEED: "CelesTrak",
+                  SCHEME_DASHBOARD: "this project's registry"}
+# A signal ID is issued by the operator of its system. Keyed by constellation name, as in constellations.csv.
+SIGNAL_ID_ISSUERS = {"NavIC": "ISRO", "QZSS": "Cabinet Office of Japan", "BeiDou": "China Satellite Navigation Office",
+                     "GPS": "US Space Force", "Galileo": "European Union (EUSPA)", "GLONASS": "Roscosmos"}
+# Said instead of a date when the repository keeps no record of when a value was last checked.
+NOT_RECORDED = "not recorded"
+
+# The catalogue's state codes (who owns the spacecraft), said in full.
+COUNTRY_NAMES = {"IN": "India", "CN": "China", "US": "United States", "J": "Japan", "RU": "Russia",
+                 "SU": "Soviet Union", "I-EU": "European Union", "I-ESA": "European Space Agency"}
+COUNTRY_NOT_GIVEN = "not given"

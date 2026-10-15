@@ -127,8 +127,128 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend
 .legend li .swatch { margin-top: 4px; }
 .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 999px; box-shadow: var(--raised-sm); border: 1px solid var(--edge); flex: none; }
 
+/* ---- the dashboard frame: no side panel, one top bar ---- */
+/* only where the top bar is drawn, so app.py keeps its side panel */
+.stApp:has(.st-key-topbar) :is([data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"], [data-testid="collapsedControl"], [data-testid="stHeader"]) { display: none; }
+.stApp:has(.st-key-topbar) [data-testid="stMainBlockContainer"] { padding-top: 22px; }
+.st-key-topbar { background: var(--platform); border: 1px solid var(--edge); border-radius: 18px; box-shadow: var(--raised); padding: 10px 16px; margin-bottom: 22px; }
+.st-key-topbar [data-testid="stColumn"] { min-width: 0; }
+.brand { font-size: 16px; letter-spacing: .01em; white-space: nowrap; }
+.right { display: flex; justify-content: flex-end; }
+
+/* segmented controls: a pressed track, the chosen item raised in the accent colour */
+[data-testid="stButtonGroup"] [data-baseweb="button-group"] { display: inline-flex; flex-wrap: nowrap; gap: 4px; padding: 4px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); }
+[data-testid="stButtonGroup"] button[data-testid^="stBaseButton-segmented"] {
+  background: transparent; color: var(--muted); border: 1px solid transparent; border-radius: 999px; box-shadow: none; padding: 4px 13px; min-height: 0; font-size: 13px; white-space: nowrap;
+}
+[data-testid="stButtonGroup"] button[data-testid^="stBaseButton-segmented"]:hover { color: var(--accent); border-color: transparent; }
+[data-testid="stButtonGroup"] button[data-testid^="stBaseButton-segmented"] :is([data-testid="stMarkdownContainer"], p) { color: inherit; }
+[data-testid="stButtonGroup"] button[data-testid="stBaseButton-segmented_controlActive"] { background: var(--platform); color: var(--accent); border-color: var(--edge); box-shadow: var(--raised-sm); }
+
+/* the gear and its panel */
+[data-testid="stPopover"] > div > button, [data-testid="stPopover"] button {
+  width: 36px; height: 36px; min-height: 0; padding: 0; border-radius: 50%; background: var(--platform); color: var(--muted); border: 1px solid var(--edge); box-shadow: var(--raised-sm);
+}
+[data-testid="stPopover"] button:hover { color: var(--accent); }
+[data-testid="stPopover"] button[aria-expanded="true"] { box-shadow: var(--pressed); background: var(--well); color: var(--accent); }
+[data-testid="stPopover"] button svg, [data-testid="stPopover"] button span { color: inherit; }
+[data-testid="stPopover"] button [data-testid="stMarkdownContainer"], [data-testid="stPopover"] button > div > :last-child:not(span) { display: none; }
+[data-testid="stPopoverBody"] { background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); color: var(--ink); }
+[data-testid="stNumberInput"] [data-baseweb="input"] { background: var(--well); border: 1px solid var(--edge); border-radius: 14px; box-shadow: var(--pressed); }
+[data-testid="stNumberInput"] [data-baseweb="base-input"] { background: transparent; border: 0; box-shadow: none; }
+[data-testid="stNumberInput"] input { color: var(--ink); background: transparent; }
+[data-testid="stNumberInput"] button { background: transparent; color: var(--muted); border: 0; box-shadow: none; }
+[data-testid="stNumberInput"] button:hover { color: var(--accent); }
+[data-testid="stNumberInput"] [data-baseweb="input"]:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* multi-select: a pressed field, raised tags, a raised list */
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div { background: var(--well); border: 1px solid var(--edge); border-radius: 14px; box-shadow: var(--pressed); color: var(--ink); }
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; border-color: var(--accent); }
+[data-testid="stMultiSelect"] input { color: var(--ink); background: transparent; }
+[data-testid="stMultiSelect"] [data-baseweb="tag"] { background: var(--platform); color: var(--accent); border-radius: 999px; box-shadow: var(--raised-sm); border: 1px solid var(--edge); font-weight: 600; }
+[data-testid="stMultiSelect"] [data-baseweb="tag"] span, [data-testid="stMultiSelect"] [data-baseweb="tag"] svg { color: inherit; fill: currentColor; }
+[data-testid="stMultiSelect"] svg { color: var(--muted); fill: var(--muted); }
+[data-baseweb="popover"] > div { background: transparent; box-shadow: none; }
+[data-baseweb="menu"], [data-baseweb="popover"] ul[role="listbox"] { background: var(--platform); border: 1px solid var(--edge); border-radius: 16px; box-shadow: var(--raised); padding: 6px; }
+[data-baseweb="popover"] li[role="option"] { background: transparent; color: var(--ink); border-radius: 12px; }
+[data-baseweb="popover"] li[role="option"]:hover, [data-baseweb="popover"] li[role="option"][aria-selected="true"] { background: var(--well); color: var(--accent); box-shadow: var(--pressed); }
+
+/* the data chip and the round refresh button; a thin ring round the button empties toward the next automatic refresh */
+/* the syntax is the percentage type, escaped: st.html drops a style block with a raw angle bracket in it */
+@property --left { syntax: "\3c percentage\3e"; inherits: false; initial-value: 0%; }
+.st-key-refresh { flex-direction: row; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: nowrap; }
+.st-key-refresh > div { width: auto !important; flex: 0 1 auto; min-width: 0; }
+.st-key-refresh .chip + .chip { margin-left: 6px; }
+.st-key-refresh_button button {
+  position: relative; width: 36px; height: 36px; min-height: 0; padding: 0; border-radius: 50%; color: var(--muted); overflow: visible;
+}
+.st-key-refresh_button button :is([data-testid="stMarkdownContainer"], p) {   /* the words stay for screen readers only */
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+.st-key-refresh_button button::before {
+  content: ""; position: absolute; inset: -5px; border-radius: 50%; pointer-events: none; opacity: .45;
+  background: conic-gradient(var(--ring, var(--accent)) var(--left), transparent 0);
+  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 2px), var(--ink) calc(100% - 2px));
+  mask: radial-gradient(closest-side, transparent calc(100% - 2px), var(--ink) calc(100% - 2px));
+}
+
+/* Compare stands apart from the constellation chips: raised when off, pressed in the accent colour when on */
+.st-key-compare_toggle button { padding: 5px 16px; min-height: 0; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.st-key-compare_toggle button[data-testid="stBaseButton-primary"] { background: var(--well); color: var(--accent); box-shadow: var(--pressed); border-color: var(--edge); }
+.st-key-compare_toggle button :is(p, span) { color: inherit; }
+
+/* the Compare picker: a pressed field of raised chips (click one to remove it), Add, and the list it opens */
+.st-key-picker { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px; margin-bottom: 18px;
+  background: var(--well); border-radius: 18px; box-shadow: var(--pressed); }
+.st-key-picker > div { width: auto !important; flex: 0 0 auto; }
+.st-key-picker [data-testid="stButton"] button { padding: 4px 12px; min-height: 0; font-size: 13px; color: var(--accent); flex-direction: row-reverse; gap: 6px; }
+.st-key-picker [data-testid="stButton"] button:hover { color: var(--bad); border-color: var(--bad); }
+.st-key-picker [data-testid="stButton"] button :is(p, span) { color: inherit; }
+.st-key-picker .st-key-picker_toggle button { flex-direction: row; color: var(--muted); }
+.st-key-picker .st-key-picker_toggle button:hover { color: var(--accent); border-color: var(--accent); }
+.st-key-picker > div:has(.st-key-picker_list) { flex: 1 0 100%; width: 100% !important; padding: 4px 8px 6px; }
+.st-key-picker_list [data-testid="stWidgetLabel"] p { color: var(--muted); font-size: 13px; }
+.st-key-picker_list [data-baseweb="button-group"] { flex-wrap: wrap; gap: 8px; padding: 2px; background: transparent; box-shadow: none; }
+.st-key-picker_list [data-testid="stBaseButton-pillsActive"] { border-color: var(--accent); }
+
+/* satellite tiles */
+.head { display: flex; align-items: baseline; gap: 14px; margin: 4px 0 14px; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 26px; }
+@media (max-width: 900px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tile { background: var(--platform); border-radius: 18px; box-shadow: var(--raised-sm); border: 1px solid var(--edge); border-top: 3px solid var(--idle); padding: 13px 15px; min-width: 0; }
+.tile.ok { border-top-color: var(--ok); } .tile.warn { border-top-color: var(--warn); } .tile.bad { border-top-color: var(--bad); }
+.tile .n { font-weight: 600; overflow-wrap: anywhere; }
+.tile .s { font-size: 28px; font-weight: 700; line-height: 1.1; margin: 6px 0; }
+.tile .s.ok { color: var(--ok); } .tile .s.warn { color: var(--warn); } .tile .s.bad { color: var(--bad); } .tile .s.idle { color: var(--idle); font-size: 22px; font-family: inherit; }
+.tile .r { display: flex; gap: 6px; flex-wrap: wrap; }
+.tile .low { font-size: 13px; margin-top: 8px; }
+.muted { color: var(--muted); font-weight: 400; }
+
+/* score parts side by side, in the same columns as the tiles above them */
+.tiles.cmp, .mrow { grid-template-columns: 120px repeat(var(--n), minmax(0, 1fr)); }
+.tiles.cmp { margin-bottom: 8px; align-items: start; }
+.mrow { display: grid; gap: 16px; align-items: center; padding: 11px 0; font-size: 14px; }
+.mrow + .mrow { border-top: 1px solid var(--edge); }
+.ml { color: var(--muted); font-weight: 500; }
+.mc { position: relative; padding: 0 15px 7px; font-weight: 700; }
+.mc i { position: absolute; left: 15px; bottom: 0; height: 3px; border-radius: 999px; max-width: calc(100% - 30px); background: currentColor; opacity: .55; }
+.mc.ok { color: var(--ok); } .mc.warn { color: var(--warn); } .mc.bad { color: var(--bad); } .mc.idle { color: var(--idle); padding-bottom: 0; }
+
 /* ---- calm motion ---- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
   [data-testid="stButton"] button:active { transform: none; }
 }
+
+/* station-keeping rhythm: one line per satellite */
+.rh { display: grid; grid-template-columns: minmax(120px, 1.3fr) minmax(150px, 1.4fr) minmax(140px, 2fr) 110px 90px; gap: 16px; align-items: center; padding: 10px 0; font-size: 14px; }
+.rh + .rh { border-top: 1px solid var(--edge); }
+.rh.hd { color: var(--muted); font-size: 12px; font-weight: 500; padding-top: 0; }
+.rh .ev { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cycle { position: relative; height: 8px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); }
+.cycle em { position: absolute; top: 0; bottom: 0; border-radius: 999px; background: var(--fill); opacity: .45; }
+.cycle i { position: absolute; left: 0; top: 2px; bottom: 2px; border-radius: 999px; background: var(--accent); max-width: 100%; }
+.cycle b { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: var(--ink); opacity: .5; }
+.cycle.late i { background: var(--warn); }
+.due { font-weight: 600; } .due.ok { color: var(--ok); } .due.warn { color: var(--warn); } .due.idle { color: var(--idle); } .due.accent { color: var(--accent); }
+@media (max-width: 900px) { .rh { grid-template-columns: 1fr 1fr; } .rh.hd { display: none; } }

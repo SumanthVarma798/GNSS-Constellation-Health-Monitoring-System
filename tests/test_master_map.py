@@ -5,10 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from evidence.master_map import (agreement, display_name, holders_of, identifiers, orbit_feed_names, signal_ids_of,
-                                 summary)
+from evidence.master_map import (agreement, display_name, holders_of, identifiers, orbit_feed_checked, orbit_feed_names,
+                                 signal_ids_of, summary)
 from evidence.registry_tables import read_table
-from evidence.settings import (MAP_ACCENT, MAP_IDLE, MAP_OK, MAP_WARN, REGISTRY_CATALOGUE_FILE,
+from evidence.settings import (MAP_ACCENT, MAP_IDLE, MAP_OK, MAP_WARN, NOT_RECORDED, REGISTRY_CATALOGUE_FILE,
                                REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_SATELLITES_FILE,
                                REGISTRY_SIGNAL_IDS_FILE)
 
@@ -75,7 +75,7 @@ def test_display_name_of_an_unknown_svn_is_the_svn():
 def lines_of(**given):
     sat = satellite("X1", **given.pop("satellite", {}))
     return identifiers("X1", [sat], given.get("catalogue", [entry("X1")]), given.get("tracked", []),
-                       given.get("signal_ids", HISTORY), given.get("feed_names"))
+                       given.get("signal_ids", HISTORY), given.get("feed_names"), given.get("feed_checked"))
 
 
 def test_identifiers_come_in_the_stated_order_with_plain_scheme_names():
@@ -84,7 +84,29 @@ def test_identifiers_come_in_the_stated_order_with_plain_scheme_names():
         "US catalogue number (NORAD)", "Launch designator (COSPAR)", "Catalogue of space objects (GCAT)",
         "Signal ID today (PRN)", "Orbit feed name (CelesTrak)", "Dashboard name"]
     assert [line["value"] for line in lines][:2] == ["43683", "2018-085A"]
-    assert lines[-1] == {"scheme": "Dashboard name", "value": "Dash", "status": MAP_ACCENT, "remark": ""}
+    assert lines[-1] == {"scheme": "Dashboard name", "value": "Dash", "status": MAP_ACCENT, "remark": "",
+                         "issuer": "this project's registry", "checked": NOT_RECORDED}
+
+
+def test_each_identifier_says_who_issued_it_and_only_the_orbit_feed_has_a_checked_day():
+    lines = lines_of(tracked=[tracked("X1", "Dash")], feed_names={43683: "BEIDOU-3 G1 (C04)"},
+                     feed_checked={43683: "2026-10-04"})
+    assert [(line["issuer"], line["checked"]) for line in lines] == [
+        ("the US Space Force space catalogue, via Space-Track", NOT_RECORDED), ("COSPAR", NOT_RECORDED),
+        ("GCAT, Jonathan McDowell", NOT_RECORDED), ("China Satellite Navigation Office", NOT_RECORDED),
+        ("CelesTrak", "2026-10-04"), ("this project's registry", NOT_RECORDED)]
+
+
+@pytest.mark.parametrize("constellation, issuer", [("NavIC", "ISRO"), ("QZSS", "Cabinet Office of Japan"),
+                                                   ("Atlantis", NOT_RECORDED)])
+def test_a_signal_id_is_issued_by_its_systems_operator(constellation, issuer):
+    line = lines_of(satellite={"constellation": constellation})[3]
+    assert line["scheme"].startswith("Signal ID") and line["issuer"] == issuer
+
+
+def test_an_orbit_feed_line_without_a_fetch_day_says_not_recorded():
+    line = lines_of(feed_names={43683: "BEIDOU-3 G1 (C04)"})[4]
+    assert line["scheme"].startswith("Orbit feed") and line["checked"] == NOT_RECORDED
 
 
 def test_catalogue_line_agrees_when_the_launch_designators_match():
@@ -263,8 +285,8 @@ ELEMENTS = ("{name}\n1 {number:05d}U 18085A   26276.67445900 -.00000119  00000+0
             "2 {number:05d}   2.6618  94.2962 0005125  28.3655 292.5952  1.00270736 29149\n")
 
 
-def write_feed(folder, file_name, text):
-    (folder / file_name).write_text(json.dumps({"tle_data": text}), encoding="utf-8")
+def write_feed(folder, file_name, text, **more):
+    (folder / file_name).write_text(json.dumps({"tle_data": text, **more}), encoding="utf-8")
 
 
 def test_orbit_feed_names_reads_every_feed_file_and_keys_by_catalogue_number(tmp_path):
@@ -293,6 +315,15 @@ def test_orbit_feed_names_of_a_missing_folder_is_empty(tmp_path):
     assert orbit_feed_names(tmp_path / "nowhere") == {}
 
 
+def test_orbit_feed_checked_is_each_files_own_fetch_day(tmp_path):
+    write_feed(tmp_path, "a_tles.json", ELEMENTS.format(name="ONE", number=1) + ELEMENTS.format(name="TWO", number=2),
+               timestamp="2026-10-04T04:19:42.382938+00:00")
+    write_feed(tmp_path, "b_tles.json", ELEMENTS.format(name="THREE", number=3), timestamp="2026-09-30T23:00:00Z")
+    write_feed(tmp_path, "c_tles.json", ELEMENTS.format(name="NO DAY", number=4))
+    write_feed(tmp_path, "d_tles.json", ELEMENTS.format(name="NOT A DAY", number=5), timestamp="Unknown")
+    assert orbit_feed_checked(tmp_path) == {1: "2026-10-04", 2: "2026-10-04", 3: "2026-09-30"}
+
+
 # --- facts from the committed tables and bundled data (checked 12 Oct 2026) ---
 
 @pytest.fixture(scope="module")
@@ -300,7 +331,13 @@ def real():
     tables = {"satellites": read_table(REGISTRY_SATELLITES_FILE), "signal_ids": read_table(REGISTRY_SIGNAL_IDS_FILE),
               "catalogue": read_table(REGISTRY_CATALOGUE_FILE), "tracked": read_table(REGISTRY_DASHBOARD_SATELLITES_FILE)}
     tables["feeds"] = orbit_feed_names(DATA_DIR)
+    tables["checked"] = orbit_feed_checked(DATA_DIR)
     return tables
+
+
+def test_real_orbit_feed_days_are_the_bundled_files_fetch_days(real):
+    assert set(real["checked"]) == set(real["feeds"])
+    assert set(real["checked"].values()) == {"2026-10-04"}
 
 
 def test_real_summary(real):

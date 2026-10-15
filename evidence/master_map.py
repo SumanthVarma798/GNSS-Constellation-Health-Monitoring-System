@@ -7,17 +7,19 @@ spacecraft, and who held a given signal ID, and when.
 
 Every function takes lists of rows as evidence.registry_tables.read_table returns them
 and gives back plain dicts and lists, so each can be tested with a few hand-made rows.
-Only orbit_feed_names reads files. Text in the tables is passed along, never interpreted.
+Only orbit_feed_names and orbit_feed_checked read files. Text in the tables is passed along, never interpreted.
 """
 import json
 import re
+from datetime import date
 from pathlib import Path
 
 from evidence.settings import (GCAT_MISSION_FAILED, GCAT_STILL_OPERATING, IDENTITY_AGREE, IDENTITY_DIFFER,
-                               IDENTITY_ONE_SOURCE, MAP_ACCENT, MAP_IDLE, MAP_OK, MAP_WARN, ORBIT_FEED_FILES,
-                               SCHEME_COSPAR, SCHEME_DASHBOARD, SCHEME_GCAT, SCHEME_NORAD, SCHEME_ORBIT_FEED,
-                               SCHEME_SIGNAL_ID, SERVICE_AGREE_NOT_IN_SERVICE, SERVICE_AGREE_OPERATING,
-                               SERVICE_DISAGREE, SERVICE_NOT_IN_CATALOGUE)
+                               IDENTITY_ONE_SOURCE, MAP_ACCENT, MAP_IDLE, MAP_OK, MAP_WARN, NOT_RECORDED,
+                               ORBIT_FEED_FILES, SCHEME_COSPAR, SCHEME_DASHBOARD, SCHEME_GCAT, SCHEME_ISSUERS,
+                               SCHEME_NORAD, SCHEME_ORBIT_FEED, SCHEME_SIGNAL_ID, SERVICE_AGREE_NOT_IN_SERVICE,
+                               SERVICE_AGREE_OPERATING, SERVICE_DISAGREE, SERVICE_NOT_IN_CATALOGUE,
+                               SIGNAL_ID_ISSUERS)
 
 NUMBER_WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
 SIGNAL_ID_IN_BRACKETS = re.compile(r"\(([^()\s]+)\)\s*$")  # "BEIDOU-3 G1 (C59)" -> "C59"
@@ -127,20 +129,23 @@ def _signal_id_identifier(satellite, periods):
             "remark": f"since {now[-1]['start']}"}
 
 
-def _feed_identifier(satellite, periods, feed_names):
-    """The orbit feed's name for the spacecraft, or None when the feed does not carry it."""
-    number = satellite["catalogue_no"]
-    feed_name = (feed_names or {}).get(int(number)) if number.isdigit() else None
+def _feed_identifier(satellite, periods, feed_names, feed_checked):
+    """The orbit feed's name for the spacecraft and the day it was fetched, or None when the feed does not carry it."""
+    number = int(satellite["catalogue_no"]) if satellite["catalogue_no"].isdigit() else None
+    feed_name = (feed_names or {}).get(number)
     if feed_name is None:
         return None
     status, remark = _feed_remark(feed_name, periods)
-    return {"scheme": SCHEME_ORBIT_FEED, "value": feed_name, "status": status, "remark": remark}
+    return {"scheme": SCHEME_ORBIT_FEED, "value": feed_name, "status": status, "remark": remark,
+            "checked": (feed_checked or {}).get(number, NOT_RECORDED)}
 
 
-def identifiers(svn, satellites, catalogue, tracked, signal_ids, feed_names=None):
+def identifiers(svn, satellites, catalogue, tracked, signal_ids, feed_names=None, feed_checked=None):
     """Every identifier of one spacecraft, in a fixed order, each as
-    {"scheme", "value", "status", "remark"}. feed_names is orbit_feed_names(); without it
-    the orbit feed line is left out. An unknown SVN gives an empty list."""
+    {"scheme", "value", "status", "remark", "issuer", "checked"}. feed_names is
+    orbit_feed_names(); without it the orbit feed line is left out. feed_checked is
+    orbit_feed_checked(). Only the orbit feed records when it was last checked; every
+    other line says NOT_RECORDED. An unknown SVN gives an empty list."""
     satellite = _by_svn(satellites).get(svn)
     if satellite is None:
         return []
@@ -152,11 +157,12 @@ def identifiers(svn, satellites, catalogue, tracked, signal_ids, feed_names=None
         found.append({"scheme": SCHEME_COSPAR, "value": satellite["cospar_id"], "status": MAP_OK, "remark": ""})
     found.append(_catalogue_identifier(satellite, entry))
     found.append(_signal_id_identifier(satellite, periods))
-    found.append(_feed_identifier(satellite, periods, feed_names))
+    found.append(_feed_identifier(satellite, periods, feed_names, feed_checked))
     if tracked_row and tracked_row["dashboard_name"]:
         found.append({"scheme": SCHEME_DASHBOARD, "value": tracked_row["dashboard_name"], "status": MAP_ACCENT,
                       "remark": ""})
-    return [item for item in found if item]
+    issuers = {**SCHEME_ISSUERS, SCHEME_SIGNAL_ID: SIGNAL_ID_ISSUERS.get(satellite["constellation"], NOT_RECORDED)}
+    return [{"issuer": issuers[item["scheme"]], "checked": NOT_RECORDED, **item} for item in found if item]
 
 
 def _identity(satellite, entry):
@@ -225,13 +231,26 @@ def _feed_names_in(text):
     return names
 
 
-def orbit_feed_names(data_dir):
-    """{catalogue number: name} from every bundled orbit-feed file in a folder. A file
-    that is missing or cannot be read is skipped."""
-    names = {}
+def _feeds(data_dir, read):
+    """{catalogue number: read(file contents, its names)} over every bundled orbit-feed file
+    in a folder. A file that is missing or cannot be read is skipped."""
+    found = {}
     for path in sorted(Path(data_dir).glob(ORBIT_FEED_FILES)):
         try:
-            names.update(_feed_names_in(json.loads(path.read_text(encoding="utf-8"))["tle_data"]))
+            feed = json.loads(path.read_text(encoding="utf-8"))
+            names = _feed_names_in(feed["tle_data"])
+            found.update({number: read(feed, name) for number, name in names.items()})
         except (OSError, ValueError, KeyError, TypeError, AttributeError):
             continue
-    return names
+    return found
+
+
+def orbit_feed_names(data_dir):
+    """{catalogue number: name} from every bundled orbit-feed file in a folder."""
+    return _feeds(data_dir, lambda feed, name: name)
+
+
+def orbit_feed_checked(data_dir):
+    """{catalogue number: 'YYYY-MM-DD'}: the day each feed file was fetched, from its own
+    timestamp. A file whose timestamp is missing or not a date gives nothing."""
+    return _feeds(data_dir, lambda feed, name: date.fromisoformat(feed["timestamp"][:10]).isoformat())

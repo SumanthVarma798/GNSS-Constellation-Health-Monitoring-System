@@ -1,0 +1,100 @@
+"""CelesTrak's newest element sets, merged onto the bundled history in memory. No network: replies are canned."""
+from datetime import datetime, timedelta, timezone
+
+import pytest
+import requests
+from skyfield.api import EarthSatellite
+
+from analysis.bundled_run import load_bundled_gp_as_dataframes
+from config.config import NAVIK_SATS
+from data import celestrak
+
+# One row of a real reply from gp.php?CATNR=39635&FORMAT=json (IRNSS-1B), taken 15 Oct 2026.
+IRNSS_1B = {"OBJECT_NAME": "IRNSS-1B", "OBJECT_ID": "2014-017A", "EPOCH": "2026-10-07T23:09:31.463136",
+            "MEAN_MOTION": 1.00268531, "ECCENTRICITY": 0.00188221, "INCLINATION": 29.1863,
+            "RA_OF_ASC_NODE": 238.4676, "ARG_OF_PERICENTER": 190.3339, "MEAN_ANOMALY": 350.3525,
+            "EPHEMERIS_TYPE": 0, "CLASSIFICATION_TYPE": "U", "NORAD_CAT_ID": 39635, "ELEMENT_SET_NO": 999,
+            "REV_AT_EPOCH": 4592, "BSTAR": 0, "MEAN_MOTION_DOT": 7.6e-07, "MEAN_MOTION_DDOT": 0}
+NOW = datetime(2026, 10, 15, 10, 42, tzinfo=timezone.utc)
+
+
+class Reply:
+    def __init__(self, rows, status=200):
+        self.rows, self.status_code = rows, status
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise requests.HTTPError(self.status_code)
+
+    def json(self):
+        return self.rows
+
+
+@pytest.fixture(autouse=True)
+def fresh_state(monkeypatch):
+    monkeypatch.setattr(celestrak, "state", {"rows": {}, "tried": None, "fetched": None, "ok": True})
+
+
+def test_a_row_takes_the_bundled_shape():
+    row = celestrak.as_history_row(IRNSS_1B)
+
+    assert row["INCLINATION"] == "29.1863" and row["NORAD_CAT_ID"] == "39635"
+    # Space-Track's SEMIMAJOR_AXIS for the bundled row with mean motion 1.00275866 is 42163.588 km.
+    assert celestrak.as_history_row({**IRNSS_1B, "MEAN_MOTION": 1.00275866})["SEMIMAJOR_AXIS"] == "42163.588"
+    satellite = EarthSatellite(row["TLE_LINE1"], row["TLE_LINE2"])
+    assert satellite.model.satnum == 39635
+    assert satellite.epoch.utc_datetime().isoformat().startswith("2026-10-07T23:09:31")
+
+
+def test_fetch_asks_for_the_group_then_each_satellite_it_left_out(monkeypatch):
+    asked = []
+
+    def get(url, params, timeout):
+        asked.append(params)
+        if params.get("GROUP") == "gnss":
+            return Reply([IRNSS_1B, {**IRNSS_1B, "NORAD_CAT_ID": 1}])   # a satellite not tracked is left out
+        return Reply([], 404) if params["CATNR"] == 41384 else Reply([{**IRNSS_1B, "NORAD_CAT_ID": 40547}])
+
+    monkeypatch.setattr(requests, "get", get)
+    rows = celestrak.fetch([39635, 40547, 41384])
+
+    assert set(rows) == {39635, 40547}
+    assert [p.get("GROUP") or p["CATNR"] for p in asked] == ["gnss", 40547, 41384]
+
+
+def test_refresh_keeps_to_every_two_hours_and_a_click_retries_only_after_a_failure(monkeypatch):
+    calls = []
+
+    def fetch(norads):
+        calls.append(norads)
+        if len(calls) == 2:
+            raise requests.ConnectionError("down")
+        return {39635: celestrak.as_history_row(IRNSS_1B)}
+
+    monkeypatch.setattr(celestrak, "fetch", fetch)
+    first = celestrak.refresh([39635], NOW)
+    assert len(calls) == 1 and first["ok"] and first["fetched"] == NOW and len(first["rows"][39635]) == 1
+
+    celestrak.refresh([39635], NOW + timedelta(minutes=30), clicked=True)   # worked last time: no fetch
+    assert len(calls) == 1 and not celestrak.due(NOW + timedelta(minutes=119))
+
+    failed = celestrak.refresh([39635], NOW + timedelta(hours=2))            # due: fetches, and fails
+    assert len(calls) == 2 and not failed["ok"] and failed["rows"][39635] and failed["fetched"] == NOW
+
+    again = celestrak.refresh([39635], NOW + timedelta(hours=2, minutes=1), clicked=True)
+    assert len(calls) == 3 and again["ok"] and len(again["rows"][39635]) == 1   # same epoch, held once
+
+
+def test_the_rows_join_the_bundled_history_once():
+    row = celestrak.as_history_row(IRNSS_1B)
+    before = load_bundled_gp_as_dataframes("navic", NAVIK_SATS)
+    after = load_bundled_gp_as_dataframes("navic", NAVIK_SATS, {39635: [row, row]})
+
+    def irnss_1b(dfs):
+        return next(df for df in dfs if df["satellite"].iloc[0] == "IRNSS-1B")
+
+    added = irnss_1b(after)
+    assert len(added) == len(irnss_1b(before)) + 1
+    newest = added.iloc[-1]
+    assert str(newest["EPOCH"]).startswith("2026-10-07 23:09:31")
+    assert newest["SEMIMAJOR_AXIS"] == pytest.approx(42165.644, abs=0.001) and newest["INCLINATION"] == 29.1863
