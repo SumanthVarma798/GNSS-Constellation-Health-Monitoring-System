@@ -119,6 +119,13 @@ def _data_chip(names, window_days, params, live, now):
     return surfaces.chip(text, status) + ("" if live["ok"] else surfaces.chip("Refresh failed", "warn"))
 
 
+def _next(live):
+    """'next update 14:20': when the next automatic refresh is, in the viewer's time zone."""
+    if not live["tried"]:
+        return ""
+    return f'<span class="next">next update {(live["tried"] + celestrak.EVERY).astimezone(_viewer_zone()):%H:%M}</span>'
+
+
 def _ring(live, now):
     """A style rule: the ring round the refresh button holds the share of the wait left before the next automatic
     refresh, and empties over that time. A keyframe name per run restarts it from the right place."""
@@ -139,14 +146,19 @@ def _auto_refresh(seconds):
     tick()
 
 
-def _refresh(names, window_days, params):
-    """The data chip and the round refresh button, with its ring."""
+def _refresh(names, window_days, gear_scope):
+    """The data chip, the time of the next automatic refresh, the round refresh button with its ring, and the gear
+    (on pages without their own filters, `gear_scope` names whose thresholds it shows)."""
     with st.container(key="refresh"):
         chip = st.empty()
         clicked = st.button("Refresh orbit data", key="refresh_button", icon=":material/refresh:",
                             help="Pull the newest orbit data")
+        if gear_scope:
+            with st.popover("", icon=":material/settings:", help="Detection thresholds"):
+                st.session_state["params"] = _thresholds(gear_scope)
         live, now = data.refresh(clicked), datetime.now(timezone.utc)
-        chip.html(_data_chip(names, window_days, params, live, now) + _ring(live, now))
+        chip.html(_data_chip(names, window_days, st.session_state["params"], live, now) + _next(live)
+                  + _ring(live, now))
         left = (live["tried"] + celestrak.EVERY - now).total_seconds() if live["tried"] else 0
         _auto_refresh(max(1, int(left) + 1))
 
@@ -177,13 +189,13 @@ def top_bar(current):
     """Draw the bar and store the choices. `current` is the st.Page that is running."""
     st.session_state.setdefault("compare", False)
     with st.container(key="topbar"):
-        brand, scope_box, compare_box, window_box, refresh_box, gear_box = st.columns(
-            [1.25, 2.9, 1.2, 1.8, 3.2, 0.45], vertical_alignment="center")
+        brand, scope_box, compare_box, window_box, refresh_box = st.columns(5, vertical_alignment="center")
         brand.html('<b class="brand">GNSS Health</b>')
         if current.title in OWN_FILTERS:
             names = [st.session_state.get("scope", CONSTELLATIONS[0])]
             window_days = st.session_state.get("window_days", 90)
             st.session_state.setdefault("params", {})
+            gear_scope = None
         else:
             with scope_box:
                 names = _scope()
@@ -193,10 +205,9 @@ def top_bar(current):
                                help="Compare satellites across constellations")
             with window_box:
                 window_days = segment("window_days", list(WINDOWS), WINDOWS, label="Window")
-            with gear_box, st.popover("", icon=":material/settings:", help="Detection thresholds"):
-                st.session_state["params"] = _thresholds("Compare" if on else names[0])
+            gear_scope = "Compare" if on else names[0]
         with refresh_box:
-            _refresh(names, window_days, st.session_state["params"])
+            _refresh(names, window_days, gear_scope)
     _page_tabs(current)
 
 
