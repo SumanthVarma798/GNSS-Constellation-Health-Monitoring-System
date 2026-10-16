@@ -8,9 +8,22 @@
 __ROOT__
 *, *::before, *::after { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
-body { background: var(--platform); color: var(--ink); font: 13.5px/1.4 __FONT__; padding: 14px 18px 22px; overflow: hidden; }
-.card { height: 100%; border-radius: var(--r); background: var(--platform); border: 1px solid var(--edge); box-shadow: var(--raised); overflow: hidden; }
-#plot { width: 100%; height: 100%; }
+body { background: var(--platform); color: var(--ink); font: 13.5px/1.4 __FONT__; padding: 14px 18px 18px; overflow: hidden;
+  display: flex; flex-direction: column; gap: 14px; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.card { flex: 1; min-height: 0; border-radius: var(--r); background: var(--platform); border: 1px solid var(--edge); box-shadow: var(--raised); overflow: hidden; }
+canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+
+/* the satellites, one chip each: the legend, and the keyboard's way in */
+.sats { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0 4px; }
+.sat { display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px; border-radius: 999px; border: 1px solid var(--edge);
+  background: var(--platform); box-shadow: var(--raised-sm); cursor: default; font-size: 12.5px; white-space: nowrap; }
+.sat.on { background: var(--well); box-shadow: var(--pressed); }
+.dot, .ring { flex: none; display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+.ring { border: 1.5px solid var(--muted); }
+.key { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 0 6px; color: var(--muted); font-size: 12px; }
+.key span { display: inline-flex; align-items: center; gap: 7px; }
 
 /* the hover card: raised off the page, words first, colour backing them up */
 .tip { position: fixed; z-index: 10; pointer-events: none; display: none; min-width: 190px; max-width: 280px; padding: 12px 16px;
@@ -26,14 +39,27 @@ body { background: var(--platform); color: var(--ink); font: 13.5px/1.4 __FONT__
 </style>
 </head>
 <body>
-<div class="card"><div id="plot"></div></div>
+<div class="card"><canvas id="orbits" role="img" aria-label="Each satellite's orbit around Earth. Drag to turn, double-click to go back."></canvas></div>
+<div class="sats" id="sats" role="group" aria-label="Satellites"></div>
+<div class="key" id="key"></div>
 <div class="tip" id="tip" role="status"></div>
-<script>__PLOTLY__</script>
 <script>
+"use strict";
 const DATA = __DATA__;
-const DIM = 0.25;
-const plot = document.getElementById("plot"), tip = document.getElementById("tip");
-let current = null, mouse = [0, 0];
+const SATS = DATA.satellites;
+const $ = id => document.getElementById(id);
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const css = getComputedStyle(document.documentElement);
+const C = Object.fromEntries(["platform", "lift", "sink", "track", "fill", "ok", "warn", "bad", "idle"].map(n => [n, css.getPropertyValue("--" + n).trim()]));
+const canvas = $("orbits"), ctx = canvas.getContext("2d"), tip = $("tip");
+
+const HOME = { yaw: -45, pitch: 22 };   // degrees: looking in from above the equator, as the view always opened
+const REST = .5, DIM = .12, BACK = .4;  // orbit strength at rest; everything else while one is picked; behind the picture's plane
+const DOT_HIT = 16, LINE_HIT = 10;      // CSS px from a dot or a line that still counts as on it
+const BELT = Array.from({ length: 121 }, (_, k) => [DATA.belt * Math.cos(k * Math.PI / 60), DATA.belt * Math.sin(k * Math.PI / 60), 0]);
+const REACH = Math.max(DATA.belt, ...SATS.flatMap(s => (s.loop || []).map(p => Math.hypot(...p))));
+let view = { ...HOME }, current = null, dpr = 1, W = 0, H = 0, scale = 1, queued = 0;
+let screen = [];   // each satellite as projected in the last frame, for hit tests
 
 function el(tag, cls, text) {
   const node = document.createElement(tag);
@@ -42,6 +68,109 @@ function el(tag, cls, text) {
   return node;
 }
 
+/* ---------- projection: orthographic, z along the pole ---------- */
+function axes() {
+  const a = view.yaw * Math.PI / 180, b = view.pitch * Math.PI / 180;
+  const ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b);
+  return { r: [-sa, ca, 0], u: [-sb * ca, -sb * sa, cb], d: [cb * ca, cb * sa, sb] };
+}
+const dot3 = (p, v) => p[0] * v[0] + p[1] * v[1] + p[2] * v[2];
+function project(p, A) {   // screen position, depth toward the viewer, and whether Earth hides it
+  const x = dot3(p, A.r), y = dot3(p, A.u), z = dot3(p, A.d);
+  return { x: W / 2 + x * scale, y: H / 2 - y * scale, z, hidden: z < 0 && x * x + y * y < 1 };
+}
+
+/* ---------- drawing: what is behind the picture's plane, then Earth over it, then the front ---------- */
+function line(pts, back, colour, width, alpha) {
+  ctx.strokeStyle = colour; ctx.lineWidth = width; ctx.globalAlpha = alpha * (back ? BACK : 1);
+  ctx.beginPath();
+  let open = false;
+  for (let k = 1; k < pts.length; k++) {
+    const a = pts[k - 1], b = pts[k];
+    if ((a.z + b.z < 0) !== back) { open = false; continue; }
+    if (!open) ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y); open = true;
+  }
+  ctx.stroke();
+}
+function earth(A) {
+  const cx = W / 2, cy = H / 2, R = scale;
+  const shade = ctx.createRadialGradient(cx - R * .4, cy - R * .45, R * .1, cx, cy, R);   // lit from the top left
+  shade.addColorStop(0, C.lift); shade.addColorStop(.65, C.platform); shade.addColorStop(1, C.sink);
+  ctx.globalAlpha = 1; ctx.fillStyle = shade;
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2 * Math.PI); ctx.fill();
+  ctx.fillStyle = C.fill;
+  for (const p of DATA.land) {
+    const q = project(p, A);
+    if (q.z <= 0) continue;
+    ctx.globalAlpha = .3 + .6 * q.z; ctx.fillRect(q.x - .7, q.y - .7, 1.4, 1.4);
+  }
+  ctx.globalAlpha = 1; ctx.strokeStyle = C.track; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cx, cy, R - .5, 0, 2 * Math.PI); ctx.stroke();
+}
+function draw() {
+  queued = 0;
+  const A = axes();
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+  ctx.lineCap = ctx.lineJoin = "round";
+  const belt = BELT.map(p => project(p, A));
+  screen = SATS.map(s => ({ loop: s.loop && s.loop.map(p => project(p, A)), at: s.at && project(s.at, A), slot: s.slot_at && project(s.slot_at, A) }));
+  const order = SATS.map((_, i) => i).filter(i => i !== current).concat(current == null ? [] : [current]);   // the picked one on top
+  for (const back of [true, false]) {
+    if (!back) earth(A);
+    line(belt, back, C.track, 1, current == null ? .8 : .4);
+    for (const i of order) {
+      const s = screen[i], colour = C[SATS[i].status], on = i === current, k = current == null || on ? 1 : DIM;
+      if (s.loop) line(s.loop, back, colour, on ? 2.5 : 1.25, current == null ? REST : k);
+      ctx.globalAlpha = k * (back ? BACK : 1);
+      if (s.slot && (s.slot.z < 0) === back) {
+        ctx.strokeStyle = colour; ctx.lineWidth = on ? 1.75 : 1.25;
+        ctx.beginPath(); ctx.arc(s.slot.x, s.slot.y, on ? 5.5 : 4, 0, 2 * Math.PI); ctx.stroke();
+      }
+      if (s.at && (s.at.z < 0) === back) {
+        ctx.fillStyle = colour;
+        ctx.beginPath(); ctx.arc(s.at.x, s.at.y, on ? 4.5 : 3, 0, 2 * Math.PI); ctx.fill();
+      }
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+const paint = () => { if (!queued) queued = requestAnimationFrame(draw); };
+function resize() {
+  const b = canvas.getBoundingClientRect();
+  dpr = devicePixelRatio || 1; W = b.width; H = b.height;
+  canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+  scale = Math.min(W, H) / 2 / (REACH * 1.05);   // pixels per Earth radius: the highest orbit just fits
+  draw();
+}
+
+/* ---------- hit test in screen space: a dot or slot first, else the nearest line, the front one on a tie ---------- */
+function segment(px, py, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y, t = clamp(((px - a.x) * dx + (py - a.y) * dy) / (dx * dx + dy * dy || 1), 0, 1);
+  return Math.hypot(a.x + t * dx - px, a.y + t * dy - py);
+}
+function hitAt(px, py) {
+  let best = null, near = DOT_HIT;
+  screen.forEach((s, i) => [s.at, s.slot].forEach(q => {
+    const d = q && !q.hidden ? Math.hypot(q.x - px, q.y - py) : Infinity;
+    if (d < near) { near = d; best = i; }
+  }));
+  if (best != null) return best;
+  let key = [Infinity, 0];   // distance in 3 px steps, then depth: the front one wins when two are about as near
+  screen.forEach((s, i) => {
+    for (let k = 1; s.loop && k < s.loop.length; k++) {
+      const a = s.loop[k - 1], b = s.loop[k];
+      if (a.hidden || b.hidden) continue;
+      const d = segment(px, py, a, b);
+      if (d > LINE_HIT) continue;
+      const mine = [Math.round(d / 3), -(a.z + b.z)];
+      if (mine[0] < key[0] || (mine[0] === key[0] && mine[1] < key[1])) { key = mine; best = i; }
+    }
+  });
+  return best;
+}
+
+/* ---------- the hover card ---------- */
 function fill(sat) {
   tip.replaceChildren();
   const head = el("div", "n", sat.name);
@@ -55,41 +184,78 @@ function fill(sat) {
   }
   tip.append(head, row);
 }
-
-function place() {
+function place(x, y, chip) {   // beside the pointer, or just above a chip; always on screen
   const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
-  let x = mouse[0] + pad, y = mouse[1] + pad;
-  if (x + w > innerWidth - 4) x = mouse[0] - pad - w;
-  if (y + h > innerHeight - 4) y = mouse[1] - pad - h;
-  tip.style.left = Math.max(4, x) + "px";
-  tip.style.top = Math.max(4, y) + "px";
+  if (chip) { const b = chip.getBoundingClientRect(); x = b.left; y = b.top - h - 10; }
+  else {
+    x = x + pad + w > innerWidth - 4 ? x - pad - w : x + pad;
+    y = y + pad + h > innerHeight - 4 ? y - pad - h : y + pad;
+  }
+  tip.style.left = clamp(x, 4, innerWidth - w - 4) + "px";
+  tip.style.top = clamp(y, 4, innerHeight - h - 4) + "px";
+}
+function pick(index, x, y, chip) {
+  if (index !== current) {
+    current = index; paint();
+    chips.forEach((c, i) => c.classList.toggle("on", i === index));
+    if (index != null) fill(SATS[index]);
+  }
+  tip.classList.toggle("on", index != null);
+  if (index != null) place(x, y, chip);
 }
 
-function focus(index) {
-  if (index === current) return;
-  current = index;
-  const traces = [], opacity = [];
-  plot.data.forEach((trace, i) => {
-    if (trace.meta == null) return;   // Earth stays as it is
-    traces.push(i);
-    opacity.push(index == null || trace.meta === index ? 1 : DIM);
-  });
-  Plotly.restyle(plot, {opacity}, traces);
-  if (index == null) { tip.classList.remove("on"); return; }
-  fill(DATA.satellites[index]);
-  tip.classList.add("on");
-  place();
-}
-
-Plotly.newPlot(plot, DATA.figure.data, DATA.figure.layout, {displayModeBar: false, responsive: true, scrollZoom: false}).then(() => {
-  plot.on("plotly_hover", e => {
-    const meta = plot.data[e.points[0].curveNumber].meta;
-    focus(meta == null ? null : meta);
-  });
-  plot.on("plotly_unhover", () => focus(null));
+/* ---------- the canvas: hover picks, drag turns, a tap picks, double-click goes back ---------- */
+let drag = null;
+const local = e => { const b = canvas.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+canvas.addEventListener("pointerdown", e => { drag = { x: e.clientX, y: e.clientY, moved: 0 }; canvas.setPointerCapture(e.pointerId); });
+canvas.addEventListener("pointermove", e => {
+  if (drag) {
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    drag.moved += Math.abs(dx) + Math.abs(dy); drag.x = e.clientX; drag.y = e.clientY;
+    if (drag.moved > 4) {
+      view.yaw -= dx * .4; view.pitch = clamp(view.pitch + dy * .4, -85, 85);
+      canvas.style.cursor = "grabbing"; pick(null); paint();
+    }
+    return;
+  }
+  const hit = hitAt(...local(e));
+  canvas.style.cursor = hit == null ? "" : "pointer";
+  pick(hit, e.clientX, e.clientY);
 });
-plot.addEventListener("mousemove", e => { mouse = [e.clientX, e.clientY]; if (current != null) place(); });
-plot.addEventListener("mouseleave", () => focus(null));
+const lift = e => {
+  if (!drag) return;
+  const tap = drag.moved <= 4 && e.type === "pointerup";
+  drag = null; canvas.style.cursor = "";
+  if (tap) pick(hitAt(...local(e)), e.clientX, e.clientY);
+};
+canvas.addEventListener("pointerup", lift);
+canvas.addEventListener("pointercancel", lift);
+canvas.addEventListener("pointerleave", e => { if (!drag && e.pointerType !== "touch") pick(null); });
+canvas.addEventListener("dblclick", () => { view = { ...HOME }; paint(); });
+
+/* ---------- the chips, then a short key of the states shown ---------- */
+const chips = SATS.map((sat, i) => {
+  const chip = el("button", "sat"), dot = el("span", "dot");
+  chip.type = "button";
+  dot.style.background = C[sat.status];
+  chip.append(dot, el("span", null, sat.name));
+  const on = () => pick(i, 0, 0, chip), off = () => { if (current === i) pick(null); };
+  chip.addEventListener("pointerenter", on); chip.addEventListener("focus", on);
+  chip.addEventListener("pointerleave", off); chip.addEventListener("blur", off);
+  return chip;
+});
+$("sats").append(...chips);
+const ORDER = ["ok", "warn", "bad", "idle"];   // in slot, off it, left it, not known
+const shown = [...new Map(SATS.map(s => [s.state, s.status]))].sort((a, b) => ORDER.indexOf(a[1]) - ORDER.indexOf(b[1]));
+for (const [state, status] of shown) {
+  const entry = el("span"), dot = el("span", "dot");
+  dot.style.background = C[status];
+  entry.append(dot, state);
+  $("key").append(entry);
+}
+if (SATS.some(s => s.slot_at)) { const entry = el("span"); entry.append(el("span", "ring"), "slot"); $("key").append(entry); }
+
+new ResizeObserver(resize).observe(canvas);
 </script>
 </body>
 </html>
