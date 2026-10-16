@@ -61,14 +61,14 @@ def _gaps(constellation, result):
         surfaces.show(surfaces.notice(text, "warn"))
 
 
-def _slot_picture(rows, result):
+def _slot_picture(rows, result, name):
     """The slots against their satellites, flat or in 3D."""
     switch, legend = st.columns([1, 1], vertical_alignment="center")
     with switch:
         view = shell.segment("slot_view", ["Flat", "3D"], label="View")
     if view == "Flat":   # the 3D view carries its own key under the picture
         legend.html(f'<div class="right">{surfaces.hover_legend(slot_legend(), opens_left=True)}</div>')
-    orbit_section.render_belt(rows, view, result["history"], result["health"])
+    orbit_section.render_belt(rows, view, result["history"], result["health"], name)
 
 
 def constellation(name, window_days, params):
@@ -81,7 +81,7 @@ def constellation(name, window_days, params):
     _gaps(name, result)
     _grid(html for html, _, _ in tiles.values())
     if rows:
-        _slot_picture(rows, result)
+        _slot_picture(rows, result, name)
 
 
 def compare(window_days, params):

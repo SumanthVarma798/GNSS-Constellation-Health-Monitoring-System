@@ -4,11 +4,14 @@ from datetime import datetime, timezone
 import streamlit as st
 
 from analysis.bundled_run import assess_constellation
-from config.config import BEIDOU3_SATS, NAVIK_SATS, QZSS_SATS
+from config.config import BEIDOU3_SATS, GENERATIONS, NAVIK_SATS, QZSS_SATS
 from data import celestrak
+from evidence.registry_tables import generation_satellites
 
 SATELLITES = {"NavIC": NAVIK_SATS, "QZSS": QZSS_SATS, "BeiDou-3": BEIDOU3_SATS}
 TRACKED = {name: [norad for norad in sats.values() if norad is not None] for name, sats in SATELLITES.items()}
+# Every registry satellite of the generation each constellation shows, tracked or not (the 3D view's "All").
+GENERATION = {name: generation_satellites(*GENERATIONS[name]) for name in SATELLITES}
 
 
 @st.cache_data(show_spinner=False)
@@ -17,8 +20,12 @@ def _assess(constellation, window_days, params, now, fresh):
 
 
 def refresh(clicked=False):
-    """Pull the newest element sets from CelesTrak when one is due (see data.celestrak.refresh). Returns its state."""
-    return celestrak.refresh([n for norads in TRACKED.values() for n in norads], datetime.now(timezone.utc), clicked)
+    """Pull the newest element sets from CelesTrak when one is due (see data.celestrak.refresh). Returns its state.
+
+    Asks for the tracked satellites and every other satellite of their generations."""
+    wanted = {n for norads in TRACKED.values() for n in norads}
+    wanted |= {int(row["catalogue_no"]) for rows in GENERATION.values() for row in rows if row["catalogue_no"]}
+    return celestrak.refresh(sorted(wanted), datetime.now(timezone.utc), clicked)
 
 
 def load(constellation, window_days, params=None):

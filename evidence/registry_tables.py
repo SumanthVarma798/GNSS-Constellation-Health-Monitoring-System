@@ -56,3 +56,9 @@ def dashboard_satellites_not_in_registry(constellation):
     """Names of tracked satellites the registry does not list. Normally none; a test
     keeps it so at the point of approval. The dashboard shows these in a notice."""
     return [name for name, found in _tracked(constellation) if not found]
+
+
+def generation_satellites(constellation, block_start):
+    """Registry rows of one constellation whose block starts with block_start, in registry order."""
+    return [row for row in read_table(REGISTRY_SATELLITES_FILE)
+            if row["constellation"] == constellation and row["block"].startswith(block_start)]

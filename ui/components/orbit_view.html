@@ -12,8 +12,16 @@ body { background: var(--platform); color: var(--ink); font: 13.5px/1.4 __FONT__
   display: flex; flex-direction: column; gap: 14px; }
 button { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.card { flex: 1; min-height: 0; border-radius: var(--r); background: var(--platform); border: 1px solid var(--edge); box-shadow: var(--raised); overflow: hidden; }
+.card { position: relative; flex: 1; min-height: 0; border-radius: var(--r); background: var(--platform); border: 1px solid var(--edge); box-shadow: var(--raised); overflow: hidden; }
 canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+
+/* which satellites: a pressed track, the chosen one raised in the accent colour, as the page's own switches */
+.top { position: absolute; top: 12px; left: 12px; display: flex; align-items: center; gap: 12px; }
+.seg { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); }
+.seg button { padding: 4px 13px; border-radius: 999px; border: 1px solid transparent; background: transparent; color: var(--muted); font-size: 13px; white-space: nowrap; cursor: pointer; }
+.seg button:hover { color: var(--accent); }
+.seg button[aria-pressed="true"] { background: var(--platform); color: var(--accent); border-color: var(--edge); box-shadow: var(--raised-sm); }
+.note { color: var(--muted); font-size: 12px; }
 
 /* the satellites, one chip each: the legend, and the keyboard's way in */
 .sats { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0 4px; }
@@ -22,6 +30,8 @@ canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: 
 .sat.on { background: var(--well); box-shadow: var(--pressed); }
 .dot, .ring { flex: none; display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
 .ring { border: 1.5px solid var(--muted); }
+.dot.faint { opacity: .5; }
+.dash { flex: none; width: 16px; border-top: 1.5px dashed var(--muted); }
 .key { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 0 6px; color: var(--muted); font-size: 12px; }
 .key span { display: inline-flex; align-items: center; gap: 7px; }
 
@@ -31,15 +41,24 @@ canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: 
 .tip.on { display: block; }
 .tip .n { font-weight: 600; overflow-wrap: anywhere; }
 .tip .k { color: var(--muted); font-weight: 400; margin-left: 6px; }
+.tip .note { margin-top: 8px; color: var(--muted); font-size: 12px; }
 .tip .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
 .chip { display: inline-flex; font-size: 12.5px; font-weight: 600; padding: 3px 11px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); white-space: nowrap; }
 .s { font: 700 24px/1 __FONT_NUMBERS__; }
 .s small { font: 400 12px __FONT__; color: var(--muted); margin-left: 4px; }
-.ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); } .idle { color: var(--idle); }
+.ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); } .idle { color: var(--idle); } .muted { color: var(--muted); }
 </style>
 </head>
 <body>
-<div class="card"><canvas id="orbits" role="img" aria-label="Each satellite's orbit around Earth. Drag to turn, double-click to go back."></canvas></div>
+<div class="card">
+  <canvas id="orbits" role="img" aria-label="Each satellite's orbit around Earth. Drag to turn, double-click to go back."></canvas>
+  <div class="top">
+    <div class="seg" id="mode" role="group" aria-label="Which satellites">
+      <button type="button" data-mode="service" aria-pressed="true">In service</button><button type="button" data-mode="all" aria-pressed="false">All</button>
+    </div>
+    <span class="note" id="note"></span>
+  </div>
+</div>
 <div class="sats" id="sats" role="group" aria-label="Satellites"></div>
 <div class="key" id="key"></div>
 <div class="tip" id="tip" role="status"></div>
@@ -50,16 +69,21 @@ const SATS = DATA.satellites;
 const $ = id => document.getElementById(id);
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const css = getComputedStyle(document.documentElement);
-const C = Object.fromEntries(["platform", "lift", "sink", "track", "fill", "ok", "warn", "bad", "idle"].map(n => [n, css.getPropertyValue("--" + n).trim()]));
+const C = Object.fromEntries(["platform", "lift", "sink", "track", "fill", "ok", "warn", "bad", "idle", "muted"].map(n => [n, css.getPropertyValue("--" + n).trim()]));
 const canvas = $("orbits"), ctx = canvas.getContext("2d"), tip = $("tip");
 
 const HOME = { yaw: -45, pitch: 22 };   // degrees: looking in from above the equator, as the view always opened
-const REST = .5, DIM = .12, BACK = .4;  // orbit strength at rest; everything else while one is picked; behind the picture's plane
+const REST = .5, CROWD = .3, DIM = .12;  // orbit strength at rest, at rest with many shown, and for the rest while some are picked
+const BACK = .4, OFF = .6;              // strength behind the picture's plane, and for satellites not in service (also dashed)
 const DOT_HIT = 16, LINE_HIT = 10;      // CSS px from a dot or a line that still counts as on it
 const BELT = Array.from({ length: 121 }, (_, k) => [DATA.belt * Math.cos(k * Math.PI / 60), DATA.belt * Math.sin(k * Math.PI / 60), 0]);
-const REACH = Math.max(DATA.belt, ...SATS.flatMap(s => (s.loop || []).map(p => Math.hypot(...p))));
-let view = { ...HOME }, current = null, dpr = 1, W = 0, H = 0, scale = 1, queued = 0;
-let screen = [];   // each satellite as projected in the last frame, for hit tests
+const REACH = Math.max(DATA.belt, ...SATS.flatMap(s => (s.loop || []).map(p => Math.hypot(...p))));   // over all: no jump on a switch
+const ORDER = ["ok", "warn", "bad", "idle", "muted"];   // in slot, off it, left it, not known, not scored
+let view = { ...HOME }, dpr = 1, W = 0, H = 0, scale = 1, queued = 0;
+let mode = "service", shown = [];   // shown: indices of the satellites the chosen set holds
+let lit = null;                    // a Set of the satellites picked out, or null
+let screen = [];                   // each shown satellite as projected in the last frame, for hit tests
+let chips = [];                    // [{button, members}]
 
 function el(tag, cls, text) {
   const node = document.createElement(tag);
@@ -108,27 +132,36 @@ function earth(A) {
   ctx.globalAlpha = 1; ctx.strokeStyle = C.track; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.arc(cx, cy, R - .5, 0, 2 * Math.PI); ctx.stroke();
 }
+const faint = i => mode === "all" && !SATS[i].service;
 function draw() {
   queued = 0;
-  const A = axes();
+  const A = axes(), rest = shown.length > 12 ? CROWD : REST;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
   ctx.lineCap = ctx.lineJoin = "round";
   const belt = BELT.map(p => project(p, A));
-  screen = SATS.map(s => ({ loop: s.loop && s.loop.map(p => project(p, A)), at: s.at && project(s.at, A), slot: s.slot_at && project(s.slot_at, A) }));
-  const order = SATS.map((_, i) => i).filter(i => i !== current).concat(current == null ? [] : [current]);   // the picked one on top
+  screen = [];
+  for (const i of shown) {
+    const s = SATS[i];
+    screen[i] = { loop: s.loop && s.loop.map(p => project(p, A)), at: s.at && project(s.at, A), slot: s.slot_at && project(s.slot_at, A) };
+  }
+  const order = lit ? shown.filter(i => !lit.has(i)).concat(shown.filter(i => lit.has(i))) : shown;   // the picked on top
   for (const back of [true, false]) {
     if (!back) earth(A);
-    line(belt, back, C.track, 1, current == null ? .8 : .4);
+    line(belt, back, C.track, 1, lit ? .4 : .8);
     for (const i of order) {
-      const s = screen[i], colour = C[SATS[i].status], on = i === current, k = current == null || on ? 1 : DIM;
-      if (s.loop) line(s.loop, back, colour, on ? 2.5 : 1.25, current == null ? REST : k);
+      const on = !!lit && lit.has(i), s = screen[i];
+      // not scored: orbits in the quiet fill colour at full strength, so a dozen in one MEO plane stay quiet; lit when picked
+      const colour = SATS[i].tracked || on ? C[SATS[i].status] : C.fill, k = (!lit || on ? 1 : DIM) * (faint(i) ? OFF : 1);
+      ctx.setLineDash(faint(i) ? [4, 4] : []);
+      if (s.loop) line(s.loop, back, colour, on ? 2.5 : 1.25, lit || !SATS[i].tracked ? k : rest * k);
+      ctx.setLineDash([]);
       ctx.globalAlpha = k * (back ? BACK : 1);
       if (s.slot && (s.slot.z < 0) === back) {
         ctx.strokeStyle = colour; ctx.lineWidth = on ? 1.75 : 1.25;
         ctx.beginPath(); ctx.arc(s.slot.x, s.slot.y, on ? 5.5 : 4, 0, 2 * Math.PI); ctx.stroke();
       }
       if (s.at && (s.at.z < 0) === back) {
-        ctx.fillStyle = colour;
+        ctx.fillStyle = C[SATS[i].status];
         ctx.beginPath(); ctx.arc(s.at.x, s.at.y, on ? 4.5 : 3, 0, 2 * Math.PI); ctx.fill();
       }
     }
@@ -137,10 +170,11 @@ function draw() {
 }
 const paint = () => { if (!queued) queued = requestAnimationFrame(draw); };
 function resize() {
-  const b = canvas.getBoundingClientRect();
+  const b = canvas.getBoundingClientRect(), wider = b.width !== W;
   dpr = devicePixelRatio || 1; W = b.width; H = b.height;
   canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
   scale = Math.min(W, H) / 2 / (REACH * 1.05);   // pixels per Earth radius: the highest orbit just fits
+  if (wider) buildChips();   // whether one chip per satellite fits in a row depends on the width
   draw();
 }
 
@@ -151,22 +185,23 @@ function segment(px, py, a, b) {
 }
 function hitAt(px, py) {
   let best = null, near = DOT_HIT;
-  screen.forEach((s, i) => [s.at, s.slot].forEach(q => {
+  for (const i of shown) [screen[i].at, screen[i].slot].forEach(q => {
     const d = q && !q.hidden ? Math.hypot(q.x - px, q.y - py) : Infinity;
     if (d < near) { near = d; best = i; }
-  }));
+  });
   if (best != null) return best;
   let key = [Infinity, 0];   // distance in 3 px steps, then depth: the front one wins when two are about as near
-  screen.forEach((s, i) => {
-    for (let k = 1; s.loop && k < s.loop.length; k++) {
-      const a = s.loop[k - 1], b = s.loop[k];
+  for (const i of shown) {
+    const loop = screen[i].loop;
+    for (let k = 1; loop && k < loop.length; k++) {
+      const a = loop[k - 1], b = loop[k];
       if (a.hidden || b.hidden) continue;
       const d = segment(px, py, a, b);
       if (d > LINE_HIT) continue;
       const mine = [Math.round(d / 3), -(a.z + b.z)];
       if (mine[0] < key[0] || (mine[0] === key[0] && mine[1] < key[1])) { key = mine; best = i; }
     }
-  });
+  }
   return best;
 }
 
@@ -183,6 +218,7 @@ function fill(sat) {
     row.append(score);
   }
   tip.append(head, row);
+  if (sat.note) tip.append(el("div", "note", sat.note));
 }
 function place(x, y, chip) {   // beside the pointer, or just above a chip; always on screen
   const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
@@ -194,12 +230,17 @@ function place(x, y, chip) {   // beside the pointer, or just above a chip; alwa
   tip.style.left = clamp(x, 4, innerWidth - w - 4) + "px";
   tip.style.top = clamp(y, 4, innerHeight - h - 4) + "px";
 }
-function pick(index, x, y, chip) {
-  if (index !== current) {
-    current = index; paint();
-    chips.forEach((c, i) => c.classList.toggle("on", i === index));
-    if (index != null) fill(SATS[index]);
-  }
+const same = (a, b) => a === b || (!!a && !!b && a.size === b.size && [...a].every(i => b.has(i)));
+function light(members) {   // pick out these satellites (or none), and press the chips that hold them
+  const next = members && members.length ? new Set(members) : null;
+  if (same(next, lit)) return;
+  lit = next; paint();
+  chips.forEach(c => c.button.classList.toggle("on", !!lit && c.members.some(i => lit.has(i))));
+}
+function pick(index, x, y, chip) {   // one satellite, with its card
+  const changed = !same(index == null ? null : new Set([index]), lit);
+  light(index == null ? null : [index]);
+  if (index != null && changed) fill(SATS[index]);
   tip.classList.toggle("on", index != null);
   if (index != null) place(x, y, chip);
 }
@@ -233,27 +274,59 @@ canvas.addEventListener("pointercancel", lift);
 canvas.addEventListener("pointerleave", e => { if (!drag && e.pointerType !== "touch") pick(null); });
 canvas.addEventListener("dblclick", () => { view = { ...HOME }; paint(); });
 
-/* ---------- the chips, then a short key of the states shown ---------- */
-const chips = SATS.map((sat, i) => {
-  const chip = el("button", "sat"), dot = el("span", "dot");
-  chip.type = "button";
-  dot.style.background = C[sat.status];
-  chip.append(dot, el("span", null, sat.name));
-  const on = () => pick(i, 0, 0, chip), off = () => { if (current === i) pick(null); };
-  chip.addEventListener("pointerenter", on); chip.addEventListener("focus", on);
-  chip.addEventListener("pointerleave", off); chip.addEventListener("blur", off);
-  return chip;
-});
-$("sats").append(...chips);
-const ORDER = ["ok", "warn", "bad", "idle"];   // in slot, off it, left it, not known
-const shown = [...new Map(SATS.map(s => [s.state, s.status]))].sort((a, b) => ORDER.indexOf(a[1]) - ORDER.indexOf(b[1]));
-for (const [state, status] of shown) {
-  const entry = el("span"), dot = el("span", "dot");
-  dot.style.background = C[status];
-  entry.append(dot, state);
-  $("key").append(entry);
+/* ---------- the chips: one per satellite while they fit in a row, else one per plane ---------- */
+function addChips(entries) {
+  for (const { label, members } of entries) {
+    const button = el("button", "sat"), one = members.length === 1 ? members[0] : null;
+    button.type = "button";
+    if (one != null) {
+      const dot = el("span", "dot" + (faint(one) ? " faint" : ""));
+      dot.style.background = C[SATS[one].status];
+      button.append(dot);
+    }
+    button.append(el("span", null, label));
+    const on = () => one != null ? pick(one, 0, 0, button) : (tip.classList.remove("on"), light(members));
+    const off = () => { if (same(lit, new Set(members))) pick(null); };
+    button.addEventListener("pointerenter", on); button.addEventListener("focus", on);
+    button.addEventListener("pointerleave", off); button.addEventListener("blur", off);
+    $("sats").append(button);
+    chips.push({ button, members });
+  }
 }
-if (SATS.some(s => s.slot_at)) { const entry = el("span"); entry.append(el("span", "ring"), "slot"); $("key").append(entry); }
+function buildChips() {
+  $("sats").replaceChildren(); chips = [];
+  addChips(shown.map(i => ({ label: SATS[i].name, members: [i] })));
+  if (chips.length > 1 && chips[chips.length - 1].button.offsetTop > chips[0].button.offsetTop) {
+    $("sats").replaceChildren(); chips = [];
+    const groups = new Map();
+    for (const i of shown) groups.set(SATS[i].group, [...(groups.get(SATS[i].group) || []), i]);
+    addChips([...groups].map(([group, members]) => ({ label: `${group} · ${members.length}`, members })));
+  }
+  chips.forEach(c => c.button.classList.toggle("on", !!lit && c.members.some(i => lit.has(i))));
+}
+
+/* ---------- the key: only what is shown ---------- */
+function buildKey() {
+  const key = $("key"), add = (mark, words) => { const entry = el("span"); entry.append(mark, words); key.append(entry); };
+  key.replaceChildren();
+  const states = [...new Map(shown.map(i => [SATS[i].tracked ? SATS[i].state : "not scored", SATS[i].status]))];
+  for (const [words, status] of states.sort((a, b) => ORDER.indexOf(a[1]) - ORDER.indexOf(b[1]))) {
+    const dot = el("span", "dot"); dot.style.background = C[status]; add(dot, words);
+  }
+  if (shown.some(faint)) add(el("span", "dash"), "out of service");
+  if (shown.some(i => SATS[i].slot_at)) add(el("span", "ring"), "slot");
+}
+
+/* ---------- in service, or all of the generation: switched here, no round trip ---------- */
+function choose(next) {
+  mode = next;
+  shown = SATS.map((_, i) => i).filter(i => mode === "all" || SATS[i].service);
+  $("mode").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+  $("note").textContent = DATA.notes[mode];
+  pick(null); buildChips(); buildKey(); paint();
+}
+$("mode").addEventListener("click", e => { const b = e.target.closest("button"); if (b && b.dataset.mode !== mode) choose(b.dataset.mode); });
+choose("service");
 
 new ResizeObserver(resize).observe(canvas);
 </script>

@@ -1,4 +1,7 @@
-"""The newest element set of each tracked satellite from CelesTrak's public GP API, no credentials.
+"""The newest element set of each wanted satellite from CelesTrak's public GP API, no credentials.
+
+Each fetch also keeps which satellites CelesTrak's GNSS group lists: the dashboard's
+meaning of "in service".
 
 The rows are held in memory only and merged onto the bundled history when it is read; the
 tracked data/*.json files are never rewritten. CelesTrak asks that unchanged data is not
@@ -17,10 +20,11 @@ TIMEOUT = 8          # seconds per request
 EVERY = timedelta(hours=2)
 MU = 398600.4418     # km^3/s^2: Space-Track's SEMIMAJOR_AXIS comes from the mean motion with this
 
-# rows: {norad: [history row, ...]}; tried: when the last fetch was tried; fetched: the last one that
+# rows: {norad: [history row, ...]}; listed: the NORAD IDs in the GNSS group at the last fetch that
+# worked, None before one has; tried: when the last fetch was tried; fetched: the last one that
 # brought rows; ok: whether the last try worked. One copy per server, shared by every viewer.
 # ponytail: rows grow by one per satellite per fetch while the server runs; trim them if it stays up for months.
-state = {"rows": {}, "tried": None, "fetched": None, "ok": True}
+state = {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True}
 _lock = Lock()
 
 
@@ -44,28 +48,30 @@ def _get(**query):
 
 
 def fetch(norad_ids):
-    """{norad: history row} for each satellite CelesTrak has: the GNSS group in one request, then one per satellite left out.
+    """({norad: history row} for each wanted satellite CelesTrak has, {NORAD IDs the GNSS group lists}).
 
+    The GNSS group in one request, then one per wanted satellite it leaves out.
     Raises requests.RequestException, or ValueError/KeyError on a reply that is not GP JSON.
     """
-    wanted = set(norad_ids)
-    rows = [row for row in _get(GROUP="gnss") if int(row["NORAD_CAT_ID"]) in wanted]
-    for norad in sorted(wanted - {int(row["NORAD_CAT_ID"]) for row in rows}):
+    wanted, group = set(norad_ids), _get(GROUP="gnss")
+    listed = {int(row["NORAD_CAT_ID"]) for row in group}
+    rows = [row for row in group if int(row["NORAD_CAT_ID"]) in wanted]
+    for norad in sorted(wanted - listed):
         rows += _get(CATNR=norad)
-    return {int(row["NORAD_CAT_ID"]): as_history_row(row) for row in rows}
+    return {int(row["NORAD_CAT_ID"]): as_history_row(row) for row in rows}, listed
 
 
 def refresh(norad_ids, now, clicked=False):
     """Fetch when the last try is EVERY old, or on a click after a failed try; otherwise keep what is held.
 
-    Returns a copy of `state`. A failure keeps the rows already held and sets ok to False.
+    Returns a copy of `state`. A failure keeps the rows and the listing already held and sets ok to False.
     """
     with _lock:
         tried = state["tried"]
         if tried is None or now - tried >= EVERY or (clicked and not state["ok"]):
             state["tried"] = now
             try:
-                found = fetch(norad_ids)
+                found, listed = fetch(norad_ids)
             except (requests.RequestException, ValueError, KeyError):
                 state["ok"] = False
             else:
@@ -73,7 +79,7 @@ def refresh(norad_ids, now, clicked=False):
                     held = state["rows"].setdefault(norad, [])
                     if row["EPOCH"] not in {r["EPOCH"] for r in held}:
                         held.append(row)
-                state["ok"] = True
+                state["ok"], state["listed"] = True, listed
                 state["fetched"] = now if found else state["fetched"]
         return {**state, "rows": {norad: list(rows) for norad, rows in state["rows"].items()}}
 
