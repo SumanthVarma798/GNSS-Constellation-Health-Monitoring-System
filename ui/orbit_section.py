@@ -146,14 +146,15 @@ def positions_and_rows(health_df, set_aside_names, slot_of, history):
     return positions, slot_rows(health_df.to_dict("records"), set_aside_rows(positions, slot_of))
 
 
-def render_belt(rows, view="Flat", history=None, health_df=None):
+def render_belt(rows, view="Flat", history=None, health_df=None, constellation=None):
     """The slot picture on its own: the flat belt, or with view="3D" each satellite's true orbit around Earth.
 
-    The 3D view takes each satellite's elements from history and its score from health_df.
+    The 3D view takes each satellite's elements from history, its score from health_df, and the rest of
+    the constellation's generation by its name.
     """
     if view == "3D":
         from ui.components.orbit_view import orbit_view   # here, as orbit_view reads this module's states
-        attempt("3D view", orbit_view, rows, history, health_df)
+        attempt("3D view", orbit_view, rows, history, health_df, constellation)
     else:
         attempt("flat belt", lambda: surfaces.show(surfaces.raised(surfaces.picture(slot_belt(rows)))))
 

@@ -29,6 +29,16 @@ TRACKED_NOT_IN_REGISTRY = {
     "BeiDou-3": dashboard_satellites_not_in_registry("BeiDou"),
 }
 
+# Every satellite of the generation each dashboard constellation shows, for the 3D view's "All":
+# (the registry's constellation name, how its block names start). The block is the design generation;
+# "" takes every block.
+GENERATIONS = {"NavIC": ("NavIC", ""), "QZSS": ("QZSS", ""), "BeiDou-3": ("BeiDou", "BDS-3")}
+
+# The registry's plane letter -> the kind of orbit it names. A plane given as a number is a
+# MEO plane, named after its slots' letter (BeiDou-3 plane 1 holds slots A-1 to A-8).
+PLANE_KINDS = {"G": "GEO", "I": "IGSO"}
+MEO_KIND = "MEO"
+
 # India's extreme geographical points for DOP analysis
 INDIA_EXTREME_POINTS = {
     "Northernmost (Siachen Glacier)": (35.5, 77.0),

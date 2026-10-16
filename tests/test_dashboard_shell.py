@@ -33,8 +33,8 @@ def segmented_controls_rerun(monkeypatch):
 @pytest.fixture(autouse=True)
 def celestrak_answers_with_nothing_new(monkeypatch):
     """No network in tests: CelesTrak 'answers' with no rows unless a test says otherwise."""
-    monkeypatch.setattr(celestrak, "state", {"rows": {}, "tried": None, "fetched": None, "ok": True})
-    monkeypatch.setattr(celestrak, "fetch", lambda norads: {})
+    monkeypatch.setattr(celestrak, "state", {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True})
+    monkeypatch.setattr(celestrak, "fetch", lambda norads: ({}, set()))
 
 
 def run(setup=lambda at: None, now=FROZEN):
@@ -196,7 +196,7 @@ def test_the_data_chip_is_amber_after_a_week():
 
 
 def test_rows_from_celestrak_make_the_chip_say_today_and_its_time(monkeypatch):
-    monkeypatch.setattr(celestrak, "fetch", lambda norads: {39635: celestrak.as_history_row(IRNSS_1B)})
+    monkeypatch.setattr(celestrak, "fetch", lambda norads: ({39635: celestrak.as_history_row(IRNSS_1B)}, {39635}))
     at = run()
     chips = " ".join(htmls(at))
 

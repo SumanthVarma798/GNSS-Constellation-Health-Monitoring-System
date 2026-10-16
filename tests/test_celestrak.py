@@ -32,7 +32,7 @@ class Reply:
 
 @pytest.fixture(autouse=True)
 def fresh_state(monkeypatch):
-    monkeypatch.setattr(celestrak, "state", {"rows": {}, "tried": None, "fetched": None, "ok": True})
+    monkeypatch.setattr(celestrak, "state", {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True})
 
 
 def test_a_row_takes_the_bundled_shape():
@@ -46,7 +46,7 @@ def test_a_row_takes_the_bundled_shape():
     assert satellite.epoch.utc_datetime().isoformat().startswith("2026-10-07T23:09:31")
 
 
-def test_fetch_asks_for_the_group_then_each_satellite_it_left_out(monkeypatch):
+def test_fetch_keeps_the_group_and_asks_only_for_each_wanted_satellite_it_left_out(monkeypatch):
     asked = []
 
     def get(url, params, timeout):
@@ -56,9 +56,10 @@ def test_fetch_asks_for_the_group_then_each_satellite_it_left_out(monkeypatch):
         return Reply([], 404) if params["CATNR"] == 41384 else Reply([{**IRNSS_1B, "NORAD_CAT_ID": 40547}])
 
     monkeypatch.setattr(requests, "get", get)
-    rows = celestrak.fetch([39635, 40547, 41384])
+    rows, listed = celestrak.fetch([39635, 40547, 41384])
 
     assert set(rows) == {39635, 40547}
+    assert listed == {39635, 1}   # every satellite the group lists, wanted or not
     assert [p.get("GROUP") or p["CATNR"] for p in asked] == ["gnss", 40547, 41384]
 
 
@@ -69,17 +70,19 @@ def test_refresh_keeps_to_every_two_hours_and_a_click_retries_only_after_a_failu
         calls.append(norads)
         if len(calls) == 2:
             raise requests.ConnectionError("down")
-        return {39635: celestrak.as_history_row(IRNSS_1B)}
+        return {39635: celestrak.as_history_row(IRNSS_1B)}, {39635}
 
     monkeypatch.setattr(celestrak, "fetch", fetch)
     first = celestrak.refresh([39635], NOW)
     assert len(calls) == 1 and first["ok"] and first["fetched"] == NOW and len(first["rows"][39635]) == 1
+    assert first["listed"] == {39635}
 
     celestrak.refresh([39635], NOW + timedelta(minutes=30), clicked=True)   # worked last time: no fetch
     assert len(calls) == 1 and not celestrak.due(NOW + timedelta(minutes=119))
 
     failed = celestrak.refresh([39635], NOW + timedelta(hours=2))            # due: fetches, and fails
     assert len(calls) == 2 and not failed["ok"] and failed["rows"][39635] and failed["fetched"] == NOW
+    assert failed["listed"] == {39635}   # a failure keeps the listing held
 
     again = celestrak.refresh([39635], NOW + timedelta(hours=2, minutes=1), clicked=True)
     assert len(calls) == 3 and again["ok"] and len(again["rows"][39635]) == 1   # same epoch, held once
@@ -98,3 +101,14 @@ def test_the_rows_join_the_bundled_history_once():
     newest = added.iloc[-1]
     assert str(newest["EPOCH"]).startswith("2026-10-07 23:09:31")
     assert newest["SEMIMAJOR_AXIS"] == pytest.approx(42165.644, abs=0.001) and newest["INCLINATION"] == 29.1863
+
+
+def test_the_dashboard_asks_for_every_satellite_of_its_generations_and_no_other(monkeypatch):
+    from ui import data
+
+    asked = []
+    monkeypatch.setattr(celestrak, "refresh", lambda norads, now, clicked: asked.extend(norads))
+    data.refresh()
+    # IRNSS-1B tracked; BeiDou-3 M7 (plane A, slot A-4), IRNSS-1A and a BeiDou-3S test satellite are not
+    assert {39635, 43107, 39199, 40549} <= set(asked)
+    assert 31115 not in asked   # a BeiDou-2 satellite: another generation

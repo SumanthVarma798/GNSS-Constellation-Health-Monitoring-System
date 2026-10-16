@@ -9,10 +9,15 @@ import pytest
 from analysis.bundled_run import load_bundled_gp_as_dataframes
 from config.config import BEIDOU3_SATS
 from ui import palette
-from ui.components.orbit_view import hover_cards, orbit_view_html, orbit_view_payload
+from data.celestrak import as_history_row
+from test_celestrak import IRNSS_1B
+from ui.components.orbit_view import NOT_REACHED, hover_cards, orbit_view_html, orbit_view_payload
+from ui.data import GENERATION
 from ui.figures.constellation_3d import BELT_RADIUS
+from ui.figures.fleet import fleet_rows, orbit_words, plane_letters
 from ui.figures.orbits_3d import LAND_FILE, ORBIT_POINTS, latest_elements, orbit_points, position_at
 from ui.figures.slot_rows import slot_rows
+from ui.pages_data import load_master_map_data
 
 HOSTILE = "</script><script>alert(1)</script>"
 
@@ -70,6 +75,59 @@ def test_the_payload_has_one_entry_per_row_with_its_loop_position_slot_and_card(
     assert geo["state"] == palette.SLOT_OFF and geo["slot"] == "off its slot, 2.00°" and geo["name"] == "BeiDou-3 G4"
     assert missing["loop"] is None and missing["at"] is None and missing["slot_at"] is not None
     assert scene["land"] and all(abs(math.hypot(*p) - 1) < 0.01 for p in scene["land"])
+
+
+def meo_row(norad):
+    """A CelesTrak row for a MEO satellite in BeiDou-3's plane A."""
+    return as_history_row({**IRNSS_1B, "NORAD_CAT_ID": norad, "MEAN_MOTION": 1.862, "INCLINATION": 54.2,
+                           "RA_OF_ASC_NODE": 298.0})
+
+
+def test_the_payload_holds_both_sets_with_plane_and_slot_words(history):
+    rows = slot_rows([{"Satellite": "BeiDou-3 G4", "Designated Lon (°)": 140.0},
+                      {"Satellite": "BeiDou-3 I1", "Designated Lon (°)": 111.0}])
+    fleet = fleet_rows(GENERATION["BeiDou-3"], load_master_map_data())
+    # CelesTrak lists G4 and M7 (43107); it leaves out the tracked I1 (44204) and M3-S (41315)
+    live = {"rows": {43107: [meo_row(43107)], 41315: [meo_row(41315)]}, "listed": {56564, 43107}}
+    payload = orbit_view_payload(rows, history, None, fleet, live)
+    sats = {s["name"]: s for s in payload["satellites"]}
+
+    assert list(sats) == ["BeiDou-3 G4", "BeiDou-3 I1", "Beidou-3 M3-S", "Beidou-3 M7"]
+    g4, i1, m3s, m7 = sats.values()
+    assert g4["tracked"] and g4["service"] and g4["group"] == "GEO" and g4["note"] == ""
+    assert i1["tracked"] and not i1["service"] and i1["note"] == "not listed by CelesTrak"   # hidden under In service
+    assert m7["orbit"] == "MEO · plane A, slot A-4" and m7["group"] == "Plane A" and len(m7["loop"]) == ORBIT_POINTS
+    assert not m7["tracked"] and m7["service"] and m7["slot"] == "not scored" and m7["score"] is None
+    assert m7["note"] == "listed by CelesTrak" and m7["slot_at"] is None
+    assert not m3s["service"] and m3s["group"] == "Plane B" and m3s["note"] == "not listed by CelesTrak"
+    assert payload["notes"] == {"service": "", "all": f"Orbits known for 4 of {len(fleet)}."}
+
+
+def test_two_satellites_with_one_name_keep_their_own_orbit_and_plane():
+    fleet = [{"norad": 58654, "name": "Beidou-3 M28", "group": "Plane B", "orbit": "MEO · plane B"},
+             {"norad": 61187, "name": "Beidou-3 M28", "group": "Plane A", "orbit": "MEO · plane A"}]
+    live = {"rows": {58654: [as_history_row({**IRNSS_1B, "NORAD_CAT_ID": 58654, "MEAN_MOTION": 1.862, "RA_OF_ASC_NODE": 58.0})],
+                     61187: [meo_row(61187)]}, "listed": {58654, 61187}}
+    b, a = orbit_view_payload([], None, None, fleet, live)["satellites"]
+
+    assert (b["group"], a["group"]) == ("Plane B", "Plane A") and b["loop"] != a["loop"]
+
+
+def test_before_celestrak_answers_in_service_means_the_tracked_satellites(history):
+    rows = slot_rows([{"Satellite": "BeiDou-3 G4", "Designated Lon (°)": 140.0}])
+    fleet = fleet_rows(GENERATION["BeiDou-3"], load_master_map_data())
+    payload = orbit_view_payload(rows, history, None, fleet, {"rows": {}, "listed": None})
+
+    assert [(s["name"], s["service"]) for s in payload["satellites"]] == [("BeiDou-3 G4", True)]
+    assert payload["notes"]["service"] == NOT_REACHED
+
+
+def test_plane_words_come_from_the_registry():
+    registry = [{"plane": "1", "slot": "A-4"}, {"plane": "1", "slot": ""}, {"plane": "G", "slot": "140E"},
+                {"plane": "", "slot": ""}]
+    letters = plane_letters(registry)
+    assert [orbit_words(row, letters) for row in registry] == ["MEO · plane A, slot A-4", "MEO · plane A",
+                                                                "GEO · slot 140E", ""]
 
 
 def test_hover_cards_say_the_state_in_words_and_band_the_score():
