@@ -54,7 +54,7 @@ canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: 
   <canvas id="orbits" role="img" aria-label="Each satellite's orbit around Earth. Drag to turn, double-click to go back."></canvas>
   <div class="top">
     <div class="seg" id="mode" role="group" aria-label="Which satellites">
-      <button type="button" data-mode="service" aria-pressed="true">In service</button><button type="button" data-mode="all" aria-pressed="false">All</button>
+      <button type="button" data-mode="all" aria-pressed="true">All</button><button type="button" data-mode="service" aria-pressed="false">In service</button>
     </div>
     <span class="note" id="note"></span>
   </div>
@@ -80,7 +80,7 @@ const BELT = Array.from({ length: 121 }, (_, k) => [DATA.belt * Math.cos(k * Mat
 const REACH = Math.max(DATA.belt, ...SATS.flatMap(s => (s.loop || []).map(p => Math.hypot(...p))));   // over all: no jump on a switch
 const ORDER = ["ok", "warn", "bad", "idle", "muted"];   // in slot, off it, left it, not known, not scored
 let view = { ...HOME }, dpr = 1, W = 0, H = 0, scale = 1, queued = 0;
-let mode = "service", shown = [];   // shown: indices of the satellites the chosen set holds
+let mode = "all", shown = [];   // shown: indices of the satellites the chosen set holds
 let lit = null;                    // a Set of the satellites picked out, or null
 let screen = [];                   // each shown satellite as projected in the last frame, for hit tests
 let chips = [];                    // [{button, members}]
@@ -313,7 +313,7 @@ function buildKey() {
   for (const [words, status] of states.sort((a, b) => ORDER.indexOf(a[1]) - ORDER.indexOf(b[1]))) {
     const dot = el("span", "dot"); dot.style.background = C[status]; add(dot, words);
   }
-  if (shown.some(faint)) add(el("span", "dash"), "out of service");
+  if (shown.some(faint)) add(el("span", "dash"), "not operational");
   if (shown.some(i => SATS[i].slot_at)) add(el("span", "ring"), "slot");
 }
 
@@ -326,7 +326,7 @@ function choose(next) {
   pick(null); buildChips(); buildKey(); paint();
 }
 $("mode").addEventListener("click", e => { const b = e.target.closest("button"); if (b && b.dataset.mode !== mode) choose(b.dataset.mode); });
-choose("service");
+choose("all");   // the whole generation first: every satellite is followed, the ones not operational shown as such
 
 new ResizeObserver(resize).observe(canvas);
 </script>
