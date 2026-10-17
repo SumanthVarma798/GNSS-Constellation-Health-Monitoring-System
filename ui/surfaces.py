@@ -95,6 +95,34 @@ def compare_grid(tile_htmls, matrix_html):
             + matrix_html)
 
 
+def group_head(title, line):
+    """The heading of one group of satellites: a short name and one plain line after it."""
+    return f'<div class="group"><span class="gt">{escape(title)}</span><span class="muted">{escape(line)}</span></div>'
+
+
+def measure(cell):
+    """One table cell from ui.measures: the value now in its status colour, what it should be, an optional note.
+    A value with a figure in it is set in the number face."""
+    _check_status(cell["status"])
+    face = "num " if any(ch.isdigit() for ch in cell["now"]) else ""
+    should = f'<span class="sb">{escape(cell["should"])}</span>' if cell["should"] else ""
+    note = f'<span class="nt">{escape(cell["note"])}</span>' if cell["note"] else ""
+    return f'<b class="{face}{cell["status"]}">{escape(cell["now"])}</b>{should}{note}'
+
+
+def table(columns, rows):
+    """A table in a raised card that scrolls sideways when the page is narrow.
+
+    columns: (heading, one plain line or "") pairs, the first over the names. rows: (name, [cell, ...]),
+    each cell a ui.measures cell drawn by measure().
+    """
+    head = "".join(f"<th>{escape(title)}{f'<small>{escape(line)}</small>' if line else ''}</th>"
+                   for title, line in columns)
+    body = "".join(f"<tr><th scope=\"row\">{escape(name)}</th>{''.join(f'<td>{measure(c)}</td>' for c in cells)}</tr>"
+                   for name, cells in rows)
+    return f'<div class="tablewrap"><table class="grid"><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>'
+
+
 def _legend_row(colour, text):
     if not _SWATCH.fullmatch(colour):
         raise ValueError(f"legend colour {colour!r} must be a hex colour or a var(--name)")

@@ -288,3 +288,24 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend
 .change p { margin: 0; padding: 0 18px 12px; }
 .change a { color: var(--accent); }
 @media (max-width: 760px) { .change summary { flex-wrap: wrap; row-gap: 4px; } .change .headline { flex-basis: 100%; order: 3; } .change .more { margin-left: auto; } }
+/* groups of satellites by orbit type, and the "is / should be" tables */
+.group { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 8px 0 12px; }
+.group .gt { font-size: 18px; font-weight: 700; letter-spacing: .02em; }
+.facts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: -4px 0 16px; font-size: 14px; color: var(--muted); }
+.tablewrap { overflow-x: auto; margin: 0 0 30px; background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); padding: 4px 12px; }
+table.grid { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px; color: var(--ink); }
+table.grid th, table.grid td { text-align: left; vertical-align: top; padding: 10px; border: 0; }
+table.grid thead th { vertical-align: bottom; font-size: 13px; font-weight: 600; }
+table.grid thead th small { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; font-weight: 400; }
+table.grid tbody tr { border-top: 1px solid var(--edge); }
+table.grid tbody th { font-weight: 600; min-width: 150px; }
+table.grid td > * { display: block; }
+table.grid td b { font-weight: 700; white-space: nowrap; }
+table.grid td b.ok { color: var(--ok); } table.grid td b.warn { color: var(--warn); } table.grid td b.bad { color: var(--bad); }
+table.grid td b.idle { color: var(--ink); } table.grid td b.accent { color: var(--accent); }
+table.grid .sb { margin-top: 2px; color: var(--muted); font-size: 12.5px; }
+table.grid .nt { margin-top: 2px; color: var(--idle); font-size: 12px; }
+.remarks { margin: 0; padding: 0; list-style: none; font-size: 14px; }
+.remarks li { padding: 8px 0; } .remarks li + li { border-top: 1px solid var(--edge); }
+.remarks b { display: block; margin-bottom: 2px; }
+.remarks span { display: block; color: var(--muted); }
