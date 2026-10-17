@@ -1,3 +1,4 @@
 source_id,name,reliability,graded_by,graded_on,reason
 files.igs.org,International GNSS Service (IGS),B,Sumanth Varma (awaiting the team's review),2026-10-09,"A scientific body; its satellite metadata file is maintained for it by the German Aerospace Center (DLR)"
 planet4589.org,General Catalog of Artificial Space Objects (GCAT),C,Sumanth Varma (awaiting the team's review),2026-10-09,"One expert's catalogue, widely cited, with sources listed; not an institution, and its author says some dates are updated patchily"
+celestrak.org,CelesTrak,B,Proposed for issue 69 (awaiting the team's review),2026-10-17,"Republishes the US Space Force public orbit catalogue as it stands; widely used, run by one organisation, no history kept"

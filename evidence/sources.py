@@ -18,6 +18,10 @@ GCAT_FAILED_LAUNCHES_URL = "https://planet4589.org/space/gcat/tsv/cat/ftocat.tsv
 
 # CelesTrak: current orbits of every catalogued BeiDou object.
 CELESTRAK_BEIDOU_URL = "https://celestrak.org/NORAD/elements/gp.php?GROUP=beidou&FORMAT=json"
+# CelesTrak: current orbits of the navigation satellites in service, all six systems. The dashboard
+# reads the same group live (data/celestrak.py); a daily copy kept here builds the history that GPS,
+# GLONASS and Galileo have nowhere else without a Space-Track login.
+CELESTRAK_GNSS_URL = "https://celestrak.org/NORAD/elements/gp.php?GROUP=gnss&FORMAT=json"
 
 # Galmon: signals heard live by a volunteer-run receiver network.
 # On hold: do not read it until its maintainer has been told.
@@ -38,8 +42,10 @@ ARCHIVED_SOURCES = {
         GCAT_OBJECTS_URL,
         GCAT_PAYLOADS_URL,
     ],
-    # Orbital elements. They change several times a day. No source yet.
-    "orbital": [],
+    # Orbital elements. They change several times a day; kept once a day, by decision (issue 69).
+    "orbital": [
+        CELESTRAK_GNSS_URL,
+    ],
     # News feeds and pages. They change all the time. No source yet.
     "news": [],
 }

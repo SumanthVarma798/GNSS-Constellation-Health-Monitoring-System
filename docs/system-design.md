@@ -196,8 +196,9 @@ Produced from the code. A test fails if this table and the code disagree.
 |---|---|---|
 | Documents are fetched | `30 0 * * *` (documents: once a day, 00:30 UTC = 06:00 India time) | `.github/workflows/archive.yml` |
 | Catalogues are fetched | `45 0 * * *` (catalogues: once a day, 00:45 UTC = 06:15 India time, after the catalogue's own daily rebuild) | `.github/workflows/archive.yml` |
+| Orbits are fetched | `0 1 * * *` (orbital: once a day, 01:00 UTC = 06:30 India time) | `.github/workflows/archive.yml` |
 | The registry is rebuilt | `0 1 * * 0` (Sundays 01:00 UTC = 06:30 India time: half an hour after that day's documents fetch (see archive.yml), so the registry builds from a fresh copy) | `.github/workflows/registry-update.yml` |
-| Sources archived, by group | documents: 1, catalogues: 2, orbital: 0, news: 0 | `evidence/sources.py` |
+| Sources archived, by group | documents: 1, catalogues: 2, orbital: 1, news: 0 | `evidence/sources.py` |
 | Grades that clear the bar alone | A | `evidence/settings.py` |
 | Grades lifted by a second source | B | `evidence/settings.py` |
 | Grades lifted by our own data | B | `evidence/settings.py` |

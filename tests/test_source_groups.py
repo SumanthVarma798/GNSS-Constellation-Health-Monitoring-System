@@ -2,8 +2,8 @@
 import re
 from pathlib import Path
 
-from evidence.sources import (ARCHIVED_SOURCES, GALMON_SATELLITES_URL, GCAT_OBJECTS_URL, GCAT_PAYLOADS_URL,
-                              IGS_SATELLITE_METADATA_URL, archived_addresses)
+from evidence.sources import (ARCHIVED_SOURCES, CELESTRAK_GNSS_URL, GALMON_SATELLITES_URL, GCAT_OBJECTS_URL,
+                              GCAT_PAYLOADS_URL, IGS_SATELLITE_METADATA_URL, archived_addresses)
 
 JOB = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "archive.yml").read_text()
 
@@ -11,6 +11,7 @@ JOB = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "archi
 def test_addresses_by_group():
     assert archived_addresses("documents") == [IGS_SATELLITE_METADATA_URL]
     assert archived_addresses("catalogues") == [GCAT_OBJECTS_URL, GCAT_PAYLOADS_URL]
+    assert archived_addresses("orbital") == [CELESTRAK_GNSS_URL]
     assert archived_addresses("news") == []
     assert archived_addresses() == [address for group in ARCHIVED_SOURCES.values() for address in group]
 
@@ -33,6 +34,11 @@ def test_every_schedule_line_is_assigned_to_a_group():
     assert len(schedules) == len(set(schedules))                 # two groups cannot share a line
     for group in assigned.values():
         assert ARCHIVED_SOURCES[group], f"'{group}' has a schedule but no sources: its runs would do nothing"
+
+
+def test_orbits_are_kept_once_a_day():
+    # CelesTrak asks that unchanged data is not fetched more than every 2 hours; once a day is well inside.
+    assert re.search(r"- cron: '0 1 \* \* \*'\s+# orbital: once a day", JOB)
 
 
 def test_the_job_can_be_started_by_hand_for_any_group():
