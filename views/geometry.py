@@ -10,6 +10,7 @@ import pandas as pd
 import streamlit as st
 
 from analysis.raan_analysis import analyze_raan_spacing
+from config.config import MEO_SATS
 from ui import data, shell, surfaces
 from ui import geometry_data as gd
 from ui import geometry_settings as gs
@@ -108,6 +109,10 @@ def _spacing(satellites):
 
 def constellation(name, picks, section, choice, mask, window, now):
     """One constellation's part of the page. `picks` limits the satellite-by-satellite pictures (None: all)."""
+    if section == "Plane spacing" and name in MEO_SATS:   # spread over planes, not one ground track
+        surfaces.show(surfaces.notice(f"{name} satellites are spread over orbital planes, not one shared ground track. "
+                                      "Their spacing within each plane is scored on the Overview, plane by plane.", "idle"))
+        return
     result = data.load(name, st.session_state["window_days"], st.session_state["params"])
     every = list(dict.fromkeys(result["history"]["satellite"]))
     counted = gd.chosen_satellites(every, result["set_aside"], choice)

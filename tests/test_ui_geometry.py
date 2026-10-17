@@ -277,3 +277,18 @@ def test_compare_draws_a_part_per_constellation_and_trends_only_for_the_picks():
     assert len(figures) == 2
     assert "IRNSS-1B" in figures[0] and "IRNSS-1I" not in figures[0]
     assert "QZS-6" in figures[1] and "QZS-2" not in figures[1]
+
+
+def test_every_constellation_in_the_bar_has_places():
+    from ui import geometry_settings, shell
+    assert set(shell.CONSTELLATIONS) <= set(geometry_settings.PLACES)
+
+
+
+def test_plane_spacing_points_medium_orbit_systems_to_the_overview():
+    def setup(at):
+        at.session_state["scope"] = "GPS"
+        at.session_state["geo_section"] = "Plane spacing"
+        _on("Geometry")(at)
+
+    assert any("spread over orbital planes" in body for body in htmls(run(setup)))

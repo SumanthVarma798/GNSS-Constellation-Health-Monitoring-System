@@ -12,6 +12,10 @@ SECTIONS = ["Position quality", "Sky view", "Ground tracks", "Orbit trends", "Pl
 
 # The places each constellation's position quality is worked out for: {name: (latitude, longitude)}.
 PLACES = {"NavIC": INDIA_EXTREME_POINTS, "QZSS": JAPAN_KEY_POINTS, "BeiDou-3": CHINA_KEY_POINTS}
+# The global systems serve everywhere; the project looks at Asia, so they are seen from all three countries' places.
+_ASIA = {f"{country}: {name}": point for country, points in (("India", INDIA_EXTREME_POINTS), ("Japan", JAPAN_KEY_POINTS),
+                                                            ("China", CHINA_KEY_POINTS)) for name, point in points.items()}
+PLACES.update({name: _ASIA for name in ("GPS", "GLONASS", "Galileo")})
 
 # Satellites the team marks as not in service. "In service" leaves them out, as app.py did by default.
 NOT_IN_SERVICE = tuple(INACTIVE_SATELLITES)
