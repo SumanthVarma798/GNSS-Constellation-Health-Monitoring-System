@@ -52,6 +52,11 @@ def dashboard_satellites(constellation):
     return {name: int(found["catalogue_no"]) for name, found in _tracked(constellation) if found}
 
 
+def dashboard_registry_rows(constellation):
+    """{dashboard name: registry row} for the tracked satellites of one constellation the registry lists."""
+    return {name: found for name, found in _tracked(constellation) if found}
+
+
 def dashboard_satellites_not_in_registry(constellation):
     """Names of tracked satellites the registry does not list. Normally none; a test
     keeps it so at the point of approval. The dashboard shows these in a notice."""
