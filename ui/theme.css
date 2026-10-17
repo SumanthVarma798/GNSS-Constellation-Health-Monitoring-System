@@ -143,8 +143,9 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend
 .st-key-topbar { background: var(--platform); border: 1px solid var(--edge); border-radius: 18px; box-shadow: var(--raised); padding: 10px 16px; margin-bottom: 22px; }
 .st-key-topbar [data-testid="stColumn"] { min-width: 0; }
 @media (min-width: 640px) {   /* each group as wide as it needs, the room left shared out between them */
-  .st-key-topbar [data-testid="stHorizontalBlock"] { justify-content: space-between; gap: 12px; flex-wrap: nowrap; }
+  .st-key-topbar [data-testid="stHorizontalBlock"] { justify-content: space-between; gap: 12px; flex-wrap: wrap; row-gap: 8px; }
   .st-key-topbar [data-testid="stColumn"] { flex: 0 1 auto !important; width: auto !important; }
+  .st-key-topbar [data-testid="stColumn"]:last-child { margin-left: auto; }   /* six constellations: on a narrow screen it takes a second row, on the right */
 }
 .brand { font-size: 16px; letter-spacing: .01em; white-space: nowrap; }
 .right { display: flex; justify-content: flex-end; }
@@ -269,3 +270,13 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend
 .cycle.late i { background: var(--warn); }
 .due { font-weight: 600; } .due.ok { color: var(--ok); } .due.warn { color: var(--warn); } .due.idle { color: var(--idle); } .due.accent { color: var(--accent); }
 @media (max-width: 900px) { .rh { grid-template-columns: 1fr 1fr; } .rh.hd { display: none; } }
+
+/* GPS, GLONASS and Galileo: a row per orbital plane, and every measure as is / should be */
+.tiles.meo { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 12px 0 22px; }
+.tiles.meo .tile .s { font-size: 22px; }
+.meanings { margin: 0 0 10px; padding-left: 18px; }
+.sb-wrap { overflow-x: auto; }
+.sb { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+.sb th, .sb td { padding: 6px 10px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--edge); }
+.sb tr:first-child th { color: var(--muted); font-weight: 500; }
+.sb td.ok { color: var(--ok); } .sb td.warn { color: var(--warn); } .sb td.bad { color: var(--bad); } .sb td.idle { color: var(--idle); }

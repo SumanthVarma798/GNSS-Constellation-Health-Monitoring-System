@@ -4,19 +4,24 @@ from datetime import datetime, timezone
 import streamlit as st
 
 from analysis.bundled_run import assess_constellation
-from config.config import BEIDOU3_SATS, GENERATIONS, NAVIK_SATS, QZSS_SATS
+from analysis.meo_run import assess_meo
+from config.config import BEIDOU3_SATS, GENERATIONS, MEO_SATS, NAVIK_SATS, QZSS_SATS
 from data import celestrak
-from evidence.registry_tables import generation_satellites
+from evidence.registry_tables import dashboard_registry_rows, generation_satellites
 
-SATELLITES = {"NavIC": NAVIK_SATS, "QZSS": QZSS_SATS, "BeiDou-3": BEIDOU3_SATS}
+SATELLITES = {"NavIC": NAVIK_SATS, "QZSS": QZSS_SATS, "BeiDou-3": BEIDOU3_SATS, **MEO_SATS}
 TRACKED = {name: [norad for norad in sats.values() if norad is not None] for name, sats in SATELLITES.items()}
 # Every registry satellite of the generation each constellation shows, tracked or not (the 3D view's "All").
-GENERATION = {name: generation_satellites(*GENERATIONS[name]) for name in SATELLITES}
+# A MEO system's is the satellites it tracks: CelesTrak's GNSS group holds them, and asking for each
+# retired one by itself would mean dozens of requests every refresh.
+GENERATION = {name: generation_satellites(*GENERATIONS[name]) for name in GENERATIONS}
+GENERATION |= {name: list(dashboard_registry_rows(name).values()) for name in MEO_SATS}
 
 
 @st.cache_data(show_spinner=False)
 def _assess(constellation, window_days, params, now, fresh):
-    return assess_constellation(constellation, now, window_days, params, fresh)
+    assess_any = assess_meo if constellation in MEO_SATS else assess_constellation
+    return assess_any(constellation, now, window_days, params, fresh)
 
 
 def refresh(clicked=False):

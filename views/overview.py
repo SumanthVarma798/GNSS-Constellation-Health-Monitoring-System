@@ -3,8 +3,8 @@ import re
 
 import streamlit as st
 
-from config.config import TRACKED_NOT_IN_REGISTRY
-from ui import data, orbit_section, palette, shell, surfaces
+from config.config import MEO_SATS, TRACKED_NOT_IN_REGISTRY
+from ui import data, meo_overview, orbit_section, palette, shell, surfaces
 from ui.data import SATELLITES
 from ui.figures.constellation_3d import slot_legend
 from ui.figures.slot_rows import as_number, slot_words
@@ -74,6 +74,9 @@ def _slot_picture(rows, result, name):
 def constellation(name, window_days, params):
     """One constellation: the count, a tile per satellite, the slot picture."""
     result = data.load(name, window_days, params)
+    if name in MEO_SATS:   # judged by orbital plane, not longitude slot
+        meo_overview.page(name, result)
+        return
     tiles, rows = _tiles(result)
     healthy = sum(healthy for _, healthy, _ in tiles.values())
     surfaces.show(f'<div class="head"><span class="big num">{healthy} of {len(tiles)}</span>'
@@ -87,14 +90,17 @@ def constellation(name, window_days, params):
 def compare(window_days, params):
     """Satellites picked across constellations: their tiles side by side, then their score parts in step."""
     chosen = []
-    for name, picked in picker().items():
-        tiles, _ = _tiles(data.load(name, window_days, params))
+    picks = picker()
+    for name, picked in picks.items():
+        result = data.load(name, window_days, params)
+        tiles = meo_overview.tiles(result) if name in MEO_SATS else _tiles(result)[0]
         chosen += [(s, *tiles[s]) for s in picked if s in tiles]
     if not chosen:
         surfaces.show('<p class="small">Add satellites to compare.</p>')
         return
-    scores = [[as_number(health.get(column)) if health else None for _, column in PARTS] for *_, health in chosen]
-    rows = [(label, [column[i] for column in scores]) for i, (label, _) in enumerate(PARTS)]
+    parts = PARTS + (meo_overview.PARTS if set(picks) & set(MEO_SATS) else [])
+    scores = [[as_number(health.get(column)) if health else None for _, column in parts] for *_, health in chosen]
+    rows = [(label, [column[i] for column in scores]) for i, (label, _) in enumerate(parts)]
     surfaces.show(surfaces.compare_grid([html for _, html, _, _ in chosen], surfaces.parts_matrix(rows)))
 
 

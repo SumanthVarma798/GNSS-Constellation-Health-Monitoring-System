@@ -71,6 +71,15 @@ except ValueError as error:
     surfaces.show(surfaces.notice(str(error), "warn"))
     st.stop()
 
+for name, result in results.items():   # GPS, GLONASS and Galileo: how much history the burns are looked for in
+    if "history_note" in result:
+        surfaces.show(surfaces.notice(
+            f"{name}. {result['history_note']} Burns show here once weeks of it have built up.", "idle"))
+results = {name: result for name, result in results.items()
+           if "history_note" not in result or not result["burns"].empty}
+if not results:
+    st.stop()
+
 satellites, burns, epochs = [], [], []
 for name, result in results.items():
     mine = chosen[name] or list(dict.fromkeys(result["history"]["satellite"]))
