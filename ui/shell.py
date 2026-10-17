@@ -21,6 +21,7 @@ OWN_FILTERS = {"Master map"}
 PAGES = [
     ("Overview", "views/overview.py"),
     ("Station-keeping", "views/station_keeping.py"),
+    ("Geometry", "views/geometry.py"),
     ("Master map", "views/master_map.py"),
     # ("How it works", "views/how_it_works.py"),
 ]
