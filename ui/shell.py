@@ -15,7 +15,7 @@ from data import celestrak
 from ui import data, surfaces
 
 # Pages with their own filters: the bar shows no constellation, window or thresholds there.
-OWN_FILTERS = {"Master map"}
+OWN_FILTERS = {"Master map", "Library"}
 
 # The pages, in one place. Add a page by adding a line: (title, file).
 PAGES = [
