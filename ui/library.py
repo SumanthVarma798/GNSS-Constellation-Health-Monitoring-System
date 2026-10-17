@@ -19,7 +19,7 @@ CSS = """<style>
 .lib caption { text-align: left; color: var(--muted); font-size: 13px; padding-bottom: 10px; }
 .lib th { color: var(--muted); font-size: 12px; font-weight: 600; text-align: right; padding: 6px 7px; vertical-align: bottom; }
 .lib td { padding: 11px 7px; text-align: right; border-top: 1px solid var(--edge); vertical-align: top; }
-.lib th:first-child, .lib td:first-child { text-align: left; }
+.lib th:first-child, .lib td:first-child { text-align: left; position: sticky; left: 0; z-index: 1; background: var(--platform); }
 .lib td.who { min-width: 150px; }
 .lib td.who b { display: block; } .lib td.who .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
 .lib td.who span.small { display: block; margin-left: 18px; }
@@ -29,7 +29,7 @@ CSS = """<style>
 .lib .rate { display: block; font-weight: 700; }
 .lib .bar { display: block; height: 5px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); margin-top: 5px; min-width: 70px; }
 .lib .bar i { display: block; height: 100%; border-radius: 999px; background: var(--accent); opacity: .7; }
-.lib sup { color: var(--accent); font-size: 10px; margin-left: 2px; }
+.lib sup { color: var(--accent); font-size: 12px; margin-left: 2px; }
 .lib-notes { font-size: 13px; color: var(--muted); }
 .lib-notes ol { margin: 6px 0 0; padding-left: 20px; } .lib-notes li { margin: 4px 0; }
 .lib-notes a, .lib a { color: var(--accent); overflow-wrap: anywhere; }
