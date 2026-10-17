@@ -20,7 +20,6 @@ from ui.picker import picker
 HEALTHY_FROM = 80
 STATUS_CHIP = {"Healthy": "ok", "Fair": "warn", "Degraded": "bad", "Critical": "bad"}
 EMOJI = re.compile(r"[\u2100-\u23FF\u2460-\u27BF\U0001F000-\U0001FAFF\uFE0F]\s?")   # the remarks' status signs; the words stay
-SLOT_SWAP = "BeiDou-3 G1 and G4 swapped slots in April 2026: G4 now holds 140°E, G1 the spare slot at 160°E."
 CLASS_COLUMNS = [("Satellite", ""), ("Type", "From the mean tilt"), ("Mean inclination", "In the window"),
                  ("Mean height", "In the window"), ("Drift now", "Per day")]
 
@@ -73,8 +72,6 @@ def _gaps(constellation, result):
                  *([f"Scored on four parts, no current position against the slot: {', '.join(unplaced)}"]
                    if (unplaced := _unplaced(result["health"])) else [])):
         surfaces.show(surfaces.notice(text, "warn"))
-    if constellation == "BeiDou-3":
-        surfaces.show(surfaces.notice(SLOT_SWAP, "accent"))
 
 
 def _unplaced(health):
