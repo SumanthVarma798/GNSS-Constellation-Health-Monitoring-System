@@ -33,8 +33,10 @@ CHANGES = [
         headline="BeiDou-3 satellites G1 and G4 swapped orbital slots: G1 is now at 160°E and G4 at 140°E.",
         meaning="G1 and G4 are judged against their new slots, so their longitude scores follow the new places. "
                 "G4 (PRN 1) left 160°E first, so 140°E, the main slot, was never empty; G1 (PRN 4) then moved to "
-                "160°E, the constellation's spare slot.",
-        source="China Satellite Navigation Office (CSNO), April 2026 re-designation",
+                "160°E, the constellation's spare slot. The IGS satellite file still lists G1 at 140°E (checked "
+                "16 Oct 2026).",
+        source="The team's dashboard note, citing the China Satellite Navigation Office (CSNO) April 2026 "
+               "re-designation; the CSNO notice itself not yet seen",
     ),
     Change(
         id="beidou3-signal-ids",
