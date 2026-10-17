@@ -22,6 +22,7 @@ PAGES = [
     ("Overview", "views/overview.py"),
     ("Station-keeping", "views/station_keeping.py"),
     ("Master map", "views/master_map.py"),
+    ("Library", "views/library.py"),
     # ("How it works", "views/how_it_works.py"),
 ]
 CONSTELLATIONS = tuple(data.SATELLITES)

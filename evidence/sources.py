@@ -12,6 +12,9 @@ IGS_SATELLITE_METADATA_URL = "https://files.igs.org/pub/station/general/igs_sate
 # Released under CC-BY; cite it (see GCAT_CITATION in evidence/settings.py).
 GCAT_OBJECTS_URL = "https://planet4589.org/space/gcat/tsv/cat/satcat.tsv"     # about 19 MB
 GCAT_PAYLOADS_URL = "https://planet4589.org/space/gcat/tsv/cat/psatcat.tsv"   # about 5 MB
+# GCAT's catalogue of launches that never reached orbit. Read by hand for the Library page's counts
+# (scripts/build_library_table.py); NOT in ARCHIVED_SOURCES, so no scheduled request goes to it.
+GCAT_FAILED_LAUNCHES_URL = "https://planet4589.org/space/gcat/tsv/cat/ftocat.tsv"   # about 0.5 MB
 
 # CelesTrak: current orbits of every catalogued BeiDou object.
 CELESTRAK_BEIDOU_URL = "https://celestrak.org/NORAD/elements/gp.php?GROUP=beidou&FORMAT=json"
