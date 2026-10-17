@@ -7,7 +7,7 @@
   align-items: center; padding: 9px 0; font-size: 14px; min-width: 700px; }
 .geo-grid .gr + .gr { border-top: 1px solid var(--edge); }
 .geo-grid .gr.hd { color: var(--muted); font-size: 12px; font-weight: 600; padding-top: 0; align-items: end; }
-.geo-grid small { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }
+.geo-grid small { display: block; font-size: 12px; font-weight: 400; color: var(--muted); }
 .gp { font-weight: 600; overflow-wrap: anywhere; }
 .gc b { font-weight: 700; }
 .gc.ok b { color: var(--ok); } .gc.warn b { color: var(--warn); } .gc.bad b { color: var(--bad); } .gc.idle b { color: var(--idle); }
@@ -18,3 +18,12 @@
 .spacing .sr { display: grid; grid-template-columns: minmax(110px, 1.5fr) repeat(4, minmax(0, 1fr)); gap: 12px; padding: 8px 0; font-size: 14px; }
 .spacing .sr + .sr { border-top: 1px solid var(--edge); }
 .spacing .sr.hd { color: var(--muted); font-size: 12px; font-weight: 600; padding-top: 0; }
+/* phones: the three tiles one under another; the place column stays put while the grid scrolls */
+@media (max-width: 639.98px) {
+  .tiles.geo-three { grid-template-columns: minmax(0, 1fr); }
+  .geo-key li { grid-template-columns: 52px minmax(0, 1fr); row-gap: 2px; }
+  .geo-key li > :nth-child(3) { grid-column: 2; }   /* "should be" under the meaning, not squeezing it */
+}
+.geo-grid .gr > :first-child { position: sticky; left: 0; z-index: 1; background: var(--platform); align-self: stretch;
+  display: flex; flex-direction: column; justify-content: center; }   /* full row height, so nothing shows through above it */
+.geo-grid .gr.hd > :first-child { justify-content: flex-end; }

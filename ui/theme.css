@@ -8,7 +8,10 @@
 html, body, .stApp, [data-testid="stApp"] { background: var(--platform); color: var(--ink); }
 [data-testid="stHeader"] { background: var(--platform); }
 [data-testid="stMain"], [data-testid="stMain"] p, [data-testid="stMain"] li, [data-testid="stMarkdownContainer"] { color: var(--ink); }
-[data-testid="stMain"] .block-container, [data-testid="stMainBlockContainer"] { max-width: 1120px; padding: 32px 20px 90px; }
+/* 1560px wide at most, centred: the top bar fits on one row from 1400px, and a table or a row of four tiles still reads
+   as one block on a 2560px screen. Running text is held to a readable length on its own (see p below). */
+[data-testid="stMain"] .block-container, [data-testid="stMainBlockContainer"] { max-width: 1560px; padding: 32px 20px 90px; }
+[data-testid="stMain"] p { max-width: 90ch; }
 h1, h2, h3, h4, h5, h6, [data-testid="stHeading"] { color: var(--ink); letter-spacing: -.01em; }
 h1 { font-size: 30px; line-height: 1.15; }
 h2 { font-size: 22px; }
@@ -98,7 +101,9 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend
 [data-baseweb="popover"] li:hover, [data-baseweb="popover"] li[aria-selected="true"] { background: var(--well); color: var(--accent); }
 
 /* ---- charts sit in a raised panel like everything else ---- */
-[data-testid="stPlotlyChart"] { background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); padding: 8px; overflow: hidden; }
+/* Streamlit draws a chart as wide as this box's outside, so no side padding or border here: they cut its right edge off.
+   The edge is drawn as an inset ring instead; the figures' own margins keep the plot clear of it. */
+[data-testid="stPlotlyChart"] { background: var(--platform); border: 0; border-radius: var(--r); box-shadow: var(--raised), inset 0 0 0 1px var(--edge); padding: 8px 0; overflow: hidden; }
 
 /* ---- tables ---- */
 [data-testid="stDataFrame"] { border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--pressed); overflow: hidden; }
@@ -141,11 +146,36 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend
 .stApp:has(.st-key-topbar) :is([data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"], [data-testid="collapsedControl"], [data-testid="stHeader"]) { display: none; }
 .stApp:has(.st-key-topbar) [data-testid="stMainBlockContainer"] { padding-top: 22px; }
 .st-key-topbar { background: var(--platform); border: 1px solid var(--edge); border-radius: 18px; box-shadow: var(--raised); padding: 10px 16px; margin-bottom: 22px; }
-.st-key-topbar [data-testid="stColumn"] { min-width: 0; }
-@media (min-width: 640px) {   /* each group as wide as it needs, the room left shared out between them */
-  .st-key-topbar [data-testid="stHorizontalBlock"] { justify-content: space-between; gap: 12px; flex-wrap: wrap; row-gap: 8px; }
-  .st-key-topbar [data-testid="stColumn"] { flex: 0 1 auto !important; width: auto !important; }
-  .st-key-topbar [data-testid="stColumn"]:last-child { margin-left: auto; }   /* six constellations: on a narrow screen it takes a second row, on the right */
+/* The bar's five groups (brand, constellations, Compare, window, data) each as wide as they need. Three arrangements:
+   from 1400px one row; from 640px two rows, brand and data above, the filters below; under 640px brand and buttons,
+   then the data chip, then the constellations (scrolling sideways), then Compare and the window. */
+.st-key-topbar [data-testid="stHorizontalBlock"] { flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.st-key-topbar [data-testid="stColumn"] { flex: 0 1 auto !important; width: auto !important; min-width: 0; }
+.st-key-topbar [data-testid="stColumn"]:nth-child(3), .st-key-topbar [data-testid="stColumn"]:nth-child(4) { flex: none !important; }
+/* the constellations give way first: they narrow and scroll rather than push the bar onto another row */
+.st-key-topbar [data-testid="stColumn"]:nth-child(2) { flex: 1 1 0 !important; max-width: max-content; }
+.st-key-topbar [data-testid="stColumn"]:last-child { margin-left: auto; }
+@media (max-width: 1399.98px) {
+  .st-key-topbar [data-testid="stColumn"]:first-child { order: 1; }
+  .st-key-topbar [data-testid="stColumn"]:last-child { order: 2; }
+  .st-key-topbar [data-testid="stHorizontalBlock"]:has(.st-key-window_days)::after { content: ""; order: 3; flex-basis: 100%; margin-top: -8px; }
+  .st-key-topbar [data-testid="stColumn"]:nth-child(2) { order: 4; }
+  .st-key-topbar [data-testid="stColumn"]:nth-child(3) { order: 5; }
+  .st-key-topbar [data-testid="stColumn"]:nth-child(4) { order: 6; margin-left: auto; }
+}
+@media (max-width: 639.98px) {   /* the data group opens up so its buttons can sit by the brand and its chip below */
+  .st-key-topbar :is([data-testid="stColumn"], [data-testid="stVerticalBlockBorderWrapper"], [data-testid="stVerticalBlock"]):has(.st-key-refresh),
+  .st-key-refresh { display: contents; }
+  .st-key-topbar [data-testid="stHorizontalBlock"]::after { content: none; }
+  .st-key-topbar [data-testid="stColumn"]:first-child { flex: 1 1 auto !important; }
+  .st-key-refresh_button { order: 2; }
+  .st-key-refresh [data-testid="stPopover"] { order: 3; }
+  .st-key-refresh > div:first-child { order: 4; flex-basis: 100%; }
+  .st-key-refresh [data-testid="stHtml"] { justify-content: flex-start; }
+  .st-key-refresh .next { margin-left: 6px; }
+  .st-key-topbar [data-testid="stColumn"]:nth-child(2) { order: 5; flex-basis: 100% !important; }
+  .st-key-topbar [data-testid="stColumn"]:nth-child(3) { order: 6; }
+  .st-key-topbar [data-testid="stColumn"]:nth-child(4) { order: 7; }
 }
 .brand { font-size: 16px; letter-spacing: .01em; white-space: nowrap; }
 .right { display: flex; justify-content: flex-end; }
@@ -233,6 +263,7 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend
 .head { display: flex; align-items: baseline; gap: 14px; margin: 4px 0 14px; }
 .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 26px; }
 @media (max-width: 900px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 639.98px) { .tiles { grid-template-columns: minmax(0, 1fr); } }
 .tile { background: var(--platform); border-radius: 18px; box-shadow: var(--raised-sm); border: 1px solid var(--edge); border-top: 3px solid var(--idle); padding: 13px 15px; min-width: 0; }
 .tile.ok { border-top-color: var(--ok); } .tile.warn { border-top-color: var(--warn); } .tile.bad { border-top-color: var(--bad); }
 .tile .n { font-weight: 600; overflow-wrap: anywhere; }
@@ -243,7 +274,12 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend
 .muted { color: var(--muted); font-weight: 400; }
 
 /* score parts side by side, in the same columns as the tiles above them */
-.tiles.cmp, .mrow { grid-template-columns: 120px repeat(var(--n), minmax(0, 1fr)); }
+/* each compared satellite at least 140px wide; past that the tiles and their score rows scroll sideways together,
+   the row names held in place */
+[data-testid="stHtml"]:has(> .tiles.cmp) { overflow-x: auto; }
+.tiles.cmp, .mrow { --label: 120px; grid-template-columns: var(--label) repeat(var(--n), minmax(0, 1fr)); min-width: calc(var(--label) + var(--n) * 156px); }
+@media (max-width: 639.98px) { .tiles.cmp, .mrow { --label: 88px; } }
+.mrow .ml { position: sticky; left: 0; z-index: 1; background: var(--platform); align-self: stretch; display: flex; align-items: center; }
 .tiles.cmp { margin-bottom: 8px; align-items: start; }
 .mrow { display: grid; gap: 16px; align-items: center; padding: 11px 0; font-size: 14px; }
 .mrow + .mrow { border-top: 1px solid var(--edge); }
@@ -271,15 +307,29 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend
 .due { font-weight: 600; } .due.ok { color: var(--ok); } .due.warn { color: var(--warn); } .due.idle { color: var(--idle); } .due.accent { color: var(--accent); }
 @media (max-width: 900px) { .rh { grid-template-columns: 1fr 1fr; } .rh.hd { display: none; } }
 
-/* GPS, GLONASS and Galileo: a row per orbital plane, and every measure as is / should be */
-.tiles.meo { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 12px 0 22px; }
-.tiles.meo .tile .s { font-size: 22px; }
-.meanings { margin: 0 0 10px; padding-left: 18px; }
-.sb-wrap { overflow-x: auto; }
-.sb { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
-.sb th, .sb td { padding: 6px 10px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--edge); }
-.sb tr:first-child th { color: var(--muted); font-weight: 500; }
-.sb td.ok { color: var(--ok); } .sb td.warn { color: var(--warn); } .sb td.bad { color: var(--bad); } .sb td.idle { color: var(--idle); }
+/* ---- major changes: a strip of notices under the top bar; each opens on click, each can be dismissed ---- */
+.st-key-changes { gap: 10px; margin: -8px 0 20px; }
+.st-key-changes [data-testid="stHorizontalBlock"] { flex-wrap: nowrap; gap: 12px; align-items: flex-start; }
+.st-key-changes [data-testid="stColumn"] { min-width: 0; }
+.st-key-changes [data-testid="stColumn"]:last-child { flex: 0 0 auto !important; width: auto !important; }
+.st-key-changes [data-testid="stColumn"]:last-child button { min-height: 0; padding: 4px 14px; font-size: 13px; margin-top: 8px; white-space: nowrap; }
+.change { padding: 0; }
+.change summary { display: flex; align-items: center; gap: 12px; padding: 10px 18px; cursor: pointer; list-style: none; border-radius: var(--r); }
+.change summary::-webkit-details-marker { display: none; }
+.change summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.change .when { flex: 0 0 5.6em; font-size: 13px; color: var(--muted); white-space: nowrap; }   /* one width, so the headlines line up */
+.change .headline { flex: 1 1 auto; min-width: 0; font-weight: 600; }
+.change .more { font-size: 13px; color: var(--accent); white-space: nowrap; }
+.change .more::after { content: " ▾"; }
+.change[open] .more::after { content: " ▴"; }
+.change p { margin: 0; padding: 0 18px 12px; }
+.change a { color: var(--accent); }
+@media (max-width: 760px) { .change summary { flex-wrap: wrap; row-gap: 4px; } .change .headline { flex-basis: 100%; order: 3; } .change .more { margin-left: auto; } }
+@media (max-width: 639.98px) {   /* phones: the note the full width, Dismiss under it on the right */
+  .st-key-changes [data-testid="stHorizontalBlock"] { flex-wrap: wrap; row-gap: 0; }
+  .st-key-changes [data-testid="stColumn"]:first-child { flex-basis: 100% !important; }
+  .st-key-changes [data-testid="stColumn"]:last-child { margin-left: auto; }
+}
 /* groups of satellites by orbit type, and the "is / should be" tables */
 .group { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 8px 0 12px; }
 .group .gt { font-size: 18px; font-weight: 700; letter-spacing: .02em; }
@@ -301,22 +351,35 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: 12px; }
 .remarks li { padding: 8px 0; } .remarks li + li { border-top: 1px solid var(--edge); }
 .remarks b { display: block; margin-bottom: 2px; }
 .remarks span { display: block; color: var(--muted); }
+/* GPS, GLONASS and Galileo: a row per orbital plane, and every measure as is / should be */
+.tiles.meo { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin: 12px 0 22px; }
+.tiles.meo .tile .s { font-size: 22px; }
+.meanings { margin: 0 0 10px; padding-left: 18px; }
+.sb-wrap { overflow-x: auto; }
+.sb { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+.sb th, .sb td { padding: 6px 10px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--edge); }
+.sb tr:first-child th { color: var(--muted); font-weight: 500; }
+.sb td.ok { color: var(--ok); } .sb td.warn { color: var(--warn); } .sb td.bad { color: var(--bad); } .sb td.idle { color: var(--idle); }
 
-/* ---- major changes: a strip of notices under the top bar; each opens on click, each can be dismissed ---- */
-.st-key-changes { gap: 10px; margin: -8px 0 20px; }
-.st-key-changes [data-testid="stHorizontalBlock"] { flex-wrap: nowrap; gap: 12px; align-items: flex-start; }
-.st-key-changes [data-testid="stColumn"] { min-width: 0; }
-.st-key-changes [data-testid="stColumn"]:last-child { flex: 0 0 auto !important; width: auto !important; }
-.st-key-changes [data-testid="stColumn"]:last-child button { min-height: 0; padding: 4px 14px; font-size: 13px; margin-top: 8px; white-space: nowrap; }
-.change { padding: 0; }
-.change summary { display: flex; align-items: center; gap: 12px; padding: 10px 18px; cursor: pointer; list-style: none; border-radius: var(--r); }
-.change summary::-webkit-details-marker { display: none; }
-.change summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.change .when { flex: 0 0 5.6em; font-size: 13px; color: var(--muted); white-space: nowrap; }   /* one width, so the headlines line up */
-.change .headline { flex: 1 1 auto; min-width: 0; font-weight: 600; }
-.change .more { font-size: 13px; color: var(--accent); white-space: nowrap; }
-.change .more::after { content: " ▾"; }
-.change[open] .more::after { content: " ▴"; }
-.change p { margin: 0; padding: 0 18px 12px; }
-.change a { color: var(--accent); }
-@media (max-width: 760px) { .change summary { flex-wrap: wrap; row-gap: 4px; } .change .headline { flex-basis: 100%; order: 3; } .change .more { margin-left: auto; } }
+/* ---- every screen size ---- */
+/* A row of switches longer than its place scrolls sideways instead of spilling; the padding keeps focus rings in view */
+[data-testid="stButtonGroup"] { max-width: calc(100% + 8px); overflow-x: auto; padding: 4px; margin: -4px; scrollbar-width: thin; scrollbar-color: var(--track) transparent; }
+/* wide tables scroll inside their own card, the first column held in place */
+:is(table.grid, .sb) tr > :first-child { position: sticky; left: 0; z-index: 1; background: var(--platform); }
+/* phones: a 16px gutter, the components shorter than the screen so the page can still be scrolled past them,
+   and every control at least 40px tall for a finger */
+@media (max-width: 639.98px) {
+  [data-testid="stMain"] .block-container, [data-testid="stMainBlockContainer"] { padding: 16px 16px 60px; }
+  .stApp:has(.st-key-topbar) [data-testid="stMainBlockContainer"] { padding-top: 16px; }
+  .st-key-topbar { padding: 10px 12px; margin-bottom: 16px; }
+  [data-testid="stMain"] iframe[data-testid="stIFrame"] { max-height: 72vh; }
+  [data-testid="stButtonGroup"] button, [data-testid="stButtonGroup"] button[data-testid^="stBaseButton-segmented"],
+  [data-testid="stMain"] :is([data-testid="stButton"], [data-testid="stDownloadButton"]) button,
+  .st-key-compare_toggle button, .st-key-picker [data-testid="stButton"] button,
+  .st-key-changes [data-testid="stColumn"]:last-child button { min-height: 40px; }
+  [data-testid="stPopover"] button, .st-key-refresh_button button { width: 40px; height: 40px; }
+  [data-testid="stNumberInput"] [data-baseweb="input"] { min-height: 40px; }
+  [data-testid="stNumberInput"] button { min-width: 40px; min-height: 40px; }
+  .legend-label { padding-block: 10px; }
+  [data-testid="stExpander"] summary { min-height: 44px; }
+}
