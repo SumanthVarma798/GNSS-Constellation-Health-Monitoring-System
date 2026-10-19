@@ -90,6 +90,40 @@ def test_switching_to_qzss_shows_its_five():
     assert any(f"{healthy_in_slot('QZSS')} of 5</span>" in body for body in htmls(at))
 
 
+def groups(at):
+    return [body.split('class="gt">')[1].split("<")[0] for body in htmls(at) if 'class="gt">' in body]
+
+
+def table_rows(at):
+    """The row names of each table on the page, in order."""
+    return [[r.split("</th>")[0] for r in body.split('<th scope="row">')[1:]]
+            for body in htmls(at) if '<table class="grid">' in body]
+
+
+def test_the_overview_groups_satellites_by_orbit_type_each_with_its_table():
+    at = run()
+
+    assert groups(at) == ["GEO", "IGSO"]
+    tables = table_rows(at)
+    assert tables[:2] == [["IRNSS-1C", "IRNSS-1F", "IRNSS-1G", "NVS-01"],
+                                                  ["IRNSS-1B", "IRNSS-1E", "IRNSS-1I"]]   # IRNSS-1D is set aside
+    assert len(tables[2]) == 8   # how each was classed from the window, the set-aside one too
+    assert len(tiles(at)) == 8
+
+
+def test_qzss_has_its_quasi_zenith_satellites_in_their_own_group():
+    at = run(lambda at: at.session_state.__setitem__("scope", "QZSS"))
+
+    assert groups(at) == ["GEO", "QZO"]
+
+
+def test_the_overview_says_the_window_and_the_status_counts():
+    body = next(b for b in htmls(run()) if 'class="facts"' in b)
+
+    assert "90 days: " in body and "orbit records" in body and "scores read" in body
+    assert all(word in body for word in ("healthy", "fair", "degraded", "critical"))
+
+
 def _compare(picks=None, constellations=None):
     """Turn Compare on with its button, then set the picks and constellation chips (AppTest cannot click pills)."""
     def setup(at):
@@ -262,6 +296,8 @@ def test_station_keeping_shows_a_rhythm_line_per_satellite_and_two_charts():
 
     assert len(lines) == 8
     assert len(at.get("plotly_chart")) == 2
+    counts = table_rows(at)[0]
+    assert len(counts) == 8 and "IRNSS-1D" in counts   # burns in the window, the set-aside one included
 
 
 def test_the_master_map_draws_its_canvas_and_hides_the_constellation_controls():
