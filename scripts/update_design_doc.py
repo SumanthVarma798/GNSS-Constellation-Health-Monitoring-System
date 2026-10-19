@@ -38,8 +38,12 @@ def schedule(job_file, which=0):
 
 
 def duration(gap):
+    """A gap in the largest whole unit that fits it: "2 hours", "1 day", "10 seconds"."""
     seconds = int(gap.total_seconds())
-    return f"{seconds // 3600} hours" if seconds >= 3600 else f"{seconds} seconds"
+    for unit, size in (("day", 86400), ("hour", 3600), ("minute", 60), ("second", 1)):
+        if seconds % size == 0 and (seconds >= size or size == 1):
+            count = seconds // size
+            return f"{count} {unit}{'' if count == 1 else 's'}"
 
 
 def constants_table():
@@ -66,6 +70,9 @@ def constants_table():
         ("Shortest gap between two requests to one site",
          ", ".join([*(f"{site}: {duration(gap)}" for site, gap in settings.MIN_GAP_BETWEEN_DOWNLOADS.items()),
                     f"any other site: {duration(settings.DEFAULT_MIN_GAP)}"]), "`evidence/settings.py`"),
+        ("A site that refuses us waits", f"{duration(settings.BACKOFF_FIRST)}, doubling with each refusal in a row, "
+         f"at most {duration(settings.BACKOFF_LONGEST)}; refusals are "
+         f"{', '.join(map(str, settings.REFUSAL_STATUSES))} or no answer", "`evidence/settings.py`"),
         ("Largest copy the archive keeps", f"{megabytes} MB", "`evidence/settings.py`"),
         ("Statuses that mean a page is gone", ", ".join(map(str, settings.GONE_STATUSES)), "`evidence/settings.py`"),
         ("How our requests name themselves", f"`{settings.USER_AGENT}`", "`evidence/settings.py`"),

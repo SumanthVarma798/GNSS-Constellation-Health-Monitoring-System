@@ -2,16 +2,21 @@
 
 Every feed here is a saved sample in tests/samples/news; no test touches the network.
 """
+import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 import requests
+import time_machine
 
 from evidence import archive, news
 from evidence.archive import FetchFailed, pacer, record
 from evidence.news import collected_items, items_from, labelling_sample, parse_feed, when
-from evidence.settings import DEFAULT_MIN_GAP, MIN_GAP_BETWEEN_DOWNLOADS
+from evidence.settings import BACKOFF_FIRST, BACKOFF_LONGEST, DEFAULT_MIN_GAP, MIN_GAP_BETWEEN_DOWNLOADS
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 SAMPLES = Path(__file__).resolve().parent / "samples" / "news"
 DIRECT = {"source_id": "press.example", "kind": "press feed", "address": "https://press.example/feed/",
           "check_type": "feed; application/rss+xml"}
@@ -214,3 +219,99 @@ def test_a_redirect_to_a_tracker_site_is_not_followed():
 
     with pytest.raises(FetchFailed, match="never fetched"):
         archive._no_redirect_to_never_fetched(Redirect())
+
+
+# ------------------------------------------------------------------ Which link is a social post's source
+
+def test_a_posts_own_link_is_its_source_even_when_another_link_comes_first():
+    text = ('<a href="https://www.reddit.com/user/someone">/u/someone</a> <a href="https://example.org/first">x</a> '
+            '<span><a href="https://www.isro.gov.in/NVS03.html">[link]</a></span>')
+    assert news.outside_link(text) == "https://www.isro.gov.in/NVS03.html"
+
+
+def test_clocks_images_videos_and_other_social_posts_are_not_a_source():
+    text = ('<a href="https://www.reddit.com/r/ISRO/comments/x/">[link]</a> '
+            '<a href="https://free.timeanddate.com/countdown/i743">Launch Countdown</a> '
+            '<a href="https://i.imgur.com/gUM4Dv8.png">Flight profile</a> <a href="https://www.youtube.com/watch?v=1">Stream</a> '
+            '<a href="https://x.com/roscosmos/status/1">post</a> <a href="https://www.isro.gov.in/Mission.html">Mission page</a>')
+    assert news.outside_link(text) == "https://www.isro.gov.in/Mission.html"
+    assert news.outside_link('<a href="https://x.com/a/status/1">[link]</a>') == ""
+
+
+# ------------------------------------------------------------------ Backing off a site that refuses us
+
+NOW = datetime(2026, 10, 19, 6, 0, tzinfo=timezone.utc)
+
+
+def test_each_refusal_in_a_row_doubles_the_wait_up_to_the_longest_and_one_answer_clears_it():
+    limits, address = {}, "https://www.reddit.com/r/ISRO/.rss"
+
+    archive.note_answer(limits, address, 429, NOW)
+    assert archive.waiting_until(limits, "https://old.reddit.com/r/gnss/.rss", NOW) == NOW + BACKOFF_FIRST  # whole site
+    assert archive.waiting_until(limits, address, NOW + BACKOFF_FIRST) is None                             # wait over
+
+    archive.note_answer(limits, address, "no answer", NOW + BACKOFF_FIRST)
+    assert archive.waiting_until(limits, address, NOW) == NOW + 3 * BACKOFF_FIRST                          # 1 h, then 2 h
+    for _ in range(20):
+        archive.note_answer(limits, address, 403, NOW)
+    assert archive.waiting_until(limits, address, NOW) == NOW + BACKOFF_LONGEST
+
+    archive.note_answer(limits, address, 200, NOW)
+    assert limits == {}
+
+
+def test_a_404_is_an_answer_not_a_refusal():
+    limits = {}
+    archive.note_answer(limits, "https://gone.example/page", 404, NOW)
+    assert limits == {}
+
+
+def test_a_refusing_site_fails_one_run_then_waits_without_failing_and_is_asked_again_later(monkeypatch, tmp_path):
+    import archive_sources
+
+    asked = []
+
+    def refusing(address, timeout, headers, **_):
+        asked.append(address)
+        return SimpleNamespace(status_code=429, content=b"", headers={})
+
+    monkeypatch.setattr(archive.requests, "get", refusing)
+    monkeypatch.setattr(archive.time, "sleep", lambda seconds: None)
+    monkeypatch.setattr(archive_sources, "archived_addresses", lambda group: ["https://www.reddit.com/r/ISRO/.rss",
+                                                                              "https://www.reddit.com/r/gnss/.rss"])
+
+    def run(at):
+        monkeypatch.setattr(sys, "argv", ["archive_sources.py", "--archive", str(tmp_path), "--group", "social"])
+        with time_machine.travel(at, tick=False):
+            archive_sources.main()
+
+    with pytest.raises(SystemExit):
+        run(NOW)                                          # refused: the run fails, and r/gnss is not asked at all
+    run(NOW + timedelta(minutes=30))                      # still in its back-off: nothing asked, the run does not fail
+    with pytest.raises(SystemExit):
+        run(NOW + BACKOFF_FIRST)                          # asked again once the wait is over
+
+    assert asked == ["https://www.reddit.com/r/ISRO/.rss"] * 2
+    assert [line["result"] for line in archive.read_runs(tmp_path, "archive")] == [
+        "failed: 1 of 2 sources; 1 waiting out a refusal", "ok; 2 waiting out a refusal",
+        "failed: 1 of 2 sources; 1 waiting out a refusal"]
+    assert archive.read_limits(tmp_path)["reddit.com"]["refusals"] == "2"
+
+
+# ------------------------------------------------------------------ Measuring each feed
+
+def test_the_report_gives_each_feeds_changes_per_run_and_share_of_items_naming_a_system(tmp_path, monkeypatch):
+    monkeypatch.setattr(news, "working_candidates", lambda: [DIRECT, SOCIAL])
+    monkeypatch.setattr(news, "ARCHIVED_SOURCES", {"news": [DIRECT["address"]], "social": [SOCIAL["address"]]})
+    for started in ("2026-10-19T00:50:00Z", "2026-10-19T03:50:00Z"):
+        archive.log_run(tmp_path, "archive", "archive news", started, started, "ok", "")
+    archive.log_run(tmp_path, "archive", "archive all", "2026-10-19T05:00:00Z", "", "ok", "")
+    record(tmp_path, DIRECT["address"], "2026-10-19T00:50:00Z", 200, sample("direct.rss"))
+    record(tmp_path, SOCIAL["address"], "2026-10-19T05:00:00Z", 200, sample("reddit.atom"))
+
+    rows = {row["via"]: row for row in news.feed_report(tmp_path)}
+
+    assert rows[DIRECT["address"]] == {"via": DIRECT["address"], "group": "news", "runs": 3, "copies": 1,
+                                       "copies_per_run": "0.33", "items": 3, "items_naming_a_system": 2,
+                                       "share_naming_a_system": "0.67"}
+    assert rows[SOCIAL["address"]]["runs"] == 1 and rows[SOCIAL["address"]]["share_naming_a_system"] == "1.00"   # "NVS-03" names NavIC

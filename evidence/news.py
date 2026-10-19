@@ -14,13 +14,14 @@ from email.utils import parsedate_to_datetime
 from urllib.parse import urlsplit
 from xml.etree import ElementTree
 
-from evidence.archive import object_path, read_versions
-from evidence.settings import (CANDIDATE_FEED_TYPE, CANDIDATE_SOCIAL_KIND, LABELLING_SHEET_SIZE,
-                               SOCIAL_PLATFORM_HOSTS, SYSTEM_WORDS)
-from evidence.sources import working_candidates
+from evidence.archive import object_path, read_runs, read_versions
+from evidence.settings import (CANDIDATE_FEED_TYPE, CANDIDATE_SOCIAL_KIND, FEED_REPORT_COLUMNS, LABELLING_SHEET_SIZE,
+                               NOT_AN_ARTICLE_HOSTS, SOCIAL_PLATFORM_HOSTS, SYSTEM_WORDS)
+from evidence.sources import ARCHIVED_SOURCES, PROVISIONAL_GROUPS, working_candidates
 
 ATOM = "{http://www.w3.org/2005/Atom}"
 LINK = re.compile(r"""href=["'](https?://[^"']+)["']""")
+POST_LINK = re.compile(r"""href=["'](https?://[^"']+)["'][^>]*>\s*\[link\]""")  # a Reddit post's own link
 
 
 def host_id(address):
@@ -87,12 +88,22 @@ def parse_feed(body):
     raise ValueError(f"not a feed: its top element is <{root.tag}>")
 
 
+def _on(host, hosts):
+    return any(host == name or host.endswith("." + name) for name in hosts)
+
+
 def outside_link(text):
-    """The first link in a social post that leads off the platform, or "" when it holds none."""
-    for address in LINK.findall(text or ""):
+    """The link a social post gives as its source, or "" when it gives none.
+
+    That is the post's own "[link]" when it leads off the platform; otherwise the first link in the post that
+    leads off the platform to something other than a clock, an image or a video (NOT_AN_ARTICLE_HOSTS).
+    """
+    text = text or ""
+    own = POST_LINK.search(text)
+    for address in ([own.group(1)] if own else []) + LINK.findall(text):
         address = html.unescape(address)
         host = (urlsplit(address).hostname or "").lower()
-        if not any(host == own or host.endswith("." + own) for own in SOCIAL_PLATFORM_HOSTS):
+        if not _on(host, SOCIAL_PLATFORM_HOSTS + NOT_AN_ARTICLE_HOSTS):
             return address
     return ""
 
@@ -150,6 +161,29 @@ def systems_named(title):
     """The systems an item's title names, in SYSTEM_WORDS order."""
     return [system for system, words in SYSTEM_WORDS.items()
             if any(re.search(rf"\b{re.escape(word)}\b", title, re.I) for word in words)]
+
+
+def feed_report(archive, run_log="archive"):
+    """FEED_REPORT_COLUMNS for every feed of the news and social groups, from the archive and its run log.
+
+    runs counts the runs of the feed's group (or of every group) in the run log; copies counts the copies kept,
+    each one a change. An item names a system when its title holds one of SYSTEM_WORDS.
+    """
+    items, _ = collected_items(archive)
+    versions = read_versions(archive)
+    jobs = [line["job"] for line in read_runs(archive, run_log)]
+    feeds = {row["address"] for row in working_candidates() if row["check_type"].startswith(CANDIDATE_FEED_TYPE)}
+    rows = []
+    for group in PROVISIONAL_GROUPS:
+        runs = sum(job in (f"archive {group}", "archive all") for job in jobs)
+        for address in (address for address in ARCHIVED_SOURCES[group] if address in feeds):
+            copies = sum(row["address"] == address and bool(row["sha256"]) for row in versions)
+            found = [item for item in items if item["via"] == address]
+            naming = sum(bool(systems_named(item["title"])) for item in found)
+            rows.append(dict(zip(FEED_REPORT_COLUMNS, [
+                address, group, runs, copies, f"{copies / runs:.2f}" if runs else "", len(found), naming,
+                f"{naming / len(found):.2f}" if found else ""])))
+    return rows
 
 
 def labelling_sample(items, size=LABELLING_SHEET_SIZE):

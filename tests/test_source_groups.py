@@ -1,10 +1,11 @@
 """Every archived source sits in exactly one group, and every schedule line names a real group."""
 import re
+from collections import Counter
 from datetime import timedelta
 from pathlib import Path
 
 from evidence.archive import min_gap, site
-from evidence.settings import NEVER_FETCH
+from evidence.settings import NEVER_FETCH, RUN_WAIT_BUDGET
 from evidence.sources import (ARCHIVED_SOURCES, CELESTRAK_GNSS_URL, GALMON_SATELLITES_URL, GCAT_OBJECTS_URL,
                               GCAT_PAYLOADS_URL, IGS_SATELLITE_METADATA_URL, archived_addresses, working_candidates)
 
@@ -15,7 +16,8 @@ def test_addresses_by_group():
     assert archived_addresses("documents") == [IGS_SATELLITE_METADATA_URL]
     assert archived_addresses("catalogues") == [GCAT_OBJECTS_URL, GCAT_PAYLOADS_URL]
     assert archived_addresses("orbital") == [CELESTRAK_GNSS_URL]
-    assert archived_addresses("news") and archived_addresses("social") == ["https://www.reddit.com/r/ISRO/.rss"]
+    assert archived_addresses("news") and archived_addresses("social") == [
+        f"https://www.reddit.com/r/{name}/.rss" for name in ("ISRO", "gnss", "nasa", "ESA", "roscosmos", "JAXA")]
     assert archived_addresses() == [address for group in ARCHIVED_SOURCES.values() for address in group]
 
 
@@ -54,7 +56,7 @@ def test_the_job_can_be_started_by_hand_for_any_group():
 def test_news_and_social_are_the_candidates_whose_check_worked():
     worked = {row["address"] for row in working_candidates()}
     assert set(archived_addresses("news")) | set(archived_addresses("social")) == worked
-    assert "https://www.reddit.com/r/gnss/.rss" not in worked       # refused (429) when checked
+    assert not any(address.startswith("https://pib.gov.in/") for address in worked)   # refused (403): via Google News
     assert not any("ssc.spaceforce.mil" in address for address in worked)   # answered with an empty body
 
 
@@ -75,7 +77,8 @@ def test_each_group_runs_no_more_often_than_its_slowest_site_allows():
         assert timedelta(hours=hours_between_runs(cron)) >= slowest, f"'{group}' runs more often than one of its sites allows"
 
 
-def test_a_site_with_a_long_gap_is_asked_once_per_run_so_a_run_never_waits_for_hours():
-    long = [site(address) for address in archived_addresses() if min_gap(address) > timedelta(minutes=1)]
-    assert len(long) == len(set(long))
-
+def test_no_run_spends_longer_than_its_budget_waiting_out_gaps():
+    for group, addresses in ARCHIVED_SOURCES.items():
+        sites = Counter(site(address) for address in addresses)
+        waits = sum((min_gap(f"https://{name}/") * (count - 1) for name, count in sites.items()), timedelta(0))
+        assert waits <= RUN_WAIT_BUDGET, f"'{group}' would wait {waits} between requests in one run"

@@ -18,16 +18,26 @@ USER_AGENT = "gnss-evidence-archive/0.1 (scheduled research fetch)"  # how we na
 MIN_GAP_BETWEEN_DOWNLOADS = {
     # CelesTrak asks for one download per 2 hours at most, and blocked this machine on 17 Oct 2026 for more (issue 76).
     "celestrak.org": timedelta(hours=2),
-    # Refused a second request three seconds after the first (8 and 19 Oct 2026); read once a day (issue 13).
-    "reddit.com": timedelta(hours=12),
+    # Refused a second request three seconds after the first (8 and 19 Oct 2026); five subreddits read 150 s apart
+    # all answered (19 Oct). Read once a day (issue 13). The real limit is not published for feeds (guess).
+    "reddit.com": timedelta(minutes=2),
     # Seven search feeds in a row; how often Google allows them is not stated (guess).
     "news.google.com": timedelta(seconds=10),
 }
 DEFAULT_MIN_GAP = timedelta(seconds=5)  # any other site: no stated limit, so a polite pause
+# The most one run of a group may spend waiting out gaps, so it ends well inside archive.yml's 30-minute fetch step.
+RUN_WAIT_BUDGET = timedelta(minutes=15)
 
 DOWNLOAD_TRIES = 3                # a failed download is tried this many times in one run...
 WAIT_BETWEEN_TRIES_SECONDS = 60   # ...with this wait between, unless that is shorter than the source's gap: then once
 RETRY_STATUSES = (429, 500, 502, 503, 504)  # replies worth another try; any other reply is the source's answer
+
+# A site that refuses us, or does not answer at all, is not asked again until its back-off has passed:
+# BACKOFF_FIRST after the first refusal, doubling with each refusal in a row, never longer than BACKOFF_LONGEST.
+# One good answer clears it. Kept across runs in the archive's ARCHIVE_LIMITS_FILE.
+REFUSAL_STATUSES = (403, 429)
+BACKOFF_FIRST = timedelta(hours=1)
+BACKOFF_LONGEST = timedelta(days=7)
 
 # Never fetched, by any job or any person's script: the Russian and Chinese satellite-tracker sites named on
 # the 17 Oct 2026 call. They may be malicious; what they show reaches us only through independent journalists.
@@ -44,6 +54,9 @@ ARCHIVE_VERSION_COLUMNS = ["address", "fetched_at", "status", "sha256", "bytes",
 # The run log: one line per run of a scheduled job, inside an archive folder. One file per job file
 # (runs/archive.csv, runs/registry-update.csv), so two jobs saving at once never edit the same file.
 ARCHIVE_RUNS_DIR = "runs"
+# Each site in its back-off, one row per site, rewritten whole every run, inside an archive folder.
+ARCHIVE_LIMITS_FILE = "limits.csv"
+ARCHIVE_LIMIT_COLUMNS = ["site", "refusals", "last_answer", "refused_at", "wait_until"]
 ARCHIVE_RUN_COLUMNS = ["job", "started", "ended", "result", "changed"]
 
 # --- The registry tables ---
@@ -105,11 +118,22 @@ CANDIDATE_FEED_TYPE = "feed"     # check_type starts with this when the answer w
 CANDIDATE_SOCIAL_KIND = "social feed"  # kind of a social media feed: its posts count only for the link they hold
 # A social post's own platform. A link to one of these is not a link to the post's source.
 SOCIAL_PLATFORM_HOSTS = ("reddit.com", "redd.it", "redditmedia.com", "redditstatic.com")
+# Links in a post that are not an article to check: countdown clocks, image hosts, videos. Skipped when
+# looking for the post's source (an r/ISRO launch thread's first link was a countdown clock, 19 Oct 2026).
+NOT_AN_ARTICLE_HOSTS = ("timeanddate.com", "imgur.com", "youtube.com", "youtu.be", "twitch.tv",
+                        # another social post is a pointer too, never the source (r/roscosmos, 19 Oct 2026)
+                        "x.com", "twitter.com", "facebook.com", "instagram.com", "linkedin.com", "t.me")
 
 # One collected news item (issue 13): a pointer to an article, read from a feed. Not a claim; nothing here decides.
 # source_id: who published the article (for a discovery or social feed, the linked page's host, decision 5);
 # via: the feed it was read from; fetched_at: when our archive first held it.
 NEWS_ITEM_COLUMNS = ["source_id", "address", "title", "published_at", "fetched_at", "via"]
+
+# One row per archived feed, measured from the archive (issue 13): how often a copy changed per run of its group
+# (to set cadence), and the share of its items that name a navigation system (a first signal-to-noise measure,
+# until the hand-labelled set gives a better one). Measurements only: no grade or cadence changes by itself.
+FEED_REPORT_COLUMNS = ["via", "group", "runs", "copies", "copies_per_run", "items", "items_naming_a_system",
+                       "share_naming_a_system"]
 
 # The hand-labelled set for choosing a claim-extraction model (issue 15, week 1). Kept here, beside the
 # source lists, until the extraction step decides where its test data lives.

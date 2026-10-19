@@ -203,7 +203,7 @@ Produced from the code. A test fails if this table and the code disagree.
 | News feeds and pages are fetched | `50 */3 * * *` (news: every 3 hours from 00:50 UTC = 06:20 India time; first, to measure how often feeds change (issue 13)) | `.github/workflows/archive.yml` |
 | Social media feeds are fetched | `40 1 * * *` (social: once a day, 01:40 UTC = 07:10 India time; Reddit refuses requests in quick succession) | `.github/workflows/archive.yml` |
 | The registry is rebuilt | `0 1 * * 0` (Sundays 01:00 UTC = 06:30 India time: half an hour after that day's documents fetch (see archive.yml), so the registry builds from a fresh copy) | `.github/workflows/registry-update.yml` |
-| Sources archived, by group | documents: 1, catalogues: 2, orbital: 1, news: 44, social: 1 | `evidence/sources.py` |
+| Sources archived, by group | documents: 1, catalogues: 2, orbital: 1, news: 44, social: 6 | `evidence/sources.py` |
 | Grades that clear the bar alone | A | `evidence/settings.py` |
 | Grades lifted by a second source | B | `evidence/settings.py` |
 | Grades lifted by our own data | B | `evidence/settings.py` |
@@ -211,7 +211,8 @@ Produced from the code. A test fails if this table and the code disagree.
 | The three labels | confirmed, probable, unconfirmed | `evidence/settings.py` |
 | Longest wait for an outside server | 60 seconds | `evidence/settings.py` |
 | A failed download is tried | 3 times, 60 seconds apart; once a run where that is sooner than the source's gap | `evidence/settings.py` |
-| Shortest gap between two requests to one site | celestrak.org: 2 hours, reddit.com: 12 hours, news.google.com: 10 seconds, any other site: 5 seconds | `evidence/settings.py` |
+| Shortest gap between two requests to one site | celestrak.org: 2 hours, reddit.com: 2 minutes, news.google.com: 10 seconds, any other site: 5 seconds | `evidence/settings.py` |
+| A site that refuses us waits | 1 hour, doubling with each refusal in a row, at most 7 days; refusals are 403, 429 or no answer | `evidence/settings.py` |
 | Largest copy the archive keeps | 50 MB | `evidence/settings.py` |
 | Statuses that mean a page is gone | 404, 410 | `evidence/settings.py` |
 | How our requests name themselves | `gnss-evidence-archive/0.1 (scheduled research fetch)` | `evidence/settings.py` |

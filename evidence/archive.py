@@ -15,18 +15,20 @@ never used to name a file.
 """
 import csv
 import hashlib
+import os
 import time
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 from pathlib import Path
 from urllib.parse import urljoin, urlsplit
 
 import requests
 
-from evidence.settings import (ARCHIVE_OBJECTS_DIR, ARCHIVE_RUN_COLUMNS, ARCHIVE_RUNS_DIR, ARCHIVE_VERSION_COLUMNS,
-                               ARCHIVE_VERSIONS_FILE, DEFAULT_MIN_GAP, DOWNLOAD_TRIES, GONE_STATUSES, MAX_COPY_BYTES,
-                               MIN_GAP_BETWEEN_DOWNLOADS, NEVER_FETCH, REQUEST_TIMEOUT_SECONDS, RETRY_STATUSES,
-                               USER_AGENT, WAIT_BETWEEN_TRIES_SECONDS)
+from evidence.settings import (ARCHIVE_LIMIT_COLUMNS, ARCHIVE_LIMITS_FILE, ARCHIVE_OBJECTS_DIR, ARCHIVE_RUN_COLUMNS,
+                               ARCHIVE_RUNS_DIR, ARCHIVE_VERSION_COLUMNS, ARCHIVE_VERSIONS_FILE, BACKOFF_FIRST,
+                               BACKOFF_LONGEST, DEFAULT_MIN_GAP, DOWNLOAD_TRIES, GONE_STATUSES, MAX_COPY_BYTES,
+                               MIN_GAP_BETWEEN_DOWNLOADS, NEVER_FETCH, REFUSAL_STATUSES, REQUEST_TIMEOUT_SECONDS,
+                               RETRY_STATUSES, USER_AGENT, WAIT_BETWEEN_TRIES_SECONDS)
 
 
 class FetchFailed(Exception):
@@ -60,6 +62,44 @@ def pacer(fetch_one=None, clock=None, sleep=None):
             ended[name] = clock()
 
     return paced_fetch
+
+
+def _utc(moment):
+    return moment.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def read_limits(archive):
+    """Every site in its back-off, as {site: row}. An archive with none gives an empty dict."""
+    return {row["site"]: row for row in _rows(Path(archive) / ARCHIVE_LIMITS_FILE)}
+
+
+def write_limits(archive, limits):
+    """Rewrite the back-off file whole, or not at all."""
+    path = Path(archive) / ARCHIVE_LIMITS_FILE
+    spare = path.with_suffix(".tmp")
+    with open(spare, "w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, ARCHIVE_LIMIT_COLUMNS, lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(sorted(limits.values(), key=lambda row: row["site"]))
+    os.replace(spare, path)
+
+
+def waiting_until(limits, address, now):
+    """When this address's site may be asked again, if it is still in its back-off at `now`; else None."""
+    row = limits.get(site(address))
+    until = row and datetime.fromisoformat(row["wait_until"].replace("Z", "+00:00"))
+    return until if until and now < until else None
+
+
+def note_answer(limits, address, answer, now):
+    """Update `limits` with a site's answer: a status, or "no answer". A refusal starts or doubles its back-off."""
+    name = site(address)
+    if answer != "no answer" and int(answer) not in REFUSAL_STATUSES:
+        limits.pop(name, None)  # any other answer means the site is talking to us again
+        return
+    refusals = int(limits.get(name, {}).get("refusals", 0)) + 1
+    wait = min(BACKOFF_FIRST * 2 ** (refusals - 1), BACKOFF_LONGEST)
+    limits[name] = dict(zip(ARCHIVE_LIMIT_COLUMNS, [name, str(refusals), str(answer), _utc(now), _utc(now + wait)]))
 
 
 def refuse_if_never_fetched(address):
