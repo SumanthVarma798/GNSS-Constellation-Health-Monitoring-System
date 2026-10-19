@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Made for the tests, in the shape of a subreddit's feed (issue 13). -->
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
+<title>/r/ISRO</title>
+<link rel="self" href="https://www.reddit.com/r/ISRO/.rss" type="application/atom+xml" />
+<entry>
+  <author><name>/u/someone</name><uri>https://www.reddit.com/user/someone</uri></author>
+  <content type="html">&lt;table&gt; &lt;tr&gt;&lt;td&gt; &lt;a href=&quot;https://www.reddit.com/r/ISRO/comments/abc/nvs03/&quot;&gt; &lt;img src=&quot;https://external-preview.redd.it/x.jpg&quot; /&gt; &lt;/a&gt; &lt;/td&gt;&lt;td&gt; submitted by &lt;a href=&quot;https://www.reddit.com/user/someone&quot;&gt; /u/someone &lt;/a&gt; &lt;br/&gt; &lt;span&gt;&lt;a href=&quot;https://www.isro.gov.in/NVS03.html?a=1&amp;amp;b=2&quot;&gt;[link]&lt;/a&gt;&lt;/span&gt; &lt;span&gt;&lt;a href=&quot;https://www.reddit.com/r/ISRO/comments/abc/nvs03/&quot;&gt;[comments]&lt;/a&gt;&lt;/span&gt; &lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</content>
+  <id>t3_abc</id>
+  <link href="https://www.reddit.com/r/ISRO/comments/abc/nvs03/" />
+  <published>2026-10-16T13:16:58+00:00</published>
+  <updated>2026-10-16T13:16:58+00:00</updated>
+  <title>NVS-03 launch date announced</title>
+</entry>
+<entry>
+  <author><name>/u/another</name><uri>https://www.reddit.com/user/another</uri></author>
+  <content type="html">&lt;div class=&quot;md&quot;&gt;&lt;p&gt;Heard NavIC is down again?&lt;/p&gt; &lt;a href=&quot;https://i.redd.it/photo.png&quot;&gt;photo&lt;/a&gt; &lt;/div&gt; submitted by &lt;a href=&quot;https://www.reddit.com/user/another&quot;&gt; /u/another &lt;/a&gt; &lt;span&gt;&lt;a href=&quot;https://www.reddit.com/r/ISRO/comments/def/rumour/&quot;&gt;[link]&lt;/a&gt;&lt;/span&gt;</content>
+  <id>t3_def</id>
+  <link href="https://www.reddit.com/r/ISRO/comments/def/rumour/" />
+  <published>2026-10-17T09:00:00+00:00</published>
+  <title>Is NavIC down?</title>
+</entry>
+</feed>

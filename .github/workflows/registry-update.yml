@@ -1,6 +1,8 @@
 # Rebuilds the satellite registry once a week from the archived copy of the IGS file.
 # If the tables changed, it proposes the change as a pull request for a person
-# to review. It never writes to main.
+# to review. It never writes to main. Every run adds one line to the archive's run log,
+# runs/registry-update.csv, then tells Healthchecks.io how it went (check registry-update), which emails when
+# a run fails or none arrives within its grace time.
 
 name: Registry update
 
@@ -22,6 +24,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Note the start
+        id: start
+        run: echo "at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
       - name: Check out the archive
         uses: actions/checkout@v4
@@ -54,6 +59,7 @@ jobs:
         run: python -m pytest -q
 
       - name: Open or update the proposal
+        id: propose
         if: steps.tables.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -70,3 +76,38 @@ jobs:
             gh pr create --base main --head registry-update \
               --title "Registry update from the IGS satellite metadata file" --body-file "$RUNNER_TEMP/registry-changes.md"
           fi
+
+      - name: Add this run's line to the run log
+        if: always()
+        working-directory: archive
+        env:
+          STARTED: ${{ steps.start.outputs.at }}
+          RESULT: ${{ job.status }}
+          CHANGED: >-
+            ${{ steps.propose.outcome == 'success' && 'tables changed, proposal opened or updated'
+            || steps.tables.outputs.changed == 'true' && 'tables changed, no proposal made'
+            || 'nothing' }}
+        run: |
+          python ../scripts/log_run.py --archive . --log registry-update --job "registry update" \
+            --started "$STARTED" --result "$RESULT" --changed "$CHANGED"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add runs/registry-update.csv
+          git commit --quiet -m "Registry run: $RESULT"
+          # The archive job may have saved meanwhile; it never touches this file.
+          git push --quiet || { git pull --rebase --quiet && git push --quiet; }
+
+      - name: Tell Healthchecks.io how the run went
+        if: always()
+        env:
+          KEY: ${{ secrets.HEALTHCHECKS_PING_KEY }}  # set by Sumanth; nothing is sent until it exists
+          OUTCOME: ${{ job.status == 'success' && '0' || '1' }}  # 0 = it worked, 1 = it failed
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "Not reported to Healthchecks.io: no key."
+            exit 0
+          fi
+          KEY=$(printf %s "$KEY" | tr -d '[:space:]')  # a pasted key can carry a newline
+          tail -n 1 archive/runs/registry-update.csv 2>/dev/null \
+            | curl -fsS -m 10 --retry 3 --data-binary @- "https://hc-ping.com/$KEY/registry-update/$OUTCOME" \
+            || echo "::warning::Healthchecks.io did not take this report (a 404 means it knows no project with this ping key). It will report the run as late."
