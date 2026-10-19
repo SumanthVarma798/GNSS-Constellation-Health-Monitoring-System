@@ -15,7 +15,7 @@ from ui.components.orbit_view import NOT_REACHED, hover_cards, orbit_view_html, 
 from ui.data import GENERATION
 from ui.figures.constellation_3d import BELT_RADIUS
 from ui.figures.fleet import fleet_rows, orbit_words, plane_letters
-from ui.figures.orbits_3d import LAND_FILE, ORBIT_POINTS, latest_elements, orbit_points, position_at
+from ui.figures.orbits_3d import EARTH_KM, LAND_FILE, ORBIT_POINTS, latest_elements, orbit_points, position_at
 from ui.figures.slot_rows import slot_rows
 from ui.pages_data import load_master_map_data
 
@@ -75,6 +75,14 @@ def test_the_payload_has_one_entry_per_row_with_its_loop_position_slot_and_card(
     assert geo["state"] == palette.SLOT_OFF and geo["slot"] == "off its slot, 2.00°" and geo["name"] == "BeiDou-3 G4"
     assert missing["loop"] is None and missing["at"] is None and missing["slot_at"] is not None
     assert scene["land"] and all(abs(math.hypot(*p) - 1) < 0.01 for p in scene["land"])
+
+
+def test_the_page_gets_earths_turn_so_it_can_say_which_longitude_faces_the_viewer(history):
+    rows = slot_rows([{"Satellite": "BeiDou-3 G4", "Designated Lon (°)": 140.0}])
+    scene = orbit_view_payload(rows, history, None)
+    x, y, _ = scene["satellites"][0]["slot_at"]
+    assert (math.degrees(math.atan2(y, x)) - scene["turn"]) % 360 == pytest.approx(140.0, abs=0.01)
+    assert scene["earth_km"] == EARTH_KM
 
 
 def meo_row(norad):

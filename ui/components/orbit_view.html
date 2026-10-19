@@ -46,17 +46,49 @@ __TIP__
 .chip { display: inline-flex; font-size: 12.5px; font-weight: 600; padding: 3px 11px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); white-space: nowrap; }
 .s { font: 700 24px/1 __FONT_NUMBERS__; }
 .s small { font: 400 12px __FONT__; color: var(--muted); margin-left: 4px; }
+/* zoom: three small raised buttons in the bottom-right corner, pressed while held */
+.zoom { position: absolute; right: 12px; bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
+.zoom button { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--edge);
+  background: var(--platform); box-shadow: var(--raised-sm); color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; }
+.zoom button:hover:not(:disabled) { color: var(--accent); }
+.zoom button:active:not(:disabled) { background: var(--well); box-shadow: var(--pressed); }
+.zoom button:disabled { opacity: .4; cursor: default; }
+/* the readout, as macOS's volume indicator: the tooltip card, see-through, bottom centre; shown while the view
+   moves and faded out a moment after it stops (the script sets and clears "on") */
+.readout { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); max-width: calc(100% - 128px);
+  background: color-mix(in srgb, var(--platform) 80%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.readout.tt-card { transition: opacity 250ms ease, visibility 0s linear 250ms; }
+.readout.tt-card.on { transition: opacity 250ms ease, visibility 0s; }
+.readout .zl { display: flex; align-items: center; gap: 14px; }
+.readout b { font: 700 18px/1 __FONT_NUMBERS__; }
+.readout .bar { display: inline-flex; flex-direction: column; gap: 3px; color: var(--muted); font-size: 12px; }
+.readout .bar i { display: block; height: 6px; border: 1.5px solid var(--muted); border-top: 0; }
+.readout .fl { margin-top: 6px; font-size: 12px; }
+.readout .fl.m { margin-top: 2px; color: var(--muted); }
+.readout .fl:empty { display: none; }
+@media (max-width: 639.98px), (pointer: coarse) { .zoom button { width: 40px; height: 40px; } }
+@media (prefers-reduced-motion: reduce) { .readout.tt-card, .readout.tt-card.on { transition: none; } }
 .ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); } .idle { color: var(--idle); } .muted { color: var(--muted); }
 </style>
 </head>
 <body>
 <div class="card">
-  <canvas id="orbits" role="img" aria-label="Each satellite's orbit around Earth. Drag to turn, double-click to go back."></canvas>
+  <canvas id="orbits" role="img" aria-label="Each satellite's orbit around Earth. Drag to turn, scroll or pinch to zoom, click a satellite, an orbit or Earth to zoom to it, double-click to go back."></canvas>
   <div class="top">
     <div class="seg" id="mode" role="group" aria-label="Which satellites">
       <button type="button" data-mode="all" aria-pressed="true">All</button><button type="button" data-mode="service" aria-pressed="false">In service</button>
     </div>
     <span class="note" id="note"></span>
+  </div>
+  <div class="zoom" role="group" aria-label="Zoom">
+    <button type="button" id="zin" aria-label="Zoom in">+</button>
+    <button type="button" id="zout" aria-label="Zoom out">&minus;</button>
+    <button type="button" id="zhome" aria-label="Back to the whole view"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8a5.5 5.5 0 1 0 1.6-3.9"/><path d="M2.5 2v3.5H6"/></svg></button>
+  </div>
+  <div class="readout tt-card" id="readout" aria-hidden="true">
+    <div class="zl"><b id="zl"></b><span class="bar"><i id="bar"></i><span id="barkm"></span></span></div>
+    <div class="fl" id="focus"></div>
+    <div class="fl m" id="facing"></div>
   </div>
 </div>
 <div class="sats" id="sats" role="group" aria-label="Satellites"></div>
@@ -70,16 +102,20 @@ const $ = id => document.getElementById(id);
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const css = getComputedStyle(document.documentElement);
 const C = Object.fromEntries(["platform", "lift", "sink", "track", "fill", "ok", "warn", "bad", "idle", "muted"].map(n => [n, css.getPropertyValue("--" + n).trim()]));
-const canvas = $("orbits"), ctx = canvas.getContext("2d"), tip = $("tip");
+const canvas = $("orbits"), ctx = canvas.getContext("2d"), tip = $("tip"), readout = $("readout");
 
-const HOME = { yaw: -45, pitch: 22 };   // degrees: looking in from above the equator, as the view always opened
+const HOME = { yaw: -45, pitch: 22, zoom: 1, c: [0, 0, 0] };   // degrees, looking in from above the equator; c: the point at the centre
 const REST = .5, CROWD = .3, DIM = .12;  // orbit strength at rest, at rest with many shown, and for the rest while some are picked
 const BACK = .4, OFF = .6;              // strength behind the picture's plane, and for satellites not in service (also dashed)
 const DOT_HIT = 16, LINE_HIT = 10;      // CSS px from a dot or a line that still counts as on it
 const BELT = Array.from({ length: 121 }, (_, k) => [DATA.belt * Math.cos(k * Math.PI / 60), DATA.belt * Math.sin(k * Math.PI / 60), 0]);
 const REACH = Math.max(DATA.belt, ...SATS.flatMap(s => (s.loop || []).map(p => Math.hypot(...p))));   // over all: no jump on a switch
 const ORDER = ["ok", "warn", "bad", "idle", "muted"];   // in slot, off it, left it, not known, not scored
-let view = { ...HOME }, dpr = 1, W = 0, H = 0, scale = 1, queued = 0;
+const KM = DATA.earth_km, SPAN = REACH * 1.05;           // SPAN: Earth radii from the centre to the short side's edge at ×1
+const MAX_ZOOM = SPAN * KM / 1000, FOCUS_KM = 4000;      // closest: 1,000 km to the edge; a click flies in to 4,000 km
+const MOVE_MS = 300, FADE_MS = 1500, BAR_PX = 110;       // a flight's length; the readout stays this long after the last change
+const STILL = matchMedia("(prefers-reduced-motion: reduce)");
+let view = { ...HOME }, dpr = 1, W = 0, H = 0, fit = 1, scale = 1, queued = 0;
 let mode = "all", shown = [];   // shown: indices of the satellites the chosen set holds
 let lit = null;                    // a Set of the satellites picked out, or null
 let screen = [];                   // each shown satellite as projected in the last frame, for hit tests
@@ -96,12 +132,14 @@ function el(tag, cls, text) {
 function axes() {
   const a = view.yaw * Math.PI / 180, b = view.pitch * Math.PI / 180;
   const ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b);
-  return { r: [-sa, ca, 0], u: [-sb * ca, -sb * sa, cb], d: [cb * ca, cb * sa, sb] };
+  const A = { r: [-sa, ca, 0], u: [-sb * ca, -sb * sa, cb], d: [cb * ca, cb * sa, sb] };
+  A.cx = dot3(view.c, A.r); A.cy = dot3(view.c, A.u);
+  return A;
 }
 const dot3 = (p, v) => p[0] * v[0] + p[1] * v[1] + p[2] * v[2];
 function project(p, A) {   // screen position, depth toward the viewer, and whether Earth hides it
   const x = dot3(p, A.r), y = dot3(p, A.u), z = dot3(p, A.d);
-  return { x: W / 2 + x * scale, y: H / 2 - y * scale, z, hidden: z < 0 && x * x + y * y < 1 };
+  return { x: W / 2 + (x - A.cx) * scale, y: H / 2 - (y - A.cy) * scale, z, hidden: z < 0 && x * x + y * y < 1 };
 }
 
 /* ---------- drawing: what is behind the picture's plane, then Earth over it, then the front ---------- */
@@ -118,7 +156,7 @@ function line(pts, back, colour, width, alpha) {
   ctx.stroke();
 }
 function earth(A) {
-  const cx = W / 2, cy = H / 2, R = scale;
+  const cx = W / 2 - A.cx * scale, cy = H / 2 + A.cy * scale, R = scale, size = Math.min(4, 1.4 * Math.sqrt(view.zoom));
   const shade = ctx.createRadialGradient(cx - R * .4, cy - R * .45, R * .1, cx, cy, R);   // lit from the top left
   shade.addColorStop(0, C.lift); shade.addColorStop(.65, C.platform); shade.addColorStop(1, C.sink);
   ctx.globalAlpha = 1; ctx.fillStyle = shade;
@@ -127,14 +165,15 @@ function earth(A) {
   for (const p of DATA.land) {
     const q = project(p, A);
     if (q.z <= 0) continue;
-    ctx.globalAlpha = .3 + .6 * q.z; ctx.fillRect(q.x - .7, q.y - .7, 1.4, 1.4);
+    ctx.globalAlpha = .3 + .6 * q.z; ctx.fillRect(q.x - size / 2, q.y - size / 2, size, size);
   }
   ctx.globalAlpha = 1; ctx.strokeStyle = C.track; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.arc(cx, cy, R - .5, 0, 2 * Math.PI); ctx.stroke();
 }
 const faint = i => mode === "all" && !SATS[i].service;
 function draw() {
-  queued = 0;
+  queued = 0; scale = fit * view.zoom;
+  $("zin").disabled = view.zoom >= MAX_ZOOM - 1e-6; $("zout").disabled = view.zoom <= 1 + 1e-6;
   const A = axes(), rest = shown.length > 12 ? CROWD : REST;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
   ctx.lineCap = ctx.lineJoin = "round";
@@ -173,7 +212,7 @@ function resize() {
   const b = canvas.getBoundingClientRect(), wider = b.width !== W;
   dpr = devicePixelRatio || 1; W = b.width; H = b.height;
   canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
-  scale = Math.min(W, H) / 2 / (REACH * 1.05);   // pixels per Earth radius: the highest orbit just fits
+  fit = Math.min(W, H) / 2 / SPAN;   // pixels per Earth radius at ×1: the highest orbit just fits
   if (wider) buildChips();   // whether one chip per satellite fits in a row depends on the width
   draw();
 }
@@ -183,13 +222,13 @@ function segment(px, py, a, b) {
   const dx = b.x - a.x, dy = b.y - a.y, t = clamp(((px - a.x) * dx + (py - a.y) * dy) / (dx * dx + dy * dy || 1), 0, 1);
   return Math.hypot(a.x + t * dx - px, a.y + t * dy - py);
 }
-function hitAt(px, py) {
+function hitAt(px, py) {   // {i, p}: the satellite, and the point in space of its dot or slot (none for its orbit)
   let best = null, near = DOT_HIT;
-  for (const i of shown) [screen[i].at, screen[i].slot].forEach(q => {
+  for (const i of shown) [[screen[i].at, SATS[i].at], [screen[i].slot, SATS[i].slot_at]].forEach(([q, p]) => {
     const d = q && !q.hidden ? Math.hypot(q.x - px, q.y - py) : Infinity;
-    if (d < near) { near = d; best = i; }
+    if (d < near) { near = d; best = { i, p }; }
   });
-  if (best != null) return best;
+  if (best) return best;
   let key = [Infinity, 0];   // distance in 3 px steps, then depth: the front one wins when two are about as near
   for (const i of shown) {
     const loop = screen[i].loop;
@@ -199,7 +238,7 @@ function hitAt(px, py) {
       const d = segment(px, py, a, b);
       if (d > LINE_HIT) continue;
       const mine = [Math.round(d / 3), -(a.z + b.z)];
-      if (mine[0] < key[0] || (mine[0] === key[0] && mine[1] < key[1])) { key = mine; best = i; }
+      if (mine[0] < key[0] || (mine[0] === key[0] && mine[1] < key[1])) { key = mine; best = { i }; }
     }
   }
   return best;
@@ -242,37 +281,145 @@ function pick(index, x, y, chip) {   // one satellite, with its card
   light(index == null ? null : [index]);
   if (index != null && changed) fill(SATS[index]);
   tip.classList.toggle("on", index != null);
+  if (index != null) readout.classList.remove("on");   // never both: the card is about the pointer, the readout the view
   if (index != null) place(x, y, chip);
 }
 
-/* ---------- the canvas: hover picks, drag turns, a tap picks, double-click goes back ---------- */
-let drag = null;
+/* ---------- zoom and flights: the view keeps c at the centre; zoom 1 is the whole system, c then Earth's centre ---------- */
+let flight = 0, clickWait = 0, fading = 0, focus = null;   // focus: {name, p} for a satellite, {name, loop} for an orbit
+const wrap = deg => ((deg % 360) + 540) % 360 - 180;
+function settle(v) {   // zoom within its limits; c pulled in toward Earth's centre below ×2 so that ×1 shows everything
+  v.zoom = clamp(v.zoom, 1, MAX_ZOOM);
+  const room = SPAN * Math.min(1, v.zoom - 1), far = Math.hypot(...v.c);
+  if (far > room) v.c = v.c.map(x => x * room / far);
+  return v;
+}
+function zoomAt(factor, px = W / 2, py = H / 2) {   // the point under (px, py) stays under it
+  cancelAnimationFrame(flight); pick(null);
+  const A = axes(), before = fit * view.zoom;
+  view.zoom = clamp(view.zoom * factor, 1, MAX_ZOOM);
+  const k = 1 / before - 1 / (fit * view.zoom), dx = (px - W / 2) * k, dy = -(py - H / 2) * k;
+  view.c = view.c.map((x, j) => x + A.r[j] * dx + A.u[j] * dy);
+  settle(view);
+  if (view.zoom <= 1 + 1e-6) focus = null;   // zoomed right out: nothing is in focus any more
+  moved(); paint();
+}
+function fly(to) {   // ease to the new view; at once when the reader asks for less motion
+  cancelAnimationFrame(flight); pick(null);
+  const from = { ...view }, end = settle({ ...view, ...to });
+  end.yaw = from.yaw + wrap(end.yaw - from.yaw);   // the short way round
+  const t0 = performance.now(), step = now => {
+    const t = STILL.matches ? 1 : Math.min(1, (now - t0) / MOVE_MS), e = t < .5 ? 4 * t ** 3 : 1 - (2 - 2 * t) ** 3 / 2;
+    view = { yaw: from.yaw + (end.yaw - from.yaw) * e, pitch: from.pitch + (end.pitch - from.pitch) * e,
+             zoom: from.zoom * (end.zoom / from.zoom) ** e, c: from.c.map((x, j) => x + (end.c[j] - x) * e) };
+    moved(); draw();
+    if (t < 1) flight = requestAnimationFrame(step);
+  };
+  flight = requestAnimationFrame(step);
+}
+function home() { clearTimeout(clickWait); focus = null; fly(HOME); }
+function goTo(px, py) {   // a satellite: centre on it; an orbit: fit it; Earth: face that place; empty space: nothing
+  const hit = hitAt(px, py), A = axes();
+  if (hit && hit.p) {
+    focus = { name: SATS[hit.i].name + (hit.p === SATS[hit.i].at ? "" : "'s slot"), p: hit.p };
+    return fly({ c: hit.p, zoom: Math.max(view.zoom, SPAN * KM / FOCUS_KM) });
+  }
+  if (hit) {
+    const loop = SATS[hit.i].loop.slice(1), c = [0, 1, 2].map(j => loop.reduce((t, p) => t + p[j], 0) / loop.length);
+    const reach = Math.max(...loop.map(p => Math.max(Math.abs(dot3(p, A.r) - dot3(c, A.r)), Math.abs(dot3(p, A.u) - dot3(c, A.u)))));
+    focus = { name: SATS[hit.i].name + "'s orbit", loop };
+    return fly({ c, zoom: SPAN / (reach * 1.1) });
+  }
+  const x = (px - W / 2) / scale + A.cx, y = -(py - H / 2) / scale + A.cy;
+  if (x * x + y * y >= 1) return;
+  const p = [0, 1, 2].map(j => x * A.r[j] + y * A.u[j] + Math.sqrt(1 - x * x - y * y) * A.d[j]);
+  focus = null;
+  fly({ yaw: Math.atan2(p[1], p[0]) * 180 / Math.PI, pitch: clamp(Math.asin(p[2]) * 180 / Math.PI, -85, 85),
+        zoom: SPAN * KM / FOCUS_KM, c: [0, 0, 0] });
+}
+
+/* ---------- the readout: zoom, a scale bar, what is in focus and which way the view faces ---------- */
+const km = v => Math.round(v / 10) * 10 >= 1000 ? (Math.round(v / 10) * 10).toLocaleString("en-GB") + " km" : Math.round(v) + " km";
+function niceKm(most) { const ten = 10 ** Math.floor(Math.log10(most)); return [5, 2, 1].map(m => m * ten).find(v => v <= most); }
+const deg = (v, plus, minus) => `${Math.abs(Math.round(v))}° ${v < 0 ? minus : plus}`;
+function moved() {
+  const perPx = KM / (fit * view.zoom), bar = niceKm(BAR_PX * perPx);
+  $("zl").textContent = "×" + (view.zoom < 10 ? view.zoom.toFixed(1) : Math.round(view.zoom));
+  $("bar").style.width = Math.round(bar / perPx) + "px"; $("barkm").textContent = km(bar);
+  let words = "";
+  if (focus && focus.p) {
+    const r = Math.hypot(...focus.p) * KM;
+    words = `${focus.name}: ${km(r - KM)} above Earth, ${km(r)} from its centre`;
+  } else if (focus) {
+    const heights = focus.loop.map(p => Math.hypot(...p) * KM - KM), lo = Math.min(...heights), hi = Math.max(...heights);
+    words = `${focus.name}: ${hi - lo < 50 ? km(lo) : km(lo) + " to " + km(hi)} above Earth`;
+  }
+  $("focus").textContent = words;
+  $("facing").textContent = `Facing ${deg(wrap(view.yaw - DATA.turn), "E", "W")}, ${deg(view.pitch, "N", "S")}`;
+  if (!tip.classList.contains("on")) readout.classList.add("on");
+  clearTimeout(fading); fading = setTimeout(() => readout.classList.remove("on"), FADE_MS);
+}
+$("zin").addEventListener("click", () => fly({ zoom: view.zoom * 1.6 }));
+$("zout").addEventListener("click", () => fly({ zoom: view.zoom / 1.6 }));
+$("zhome").addEventListener("click", home);
+
+/* ---------- the canvas: hover picks, drag turns, two fingers pinch, the wheel zooms, a click flies, double-click goes back ---------- */
+let drag = null, pinch = null;
+const fingers = new Map();
 const local = e => { const b = canvas.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
-canvas.addEventListener("pointerdown", e => { drag = { x: e.clientX, y: e.clientY, moved: 0 }; canvas.setPointerCapture(e.pointerId); });
+const apart = () => { const [a, b] = fingers.values(); return Math.hypot(a.x - b.x, a.y - b.y); };
+canvas.addEventListener("pointerdown", e => {
+  fingers.set(e.pointerId, { x: e.clientX, y: e.clientY }); canvas.setPointerCapture(e.pointerId);
+  cancelAnimationFrame(flight); clearTimeout(clickWait);
+  if (fingers.size === 2) { pinch = apart(); drag = null; pick(null); }
+  else if (fingers.size === 1) drag = { x: e.clientX, y: e.clientY, moved: 0 };
+});
 canvas.addEventListener("pointermove", e => {
+  if (fingers.has(e.pointerId)) fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinch && fingers.size >= 2) {
+    const [a, b] = fingers.values(), d = apart(), r = canvas.getBoundingClientRect();
+    zoomAt(d / pinch, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top); pinch = d;
+    return;
+  }
   if (drag) {
     const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
     drag.moved += Math.abs(dx) + Math.abs(dy); drag.x = e.clientX; drag.y = e.clientY;
     if (drag.moved > 4) {
-      view.yaw -= dx * .4; view.pitch = clamp(view.pitch + dy * .4, -85, 85);
-      canvas.style.cursor = "grabbing"; pick(null); paint();
+      view.yaw -= dx * .4 / Math.sqrt(view.zoom); view.pitch = clamp(view.pitch + dy * .4 / Math.sqrt(view.zoom), -85, 85);
+      canvas.style.cursor = "grabbing"; pick(null); moved(); paint();
     }
     return;
   }
   const hit = hitAt(...local(e));
-  canvas.style.cursor = hit == null ? "" : "pointer";
-  pick(hit, e.clientX, e.clientY);
+  canvas.style.cursor = hit ? "pointer" : "";
+  pick(hit && hit.i, e.clientX, e.clientY);
 });
 const lift = e => {
+  fingers.delete(e.pointerId);
+  if (pinch) {   // the finger left after a pinch turns on from where it is; it is never a tap
+    if (fingers.size < 2) pinch = null;
+    const [rest] = fingers.values();
+    drag = rest ? { ...rest, moved: 5 } : null;
+    return;
+  }
   if (!drag) return;
   const tap = drag.moved <= 4 && e.type === "pointerup";
   drag = null; canvas.style.cursor = "";
-  if (tap) pick(hitAt(...local(e)), e.clientX, e.clientY);
+  if (!tap) return;
+  const [px, py] = local(e), hit = hitAt(px, py);
+  pick(hit && hit.i, e.clientX, e.clientY);
+  clearTimeout(clickWait); clickWait = setTimeout(() => goTo(px, py), 250);   // wait: it may be the first of a double-click
 };
 canvas.addEventListener("pointerup", lift);
 canvas.addEventListener("pointercancel", lift);
 canvas.addEventListener("pointerleave", e => { if (!drag && e.pointerType !== "touch") pick(null); });
-canvas.addEventListener("dblclick", () => { view = { ...HOME }; paint(); });
+canvas.addEventListener("dblclick", home);
+canvas.addEventListener("wheel", e => {   // only over the picture; at ×1 a scroll down is left to the page, so it never traps the reader
+  if (e.deltaY > 0 && view.zoom <= 1 + 1e-6) return;
+  e.preventDefault();
+  const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? H : 1;
+  zoomAt(Math.exp(-e.deltaY * unit * (e.ctrlKey ? .01 : .002)), ...local(e));   // ctrlKey: a trackpad pinch
+}, { passive: false });
 
 /* ---------- the chips: one per satellite while they fit in a row, else one per plane ---------- */
 function addChips(entries) {
