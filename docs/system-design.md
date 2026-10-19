@@ -23,7 +23,8 @@ approve. It never changes reference data by itself.
 flowchart TB
   igs["IGS satellite file"]:::built --> fetch["Archive job"]:::built
   gcat["Catalogue of space objects"]:::built --> fetch
-  more["Notices, news, orbital and signal data"]:::planned -.-> fetch
+  orbits["CelesTrak orbit records"]:::built --> fetch
+  more["Notices, news and signal data"]:::planned -.-> fetch
   galmon["Galmon"]:::hold -.-> fetch
   fetch --> archive[("Archive")]:::built
   archive --> regjob["Registry job"]:::built
@@ -100,7 +101,7 @@ pie showData title Estimated hours, all guesses
 | 15 | Claim extraction | 20 | Waiting on a model and a spending ceiling |
 | 16 | Change proposals from claims | 12 | Open |
 | 6 | Internet Archive capture | 3 | Later |
-| 31 | Orbital data into the archive | 6 | Later |
+| 31 | Orbital data into the archive | 6 | Built: CelesTrak's GNSS group, once a day |
 | 7 | Galmon snapshots | 8 | On hold |
 | 8, 9 | Phone database trend; NavIC signal status | 18 | Open |
 | 19, 20 | Service column; announced versus observed | 25 | Open |
@@ -196,8 +197,9 @@ Produced from the code. A test fails if this table and the code disagree.
 |---|---|---|
 | Documents are fetched | `30 0 * * *` (documents: once a day, 00:30 UTC = 06:00 India time) | `.github/workflows/archive.yml` |
 | Catalogues are fetched | `45 0 * * *` (catalogues: once a day, 00:45 UTC = 06:15 India time, after the catalogue's own daily rebuild) | `.github/workflows/archive.yml` |
+| Orbit records are fetched | `15 1 * * *` (orbital: once a day, 01:15 UTC = 06:45 India time; CelesTrak allows one download per 2 hours) | `.github/workflows/archive.yml` |
 | The registry is rebuilt | `0 1 * * 0` (Sundays 01:00 UTC = 06:30 India time: half an hour after that day's documents fetch (see archive.yml), so the registry builds from a fresh copy) | `.github/workflows/registry-update.yml` |
-| Sources archived, by group | documents: 1, catalogues: 2, orbital: 0, news: 0 | `evidence/sources.py` |
+| Sources archived, by group | documents: 1, catalogues: 2, orbital: 1, news: 0 | `evidence/sources.py` |
 | Grades that clear the bar alone | A | `evidence/settings.py` |
 | Grades lifted by a second source | B | `evidence/settings.py` |
 | Grades lifted by our own data | B | `evidence/settings.py` |
