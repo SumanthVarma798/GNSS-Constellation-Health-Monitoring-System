@@ -1,6 +1,9 @@
 # Keeps a raw copy of every archived source whenever it changes.
 # Writes to the private archive repository only, and only when something changed.
 # "Last checked" is the time of this job's last successful run for that group.
+# Every run adds one line to the archive's run log, runs/archive.csv. A failed download is tried
+# again (see DOWNLOAD_TRIES in evidence/settings.py), never sooner than the source's minimum gap.
+# A failed run fails the job, and GitHub emails whoever last edited the schedule lines below.
 #
 # CADENCE IS SET HERE. Each group of sources (see evidence/sources.py) has one
 # schedule line below. To change how often a group is fetched, change its line
@@ -35,7 +38,7 @@ jobs:
     # Only in the private working copy. Anyone who copies this file elsewhere must opt in.
     if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20  # retries: up to 3 tries of 60 s, 60 s apart, for each of the 2 catalogues
     steps:
       - uses: actions/checkout@v4
       - name: Check out the archive
@@ -78,18 +81,15 @@ jobs:
             python scripts/archive_sources.py --archive archive --group "$GROUP"
           fi
 
-      - name: Save the changes to the archive
+      - name: Save the changes and the run log line to the archive
         working-directory: archive
         run: |
           git add --all
-          if git diff --cached --quiet; then
-            echo "Nothing changed at any source. Nothing saved."
-            exit 0
-          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit --quiet -m "Archive update, new copies: $(git diff --cached --name-only -- objects | wc -l | tr -d ' ')"
-          git push --quiet
+          git commit --quiet -m "Archive run, new copies: $(git diff --cached --name-only -- objects | wc -l | tr -d ' ')"
+          # The registry job may have saved its own run log line meanwhile; it never touches these files.
+          git push --quiet || { git pull --rebase --quiet && git push --quiet; }
 
       - name: Fail if any source could not be fetched
         if: steps.fetch.outcome == 'failure'

@@ -3,12 +3,22 @@
 Addresses of outside sources live in evidence/sources.py. The system-letter
 mapping lives in registry/constellations.csv.
 """
+from datetime import timedelta
 from pathlib import Path
 
 # --- Requests to outside servers ---
 
 REQUEST_TIMEOUT_SECONDS = 60  # how long to wait for any outside server
 USER_AGENT = "gnss-evidence-archive/0.1 (scheduled research fetch)"  # how we name ourselves to them
+
+# Each source's minimum gap between two downloads of the same address, by host name. Every fetcher reads it here:
+# the archive job and the dashboard. CelesTrak asks for one download per 2 hours at most, and blocked this
+# machine on 17 Oct 2026 for downloading more often (issue 76).
+MIN_GAP_BETWEEN_DOWNLOADS = {"celestrak.org": timedelta(hours=2)}
+
+DOWNLOAD_TRIES = 3                # a failed download is tried this many times in one run...
+WAIT_BETWEEN_TRIES_SECONDS = 60   # ...with this wait between, unless that is shorter than the source's gap: then once
+RETRY_STATUSES = (429, 500, 502, 503, 504)  # replies worth another try; any other reply is the source's answer
 
 # --- The raw-copy archive ---
 
@@ -18,6 +28,10 @@ GONE_STATUSES = (404, 410)         # the page no longer exists: a change worth r
 ARCHIVE_OBJECTS_DIR = "objects"          # folder of raw copies, inside an archive folder
 ARCHIVE_VERSIONS_FILE = "versions.csv"   # one row per change, inside an archive folder
 ARCHIVE_VERSION_COLUMNS = ["address", "fetched_at", "status", "sha256", "bytes", "content_type", "wayback_url"]
+# The run log: one line per run of a scheduled job, inside an archive folder. One file per job file
+# (runs/archive.csv, runs/registry-update.csv), so two jobs saving at once never edit the same file.
+ARCHIVE_RUNS_DIR = "runs"
+ARCHIVE_RUN_COLUMNS = ["job", "started", "ended", "result", "changed"]
 
 # --- The registry tables ---
 

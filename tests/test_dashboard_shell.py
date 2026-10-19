@@ -14,7 +14,7 @@ from streamlit.testing.v1.element_tree import ButtonGroup
 from data import celestrak
 from test_celestrak import IRNSS_1B
 from test_golden_scores import GOLDEN
-from ui.shell import age_words
+from ui.shell import age_words, failing_words
 
 ROOT = Path(__file__).resolve().parent.parent
 FROZEN = datetime.fromisoformat(GOLDEN["frozen_utc"])
@@ -33,7 +33,8 @@ def segmented_controls_rerun(monkeypatch):
 @pytest.fixture(autouse=True)
 def celestrak_answers_with_nothing_new(monkeypatch):
     """No network in tests: CelesTrak 'answers' with no rows unless a test says otherwise."""
-    monkeypatch.setattr(celestrak, "state", {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True})
+    monkeypatch.setattr(celestrak, "state", {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True,
+                                             "failing_since": None})
     monkeypatch.setattr(celestrak, "fetch", lambda norads: ({}, set()))
 
 
@@ -192,7 +193,7 @@ def test_the_data_chip_is_amber_after_a_week():
 
     assert 'class="chip ok">Orbit data 4 Oct, 2 days old' in fresh
     assert 'class="chip warn">Orbit data 4 Oct, 10 days old' in stale
-    assert "Refresh failed" not in fresh
+    assert "failing" not in fresh
 
 
 def test_rows_from_celestrak_make_the_chip_say_today_and_its_time(monkeypatch):
@@ -218,8 +219,19 @@ def test_a_failed_refresh_keeps_the_archive_and_says_so(monkeypatch):
     chips = " ".join(htmls(at))
 
     assert 'class="chip ok">Orbit data 4 Oct, 2 days old' in chips
-    assert 'class="chip warn">Refresh failed' in chips
+    assert 'class="chip warn">CelesTrak failing since 12:00' in chips   # the frozen clock's time, in UTC
     assert len(tiles(at)) == 8
+
+
+def test_a_source_failing_since_yesterday_says_since_when(monkeypatch):
+    def down(norads):
+        raise requests.HTTPError(403)
+    monkeypatch.setattr(celestrak, "fetch", down)
+    celestrak.state.update(tried=FROZEN, ok=False, failing_since=FROZEN)
+    chips = " ".join(htmls(run(now=FROZEN + timedelta(days=1))))   # due again: tried, and refused again
+
+    assert 'class="chip warn">CelesTrak failing since 6 Oct 12:00' in chips
+    assert 'class="chip ok">Orbit data 4 Oct, 3 days old' in chips   # the saved copies stay in use
 
 
 def test_age_words():
@@ -231,6 +243,13 @@ def test_age_words():
     assert age_words(taken, now.replace(day=5)) == ("Orbit data 4 Oct, 1 day old", "ok")
     assert age_words(taken, now.replace(day=4)) == ("Orbit data 4 Oct 04:19", "ok")
     assert age_words("Unknown", now)[1] == "idle"
+
+
+def test_failing_words():
+    now = datetime.fromisoformat("2026-10-19T10:00:00+00:00")
+
+    assert failing_words(now.replace(hour=8, minute=2), now) == "CelesTrak failing since 08:02"
+    assert failing_words(now.replace(day=18, hour=23), now) == "CelesTrak failing since 18 Oct 23:00"
 
 
 def _on(page):
