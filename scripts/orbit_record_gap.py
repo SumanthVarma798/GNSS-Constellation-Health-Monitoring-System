@@ -1,0 +1,161 @@
+"""How far off each tracked satellite's orbit record is, measured against its own broadcast orbit.
+
+For one UTC day, every 15 minutes: where the orbit record nearest in time (TLE, rolled with SGP4)
+puts each dashboard satellite, against where the satellite's broadcast orbit puts it (good to
+metres). Prints a Markdown report. Read-only.
+
+    python scripts/orbit_record_gap.py                   # yesterday, from BKG's copy of the IGS file
+    python scripts/orbit_record_gap.py --day 2026-10-17 --file BRDC00IGS_R_20262900000_01D_MN.rnx
+
+Orbit records: the bundled history, plus CelesTrak's newest through data.celestrak (which keeps to
+CelesTrak's 2 hours and its saved copy). Issue 77.
+"""
+import argparse
+import csv
+import gzip
+import json
+import math
+import statistics
+import sys
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+import numpy as np
+import requests
+from skyfield.api import EarthSatellite, load
+from skyfield.framelib import itrs
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from analysis.broadcast_orbit import FIT, nearest, position, read_navigation, seconds_from_toe, system_time  # noqa: E402
+from data import celestrak  # noqa: E402
+
+ROOT = Path(__file__).resolve().parent.parent
+# The IGS merged navigation file for one day, as BKG serves it without a login (checked 19 Oct 2026).
+BKG = "https://igs.bkg.bund.de/root_ftp/IGS/BRDC/{year}/{doy:03d}/BRDC00IGS_R_{year}{doy:03d}0000_01D_MN.rnx.gz"
+SAVED = Path.home() / ".cache" / "gnss-health-monitor" / "broadcast"   # one copy per day, outside the repository
+STEP = timedelta(minutes=15)
+HISTORIES = ("navic", "qzss", "beidou3")
+_ts = load.timescale()
+
+
+def navigation_text(day, file=None):
+    """The day's navigation file as text: the given file, the saved copy, or BKG's (then saved)."""
+    if file:
+        return Path(file).read_text()
+    doy = day.timetuple().tm_yday
+    saved = SAVED / f"BRDC00IGS_R_{day.year}{doy:03d}0000_01D_MN.rnx.gz"
+    if not saved.exists():
+        reply = requests.get(BKG.format(year=day.year, doy=doy), timeout=60)
+        reply.raise_for_status()
+        saved.parent.mkdir(parents=True, exist_ok=True)
+        saved.write_bytes(reply.content)
+    return gzip.decompress(saved.read_bytes()).decode("ascii", "replace")
+
+
+def leap_seconds(text):
+    """GPS time minus UTC, from the file header."""
+    line = next(line for line in text.splitlines() if "LEAP SECONDS" in line)
+    return int(line[:6])
+
+
+def tracked(day):
+    """[(svn, dashboard name, catalogue number, signal ID that day)] from the registry tables."""
+    with open(ROOT / "registry" / "satellites.csv", newline="") as handle:
+        catalogue = {row["svn"]: int(row["catalogue_no"]) for row in csv.DictReader(handle)}
+    noon = f"{day.isoformat()}T12:00:00Z"
+    with open(ROOT / "registry" / "signal_ids.csv", newline="") as handle:
+        held = {row["svn"]: row["signal_id"] for row in csv.DictReader(handle)
+                if row["valid_from"] <= noon and (not row["valid_to"] or row["valid_to"] > noon)}
+    with open(ROOT / "registry" / "dashboard_satellites.csv", newline="") as handle:
+        return [(row["svn"], row["dashboard_name"], catalogue[row["svn"]], held.get(row["svn"]))
+                for row in csv.DictReader(handle)]
+
+
+def orbit_records(catalogue_numbers, now):
+    """{catalogue number: [(epoch, line1, line2), ...] oldest first}: bundled history plus CelesTrak's newest."""
+    records = {}
+    for name in HISTORIES:
+        history = json.loads((ROOT / "data" / f"{name}_gp_history.json").read_text())["satellites"]
+        for rows in history.values():
+            for row in rows:
+                records.setdefault(int(row["NORAD_CAT_ID"]), []).append(row)
+    for norad, rows in celestrak.refresh(sorted(catalogue_numbers), now)["rows"].items():
+        records.setdefault(norad, []).extend(rows)
+    out = {}
+    for norad, rows in records.items():
+        unique = {row["EPOCH"]: row for row in rows}
+        out[norad] = sorted((datetime.fromisoformat(epoch).replace(tzinfo=timezone.utc), row["TLE_LINE1"], row["TLE_LINE2"])
+                            for epoch, row in unique.items())
+    return out
+
+
+def compare(broadcast, records, signal_id, leap, day):
+    """Per 15 minutes a broadcast record covers: (gap km, along km, cross km, radial km, broadcast longitude, UTC); and the last orbit record used."""
+    samples, used = [], None
+    for k in range(int(timedelta(days=1) / STEP)):
+        utc = datetime.combine(day, datetime.min.time(), timezone.utc) + k * STEP
+        if not records:
+            break
+        epoch, line1, line2 = min(records, key=lambda record: abs(record[0] - utc))   # nearest in time, either side
+        used = epoch
+        own = system_time(utc.replace(tzinfo=None), signal_id, leap)
+        record = nearest(broadcast, own)
+        if abs(seconds_from_toe(record, own)) > FIT:              # no broadcast record covers this moment
+            continue
+        fixed = np.array(position(record, own))
+        t = _ts.from_datetime(utc)
+        inertial = itrs.rotation_at(t).T @ fixed                       # Earth-fixed -> the frame SGP4's output uses
+        at = EarthSatellite(line1, line2, ts=_ts).at(t)
+        guess, speed = at.position.km, at.velocity.km_per_s
+        radial = guess / np.linalg.norm(guess)
+        cross = np.cross(guess, speed) / np.linalg.norm(np.cross(guess, speed))
+        along = np.cross(cross, radial)
+        gap = inertial - guess                                         # where it is, minus where the record says
+        samples.append((float(np.linalg.norm(gap)), float(gap @ along), float(gap @ cross), float(gap @ radial),
+                        math.degrees(math.atan2(fixed[1], fixed[0])), utc))
+    return samples, used
+
+
+def report(day, file=None, now=None):
+    now = now or datetime.now(timezone.utc)
+    text = navigation_text(day, file)
+    leap, broadcast = leap_seconds(text), read_navigation(text)
+    satellites = tracked(day)
+    records = orbit_records([norad for _, _, norad, _ in satellites], now)
+    lines = [f"# How far off each orbit record is, {day.isoformat()}", "",
+             "Gap = distance between where the orbit record nearest in time (rolled to the moment with SGP4) puts the satellite and "
+             "where its own broadcast orbit puts it, every 15 minutes over the day (UTC) that a broadcast record covers. Along: + means the satellite "
+             "is ahead of where the record says. Broadcast orbits are good to metres; a gap of kilometres is the record's.",
+             "", "| Satellite | Signal ID | Record from | Days between record and last sample | Typical gap | Largest gap | Mostly | Mean longitude (broadcast) |",
+             "|---|---|---|---|---|---|---|---|"]
+    for svn, name, norad, signal_id in satellites:
+        if signal_id not in broadcast:
+            lines.append(f"| {name} | {signal_id or 'none'} | | | | | not in the day's broadcast file | |")
+            continue
+        samples, used = compare(broadcast[signal_id], records.get(norad, []), signal_id, leap, day)
+        if not samples:
+            lines.append(f"| {name} | {signal_id} | no orbit record | | | | | |")
+            continue
+        gaps = [s[0] for s in samples]
+        parts = [statistics.mean(abs(s[i]) for s in samples) for i in (1, 2, 3)]
+        biggest = max(range(3), key=lambda i: parts[i])
+        sign = statistics.mean(s[biggest + 1] for s in samples)
+        mostly = [("ahead" if sign > 0 else "behind") + " on its path", "off its orbit plane",
+                  "higher" if sign > 0 else "lower"][biggest]
+        longitude = math.degrees(math.atan2(statistics.mean(math.sin(math.radians(s[4])) for s in samples),
+                                            statistics.mean(math.cos(math.radians(s[4])) for s in samples)))
+        age = abs(samples[-1][5] - used).total_seconds() / 86400
+        lines.append(f"| {name} | {signal_id} | {used:%d %b %H:%M} | {age:.1f} days | {statistics.median(gaps):.1f} km | "
+                     f"{max(gaps):.1f} km | {mostly} | {longitude:.2f}° |")
+    lines += ["", f"Broadcast file: IGS merged navigation file for the day, GPS - UTC = {leap} s from its header. "
+              "Orbit records: the bundled history plus CelesTrak's newest."]
+    return "\n".join(lines)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--day", type=lambda s: datetime.strptime(s, "%Y-%m-%d").date(),
+                        default=(datetime.now(timezone.utc) - timedelta(days=1)).date())
+    parser.add_argument("--file", help="a local RINEX 3 navigation file instead of BKG's copy")
+    arguments = parser.parse_args()
+    print(report(arguments.day, arguments.file))
