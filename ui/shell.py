@@ -12,7 +12,7 @@ import streamlit as st
 
 from config.config import DEFAULT_PARAMS
 from data import celestrak
-from ui import data, surfaces
+from ui import changes, data, surfaces
 
 # Pages with their own filters: the bar shows no constellation, window or thresholds there.
 OWN_FILTERS = {"Master map"}
@@ -224,6 +224,7 @@ def top_bar(current):
         with refresh_box:
             _refresh(names, window_days, gear_scope)
     _page_tabs(current)
+    changes.show(CONSTELLATIONS if current.title in OWN_FILTERS else names)   # the master map shows every constellation
 
 
 def _page_tabs(current):
