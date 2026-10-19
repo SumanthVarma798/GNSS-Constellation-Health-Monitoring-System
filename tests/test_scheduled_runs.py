@@ -28,7 +28,7 @@ def answers(monkeypatch, *replies):
     """requests.get gives these replies in turn, raising any that is an exception. Returns (addresses asked, waits)."""
     replies, asked, waits = list(replies), [], []
 
-    def get(address, timeout, headers):
+    def get(address, timeout, headers, **_):   # **_: the redirect check (issue 13)
         asked.append(address)
         reply = replies.pop(0)
         if isinstance(reply, Exception):
