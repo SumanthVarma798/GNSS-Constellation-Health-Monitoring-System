@@ -110,4 +110,4 @@ jobs:
           KEY=$(printf %s "$KEY" | tr -d '[:space:]')  # a pasted key can carry a newline
           tail -n 1 archive/runs/registry-update.csv 2>/dev/null \
             | curl -fsS -m 10 --retry 3 --data-binary @- "https://hc-ping.com/$KEY/registry-update/$OUTCOME" \
-            || echo "::warning::Healthchecks.io did not take this report (a 404 means it knows no project with this ping key). It will report the run as late."
+            || echo "::warning::Healthchecks.io did not take this report. A 404 means the ping key is wrong or there is no check with the slug registry-update. It will report the run as late."
