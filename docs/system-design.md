@@ -1,6 +1,6 @@
 # GNSS evidence pipeline: system design
 
-**As of 12 Oct 2026.** The one page that says what the plan is, what is built, what remains,
+**As of 19 Oct 2026.** The one page that says what the plan is, what is built, what remains,
 and what is assumed. A pull request that changes any of this changes this page too.
 
 GNSS is Global Navigation Satellite System. IGS is the International GNSS Service.
@@ -23,7 +23,9 @@ approve. It never changes reference data by itself.
 flowchart TB
   igs["IGS satellite file"]:::built --> fetch["Archive job"]:::built
   gcat["Catalogue of space objects"]:::built --> fetch
-  more["Notices, news, orbital and signal data"]:::planned -.-> fetch
+  orbits["CelesTrak orbit records"]:::built --> fetch
+  news["News feeds, pages and linked posts"]:::built --> fetch
+  more["Notices and signal data"]:::planned -.-> fetch
   galmon["Galmon"]:::hold -.-> fetch
   fetch --> archive[("Archive")]:::built
   archive --> regjob["Registry job"]:::built
@@ -58,9 +60,9 @@ Solid arrows carry data today. Dotted arrows are not wired yet.
 
 | Box | What it does |
 |---|---|
-| Archive job | Fetches each source, and keeps a raw copy only when it has changed |
+| Archive job | Fetches each source, trying a failed download again within the source's limits, and keeps a raw copy only when it has changed |
 | Registry job | Rebuilds the table of satellites from the archived copy, and proposes any change to a person |
-| Archive | A private repository of raw copies, each named by its hash and never overwritten |
+| Archive | A private repository of raw copies, each named by its hash and never overwritten, and the run log: one line per run of each scheduled job (job, start, end, result, what changed) |
 | Registry | Plain-text tables saying which satellite is which, and what a second source (the catalogue) says about its owner and status. The master map page shows it: every identifier of a spacecraft resolved to one master ID, and who held each signal ID when. |
 | Query store | A small database rebuilt from the archive and the registry on every run |
 | Bar and labels | Decides whether an item is confirmed, probable or unconfirmed (section 6) |
@@ -70,7 +72,7 @@ Solid arrows carry data today. Dotted arrows are not wired yet.
 
 ```mermaid
 pie showData title Estimated hours, all guesses
-  "Built" : 73
+  "Built" : 83
   "Remaining" : 197
 ```
 
@@ -88,6 +90,7 @@ pie showData title Estimated hours, all guesses
 | 39 | Parts out of step: keep working, and say so visibly | 6 | Parts 1 and 2 built (about 4 hours): notices for every satellite left out, set aside or partly scored. Part 3, dates and a staleness check, is open. |
 | 42 | Decide where scheduled jobs run and where raw copies are kept | not sized | Decided 12 Oct 2026: stay on GitHub while its timer works. |
 | 44 | Scheduled jobs in one container image, run by Kubernetes CronJob locally | 8 | Parked: not needed while GitHub's timer works |
+| 79 | Production-grade running: retries, run log, alerts, late-source notices | 10 | Built: retries within each source's limits, a run log in the archive, the dashboard says since when CelesTrak has been failing, and Healthchecks.io emails when a scheduled run fails or does not arrive (once Sumanth has made the account and the key). |
 | 45 | Archive writes through one interface: a folder today, an object store later | 5 | Parked until the archive's size starts to matter |
 | 47 | Demo for the team call, Sat 17 Oct 2026 | tracker | Items 48 to 51, and 23 |
 | 48 | Demo A. The look: one theme and reusable parts | 6 | Built |
@@ -95,12 +98,12 @@ pie showData title Estimated hours, all guesses
 | 50 | Demo C. Orbit pictures: slot belt, 3D view, score parts | 9 | Built |
 | 51 | Demo D. Menu, How it works page, new look on the existing tabs | 6 | Open; needs 48, 49 and 50 |
 | 10 | Notices ledger: GPS advisories | 10 | Open, after the call |
-| 13 | News, official pages, linked social posts | 14 | Waiting on a list of sources |
+| 13 | News, official pages, linked social posts | 14 | Candidates in `evidence/source_candidates.csv`, waiting on the team's grades. The 45 whose check worked are archived on a schedule, provisional, deciding nothing; feed items are read into news records (`evidence/news.py`) |
 | 14 | Owner and status per satellite, from a second source | 3 | Built; joining the weekly proposal is a follow-up |
 | 15 | Claim extraction | 20 | Waiting on a model and a spending ceiling |
 | 16 | Change proposals from claims | 12 | Open |
 | 6 | Internet Archive capture | 3 | Later |
-| 31 | Orbital data into the archive | 6 | Later |
+| 31 | Orbital data into the archive | 6 | Built: CelesTrak's GNSS group, once a day |
 | 7 | Galmon snapshots | 8 | On hold |
 | 8, 9 | Phone database trend; NavIC signal status | 18 | Open |
 | 19, 20 | Service column; announced versus observed | 25 | Open |
@@ -196,14 +199,20 @@ Produced from the code. A test fails if this table and the code disagree.
 |---|---|---|
 | Documents are fetched | `30 0 * * *` (documents: once a day, 00:30 UTC = 06:00 India time) | `.github/workflows/archive.yml` |
 | Catalogues are fetched | `45 0 * * *` (catalogues: once a day, 00:45 UTC = 06:15 India time, after the catalogue's own daily rebuild) | `.github/workflows/archive.yml` |
+| Orbit records are fetched | `15 1 * * *` (orbital: once a day, 01:15 UTC = 06:45 India time; CelesTrak allows one download per 2 hours) | `.github/workflows/archive.yml` |
+| News feeds and pages are fetched | `50 */3 * * *` (news: every 3 hours from 00:50 UTC = 06:20 India time; first, to measure how often feeds change (issue 13)) | `.github/workflows/archive.yml` |
+| Social media feeds are fetched | `40 1 * * *` (social: once a day, 01:40 UTC = 07:10 India time; Reddit refuses requests in quick succession) | `.github/workflows/archive.yml` |
 | The registry is rebuilt | `0 1 * * 0` (Sundays 01:00 UTC = 06:30 India time: half an hour after that day's documents fetch (see archive.yml), so the registry builds from a fresh copy) | `.github/workflows/registry-update.yml` |
-| Sources archived, by group | documents: 1, catalogues: 2, orbital: 0, news: 0 | `evidence/sources.py` |
+| Sources archived, by group | documents: 1, catalogues: 2, orbital: 1, news: 44, social: 6 | `evidence/sources.py` |
 | Grades that clear the bar alone | A | `evidence/settings.py` |
 | Grades lifted by a second source | B | `evidence/settings.py` |
 | Grades lifted by our own data | B | `evidence/settings.py` |
 | Grades that count as a second source | A, B, C, D | `evidence/settings.py` |
 | The three labels | confirmed, probable, unconfirmed | `evidence/settings.py` |
 | Longest wait for an outside server | 60 seconds | `evidence/settings.py` |
+| A failed download is tried | 3 times, 60 seconds apart; once a run where that is sooner than the source's gap | `evidence/settings.py` |
+| Shortest gap between two requests to one site | celestrak.org: 2 hours, reddit.com: 2 minutes, news.google.com: 10 seconds, any other site: 5 seconds | `evidence/settings.py` |
+| A site that refuses us waits | 1 hour, doubling with each refusal in a row, at most 7 days; refusals are 403, 429 or no answer | `evidence/settings.py` |
 | Largest copy the archive keeps | 50 MB | `evidence/settings.py` |
 | Statuses that mean a page is gone | 404, 410 | `evidence/settings.py` |
 | How our requests name themselves | `gnss-evidence-archive/0.1 (scheduled research fetch)` | `evidence/settings.py` |
@@ -224,9 +233,12 @@ Produced from the code. A test fails if this table and the code disagree.
 | 9 | Scoreboard | Satellites within a constellation by default; weights set by hand later |
 | 10 | Team call, 17 Oct | Show findings and two questions; say the private copy exists |
 | - | Archive layout | Each copy named by its hash, never overwritten |
-| - | What the archive records | Only changes. "Last checked" is the last successful run of the job. |
+| - | What the archive records | Only changes, plus one line per run of each scheduled job in its run log (`runs/<job file>.csv`). "Last checked" is the last run logged as ok. |
+| - | Run log | A file in the archive, not a hosted logging service: the free ones found (Grafana Cloud, Axiom, Better Stack) keep logs 3 to 30 days and need an account, for about four lines a day. Decided 19 Oct 2026 at Sumanth's request. |
+| - | Alerts | Healthchecks.io (open source, free hosted tier of 20 checks). Each scheduled run reports how it went, with its run log line, to one check per job: `archive-documents`, `archive-catalogues`, `archive-orbital`, `registry-update`. It emails when a run fails, or when none arrives within 8 hours of its written time, which also catches a run GitHub never starts. GitHub's own failure email does not reach Sumanth (checked by him, 19 Oct 2026). |
+| - | Limits per source | One place, `MIN_GAP_BETWEEN_DOWNLOADS` in `evidence/settings.py`, read by the archive job and the dashboard. A retry that would come sooner than a source's gap is not made. |
 | - | Storage rule | The database keeps a reference to a document, never the document |
-| - | Cadence | Documents daily at 6 AM India time; catalogues daily at 6:15 AM; registry on Sundays at 6:30 AM. Short cadences first, accepting the storage; lengthen them as the product matures. |
+| - | Cadence | Documents daily at 6 AM India time; catalogues daily at 6:15 AM; orbit records daily at 6:45 AM; news every 3 hours, to measure how often each feed changes (issue 13); social media daily at 7:10 AM; registry on Sundays at 6:30 AM. Short cadences first, accepting the storage; lengthen them as the product matures. |
 | - | Changes on the dashboard | Always shown visually, with colour. If there is too much to show, add filters. A satellite is added or removed only with approval and a traceable record. |
 | - | GitHub-only is temporary | Scheduled jobs and raw copies will move off GitHub (issue 42). Code, registry tables and approvals stay on GitHub. |
 | - | Scheduler | Stay on GitHub while its timer works; do not add complexity. If it stops working, the agreed next step is Kubernetes CronJob, then Argo Workflows when a job first needs steps that wait on each other or on a person. |
@@ -241,9 +253,11 @@ Produced from the code. A test fails if this table and the code disagree.
 |---|---|
 | The IGS file is right about which satellite is which | Checked once against live signals for BeiDou, 8 Oct 2026. The catalogue agrees on the launch designator of 292 of 294 satellites, 9 Oct 2026; the other two are not in it yet. |
 | GitHub runs scheduled jobs close to on time | **Late, not broken.** All 6 scheduled runs from 10 to 12 Oct 2026 started and succeeded, each about 5¾ hours late: a job due at 6:00 AM India time runs near 11:50 AM (checked). A daily fetch tolerates that; nothing may depend on two jobs running in a set order. |
-| GitHub keeps a job's run history for about 90 days | Read, not verified. Beyond that, "last checked" rests on the schedule. |
+| GitHub keeps a job's run history for about 90 days | Read, not verified. The run log in the archive keeps every run since 19 Oct 2026. |
+| GitHub emails a failed scheduled run to the person who last changed its schedule line | Source summary (community answers, not GitHub's documentation). It does not reach Sumanth (checked by him, 19 Oct 2026), so alerts go through Healthchecks.io. |
+| A run starts within 8 hours of its written time | Runs were 4 to 6½ hours late from 10 to 16 Oct 2026 (checked). Healthchecks.io's grace time is set to 8 hours on that basis; a run later than that is reported as missing. |
 | The archive's change log is only ever added to | True by construction today. Document numbers depend on it. |
-| A source can be told apart by its website's host name | True for the one source so far. |
+| A source can be told apart by its website's host name | True for the three sources so far. |
 | Volumes stay small enough for a git repository | A guess: a few hundred changed pages a month. The catalogue adds about 24 MB before compression each time it changes. It changed on 2 of the first 3 days (checked), so perhaps 0.8 GB a year after compression (guess). GitHub advises keeping a repository under about 1 GB (source summary), so this cadence has roughly a year before it must change or the copies must move. |
 | Hours in section 3 | All guesses. |
 
