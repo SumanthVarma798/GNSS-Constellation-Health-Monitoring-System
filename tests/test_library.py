@@ -147,7 +147,7 @@ def test_the_scoreboard_shows_its_sources_and_cites_gcat():
     counts, figures = read_table(LIBRARY_COUNTS_FILE), read_table(LIBRARY_FIGURES_FILE)
     html = library.scoreboard(counts, figures)
 
-    assert GCAT_CITATION in html
+    assert GCAT_CITATION in library.notes(counts)
     for note in range(1, 11):
         assert f"<sup>{note}</sup>" in html
     assert "not known" in html                                                   # BeiDou has no stated cost

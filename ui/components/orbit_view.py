@@ -24,6 +24,7 @@ from ui.figures.slot_rows import as_number, slot_words
 from ui.orbit_section import CHIP_STATUS
 from ui.pages_data import load_master_map_data
 from ui.theme import root_block
+from ui.tooltip import CARD_CSS
 
 PAGE_FILE = Path(__file__).with_name("orbit_view.html")
 NOT_SCORED = "not scored"
@@ -96,7 +97,7 @@ def orbit_view_html(rows, history, health_df, fleet=(), live=None):
     """The finished page: colours and fonts first, the data last so it is never searched for placeholders."""
     page = PAGE_FILE.read_text(encoding="utf-8")
     for placeholder, text in {"__ROOT__": root_block(), "__FONT__": palette.FONT,
-                              "__FONT_NUMBERS__": palette.FONT_NUMBERS}.items():
+                              "__FONT_NUMBERS__": palette.FONT_NUMBERS, "__TIP__": CARD_CSS}.items():
         page = page.replace(placeholder, text)
     payload = orbit_view_payload(rows, history, health_df, fleet, live)
     return page.replace("const DATA = __DATA__;", f"const DATA = {embed(payload)};", 1)

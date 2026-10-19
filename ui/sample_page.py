@@ -11,7 +11,7 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from ui import palette, surfaces
+from ui import palette, reveal, surfaces, tooltip
 from ui.theme import apply_theme
 
 st.set_page_config(page_title="Look sample", layout="wide")
@@ -33,12 +33,10 @@ surfaces.show(
 for status in ("ok", "warn", "bad"):
     surfaces.show(surfaces.notice(f"A {status} notice says what happened in words.", status))
 surfaces.show(surfaces.big_number("24 of 31", "satellites scored this run"))
-surfaces.show(
-    surfaces.hover_legend(
-        [(palette.SLOT_COLOURS[state], state) for state in palette.SLOT_COLOURS],
-        label="Slot legend",
-    )
-)
+surfaces.show(tooltip.legend([(palette.SLOT_COLOURS[state], state) for state in palette.SLOT_COLOURS], "Slot legend")
+              + " " + tooltip.tip("A word with a tip", "The same card opens on hover, focus and tap."))
+reveal.section("sample", "An expandable section", "2 rows · 1 needs a look",
+               '<p class="small">Hidden detail, shown on request; the open state is kept for the session.</p>')
 
 st.header("Streamlit built-ins")
 cols = st.columns(3)
@@ -53,9 +51,6 @@ st.selectbox("A select box", ["GPS", "Galileo", "BeiDou"])
 tab_one, tab_two = st.tabs(["First tab", "Second tab"])
 tab_one.write("Content of the first tab.")
 tab_two.write("Content of the second tab.")
-
-with st.expander("An expander"):
-    st.write("Hidden detail, shown on request.")
 
 st.warning("A built-in warning.")
 st.info("A built-in note.")

@@ -24,6 +24,7 @@ from plotly.subplots import make_subplots
 
 from evidence import settings
 from ui import palette
+from ui.tooltip import PLOTLY_HOVER
 
 EAST_WEST = "east-west"
 NORTH_SOUTH = "north-south"
@@ -127,7 +128,7 @@ def burn_timeline(burns, satellites, start, end):
         height=ROW_PX * max(len(satellites), 1) + SLIDER_PX, margin={"l": 110, "r": 16, "t": 8, "b": 8},
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", barmode="overlay",
         font={"color": palette.INK}, showlegend=False,
-        hoverlabel={"bgcolor": palette.PLATFORM, "font": {"color": palette.INK}},
+        hoverlabel=PLOTLY_HOVER,
         xaxis={"type": "date", "range": [first, end], "showgrid": False, "linecolor": palette.TRACK,
                "tickcolor": palette.TRACK, "rangeslider": {"visible": True, "range": [start, end], "thickness": 0.1,
                                                            "bgcolor": palette.WELL, "bordercolor": palette.TRACK}},
@@ -175,7 +176,7 @@ def burn_cadence(burns, satellites):
         height=CELL_PX * rows + 70, margin={"l": 60, "r": 16, "t": 50, "b": 30},
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font={"color": palette.INK},
         legend={"orientation": "h", "x": 0, "y": 1.12, "bgcolor": "rgba(0,0,0,0)"},
-        hoverlabel={"bgcolor": palette.PLATFORM, "font": {"color": palette.INK}})
+        hoverlabel=PLOTLY_HOVER)
     return fig
 
 

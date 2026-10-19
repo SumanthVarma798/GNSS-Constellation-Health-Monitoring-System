@@ -15,9 +15,9 @@ from analysis.dop_calculations import assess_dop_quality
 from ui import geometry_settings as gs
 from ui import palette, surfaces
 from ui.figures.orbits_3d import LAND_FILE
+from ui.tooltip import PLOTLY_HOVER
 
 CLEAR = "rgba(0,0,0,0)"
-HOVER = {"bgcolor": palette.PLATFORM, "font": {"color": palette.INK}}
 AXIS = {"linecolor": palette.TRACK, "tickcolor": palette.TRACK, "gridcolor": palette.WELL, "zeroline": False}
 DOP_LINES = {"GDOP": (palette.ACCENT, "solid", 3), "PDOP": (palette.INK, "solid", 1.5),
              "HDOP": (palette.MUTED, "solid", 1.5), "VDOP": (palette.MUTED, "dot", 1.5)}
@@ -31,7 +31,7 @@ SKY_LABEL_EVERY = 3     # a time under every third step of the slider
 
 def _layout(fig, height, **extra):
     fig.update_layout(height=height, paper_bgcolor=CLEAR, plot_bgcolor=CLEAR, font={"color": palette.INK},
-                      hoverlabel=HOVER, **extra)
+                      hoverlabel=PLOTLY_HOVER, **extra)
     return fig
 
 
@@ -83,8 +83,8 @@ def dop_key():
         f'<li><b>{key}</b> <span>{escape(name)}: {escape(meaning)}.</span>'
         f'<span class="muted">{"Should be " + should_be(key) + "." if should_be(key) else "No set target."}</span></li>'
         for key, name, meaning in gs.DOP_MEASURES)
-    return (f'<p class="small">{escape(gs.DOP_INTRO)}</p><ul class="geo-key">{lines}</ul>'
-            f'<p class="small">{escape(gs.SEEN_WORDS)} {escape(gs.DOP_SOURCE)}</p>')
+    return (f'<p>{escape(gs.DOP_INTRO)}</p><ul class="geo-key">{lines}</ul>'
+            f'<p class="muted">{escape(gs.SEEN_WORDS)} {escape(gs.DOP_SOURCE)}</p>')
 
 
 def _cell(key, value, seen):
@@ -305,26 +305,34 @@ def orbit_trends(series, satellites, types, bands, start, end):
 def trends_key():
     """What each trend column means."""
     lines = "".join(f'<li><b>{escape(name)}</b> <span>{escape(meaning)}.</span></li>' for _, name, _, meaning in gs.TRENDS)
-    return f'<ul class="geo-key">{lines}</ul><p class="small">Green band: what it should be, where a target is set.</p>'
+    return f'<ul class="geo-key">{lines}</ul><p class="muted">Green band: what it should be, where a target is set.</p>'
 
 
 # ---- orbit plane spacing ----
 
 def spacing_card(group):
-    """One group of satellites sharing a ground track: should be, is, and each satellite's node and gap."""
+    """One group of satellites sharing a ground track: what the spacing should be and how far it is off."""
     status = gs.SPACING_STATUS.get(group["status"], "idle")
+    facts = (f'<div class="geo-facts"><span><small>Should be</small><b class="num">{group["ideal_spacing_deg"]:g}° apart</b></span>'
+             f'<span><small>Largest miss</small><b class="num">{group["max_deviation_deg"]:.2f}°</b></span>'
+             f'<span><small>Typical miss</small><b class="num">{group["rms_deviation_deg"]:.2f}°</b></span>'
+             f'<span><small>Verdict</small>{surfaces.chip(group["status"].lower(), status)}</span></div>')
+    return surfaces.raised(facts, spacing_title(group))
+
+
+def spacing_title(group):
+    return f'{group["satellite_count"]} satellites around {group["central_longitude_deg"]:.1f}° east'
+
+
+def spacing_table(group):
+    """Each satellite of the group: where its node is, the next one along, the gap to it and how far that is off even."""
     rows = "".join(
         f'<div class="sr"><b>{escape(s["name"])}</b><span class="num">{s["raan_deg"]:.2f}°</span>'
         f'<span>{escape(s["next_neighbor"])}</span><span class="num">{s["gap_to_next_deg"]:.2f}°</span>'
         f'<span class="num">{s["deviation_from_ideal_deg"]:+.2f}°</span></div>' for s in group["satellites"])
     head = ('<div class="sr hd"><span>Satellite</span><span>Node at</span><span>Next along</span>'
             '<span>Gap to next</span><span>Off even</span></div>')
-    facts = (f'<div class="geo-facts"><span><small>Should be</small><b class="num">{group["ideal_spacing_deg"]:g}° apart</b></span>'
-             f'<span><small>Largest miss</small><b class="num">{group["max_deviation_deg"]:.2f}°</b></span>'
-             f'<span><small>Typical miss</small><b class="num">{group["rms_deviation_deg"]:.2f}°</b></span>'
-             f'<span><small>Verdict</small>{surfaces.chip(group["status"].lower(), status)}</span></div>')
-    title = f'{group["satellite_count"]} satellites around {group["central_longitude_deg"]:.1f}° east'
-    return surfaces.raised(facts + f'<div class="spacing">{head}{rows}</div>', title)
+    return f'<div class="spacing">{head}{rows}</div>'
 
 
 def spacing_wheel(group):

@@ -12,6 +12,7 @@ from evidence.master_map import agreement, display_name, identifiers, signal_ids
 from evidence.settings import COUNTRY_NAMES, COUNTRY_NOT_GIVEN, IDENTITY_DIFFER, SCHEME_SIGNAL_ID, SERVICE_DISAGREE
 from ui import palette
 from ui.theme import root_block
+from ui.tooltip import CARD_CSS
 
 PAGE_FILE = Path(__file__).with_name("master_map.html")
 
@@ -59,7 +60,7 @@ def embed(value):
 def master_map_html(data):
     """The finished page: colours and fonts first, the data last so it is never searched for placeholders."""
     page = PAGE_FILE.read_text(encoding="utf-8")
-    fills = {"__ROOT__": root_block(), "__FONT__": palette.FONT, "__FONT_NUMBERS__": palette.FONT_NUMBERS}
+    fills = {"__ROOT__": root_block(), "__FONT__": palette.FONT, "__FONT_NUMBERS__": palette.FONT_NUMBERS, "__TIP__": CARD_CSS}
     for placeholder, text in fills.items():
         page = page.replace(placeholder, text)
     payload = {"records": master_map_records(data), "colours": palette.CONSTELLATION_COLOURS}

@@ -40,7 +40,7 @@ button [data-testid="stMarkdownContainer"] { font-size: inherit; }
 [data-testid="stButton"] button:active, [data-testid="stDownloadButton"] button:active, [data-testid="stFormSubmitButton"] button:active {
   box-shadow: var(--pressed); background: var(--well); color: var(--accent); transform: translateY(1px);
 }
-button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend:focus-visible {
+button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-trigger:focus-visible {
   outline: 2px solid var(--accent); outline-offset: 2px;
 }
 [data-testid="stButton"] button:focus:not(:focus-visible) { box-shadow: var(--raised-sm); }
@@ -129,16 +129,32 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend
 .big { font-size: 34px; font-weight: 700; line-height: 1.05; color: var(--ink); }
 .big-number .small { margin-top: 4px; }
 
-/* hover legend: collapsed until the pointer is over it or it holds keyboard focus */
-.legend { position: relative; display: inline-block; font-size: 14px; color: var(--ink); }
-.legend-label { display: inline-block; padding: 6px 16px; border-radius: 999px; border: 1px solid var(--edge); box-shadow: var(--raised-sm); background: var(--platform); cursor: default; }
-.legend:hover .legend-label, .legend:focus-within .legend-label { box-shadow: var(--pressed); background: var(--well); color: var(--accent); }
-.legend ul { display: none; position: absolute; z-index: 20; left: 0; top: calc(100% + 8px); min-width: 220px; margin: 0; padding: 12px 16px; list-style: none; background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); }
-.legend:hover ul, .legend:focus-within ul { display: block; }
-.legend ul { width: max-content; max-width: min(420px, 86vw); }
-.legend.opens-left ul { left: auto; right: 0; }   /* for a legend near the right edge of the page */
-.legend li { display: flex; align-items: flex-start; gap: 10px; margin: 6px 0; }
-.legend li .swatch { margin-top: 4px; }
+/* ---- the one tooltip (ui/tooltip.py). Its card's look and open state are tooltip.CARD_CSS, shared with the canvases ---- */
+.tt-trigger { cursor: help; border-radius: 6px; text-decoration: underline dotted var(--muted); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.tt-trigger.pill { display: inline-block; padding: 6px 16px; border-radius: 999px; border: 1px solid var(--edge); box-shadow: var(--raised-sm);
+  background: var(--platform); color: var(--ink); font-size: 14px; font-weight: 400; text-decoration: none; white-space: nowrap; transition: color 150ms ease, box-shadow 150ms ease; }
+.tt-trigger.pill:is(:hover, :focus) { box-shadow: var(--pressed); background: var(--well); color: var(--accent); }
+/* One placement: under the trigger, centred on it, slid along to stay on the screen, above it when there is no room
+   below. Fixed to the screen, so a scrolling table never cuts it off. A browser that cannot anchor shows it at the foot. */
+.tt-card { position: fixed; left: 16px; right: 16px; bottom: 16px; margin-inline: auto; }
+@supports (anchor-scope: all) {
+  .tt { anchor-scope: --tt; }
+  .tt-trigger { anchor-name: --tt; }
+  .tt-card { position-anchor: --tt; inset: auto; margin: 8px 16px; position-area: bottom span-all; justify-self: anchor-center;
+    position-try-fallbacks: flip-block; }
+}
+/* Streamlit's own help tips on its buttons and inputs (help=) cannot be our part: they take the same card */
+[data-baseweb="tooltip"] { background: transparent; box-shadow: none; border: 0; }
+[data-baseweb="tooltip"] > div { background: var(--platform); color: var(--ink); border: 1px solid var(--edge); border-radius: var(--r);
+  box-shadow: var(--raised); }
+[data-testid="stTooltipContent"] { padding: 12px 16px; max-width: min(360px, calc(100vw - 32px)); }
+[data-testid="stTooltipContent"], [data-testid="stTooltipContent"] :is(p, [data-testid="stMarkdownContainer"]) { color: var(--ink); font-size: 13px !important; line-height: 1.45; background: transparent; }
+.tt-card p { margin: 0 0 6px; max-width: none; } .tt-card p:last-child { margin-bottom: 0; }
+.tt-card .muted, .tt-card small { color: var(--muted); }
+.tt-list { list-style: none; margin: 0; padding: 0; }
+.tt-list li { display: flex; align-items: flex-start; gap: 10px; margin: 5px 0; }
+.tt-list li .swatch { margin-top: 2px; }
+.swatch { margin-top: 4px; }
 .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 999px; box-shadow: var(--raised-sm); border: 1px solid var(--edge); flex: none; }
 
 /* ---- the dashboard frame: no side panel, one top bar ---- */
@@ -320,8 +336,7 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .legend
 .change .when { flex: 0 0 5.6em; font-size: 13px; color: var(--muted); white-space: nowrap; }   /* one width, so the headlines line up */
 .change .headline { flex: 1 1 auto; min-width: 0; font-weight: 600; }
 .change .more { font-size: 13px; color: var(--accent); white-space: nowrap; }
-.change .more::after { content: " ▾"; }
-.change[open] .more::after { content: " ▴"; }
+.change .more { display: inline-flex; align-items: center; gap: 10px; }
 .change p { margin: 0; padding: 0 18px 12px; }
 .change a { color: var(--accent); }
 @media (max-width: 760px) { .change summary { flex-wrap: wrap; row-gap: 4px; } .change .headline { flex-basis: 100%; order: 3; } .change .more { margin-left: auto; } }
@@ -380,6 +395,46 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: 12px; }
   [data-testid="stPopover"] button, .st-key-refresh_button button { width: 40px; height: 40px; }
   [data-testid="stNumberInput"] [data-baseweb="input"] { min-height: 40px; }
   [data-testid="stNumberInput"] button { min-width: 40px; min-height: 40px; }
-  .legend-label { padding-block: 10px; }
+  .tt-trigger.pill { padding-block: 10px; }
   [data-testid="stExpander"] summary { min-height: 44px; }
 }
+
+/* ---- expandable sections (ui/reveal.py): a raised card, a header row, the details sliding open under it ---- */
+[class*="st-key-rv_"] { gap: 0; background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised-sm); }
+/* the header: Streamlit's checkbox drawn as a row, its box hidden, the chevron at the end */
+[class*="st-key-rvx_"] label { display: flex; align-items: center; gap: 12px; width: 100%; max-width: none; margin: 0; padding: 13px 20px; cursor: pointer; border-radius: var(--r);
+  background-color: transparent !important; }   /* Streamlit tints a focused checkbox's row; the ring below says focus instead */
+[class*="st-key-rvx_"] label > span:first-child { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip-path: inset(50%); }
+[class*="st-key-rvx_"] label > div { flex: 1 1 auto; min-width: 0; padding: 0; }
+[class*="st-key-rvx_"] label p { margin: 0; max-width: none; color: var(--muted); font-size: 14px; }
+[class*="st-key-rvx_"] label strong { color: var(--ink); font-size: 16px; font-weight: 600; margin-right: 10px; }
+[class*="st-key-rvx_"] label:hover strong { color: var(--accent); }
+[class*="st-key-rvx_"] label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
+/* one chevron for every section and for the changes strip: down when closed, up when open, turning in 200 ms */
+[class*="st-key-rvx_"] label::after, .change .more::after {
+  content: ""; flex: none; width: 8px; height: 8px; margin: -3px 4px 0; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(45deg); transition: transform 200ms ease;
+}
+[class*="st-key-rvx_"] label::after { color: var(--muted); }
+[class*="st-key-rvx_"] label:has(input:checked)::after, .change[open] .more::after { transform: translateY(4px) rotate(225deg); }
+/* the body: always on the page, closed to no height; it opens and closes in 200 ms */
+[class*="st-key-rv_"] > [data-testid="stElementContainer"]:has(.rv-body) {
+  display: grid; grid-template-rows: 0fr; visibility: hidden; transition: grid-template-rows 200ms ease, visibility 0s linear 200ms;
+}
+[class*="st-key-rv_"]:has([class*="st-key-rvx_"] input:checked) > [data-testid="stElementContainer"]:has(.rv-body) {
+  grid-template-rows: 1fr; visibility: visible; transition: grid-template-rows 200ms ease, visibility 0s;
+}
+[class*="st-key-rv_"] > [data-testid="stElementContainer"]:has(.rv-body) > * { min-height: 0; overflow: hidden; }
+.rv-body { padding: 0 20px 16px; }
+/* a table or card inside a section takes the section's card instead of its own */
+.rv-body :is(.tablewrap, .raised) { margin: 0; padding: 0; border: 0; background: transparent; box-shadow: none; }
+@media (max-width: 639.98px) {
+  [class*="st-key-rvx_"] label { padding: 12px 16px; min-height: 48px; }
+  [class*="st-key-rvx_"] label strong { display: block; margin: 0 0 2px; }
+  .rv-body { padding: 0 16px 14px; }
+}
+/* the changes strip opens with the same motion, where the browser can animate a details element */
+.change { interpolate-size: allow-keywords; }
+.change::details-content { block-size: 0; overflow: hidden; transition: block-size 200ms ease, content-visibility 200ms allow-discrete; }
+.change[open]::details-content { block-size: auto; }
+@media (prefers-reduced-motion: reduce) { .change::details-content { transition: none; } }

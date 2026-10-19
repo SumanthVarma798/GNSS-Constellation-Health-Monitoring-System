@@ -13,7 +13,7 @@ from config.config import (
     BEIDOU3_SERVICE_REQUIREMENTS, GEO_NOMINAL_ALTITUDE, NAVIK_SERVICE_REQUIREMENTS,
     QZSS_SERVICE_REQUIREMENTS,
 )
-from ui import palette, surfaces
+from ui import palette, surfaces, tooltip
 from ui.figures.constellation_3d import constellation_3d, slot_legend
 from ui.figures.score_parts import score_parts
 from ui.figures.slot_belt import slot_belt
@@ -178,7 +178,7 @@ def render_slot_pictures(health_df, set_aside_names, slot_of, history=None, cons
     title, legend = st.columns([3, 2])   # the legend opens to the right, over the cards and clear of the 3D view
     title.subheader(HEADING)
     title.write(SENTENCE)
-    legend.html(surfaces.hover_legend(slot_legend(), opens_left=True))
+    legend.html(tooltip.legend(slot_legend(), "Slot legend"))
 
     positions, rows = attempt("slot rows", positions_and_rows, health_df, set_aside_names, slot_of, history) or ({}, None)
     if rows is None:

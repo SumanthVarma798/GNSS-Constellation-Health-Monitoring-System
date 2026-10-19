@@ -23,7 +23,6 @@ def test_titles_and_captions_are_escaped():
     assert_escaped(surfaces.raised("<p>body</p>", title=ATTACK))
     assert_escaped(surfaces.well("<p>body</p>", title=ATTACK))
     assert_escaped(surfaces.big_number(ATTACK, ATTACK))
-    assert_escaped(surfaces.hover_legend([(palette.OK, ATTACK)], label=ATTACK))
 
 
 def test_body_html_is_passed_through():
@@ -46,19 +45,6 @@ def test_unknown_status_is_a_clear_error():
     for build in (surfaces.chip, surfaces.notice):
         with pytest.raises(ValueError, match="unknown status 'fine'.*ok, warn, bad, idle, accent"):
             build("text", "fine")
-
-
-def test_hover_legend_lists_every_entry_and_can_take_focus():
-    entries = [(palette.OK, "in slot"), (palette.WARN, "off its slot"), ("var(--bad)", "left its slot")]
-    html = surfaces.hover_legend(entries)
-    for colour, text in entries:
-        assert colour in html and text in html
-    assert 'tabindex="0"' in html
-
-
-def test_legend_colour_cannot_carry_other_css():
-    with pytest.raises(ValueError):
-        surfaces.hover_legend([("red;background:url(x)", "bad")])
 
 
 def test_theme_defines_every_variable():
@@ -104,13 +90,6 @@ def test_the_framework_theme_file_matches_the_palette():
                      "secondaryBackgroundColor": palette.WELL, "textColor": palette.INK}
 
 
-def test_a_legend_near_the_right_edge_can_open_leftwards():
-    from ui.surfaces import hover_legend
-
-    assert 'class="legend opens-left"' in hover_legend([("#74d6a0", "in slot")], opens_left=True)
-    assert 'class="legend"' in hover_legend([("#74d6a0", "in slot")])
-
-
 @pytest.mark.parametrize("score, band", [(100, "ok"), (80, "ok"), (79.9, "warn"), (60, "warn"), (59.9, "bad"), (0, "bad")])
 def test_score_bands(score, band):
     assert surfaces.band(score) == band
@@ -154,3 +133,8 @@ def test_compare_grid_puts_tiles_and_matrix_in_the_same_columns():
     html = surfaces.compare_grid(["<i>a</i>", "<i>b</i>"], surfaces.parts_matrix([("Drift", [1, 2])]))
 
     assert html.count('style="--n:2"') == 2 and html.index("<i>a</i>") < html.index('class="matrix"')
+
+
+def test_the_stylesheet_has_no_angle_bracket():
+    # st.html drops a whole style block with a raw "<" in it, and the page loses its look (seen in issue 92).
+    assert "<" not in theme_css()

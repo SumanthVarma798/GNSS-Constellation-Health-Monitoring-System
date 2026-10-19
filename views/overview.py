@@ -1,7 +1,8 @@
 """Overview: is each satellite healthy and in its slot? One constellation, or satellites picked across constellations.
 
-Satellites are grouped by orbit type, each group with its tiles and a table of what each measure is against what
-it should be.
+The count first, then the tiles grouped by orbit type and the slot picture; then the details, each in a section
+(ui/reveal.py): per orbit type a table of what each measure is against what it should be, open, then what the checks
+found and how each satellite was classed, closed.
 """
 import re
 from datetime import datetime, timezone
@@ -11,7 +12,7 @@ import pandas as pd
 import streamlit as st
 
 from config.config import MEO_SATS, TRACKED_NOT_IN_REGISTRY
-from ui import data, limits, measures, meo_overview, orbit_section, palette, shell, surfaces
+from ui import data, limits, measures, meo_overview, orbit_section, palette, reveal, shell, surfaces, tooltip
 from ui.data import SATELLITES
 from ui.figures.constellation_3d import slot_legend
 from ui.figures.slot_rows import as_number, slot_words
@@ -89,10 +90,10 @@ def _period(result, window, window_days, today):
     year = (f'<span>scores read {_day(min(a for a, _ in spans))} to {_day(max(b for _, b in spans))}</span>'
             if spans else "")
     shown = window[~window["satellite"].isin(result["set_aside"])]
-    legend = surfaces.hover_legend(
+    legend = tooltip.legend(
         [("var(--fill)", f"{label} {weight}%") for label, weight in limits.SCORE_WEIGHTS]
         + [(f"var(--{STATUS_CHIP[word]})", f"{word} from {low}" if low else f"{word} under {limits.STATUS_FROM[i - 1][1]}")
-           for i, (word, low) in enumerate(limits.STATUS_FROM)], label="How the score is made", opens_left=True)
+           for i, (word, low) in enumerate(limits.STATUS_FROM)], label="How the score is made")
     surfaces.show(f'<div class="facts">{chips}<span>{shell.WINDOWS[window_days]}: {_day(start)} to {_day(today)}</span>'
                   f'<span>{len(shown):,} orbit records</span>{year}{legend}</div>')
 
@@ -116,13 +117,27 @@ def _table_rows(chosen, params, window):
             for c, r, h in chosen]
 
 
+def _measures(key, rows, title="Should be and is"):
+    """The "should be and is" table in its section, open (the page's main table), the summary saying how many
+    satellites need a look."""
+    look = sum(any(c["status"] in ("warn", "bad") for c in cells) for _, cells in rows)
+    summary = f"{reveal.count(len(rows), 'satellite')} · " + (f"{look} need{'s' if look == 1 else ''} a look" if look
+                                                              else "all within limits")
+    reveal.section(key, title, summary, surfaces.table([("Satellite", "")] + measures.COLUMNS, rows), open=True)
+
+
+def _findings(health_row):
+    """One satellite's findings, one line each, as the health assessment wrote them, without the status signs."""
+    lines = [EMOJI.sub("", part).strip() for part in str(health_row.get("Remarks", "")).split(" | ")]
+    return [line for line in lines if line]
+
+
 def _remarks(health):
-    """Each satellite's findings, one line each, as the health assessment wrote them."""
+    """Each satellite's findings, one line each."""
     items = ""
     for h in health.to_dict("records"):
-        lines = [EMOJI.sub("", part).strip() for part in str(h.get("Remarks", "")).split(" | ")]
         items += (f"<li><b>{escape(str(h['Satellite']))}</b>"
-                  + "".join(f"<span>{escape(line)}</span>" for line in lines if line) + "</li>")
+                  + "".join(f"<span>{escape(line)}</span>" for line in _findings(h)) + "</li>")
     return f'<ul class="remarks">{items}</ul>'
 
 
@@ -141,12 +156,13 @@ def _slot_picture(rows, result, name):
     with switch:
         view = shell.segment("slot_view", ["Flat", "3D"], label="View")
     if view == "Flat":   # the 3D view carries its own key under the picture
-        legend.html(f'<div class="right">{surfaces.hover_legend(slot_legend(), opens_left=True)}</div>')
+        legend.html(f'<div class="right">{tooltip.legend(slot_legend(), "Slot legend")}</div>')
     orbit_section.render_belt(rows, view, result["history"], result["health"], name)
 
 
 def constellation(name, window_days, params):
-    """One constellation: the count, then per orbit type its tiles and table, the slot picture, the details."""
+    """One constellation: the count, the tiles per orbit type, the slot picture, then the details: each orbit type's
+    table, what the checks found, how each satellite was classed."""
     result = data.load(name, window_days, params)
     if name in MEO_SATS:   # judged by orbital plane, not longitude slot
         meo_overview.page(name, result)
@@ -160,19 +176,24 @@ def constellation(name, window_days, params):
                   '<span class="muted">healthy and in their slot</span></div>')
     _period(result, window, window_days, today)
     _gaps(name, result)
-    for kind, names in measures.grouped(_types(tiles, result, classes)).items():
+    groups = measures.grouped(_types(tiles, result, classes))
+    for kind, names in groups.items():
         count = f"{len(names)} satellite{'s' if len(names) > 1 else ''}"
         surfaces.show(surfaces.group_head(kind, " · ".join(filter(None, [count, limits.ORBIT_TYPES.get(kind)]))))
         _grid(tiles[n][0] for n in names)
-        scored = [(name, result, tiles[n][2]) for n in names if tiles[n][2] is not None]
-        if scored:
-            surfaces.show(surfaces.table([("Satellite", "")] + measures.COLUMNS, _table_rows(scored, params, window)))
     if rows:
         _slot_picture(rows, result, name)
-    with st.expander("What the checks found"):
-        surfaces.show(_remarks(result["health"]))
-    with st.expander("How each satellite was classed"):
-        surfaces.show(_classes_table(classes))
+    for kind, names in groups.items():
+        scored = [(name, result, tiles[n][2]) for n in names if tiles[n][2] is not None]
+        if scored:
+            _measures(f"overview_measures_{kind}", _table_rows(scored, params, window), f"Should be and is: {kind}")
+    found = sum(len(_findings(h)) for h in result["health"].to_dict("records"))
+    reveal.section("overview_checks", "What the checks found",
+                   f"{reveal.count(len(result['health']), 'satellite')} · {reveal.count(found, 'finding')}",
+                   _remarks(result["health"]))
+    kinds = measures.grouped({c["satellite"]: c["type"] for c in classes})
+    reveal.section("overview_classes", "How each satellite was classed",
+                   " · ".join(f"{len(n)} {kind}" for kind, n in kinds.items()), _classes_table(classes))
 
 
 def compare(window_days, params):
@@ -195,7 +216,7 @@ def compare(window_days, params):
     if measured:
         today = pd.Timestamp(datetime.now(timezone.utc).date())
         window = pd.concat([measures.in_window(r["history"], window_days, today) for _, r, _ in measured])
-        surfaces.show(surfaces.table([("Satellite", "")] + measures.COLUMNS, _table_rows(measured, params, window)))
+        _measures("compare_measures", _table_rows(measured, params, window))
 
 
 try:
