@@ -30,9 +30,13 @@ class Reply:
         return self.rows
 
 
+def empty_state():
+    return {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True, "failing_since": None}
+
+
 @pytest.fixture(autouse=True)
 def fresh_state(monkeypatch):
-    monkeypatch.setattr(celestrak, "state", {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True})
+    monkeypatch.setattr(celestrak, "state", empty_state())
 
 
 def test_a_row_takes_the_bundled_shape():
@@ -112,3 +116,59 @@ def test_the_dashboard_asks_for_every_satellite_of_its_generations_and_no_other(
     # IRNSS-1B tracked; BeiDou-3 M7 (plane A, slot A-4), IRNSS-1A and a BeiDou-3S test satellite are not
     assert {39635, 43107, 39199, 40549} <= set(asked)
     assert 31115 not in asked   # a BeiDou-2 satellite: another generation
+
+
+def test_a_restart_reads_the_saved_copy_instead_of_downloading_again(monkeypatch):
+    calls = []
+
+    def fetch(norads):
+        calls.append(norads)
+        return {39635: celestrak.as_history_row(IRNSS_1B)}, {39635}
+
+    monkeypatch.setattr(celestrak, "fetch", fetch)
+    celestrak.refresh([39635], NOW)
+    monkeypatch.setattr(celestrak, "state", empty_state())               # the dashboard restarts
+    after = celestrak.refresh([39635], NOW + timedelta(minutes=5))
+    assert len(calls) == 1 and after["tried"] == NOW and after["listed"] == {39635}
+    assert after["rows"][39635][0]["TLE_LINE1"] == celestrak.as_history_row(IRNSS_1B)["TLE_LINE1"]
+
+    monkeypatch.setattr(celestrak, "state", empty_state())               # restarts again, 2 hours on
+    celestrak.refresh([39635], NOW + timedelta(hours=2))
+    assert len(calls) == 2
+
+
+def test_a_failed_try_is_saved_too_so_restarts_do_not_hammer_a_refusing_server(monkeypatch):
+    calls = []
+
+    def refused(norads):
+        calls.append(norads)
+        raise requests.HTTPError(403)
+
+    monkeypatch.setattr(celestrak, "fetch", refused)
+    celestrak.refresh([39635], NOW)
+    monkeypatch.setattr(celestrak, "state", empty_state())
+    after = celestrak.refresh([39635], NOW + timedelta(minutes=5))
+    assert len(calls) == 1 and not after["ok"]
+
+
+def test_an_unreadable_saved_copy_is_ignored(monkeypatch):
+    celestrak.SAVED.write_text("{not json")
+    monkeypatch.setattr(celestrak, "fetch", lambda norads: ({}, {39635}))
+    assert celestrak.refresh([39635], NOW)["tried"] == NOW
+
+
+def test_failing_since_is_the_first_failure_in_a_row_and_survives_a_restart(monkeypatch):
+    replies = [requests.ConnectionError("down"), requests.HTTPError(403), ({}, {39635})]
+
+    def fetch(norads):
+        reply = replies.pop(0)
+        if isinstance(reply, Exception):
+            raise reply
+        return reply
+
+    monkeypatch.setattr(celestrak, "fetch", fetch)
+    celestrak.refresh([39635], NOW)
+    assert celestrak.refresh([39635], NOW + timedelta(hours=2))["failing_since"] == NOW
+    monkeypatch.setattr(celestrak, "state", empty_state())               # the dashboard restarts
+    assert celestrak.refresh([39635], NOW + timedelta(hours=2, minutes=5))["failing_since"] == NOW
+    assert celestrak.refresh([39635], NOW + timedelta(hours=4))["failing_since"] is None

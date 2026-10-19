@@ -79,6 +79,16 @@ def age_words(data_time, now, tz=timezone.utc):
     return f"Orbit data {taken.day} {taken:%b}{age}", "warn" if days > STALE_DAYS else "ok"
 
 
+def failing_words(since, now, tz=timezone.utc):
+    """'CelesTrak failing since 14:02' when the failures began today, 'CelesTrak failing since 18 Oct 14:02' before.
+
+    Days and times are counted in `tz`, the viewer's time zone.
+    """
+    since = since.astimezone(tz)
+    when = f"{since:%H:%M}" if since.date() == now.astimezone(tz).date() else f"{since.day} {since:%b %H:%M}"
+    return f"CelesTrak failing since {when}"
+
+
 def offered():
     """The constellations Compare draws from: those chosen in the top bar, or all when none are."""
     chosen = st.session_state.get("compare_constellations", [])
@@ -108,7 +118,8 @@ def _viewer_zone():
 
 
 def _data_chip(names, window_days, params, live, now):
-    """The time of the newest orbit data behind the page (the oldest constellation's), and a warning if a refresh failed."""
+    """The time of the newest orbit data behind the page (the oldest constellation's), and since when CelesTrak has
+    been failing, if it is. Every saved copy stays in use meanwhile (issue 39: parts out of step say so)."""
     try:
         taken = min(data.load(c, window_days, params)["data_time"] for c in names)
     except ValueError:
@@ -116,7 +127,11 @@ def _data_chip(names, window_days, params, live, now):
     if live["fetched"]:
         taken = max(taken, live["fetched"].isoformat())
     text, status = age_words(taken, now, _viewer_zone())
-    return surfaces.chip(text, status) + ("" if live["ok"] else surfaces.chip("Refresh failed", "warn"))
+    if live["ok"]:
+        return surfaces.chip(text, status)
+    # A copy saved before failing_since was kept has none: its last try stands in.
+    return surfaces.chip(text, status) + surfaces.chip(
+        failing_words(live["failing_since"] or live["tried"], now, _viewer_zone()), "warn")
 
 
 def _next(live):
