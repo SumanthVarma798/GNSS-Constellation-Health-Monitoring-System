@@ -15,9 +15,9 @@ GCAT_PAYLOADS_URL = "https://planet4589.org/space/gcat/tsv/cat/psatcat.tsv"   # 
 
 # CelesTrak: current orbits of every catalogued BeiDou object.
 CELESTRAK_BEIDOU_URL = "https://celestrak.org/NORAD/elements/gp.php?GROUP=beidou&FORMAT=json"
-# CelesTrak: current orbits of the navigation satellites in service, all six systems. The dashboard
-# reads the same group live (data/celestrak.py); a daily copy kept here builds the history that GPS,
-# GLONASS and Galileo have nowhere else without a Space-Track login.
+# CelesTrak: current orbit record (OMM, as JSON) of every satellite in its GNSS group, about
+# 170 objects. Never TLE: CelesTrak ran out of 5-digit catalogue numbers on 11 Jul 2026, and
+# newer objects cannot be written as TLE. CelesTrak asks for one download per 2 hours at most.
 CELESTRAK_GNSS_URL = "https://celestrak.org/NORAD/elements/gp.php?GROUP=gnss&FORMAT=json"
 
 # Galmon: signals heard live by a volunteer-run receiver network.
@@ -39,7 +39,9 @@ ARCHIVED_SOURCES = {
         GCAT_OBJECTS_URL,
         GCAT_PAYLOADS_URL,
     ],
-    # Orbital elements. They change several times a day; kept once a day, by decision (issue 69).
+    # Orbit records. They change several times a day, so nearly every fetch is a new
+    # copy: about 130 KB a day (guess, from 170 objects). Kept so the age of each
+    # satellite's record can be measured over time, without a Space-Track login.
     "orbital": [
         CELESTRAK_GNSS_URL,
     ],

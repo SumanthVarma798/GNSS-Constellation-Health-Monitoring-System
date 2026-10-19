@@ -14,7 +14,7 @@ on:
   schedule:
     - cron: '30 0 * * *'  # documents: once a day, 00:30 UTC = 06:00 India time
     - cron: '45 0 * * *'  # catalogues: once a day, 00:45 UTC = 06:15 India time, after the catalogue's own daily rebuild
-    - cron: '0 1 * * *'   # orbital: once a day, 01:00 UTC = 06:30 India time
+    - cron: '15 1 * * *'  # orbital: once a day, 01:15 UTC = 06:45 India time; CelesTrak allows one download per 2 hours
   workflow_dispatch:
     inputs:
       group:
@@ -59,7 +59,7 @@ jobs:
           case "$SCHEDULE" in
             '30 0 * * *') group=documents ;;
             '45 0 * * *') group=catalogues ;;
-            '0 1 * * *') group=orbital ;;
+            '15 1 * * *') group=orbital ;;
             '') group="${CHOSEN:-all}" ;;
             *) echo "No group is assigned to the schedule '$SCHEDULE'. Add it to this step."; exit 1 ;;
           esac
