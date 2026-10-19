@@ -68,3 +68,9 @@ def test_a_listed_slot_without_a_spacing_check_says_why_not_that_the_slot_is_unl
     assert meo_overview.state_of(row(40, 12.0)) == (palette.SLOT_UNKNOWN, "away from its working height", None)
     assert meo_overview.state_of(row(100, 12.0)) == (palette.SLOT_UNKNOWN, "no neighbour to space against", None)
     assert meo_overview.state_of(row(100, None)) == (palette.SLOT_UNKNOWN, "slot B2 not listed", None)
+
+
+def test_the_geometry_page_says_it_does_not_cover_a_global_system_yet():
+    bodies = htmls(run(scope("Galileo", "Geometry")))
+
+    assert any("Geometry covers NavIC, QZSS and BeiDou-3 only, not yet Galileo" in body for body in bodies)

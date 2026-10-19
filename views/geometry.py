@@ -108,6 +108,10 @@ def _spacing(satellites):
 
 def constellation(name, picks, section, choice, mask, window, now):
     """One constellation's part of the page. `picks` limits the satellite-by-satellite pictures (None: all)."""
+    if name not in gs.PLACES:   # worked out for the regional systems' key places; GPS, GLONASS, Galileo have none yet
+        regional = ", ".join(list(gs.PLACES)[:-1]) + " and " + list(gs.PLACES)[-1]
+        surfaces.show(surfaces.notice(f"Geometry covers {regional} only, not yet {name}.", "idle"))
+        return
     result = data.load(name, st.session_state["window_days"], st.session_state["params"])
     every = list(dict.fromkeys(result["history"]["satellite"]))
     counted = gd.chosen_satellites(every, result["set_aside"], choice)
