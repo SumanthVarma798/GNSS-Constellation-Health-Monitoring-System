@@ -64,7 +64,8 @@ REGISTRY_COLUMN_PLAIN_NAMES = {
 SOURCE_GRADES_FILE = Path(__file__).resolve().parent / "source_grades.csv"
 SOURCE_GRADE_COLUMNS = ["source_id", "name", "reliability", "graded_by", "graded_on", "reason"]
 
-# Candidate sources for the news pipeline (issue 13), one row per feed or page, each checked once.
+# Candidate sources for the news pipeline (issue 13), one row per feed or page. Each address was fetched once;
+# where it failed, up to two other addresses were tried, and the row records the last one.
 # Proposals only: a grade counts once the team moves it into the source table. Nothing reads it yet.
 SOURCE_CANDIDATES_FILE = Path(__file__).resolve().parent / "source_candidates.csv"
 SOURCE_CANDIDATE_COLUMNS = ["source_id", "name", "kind", "address", "checked_on", "check_status", "check_type",

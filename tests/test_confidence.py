@@ -72,7 +72,7 @@ def test_the_candidate_list_is_well_formed():
         if row["standing"] == CANDIDATE_GRADED:
             assert row["proposed_grade"] == graded[row["source_id"]]
         # The Russian and Chinese tracker sites are never fetched, so never listed (issue 13, 17 Oct).
-        assert not any(name in row["address"].lower() for name in ("vimpel", "spacemapper"))
+        assert not any(name in " ".join(row.values()).lower() for name in ("vimpel", "spacemapper"))
 
 
 @pytest.fixture
