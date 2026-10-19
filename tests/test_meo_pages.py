@@ -25,11 +25,10 @@ def test_the_constellation_chips_offer_the_three_meo_systems_after_the_others():
     assert CONSTELLATIONS == ("NavIC", "QZSS", "BeiDou-3", "GPS", "GLONASS", "Galileo")
 
 
-def test_galileo_shows_its_planes_with_a_tile_per_satellite_and_says_what_is_missing():
+def test_galileo_shows_its_planes_and_says_what_is_missing():
     at = run(scope("Galileo"))
     bodies = htmls(at)
 
-    assert len(tiles(at)) == 2
     assert any('<div class="part-title">Plane B · 2</div>' in body for body in bodies)
     assert any("2 of 2</span>" in body and "healthy and in step" in body for body in bodies)
     assert any("Orbit history: only the newest element set" in body for body in bodies)
@@ -40,6 +39,43 @@ def test_a_system_with_no_orbit_data_yet_says_so_and_the_page_still_runs():
     bodies = htmls(run(scope("GPS")))
 
     assert any("No orbit data for GPS yet" in body for body in bodies)
+
+
+def gps_row(norad, name, mean_anomaly):
+    """A made-up GPS element set: circular, plane D's node, at argument of latitude `mean_anomaly`."""
+    return {**GSAT0101, "OBJECT_NAME": name, "NORAD_CAT_ID": norad, "MEAN_MOTION": 2.00563, "ECCENTRICITY": 0.0001,
+            "INCLINATION": 55.0, "RA_OF_ASC_NODE": 100.0, "ARG_OF_PERICENTER": 0.0, "MEAN_ANOMALY": mean_anomaly}
+
+
+def test_gps_opens_on_its_planes_without_tiles_and_the_switch_shows_the_tiles(monkeypatch):
+    rows = {row["NORAD_CAT_ID"]: celestrak.as_history_row(row)
+            for row in (gps_row(62339, "NAVSTAR 83", 258.0), gps_row(39741, "NAVSTAR 70", 167.4))}   # D2A, D4
+    monkeypatch.setattr(celestrak, "fetch", lambda norads: (rows, set(rows)))
+
+    at = run(scope("GPS"))
+    bodies = htmls(at)
+    assert at.session_state["meo_view"] == "Planes"
+    assert tiles(at) == []
+    card = next(body for body in bodies if '<div class="part-title">Plane D · 2</div>' in body)
+    assert all(words in card for words in ("2 of 2", "none", "0.0° · within 5°", "steady", "· within 8°"))
+    assert any("Measured against limits, every satellite" in str(e.label) for e in at.checkbox)
+
+    at.button_group(key="meo_view").set_value("Satellites").run()
+    assert len(tiles(at)) == 2
+    assert any("Plane D</span><span class=\"muted\">2 satellites · 2 in step" in body for body in htmls(at))
+    assert not any("part-title\">Plane D" in body for body in htmls(at))
+
+
+def test_a_plane_card_says_which_way_its_node_drifts():
+    from ui import meo_overview
+
+    members = [{"plane": "A", "plane_agrees": True, "signal_id": "G01", "name": "S", "u": 10.0, "slot": "A1",
+                "slot_at": 10.0, "checks": [("plane", 0.0, 1.2, 1.2, 100), ("spacing", 60.0, 61.0, 1.0, 100)]}]
+    drift = {"offset": 1.2, "offset_limit": 2.0, "rate": 0.3, "gap": 1.0, "gap_limit": 8.0}
+
+    assert "0.30° a year, away" in meo_overview._plane_card("A", members, drift)
+    assert "0.30° a year, back" in meo_overview._plane_card("A", members, {**drift, "rate": -0.3})
+    assert "6.0° · over 2°" in meo_overview._plane_card("A", members, {**drift, "offset": -6.0})
 
 
 def test_station_keeping_says_how_much_history_there_is():

@@ -145,7 +145,8 @@ def assess(system, elements, registry):
     elements: {name: newest element row, with EPOCH a datetime}. registry: {name: registry row (plane,
     slot, signal_id_now)}. Each row: name, signal_id, plane (from the orbit), registry_plane, plane_agrees,
     slot (the registry's), u (argument of latitude now), slot_at (where its slot is now, or None),
-    checks ([(measure, should be, is, error, score)]), parts ({measure: score}), score, status.
+    node_rate (its node's drift from J2, degrees a day), checks ([(measure, should be, is, error, score)]),
+    parts ({measure: score}), score, status.
     """
     nominal = {key: value.value for key, value in NOMINAL[system].items()}
     now = at_common_time(elements)
@@ -154,7 +155,9 @@ def assess(system, elements, registry):
     in_planes = [name for name in names if plane_of[name]]
     rows = {name: {"name": name, "signal_id": registry[name]["signal_id_now"], "u": now[name]["u"],
                    "registry_plane": plane_of[name], "slot": registry[name]["slot"], "slot_at": None,
-                   "checks": [], "plane": EXTENDED, "plane_agrees": True} for name in names}
+                   "checks": [], "plane": EXTENDED, "plane_agrees": True,
+                   "node_rate": _node_rate_deg_day(now[name]["a"], now[name]["e"], now[name]["i"],
+                                                   float(elements[name]["MEAN_MOTION"]))} for name in names}
 
     if in_planes:
         _, index, offsets = fit_planes([now[name]["raan"] for name in in_planes], nominal["plane_spacing_deg"])
@@ -197,3 +200,35 @@ def assess(system, elements, registry):
         row["score"] = sum(WEIGHTS[m] * s for m, s in row["parts"].items()) / weight if weight else None
         row["status"] = status_of(row["score"]) if row["score"] is not None else ""
     return [rows[name] for name in names]
+
+
+def plane_drift(system, rows):
+    """{plane: {offset, offset_limit, rate, gap, gap_limit}} for each plane of slots in `rows` (assess's), not the
+    eccentric orbit.
+
+      offset  How far the plane's node sits from the fitted pattern of equally spaced planes: the mean of its
+              satellites' plane offsets, degrees.
+      rate    How fast that offset is changing, degrees a year: the plane's node drift from the Earth's flattening
+              (J2), worked out from its satellites' tilt and height, less the whole pattern's (every satellite in a
+              plane, as fit_planes weighs them). From the newest elements, so it needs no history. The same sign
+              as offset means moving away from the pattern.
+      gap     The spacing spread inside the plane: the worst gap error against the slot table, degrees, or None
+              when no gap could be measured.
+    The limits are those the satellites' own plane and spacing checks use.
+    """
+    nominal = NOMINAL[system]
+    in_planes = [row for row in rows if row["plane"] != EXTENDED]
+    if not in_planes:
+        return {}
+    pattern_rate = np.mean([row["node_rate"] for row in in_planes])
+    out = {}
+    for plane in {row["plane"] for row in in_planes}:
+        members = [row for row in in_planes if row["plane"] == plane]
+        checks = [{check[0]: check for check in row["checks"]} for row in members]
+        gaps = [abs(check["spacing"][3]) for check in checks if "spacing" in check]
+        out[plane] = {"offset": float(np.mean([check["plane"][3] for check in checks])),
+                      "offset_limit": nominal["plane_tolerance_deg"].value,
+                      "rate": float(np.mean([row["node_rate"] for row in members]) - pattern_rate) * 365.25,
+                      "gap": max(gaps) if gaps else None,
+                      "gap_limit": 2 * nominal["spacing_tolerance_deg"].value}
+    return out
