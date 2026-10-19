@@ -11,14 +11,27 @@ from pathlib import Path
 REQUEST_TIMEOUT_SECONDS = 60  # how long to wait for any outside server
 USER_AGENT = "gnss-evidence-archive/0.1 (scheduled research fetch)"  # how we name ourselves to them
 
-# Each source's minimum gap between two downloads of the same address, by host name. Every fetcher reads it here:
-# the archive job and the dashboard. CelesTrak asks for one download per 2 hours at most, and blocked this
-# machine on 17 Oct 2026 for downloading more often (issue 76).
-MIN_GAP_BETWEEN_DOWNLOADS = {"celestrak.org": timedelta(hours=2)}
+# Each site's minimum gap between two of our requests to it. Every fetcher reads it here: the archive job and
+# the dashboard. A site is a host name and every host under it ("reddit.com" covers www.reddit.com).
+# Within one run the archive job waits out the gap, counted from the end of the last request; between runs,
+# each group's schedule in .github/workflows/archive.yml must be at least as far apart as its longest gap (a test checks).
+MIN_GAP_BETWEEN_DOWNLOADS = {
+    # CelesTrak asks for one download per 2 hours at most, and blocked this machine on 17 Oct 2026 for more (issue 76).
+    "celestrak.org": timedelta(hours=2),
+    # Refused a second request three seconds after the first (8 and 19 Oct 2026); read once a day (issue 13).
+    "reddit.com": timedelta(hours=12),
+    # Seven search feeds in a row; how often Google allows them is not stated (guess).
+    "news.google.com": timedelta(seconds=10),
+}
+DEFAULT_MIN_GAP = timedelta(seconds=5)  # any other site: no stated limit, so a polite pause
 
 DOWNLOAD_TRIES = 3                # a failed download is tried this many times in one run...
 WAIT_BETWEEN_TRIES_SECONDS = 60   # ...with this wait between, unless that is shorter than the source's gap: then once
 RETRY_STATUSES = (429, 500, 502, 503, 504)  # replies worth another try; any other reply is the source's answer
+
+# Never fetched, by any job or any person's script: the Russian and Chinese satellite-tracker sites named on
+# the 17 Oct 2026 call. They may be malicious; what they show reaches us only through independent journalists.
+NEVER_FETCH = ("vimpel", "spacemapper")  # matched anywhere in a host name
 
 # --- The raw-copy archive ---
 
@@ -80,12 +93,39 @@ SOURCE_GRADE_COLUMNS = ["source_id", "name", "reliability", "graded_by", "graded
 
 # Candidate sources for the news pipeline (issue 13), one row per feed or page. Each address was fetched once;
 # where it failed, up to two other addresses were tried, and the row records the last one.
-# Proposals only: a grade counts once the team moves it into the source table. Nothing reads it yet.
+# Proposals only: a grade counts once the team moves it into the source table. The rows whose check worked
+# are archived on a schedule (evidence/sources.py), and decide nothing.
 SOURCE_CANDIDATES_FILE = Path(__file__).resolve().parent / "source_candidates.csv"
 SOURCE_CANDIDATE_COLUMNS = ["source_id", "name", "kind", "address", "checked_on", "check_status", "check_type",
                             "check_bytes", "check_items", "proposed_grade", "grade_reason", "standing", "note"]
 CANDIDATE_GRADED = "graded"  # already in the source table; the proposed grade must match it
 CANDIDATE_STANDINGS = ("provisional", CANDIDATE_GRADED, "no grade: discovery or pointer", "held: not fetched")
+CANDIDATE_WORKED = "200"         # check_status of a row whose feed or page answered
+CANDIDATE_FEED_TYPE = "feed"     # check_type starts with this when the answer was a feed a program can read
+CANDIDATE_SOCIAL_KIND = "social feed"  # kind of a social media feed: its posts count only for the link they hold
+# A social post's own platform. A link to one of these is not a link to the post's source.
+SOCIAL_PLATFORM_HOSTS = ("reddit.com", "redd.it", "redditmedia.com", "redditstatic.com")
+
+# One collected news item (issue 13): a pointer to an article, read from a feed. Not a claim; nothing here decides.
+# source_id: who published the article (for a discovery or social feed, the linked page's host, decision 5);
+# via: the feed it was read from; fetched_at: when our archive first held it.
+NEWS_ITEM_COLUMNS = ["source_id", "address", "title", "published_at", "fetched_at", "via"]
+
+# The hand-labelled set for choosing a claim-extraction model (issue 15, week 1). Kept here, beside the
+# source lists, until the extraction step decides where its test data lives.
+LABELLING_SHEET_FILE = Path(__file__).resolve().parent / "labelling_sheet.csv"
+LABELLING_SHEET_COLUMNS = ["system", "title", "source_id", "published_at", "address", "claims_in_this_item", "none"]
+LABELLING_SHEET_SIZE = 30
+# Words that put an item under a system, for spreading the sheet across all six. Matched as whole words,
+# any case. A cheap pointer, not the relevance filter: an item may name several systems or none.
+SYSTEM_WORDS = {
+    "GPS": ("GPS", "Navstar"),
+    "GLONASS": ("GLONASS",),
+    "Galileo": ("Galileo",),
+    "BeiDou": ("BeiDou", "Compass navigation"),
+    "QZSS": ("QZSS", "Michibiki", "QZS"),
+    "NavIC": ("NavIC", "IRNSS", "NVS-01", "NVS-02", "NVS-03"),
+}
 
 # Source reliability, from the Admiralty code. The grade belongs to the source.
 RELIABILITY_GRADES = {

@@ -24,7 +24,8 @@ flowchart TB
   igs["IGS satellite file"]:::built --> fetch["Archive job"]:::built
   gcat["Catalogue of space objects"]:::built --> fetch
   orbits["CelesTrak orbit records"]:::built --> fetch
-  more["Notices, news and signal data"]:::planned -.-> fetch
+  news["News feeds, pages and linked posts"]:::built --> fetch
+  more["Notices and signal data"]:::planned -.-> fetch
   galmon["Galmon"]:::hold -.-> fetch
   fetch --> archive[("Archive")]:::built
   archive --> regjob["Registry job"]:::built
@@ -97,7 +98,7 @@ pie showData title Estimated hours, all guesses
 | 50 | Demo C. Orbit pictures: slot belt, 3D view, score parts | 9 | Built |
 | 51 | Demo D. Menu, How it works page, new look on the existing tabs | 6 | Open; needs 48, 49 and 50 |
 | 10 | Notices ledger: GPS advisories | 10 | Open, after the call |
-| 13 | News, official pages, linked social posts | 14 | A first candidate list, each feed checked once, is in `evidence/source_candidates.csv`, waiting on the team's grades |
+| 13 | News, official pages, linked social posts | 14 | Candidates in `evidence/source_candidates.csv`, waiting on the team's grades. The 45 whose check worked are archived on a schedule, provisional, deciding nothing; feed items are read into news records (`evidence/news.py`) |
 | 14 | Owner and status per satellite, from a second source | 3 | Built; joining the weekly proposal is a follow-up |
 | 15 | Claim extraction | 20 | Waiting on a model and a spending ceiling |
 | 16 | Change proposals from claims | 12 | Open |
@@ -199,8 +200,10 @@ Produced from the code. A test fails if this table and the code disagree.
 | Documents are fetched | `30 0 * * *` (documents: once a day, 00:30 UTC = 06:00 India time) | `.github/workflows/archive.yml` |
 | Catalogues are fetched | `45 0 * * *` (catalogues: once a day, 00:45 UTC = 06:15 India time, after the catalogue's own daily rebuild) | `.github/workflows/archive.yml` |
 | Orbit records are fetched | `15 1 * * *` (orbital: once a day, 01:15 UTC = 06:45 India time; CelesTrak allows one download per 2 hours) | `.github/workflows/archive.yml` |
+| News feeds and pages are fetched | `50 */3 * * *` (news: every 3 hours from 00:50 UTC = 06:20 India time; first, to measure how often feeds change (issue 13)) | `.github/workflows/archive.yml` |
+| Social media feeds are fetched | `40 1 * * *` (social: once a day, 01:40 UTC = 07:10 India time; Reddit refuses requests in quick succession) | `.github/workflows/archive.yml` |
 | The registry is rebuilt | `0 1 * * 0` (Sundays 01:00 UTC = 06:30 India time: half an hour after that day's documents fetch (see archive.yml), so the registry builds from a fresh copy) | `.github/workflows/registry-update.yml` |
-| Sources archived, by group | documents: 1, catalogues: 2, orbital: 1, news: 0 | `evidence/sources.py` |
+| Sources archived, by group | documents: 1, catalogues: 2, orbital: 1, news: 44, social: 1 | `evidence/sources.py` |
 | Grades that clear the bar alone | A | `evidence/settings.py` |
 | Grades lifted by a second source | B | `evidence/settings.py` |
 | Grades lifted by our own data | B | `evidence/settings.py` |
@@ -208,7 +211,7 @@ Produced from the code. A test fails if this table and the code disagree.
 | The three labels | confirmed, probable, unconfirmed | `evidence/settings.py` |
 | Longest wait for an outside server | 60 seconds | `evidence/settings.py` |
 | A failed download is tried | 3 times, 60 seconds apart; once a run where that is sooner than the source's gap | `evidence/settings.py` |
-| Shortest gap between downloads | celestrak.org: 2 hours | `evidence/settings.py` |
+| Shortest gap between two requests to one site | celestrak.org: 2 hours, reddit.com: 12 hours, news.google.com: 10 seconds, any other site: 5 seconds | `evidence/settings.py` |
 | Largest copy the archive keeps | 50 MB | `evidence/settings.py` |
 | Statuses that mean a page is gone | 404, 410 | `evidence/settings.py` |
 | How our requests name themselves | `gnss-evidence-archive/0.1 (scheduled research fetch)` | `evidence/settings.py` |
@@ -234,7 +237,7 @@ Produced from the code. A test fails if this table and the code disagree.
 | - | Alerts | Healthchecks.io (open source, free hosted tier of 20 checks). Each scheduled run reports how it went, with its run log line, to one check per job: `archive-documents`, `archive-catalogues`, `archive-orbital`, `registry-update`. It emails when a run fails, or when none arrives within 8 hours of its written time, which also catches a run GitHub never starts. GitHub's own failure email does not reach Sumanth (checked by him, 19 Oct 2026). |
 | - | Limits per source | One place, `MIN_GAP_BETWEEN_DOWNLOADS` in `evidence/settings.py`, read by the archive job and the dashboard. A retry that would come sooner than a source's gap is not made. |
 | - | Storage rule | The database keeps a reference to a document, never the document |
-| - | Cadence | Documents daily at 6 AM India time; catalogues daily at 6:15 AM; orbit records daily at 6:45 AM; registry on Sundays at 6:30 AM. Short cadences first, accepting the storage; lengthen them as the product matures. |
+| - | Cadence | Documents daily at 6 AM India time; catalogues daily at 6:15 AM; orbit records daily at 6:45 AM; news every 3 hours, to measure how often each feed changes (issue 13); social media daily at 7:10 AM; registry on Sundays at 6:30 AM. Short cadences first, accepting the storage; lengthen them as the product matures. |
 | - | Changes on the dashboard | Always shown visually, with colour. If there is too much to show, add filters. A satellite is added or removed only with approval and a traceable record. |
 | - | GitHub-only is temporary | Scheduled jobs and raw copies will move off GitHub (issue 42). Code, registry tables and approvals stay on GitHub. |
 | - | Scheduler | Stay on GitHub while its timer works; do not add complexity. If it stops working, the agreed next step is Kubernetes CronJob, then Argo Workflows when a job first needs steps that wait on each other or on a person. |

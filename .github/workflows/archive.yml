@@ -19,12 +19,14 @@ on:
     - cron: '30 0 * * *'  # documents: once a day, 00:30 UTC = 06:00 India time
     - cron: '45 0 * * *'  # catalogues: once a day, 00:45 UTC = 06:15 India time, after the catalogue's own daily rebuild
     - cron: '15 1 * * *'  # orbital: once a day, 01:15 UTC = 06:45 India time; CelesTrak allows one download per 2 hours
+    - cron: '50 */3 * * *'  # news: every 3 hours from 00:50 UTC = 06:20 India time; first, to measure how often feeds change (issue 13)
+    - cron: '40 1 * * *'  # social: once a day, 01:40 UTC = 07:10 India time; Reddit refuses requests in quick succession
   workflow_dispatch:
     inputs:
       group:
         description: Which group to fetch
         type: choice
-        options: [all, documents, catalogues, orbital, news]
+        options: [all, documents, catalogues, orbital, news, social]
         default: all
 
 permissions:
@@ -64,6 +66,8 @@ jobs:
             '30 0 * * *') group=documents ;;
             '45 0 * * *') group=catalogues ;;
             '15 1 * * *') group=orbital ;;
+            '50 */3 * * *') group=news ;;
+            '40 1 * * *') group=social ;;
             '') group="${CHOSEN:-all}" ;;
             *) echo "No group is assigned to the schedule '$SCHEDULE'. Add it to this step."; exit 1 ;;
           esac
