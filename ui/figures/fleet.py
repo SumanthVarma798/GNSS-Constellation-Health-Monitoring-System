@@ -10,8 +10,10 @@ OTHER_GROUP = "Other"
 
 
 def plane_letters(registry_rows):
-    """{'1': 'A', ...}: each numbered plane to the letter its slots carry (slot 'A-4' is in plane A)."""
-    return {row["plane"]: row["slot"][0] for row in registry_rows if row["plane"].isdigit() and "-" in row["slot"]}
+    """{'1': 'A', ...}: each numbered plane to the letter its slots carry (slots 'A-4', 'A4' and 'A05' are in
+    plane A). GLONASS's slots are numbers: its planes keep theirs."""
+    return {row["plane"]: row["slot"][0] for row in registry_rows
+            if row["plane"].isdigit() and row["slot"][:1].isalpha()}
 
 
 def orbit_words(row, letters):

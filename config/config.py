@@ -27,7 +27,13 @@ TRACKED_NOT_IN_REGISTRY = {
     "NavIC": dashboard_satellites_not_in_registry("NavIC"),
     "QZSS": dashboard_satellites_not_in_registry("QZSS"),
     "BeiDou-3": dashboard_satellites_not_in_registry("BeiDou"),
+    **{system: dashboard_satellites_not_in_registry(system) for system in ("GPS", "GLONASS", "Galileo")},
 }
+
+# The medium Earth orbit (MEO) systems, judged by orbital plane (analysis/meo_geometry.py), not by
+# longitude slot. Their nominal orbits are in config/meo_nominal.py. The dashboard tracks every
+# registry satellite with a signal ID today; tests/test_meo_data.py keeps the list in step.
+MEO_SATS = {system: dashboard_satellites(system) for system in ("GPS", "GLONASS", "Galileo")}
 
 # Every satellite of the generation each dashboard constellation shows, for the 3D view's "All":
 # (the registry's constellation name, how its block names start). The block is the design generation;
