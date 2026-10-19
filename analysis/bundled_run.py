@@ -41,13 +41,10 @@ _ts = load.timescale()
 def load_bundled_gp_as_dataframes(constellation_key: str, sat_dict: dict, fresh=None) -> list:
     """Copy of app.py's load_bundled_gp_as_dataframes (same behaviour); app.py cannot be
     imported without running its Streamlit script. `fresh` ({norad: [rows]}, from data.celestrak)
-    is added to each satellite's bundled records, leaving out epochs already there."""
-    bundled = load_bundled_gp_history(constellation_key)
-    if not bundled or not bundled.get('satellites'):
-        return []
-
+    is added to each satellite's bundled records, leaving out epochs already there. With no bundled
+    file the fresh rows alone are used (GPS, GLONASS and Galileo have none yet)."""
     all_dfs = []
-    sat_data = bundled.get('satellites', {})
+    sat_data = (load_bundled_gp_history(constellation_key) or {}).get('satellites') or {}
     fresh = fresh or {}
 
     for sat_name, norad_id in sat_dict.items():

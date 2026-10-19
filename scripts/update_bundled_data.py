@@ -12,6 +12,12 @@ Or set environment variables:
     SPACETRACK_PASSWORD=your_password
     python scripts/update_bundled_data.py
 
+Or keep them in the git-ignored .env (see .env.example) and load it first:
+    set -a; . ./.env; set +a
+
+GPS, GLONASS and Galileo are fetched only when named (--constellation gps, glonass or galileo), never
+by "all": about 30 satellites each, a year apiece, is a large request to Space-Track and a large file in data/.
+
 Or the script will automatically read from .streamlit/secrets.toml if available.
 """
 
@@ -24,7 +30,7 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config.config import NAVIK_SATS, QZSS_SATS, BEIDOU3_SATS
+from config.config import BEIDOU3_SATS, MEO_SATS, NAVIK_SATS, QZSS_SATS
 from api.celestrak_api import fetch_tles_from_celestrak
 from data.tle_cache import save_tles_to_bundle, save_gp_history_to_bundle
 
@@ -224,7 +230,7 @@ def main():
     parser.add_argument('--days', '-d', type=int, default=365,
                         help='Days of GP history to fetch (default: 365 for full year)')
     parser.add_argument('--constellation', '-c', 
-                        choices=['navic', 'qzss', 'beidou3', 'all'],
+                        choices=['navic', 'qzss', 'beidou3', 'gps', 'glonass', 'galileo', 'all'],
                         default='all',
                         help='Constellation to update (default: all)')
     parser.add_argument('--tles-only', action='store_true',
@@ -261,10 +267,11 @@ def main():
         'beidou3': BEIDOU3_SATS,
     }
     
+    meo = {system.lower(): sats for system, sats in MEO_SATS.items()}
     if args.constellation == 'all':
         targets = constellations
     else:
-        targets = {args.constellation: constellations[args.constellation]}
+        targets = {args.constellation: {**constellations, **meo}[args.constellation]}
     
     print(f"\n🛰️  GNSS Health Monitor - Data Update Script")
     print(f"   Timestamp: {datetime.now(timezone.utc).isoformat()}")

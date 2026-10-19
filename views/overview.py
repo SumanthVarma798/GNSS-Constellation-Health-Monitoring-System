@@ -10,8 +10,8 @@ from html import escape
 import pandas as pd
 import streamlit as st
 
-from config.config import TRACKED_NOT_IN_REGISTRY
-from ui import data, limits, measures, orbit_section, palette, shell, surfaces
+from config.config import MEO_SATS, TRACKED_NOT_IN_REGISTRY
+from ui import data, limits, measures, meo_overview, orbit_section, palette, shell, surfaces
 from ui.data import SATELLITES
 from ui.figures.constellation_3d import slot_legend
 from ui.figures.slot_rows import as_number, slot_words
@@ -148,6 +148,9 @@ def _slot_picture(rows, result, name):
 def constellation(name, window_days, params):
     """One constellation: the count, then per orbit type its tiles and table, the slot picture, the details."""
     result = data.load(name, window_days, params)
+    if name in MEO_SATS:   # judged by orbital plane, not longitude slot
+        meo_overview.page(name, result)
+        return
     today = pd.Timestamp(datetime.now(timezone.utc).date())
     window = measures.in_window(result["history"], window_days, today)
     classes = measures.classified(window, name)
@@ -175,16 +178,19 @@ def constellation(name, window_days, params):
 def compare(window_days, params):
     """Satellites picked across constellations: their tiles side by side, then their score parts in step."""
     chosen, measured = [], []
-    for name, picked in picker().items():
+    picks = picker()
+    for name, picked in picks.items():
         result = data.load(name, window_days, params)
-        tiles, _ = _tiles(result)
+        tiles = meo_overview.tiles(result) if name in MEO_SATS else _tiles(result)[0]
         chosen += [(s, *tiles[s]) for s in picked if s in tiles]
-        measured += [(name, result, tiles[s][2]) for s in picked if s in tiles and tiles[s][2] is not None]
+        if name not in MEO_SATS:   # the should-be / is table is for slot-keeping satellites
+            measured += [(name, result, tiles[s][2]) for s in picked if s in tiles and tiles[s][2] is not None]
     if not chosen:
         surfaces.show('<p class="small">Add satellites to compare.</p>')
         return
-    scores = [[as_number(health.get(column)) if health else None for _, column in PARTS] for *_, health in chosen]
-    rows = [(label, [column[i] for column in scores]) for i, (label, _) in enumerate(PARTS)]
+    parts = PARTS + (meo_overview.PARTS if set(picks) & set(MEO_SATS) else [])
+    scores = [[as_number(health.get(column)) if health else None for _, column in parts] for *_, health in chosen]
+    rows = [(label, [column[i] for column in scores]) for i, (label, _) in enumerate(parts)]
     surfaces.show(surfaces.compare_grid([html for _, html, _, _ in chosen], surfaces.parts_matrix(rows)))
     if measured:
         today = pd.Timestamp(datetime.now(timezone.utc).date())
