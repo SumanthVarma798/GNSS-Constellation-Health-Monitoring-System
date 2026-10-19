@@ -1,11 +1,12 @@
 """Station-keeping: how often each satellite's orbit is corrected, and whether the rhythm holds."""
+from datetime import datetime, timezone
 from html import escape
 
 import pandas as pd
 import streamlit as st
 
-from ui import data, shell, surfaces
-from ui.figures.burns import burn_cadence, burn_timeline, rhythm
+from ui import data, measures, shell, surfaces
+from ui.figures.burns import EAST_WEST, burn_cadence, burn_timeline, rhythm
 
 PATTERN_STATUS = {"regular": "ok", "irregular": "warn", "too few": "idle"}
 CHART = {"use_container_width": True, "config": {"displayModeBar": False}}
@@ -61,6 +62,41 @@ def _rhythm(rows):
     return surfaces.raised('<div class="rhythm">' + "".join(lines) + "</div>")
 
 
+def _detection(p):
+    """How a burn is found, with the thresholds in use."""
+    return (f'<p class="small">A burn is found where the orbit\'s size jumps by {p["sma_threshold"]:g} km or more '
+            f'(east-west) or its tilt by {p["inc_threshold"]:g}° or more (north-south), standing out at a z-score of '
+            f'{p["z_threshold"]:g} and holding for {int(p["persist_window"])} element sets.</p>')
+
+
+def _counts(results, chosen, window_days, today):
+    """Burns in the window and the score's pattern, one row per satellite shown, and the burns in the window."""
+    rows, recent, start = [], [], today - pd.Timedelta(days=window_days)
+    for name, result in results.items():
+        window = measures.in_window(result["history"], window_days, today)
+        burns = result["burns"][pd.to_datetime(result["burns"]["window_end"]) >= start]
+        health = {str(h["Satellite"]): h for h in result["health"].to_dict("records")}
+        for satellite in chosen[name] or list(dict.fromkeys(result["history"]["satellite"])):
+            own = pd.to_datetime(window.loc[window["satellite"] == satellite, "EPOCH"])
+            days = (own.max() - own.min()).days if len(own) else None
+            rows.append((satellite, measures.burn_row(satellite, burns, days, health.get(satellite))))
+            recent.append(burns[burns["satellite"] == satellite])
+    return rows, pd.concat(recent, ignore_index=True)
+
+
+def _events(burns):
+    """Every burn in the window, newest first: which satellite, when, which kind, and how much the orbit changed.
+    The change that kind of burn makes is drawn in the accent colour."""
+    cell, rows = measures.cell, []
+    for b in burns.sort_values("window_end", ascending=False).to_dict("records"):
+        end, east_west = pd.Timestamp(b["window_end"]), b["kind"] == EAST_WEST
+        rows.append((b["satellite"], [cell(f"{end.day} {end:%b %Y %H:%M}"), cell(b["kind"]),
+                                      cell(f"{b['d_sma_km']:+.3f} km", status="accent" if east_west else "idle"),
+                                      cell(f"{b['d_inc_deg']:+.4f}°", status="idle" if east_west else "accent")]))
+    return surfaces.table([("Satellite", ""), ("Found at (UTC)", "End of the window it fell in"), ("Kind", ""),
+                           ("Size change", "Semi-major axis"), ("Tilt change", "Inclination")], rows)
+
+
 chosen = _chosen()
 if not chosen:
     surfaces.show('<p class="small">Pick satellites on the Overview to compare.</p>')
@@ -89,6 +125,17 @@ for name, result in results.items():
 burns = pd.concat(burns, ignore_index=True)
 start, end = min(e.min() for e in epochs), max(e.max() for e in epochs)
 
+window_days = st.session_state["window_days"]
+counts, recent = _counts(results, chosen, window_days, pd.Timestamp(datetime.now(timezone.utc).date()))
+
 surfaces.show(_rhythm(rhythm(burns, satellites, end)))
+surfaces.show(surfaces.group_head(shell.WINDOWS[window_days],
+                                  f"{len(recent)} burns: {(recent['kind'] == EAST_WEST).sum()} east-west, "
+                                  f"{(recent['kind'] != EAST_WEST).sum()} north-south"))
+surfaces.show(surfaces.table([("Satellite", "")] + measures.BURN_COLUMNS, counts))
+surfaces.show(_detection(measures.thresholds(None, st.session_state["params"])))
+if len(recent):
+    with st.expander("Every burn in the window"):
+        surfaces.show(_events(recent))
 st.plotly_chart(burn_cadence(burns, satellites), **CHART)
 st.plotly_chart(burn_timeline(burns, satellites, start, end), **CHART)
