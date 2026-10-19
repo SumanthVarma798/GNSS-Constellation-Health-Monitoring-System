@@ -37,12 +37,23 @@ def schedule(job_file, which=0):
     return f"`{schedule}` ({note.rstrip('.')})"
 
 
+def duration(gap):
+    """A gap in the largest whole unit that fits it: "2 hours", "1 day", "10 seconds"."""
+    seconds = int(gap.total_seconds())
+    for unit, size in (("day", 86400), ("hour", 3600), ("minute", 60), ("second", 1)):
+        if seconds % size == 0 and (seconds >= size or size == 1):
+            count = seconds // size
+            return f"{count} {unit}{'' if count == 1 else 's'}"
+
+
 def constants_table():
     megabytes = settings.MAX_COPY_BYTES // (1024 * 1024)
     rows = [
         ("Documents are fetched", schedule("archive.yml"), "`.github/workflows/archive.yml`"),
         ("Catalogues are fetched", schedule("archive.yml", 1), "`.github/workflows/archive.yml`"),
         ("Orbit records are fetched", schedule("archive.yml", 2), "`.github/workflows/archive.yml`"),
+        ("News feeds and pages are fetched", schedule("archive.yml", 3), "`.github/workflows/archive.yml`"),
+        ("Social media feeds are fetched", schedule("archive.yml", 4), "`.github/workflows/archive.yml`"),
         ("The registry is rebuilt", schedule("registry-update.yml"), "`.github/workflows/registry-update.yml`"),
         ("Sources archived, by group", ", ".join(f"{group}: {len(found)}" for group, found in ARCHIVED_SOURCES.items()),
          "`evidence/sources.py`"),
@@ -54,6 +65,14 @@ def constants_table():
         ("The three labels", ", ".join((settings.LABEL_CONFIRMED, settings.LABEL_PROBABLE, settings.LABEL_UNCONFIRMED)),
          "`evidence/settings.py`"),
         ("Longest wait for an outside server", f"{settings.REQUEST_TIMEOUT_SECONDS} seconds", "`evidence/settings.py`"),
+        ("A failed download is tried", f"{settings.DOWNLOAD_TRIES} times, {settings.WAIT_BETWEEN_TRIES_SECONDS} seconds "
+         "apart; once a run where that is sooner than the source's gap", "`evidence/settings.py`"),
+        ("Shortest gap between two requests to one site",
+         ", ".join([*(f"{site}: {duration(gap)}" for site, gap in settings.MIN_GAP_BETWEEN_DOWNLOADS.items()),
+                    f"any other site: {duration(settings.DEFAULT_MIN_GAP)}"]), "`evidence/settings.py`"),
+        ("A site that refuses us waits", f"{duration(settings.BACKOFF_FIRST)}, doubling with each refusal in a row, "
+         f"at most {duration(settings.BACKOFF_LONGEST)}; refusals are "
+         f"{', '.join(map(str, settings.REFUSAL_STATUSES))} or no answer", "`evidence/settings.py`"),
         ("Largest copy the archive keeps", f"{megabytes} MB", "`evidence/settings.py`"),
         ("Statuses that mean a page is gone", ", ".join(map(str, settings.GONE_STATUSES)), "`evidence/settings.py`"),
         ("How our requests name themselves", f"`{settings.USER_AGENT}`", "`evidence/settings.py`"),

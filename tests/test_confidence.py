@@ -8,7 +8,7 @@ import pytest
 from evidence.confidence import assess, assess_event, read_source_grades
 from evidence.settings import (CANDIDATE_GRADED, CANDIDATE_STANDINGS, RELIABILITY_GRADES, SOURCE_CANDIDATE_COLUMNS,
                                SOURCE_CANDIDATES_FILE, SOURCE_GRADE_COLUMNS)
-from evidence.sources import archived_addresses
+from evidence.sources import ARCHIVED_SOURCES, PROVISIONAL_GROUPS, archived_addresses
 from evidence.store import new_store
 
 
@@ -53,10 +53,16 @@ def test_the_source_table_is_complete_and_well_formed():
         datetime.date.fromisoformat(row["graded_on"])
 
 
-def test_every_archived_source_has_been_graded():
+def test_every_archived_source_has_been_graded_or_is_a_provisional_candidate():
     graded = {row["source_id"] for row in read_source_grades()}
-    ungraded = {urlsplit(address).hostname for address in archived_addresses()} - graded
+    settled = [address for group in ARCHIVED_SOURCES if group not in PROVISIONAL_GROUPS
+               for address in archived_addresses(group)]
+    ungraded = {urlsplit(address).hostname for address in settled} - graded
     assert ungraded == set(), "add these sources to evidence/source_grades.csv before archiving them"
+    # News and social sources are collected before they are graded (19 Oct 2026): each must be on the candidate list.
+    with open(SOURCE_CANDIDATES_FILE, newline="", encoding="utf-8") as handle:
+        candidates = {row["address"] for row in csv.DictReader(handle)}
+    assert {address for group in PROVISIONAL_GROUPS for address in archived_addresses(group)} <= candidates
 
 
 def test_the_candidate_list_is_well_formed():
