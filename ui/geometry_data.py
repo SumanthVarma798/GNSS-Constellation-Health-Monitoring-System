@@ -72,9 +72,10 @@ def sky_frames(satellites, lat, lon, start, mask_deg, hours=gs.SKY_HOURS, step_m
     [{"time", "gdop" (None without a position), "satellites": [(name, azimuth, elevation), ...]}]."""
     frames = []
     for when in _steps(start, hours, step_minutes):
-        dop, _, positions = calculate_dop_for_location(satellites, lat, lon, when, elevation_mask_deg=mask_deg)
-        seen = [(name, p["azimuth"], p["elevation"]) for name, p in zip(satellites, positions)
-                if p and p["elevation"] > mask_deg]
+        dop, names, positions = calculate_dop_for_location(satellites, lat, lon, when, elevation_mask_deg=mask_deg)
+        # positions leaves out satellites it could not place, so pair the ones in view with the names in view
+        above = [p for p in positions if p["elevation"] > mask_deg]
+        seen = [(name, p["azimuth"], p["elevation"]) for name, p in zip(names, above)]
         frames.append({"time": when, "gdop": dop["GDOP"] if dop else None, "satellites": seen})
     return frames
 
@@ -113,9 +114,10 @@ def central_longitudes(history, names, since):
 def targets(constellation, name, orbit_type, params):
     """What each trend should be for one satellite: {history column: (low, high)}, only where a target is set.
 
-    Tilt: the configured range, else the target plus or minus the inclination tolerance. Height: the configured
-    semi-major axis, less Earth's radius, plus or minus its tolerance. Drift: within the drift tolerance for its
-    orbit type. Centre: its slot's longitude plus or minus the configured tolerance."""
+    Tilt: the configured range, else the target plus or minus the satellite's own inclination tolerance, else the
+    constellation's. Height: the configured semi-major axis, less Earth's radius, plus or minus its tolerance.
+    Drift: within the drift tolerance for its orbit type. Centre: its slot's longitude plus or minus the configured
+    tolerance."""
     p = {**DEFAULT_PARAMS, **params}
     req = REQUIREMENTS.get(constellation, {}).get(name, {})
     out = {}
@@ -123,7 +125,8 @@ def targets(constellation, name, orbit_type, params):
     if "inclination_target_deg_range" in req:
         out["INCLINATION"] = tuple(req["inclination_target_deg_range"])
     elif target is not None:
-        out["INCLINATION"] = (target - p["inclination_tolerance"], target + p["inclination_tolerance"])
+        tol = req.get("inclination_tol_deg", p["inclination_tolerance"])
+        out["INCLINATION"] = (target - tol, target + tol)
     if "sma_km" in req:
         out["altitude_km"] = (req["sma_km"] - R_EARTH - req["sma_tol_km"], req["sma_km"] - R_EARTH + req["sma_tol_km"])
     drift = p["drift_tolerance_gso"] if orbit_type == "GEO" else gs.DRIFT_TOLERANCE_IGSO

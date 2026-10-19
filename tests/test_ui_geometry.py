@@ -62,6 +62,20 @@ def test_sky_frames_hold_only_satellites_above_the_mask(beidou):
     assert {n for n, _, _ in frames[0]["satellites"]} <= set(beidou)
 
 
+class _Unplaceable:
+    """A satellite whose position cannot be worked out: calculate_satellite_position skips it."""
+    def __sub__(self, other):
+        raise ValueError("no position")
+
+
+def test_a_satellite_without_a_position_does_not_shift_the_others(beidou):
+    alone = gd.sky_frames(beidou, 39.9, 116.4, WHEN, MASK, hours=0)[0]["satellites"]
+
+    with_broken = gd.sky_frames({"Broken": _Unplaceable(), **beidou}, 39.9, 116.4, WHEN, MASK, hours=0)[0]["satellites"]
+
+    assert with_broken == alone
+
+
 def test_a_geostationary_track_stays_near_its_slot(beidou):
     tracks, here = gd.ground_tracks(beidou, WHEN, gs.TRACK_WINDOWS[0])
 
@@ -118,6 +132,12 @@ def test_targets_come_from_config_and_the_thresholds():
     assert navic["central_lon"] == (55.0, 55.0)
     assert navic["LonDrift_deg_per_day"] == (-gs.DRIFT_TOLERANCE_IGSO, gs.DRIFT_TOLERANCE_IGSO)
     assert geo["LonDrift_deg_per_day"] == (-0.1, 0.1)
+
+
+def test_a_satellites_own_inclination_tolerance_comes_before_the_constellation_one():
+    qzs3 = gd.targets("QZSS", "QZS-3 (Michibiki-3)", "GEO", {"inclination_tolerance": 4.0})
+
+    assert qzs3["INCLINATION"] == (-0.5, 0.5)
 
 
 def test_orbit_types_fall_back_to_the_history_for_satellites_set_aside():
