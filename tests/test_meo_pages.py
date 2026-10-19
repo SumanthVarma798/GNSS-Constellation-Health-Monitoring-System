@@ -56,3 +56,15 @@ def test_the_dashboard_asks_for_the_meo_satellites_it_tracks_and_not_the_retired
     data.refresh()
     assert {37846, 39533, 100460} <= set(asked)   # GSAT0101, NAVSTAR 69 and COSMOS 2619
     assert 10893 not in asked                     # a GPS-I satellite, retired
+
+
+def test_a_listed_slot_without_a_spacing_check_says_why_not_that_the_slot_is_unlisted():
+    from ui import meo_overview, palette
+
+    def row(height_score, slot_at):
+        return {"plane_agrees": True, "plane": "B", "slot": "B2", "slot_at": slot_at,
+                "checks": [("plane", 0.0, 0.1, 0.1, 100), ("height", 26560.0, 26900.0, 340.0, height_score)]}
+
+    assert meo_overview.state_of(row(40, 12.0)) == (palette.SLOT_UNKNOWN, "away from its working height", None)
+    assert meo_overview.state_of(row(100, 12.0)) == (palette.SLOT_UNKNOWN, "no neighbour to space against", None)
+    assert meo_overview.state_of(row(100, None)) == (palette.SLOT_UNKNOWN, "slot B2 not listed", None)

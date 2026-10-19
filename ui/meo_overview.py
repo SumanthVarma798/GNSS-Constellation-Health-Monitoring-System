@@ -37,6 +37,11 @@ def state_of(row):
             (palette.SLOT_OFF, f"out of step, {off:.1f}°", off)
     if row["plane"] == EXTENDED:
         return palette.SLOT_UNKNOWN, "own eccentric orbit", None
+    # left out of the gaps (analysis/meo_geometry.py): passing through at another height, or alone in its plane
+    if "height" in checks and checks["height"][4] < 100:
+        return palette.SLOT_UNKNOWN, "away from its working height", None
+    if row["slot_at"] is not None:
+        return palette.SLOT_UNKNOWN, "no neighbour to space against", None
     return palette.SLOT_UNKNOWN, f"slot {row['slot']} not listed" if row["slot"] else "no slot given", None
 
 
