@@ -3,12 +3,45 @@
 Addresses of outside sources live in evidence/sources.py. The system-letter
 mapping lives in registry/constellations.csv.
 """
+from datetime import timedelta
 from pathlib import Path
 
 # --- Requests to outside servers ---
 
 REQUEST_TIMEOUT_SECONDS = 60  # how long to wait for any outside server
 USER_AGENT = "gnss-evidence-archive/0.1 (scheduled research fetch)"  # how we name ourselves to them
+
+# Each site's minimum gap between two of our requests to it. Every fetcher reads it here: the archive job and
+# the dashboard. A site is a host name and every host under it ("reddit.com" covers www.reddit.com).
+# Within one run the archive job waits out the gap, counted from the end of the last request; between runs,
+# each group's schedule in .github/workflows/archive.yml must be at least as far apart as its longest gap (a test checks).
+MIN_GAP_BETWEEN_DOWNLOADS = {
+    # CelesTrak asks for one download per 2 hours at most, and blocked this machine on 17 Oct 2026 for more (issue 76).
+    "celestrak.org": timedelta(hours=2),
+    # Refused a second request three seconds after the first (8 and 19 Oct 2026); five subreddits read 150 s apart
+    # all answered (19 Oct). Read once a day (issue 13). The real limit is not published for feeds (guess).
+    "reddit.com": timedelta(minutes=2),
+    # Seven search feeds in a row; how often Google allows them is not stated (guess).
+    "news.google.com": timedelta(seconds=10),
+}
+DEFAULT_MIN_GAP = timedelta(seconds=5)  # any other site: no stated limit, so a polite pause
+# The most one run of a group may spend waiting out gaps, so it ends well inside archive.yml's 30-minute fetch step.
+RUN_WAIT_BUDGET = timedelta(minutes=15)
+
+DOWNLOAD_TRIES = 3                # a failed download is tried this many times in one run...
+WAIT_BETWEEN_TRIES_SECONDS = 60   # ...with this wait between, unless that is shorter than the source's gap: then once
+RETRY_STATUSES = (429, 500, 502, 503, 504)  # replies worth another try; any other reply is the source's answer
+
+# A site that refuses us, or does not answer at all, is not asked again until its back-off has passed:
+# BACKOFF_FIRST after the first refusal, doubling with each refusal in a row, never longer than BACKOFF_LONGEST.
+# One good answer clears it. Kept across runs in the archive's ARCHIVE_LIMITS_FILE.
+REFUSAL_STATUSES = (403, 429)
+BACKOFF_FIRST = timedelta(hours=1)
+BACKOFF_LONGEST = timedelta(days=7)
+
+# Never fetched, by any job or any person's script: the Russian and Chinese satellite-tracker sites named on
+# the 17 Oct 2026 call. They may be malicious; what they show reaches us only through independent journalists.
+NEVER_FETCH = ("vimpel", "spacemapper")  # matched anywhere in a host name
 
 # --- The raw-copy archive ---
 
@@ -18,6 +51,13 @@ GONE_STATUSES = (404, 410)         # the page no longer exists: a change worth r
 ARCHIVE_OBJECTS_DIR = "objects"          # folder of raw copies, inside an archive folder
 ARCHIVE_VERSIONS_FILE = "versions.csv"   # one row per change, inside an archive folder
 ARCHIVE_VERSION_COLUMNS = ["address", "fetched_at", "status", "sha256", "bytes", "content_type", "wayback_url"]
+# The run log: one line per run of a scheduled job, inside an archive folder. One file per job file
+# (runs/archive.csv, runs/registry-update.csv), so two jobs saving at once never edit the same file.
+ARCHIVE_RUNS_DIR = "runs"
+# Each site in its back-off, one row per site, rewritten whole every run, inside an archive folder.
+ARCHIVE_LIMITS_FILE = "limits.csv"
+ARCHIVE_LIMIT_COLUMNS = ["site", "refusals", "last_answer", "refused_at", "wait_until"]
+ARCHIVE_RUN_COLUMNS = ["job", "started", "ended", "result", "changed"]
 
 # --- The registry tables ---
 
@@ -63,6 +103,53 @@ REGISTRY_COLUMN_PLAIN_NAMES = {
 # The source table: one row per source, graded by a person. Changed only through review.
 SOURCE_GRADES_FILE = Path(__file__).resolve().parent / "source_grades.csv"
 SOURCE_GRADE_COLUMNS = ["source_id", "name", "reliability", "graded_by", "graded_on", "reason"]
+
+# Candidate sources for the news pipeline (issue 13), one row per feed or page. Each address was fetched once;
+# where it failed, up to two other addresses were tried, and the row records the last one.
+# Proposals only: a grade counts once the team moves it into the source table. The rows whose check worked
+# are archived on a schedule (evidence/sources.py), and decide nothing.
+SOURCE_CANDIDATES_FILE = Path(__file__).resolve().parent / "source_candidates.csv"
+SOURCE_CANDIDATE_COLUMNS = ["source_id", "name", "kind", "address", "checked_on", "check_status", "check_type",
+                            "check_bytes", "check_items", "proposed_grade", "grade_reason", "standing", "note"]
+CANDIDATE_GRADED = "graded"  # already in the source table; the proposed grade must match it
+CANDIDATE_STANDINGS = ("provisional", CANDIDATE_GRADED, "no grade: discovery or pointer", "held: not fetched")
+CANDIDATE_WORKED = "200"         # check_status of a row whose feed or page answered
+CANDIDATE_FEED_TYPE = "feed"     # check_type starts with this when the answer was a feed a program can read
+CANDIDATE_SOCIAL_KIND = "social feed"  # kind of a social media feed: its posts count only for the link they hold
+# A social post's own platform. A link to one of these is not a link to the post's source.
+SOCIAL_PLATFORM_HOSTS = ("reddit.com", "redd.it", "redditmedia.com", "redditstatic.com")
+# Links in a post that are not an article to check: countdown clocks, image hosts, videos. Skipped when
+# looking for the post's source (an r/ISRO launch thread's first link was a countdown clock, 19 Oct 2026).
+NOT_AN_ARTICLE_HOSTS = ("timeanddate.com", "imgur.com", "youtube.com", "youtu.be", "twitch.tv",
+                        # another social post is a pointer too, never the source (r/roscosmos, 19 Oct 2026)
+                        "x.com", "twitter.com", "facebook.com", "instagram.com", "linkedin.com", "t.me")
+
+# One collected news item (issue 13): a pointer to an article, read from a feed. Not a claim; nothing here decides.
+# source_id: who published the article (for a discovery or social feed, the linked page's host, decision 5);
+# via: the feed it was read from; fetched_at: when our archive first held it.
+NEWS_ITEM_COLUMNS = ["source_id", "address", "title", "published_at", "fetched_at", "via"]
+
+# One row per archived feed, measured from the archive (issue 13): how often a copy changed per run of its group
+# (to set cadence), and the share of its items that name a navigation system (a first signal-to-noise measure,
+# until the hand-labelled set gives a better one). Measurements only: no grade or cadence changes by itself.
+FEED_REPORT_COLUMNS = ["via", "group", "runs", "copies", "copies_per_run", "items", "items_naming_a_system",
+                       "share_naming_a_system"]
+
+# The hand-labelled set for choosing a claim-extraction model (issue 15, week 1). Kept here, beside the
+# source lists, until the extraction step decides where its test data lives.
+LABELLING_SHEET_FILE = Path(__file__).resolve().parent / "labelling_sheet.csv"
+LABELLING_SHEET_COLUMNS = ["system", "title", "source_id", "published_at", "address", "claims_in_this_item", "none"]
+LABELLING_SHEET_SIZE = 30
+# Words that put an item under a system, for spreading the sheet across all six. Matched as whole words,
+# any case. A cheap pointer, not the relevance filter: an item may name several systems or none.
+SYSTEM_WORDS = {
+    "GPS": ("GPS", "Navstar"),
+    "GLONASS": ("GLONASS",),
+    "Galileo": ("Galileo",),
+    "BeiDou": ("BeiDou", "Compass navigation"),
+    "QZSS": ("QZSS", "Michibiki", "QZS"),
+    "NavIC": ("NavIC", "IRNSS", "NVS-01", "NVS-02", "NVS-03"),
+}
 
 # Source reliability, from the Admiralty code. The grade belongs to the source.
 RELIABILITY_GRADES = {

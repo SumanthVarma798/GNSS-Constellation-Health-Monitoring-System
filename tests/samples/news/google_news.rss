@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!-- Made for the tests, in the shape of a Google News search feed (issue 13). -->
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel>
+<title>"GLONASS satellite" - Google News</title>
+<lastBuildDate>Mon, 19 Oct 2026 13:10:32 GMT</lastBuildDate>
+<item>
+  <title>Soyuz rocket delivers fresh GLONASS navsat - Russian Space Web</title>
+  <link>https://news.google.com/rss/articles/CBMiAAA?oc=5</link>
+  <guid isPermaLink="false">CBMiAAA</guid>
+  <pubDate>Mon, 24 Aug 2026 07:00:00 GMT</pubDate>
+  <description>&lt;a href="https://news.google.com/rss/articles/CBMiAAA?oc=5"&gt;Soyuz rocket delivers fresh GLONASS navsat&lt;/a&gt;</description>
+  <source url="https://www.russianspaceweb.com">Russian Space Web</source>
+</item>
+<item>
+  <title>GLONASS - the system, explained - Example Daily</title>
+  <link>https://news.google.com/rss/articles/CBMiBBB?oc=5</link>
+  <pubDate>Sun, 20 Sep 2026 07:00:00 GMT</pubDate>
+  <source url="https://exampledaily.example">Example Daily</source>
+</item>
+</channel></rss>
