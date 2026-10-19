@@ -34,9 +34,11 @@ def test_galmon_is_not_fetched_on_a_schedule():
 def test_every_schedule_line_is_assigned_to_a_group():
     schedules = re.findall(r"- cron: '([^']+)'", JOB)
     assigned = dict(re.findall(r"^\s+'([^']+)'\) group=(\w+) ;;", JOB, re.M))
+    labelled = dict(re.findall(r"- cron: '([^']+)'\s+# (\w+):", JOB))
 
     assert schedules and sorted(schedules) == sorted(assigned)   # same lines in both places
     assert len(schedules) == len(set(schedules))                 # two groups cannot share a line
+    assert labelled == assigned       # each line's comment, and so the design page, names the group it fetches
     for group in assigned.values():
         assert ARCHIVED_SOURCES[group], f"'{group}' has a schedule but no sources: its runs would do nothing"
 
