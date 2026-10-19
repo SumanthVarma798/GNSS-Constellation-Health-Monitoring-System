@@ -252,7 +252,7 @@ def test_each_refusal_in_a_row_doubles_the_wait_up_to_the_longest_and_one_answer
 
     archive.note_answer(limits, address, "no answer", NOW + BACKOFF_FIRST)
     assert archive.waiting_until(limits, address, NOW) == NOW + 3 * BACKOFF_FIRST                          # 1 h, then 2 h
-    for _ in range(20):
+    for _ in range(40):                                  # a site refused for most of a year: no overflow
         archive.note_answer(limits, address, 403, NOW)
     assert archive.waiting_until(limits, address, NOW) == NOW + BACKOFF_LONGEST
 

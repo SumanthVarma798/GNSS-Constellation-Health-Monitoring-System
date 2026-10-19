@@ -98,7 +98,8 @@ def note_answer(limits, address, answer, now):
         limits.pop(name, None)  # any other answer means the site is talking to us again
         return
     refusals = int(limits.get(name, {}).get("refusals", 0)) + 1
-    wait = min(BACKOFF_FIRST * 2 ** (refusals - 1), BACKOFF_LONGEST)
+    # The doubling stops at 2**20: far past BACKOFF_LONGEST, and short of overflowing a timedelta.
+    wait = min(BACKOFF_FIRST * 2 ** min(refusals - 1, 20), BACKOFF_LONGEST)
     limits[name] = dict(zip(ARCHIVE_LIMIT_COLUMNS, [name, str(refusals), str(answer), _utc(now), _utc(now + wait)]))
 
 
