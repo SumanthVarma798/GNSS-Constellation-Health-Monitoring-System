@@ -1,16 +1,27 @@
-"""Overview: is each satellite healthy and in its slot? One constellation, or satellites picked across constellations."""
-import re
+"""Overview: is each satellite healthy and in its slot? One constellation, or satellites picked across constellations.
 
+Satellites are grouped by orbit type, each group with its tiles and a table of what each measure is against what
+it should be.
+"""
+import re
+from datetime import datetime, timezone
+from html import escape
+
+import pandas as pd
 import streamlit as st
 
 from config.config import TRACKED_NOT_IN_REGISTRY
-from ui import data, orbit_section, palette, shell, surfaces
+from ui import data, limits, measures, orbit_section, palette, shell, surfaces
 from ui.data import SATELLITES
 from ui.figures.constellation_3d import slot_legend
 from ui.figures.slot_rows import as_number, slot_words
 from ui.orbit_section import CHIP_STATUS, PARTS
 from ui.picker import picker
 HEALTHY_FROM = 80
+STATUS_CHIP = {"Healthy": "ok", "Fair": "warn", "Degraded": "bad", "Critical": "bad"}
+EMOJI = re.compile(r"[\u2100-\u23FF\u2460-\u27BF\U0001F000-\U0001FAFF\uFE0F]\s?")   # the remarks' status signs; the words stay
+CLASS_COLUMNS = [("Satellite", ""), ("Type", "From the mean tilt"), ("Mean inclination", "In the window"),
+                 ("Mean height", "In the window"), ("Drift now", "Per day")]
 
 
 def _tile(health, slot):
@@ -57,8 +68,71 @@ def _gaps(constellation, result):
     unlisted = TRACKED_NOT_IN_REGISTRY[constellation]
     for text in (*result["warnings"],
                  *([f"No orbit data: {', '.join(no_data)}"] if no_data else []),
-                 *([f"Awaiting a registry update: {', '.join(unlisted)}"] if unlisted else [])):
+                 *([f"Awaiting a registry update: {', '.join(unlisted)}"] if unlisted else []),
+                 *([f"Scored on four parts, no current position against the slot: {', '.join(unplaced)}"]
+                   if (unplaced := _unplaced(result["health"])) else [])):
         surfaces.show(surfaces.notice(text, "warn"))
+
+
+def _unplaced(health):
+    """Satellites with a slot but no longitude score: their overall score uses the other four parts."""
+    return [str(h["Satellite"]) for h in health.to_dict("records")
+            if as_number(h.get("Designated Lon (°)")) is not None and as_number(h.get("Lon Deviation Score")) is None]
+
+
+def _period(result, window, window_days, today):
+    """Status counts, the window and its records, the year the scores read, and how the score is made."""
+    chips = "".join(surfaces.chip(f"{n} {word.lower()}", STATUS_CHIP[word])
+                    for word, n in measures.status_counts(result["health"]))
+    start = today - pd.Timedelta(days=window_days)
+    spans = [str(p).split(" to ") for p in result["health"].get("Pattern Analysis Period", []) if " to " in str(p)]
+    year = (f'<span>scores read {_day(min(a for a, _ in spans))} to {_day(max(b for _, b in spans))}</span>'
+            if spans else "")
+    shown = window[~window["satellite"].isin(result["set_aside"])]
+    legend = surfaces.hover_legend(
+        [("var(--fill)", f"{label} {weight}%") for label, weight in limits.SCORE_WEIGHTS]
+        + [(f"var(--{STATUS_CHIP[word]})", f"{word} from {low}" if low else f"{word} under {limits.STATUS_FROM[i - 1][1]}")
+           for i, (word, low) in enumerate(limits.STATUS_FROM)], label="How the score is made", opens_left=True)
+    surfaces.show(f'<div class="facts">{chips}<span>{shell.WINDOWS[window_days]}: {_day(start)} to {_day(today)}</span>'
+                  f'<span>{len(shown):,} orbit records</span>{year}{legend}</div>')
+
+
+def _day(value):
+    day = pd.Timestamp(value)
+    return f"{day.day} {day:%b %Y}"
+
+
+def _types(names, result, classes):
+    """{satellite: orbit type} for `names`: the health row's type, else (set aside) the type its mean tilt gives."""
+    of = {str(h["Satellite"]): str(h.get("Type")) for h in result["health"].to_dict("records")}
+    by_tilt = {c["satellite"]: c["type"] for c in classes}
+    return {n: of.get(n) or by_tilt.get(n, "Unclassified") for n in names}
+
+
+def _table_rows(chosen, params, window):
+    """(name, cells) for each (constellation, result, health row), with the drift spread over the window."""
+    spread = measures.spreads(window)
+    return [(str(h["Satellite"]), measures.row(h, c, params, r["history"], spread.get(str(h["Satellite"]))))
+            for c, r, h in chosen]
+
+
+def _remarks(health):
+    """Each satellite's findings, one line each, as the health assessment wrote them."""
+    items = ""
+    for h in health.to_dict("records"):
+        lines = [EMOJI.sub("", part).strip() for part in str(h.get("Remarks", "")).split(" | ")]
+        items += (f"<li><b>{escape(str(h['Satellite']))}</b>"
+                  + "".join(f"<span>{escape(line)}</span>" for line in lines if line) + "</li>")
+    return f'<ul class="remarks">{items}</ul>'
+
+
+def _classes_table(classes):
+    cell = measures.cell
+    rows = [(c["satellite"], [cell(c["type"]),
+                              cell("–" if c["tilt"] is None else f"{c['tilt']:.3f}°"),
+                              cell("–" if c["height"] is None else f"{c['height']:,.1f} km"),
+                              cell("–" if c["drift"] is None else f"{c['drift']:+.4f}°")]) for c in classes]
+    return surfaces.table(CLASS_COLUMNS, rows)
 
 
 def _slot_picture(rows, result, name):
@@ -72,30 +146,50 @@ def _slot_picture(rows, result, name):
 
 
 def constellation(name, window_days, params):
-    """One constellation: the count, a tile per satellite, the slot picture."""
+    """One constellation: the count, then per orbit type its tiles and table, the slot picture, the details."""
     result = data.load(name, window_days, params)
+    today = pd.Timestamp(datetime.now(timezone.utc).date())
+    window = measures.in_window(result["history"], window_days, today)
+    classes = measures.classified(window, name)
     tiles, rows = _tiles(result)
     healthy = sum(healthy for _, healthy, _ in tiles.values())
     surfaces.show(f'<div class="head"><span class="big num">{healthy} of {len(tiles)}</span>'
                   '<span class="muted">healthy and in their slot</span></div>')
+    _period(result, window, window_days, today)
     _gaps(name, result)
-    _grid(html for html, _, _ in tiles.values())
+    for kind, names in measures.grouped(_types(tiles, result, classes)).items():
+        count = f"{len(names)} satellite{'s' if len(names) > 1 else ''}"
+        surfaces.show(surfaces.group_head(kind, " · ".join(filter(None, [count, limits.ORBIT_TYPES.get(kind)]))))
+        _grid(tiles[n][0] for n in names)
+        scored = [(name, result, tiles[n][2]) for n in names if tiles[n][2] is not None]
+        if scored:
+            surfaces.show(surfaces.table([("Satellite", "")] + measures.COLUMNS, _table_rows(scored, params, window)))
     if rows:
         _slot_picture(rows, result, name)
+    with st.expander("What the checks found"):
+        surfaces.show(_remarks(result["health"]))
+    with st.expander("How each satellite was classed"):
+        surfaces.show(_classes_table(classes))
 
 
 def compare(window_days, params):
     """Satellites picked across constellations: their tiles side by side, then their score parts in step."""
-    chosen = []
+    chosen, measured = [], []
     for name, picked in picker().items():
-        tiles, _ = _tiles(data.load(name, window_days, params))
+        result = data.load(name, window_days, params)
+        tiles, _ = _tiles(result)
         chosen += [(s, *tiles[s]) for s in picked if s in tiles]
+        measured += [(name, result, tiles[s][2]) for s in picked if s in tiles and tiles[s][2] is not None]
     if not chosen:
         surfaces.show('<p class="small">Add satellites to compare.</p>')
         return
     scores = [[as_number(health.get(column)) if health else None for _, column in PARTS] for *_, health in chosen]
     rows = [(label, [column[i] for column in scores]) for i, (label, _) in enumerate(PARTS)]
     surfaces.show(surfaces.compare_grid([html for _, html, _, _ in chosen], surfaces.parts_matrix(rows)))
+    if measured:
+        today = pd.Timestamp(datetime.now(timezone.utc).date())
+        window = pd.concat([measures.in_window(r["history"], window_days, today) for _, r, _ in measured])
+        surfaces.show(surfaces.table([("Satellite", "")] + measures.COLUMNS, _table_rows(measured, params, window)))
 
 
 try:
