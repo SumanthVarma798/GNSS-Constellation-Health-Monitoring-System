@@ -15,13 +15,15 @@ from data import celestrak
 from ui import changes, data, surfaces
 
 # Pages with their own filters: the bar shows no constellation, window or thresholds there.
-OWN_FILTERS = {"Master map"}
+OWN_FILTERS = {"Master map", "Library"}
 
 # The pages, in one place. Add a page by adding a line: (title, file).
 PAGES = [
     ("Overview", "views/overview.py"),
     ("Station-keeping", "views/station_keeping.py"),
+    ("Geometry", "views/geometry.py"),
     ("Master map", "views/master_map.py"),
+    ("Library", "views/library.py"),
     # ("How it works", "views/how_it_works.py"),
 ]
 CONSTELLATIONS = tuple(data.SATELLITES)

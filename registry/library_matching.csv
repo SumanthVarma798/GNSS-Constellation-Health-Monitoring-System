@@ -1,0 +1,7 @@
+system,registry_satellites,registry_found_in_gcat,registry_not_in_gcat,also_found_by_programme,found_by_programme_only,registry_and_programme_disagree
+GPS,80,80,0,80,0,0
+GLONASS,101,100,1,100,47,0
+Galileo,36,36,0,36,0,0
+BeiDou,60,60,0,60,4,0
+NavIC,10,10,0,10,1,0
+QZSS,7,6,1,6,0,0
