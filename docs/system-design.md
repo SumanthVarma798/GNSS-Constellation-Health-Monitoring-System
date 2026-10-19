@@ -23,7 +23,8 @@ approve. It never changes reference data by itself.
 flowchart TB
   igs["IGS satellite file"]:::built --> fetch["Archive job"]:::built
   gcat["Catalogue of space objects"]:::built --> fetch
-  more["Notices, news, orbital and signal data"]:::planned -.-> fetch
+  orbits["CelesTrak orbit records"]:::built --> fetch
+  more["Notices, news and signal data"]:::planned -.-> fetch
   galmon["Galmon"]:::hold -.-> fetch
   fetch --> archive[("Archive")]:::built
   archive --> regjob["Registry job"]:::built
@@ -95,12 +96,12 @@ pie showData title Estimated hours, all guesses
 | 50 | Demo C. Orbit pictures: slot belt, 3D view, score parts | 9 | Built |
 | 51 | Demo D. Menu, How it works page, new look on the existing tabs | 6 | Open; needs 48, 49 and 50 |
 | 10 | Notices ledger: GPS advisories | 10 | Open, after the call |
-| 13 | News, official pages, linked social posts | 14 | Waiting on a list of sources |
+| 13 | News, official pages, linked social posts | 14 | A first candidate list, each feed checked once, is in `evidence/source_candidates.csv`, waiting on the team's grades |
 | 14 | Owner and status per satellite, from a second source | 3 | Built; joining the weekly proposal is a follow-up |
 | 15 | Claim extraction | 20 | Waiting on a model and a spending ceiling |
 | 16 | Change proposals from claims | 12 | Open |
 | 6 | Internet Archive capture | 3 | Later |
-| 31 | Orbital data into the archive | 6 | Later |
+| 31 | Orbital data into the archive | 6 | Built: CelesTrak's GNSS group, once a day |
 | 7 | Galmon snapshots | 8 | On hold |
 | 8, 9 | Phone database trend; NavIC signal status | 18 | Open |
 | 19, 20 | Service column; announced versus observed | 25 | Open |
@@ -196,8 +197,9 @@ Produced from the code. A test fails if this table and the code disagree.
 |---|---|---|
 | Documents are fetched | `30 0 * * *` (documents: once a day, 00:30 UTC = 06:00 India time) | `.github/workflows/archive.yml` |
 | Catalogues are fetched | `45 0 * * *` (catalogues: once a day, 00:45 UTC = 06:15 India time, after the catalogue's own daily rebuild) | `.github/workflows/archive.yml` |
+| Orbit records are fetched | `15 1 * * *` (orbital: once a day, 01:15 UTC = 06:45 India time; CelesTrak allows one download per 2 hours) | `.github/workflows/archive.yml` |
 | The registry is rebuilt | `0 1 * * 0` (Sundays 01:00 UTC = 06:30 India time: half an hour after that day's documents fetch (see archive.yml), so the registry builds from a fresh copy) | `.github/workflows/registry-update.yml` |
-| Sources archived, by group | documents: 1, catalogues: 2, orbital: 0, news: 0 | `evidence/sources.py` |
+| Sources archived, by group | documents: 1, catalogues: 2, orbital: 1, news: 0 | `evidence/sources.py` |
 | Grades that clear the bar alone | A | `evidence/settings.py` |
 | Grades lifted by a second source | B | `evidence/settings.py` |
 | Grades lifted by our own data | B | `evidence/settings.py` |
@@ -226,7 +228,7 @@ Produced from the code. A test fails if this table and the code disagree.
 | - | Archive layout | Each copy named by its hash, never overwritten |
 | - | What the archive records | Only changes. "Last checked" is the last successful run of the job. |
 | - | Storage rule | The database keeps a reference to a document, never the document |
-| - | Cadence | Documents daily at 6 AM India time; catalogues daily at 6:15 AM; registry on Sundays at 6:30 AM. Short cadences first, accepting the storage; lengthen them as the product matures. |
+| - | Cadence | Documents daily at 6 AM India time; catalogues daily at 6:15 AM; orbit records daily at 6:45 AM; registry on Sundays at 6:30 AM. Short cadences first, accepting the storage; lengthen them as the product matures. |
 | - | Changes on the dashboard | Always shown visually, with colour. If there is too much to show, add filters. A satellite is added or removed only with approval and a traceable record. |
 | - | GitHub-only is temporary | Scheduled jobs and raw copies will move off GitHub (issue 42). Code, registry tables and approvals stay on GitHub. |
 | - | Scheduler | Stay on GitHub while its timer works; do not add complexity. If it stops working, the agreed next step is Kubernetes CronJob, then Argo Workflows when a job first needs steps that wait on each other or on a person. |
@@ -243,7 +245,7 @@ Produced from the code. A test fails if this table and the code disagree.
 | GitHub runs scheduled jobs close to on time | **Late, not broken.** All 6 scheduled runs from 10 to 12 Oct 2026 started and succeeded, each about 5¾ hours late: a job due at 6:00 AM India time runs near 11:50 AM (checked). A daily fetch tolerates that; nothing may depend on two jobs running in a set order. |
 | GitHub keeps a job's run history for about 90 days | Read, not verified. Beyond that, "last checked" rests on the schedule. |
 | The archive's change log is only ever added to | True by construction today. Document numbers depend on it. |
-| A source can be told apart by its website's host name | True for the one source so far. |
+| A source can be told apart by its website's host name | True for the three sources so far. |
 | Volumes stay small enough for a git repository | A guess: a few hundred changed pages a month. The catalogue adds about 24 MB before compression each time it changes. It changed on 2 of the first 3 days (checked), so perhaps 0.8 GB a year after compression (guess). GitHub advises keeping a repository under about 1 GB (source summary), so this cadence has roughly a year before it must change or the copies must move. |
 | Hours in section 3 | All guesses. |
 

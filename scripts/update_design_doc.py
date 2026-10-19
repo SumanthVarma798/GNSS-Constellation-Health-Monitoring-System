@@ -42,6 +42,7 @@ def constants_table():
     rows = [
         ("Documents are fetched", schedule("archive.yml"), "`.github/workflows/archive.yml`"),
         ("Catalogues are fetched", schedule("archive.yml", 1), "`.github/workflows/archive.yml`"),
+        ("Orbit records are fetched", schedule("archive.yml", 2), "`.github/workflows/archive.yml`"),
         ("The registry is rebuilt", schedule("registry-update.yml"), "`.github/workflows/registry-update.yml`"),
         ("Sources archived, by group", ", ".join(f"{group}: {len(found)}" for group, found in ARCHIVED_SOURCES.items()),
          "`evidence/sources.py`"),
