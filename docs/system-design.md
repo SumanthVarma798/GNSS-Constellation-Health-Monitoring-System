@@ -95,7 +95,7 @@ pie showData title Estimated hours, all guesses
 | 50 | Demo C. Orbit pictures: slot belt, 3D view, score parts | 9 | Built |
 | 51 | Demo D. Menu, How it works page, new look on the existing tabs | 6 | Open; needs 48, 49 and 50 |
 | 10 | Notices ledger: GPS advisories | 10 | Open, after the call |
-| 13 | News, official pages, linked social posts | 14 | Waiting on a list of sources |
+| 13 | News, official pages, linked social posts | 14 | A first candidate list, each feed checked once, is in `evidence/source_candidates.csv`, waiting on the team's grades |
 | 14 | Owner and status per satellite, from a second source | 3 | Built; joining the weekly proposal is a follow-up |
 | 15 | Claim extraction | 20 | Waiting on a model and a spending ceiling |
 | 16 | Change proposals from claims | 12 | Open |

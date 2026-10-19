@@ -64,6 +64,14 @@ REGISTRY_COLUMN_PLAIN_NAMES = {
 SOURCE_GRADES_FILE = Path(__file__).resolve().parent / "source_grades.csv"
 SOURCE_GRADE_COLUMNS = ["source_id", "name", "reliability", "graded_by", "graded_on", "reason"]
 
+# Candidate sources for the news pipeline (issue 13), one row per feed or page, each checked once.
+# Proposals only: a grade counts once the team moves it into the source table. Nothing reads it yet.
+SOURCE_CANDIDATES_FILE = Path(__file__).resolve().parent / "source_candidates.csv"
+SOURCE_CANDIDATE_COLUMNS = ["source_id", "name", "kind", "address", "checked_on", "check_status", "check_type",
+                            "check_bytes", "check_items", "proposed_grade", "grade_reason", "standing", "note"]
+CANDIDATE_GRADED = "graded"  # already in the source table; the proposed grade must match it
+CANDIDATE_STANDINGS = ("provisional", CANDIDATE_GRADED, "no grade: discovery or pointer", "held: not fetched")
+
 # Source reliability, from the Admiralty code. The grade belongs to the source.
 RELIABILITY_GRADES = {
     "A": "operator advisories and official documents",

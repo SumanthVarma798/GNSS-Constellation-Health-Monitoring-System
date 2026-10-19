@@ -1,11 +1,13 @@
 """The bar and the labels, one test for each rule Sumanth set on 8 Oct 2026."""
+import csv
 import datetime
 from urllib.parse import urlsplit
 
 import pytest
 
 from evidence.confidence import assess, assess_event, read_source_grades
-from evidence.settings import RELIABILITY_GRADES, SOURCE_GRADE_COLUMNS
+from evidence.settings import (CANDIDATE_GRADED, CANDIDATE_STANDINGS, RELIABILITY_GRADES, SOURCE_CANDIDATE_COLUMNS,
+                               SOURCE_CANDIDATES_FILE, SOURCE_GRADE_COLUMNS)
 from evidence.sources import archived_addresses
 from evidence.store import new_store
 
@@ -55,6 +57,22 @@ def test_every_archived_source_has_been_graded():
     graded = {row["source_id"] for row in read_source_grades()}
     ungraded = {urlsplit(address).hostname for address in archived_addresses()} - graded
     assert ungraded == set(), "add these sources to evidence/source_grades.csv before archiving them"
+
+
+def test_the_candidate_list_is_well_formed():
+    with open(SOURCE_CANDIDATES_FILE, newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    graded = {row["source_id"]: row["reliability"] for row in read_source_grades()}
+
+    assert rows and list(rows[0]) == SOURCE_CANDIDATE_COLUMNS
+    for row in rows:
+        assert row["name"] and row["grade_reason"] and row["standing"] in CANDIDATE_STANDINGS
+        assert row["proposed_grade"] in ("", *RELIABILITY_GRADES)
+        assert (row["standing"] == CANDIDATE_GRADED) == (row["source_id"] in graded)
+        if row["standing"] == CANDIDATE_GRADED:
+            assert row["proposed_grade"] == graded[row["source_id"]]
+        # The Russian and Chinese tracker sites are never fetched, so never listed (issue 13, 17 Oct).
+        assert not any(name in row["address"].lower() for name in ("vimpel", "spacemapper"))
 
 
 @pytest.fixture
