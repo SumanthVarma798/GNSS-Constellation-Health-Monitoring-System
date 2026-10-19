@@ -28,7 +28,6 @@ CELESTRAK_GNSS_URL = "https://celestrak.org/NORAD/elements/gp.php?GROUP=gnss&FOR
 GALMON_SATELLITES_URL = "https://galmon.eu/svs.json"
 
 
-
 def working_candidates():
     """The candidate rows (issue 13) whose feed or page answered with something when checked.
 
