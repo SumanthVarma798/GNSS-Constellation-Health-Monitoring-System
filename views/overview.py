@@ -117,8 +117,8 @@ def _table_rows(chosen, params, window):
             for c, r, h in chosen]
 
 
-def _measures(key, rows, title="Should be and is"):
-    """The "should be and is" table in its section, open (the page's main table), the summary saying how many
+def _measures(key, rows, title="Measured against limits"):
+    """The "Measured against limits" table in its section, open (the page's main table), the summary saying how many
     satellites need a look."""
     look = sum(any(c["status"] in ("warn", "bad") for c in cells) for _, cells in rows)
     summary = f"{reveal.count(len(rows), 'satellite')} · " + (f"{look} need{'s' if look == 1 else ''} a look" if look
@@ -186,7 +186,7 @@ def constellation(name, window_days, params):
     for kind, names in groups.items():
         scored = [(name, result, tiles[n][2]) for n in names if tiles[n][2] is not None]
         if scored:
-            _measures(f"overview_measures_{kind}", _table_rows(scored, params, window), f"Should be and is: {kind}")
+            _measures(f"overview_measures_{kind}", _table_rows(scored, params, window), f"Measured against limits: {kind}")
     found = sum(len(_findings(h)) for h in result["health"].to_dict("records"))
     reveal.section("overview_checks", "What the checks found",
                    f"{reveal.count(len(result['health']), 'satellite')} · {reveal.count(found, 'finding')}",
@@ -204,7 +204,7 @@ def compare(window_days, params):
         result = data.load(name, window_days, params)
         tiles = meo_overview.tiles(result) if name in MEO_SATS else _tiles(result)[0]
         chosen += [(s, *tiles[s]) for s in picked if s in tiles]
-        if name not in MEO_SATS:   # the should-be / is table is for slot-keeping satellites
+        if name not in MEO_SATS:   # the limits table is for slot-keeping satellites
             measured += [(name, result, tiles[s][2]) for s in picked if s in tiles and tiles[s][2] is not None]
     if not chosen:
         surfaces.show('<p class="small">Add satellites to compare.</p>')

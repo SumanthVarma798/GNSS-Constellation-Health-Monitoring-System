@@ -1,7 +1,7 @@
 """The Overview for a medium Earth orbit (MEO) system: GPS, GLONASS or Galileo, one row per orbital plane.
 
 Each plane: a strip of its slots and satellites along the orbit, then a tile per satellite in orbit
-order. Under the planes the 3D view, then every measure as should be / is, in its section (ui/reveal.py). The numbers come from
+order. Under the planes the 3D view, then every measure against its limit, in its section (ui/reveal.py). The numbers come from
 analysis/meo_run.py; the nominal values and their sources from config/meo_nominal.py.
 """
 from html import escape
@@ -65,7 +65,7 @@ def _value(measure, value):
 
 
 def _should_be_table(rows):
-    """Every measure of every satellite as 'is / should be', each coloured by its part's band."""
+    """Every measure of every satellite against its limit, each coloured by its part's band."""
     head = "".join(f"<th>{tooltip.tip(LABELS[m], MEANINGS[m])}</th>" for m in LABELS)
     lines = []
     for row in rows:
@@ -77,7 +77,7 @@ def _should_be_table(rows):
             f'{_value(m, checks[m][1])}</span></td>' for m in LABELS)
         name = f'{escape(row["name"])} <span class="muted">{escape(row["signal_id"])}</span>'
         lines.append(f"<tr><th>{name}</th>{cells}</tr>")
-    return (f'<p class="small">Each cell: is / should be.</p>'
+    return (f'<p class="small">Each cell: the measured value, then its limit.</p>'
             f'<div class="sb-wrap"><table class="sb"><tr><th></th>{head}</tr>{"".join(lines)}</table></div>')
 
 
@@ -117,7 +117,7 @@ def _strip(members):
 
 
 def page(name, result):
-    """The count, the history line, one row per plane, the 3D view, then should be / is in its section, open."""
+    """The count, the history line, one row per plane, the 3D view, then measured against limits in its section, open."""
     shown = tiles(result)
     healthy = sum(ok for _, ok, _ in shown.values())
     surfaces.show(f'<div class="head"><span class="big num">{healthy} of {len(shown)}</span>'
@@ -136,7 +136,7 @@ def page(name, result):
              "deviation_deg": off} for row in in_order for state, _, off in [state_of(row)]]
     orbit_section.render_belt(rows, "3D", result["history"], result["health"], name)
     look = sum(any(check[4] < 80 for check in row["checks"]) for row in in_order)
-    reveal.section("meo_should_be", "Should be and is, for every satellite",
+    reveal.section("meo_should_be", "Measured against limits, every satellite",
                    f"{reveal.count(len(in_order), 'satellite')} · "
                    + (f"{look} need{'s' if look == 1 else ''} a look" if look else "all within limits"),
                    _should_be_table(in_order) + f'<ul class="small meanings">{_sources(name)}</ul>', open=True)

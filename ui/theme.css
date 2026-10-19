@@ -345,7 +345,7 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
   .st-key-changes [data-testid="stColumn"]:first-child { flex-basis: 100% !important; }
   .st-key-changes [data-testid="stColumn"]:last-child { margin-left: auto; }
 }
-/* groups of satellites by orbit type, and the "is / should be" tables */
+/* groups of satellites by orbit type, and the "Measured against limits" tables */
 .group { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 8px 0 12px; }
 .group .gt { font-size: 18px; font-weight: 700; letter-spacing: .02em; }
 .facts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: -4px 0 16px; font-size: 14px; color: var(--muted); }
@@ -366,7 +366,7 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: 12px; }
 .remarks li { padding: 8px 0; } .remarks li + li { border-top: 1px solid var(--edge); }
 .remarks b { display: block; margin-bottom: 2px; }
 .remarks span { display: block; color: var(--muted); }
-/* GPS, GLONASS and Galileo: a row per orbital plane, and every measure as is / should be */
+/* GPS, GLONASS and Galileo: a row per orbital plane, and every measure against its limit */
 .tiles.meo { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin: 12px 0 22px; }
 .tiles.meo .tile .s { font-size: 22px; }
 .meanings { margin: 0 0 10px; padding-left: 18px; }
