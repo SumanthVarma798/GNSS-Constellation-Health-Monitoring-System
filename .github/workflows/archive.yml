@@ -3,7 +3,8 @@
 # "Last checked" is the time of this job's last successful run for that group.
 # Every run adds one line to the archive's run log, runs/archive.csv. A failed download is tried
 # again (see DOWNLOAD_TRIES in evidence/settings.py), never sooner than the source's minimum gap.
-# A failed run fails the job, and GitHub emails whoever last edited the schedule lines below.
+# Each run then tells Healthchecks.io how it went, with its log line: one check per group, named
+# archive-<group>. Healthchecks.io emails when a run fails, or when none arrives within its grace time.
 #
 # CADENCE IS SET HERE. Each group of sources (see evidence/sources.py) has one
 # schedule line below. To change how often a group is fetched, change its line
@@ -96,3 +97,18 @@ jobs:
         run: |
           echo "At least one source could not be fetched. See the step above."
           exit 1
+
+      - name: Tell Healthchecks.io how the run went
+        if: always()
+        env:
+          KEY: ${{ secrets.HEALTHCHECKS_PING_KEY }}  # set by Sumanth; nothing is sent until it exists
+          GROUP: ${{ steps.due.outputs.group }}
+          OUTCOME: ${{ job.status == 'success' && '0' || '1' }}  # 0 = it worked, 1 = it failed
+        run: |
+          if [ -z "$KEY" ] || [ -z "$GROUP" ] || [ "$GROUP" = all ]; then
+            echo "Not reported to Healthchecks.io: no key, or not one scheduled group."
+            exit 0
+          fi
+          tail -n 1 archive/runs/archive.csv 2>/dev/null \
+            | curl -fsS -m 10 --retry 3 --data-binary @- "https://hc-ping.com/$KEY/archive-$GROUP/$OUTCOME" \
+            || echo "::warning::Could not reach Healthchecks.io. It will report this run as late."

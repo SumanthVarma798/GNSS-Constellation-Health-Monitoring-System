@@ -1,7 +1,8 @@
 # Rebuilds the satellite registry once a week from the archived copy of the IGS file.
 # If the tables changed, it proposes the change as a pull request for a person
 # to review. It never writes to main. Every run adds one line to the archive's run log,
-# runs/registry-update.csv. A failed run fails the job, and GitHub emails whoever last edited the schedule line.
+# runs/registry-update.csv, then tells Healthchecks.io how it went (check registry-update), which emails when
+# a run fails or none arrives within its grace time.
 
 name: Registry update
 
@@ -95,3 +96,17 @@ jobs:
           git commit --quiet -m "Registry run: $RESULT"
           # The archive job may have saved meanwhile; it never touches this file.
           git push --quiet || { git pull --rebase --quiet && git push --quiet; }
+
+      - name: Tell Healthchecks.io how the run went
+        if: always()
+        env:
+          KEY: ${{ secrets.HEALTHCHECKS_PING_KEY }}  # set by Sumanth; nothing is sent until it exists
+          OUTCOME: ${{ job.status == 'success' && '0' || '1' }}  # 0 = it worked, 1 = it failed
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "Not reported to Healthchecks.io: no key."
+            exit 0
+          fi
+          tail -n 1 archive/runs/registry-update.csv 2>/dev/null \
+            | curl -fsS -m 10 --retry 3 --data-binary @- "https://hc-ping.com/$KEY/registry-update/$OUTCOME" \
+            || echo "::warning::Could not reach Healthchecks.io. It will report this run as late."

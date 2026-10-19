@@ -89,7 +89,7 @@ pie showData title Estimated hours, all guesses
 | 39 | Parts out of step: keep working, and say so visibly | 6 | Parts 1 and 2 built (about 4 hours): notices for every satellite left out, set aside or partly scored. Part 3, dates and a staleness check, is open. |
 | 42 | Decide where scheduled jobs run and where raw copies are kept | not sized | Decided 12 Oct 2026: stay on GitHub while its timer works. |
 | 44 | Scheduled jobs in one container image, run by Kubernetes CronJob locally | 8 | Parked: not needed while GitHub's timer works |
-| 79 | Production-grade running: retries, run log, alerts, late-source notices | 10 | Built: retries within each source's limits, a run log in the archive, the dashboard says since when CelesTrak has been failing. Alerts are GitHub's own failure email (to confirm it reaches Sumanth). |
+| 79 | Production-grade running: retries, run log, alerts, late-source notices | 10 | Built: retries within each source's limits, a run log in the archive, the dashboard says since when CelesTrak has been failing, and Healthchecks.io emails when a scheduled run fails or does not arrive (once Sumanth has made the account and the key). |
 | 45 | Archive writes through one interface: a folder today, an object store later | 5 | Parked until the archive's size starts to matter |
 | 47 | Demo for the team call, Sat 17 Oct 2026 | tracker | Items 48 to 51, and 23 |
 | 48 | Demo A. The look: one theme and reusable parts | 6 | Built |
@@ -231,7 +231,7 @@ Produced from the code. A test fails if this table and the code disagree.
 | - | Archive layout | Each copy named by its hash, never overwritten |
 | - | What the archive records | Only changes, plus one line per run of each scheduled job in its run log (`runs/<job file>.csv`). "Last checked" is the last run logged as ok. |
 | - | Run log | A file in the archive, not a hosted logging service: the free ones found (Grafana Cloud, Axiom, Better Stack) keep logs 3 to 30 days and need an account, for about four lines a day. Decided 19 Oct 2026 at Sumanth's request. |
-| - | Alerts | A failed run fails its job; GitHub emails whoever last edited the job's schedule lines. If that email does not reach Sumanth, the next step is Healthchecks.io (open source, free hosted tier), which also notices a run that never started. |
+| - | Alerts | Healthchecks.io (open source, free hosted tier of 20 checks). Each scheduled run reports how it went, with its run log line, to one check per job: `archive-documents`, `archive-catalogues`, `archive-orbital`, `registry-update`. It emails when a run fails, or when none arrives within 8 hours of its written time, which also catches a run GitHub never starts. GitHub's own failure email does not reach Sumanth (checked by him, 19 Oct 2026). |
 | - | Limits per source | One place, `MIN_GAP_BETWEEN_DOWNLOADS` in `evidence/settings.py`, read by the archive job and the dashboard. A retry that would come sooner than a source's gap is not made. |
 | - | Storage rule | The database keeps a reference to a document, never the document |
 | - | Cadence | Documents daily at 6 AM India time; catalogues daily at 6:15 AM; orbit records daily at 6:45 AM; registry on Sundays at 6:30 AM. Short cadences first, accepting the storage; lengthen them as the product matures. |
@@ -250,7 +250,8 @@ Produced from the code. A test fails if this table and the code disagree.
 | The IGS file is right about which satellite is which | Checked once against live signals for BeiDou, 8 Oct 2026. The catalogue agrees on the launch designator of 292 of 294 satellites, 9 Oct 2026; the other two are not in it yet. |
 | GitHub runs scheduled jobs close to on time | **Late, not broken.** All 6 scheduled runs from 10 to 12 Oct 2026 started and succeeded, each about 5¾ hours late: a job due at 6:00 AM India time runs near 11:50 AM (checked). A daily fetch tolerates that; nothing may depend on two jobs running in a set order. |
 | GitHub keeps a job's run history for about 90 days | Read, not verified. The run log in the archive keeps every run since 19 Oct 2026. |
-| GitHub emails a failed scheduled run to the person who last changed its schedule line | Source summary (community answers, not GitHub's documentation); that is Sumanth for both jobs. To check that it arrives. |
+| GitHub emails a failed scheduled run to the person who last changed its schedule line | Source summary (community answers, not GitHub's documentation). It does not reach Sumanth (checked by him, 19 Oct 2026), so alerts go through Healthchecks.io. |
+| A run starts within 8 hours of its written time | Runs were 4 to 6½ hours late from 10 to 16 Oct 2026 (checked). Healthchecks.io's grace time is set to 8 hours on that basis; a run later than that is reported as missing. |
 | The archive's change log is only ever added to | True by construction today. Document numbers depend on it. |
 | A source can be told apart by its website's host name | True for the three sources so far. |
 | Volumes stay small enough for a git repository | A guess: a few hundred changed pages a month. The catalogue adds about 24 MB before compression each time it changes. It changed on 2 of the first 3 days (checked), so perhaps 0.8 GB a year after compression (guess). GitHub advises keeping a repository under about 1 GB (source summary), so this cadence has roughly a year before it must change or the copies must move. |
