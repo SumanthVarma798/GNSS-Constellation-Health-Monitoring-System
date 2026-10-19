@@ -31,7 +31,7 @@ class Reply:
 
 
 def empty_state():
-    return {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True}
+    return {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True, "failing_since": None}
 
 
 @pytest.fixture(autouse=True)
@@ -155,3 +155,20 @@ def test_an_unreadable_saved_copy_is_ignored(monkeypatch):
     celestrak.SAVED.write_text("{not json")
     monkeypatch.setattr(celestrak, "fetch", lambda norads: ({}, {39635}))
     assert celestrak.refresh([39635], NOW)["tried"] == NOW
+
+
+def test_failing_since_is_the_first_failure_in_a_row_and_survives_a_restart(monkeypatch):
+    replies = [requests.ConnectionError("down"), requests.HTTPError(403), ({}, {39635})]
+
+    def fetch(norads):
+        reply = replies.pop(0)
+        if isinstance(reply, Exception):
+            raise reply
+        return reply
+
+    monkeypatch.setattr(celestrak, "fetch", fetch)
+    celestrak.refresh([39635], NOW)
+    assert celestrak.refresh([39635], NOW + timedelta(hours=2))["failing_since"] == NOW
+    monkeypatch.setattr(celestrak, "state", empty_state())               # the dashboard restarts
+    assert celestrak.refresh([39635], NOW + timedelta(hours=2, minutes=5))["failing_since"] == NOW
+    assert celestrak.refresh([39635], NOW + timedelta(hours=4))["failing_since"] is None

@@ -54,6 +54,11 @@ def constants_table():
         ("The three labels", ", ".join((settings.LABEL_CONFIRMED, settings.LABEL_PROBABLE, settings.LABEL_UNCONFIRMED)),
          "`evidence/settings.py`"),
         ("Longest wait for an outside server", f"{settings.REQUEST_TIMEOUT_SECONDS} seconds", "`evidence/settings.py`"),
+        ("A failed download is tried", f"{settings.DOWNLOAD_TRIES} times, {settings.WAIT_BETWEEN_TRIES_SECONDS} seconds "
+         "apart; once a run where that is sooner than the source's gap", "`evidence/settings.py`"),
+        ("Shortest gap between downloads", ", ".join(f"{host}: {gap.total_seconds() / 3600:g} hours"
+                                                     for host, gap in settings.MIN_GAP_BETWEEN_DOWNLOADS.items()),
+         "`evidence/settings.py`"),
         ("Largest copy the archive keeps", f"{megabytes} MB", "`evidence/settings.py`"),
         ("Statuses that mean a page is gone", ", ".join(map(str, settings.GONE_STATUSES)), "`evidence/settings.py`"),
         ("How our requests name themselves", f"`{settings.USER_AGENT}`", "`evidence/settings.py`"),
