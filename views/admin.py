@@ -13,7 +13,7 @@ import streamlit as st
 
 from evidence import decisions
 from evidence.decision_settings import ACTIONS, AFTER_CHANGES, CHOICES, READ_EVERY_SECONDS, SECRETS_SECTION
-from ui import admin, reveal, surfaces
+from ui import admin, reveal, sign_in_fix, surfaces
 
 # What Google sign-in (st.login) needs in [auth]; one left empty means it is not set up.
 SIGN_IN_FIELDS = ("redirect_uri", "cookie_secret", "client_id", "client_secret", "server_metadata_url")
@@ -78,6 +78,7 @@ def github_trouble(error):
     return "GitHub did not answer, so it cannot be shown or changed now. Try again when the page is next opened."
 
 
+sign_in_fix.apply()   # before anyone presses Sign in
 surfaces.show(admin.CSS)
 config, sign_in_ready = settings()
 if not (sign_in_ready and config.get("allowed") and config.get("github_token")):

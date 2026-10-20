@@ -199,3 +199,34 @@ def test_the_weekly_registry_job_starts_the_tests_on_its_pull_request():
 
     assert "gh workflow run tests.yml --ref registry-update" in registry and "actions: write" in registry
     assert "workflow_dispatch:" in tests
+
+
+def test_google_sign_in_keeps_its_state_with_the_installed_authlib():
+    """Streamlit 1.45 passes no session; Authlib 1.6.6+ writes to one anyway, and sign-in failed with "'NoneType'
+    object does not support item assignment". ui/sign_in_fix.py keeps the state in the cache, as Streamlit 1.53 does."""
+    from streamlit.web.server.authlib_tornado_integration import TornadoIntegration
+
+    from ui import sign_in_fix
+
+    assert sign_in_fix.needed(), "Streamlit now has this fix itself: delete ui/sign_in_fix.py and its two uses"
+    sign_in_fix.apply()
+
+    class Cache:   # like Streamlit's AuthCache: a plain object, so it is never empty-and-false like a dict
+        def __init__(self):
+            self.kept = {}
+
+        def get(self, key):
+            return self.kept.get(key)
+
+        def set(self, key, value, expires=None):
+            self.kept[key] = value
+
+        def delete(self, key):
+            self.kept.pop(key, None)
+
+    sign_in = TornadoIntegration("google", cache=Cache())
+    sign_in.set_state_data(None, "state", {"nonce": "n"})
+
+    assert sign_in.get_state_data(None, "state") == {"nonce": "n"}
+    sign_in.clear_state_data(None, "state")
+    assert sign_in.get_state_data(None, "state") is None

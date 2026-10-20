@@ -1,5 +1,5 @@
 streamlit==1.45.0
-Authlib==1.8.0   # Google sign-in for the admin page (st.login)
+Authlib==1.8.0   # Google sign-in for the admin page (st.login); needs ui/sign_in_fix.py on Streamlit 1.45
 numpy==2.2.6
 pandas==2.2.3
 pyarrow==18.1.0
