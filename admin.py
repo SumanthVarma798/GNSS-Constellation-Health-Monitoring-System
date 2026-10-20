@@ -1,4 +1,4 @@
-"""The administration console: `streamlit run admin.py --server.port 48979`. Signed-in team members only (issue 17).
+"""The administration console: `streamlit run admin.py --server.port 48973`. Signed-in team members only (issue 17).
 
 Google sign-in through Streamlit (st.login), with the allow-list and the GitHub token in .streamlit/secrets.toml under
 [admin]. Then the console tree on the left (Streamlit's page list), a title bar and a toolbar, the page, and a status
