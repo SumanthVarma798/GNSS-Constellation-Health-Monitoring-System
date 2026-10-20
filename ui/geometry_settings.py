@@ -8,7 +8,7 @@ from config.config import (CHINA_KEY_POINTS, DEFAULT_PARAMS, DOP_QUALITY_THRESHO
 from ui import palette
 
 # The page's sections, in the order offered.
-SECTIONS = ["Position quality", "Sky view", "Ground tracks", "Orbit trends", "Plane spacing"]
+SECTIONS = ["Position quality", "Sky and ground", "Orbit trends"]
 
 # The places each constellation's position quality is worked out for: {name: (latitude, longitude)}.
 PLACES = {"NavIC": INDIA_EXTREME_POINTS, "QZSS": JAPAN_KEY_POINTS, "BeiDou-3": CHINA_KEY_POINTS}
@@ -23,10 +23,18 @@ ELEVATION_MASK_RANGE = (0, 30)
 TREND_HOURS = 24          # position quality over the last day, as app.py's DOP trends
 TREND_STEP_MINUTES = 15
 SKY_HOURS = 24            # the sky view runs over the next day...
-SKY_STEP_MINUTES = 60     # ...an hour a step
+SKY_STEP_MINUTES = 10     # ...ten minutes a step, so playing it moves smoothly...
+SKY_FRAME_MS = 100        # ...and a day plays in about 15 seconds
+NEXT_HOURS = 24           # when each satellite next comes into view or leaves it: the next day...
+NEXT_STEP_MINUTES = 1     # ...to the minute
 TRACK_HOURS = 24          # ground tracks: the next or the past day
 TRACK_STEP_MINUTES = 15
 TRACK_WINDOWS = ["Next 24 hours", "Past 24 hours"]
+CLICK_GRID_DEG = 2        # a click on the map picks the nearest point of a grid this fine
+# A place of the reader's own: typed as latitude, longitude, or clicked on the map.
+PLACE_EXAMPLE = "28.61, 77.21"
+PLACE_HELP = ("Latitude, then longitude, in degrees: for example 28.61, 77.21. South and west are negative, "
+              "or write N, S, E or W after the number (28.61 N, 77.21 E).")
 CENTRAL_LON_HALF_HOURS = 12        # central longitude: a day of track around each element set...
 CENTRAL_LON_STEP_MINUTES = 15      # ...as app.py's historical central longitude, one element set a week
 

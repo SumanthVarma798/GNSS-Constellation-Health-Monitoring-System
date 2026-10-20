@@ -110,7 +110,7 @@ def _thresholds(scope):
     return moved
 
 
-def _viewer_zone():
+def viewer_zone():
     """The browser's time zone. st.context loses it after a page switch, so the first one seen is kept."""
     st.session_state["_zone"] = st.context.timezone or st.session_state.get("_zone")
     try:
@@ -128,19 +128,19 @@ def _data_chip(names, window_days, params, live, now):
         return surfaces.chip("No orbit data", "bad")
     if live["fetched"]:
         taken = max(taken, live["fetched"].isoformat())
-    text, status = age_words(taken, now, _viewer_zone())
+    text, status = age_words(taken, now, viewer_zone())
     if live["ok"]:
         return surfaces.chip(text, status)
     # A copy saved before failing_since was kept has none: its last try stands in.
     return surfaces.chip(text, status) + surfaces.chip(
-        failing_words(live["failing_since"] or live["tried"], now, _viewer_zone()), "warn")
+        failing_words(live["failing_since"] or live["tried"], now, viewer_zone()), "warn")
 
 
 def _next(live):
     """'next update 14:20': when the next automatic refresh is, in the viewer's time zone."""
     if not live["tried"]:
         return ""
-    return f'<span class="next">next update {(live["tried"] + celestrak.EVERY).astimezone(_viewer_zone()):%H:%M}</span>'
+    return f'<span class="next">next update {(live["tried"] + celestrak.EVERY).astimezone(viewer_zone()):%H:%M}</span>'
 
 
 def _ring(live, now):

@@ -27,3 +27,14 @@
 .geo-grid .gr > :first-child { position: sticky; left: 0; z-index: 1; background: var(--platform); align-self: stretch;
   display: flex; flex-direction: column; justify-content: center; }   /* full row height, so nothing shows through above it */
 .geo-grid .gr.hd > :first-child { justify-content: flex-end; }
+/* when each satellite is in view: satellite, now, until or next; on a phone the time goes under the other two */
+.geo-next .nr { display: grid; grid-template-columns: minmax(150px, 1.2fr) minmax(110px, .7fr) minmax(0, 2.6fr); gap: 12px;
+  align-items: center; padding: 9px 0; font-size: 14px; }
+.geo-next .nr + .nr { border-top: 1px solid var(--edge); }
+.geo-next .nr.hd { color: var(--muted); font-size: 12px; font-weight: 600; padding-top: 0; }
+.geo-next .nr b small { display: block; font-size: 12px; font-weight: 400; color: var(--muted); }
+@media (max-width: 639.98px) {
+  .geo-next .nr { grid-template-columns: minmax(0, 1fr) auto; row-gap: 4px; }
+  .geo-next .nr > :last-child { grid-column: 1 / -1; }
+  .geo-next .nr.hd > :last-child { display: none; }
+}
