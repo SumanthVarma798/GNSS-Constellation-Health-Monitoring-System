@@ -2,8 +2,13 @@
 
 The choices live in st.session_state: `scope` (one constellation), `compare` (on or off),
 `compare_constellations` (the constellations Compare draws from; none means all), `compare_picks`
-({constellation: [satellite, ...]}, set with ui.picker), `window_days` and `params` (only the
-detection thresholds moved off their defaults). Pages read them.
+({constellation: [satellite, ...]}, set with ui.picker), `window_days` (the time range, ui/time_range.py) and
+`params` (only the detection thresholds moved off their defaults). Pages read them.
+
+The bar: the product name, then the filters as their own group (constellations, Compare, time range), then the
+data's state (the UTC clock, when the next update is, the data chip, refresh and the gear). Three arrangements in
+ui/theme.css: one row from 1400px, the filters as a strip of their own under the rest from 640px, and on a phone
+the constellations as a menu.
 """
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
@@ -12,7 +17,7 @@ import streamlit as st
 
 from config.config import DEFAULT_PARAMS
 from data import celestrak
-from ui import changes, data, surfaces
+from ui import changes, data, surfaces, time_range
 
 # Pages with their own filters: the bar shows no constellation, window or thresholds there.
 OWN_FILTERS = {"Master map", "Library"}
@@ -27,8 +32,9 @@ PAGES = [
     # ("How it works", "views/how_it_works.py"),
 ]
 CONSTELLATIONS = tuple(data.SATELLITES)
-WINDOWS = {90: "90 days", 365: "1 year"}
 STALE_DAYS = 7
+# The clock and "next update" are redrawn this often, alone: never a page redraw, at most this far behind.
+CLOCK_TICK_SECONDS = 15
 
 # (key in params, label, smallest, largest, step, format): the seven detection thresholds app.py offers.
 THRESHOLDS = [
@@ -136,17 +142,29 @@ def _data_chip(names, window_days, params, live, now):
         failing_words(live["failing_since"] or live["tried"], now, viewer_zone()), "warn")
 
 
-def _next(live):
-    """'next update 14:20': when the next automatic refresh is, in the viewer's time zone."""
-    if not live["tried"]:
-        return ""
-    return f'<span class="next">next update {(live["tried"] + celestrak.EVERY).astimezone(viewer_zone()):%H:%M}</span>'
+def next_words(left):
+    """'Next update in 1 h 42 m' for `left` seconds to go; minutes are rounded up, so it never says 0 m too soon."""
+    if left <= 0:
+        return "Next update due now"
+    hours, minutes = divmod(-(-int(left) // 60), 60)
+    parts = ([f"{hours} h"] if hours else []) + ([f"{minutes} m"] if minutes or not hours else [])
+    return "Next update in " + " ".join(parts)
+
+
+def clock_words(now):
+    """'14:05 UTC'."""
+    return f"{now.astimezone(timezone.utc):%H:%M} UTC"
+
+
+def _left(tried, now):
+    """Seconds to the next automatic refresh; 0 before the first try."""
+    return max(0.0, (tried + celestrak.EVERY - now).total_seconds()) if tried else 0.0
 
 
 def _ring(live, now):
     """A style rule: the ring round the refresh button holds the share of the wait left before the next automatic
     refresh, and empties over that time. A keyframe name per run restarts it from the right place."""
-    left = max(0.0, (live["tried"] + celestrak.EVERY - now).total_seconds()) if live["tried"] else 0.0
+    left = _left(live["tried"], now)
     share = f"{100 * left / celestrak.EVERY.total_seconds():.2f}%"
     name = f"ring{now:%H%M%S%f}"
     return (f"<style>@keyframes {name} {{ from {{ --left: {share}; }} to {{ --left: 0%; }} }}"
@@ -154,30 +172,31 @@ def _ring(live, now):
             + ("" if live["ok"] else ".st-key-refresh_button button::before { --ring: var(--warn); }") + "</style>")
 
 
-def _auto_refresh(seconds):
-    """Rerun the whole page when the next automatic refresh is due; the top bar then fetches."""
-    @st.fragment(run_every=seconds)
-    def tick():
-        if celestrak.due(datetime.now(timezone.utc)):
-            st.rerun()
-    tick()
+@st.fragment(run_every=CLOCK_TICK_SECONDS)
+def _clock():
+    """The UTC clock and the wait to the next automatic refresh, redrawn alone every CLOCK_TICK_SECONDS; when the
+    refresh is due the whole page reruns and the top bar fetches."""
+    now = datetime.now(timezone.utc)
+    if celestrak.state["tried"] and celestrak.due(now):
+        st.rerun()
+    upcoming = next_words(_left(celestrak.state["tried"], now)) if celestrak.state["tried"] else ""
+    st.html(f'<span class="clock num">{clock_words(now)}</span><span class="next">{upcoming}</span>')
 
 
 def _refresh(names, window_days, gear_scope):
-    """The data chip, the time of the next automatic refresh, the round refresh button with its ring, and the gear
-    (on pages without their own filters, `gear_scope` names whose thresholds it shows)."""
+    """The UTC clock and the wait to the next automatic refresh, the data chip, the round refresh button with its
+    ring, and the gear (on pages without their own filters, `gear_scope` names whose thresholds it shows)."""
     with st.container(key="refresh"):
-        chip = st.empty()
+        clock, chip = st.container(key="clock"), st.empty()
         clicked = st.button("Refresh orbit data", key="refresh_button", icon=":material/refresh:",
                             help="Pull the newest orbit data")
         if gear_scope:
             with st.popover("", icon=":material/settings:", help="Detection thresholds"):
                 st.session_state["params"] = _thresholds(gear_scope)
         live, now = data.refresh(clicked), datetime.now(timezone.utc)
-        chip.html(_data_chip(names, window_days, st.session_state["params"], live, now) + _next(live)
-                  + _ring(live, now))
-        left = (live["tried"] + celestrak.EVERY - now).total_seconds() if live["tried"] else 0
-        _auto_refresh(max(1, int(left) + 1))
+        chip.html(_data_chip(names, window_days, st.session_state["params"], live, now) + _ring(live, now))
+        with clock:   # after the refresh, so it reads the try just made
+            _clock()
 
 
 def _toggle_compare():
@@ -188,14 +207,36 @@ def _keep(plain, widget):
     st.session_state[plain] = st.session_state[widget]
 
 
+def _from_menu(plain, widget):
+    """A choice in the phone's menu; clicking the chosen constellation again keeps it."""
+    if st.session_state[widget] is not None:
+        st.session_state[plain] = st.session_state[widget]
+
+
+def _menu(plain, multi):
+    """On a phone the chips are a menu: a button naming the choice that opens the same chips as a list. The same
+    choice as the chips, under its own key; ui/theme.css shows one or the other by screen width."""
+    chosen = st.session_state.get(plain, [] if multi else CONSTELLATIONS[0])
+    title = (chosen if not multi else "All constellations" if not chosen else
+             chosen[0] if len(chosen) == 1 else f"{len(chosen)} constellations")
+    st.session_state[f"_{plain}_menu"] = chosen
+    with st.container(key="scope_menu"), st.popover(title, help="Choose the constellation"):
+        st.segmented_control("Constellations menu" if multi else "Constellation menu", CONSTELLATIONS,
+                             selection_mode="multi" if multi else "single", key=f"_{plain}_menu",
+                             label_visibility="collapsed", on_change=_from_menu, args=(plain, f"_{plain}_menu"))
+
+
 def _scope():
     """Constellation chips: one chosen, or under Compare any number (none means all). Returns the names in view."""
     if not st.session_state.get("compare"):
-        return [segment("scope", list(CONSTELLATIONS), label="Constellation")]
+        name = segment("scope", list(CONSTELLATIONS), label="Constellation")
+        _menu("scope", multi=False)
+        return [name]
     st.session_state["_compare_constellations"] = st.session_state.get("compare_constellations", [])
     st.segmented_control("Constellations", CONSTELLATIONS, selection_mode="multi", key="_compare_constellations",
                          label_visibility="collapsed", on_change=_keep,
                          args=("compare_constellations", "_compare_constellations"))
+    _menu("compare_constellations", multi=True)
     names = offered()
     st.session_state["compare_picks"] = {c: picks for c, picks in st.session_state.get("compare_picks", {}).items()
                                          if c in names and picks}
@@ -206,25 +247,28 @@ def top_bar(current):
     """Draw the bar and store the choices. `current` is the st.Page that is running."""
     st.session_state.setdefault("compare", False)
     with st.container(key="topbar"):
-        brand, scope_box, compare_box, window_box, refresh_box = st.columns(5, vertical_alignment="center")
-        brand.html('<b class="brand">GNSS Health</b>')
+        brand, filters, refresh_box = st.columns(3, vertical_alignment="center")
+        brand.html('<span class="brand">GNSS Health Monitor</span>')
+        st.session_state.setdefault("params", {})
+        window_days = st.session_state.setdefault("window_days", time_range.DEFAULT_DAYS)
         if current.title in OWN_FILTERS:
             names = [st.session_state.get("scope", CONSTELLATIONS[0])]
-            window_days = st.session_state.get("window_days", 90)
-            st.session_state.setdefault("params", {})
             gear_scope = None
         else:
-            with scope_box:
+            with filters:
+                filter_box = st.container(key="filters")
+            with filter_box:
                 names = _scope()
-            on = st.session_state["compare"]
-            compare_box.button("Compare", key="compare_toggle", icon=":material/check:" if on else None,
-                               type="primary" if on else "secondary", on_click=_toggle_compare,
-                               help="Compare satellites across constellations")
-            with window_box:
-                window_days = segment("window_days", list(WINDOWS), WINDOWS, label="Window")
+                on = st.session_state["compare"]
+                st.button("Compare", key="compare_toggle", icon=":material/check:" if on else None,
+                          type="primary" if on else "secondary", on_click=_toggle_compare,
+                          help="Compare satellites across constellations")
             gear_scope = "Compare" if on else names[0]
         with refresh_box:
             _refresh(names, window_days, gear_scope)
+        if current.title not in OWN_FILTERS:   # after the gear, so the range's bounds read this run's thresholds
+            with filter_box:
+                time_range.control(names, st.session_state["params"])
     _page_tabs(current)
     changes.show(CONSTELLATIONS if current.title in OWN_FILTERS else names)   # the master map shows every constellation
 
@@ -241,8 +285,6 @@ def _page_tabs(current):
                                    ("page_all", "Across all systems", [t for t, _ in PAGES if t in OWN_FILTERS])):
             st.session_state[key] = page if page in titles else None
             with st.container(key=f"{key}_group"):
-                if key == "page_all":
-                    st.html(f'<span class="tabs-label">{label}</span>')
                 st.segmented_control(label, titles, key=key, label_visibility="collapsed", on_change=_pick_page, args=(key,))
         if st.session_state["page"] != current.title:
             st.switch_page(next(p for p in pages() if p.title == st.session_state["page"]))

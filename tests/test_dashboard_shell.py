@@ -2,7 +2,7 @@
 
 These drive the real script without a browser, with the clock frozen as tests/test_dashboard_notices.py does.
 """
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -14,7 +14,8 @@ from streamlit.testing.v1.element_tree import ButtonGroup
 from data import celestrak
 from test_celestrak import IRNSS_1B
 from test_golden_scores import GOLDEN
-from ui.shell import age_words, failing_words
+from ui import time_range
+from ui.shell import age_words, clock_words, failing_words, next_words
 
 ROOT = Path(__file__).resolve().parent.parent
 FROZEN = datetime.fromisoformat(GOLDEN["frozen_utc"])
@@ -239,10 +240,75 @@ def test_rows_from_celestrak_make_the_chip_say_today_and_its_time(monkeypatch):
     assert len(tiles(at)) == 8
 
 
-def test_the_bar_says_when_the_next_automatic_refresh_is():
+def test_the_bar_says_how_long_to_the_next_automatic_refresh_and_the_time_in_utc():
     chips = " ".join(htmls(run()))
 
-    assert '<span class="next">next update 14:00</span>' in chips   # tried at the frozen 12:00 UTC, every two hours
+    assert '<span class="next">Next update in 2 h</span>' in chips   # tried at the frozen 12:00 UTC, every two hours
+    assert '<span class="clock num">12:00 UTC</span>' in chips
+
+
+def test_next_words_say_hours_and_minutes_rounded_up():
+    assert next_words(1 * 3600 + 41 * 60 + 5) == "Next update in 1 h 42 m"
+    assert next_words(7200) == "Next update in 2 h"
+    assert next_words(42 * 60) == "Next update in 42 m"
+    assert next_words(20) == "Next update in 1 m"
+    assert next_words(0) == "Next update due now"
+
+
+def test_clock_words_are_utc():
+    assert clock_words(datetime.fromisoformat("2026-10-20T19:35:59+05:30")) == "14:05 UTC"
+
+
+def test_the_range_presets_and_custom_dates_are_bounded_by_the_records_held():
+    today = date(2026, 10, 20)
+
+    assert time_range.held_days(date(2025, 10, 4), today) == 381 and time_range.held_days(None, today) == 0
+    assert all(time_range.too_long(days, 381, ["NavIC"]) is None for days in time_range.PRESETS)
+    assert time_range.too_long(90, 28, ["GPS"]) == "Only 28 days of orbit records are held for GPS."
+    assert time_range.too_long(30, 0, ["GPS", "Galileo"]) == "No orbit records are yet held for GPS, Galileo."
+    assert time_range.from_bounds(date(2025, 10, 4), today) == (date(2025, 10, 4), date(2026, 10, 6))   # 14 days at least
+    assert time_range.from_bounds(date(2026, 10, 10), today) is None    # under 14 days held: no custom range
+    assert time_range.from_bounds(None, today) is None
+    assert time_range.words(182) == "6 months" and time_range.words(47) == "47 days"
+
+
+def test_the_range_offers_every_preset_for_navics_year_and_a_custom_start_inside_it():
+    at = run()
+
+    assert not any(at.button(key=f"window_{days}").disabled for days in time_range.PRESETS)
+    start = at.date_input(key="_window_from")
+    assert (start.min, start.max) == (date(2025, 10, 4), date(2026, 9, 22))   # oldest record held; 14 days before today
+    assert start.value == date(2026, 7, 8)                                     # the 90 days chosen
+
+
+def test_a_constellation_with_no_records_held_greys_every_preset_and_says_why():
+    at = run(lambda at: at.session_state.__setitem__("scope", "GPS"))
+
+    assert all(at.button(key=f"window_{days}").disabled for days in time_range.PRESETS)
+    assert at.button(key="window_30").help == "No orbit records are yet held for GPS."
+    assert not at.get("date_input")
+    assert any("No orbit records are held yet." in body for body in htmls(at))
+
+
+def test_a_custom_start_sets_the_range_to_now_on_every_page():
+    at = run(lambda at: at.date_input(key="_window_from").set_value(date(2026, 8, 20)))
+
+    assert at.session_state["window_days"] == 47
+    assert any("47 days: 20 Aug 2026 to 6 Oct 2026" in body for body in htmls(at))
+    at.session_state["page"] = "Station-keeping"
+    at.run()
+    assert not at.exception and any("47 days" in body for body in htmls(at))
+
+
+def test_a_preset_button_sets_the_range():
+    at = run(lambda at: at.button(key="window_182").click())
+
+    assert at.session_state["window_days"] == 182
+    assert any("6 months: " in body for body in htmls(at))
+
+
+def test_the_pages_across_all_systems_are_set_apart_without_words():
+    assert not any("Across all systems" in body for body in htmls(run()))
 
 
 def test_a_failed_refresh_keeps_the_archive_and_says_so(monkeypatch):
