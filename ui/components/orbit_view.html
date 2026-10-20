@@ -70,6 +70,7 @@ __TIP__
 @media (max-width: 639.98px), (pointer: coarse) { .zoom button { width: 40px; height: 40px; } }
 @media (prefers-reduced-motion: reduce) { .readout.tt-card, .readout.tt-card.on { transition: none; } }
 .ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); } .idle { color: var(--idle); } .muted { color: var(--muted); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -86,6 +87,7 @@ __TIP__
     <button type="button" id="zout" aria-label="Zoom out">&minus;</button>
     <button type="button" id="zhome" aria-label="Back to the whole view"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8a5.5 5.5 0 1 0 1.6-3.9"/><path d="M2.5 2v3.5H6"/></svg></button>
   </div>
+  <div class="sr" id="said" role="status" aria-live="polite"></div>
   <div class="readout tt-card" id="readout" aria-hidden="true">
     <div class="zl"><b id="zl"></b><span class="bar"><i id="bar"></i><span id="barkm"></span></span></div>
     <div class="fl" id="focus"></div>
@@ -306,7 +308,7 @@ function settle(v) {   // zoom within its limits; c pulled in toward Earth's cen
   return v;
 }
 function zoomAt(factor, px = W / 2, py = H / 2) {   // the point under (px, py) stays under it
-  cancelAnimationFrame(flight); pick(null);
+  cancelAnimationFrame(flight); clearTimeout(clickWait); pick(null);
   const A = axes(), before = fit * view.zoom;
   view.zoom = clamp(view.zoom * factor, focus ? 1 / ROOM : 1, MAX_ZOOM);
   const k = 1 / before - 1 / (fit * view.zoom), dx = (px - W / 2) * k, dy = -(py - H / 2) * k;
@@ -315,7 +317,7 @@ function zoomAt(factor, px = W / 2, py = H / 2) {   // the point under (px, py) 
   moved(); paint();
 }
 function fly(to) {   // ease to the new view; at once when the reader asks for less motion
-  cancelAnimationFrame(flight); pick(null);
+  cancelAnimationFrame(flight); clearTimeout(clickWait); pick(null);
   const from = { ...view }, end = settle({ ...view, ...to });
   end.yaw = from.yaw + wrap(end.yaw - from.yaw);   // the short way round
   const t0 = performance.now(), step = now => {
@@ -331,10 +333,10 @@ function home() { clearTimeout(clickWait); if (focus) unfocus(); fly(HOME); }
 function goTo(px, py) {   // an orbit or a satellite: its plane; else, in focus, go back; Earth: face that place
   const hit = hitAt(px, py), A = axes();
   if (hit && SATS[hit.i].loop) return enter(hit.i);
-  if (focus) return leave();
-  if (hit) return;
   const x = (px - W / 2) / scale + A.cx, y = -(py - H / 2) / scale + A.cy;
-  if (x * x + y * y >= 1) return;
+  if (x * x + y * y >= 1) return focus ? leave() : undefined;   // empty space: back out of a focus
+  if (hit) return;
+  if (focus) unfocus();
   const p = [0, 1, 2].map(j => x * A.r[j] + y * A.u[j] + Math.sqrt(1 - x * x - y * y) * A.d[j]);
   fly({ yaw: Math.atan2(p[1], p[0]) / RAD, pitch: clamp(Math.asin(p[2]) / RAD, -85, 85),
         zoom: SPAN * KM / FOCUS_KM, c: [0, 0, 0] });
@@ -374,8 +376,8 @@ const FONT = getComputedStyle(document.body).fontFamily;
 function geometry(A) {   // the node, the inclination, the height and the slot, drawn and said in words
   const f = focus, s = SATS[f.i], g = f.g, P = p => project(p, A), marks = [];
   ctx.globalAlpha = 1; ctx.setLineDash([]); ctx.strokeStyle = ctx.fillStyle = C.ink; ctx.lineWidth = 1.5;
-  const path = pts => { ctx.beginPath(); pts.forEach((q, k) => k ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.stroke(); };
-  const spot = q => { ctx.beginPath(); ctx.arc(q.x, q.y, 3.5, 0, 2 * Math.PI); ctx.fill(); };
+  const path = pts => { if (pts.some(q => q.hidden)) return; ctx.beginPath(); pts.forEach((q, k) => k ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.stroke(); };
+  const spot = q => { if (q.hidden) return; ctx.beginPath(); ctx.arc(q.x, q.y, 3.5, 0, 2 * Math.PI); ctx.fill(); };
   let anchor = P(s.at);
   if (f.node) {   // the angle from the equator (heading east) up to the orbit (heading north), at the node
     const east = [-g.N[1], g.N[0], 0], rho = 56 / scale, arc = [];
@@ -398,7 +400,7 @@ function geometry(A) {   // the node, the inclination, the height and the slot, 
     const lon = wrap(Math.atan2(s.slot_at[1], s.slot_at[0]) / RAD - DATA.turn);
     marks.push([P(s.slot_at), `Slot ${deg(lon, "E", "W")}: ${s.slot}`]);
   }
-  labels(marks, W / 2 - A.cx * scale, H / 2 + A.cy * scale);
+  labels(marks.filter(([q]) => !q.hidden), W / 2 - A.cx * scale, H / 2 + A.cy * scale);   // behind Earth: not drawn, as the orbit line
 }
 function labels(marks, ex, ey) {   // just outside each point as seen from Earth, so off its orbit; pushed on past any put already
   ctx.textBaseline = "middle"; ctx.lineJoin = "round";
@@ -434,7 +436,7 @@ function moved() {
   $("focus").textContent = words;
   $("facing").textContent = `Facing ${deg(wrap(view.yaw - DATA.turn), "E", "W")}, ${deg(view.pitch, "N", "S")}`;
   if (!tip.classList.contains("on")) readout.classList.add("on");
-  clearTimeout(fading); fading = setTimeout(() => readout.classList.remove("on"), FADE_MS);
+  clearTimeout(fading); fading = setTimeout(() => { readout.classList.remove("on"); $("said").textContent = readout.textContent.replace(/\s+/g, " ").trim(); }, FADE_MS);   // said once it settles
 }
 $("zin").addEventListener("click", () => fly({ zoom: view.zoom * 1.6 }));
 $("zout").addEventListener("click", () => fly({ zoom: view.zoom / 1.6 }));
@@ -544,7 +546,7 @@ function buildKey() {
 
 /* ---------- in service, or all of the generation: switched here, no round trip ---------- */
 function choose(next) {
-  mode = next;
+  clearTimeout(clickWait); mode = next;
   if (focus) leave();
   shown = SATS.map((_, i) => i).filter(i => mode === "all" || SATS[i].service);
   $("mode").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
