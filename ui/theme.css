@@ -295,7 +295,8 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 [data-testid="stHtml"]:has(> .tiles.cmp) { overflow-x: auto; }
 .tiles.cmp, .mrow { --label: 120px; grid-template-columns: var(--label) repeat(var(--n), minmax(0, 1fr)); min-width: calc(var(--label) + var(--n) * 156px); }
 @media (max-width: 639.98px) { .tiles.cmp, .mrow { --label: 88px; } }
-.mrow .ml { position: sticky; left: 0; z-index: 1; background: var(--platform); align-self: stretch; display: flex; align-items: center; }
+.mrow .ml, .tiles.cmp > :first-child { position: sticky; left: 0; z-index: 1; background: var(--platform); align-self: stretch; }
+.mrow .ml { display: flex; align-items: center; }   /* the tiles' empty gutter is held too, so tiles stay over their scores */
 .tiles.cmp { margin-bottom: 8px; align-items: start; }
 .mrow { display: grid; gap: 16px; align-items: center; padding: 11px 0; font-size: 14px; }
 .mrow + .mrow { border-top: 1px solid var(--edge); }
