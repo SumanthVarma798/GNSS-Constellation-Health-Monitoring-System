@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sky</title>
+<style>
+__ROOT__
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--platform); color: var(--ink); font: 13.5px/1.4 __FONT__; padding: 6px 8px 8px; overflow: hidden;
+  display: flex; flex-direction: column; gap: 10px; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.head { display: flex; flex-wrap: wrap; gap: 2px 12px; align-items: baseline; min-height: 40px; }
+.head b { font-weight: 600; }
+.head span { color: var(--muted); font-size: 12.5px; }
+.card { position: relative; flex: 1; min-height: 0; border-radius: var(--r); background: var(--platform); border: 1px solid var(--edge);
+  box-shadow: var(--raised); overflow: hidden; }
+canvas { display: block; width: 100%; height: 100%; }
+.key { display: flex; flex-wrap: wrap; gap: 4px 16px; padding: 0 4px; color: var(--muted); font-size: 12px; }
+.key span { display: inline-flex; align-items: center; gap: 7px; }
+.mark { flex: none; width: 9px; height: 9px; border-radius: 50%; }
+.mark.diamond { border-radius: 1px; transform: rotate(45deg); width: 8px; height: 8px; }
+.ring { flex: none; width: 14px; height: 14px; border-radius: 50%; border: 1.5px dotted var(--muted); }
+
+/* the player: a round raised button that sinks in while playing, right beside a pressed-in timeline */
+.player { display: flex; align-items: center; gap: 14px; padding: 0 4px; }
+.play { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--edge); background: var(--platform);
+  box-shadow: var(--raised-sm); color: var(--accent); cursor: pointer; display: grid; place-items: center; padding: 0;
+  transition: box-shadow 150ms ease, background 150ms ease; }
+.play:hover { border-color: var(--accent); }
+.play[aria-pressed="true"] { background: var(--well); box-shadow: var(--pressed); }
+.play svg { width: 16px; height: 16px; fill: currentColor; display: block; }
+.play .pause, .play[aria-pressed="true"] .go { display: none; }
+.play[aria-pressed="true"] .pause { display: block; }
+.line { flex: 1; min-width: 0; position: relative; padding: 4px 0 18px; }
+input[type="range"] { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 12px; margin: 0;
+  border-radius: 999px; background: var(--well); box-shadow: var(--pressed); cursor: pointer; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent); border: 3px solid var(--platform); box-shadow: var(--raised-sm); }
+input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--accent);
+  border: 3px solid var(--platform); box-shadow: var(--raised-sm); }
+.ticks { position: absolute; left: 10px; right: 10px; bottom: 0; height: 14px; font-size: 11px; color: var(--muted); }
+.ticks span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.ticks span:first-child { transform: translateX(-10px); }
+@media (max-width: 520px) { .ticks span:nth-child(even) { display: none; } }   /* every six hours on a phone */
+
+/* the hover card: the dashboard's one tooltip card (ui/tooltip.py CARD_CSS), beside the pointer, always on screen */
+__TIP__
+.tip { position: fixed; min-width: 170px; }
+.tip .n { font-weight: 600; overflow-wrap: anywhere; }
+.tip .k { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="head" aria-live="polite"><b id="when"></b><span id="state"></span></div>
+<div class="card"><canvas id="sky" role="img"></canvas></div>
+<div class="key" id="key"></div>
+<div class="player">
+  <button type="button" class="play" id="play" aria-pressed="false" aria-label="Play the next 24 hours">
+    <svg class="go" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.2v11.6l9.6-5.8z"/></svg>
+    <svg class="pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h3.2v11h-3.2zM9.3 2.5h3.2v11h-3.2z"/></svg>
+  </button>
+  <div class="line"><input type="range" id="time" min="0" step="any" value="0" aria-label="Time"><div class="ticks" id="ticks"></div></div>
+</div>
+<div class="tt-card tip" id="tip" role="tooltip"></div>
+<script>
+const DATA = __DATA__;
+const $ = id => document.getElementById(id);
+const css = getComputedStyle(document.documentElement), C = name => css.getPropertyValue("--" + name).trim();
+const STEPS = DATA.steps, SATS = DATA.satellites, LAST = STEPS.length - 1;
+const canvas = $("sky"), ctx = canvas.getContext("2d"), range = $("time"), play = $("play"), tip = $("tip");
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+let at = 0, playing = false, last = null, shown = [], hovered = null;
+let box = { w: 0, h: 0, cx: 0, cy: 0, r: 0 };
+
+/* ---------- where things are: overhead in the middle, north up, east to the right ---------- */
+const toXY = (az, elev) => { const d = (90 - elev) / 90 * box.r, a = az * Math.PI / 180; return [box.cx + d * Math.sin(a), box.cy - d * Math.cos(a)]; };
+function placeOf(s, t) {   // glided between the two steps either side of t, across the picture (so 359° to 1° stays short)
+  const i = Math.min(Math.floor(t), LAST), j = Math.min(i + 1, LAST), f = t - i;
+  if (s.el[i] == null || s.el[j] == null) return null;
+  const p = toXY(s.az[i], s.el[i]), q = toXY(s.az[j], s.el[j]);
+  const x = p[0] + (q[0] - p[0]) * f, y = p[1] + (q[1] - p[1]) * f;
+  const elev = 90 - Math.hypot(x - box.cx, y - box.cy) / box.r * 90;
+  if (elev <= DATA.mask) return null;   // in view means above the mask, as everywhere else on the page
+  const az = (Math.atan2(x - box.cx, box.cy - y) * 180 / Math.PI + 360) % 360;
+  return { s, x, y, az, elev };
+}
+
+/* ---------- drawing ---------- */
+function ring(r, colour, dash) {
+  ctx.beginPath(); ctx.setLineDash(dash || []); ctx.strokeStyle = colour; ctx.arc(box.cx, box.cy, r, 0, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]);
+}
+function mark(p, size) {
+  ctx.beginPath();
+  if (p.s.shape === "circle") ctx.arc(p.x, p.y, size, 0, 2 * Math.PI);
+  else { ctx.moveTo(p.x, p.y - size - 1); ctx.lineTo(p.x + size + 1, p.y); ctx.lineTo(p.x, p.y + size + 1); ctx.lineTo(p.x - size - 1, p.y); ctx.closePath(); }
+  ctx.fillStyle = p.s.colour; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = C("platform"); ctx.stroke();
+}
+function paint() {
+  const { w, h, cx, cy, r } = box;
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = C("well"); ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI); ctx.fill();
+  ctx.lineWidth = 1;
+  for (const elev of [0, 30, 60]) ring((90 - elev) / 90 * r, C("track"));
+  ctx.beginPath(); ctx.strokeStyle = C("track"); ctx.moveTo(cx - r, cy); ctx.lineTo(cx + r, cy); ctx.moveTo(cx, cy - r); ctx.lineTo(cx, cy + r); ctx.stroke();
+  ring((90 - DATA.mask) / 90 * r, C("muted"), [2, 4]);
+  ctx.font = "600 12px " + getComputedStyle(document.body).fontFamily; ctx.fillStyle = C("muted"); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  [["N", 0, -1], ["E", 1, 0], ["S", 0, 1], ["W", -1, 0]].forEach(([t, dx, dy]) => ctx.fillText(t, cx + dx * (r + 13), cy + dy * (r + 13)));
+  ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+  [[60, "60°"], [30, "30°"]].forEach(([elev, t]) => ctx.fillText(t, cx + 4 + (90 - elev) / 90 * r * Math.SQRT1_2, cy - (90 - elev) / 90 * r * Math.SQRT1_2 - 6));
+  shown = SATS.map(s => placeOf(s, at)).filter(Boolean);
+  for (const p of shown) {
+    mark(p, p.s === hovered ? 8 : 6);
+    ctx.fillStyle = C("ink"); ctx.textBaseline = "bottom"; ctx.fillText(p.s.label, p.x, p.y - 9);
+  }
+  if (hovered) card();
+}
+function head() {
+  const step = STEPS[Math.round(at)];
+  $("when").textContent = step.when;
+  $("state").textContent = `${step.seen} in view · ${step.gdop}`;
+  range.setAttribute("aria-valuetext", `${step.when}: ${step.seen} in view, ${step.gdop}`);
+  canvas.setAttribute("aria-label", `The sky above the chosen place at ${step.when}: ${step.seen} satellites in view.`);
+}
+function set(t) { at = Math.max(0, Math.min(LAST, t)); range.value = at; head(); paint(); }
+
+/* ---------- the card for the satellite under the pointer, or tapped ---------- */
+function card() {
+  const p = shown.find(q => q.s === hovered);
+  if (!p) { tip.classList.remove("on"); return; }
+  tip.replaceChildren(el("div", "n", p.s.name), el("div", "k", p.s.orbit),
+                      el("div", null, `azimuth ${Math.round(p.az)}° · elevation ${Math.round(p.elev)}°`));
+  tip.classList.add("on");
+  const b = canvas.getBoundingClientRect(), x = b.left + p.x, y = b.top + p.y, tw = tip.offsetWidth, th = tip.offsetHeight;
+  tip.style.left = Math.max(8, Math.min(innerWidth - tw - 8, x - tw / 2)) + "px";
+  tip.style.top = (y + 16 + th < innerHeight ? y + 16 : Math.max(8, y - th - 16)) + "px";
+}
+function hit(x, y) {
+  let best = null, far = 18 * 18;
+  for (const p of shown) { const d = (p.x - x) ** 2 + (p.y - y) ** 2; if (d < far) { far = d; best = p.s; } }
+  return best;
+}
+const local = e => { const b = canvas.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+canvas.addEventListener("pointermove", e => { hovered = hit(...local(e)); canvas.style.cursor = hovered ? "pointer" : ""; paint(); });
+canvas.addEventListener("pointerdown", e => { hovered = hit(...local(e)); paint(); });
+canvas.addEventListener("pointerleave", e => { if (e.pointerType !== "touch") { hovered = null; tip.classList.remove("on"); paint(); } });
+
+/* ---------- playing: one button, the play sign while paused and the pause sign while playing ---------- */
+function toggle(on) {
+  playing = on;
+  play.setAttribute("aria-pressed", String(on));
+  play.setAttribute("aria-label", on ? "Pause" : "Play the next 24 hours");
+  if (on) { if (at >= LAST) set(0); last = null; requestAnimationFrame(tick); }
+}
+function tick(now) {
+  if (!playing) return;
+  if (last != null) set(at + (now - last) / DATA.ms);
+  last = now;
+  if (at >= LAST) toggle(false); else requestAnimationFrame(tick);
+}
+play.addEventListener("click", () => toggle(!playing));
+range.addEventListener("input", () => set(+range.value));   // dragging while playing carries on from there
+
+/* ---------- the timeline's times and the key ---------- */
+range.max = LAST;
+STEPS.forEach((s, i) => {
+  if (i % DATA.every) return;
+  const t = el("span", null, s.tick); t.style.left = (i / LAST * 100) + "%"; $("ticks").append(t);
+});
+for (const k of DATA.key) {
+  const m = el("span", "mark " + k.shape); m.style.background = k.colour;
+  const entry = el("span"); entry.append(m, k.words); $("key").append(entry);
+}
+const maskEntry = el("span"); maskEntry.append(el("span", "ring"), `elevation mask ${DATA.mask}°`); $("key").append(maskEntry);
+
+function resize() {
+  const b = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(b.width * dpr); canvas.height = Math.round(b.height * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  box = { w: b.width, h: b.height, cx: b.width / 2, cy: b.height / 2, r: Math.max(10, Math.min(b.width, b.height) / 2 - 26) };
+  paint();
+}
+head();
+new ResizeObserver(resize).observe(canvas);
+</script>
+</body>
+</html>

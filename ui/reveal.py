@@ -6,7 +6,7 @@ section. Tables open closed, except each page's one most important table, which 
   Overview         the "Measured against limits" table: one per orbit type for NavIC, QZSS and BeiDou-3, one for every
                    satellite for GPS, GLONASS and Galileo, one for the satellites picked under Compare
   Station-keeping  burns per satellite
-  Geometry         position quality by place
+  Geometry         position quality by place; in "Sky and ground", when each satellite is in view (the question asked)
   Library          the count per system
   Master map       none: the map is the page
 

@@ -5,6 +5,7 @@ Figure builders return Plotly figures; grid builders return HTML strings for ui.
 outside files, so they are escaped. No Streamlit and no clock: the numbers come from ui/geometry_data.py.
 """
 import json
+import math
 from functools import cache
 from html import escape
 
@@ -22,11 +23,11 @@ AXIS = {"linecolor": palette.TRACK, "tickcolor": palette.TRACK, "gridcolor": pal
 DOP_LINES = {"GDOP": (palette.ACCENT, "solid", 3), "PDOP": (palette.INK, "solid", 1.5),
              "HDOP": (palette.MUTED, "solid", 1.5), "VDOP": (palette.MUTED, "dot", 1.5)}
 BAND_LINES = [("Excellent", palette.OK), ("Good", palette.WARN), ("Moderate", palette.BAD)]
-TREND_ROW_PX = 112
+TREND_ROW_PX = 120      # each measure's strip in a satellite's trends
+TREND_FORMAT = {"altitude_km": ",.1f"}   # hover numbers: km to a tenth, the rest to three places
 MAP_PAD_DEG = 12
 MAP_MIN_WIDE = 1.6     # the map is at least this many times as wide as it is tall
-SKY_PX = 560
-SKY_LABEL_EVERY = 3     # a time under every third step of the slider
+MAP_PX = 500
 
 
 def _layout(fig, height, **extra):
@@ -142,57 +143,73 @@ def dop_trend(series, place):
                    legend={"orientation": "h", "x": 0, "y": 1.1, "bgcolor": CLEAR})
 
 
-# ---- sky view ----
+# ---- sky view (drawn by ui/components/sky_view.py) ----
 
-def _sky_traces(frame, types, groups):
-    """One trace per orbit type in `groups`, in that order, so every frame has the same traces."""
-    traces = []
-    for orbit in groups:
-        here = [s for s in frame["satellites"] if types.get(s[0], gs.OTHER_ORBIT) == orbit]
-        traces.append(go.Scatterpolar(
-            r=[90 - el for _, _, el in here], theta=[az for _, az, _ in here], text=[escape(short(n)) for n, _, _ in here],
-            mode="markers+text", textposition="top center", name=orbit,
-            textfont={"color": palette.INK, "size": 11},
-            marker={"size": 12, "color": _colour(orbit), "symbol": _symbol(orbit), "line": {"color": palette.PLATFORM, "width": 1}},
-            hovertemplate="%{customdata[0]}<br>azimuth %{theta:.0f}°<br>elevation %{customdata[1]:.0f}°<extra></extra>",
-            customdata=[[escape(n), el] for n, _, el in here]))
-    return traces
+def gdop_words(gdop):
+    """'GDOP 2.10, excellent', or 'no position' without one."""
+    return "no position" if gdop is None else f"GDOP {gdop:.2f}, {quality('GDOP', gdop)[0]}"
 
 
-def _sky_title(frame):
-    gdop = "no position" if frame["gdop"] is None else f"GDOP {frame['gdop']:.2f}, {quality('GDOP', frame['gdop'])[0]}"
-    return f"{frame['time']:%d %b %H:%M} UTC · {len(frame['satellites'])} in view · {gdop}"
+# ---- when each satellite is next in view ----
+
+def latlon_words(lat, lon, places=2):
+    """'28.61° N, 77.21° E': a place in words, for headings and hovers."""
+    lat, lon = round(lat, places) + 0.0, round(lon, places) + 0.0   # + 0.0: no "0.0° S" for a hair south
+    return f"{abs(lat):.{places}f}° {'N' if lat >= 0 else 'S'}, {abs(lon):.{places}f}° {'E' if lon >= 0 else 'W'}"
 
 
-def sky_view(frames, types, mask_deg):
-    """Where the satellites sit in the sky at one place: overhead in the middle, the horizon at the edge.
+def clock_words(when, zone):
+    """'20 Oct 14:20 IST · 08:50 UTC': the viewer's time and UTC (UTC alone for a viewer on UTC)."""
+    local = when.astimezone(zone)
+    if not local.utcoffset():
+        return f"{when.day} {when:%b %H:%M} UTC"
+    utc = f"{when:%H:%M} UTC" if local.date() == when.date() else f"{when.day} {when:%b %H:%M} UTC"
+    return f"{local.day} {local:%b %H:%M} {local.tzname()} · {utc}"
 
-    A slider moves through the frames (the first is now)."""
-    groups = sorted({types.get(n, gs.OTHER_ORBIT) for f in frames for n, _, _ in f["satellites"]} or {"GEO"})
-    mask = go.Scatterpolar(r=[90 - mask_deg] * 73, theta=list(range(0, 365, 5)), mode="lines", hoverinfo="skip",
-                           line={"color": palette.TRACK, "dash": "dot", "width": 1}, showlegend=False)
-    fig = go.Figure([mask, *_sky_traces(frames[0], types, groups)])
-    fig.frames = [go.Frame(data=_sky_traces(f, types, groups), traces=list(range(1, 1 + len(groups))), name=str(i),
-                           layout={"title": {"text": _sky_title(f)}}) for i, f in enumerate(frames)]
-    steps = [{"method": "animate", "label": f"{f['time']:%H:%M}" if i % SKY_LABEL_EVERY == 0 else "",
-              "args": [[str(i)], {"mode": "immediate", "frame": {"duration": 0, "redraw": True}, "transition": {"duration": 0}}]}
-             for i, f in enumerate(frames)]
-    return _layout(
-        fig, SKY_PX, margin={"l": 40, "r": 40, "t": 50, "b": 90},
-        title={"text": _sky_title(frames[0]), "font": {"size": 14, "color": palette.INK}, "x": 0.02},
-        legend={"orientation": "h", "x": 1, "xanchor": "right", "y": 1.08, "bgcolor": CLEAR},
-        polar={"bgcolor": palette.WELL,
-               "radialaxis": {"range": [0, 90], "tickvals": [0, 30, 60, 90], "ticktext": ["overhead", "60°", "30°", "horizon"],
-                              "gridcolor": palette.TRACK, "linecolor": palette.TRACK, "tickfont": {"color": palette.MUTED, "size": 10}},
-               "angularaxis": {"direction": "clockwise", "rotation": 90, "tickvals": [0, 90, 180, 270],
-                               "ticktext": ["N", "E", "S", "W"], "gridcolor": palette.TRACK, "linecolor": palette.TRACK}},
-        sliders=[{"steps": steps, "x": 0.12, "len": 0.88, "y": -0.06, "pad": {"t": 10}, "bgcolor": palette.WELL,
-                  "bordercolor": palette.TRACK, "font": {"color": palette.MUTED, "size": 10},
-                  "currentvalue": {"visible": False}}],
-        updatemenus=[{"type": "buttons", "x": 0, "y": -0.06, "xanchor": "left", "yanchor": "top", "showactive": False,
-                      "bgcolor": palette.PLATFORM, "bordercolor": palette.TRACK, "font": {"color": palette.INK},
-                      "buttons": [{"label": "Play", "method": "animate",
-                                   "args": [None, {"frame": {"duration": 400, "redraw": True}, "fromcurrent": True}]}]}])
+
+def _after(when, now):
+    minutes = round((when - now).total_seconds() / 60)
+    hours, minutes = divmod(minutes, 60)
+    return f"in {hours} h {minutes} min" if hours else f"in {minutes} min"
+
+
+def next_words(row, orbit, now, zone, hours=gs.NEXT_HOURS):
+    """(now: 'in view' or 'not in view', status, when: until when, or when next, in plain words) for one row of
+    geometry_data.next_visible. A geostationary satellite stays at one point in the sky, so it says so."""
+    state, status = ("in view", "ok") if row["in_view"] else ("not in view", "idle")
+    if row["change"] is not None:
+        verb = "until" if row["in_view"] else "next in view"
+        return state, status, f"{verb} {clock_words(row['change'], zone)}, {_after(row['change'], now)}"
+    if orbit == "GEO":
+        return state, status, ("always in view: geostationary, it stays at one point in the sky" if row["in_view"] else
+                               "never in view from here: geostationary, it stays below the elevation mask")
+    return state, status, (f"in view for all of the next {hours} hours" if row["in_view"] else
+                           f"not in the next {hours} hours")
+
+
+def next_order(rows):
+    """In view first (leaving soonest first), then the rest by when they come into view; never last."""
+    far = max((r["change"] for r in rows if r["change"] is not None), default=None)
+    return sorted(rows, key=lambda r: (not r["in_view"], r["change"] is None, r["change"] or far))
+
+
+def next_table(rows, types, now, zone):
+    """One line per satellite: in view now or not, and until when or when next."""
+    lines = ['<div class="nr hd"><span>Satellite</span><span>Now</span><span>Until, or next in view</span></div>']
+    for row in next_order(rows):
+        orbit = types.get(row["satellite"], gs.OTHER_ORBIT)
+        state, status, when = next_words(row, orbit, now, zone)
+        lines.append(f'<div class="nr"><b>{escape(row["satellite"])}<small>{escape(gs.ORBIT_WORDS.get(orbit, orbit))}</small></b>'
+                     f'<span>{surfaces.chip(state, status)}</span><span>{escape(when)}</span></div>')
+    return f'<div class="geo-next">{"".join(lines)}</div>'
+
+
+def next_summary(rows, now, zone):
+    """The section's one line: how many are in view now and the next to come into view."""
+    seen = sum(r["in_view"] for r in rows)
+    rising = [r for r in next_order(rows) if not r["in_view"] and r["change"] is not None]
+    soonest = (f" · next: {short(rising[0]['satellite'])} {clock_words(rising[0]['change'], zone)}" if rising else "")
+    return f"{seen} of {len(rows)} in view now{soonest}"
 
 
 # ---- ground tracks ----
@@ -207,99 +224,146 @@ def _land():
     return xs, ys
 
 
-def _unwrapped(lats, lons):
-    """The track with a break wherever it crosses the 180° line, so no line runs across the whole map."""
-    xs, ys = [], []
-    for i, (lat, lon) in enumerate(zip(lats, lons)):
-        if i and abs(lon - lons[i - 1]) > 180:
-            xs.append(None)
-            ys.append(None)
-        xs.append(lon)
-        ys.append(lat)
-    return xs, ys
+def _unwrapped(*columns, lon_at=1):
+    """The track's columns with a break (None) wherever it crosses the 180° line, so no line runs across the map.
+    lon_at: which column is the longitude."""
+    lons = columns[lon_at]
+    out = [[] for _ in columns]
+    for i in range(len(lons)):
+        if i and abs(lons[i] - lons[i - 1]) > 180:
+            for column in out:
+                column.append(None)
+        for column, values in zip(out, columns):
+            column.append(values[i])
+    return out
 
 
-def ground_map(tracks, here, types, places):
-    """Each satellite's ground track, where it is now, and the places position quality is worked out for."""
-    land_x, land_y = _land()
-    fig = go.Figure(go.Scatter(x=land_x, y=land_y, mode="lines", fill="toself", fillcolor=palette.FILL,
-                               line={"color": palette.TRACK, "width": 0.5}, hoverinfo="skip", showlegend=False, opacity=0.5))
-    shown = set()
-    for name, (lats, lons) in tracks.items():
-        orbit = types.get(name, gs.OTHER_ORBIT)
-        xs, ys = _unwrapped(lats, lons)
-        fig.add_trace(go.Scatter(x=xs, y=ys, mode="lines", line={"color": _colour(orbit), "width": 2}, opacity=0.8,
-                                 name=orbit, legendgroup=orbit, showlegend=orbit not in shown,
-                                 hovertemplate=f"{escape(name)}<br>%{{y:.1f}}°, %{{x:.1f}}°<extra></extra>"))
-        shown.add(orbit)
-    now = [(n, *here[n]) for n in tracks if n in here]
-    fig.add_trace(go.Scatter(
-        x=[lon for _, _, lon in now], y=[lat for _, lat, _ in now], text=[escape(short(n)) for n, _, _ in now],
-        customdata=[escape(n) for n, _, _ in now],
-        mode="markers+text", textposition="top center", textfont={"color": palette.INK, "size": 11}, showlegend=False,
-        marker={"size": 10, "color": [_colour(types.get(n, gs.OTHER_ORBIT)) for n, _, _ in now],
-                "symbol": [_symbol(types.get(n, gs.OTHER_ORBIT)) for n, _, _ in now], "line": {"color": palette.PLATFORM, "width": 1}},
-        hovertemplate="%{customdata} now<extra></extra>"))
-    fig.add_trace(go.Scatter(x=[lon for lat, lon in places.values()], y=[lat for lat, lon in places.values()],
-                             text=[escape(p) for p in places], mode="markers", name="places",
-                             marker={"symbol": "x-thin", "size": 10, "color": palette.MUTED, "line": {"color": palette.MUTED, "width": 2}},
-                             hovertemplate="%{text}<extra></extra>"))
-    lons = [x for lats, lons in tracks.values() for x in lons] + [lon for _, lon in places.values()]
-    lats = [y for lats, lons in tracks.values() for y in lats] + [lat for lat, _ in places.values()]
+def _ranges(lats, lons):
     y_range = [max(-90, min(lats) - MAP_PAD_DEG), min(90, max(lats) + MAP_PAD_DEG)] if lats else [-90, 90]
     half = max((max(lons) - min(lons)) / 2 + MAP_PAD_DEG, (y_range[1] - y_range[0]) * MAP_MIN_WIDE / 2) if lons else 180
     middle = (max(lons) + min(lons)) / 2 if lons else 0
-    x_range = [max(-180, middle - half), min(180, middle + half)]
+    return [max(-180, middle - half), min(180, middle + half)], y_range
+
+
+def click_cells(x_range, y_range, step=gs.CLICK_GRID_DEG):
+    """Squares `step` degrees a side covering the map: [(west edge, south edge), ...]."""
+    wests = range(math.floor(x_range[0] / step) * step, math.ceil(x_range[1]), step)
+    souths = range(math.floor(y_range[0] / step) * step, math.ceil(y_range[1]), step)
+    return [(w, s) for w in wests for s in souths]
+
+
+def ground_map(tracks, here, types, places, chosen=None):
+    """Each satellite's ground track, where it is now, the key places, and the chosen place (name, lat, lon).
+
+    Hovering a track says which satellite, when, the point on the ground under it and its height. A click anywhere
+    on the map picks that point, to the nearest square of CLICK_GRID_DEG (Plotly reports clicks on drawn things only)."""
+    land_x, land_y = _land()
+    fig = go.Figure(go.Scatter(x=land_x, y=land_y, mode="lines", fill="toself", fillcolor=palette.FILL,
+                               line={"color": palette.TRACK, "width": 0.5}, hoverinfo="skip", showlegend=False, opacity=0.5))
+    hidden = {"marker": {"opacity": 0}}
+    shown = set()
+    for name, track in tracks.items():
+        orbit = types.get(name, gs.OTHER_ORBIT)
+        words = [[f"{t:%d %b %H:%M} UTC", latlon_words(lat, lon, 1), h]
+                 for t, lat, lon, h in zip(track["time"], track["lat"], track["lon"], track["height"])]
+        lats, lons, info = _unwrapped(track["lat"], track["lon"], words)
+        # big invisible markers: a hover near the line finds the track before the click grid under it
+        fig.add_trace(go.Scatter(x=lons, y=lats, customdata=info, mode="lines+markers", opacity=0.8,
+                                 line={"color": _colour(orbit), "width": 2}, marker={"size": 16, "opacity": 0},
+                                 selected=hidden, unselected=hidden, name=orbit, legendgroup=orbit,
+                                 showlegend=orbit not in shown,
+                                 hovertemplate=(f"<b>{escape(name)}</b><br>%{{customdata[0]}}<br>"
+                                                "over %{customdata[1]}<br>height %{customdata[2]:,.0f} km<extra></extra>")))
+        shown.add(orbit)
+    now = [(n, *here[n]) for n in tracks if n in here]
+    keep = {"marker": {"opacity": 1}}
+    fig.add_trace(go.Scatter(
+        x=[lon for _, _, lon in now], y=[lat for _, lat, _ in now], text=[escape(short(n)) for n, _, _ in now],
+        customdata=[[escape(n), latlon_words(lat, lon, 1)] for n, lat, lon in now],
+        mode="markers+text", textposition="top center", textfont={"color": palette.INK, "size": 11}, showlegend=False,
+        marker={"size": 10, "color": [_colour(types.get(n, gs.OTHER_ORBIT)) for n, _, _ in now],
+                "symbol": [_symbol(types.get(n, gs.OTHER_ORBIT)) for n, _, _ in now], "line": {"color": palette.PLATFORM, "width": 1}},
+        selected=keep, unselected=keep, hovertemplate="<b>%{customdata[0]}</b> now<br>over %{customdata[1]}<extra></extra>"))
+    fig.add_trace(go.Scatter(x=[lon for lat, lon in places.values()], y=[lat for lat, lon in places.values()],
+                             text=[escape(p) for p in places], mode="markers", name="key places", selected=keep, unselected=keep,
+                             marker={"symbol": "x-thin", "size": 10, "color": palette.MUTED, "line": {"color": palette.MUTED, "width": 2}},
+                             hovertemplate="%{text}<br>click to see its sky<extra></extra>"))
+    picked = [chosen[1:]] if chosen else []
+    lons = [x for t in tracks.values() for x in t["lon"]] + [lon for _, lon in [*places.values(), *picked]]
+    lats = [y for t in tracks.values() for y in t["lat"]] + [lat for lat, _ in [*places.values(), *picked]]
+    x_range, y_range = _ranges(lats, lons)
+    # Invisible squares under everything: a click on one picks its middle. Plotly ranks the inside of a bar behind
+    # any point within the hover distance, so a track's hover still wins near the track.
+    cells, half = click_cells(x_range, y_range), gs.CLICK_GRID_DEG / 2
+    fig.add_trace(go.Bar(x=[w + half for w, _ in cells], y=[gs.CLICK_GRID_DEG] * len(cells), base=[s for _, s in cells],
+                         width=gs.CLICK_GRID_DEG, customdata=[[s + half, w + half] for w, s in cells], name="click",
+                         marker={"opacity": 0, "line": {"width": 0}}, selected=hidden, unselected=hidden,
+                         hoverinfo="none", showlegend=False))
+    if chosen:
+        fig.add_trace(go.Scatter(x=[chosen[2]], y=[chosen[1]], mode="markers", name="chosen place", hoverinfo="skip",
+                                 marker={"symbol": "circle-open", "size": 18, "color": palette.ACCENT, "line": {"width": 3}},
+                                 selected=keep, unselected=keep))
     fig.update_xaxes(range=x_range, ticksuffix="°", showgrid=True, constrain="domain", **AXIS)
     fig.update_yaxes(range=y_range, ticksuffix="°", showgrid=True, scaleanchor="x", constrain="domain", **AXIS)
-    return _layout(fig, 560, margin={"l": 50, "r": 16, "t": 10, "b": 40},
+    return _layout(fig, MAP_PX, margin={"l": 50, "r": 16, "t": 10, "b": 40}, hovermode="closest", hoverdistance=16,
                    legend={"orientation": "h", "x": 0, "y": 1.06, "bgcolor": CLEAR})
 
 
 # ---- orbit trends ----
 
-def _band(fig, x0, x1, low, high, row, col):
+def _band(fig, x0, x1, low, high, yaxis):
     """What the measure should be, as a shaded band (a dashed line when it is one value). Drawn as a trace, so the
-    axis always takes it in."""
+    axis always takes it in; its words are in the measure's own hover."""
     if low == high:
         fig.add_trace(go.Scatter(x=[x0, x1], y=[low, low], mode="lines", line={"color": palette.OK, "dash": "dash", "width": 1},
-                                 hovertemplate=f"should be {low:g}<extra></extra>", showlegend=False), row=row, col=col)
+                                 hoverinfo="skip", showlegend=False, yaxis=yaxis))
         return
     fig.add_trace(go.Scatter(x=[x0, x1, x1, x0, x0], y=[low, low, high, high, low], mode="lines", fill="toself",
-                             fillcolor=palette.OK, line={"width": 0}, opacity=0.16, showlegend=False,
-                             hovertemplate=f"should be {low:g} to {high:g}<extra></extra>"), row=row, col=col)
+                             fillcolor=palette.OK, line={"width": 0}, opacity=0.16, showlegend=False, hoverinfo="skip",
+                             yaxis=yaxis))
 
 
-def orbit_trends(series, satellites, types, bands, start, end):
-    """One row per satellite (grouped by orbit type), one column per measure in TRENDS: the measure over the window
-    and, where a target is set, the band it should sit in.
+def _should(band):
+    if band is None:
+        return ""
+    low, high = band
+    return f" (should be {low:g})" if low == high else f" (should be {low:g} to {high:g})"
 
-    series: {history column: table with satellite, EPOCH and that column}. bands: {name: {column: (low, high)}}."""
-    order = [n for _, names in by_orbit(satellites, types) for n in names]
-    titles = [f"{name} ({unit})" for _, name, unit, _ in gs.TRENDS]
-    fig = make_subplots(rows=max(len(order), 1), cols=len(gs.TRENDS), shared_xaxes=True, column_titles=titles,
-                        horizontal_spacing=0.07, vertical_spacing=0.25 / max(len(order), 1))
-    for r, name in enumerate(order, start=1):
-        orbit = types.get(name, gs.OTHER_ORBIT)
-        for c, (column, label, unit, _) in enumerate(gs.TRENDS, start=1):
-            if column in bands.get(name, {}):
-                _band(fig, start, end, *bands[name][column], r, c)
-            table = series.get(column)
-            own = table[table["satellite"] == name] if table is not None else None
-            if own is not None and not own.empty:
-                fig.add_trace(go.Scatter(x=own["EPOCH"], y=own[column], mode="lines+markers" if len(own) < 30 else "lines",
-                                         line={"color": _colour(orbit), "width": 1.6}, marker={"size": 4}, showlegend=False,
-                                         hovertemplate=f"{escape(name)}<br>{label} %{{y:.3f}} {unit}<br>%{{x|%d %b %Y}}<extra></extra>"),
-                              row=r, col=c)
-        fig.add_annotation(text=f"<b>{escape(name)}</b> <span style='color:{palette.MUTED}'>{orbit}</span>", xref="paper",
-                           yref=f"y{'' if r == 1 else (r - 1) * len(gs.TRENDS) + 1} domain", x=0, y=1.0, xanchor="left",
-                           yanchor="bottom", showarrow=False, font={"size": 12, "color": palette.INK})
-    fig.update_xaxes(type="date", showgrid=False, range=[start, end], linecolor=palette.TRACK, tickcolor=palette.TRACK)
-    fig.update_yaxes(showgrid=True, nticks=4, **AXIS)
-    fig.update_yaxes(tickformat=",.0f", col=1 + [t[0] for t in gs.TRENDS].index("altitude_km"))   # km in full
-    for title in titles:   # the column titles sit above the first satellite's name
-        fig.update_annotations(selector={"text": title}, yshift=20, font={"color": palette.MUTED, "size": 12})
-    return _layout(fig, TREND_ROW_PX * max(len(order), 1) + 80, margin={"l": 50, "r": 16, "t": 60, "b": 30})
+
+def satellite_trends(series, name, orbit, bands, start, end):
+    """One satellite's measures (TRENDS), one strip each, over one shared time axis: hovering any strip reads all of
+    them at that time, with a line down through every strip.
+
+    series: {history column: table with satellite, EPOCH and that column}. bands: {column: (low, high)}."""
+    fig = go.Figure()
+    count, gap = len(gs.TRENDS), 0.07
+    tall = (1 - gap * (count - 1)) / count
+    for i, (column, label, unit, _) in enumerate(gs.TRENDS):
+        yaxis = "y" if i == 0 else f"y{i + 1}"
+        top = 1 - i * (tall + gap)
+        fig.update_layout({f"yaxis{'' if i == 0 else i + 1}": {
+            "domain": [top - tall, top], "title": {"text": f"{label}<br>{unit}", "font": {"size": 12, "color": palette.MUTED},
+                                                   "standoff": 6},
+            "showgrid": True, "nticks": 4, "tickfont": {"size": 12, "color": palette.MUTED},
+            "tickformat": ",.0f" if column == "altitude_km" else None, **AXIS}})
+        if column in bands:
+            _band(fig, start, end, *bands[column], yaxis)
+        table = series.get(column)
+        own = table[table["satellite"] == name] if table is not None else None
+        if own is not None and not own.empty:
+            fig.add_trace(go.Scatter(x=own["EPOCH"], y=own[column], name=label, yaxis=yaxis,
+                                     mode="lines+markers" if len(own) < 30 else "lines",
+                                     line={"color": _colour(orbit), "width": 1.8}, marker={"size": 5}, showlegend=False,
+                                     hovertemplate=(f"{label} %{{y:{TREND_FORMAT.get(column, '.3f')}}} {unit}"
+                                                    f"{_should(bands.get(column))}<extra></extra>")))
+    fig.update_xaxes(type="date", range=[start, end], anchor=f"y{count}", showgrid=False, tickfont={"size": 12, "color": palette.MUTED},
+                     hoverformat="%d %b %Y %H:%M UTC", showspikes=True, spikemode="across", spikesnap="cursor",
+                     spikecolor=palette.MUTED, spikethickness=1, spikedash="solid",
+                     linecolor=palette.TRACK, tickcolor=palette.TRACK)
+    return _layout(fig, TREND_ROW_PX * count + 70, hovermode="x unified", hoversubplots="axis", spikedistance=-1,
+                   margin={"l": 74, "r": 16, "t": 40, "b": 30},
+                   title={"text": f"<b>{escape(name)}</b>  <span style='color:{palette.MUTED}'>{escape(gs.ORBIT_WORDS.get(orbit, orbit))}</span>",
+                          "font": {"size": 14, "color": palette.INK}, "x": 0.01, "y": 0.98})
 
 
 def trends_key():

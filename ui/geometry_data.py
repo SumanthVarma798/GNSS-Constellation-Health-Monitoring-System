@@ -4,12 +4,14 @@ analysis/raan_analysis.py). Nothing here draws, and nothing reads the clock: the
 Satellites are placed from each one's newest element set in the history (bundled data plus any fresh rows),
 the same rows the other pages use.
 """
+import re
 from datetime import timedelta, timezone
 
+import numpy as np
 import pandas as pd
 from skyfield.api import EarthSatellite, load, wgs84
 
-from analysis.dop_calculations import calculate_bounding_boxes, calculate_dop_for_location
+from analysis.dop_calculations import calculate_dop_for_location
 from analysis.raan_analysis import _circular_mean_deg
 from config.config import (BEIDOU3_SERVICE_REQUIREMENTS, DEFAULT_PARAMS, NAVIK_SERVICE_REQUIREMENTS, R_EARTH,
                            QZSS_SERVICE_REQUIREMENTS)
@@ -80,16 +82,76 @@ def sky_frames(satellites, lat, lon, start, mask_deg, hours=gs.SKY_HOURS, step_m
     return frames
 
 
-def ground_tracks(satellites, now, window, hours=gs.TRACK_HOURS, step_minutes=gs.TRACK_STEP_MINUTES):
-    """({name: (latitudes, longitudes)} over the next or past day, {name: (lat, lon) now})."""
-    start = now if window == gs.TRACK_WINDOWS[0] else now - timedelta(hours=hours)
-    boxes = calculate_bounding_boxes(satellites, start, timestep_minutes=step_minutes, prop_duration_days=hours / 24)
-    t = _ts.from_datetime(now)
-    here = {}
+def sky_paths(satellites, lat, lon, start, hours=gs.SKY_HOURS, step_minutes=gs.SKY_STEP_MINUTES):
+    """Where each satellite sits in the sky at one place, a step at a time from `start` (the steps of sky_frames):
+    {name: (azimuths, elevations)} in degrees, below the horizon as well."""
+    steps, observer = _ts.from_datetimes(_steps(start, hours, step_minutes)), wgs84.latlon(lat, lon)
+    paths = {}
     for name, sat in satellites.items():
-        point = wgs84.subpoint(sat.at(t))
+        elevation, azimuth, _ = (sat - observer).at(steps).altaz()
+        paths[name] = (list(azimuth.degrees), list(elevation.degrees))
+    return paths
+
+
+def ground_tracks(satellites, now, window, hours=gs.TRACK_HOURS, step_minutes=gs.TRACK_STEP_MINUTES):
+    """({name: {"time", "lat", "lon", "height"}} over the next or past day, {name: (lat, lon) now}).
+
+    lat and lon are the point on the ground under the satellite, in degrees; height is km above the ground there."""
+    start = now if window == gs.TRACK_WINDOWS[0] else now - timedelta(hours=hours)
+    times = _steps(start, hours, step_minutes)
+    steps, at_now = _ts.from_datetimes(times), _ts.from_datetime(now)
+    tracks, here = {}, {}
+    for name, sat in satellites.items():
+        under = wgs84.geographic_position_of(sat.at(steps))
+        tracks[name] = {"time": times, "lat": list(under.latitude.degrees), "lon": list(under.longitude.degrees),
+                        "height": list(under.elevation.km)}
+        point = wgs84.subpoint_of(sat.at(at_now))
         here[name] = (point.latitude.degrees, point.longitude.degrees)
-    return {name: (box["latitudes"], box["longitudes"]) for name, box in boxes.items()}, here
+    return tracks, here
+
+
+def next_visible(satellites, lat, lon, start, mask_deg, hours=gs.NEXT_HOURS, step_minutes=gs.NEXT_STEP_MINUTES):
+    """Whether each satellite is in view at one place at `start`, and when that next changes within `hours`.
+
+    [{"satellite", "in_view" (above the mask at `start`), "change" (the first step at which it has risen above the
+    mask, or set below it; None when it does not within the window)}], to the step."""
+    times = _steps(start, hours, step_minutes)
+    steps, observer = _ts.from_datetimes(times), wgs84.latlon(lat, lon)
+    rows = []
+    for name, sat in satellites.items():
+        above = (sat - observer).at(steps).altaz()[0].degrees > mask_deg   # strictly above, as position quality counts
+        flips = np.flatnonzero(above != above[0])
+        rows.append({"satellite": name, "in_view": bool(above[0]), "change": times[flips[0]] if len(flips) else None})
+    return rows
+
+
+_COORDINATE = re.compile(r"([+-]?\d+(?:\.\d+)?)\s*°?\s*([NSEW]?)", re.IGNORECASE)
+
+
+def parse_place(text):
+    """(latitude, longitude) in degrees from what a reader typed: '28.61, 77.21', '28.61 77.21' or
+    '28.61 N, 77.21 E'. South and west are negative. Anything else raises a ValueError that says, in plain words,
+    what to change."""
+    parts = [p for p in re.split(r"\s*[,;]\s*|\s+(?=[+-]?\d)", (text or "").strip()) if p]
+    if not parts:
+        raise ValueError(f"Enter a latitude and a longitude, for example {gs.PLACE_EXAMPLE}.")
+    if len(parts) != 2:
+        raise ValueError(f"Enter two numbers, latitude then longitude, for example {gs.PLACE_EXAMPLE}.")
+    values = []
+    for part, (name, signs, limit) in zip(parts, (("Latitude", "NS", 90), ("Longitude", "EW", 180))):
+        found = _COORDINATE.fullmatch(part)
+        if not found:
+            raise ValueError(f"{name}: “{part}” is not a number of degrees.")
+        value, letter = float(found[1]), found[2].upper()
+        if letter and letter not in signs:
+            raise ValueError(f"{name} is {' or '.join(signs)}, not {letter}: latitude first, then longitude.")
+        if letter and value < 0:
+            raise ValueError(f"{name}: use a minus sign or {signs[1]}, not both.")
+        value = -value if letter == signs[1] else value
+        if abs(value) > limit:
+            raise ValueError(f"{name} must be between -{limit} and {limit} degrees; {value:g} is outside that.")
+        values.append(value)
+    return tuple(values)
 
 
 def central_longitudes(history, names, since):
