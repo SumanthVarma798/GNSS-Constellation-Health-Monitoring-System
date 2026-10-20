@@ -138,7 +138,9 @@ def day_columns(days, labels):
                     + (f'<i class="bad" style="flex:{failed}"></i>' if failed else "")
                     + (f'<i class="ok" style="flex:{ok}"></i>' if ok else "") + "</span>")
     failures = [f"{label} {day[1]}" for label, day in zip(labels, days) if day and day[1]]
-    alt = f"Runs per day over {len(days)} days; " + (f"failed: {', '.join(failures)}" if failures else "none failed")
+    succeeded = sum(day[0] for day in days if day)
+    alt = (f"Runs per day over {len(days)} days: {succeeded} succeeded; "
+           + (f"failed: {', '.join(failures)}" if failures else "none failed"))
     return f'<div class="c-trend" role="img" aria-label="{escape(alt, quote=True)}">{columns}</div>'
 
 

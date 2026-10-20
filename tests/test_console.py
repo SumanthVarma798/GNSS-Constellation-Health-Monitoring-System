@@ -321,3 +321,15 @@ def test_the_summary_leads_with_one_figure_and_draws_grades_in_one_blue_ramp(mon
 
     assert page.count('class="c-hero') == 1 and "things need a look" in page
     assert "var(--g-a)" in page and "var(--c-ok)\" title=\"A" not in page
+
+
+def test_an_answer_github_gives_in_another_shape_is_said_plainly(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+
+    assert "not in the shape the console expects" in text(run(monkeypatch, GitHub(fail=KeyError("workflows"))))
+
+
+def test_the_hero_says_in_words_whether_any_of_it_is_failing(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+
+    assert "things need a look, 1 of them failing" in text(run(monkeypatch))

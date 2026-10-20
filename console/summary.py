@@ -30,7 +30,9 @@ body, actions = common.layout("summary", "Summary", "The state of the whole syst
 with body:
     for problem in seen["problems"]:
         st.html(console.notice(problem, "warn"))
-    st.html(console.hero(looks, "thing needs a look" if looks == 1 else "things need a look", worst)
+    failing = sum(tone == "bad" for tone, *_ in items)
+    st.html(console.hero(looks, ("thing needs a look" if looks == 1 else "things need a look")
+                         + (f", {failing} of them failing" if failing else ", none failing" if looks else ""), worst)
             + console.section("Needs attention", console.attention(items), right="worst first"))
 
     grid = jobs.reliability(seen["runs"], now)
@@ -72,13 +74,15 @@ with body:
     tests = next(r for r in rows if r["workflow"] == TESTS_WORKFLOW)
     on_main = sorted((r for r in seen["runs"] if r["path"].endswith(TESTS_WORKFLOW) and r["head_branch"] == "main"
                       and r["event"] == "push" and r["status"] == "completed"), key=lambda r: r["created_at"])[-TESTS_SHOWN:]
+    looks_of = {"ok": ("ok", "✓"), "bad": ("bad", "✕"), "idle": ("none", "–")}   # a cancelled run is neither
     marks = "".join(
-        f'<span class="m {"ok" if jobs.conclusion(r)[0] == "ok" else "bad"}" '
+        f'<span class="m {looks_of[jobs.conclusion(r)[0]][0]}" '
         f'title="{escape(console.when(jobs.parse_time(r["created_at"])) + ": " + jobs.conclusion(r)[1], quote=True)}">'
-        f'{"✓" if jobs.conclusion(r)[0] == "ok" else "✕"}</span>' for r in on_main)
+        f'{looks_of[jobs.conclusion(r)[0]][1]}</span>' for r in on_main)
+    said = ", ".join(f"{console.when(jobs.parse_time(r['created_at']))} {jobs.conclusion(r)[1].lower()}" for r in on_main)
     tests_tile = console.tile(tests["result"][0] if tests["result"][0] != "idle" else "info", "Tests on main",
                               console.status(*tests["result"]), tests["result"][1], f"last run {console.when(tests['last'])} UTC",
-                              f'<div class="c-marks" role="img" aria-label="The last {len(on_main)} runs on main">{marks}</div>')
+                              f'<div class="c-marks" role="img" aria-label="{escape(f"The last {len(on_main)} runs on main: {said}", quote=True)}">{marks}</div>')
     st.html(console.section("At a glance", console.tiles([runs_tile, sources_tile, orbit_tile, tests_tile]),
                             right=f"read {seen['read_at']:%H:%M} UTC"))
 

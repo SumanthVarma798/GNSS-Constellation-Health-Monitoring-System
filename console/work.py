@@ -23,7 +23,7 @@ def labels_html(found):
 
 
 def link(row):
-    return (f'<a href="{escape(row["link"], quote=True)}" target="_blank" rel="noopener noreferrer">{row["number"]}</a>')
+    return (f'<a href="{escape(row["link"], quote=True)}" target="_blank" rel="noopener noreferrer">{escape(str(row["number"]))}</a>')
 
 
 with body:

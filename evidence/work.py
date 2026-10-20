@@ -27,8 +27,8 @@ def fetch_open_issues(token):
 
 def labels(item):
     """[(name, '#rrggbb')] for its labels; a colour GitHub did not give as six hex digits is left grey."""
-    return [(label["name"], f"#{label['color']}" if _HEX.fullmatch(label.get("color") or "") else "#8a8a8a")
-            for label in item.get("labels", [])]
+    return [(label.get("name", ""), f"#{label['color']}" if _HEX.fullmatch(label.get("color") or "") else "#8a8a8a")
+            for label in item.get("labels") or []]
 
 
 def _who(item):
