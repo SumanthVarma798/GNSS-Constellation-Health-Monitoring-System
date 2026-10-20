@@ -42,6 +42,10 @@ def decide_controls(item, config, who, email):
     """The call on one item: a choice, then the reason (and the changes asked for), then one button that records it."""
     number = item["number"]
     with st.container(key=f"decide_{number}"):
+        said = st.session_state.get("admin_result")
+        if said and said[0] == number:   # why the last try on this item did not go through, beside it
+            surfaces.show(surfaces.notice(said[2], said[1]))
+            del st.session_state["admin_result"]
         choice = st.segmented_control("Decision", list(CHOICES), format_func=CHOICES.get, key=f"choice_{number}",
                                       label_visibility="collapsed")
         if choice is None:
@@ -56,7 +60,7 @@ def decide_controls(item, config, who, email):
                                           dict(config.get("accounts", {})), datetime.now(timezone.utc))
             except requests.RequestException as error:
                 result = "bad", github_trouble(error)
-            st.session_state["admin_result"] = result
+            st.session_state["admin_result"] = (number, *result)
             if result[0] == "ok":
                 read.clear()   # the list has changed on GitHub
                 for key in (f"choice_{number}", f"reason_{number}", f"changes_{number}"):
@@ -95,9 +99,10 @@ if state == "not on the list":
 who = st.user.get("name") or email
 surfaces.show(f'<p class="small">Signed in as {escape(who)}.</p>')
 sign_out()
-if "admin_result" in st.session_state:   # what the last decision did, said once
-    status, words = st.session_state.pop("admin_result")
-    surfaces.show(surfaces.notice(words, status))
+said = st.session_state.get("admin_result")
+if said and said[1] == "ok":   # a decision that went through: its item has left the list, so it is said up here
+    surfaces.show(surfaces.notice(said[2], "ok"))
+    del st.session_state["admin_result"]
 try:
     prs, read_at = read(config["github_token"])
 except requests.RequestException as error:

@@ -178,6 +178,21 @@ def test_recording_a_decision_passes_who_decided_and_says_what_happened(monkeypa
     assert "Approved and merged." in page_text(at)
 
 
+def test_a_decision_that_cannot_go_through_is_said_beside_its_item(monkeypatch):
+    one_waiting(monkeypatch, [])
+    monkeypatch.setattr(decisions, "decide", lambda *args: ("warn", "Write the reason first: every decision needs one."))
+
+    def decide(at):
+        at.session_state["choice_5"] = APPROVE
+        at.run()
+        at.button(key="record_5").click()
+
+    at = run(then=decide)
+
+    beside = [h.proto.body for h in at.get("html") if "Write the reason first" in h.proto.body]
+    assert beside and at.session_state["choice_5"] == APPROVE   # the choice is kept, to try again
+
+
 def test_the_weekly_registry_job_starts_the_tests_on_its_pull_request():
     registry = (ROOT / ".github/workflows/registry-update.yml").read_text()
     tests = (ROOT / ".github/workflows/tests.yml").read_text()
