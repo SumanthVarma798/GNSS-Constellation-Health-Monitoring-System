@@ -48,7 +48,7 @@ def pending(prs, now):
         if kind is None:
             continue
         opened = datetime.fromisoformat(pr["created_at"])
-        login = pr["user"]["login"]
+        login = (pr.get("user") or {}).get("login", "a deleted account")   # GitHub sends no user for a deleted one
         items.append({"number": pr["number"], "title": pr["title"], "kind": kind, "group": KINDS.get(kind, OTHER_GROUP),
                       "summary": summary(pr["body"]), "body": pr["body"] or "", "link": pr["html_url"],
                       "raised_by": RAISED_BY.get(login, login), "opened": opened, "waited_days": (now - opened).days})

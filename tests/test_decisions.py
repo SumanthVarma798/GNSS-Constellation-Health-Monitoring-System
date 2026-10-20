@@ -35,6 +35,12 @@ def test_a_person_who_raised_an_item_is_named_by_their_account():
     assert decisions.pending([pr(1, ["decision: slot"], login="someone")], NOW)[0]["raised_by"] == "someone"
 
 
+def test_an_item_from_a_deleted_account_still_shows():
+    gone = {**pr(1, ["decision: slot"]), "user": None}
+
+    assert decisions.pending([gone], NOW)[0]["raised_by"] == "a deleted account"
+
+
 def test_a_kind_not_in_the_settings_is_still_shown_under_other_kinds():
     one = decisions.pending([pr(1, ["decision: new source"])], NOW)[0]
 

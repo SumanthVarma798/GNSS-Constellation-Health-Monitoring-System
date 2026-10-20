@@ -5,6 +5,7 @@ with are in .streamlit/secrets.toml under [admin]. Each item is an open pull req
 "decision: <kind>" (evidence/decisions.py). This page only reads; deciding comes in a later step of issue 17.
 """
 from datetime import datetime, timezone
+from html import escape
 
 import requests
 import streamlit as st
@@ -12,6 +13,9 @@ import streamlit as st
 from evidence import decisions
 from evidence.decision_settings import READ_EVERY_SECONDS, SECRETS_SECTION
 from ui import admin, reveal, surfaces
+
+# What Google sign-in (st.login) needs in [auth]; one left empty means it is not set up.
+SIGN_IN_FIELDS = ("redirect_uri", "cookie_secret", "client_id", "client_secret", "server_metadata_url")
 
 
 @st.cache_data(ttl=READ_EVERY_SECONDS, show_spinner=False)
@@ -23,7 +27,8 @@ def read(token):
 def settings():
     """The [admin] settings, and whether Google sign-in is set up. Both empty without a secrets file."""
     try:
-        return dict(st.secrets.get(SECRETS_SECTION, {})), "auth" in st.secrets
+        auth = st.secrets.get("auth", {})
+        return dict(st.secrets.get(SECRETS_SECTION, {})), all(auth.get(field) for field in SIGN_IN_FIELDS)
     except FileNotFoundError:
         return {}, False
 
@@ -58,7 +63,7 @@ if state == "not on the list":
     sign_out()
     st.stop()
 
-surfaces.show(f'<p class="small">Signed in as {st.user.get("name") or email}.</p>')
+surfaces.show(f'<p class="small">Signed in as {escape(st.user.get("name") or email)}.</p>')
 sign_out()
 try:
     prs, read_at = read(config["github_token"])

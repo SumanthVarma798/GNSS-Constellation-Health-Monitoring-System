@@ -13,7 +13,8 @@ from test_decisions import NOW, pr
 from ui import admin
 
 ROOT = Path(__file__).resolve().parent.parent
-SECRETS = {"auth": {"redirect_uri": "http://localhost:48973/oauth2callback"},
+SECRETS = {"auth": {field: "set" for field in ("redirect_uri", "cookie_secret", "client_id", "client_secret",
+                                              "server_metadata_url")},
            "admin": {"allowed": ["member@example.com"], "github_token": "t0ken"}}
 
 
@@ -45,6 +46,22 @@ def test_without_its_settings_the_page_says_it_is_not_set_up(monkeypatch):
     at = run({"admin": {"allowed": ["member@example.com"]}})   # no sign-in, no token
 
     assert "not set up on this computer" in page_text(at) and not at.button
+
+
+def test_a_sign_in_block_with_an_empty_field_counts_as_not_set_up(monkeypatch):
+    signed_in(monkeypatch, None)
+
+    at = run({**SECRETS, "auth": {**SECRETS["auth"], "client_secret": ""}})
+
+    assert "not set up on this computer" in page_text(at) and not at.button
+
+
+def test_a_signed_in_name_is_shown_as_plain_text(monkeypatch):
+    monkeypatch.setattr(streamlit, "user", SimpleNamespace(
+        is_logged_in=True, get={"email": "member@example.com", "name": "<b>Member</b>"}.get))
+    monkeypatch.setattr(decisions, "fetch_open", lambda token: [])
+
+    assert "Signed in as &lt;b&gt;Member&lt;/b&gt;." in page_text(run())
 
 
 def test_someone_not_signed_in_is_offered_google_sign_in_and_sees_no_items(monkeypatch):
