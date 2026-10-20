@@ -22,6 +22,7 @@ canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: 
 .seg button:hover { color: var(--accent); }
 .seg button[aria-pressed="true"] { background: var(--platform); color: var(--accent); border-color: var(--edge); box-shadow: var(--raised-sm); }
 .note { color: var(--muted); font-size: 12px; }
+.note.named { color: var(--ink); font-weight: 600; font-size: 13px; }   /* the clicked orbit or plane */
 
 /* the satellites, one chip each: the legend, and the keyboard's way in */
 .sats { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0 4px; }
@@ -46,17 +47,51 @@ __TIP__
 .chip { display: inline-flex; font-size: 12.5px; font-weight: 600; padding: 3px 11px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); white-space: nowrap; }
 .s { font: 700 24px/1 __FONT_NUMBERS__; }
 .s small { font: 400 12px __FONT__; color: var(--muted); margin-left: 4px; }
+/* zoom: three small raised buttons in the bottom-right corner, pressed while held */
+.zoom { position: absolute; right: 12px; bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
+.zoom button { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--edge);
+  background: var(--platform); box-shadow: var(--raised-sm); color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; }
+.zoom button:hover:not(:disabled) { color: var(--accent); }
+.zoom button:active:not(:disabled) { background: var(--well); box-shadow: var(--pressed); }
+.zoom button:disabled { opacity: .4; cursor: default; }
+/* the readout, as macOS's volume indicator: the tooltip card, see-through, bottom centre; shown while the view
+   moves and faded out a moment after it stops (the script sets and clears "on") */
+.readout { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); max-width: calc(100% - 128px);
+  background: color-mix(in srgb, var(--platform) 80%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.readout.tt-card { transition: opacity 250ms ease, visibility 0s linear 250ms; }
+.readout.tt-card.on { transition: opacity 250ms ease, visibility 0s; }
+.readout .zl { display: flex; align-items: center; gap: 14px; }
+.readout b { font: 700 18px/1 __FONT_NUMBERS__; }
+.readout .bar { display: inline-flex; flex-direction: column; gap: 3px; color: var(--muted); font-size: 12px; }
+.readout .bar i { display: block; height: 6px; border: 1.5px solid var(--muted); border-top: 0; }
+.readout .fl { margin-top: 6px; font-size: 12px; }
+.readout .fl.m { margin-top: 2px; color: var(--muted); }
+.readout .fl:empty { display: none; }
+@media (max-width: 639.98px), (pointer: coarse) { .zoom button { width: 40px; height: 40px; } }
+@media (prefers-reduced-motion: reduce) { .readout.tt-card, .readout.tt-card.on { transition: none; } }
 .ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); } .idle { color: var(--idle); } .muted { color: var(--muted); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 </style>
 </head>
 <body>
 <div class="card">
-  <canvas id="orbits" role="img" aria-label="Each satellite's orbit around Earth. Drag to turn, double-click to go back."></canvas>
+  <canvas id="orbits" role="img" aria-label="Each satellite's orbit around Earth. Drag to turn, scroll or pinch to zoom. Click an orbit or a satellite to turn its plane toward you, with its node, inclination and height drawn; click empty space or press Escape to go back. Click Earth to face that place, double-click for the whole view."></canvas>
   <div class="top">
     <div class="seg" id="mode" role="group" aria-label="Which satellites">
       <button type="button" data-mode="all" aria-pressed="true">All</button><button type="button" data-mode="service" aria-pressed="false">In service</button>
     </div>
     <span class="note" id="note"></span>
+  </div>
+  <div class="zoom" role="group" aria-label="Zoom">
+    <button type="button" id="zin" aria-label="Zoom in">+</button>
+    <button type="button" id="zout" aria-label="Zoom out">&minus;</button>
+    <button type="button" id="zhome" aria-label="Back to the whole view"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8a5.5 5.5 0 1 0 1.6-3.9"/><path d="M2.5 2v3.5H6"/></svg></button>
+  </div>
+  <div class="sr" id="said" role="status" aria-live="polite"></div>
+  <div class="readout tt-card" id="readout" aria-hidden="true">
+    <div class="zl"><b id="zl"></b><span class="bar"><i id="bar"></i><span id="barkm"></span></span></div>
+    <div class="fl" id="focus"></div>
+    <div class="fl m" id="facing"></div>
   </div>
 </div>
 <div class="sats" id="sats" role="group" aria-label="Satellites"></div>
@@ -69,17 +104,24 @@ const SATS = DATA.satellites;
 const $ = id => document.getElementById(id);
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const css = getComputedStyle(document.documentElement);
-const C = Object.fromEntries(["platform", "lift", "sink", "track", "fill", "ok", "warn", "bad", "idle", "muted"].map(n => [n, css.getPropertyValue("--" + n).trim()]));
-const canvas = $("orbits"), ctx = canvas.getContext("2d"), tip = $("tip");
+const C = Object.fromEntries(["platform", "lift", "sink", "track", "fill", "ink", "ok", "warn", "bad", "idle", "muted"].map(n => [n, css.getPropertyValue("--" + n).trim()]));
+const canvas = $("orbits"), ctx = canvas.getContext("2d"), tip = $("tip"), readout = $("readout");
 
-const HOME = { yaw: -45, pitch: 22 };   // degrees: looking in from above the equator, as the view always opened
+const HOME = { yaw: -45, pitch: 22, zoom: 1, c: [0, 0, 0] };   // degrees, looking in from above the equator; c: the point at the centre
 const REST = .5, CROWD = .3, DIM = .12;  // orbit strength at rest, at rest with many shown, and for the rest while some are picked
 const BACK = .4, OFF = .6;              // strength behind the picture's plane, and for satellites not in service (also dashed)
 const DOT_HIT = 16, LINE_HIT = 10;      // CSS px from a dot or a line that still counts as on it
 const BELT = Array.from({ length: 121 }, (_, k) => [DATA.belt * Math.cos(k * Math.PI / 60), DATA.belt * Math.sin(k * Math.PI / 60), 0]);
 const REACH = Math.max(DATA.belt, ...SATS.flatMap(s => (s.loop || []).map(p => Math.hypot(...p))));   // over all: no jump on a switch
 const ORDER = ["ok", "warn", "bad", "idle", "muted"];   // in slot, off it, left it, not known, not scored
-let view = { ...HOME }, dpr = 1, W = 0, H = 0, scale = 1, queued = 0;
+const KM = DATA.earth_km, SPAN = REACH * 1.05;           // SPAN: Earth radii from the centre to the short side's edge at ×1
+const MAX_ZOOM = SPAN * KM / 1000, FOCUS_KM = 4000;      // closest: 1,000 km to the edge; a click on Earth flies in to 4,000 km
+// a clicked orbit: its plane turned TILT degrees off face-on (face-on, the inclination angle would be edge-on and unseen),
+// fitted with ROOM to spare for the labels. FLAT: an orbit tilted less than this lies on the equator and has no node to draw
+const TILT = 40, ROOM = 1.3, FLAT = .5;
+const MOVE_MS = 300, FADE_MS = 1500, BAR_PX = 110;       // a flight's length; the readout stays this long after the last change
+const STILL = matchMedia("(prefers-reduced-motion: reduce)");
+let view = { ...HOME }, dpr = 1, W = 0, H = 0, fit = 1, scale = 1, queued = 0;
 let mode = "all", shown = [];   // shown: indices of the satellites the chosen set holds
 let lit = null;                    // a Set of the satellites picked out, or null
 let screen = [];                   // each shown satellite as projected in the last frame, for hit tests
@@ -93,15 +135,20 @@ function el(tag, cls, text) {
 }
 
 /* ---------- projection: orthographic, z along the pole ---------- */
-function axes() {
-  const a = view.yaw * Math.PI / 180, b = view.pitch * Math.PI / 180;
+function axes(v = view) {
+  const a = v.yaw * Math.PI / 180, b = v.pitch * Math.PI / 180;
   const ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b);
-  return { r: [-sa, ca, 0], u: [-sb * ca, -sb * sa, cb], d: [cb * ca, cb * sa, sb] };
+  const A = { r: [-sa, ca, 0], u: [-sb * ca, -sb * sa, cb], d: [cb * ca, cb * sa, sb] };
+  A.cx = dot3(v.c, A.r); A.cy = dot3(v.c, A.u);
+  return A;
 }
 const dot3 = (p, v) => p[0] * v[0] + p[1] * v[1] + p[2] * v[2];
+const cross = (p, v) => [p[1] * v[2] - p[2] * v[1], p[2] * v[0] - p[0] * v[2], p[0] * v[1] - p[1] * v[0]];
+const unit = p => { const r = Math.hypot(...p) || 1; return p.map(x => x / r); };
+const RAD = Math.PI / 180;
 function project(p, A) {   // screen position, depth toward the viewer, and whether Earth hides it
   const x = dot3(p, A.r), y = dot3(p, A.u), z = dot3(p, A.d);
-  return { x: W / 2 + x * scale, y: H / 2 - y * scale, z, hidden: z < 0 && x * x + y * y < 1 };
+  return { x: W / 2 + (x - A.cx) * scale, y: H / 2 - (y - A.cy) * scale, z, hidden: z < 0 && x * x + y * y < 1 };
 }
 
 /* ---------- drawing: what is behind the picture's plane, then Earth over it, then the front ---------- */
@@ -118,7 +165,7 @@ function line(pts, back, colour, width, alpha) {
   ctx.stroke();
 }
 function earth(A) {
-  const cx = W / 2, cy = H / 2, R = scale;
+  const cx = W / 2 - A.cx * scale, cy = H / 2 + A.cy * scale, R = scale, size = Math.min(4, 1.4 * Math.sqrt(view.zoom));
   const shade = ctx.createRadialGradient(cx - R * .4, cy - R * .45, R * .1, cx, cy, R);   // lit from the top left
   shade.addColorStop(0, C.lift); shade.addColorStop(.65, C.platform); shade.addColorStop(1, C.sink);
   ctx.globalAlpha = 1; ctx.fillStyle = shade;
@@ -127,14 +174,15 @@ function earth(A) {
   for (const p of DATA.land) {
     const q = project(p, A);
     if (q.z <= 0) continue;
-    ctx.globalAlpha = .3 + .6 * q.z; ctx.fillRect(q.x - .7, q.y - .7, 1.4, 1.4);
+    ctx.globalAlpha = .3 + .6 * q.z; ctx.fillRect(q.x - size / 2, q.y - size / 2, size, size);
   }
   ctx.globalAlpha = 1; ctx.strokeStyle = C.track; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.arc(cx, cy, R - .5, 0, 2 * Math.PI); ctx.stroke();
 }
 const faint = i => mode === "all" && !SATS[i].service;
 function draw() {
-  queued = 0;
+  queued = 0; scale = fit * view.zoom;
+  $("zin").disabled = view.zoom >= MAX_ZOOM - 1e-6; $("zout").disabled = view.zoom <= 1 + 1e-6;
   const A = axes(), rest = shown.length > 12 ? CROWD : REST;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
   ctx.lineCap = ctx.lineJoin = "round";
@@ -147,25 +195,27 @@ function draw() {
   const order = lit ? shown.filter(i => !lit.has(i)).concat(shown.filter(i => lit.has(i))) : shown;   // the picked on top
   for (const back of [true, false]) {
     if (!back) earth(A);
-    line(belt, back, C.track, 1, lit ? .4 : .8);
+    line(belt, back, C.track, 1, focus ? .25 : lit ? .4 : .8);
+    if (focus) line(focus.equator.map(p => project(p, A)), back, C.muted, 1, .7);   // the equator's plane, at the orbit's height
     for (const i of order) {
       const on = !!lit && lit.has(i), s = screen[i];
       // not scored: orbits in the quiet fill colour at full strength, so a dozen in one MEO plane stay quiet; lit when picked
       const colour = SATS[i].tracked || on ? C[SATS[i].status] : C.fill, k = (!lit || on ? 1 : DIM) * (faint(i) ? OFF : 1);
       ctx.setLineDash(faint(i) ? [4, 4] : []);
-      if (s.loop) line(s.loop, back, colour, on ? 2.5 : 1.25, lit || !SATS[i].tracked ? k : rest * k);
+      if (s.loop) line(s.loop, back, colour, on ? (focus ? 3 : 2.5) : 1.25, lit || !SATS[i].tracked ? k : rest * k);
       ctx.setLineDash([]);
       ctx.globalAlpha = k * (back ? BACK : 1);
       if (s.slot && (s.slot.z < 0) === back) {
-        ctx.strokeStyle = colour; ctx.lineWidth = on ? 1.75 : 1.25;
-        ctx.beginPath(); ctx.arc(s.slot.x, s.slot.y, on ? 5.5 : 4, 0, 2 * Math.PI); ctx.stroke();
+        ctx.strokeStyle = colour; ctx.lineWidth = on ? (focus ? 2 : 1.75) : 1.25;
+        ctx.beginPath(); ctx.arc(s.slot.x, s.slot.y, on ? (focus ? 7.5 : 5.5) : 4, 0, 2 * Math.PI); ctx.stroke();
       }
       if (s.at && (s.at.z < 0) === back) {
         ctx.fillStyle = C[SATS[i].status];
-        ctx.beginPath(); ctx.arc(s.at.x, s.at.y, on ? 4.5 : 3, 0, 2 * Math.PI); ctx.fill();
+        ctx.beginPath(); ctx.arc(s.at.x, s.at.y, on ? (focus ? 6 : 4.5) : 3, 0, 2 * Math.PI); ctx.fill();
       }
     }
   }
+  if (focus) geometry(A);
   ctx.globalAlpha = 1;
 }
 const paint = () => { if (!queued) queued = requestAnimationFrame(draw); };
@@ -173,7 +223,7 @@ function resize() {
   const b = canvas.getBoundingClientRect(), wider = b.width !== W;
   dpr = devicePixelRatio || 1; W = b.width; H = b.height;
   canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
-  scale = Math.min(W, H) / 2 / (REACH * 1.05);   // pixels per Earth radius: the highest orbit just fits
+  fit = Math.min(W, H) / 2 / SPAN;   // pixels per Earth radius at ×1: the highest orbit just fits
   if (wider) buildChips();   // whether one chip per satellite fits in a row depends on the width
   draw();
 }
@@ -183,13 +233,13 @@ function segment(px, py, a, b) {
   const dx = b.x - a.x, dy = b.y - a.y, t = clamp(((px - a.x) * dx + (py - a.y) * dy) / (dx * dx + dy * dy || 1), 0, 1);
   return Math.hypot(a.x + t * dx - px, a.y + t * dy - py);
 }
-function hitAt(px, py) {
+function hitAt(px, py) {   // {i, p}: the satellite, and the point in space of its dot or slot (none for its orbit)
   let best = null, near = DOT_HIT;
-  for (const i of shown) [screen[i].at, screen[i].slot].forEach(q => {
+  for (const i of shown) [[screen[i].at, SATS[i].at], [screen[i].slot, SATS[i].slot_at]].forEach(([q, p]) => {
     const d = q && !q.hidden ? Math.hypot(q.x - px, q.y - py) : Infinity;
-    if (d < near) { near = d; best = i; }
+    if (d < near) { near = d; best = { i, p }; }
   });
-  if (best != null) return best;
+  if (best) return best;
   let key = [Infinity, 0];   // distance in 3 px steps, then depth: the front one wins when two are about as near
   for (const i of shown) {
     const loop = screen[i].loop;
@@ -199,7 +249,7 @@ function hitAt(px, py) {
       const d = segment(px, py, a, b);
       if (d > LINE_HIT) continue;
       const mine = [Math.round(d / 3), -(a.z + b.z)];
-      if (mine[0] < key[0] || (mine[0] === key[0] && mine[1] < key[1])) { key = mine; best = i; }
+      if (mine[0] < key[0] || (mine[0] === key[0] && mine[1] < key[1])) { key = mine; best = { i }; }
     }
   }
   return best;
@@ -231,48 +281,224 @@ function place(x, y, chip) {   // beside the pointer, or just above a chip; alwa
   tip.style.top = clamp(y, 4, innerHeight - h - 4) + "px";
 }
 const same = (a, b) => a === b || (!!a && !!b && a.size === b.size && [...a].every(i => b.has(i)));
-function light(members) {   // pick out these satellites (or none), and press the chips that hold them
+function light(members, force) {   // pick out these satellites (or none), and press the chips that hold them
+  if (focus && !force) return;      // a clicked orbit stays picked out while the pointer roams
   const next = members && members.length ? new Set(members) : null;
   if (same(next, lit)) return;
   lit = next; paint();
   chips.forEach(c => c.button.classList.toggle("on", !!lit && c.members.some(i => lit.has(i))));
 }
+let carded = null;   // the satellite the card is filled for
 function pick(index, x, y, chip) {   // one satellite, with its card
-  const changed = !same(index == null ? null : new Set([index]), lit);
   light(index == null ? null : [index]);
-  if (index != null && changed) fill(SATS[index]);
+  if (index != null && index !== carded) fill(SATS[index]);
+  carded = index;
   tip.classList.toggle("on", index != null);
+  if (index != null) readout.classList.remove("on");   // never both: the card is about the pointer, the readout the view
   if (index != null) place(x, y, chip);
 }
 
-/* ---------- the canvas: hover picks, drag turns, a tap picks, double-click goes back ---------- */
-let drag = null;
+/* ---------- zoom and flights: the view keeps c at the centre; zoom 1 is the whole system, c then Earth's centre ---------- */
+let flight = 0, clickWait = 0, fading = 0, focus = null;   // focus: the clicked orbit, its plane and the view to go back to
+const wrap = deg => ((deg % 360) + 540) % 360 - 180;
+function settle(v) {   // zoom within its limits; c pulled in toward Earth's centre below ×2 so that ×1 shows everything
+  v.zoom = clamp(v.zoom, focus ? 1 / ROOM : 1, MAX_ZOOM);   // a clicked outermost orbit may go below ×1, for its labels
+  const room = SPAN * clamp(v.zoom - 1, 0, 1), far = Math.hypot(...v.c);
+  if (far > room) v.c = v.c.map(x => x * room / far);
+  return v;
+}
+function zoomAt(factor, px = W / 2, py = H / 2) {   // the point under (px, py) stays under it
+  cancelAnimationFrame(flight); clearTimeout(clickWait); pick(null);
+  const A = axes(), before = fit * view.zoom;
+  view.zoom = clamp(view.zoom * factor, focus ? 1 / ROOM : 1, MAX_ZOOM);
+  const k = 1 / before - 1 / (fit * view.zoom), dx = (px - W / 2) * k, dy = -(py - H / 2) * k;
+  view.c = view.c.map((x, j) => x + A.r[j] * dx + A.u[j] * dy);
+  settle(view);
+  moved(); paint();
+}
+function fly(to) {   // ease to the new view; at once when the reader asks for less motion
+  cancelAnimationFrame(flight); clearTimeout(clickWait); pick(null);
+  const from = { ...view }, end = settle({ ...view, ...to });
+  end.yaw = from.yaw + wrap(end.yaw - from.yaw);   // the short way round
+  const t0 = performance.now(), step = now => {
+    const t = STILL.matches ? 1 : Math.min(1, (now - t0) / MOVE_MS), e = t < .5 ? 4 * t ** 3 : 1 - (2 - 2 * t) ** 3 / 2;
+    view = { yaw: from.yaw + (end.yaw - from.yaw) * e, pitch: from.pitch + (end.pitch - from.pitch) * e,
+             zoom: from.zoom * (end.zoom / from.zoom) ** e, c: from.c.map((x, j) => x + (end.c[j] - x) * e) };
+    moved(); draw();
+    if (t < 1) flight = requestAnimationFrame(step);
+  };
+  flight = requestAnimationFrame(step);
+}
+function home() { clearTimeout(clickWait); if (focus) unfocus(); fly(HOME); }
+function goTo(px, py) {   // an orbit or a satellite: its plane; else, in focus, go back; Earth: face that place
+  const hit = hitAt(px, py), A = axes();
+  if (hit && SATS[hit.i].loop) return enter(hit.i);
+  const x = (px - W / 2) / scale + A.cx, y = -(py - H / 2) / scale + A.cy;
+  if (x * x + y * y >= 1) return focus ? leave() : undefined;   // empty space: back out of a focus
+  if (hit) return;
+  if (focus) unfocus();
+  const p = [0, 1, 2].map(j => x * A.r[j] + y * A.u[j] + Math.sqrt(1 - x * x - y * y) * A.d[j]);
+  fly({ yaw: Math.atan2(p[1], p[0]) / RAD, pitch: clamp(Math.asin(p[2]) / RAD, -85, 85),
+        zoom: SPAN * KM / FOCUS_KM, c: [0, 0, 0] });
+}
+
+/* ---------- focus: a clicked orbit turned toward the viewer, the rest dimmed, its geometry drawn ---------- */
+function plane(i) {   // from the drawn loop (which runs the way the satellite moves): normal, node direction, angles
+  const L = SATS[i].loop, n = unit(cross(L[0], L[45])), N = unit([-n[1], n[0], 0]);
+  return { n, N, incl: Math.acos(clamp(n[2], -1, 1)) / RAD, raan: (Math.atan2(N[1], N[0]) / RAD + 360) % 360 };
+}
+function enter(i) {
+  const s = SATS[i], g = plane(i), loop = s.loop.slice(1);
+  // its plane as the registry names it (the plane chips' groups, cross-checked by node in analysis/meo_geometry.py)
+  const members = s.group.startsWith("Plane") ? shown.filter(j => SATS[j].group === s.group && SATS[j].loop) : [i];
+  const name = members.length < 2 ? s.name + "'s orbit" : `${s.group} · ${members.length} satellites`;
+  const side = g.incl < FLAT ? unit([s.at[0], s.at[1], 0]) : g.N;   // look from the node's side (a flat orbit: the satellite's)
+  const d = g.n.map((x, j) => Math.cos(TILT * RAD) * x + Math.sin(TILT * RAD) * side[j]);
+  const c = [0, 1, 2].map(j => loop.reduce((t, p) => t + p[j], 0) / loop.length);
+  const to = { yaw: Math.atan2(d[1], d[0]) / RAD, pitch: clamp(Math.asin(d[2]) / RAD, -85, 85), c }, A = axes(to);
+  const reach = Math.max(...loop.map(p => Math.max(Math.abs(dot3(p, A.r) - A.cx), Math.abs(dot3(p, A.u) - A.cy))));
+  let node = null;   // where it crosses the equator going north
+  for (let k = 1; k < loop.length && g.incl >= FLAT; k++) {
+    const a = loop[k - 1], b = loop[k];
+    if (a[2] < 0 && b[2] >= 0) { const f = -a[2] / (b[2] - a[2]); node = a.map((x, j) => x + f * (b[j] - x)); }
+  }
+  const r = node ? Math.hypot(...node) : Math.hypot(...s.at), heights = loop.map(p => Math.hypot(...p) * KM - KM);
+  focus = { i, name, loop, g, node, heights, before: focus ? focus.before : { ...view },
+            equator: BELT.map(p => p.map(x => x * r / DATA.belt)) };
+  $("note").textContent = name; $("note").classList.add("named");
+  light(members, true); fly({ ...to, zoom: SPAN / (reach * ROOM) });
+}
+function unfocus() { focus = null; $("note").textContent = DATA.notes[mode]; $("note").classList.remove("named"); light(null, true); }
+function leave() { const back = focus.before; unfocus(); fly(back); }
+addEventListener("keydown", e => { if (e.key === "Escape" && focus) leave(); });
+
+const FONT = getComputedStyle(document.body).fontFamily;
+function geometry(A) {   // the node, the inclination, the height and the slot, drawn and said in words
+  const f = focus, s = SATS[f.i], g = f.g, P = p => project(p, A), marks = [];
+  ctx.globalAlpha = 1; ctx.setLineDash([]); ctx.strokeStyle = ctx.fillStyle = C.ink; ctx.lineWidth = 1.5;
+  const path = pts => { if (pts.some(q => q.hidden)) return; ctx.beginPath(); pts.forEach((q, k) => k ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.stroke(); };
+  const spot = q => { if (q.hidden) return; ctx.beginPath(); ctx.arc(q.x, q.y, 3.5, 0, 2 * Math.PI); ctx.fill(); };
+  let anchor = P(s.at);
+  if (f.node) {   // the angle from the equator (heading east) up to the orbit (heading north), at the node
+    const east = [-g.N[1], g.N[0], 0], rho = 56 / scale, arc = [];
+    const at = (t, far) => P(f.node.map((x, j) => x + far * (Math.cos(t) * east[j] + Math.sin(t) * (j === 2 ? 1 : 0))));
+    for (let k = 0; k <= 16; k++) arc.push(at(g.incl * RAD * k / 16, rho));
+    path(arc); path([at(0, 1.4 * rho), P(f.node), at(g.incl * RAD, 1.4 * rho)]); spot(P(f.node)); anchor = at(g.incl * RAD / 2, 1.5 * rho);
+    marks.push([P(f.node), `Ascending node: RAAN ${g.raan.toFixed(1)}°`]);
+  }
+  marks.push([anchor, `Inclination ${g.incl.toFixed(1)}°` + (f.node ? "" : ", on the equator")]);
+  const lo = Math.min(...f.heights), hi = Math.max(...f.heights);
+  if (hi - lo < 50) {   // round: one height, a line from the ground up to the satellite
+    const u = unit(s.at);
+    ctx.setLineDash([3, 4]); path([P(u), P(s.at)]); ctx.setLineDash([]);
+    marks.push([P(s.at), `Height ${km(Math.hypot(...s.at) * KM - KM)}`]);
+  } else for (const [h, words] of [[lo, "Perigee"], [hi, "Apogee"]]) {
+    const q = P(f.loop[f.heights.indexOf(h)]);
+    spot(q); marks.push([q, `${words} ${km(h)}`]);
+  }
+  if (s.slot_at) {
+    const lon = wrap(Math.atan2(s.slot_at[1], s.slot_at[0]) / RAD - DATA.turn);
+    marks.push([P(s.slot_at), `Slot ${deg(lon, "E", "W")}: ${s.slot}`]);
+  }
+  labels(marks.filter(([q]) => !q.hidden), W / 2 - A.cx * scale, H / 2 + A.cy * scale);   // behind Earth: not drawn, as the orbit line
+}
+function labels(marks, ex, ey) {   // just outside each point as seen from Earth, so off its orbit; pushed on past any put already
+  ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+  const put = [], h = 17, zoom = document.querySelector(".zoom"), top = document.querySelector(".top");
+  const below = top.offsetTop + top.offsetHeight + h / 2, zx = zoom.offsetLeft - 8, zy = zoom.offsetTop - h / 2;   // clear of the controls
+  ctx.font = "12px " + FONT;
+  for (const [p, text] of marks) {
+    const w = ctx.measureText(text).width, r = Math.hypot(p.x - ex, p.y - ey) || 1, ux = (p.x - ex) / r, uy = (p.y - ey) / r;
+    let x = p.x + 12 * ux, y = p.y + 18 * uy;
+    x = clamp(ux > .35 ? x : ux < -.35 ? x - w : x - w / 2, 4, W - w - 4);
+    for (let k = 0; k < 20 && put.some(b => Math.abs(b.y - y) < h && x < b.x + b.w + 6 && b.x < x + w + 6); k++) y += uy < 0 ? -h : h;
+    y = clamp(y, below, H - h);
+    if (y > zy && x + w > zx) x = Math.max(4, zx - w);
+    put.push({ x, y, w });
+    ctx.lineWidth = 4; ctx.strokeStyle = C.platform; ctx.strokeText(text, x, y);   // a cut-out of the background, so lines never cross the words
+    ctx.fillStyle = C.ink; ctx.fillText(text, x, y);
+  }
+}
+
+/* ---------- the readout: zoom, a scale bar, what is in focus and which way the view faces ---------- */
+const km = v => Math.round(v / 10) * 10 >= 1000 ? (Math.round(v / 10) * 10).toLocaleString("en-GB") + " km" : Math.round(v) + " km";
+function niceKm(most) { const ten = 10 ** Math.floor(Math.log10(most)); return [5, 2, 1].map(m => m * ten).find(v => v <= most); }
+const deg = (v, plus, minus) => `${Math.abs(Math.round(v))}° ${v < 0 ? minus : plus}`;
+function moved() {
+  const perPx = KM / (fit * view.zoom), bar = niceKm(BAR_PX * perPx);
+  $("zl").textContent = "×" + (view.zoom < 10 ? view.zoom.toFixed(1) : Math.round(view.zoom));
+  $("bar").style.width = Math.round(bar / perPx) + "px"; $("barkm").textContent = km(bar);
+  let words = "";
+  if (focus) {
+    const lo = Math.min(...focus.heights), hi = Math.max(...focus.heights);
+    words = `${focus.name}: ${hi - lo < 50 ? km(lo) : km(lo) + " to " + km(hi)} above Earth`;
+  }
+  $("focus").textContent = words;
+  $("facing").textContent = `Facing ${deg(wrap(view.yaw - DATA.turn), "E", "W")}, ${deg(view.pitch, "N", "S")}`;
+  if (!tip.classList.contains("on")) readout.classList.add("on");
+  clearTimeout(fading); fading = setTimeout(() => { readout.classList.remove("on"); $("said").textContent = readout.textContent.replace(/\s+/g, " ").trim(); }, FADE_MS);   // said once it settles
+}
+$("zin").addEventListener("click", () => fly({ zoom: view.zoom * 1.6 }));
+$("zout").addEventListener("click", () => fly({ zoom: view.zoom / 1.6 }));
+$("zhome").addEventListener("click", home);
+
+/* ---------- the canvas: hover picks, drag turns, two fingers pinch, the wheel zooms, a click flies, double-click goes back ---------- */
+let drag = null, pinch = null;
+const fingers = new Map();
 const local = e => { const b = canvas.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
-canvas.addEventListener("pointerdown", e => { drag = { x: e.clientX, y: e.clientY, moved: 0 }; canvas.setPointerCapture(e.pointerId); });
+const apart = () => { const [a, b] = fingers.values(); return Math.hypot(a.x - b.x, a.y - b.y); };
+canvas.addEventListener("pointerdown", e => {
+  fingers.set(e.pointerId, { x: e.clientX, y: e.clientY }); canvas.setPointerCapture(e.pointerId);
+  cancelAnimationFrame(flight); clearTimeout(clickWait);
+  if (fingers.size === 2) { pinch = apart(); drag = null; pick(null); }
+  else if (fingers.size === 1) drag = { x: e.clientX, y: e.clientY, moved: 0 };
+});
 canvas.addEventListener("pointermove", e => {
+  if (fingers.has(e.pointerId)) fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinch && fingers.size >= 2) {
+    const [a, b] = fingers.values(), d = apart(), r = canvas.getBoundingClientRect();
+    zoomAt(d / pinch, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top); pinch = d;
+    return;
+  }
   if (drag) {
     const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
     drag.moved += Math.abs(dx) + Math.abs(dy); drag.x = e.clientX; drag.y = e.clientY;
     if (drag.moved > 4) {
-      view.yaw -= dx * .4; view.pitch = clamp(view.pitch + dy * .4, -85, 85);
-      canvas.style.cursor = "grabbing"; pick(null); paint();
+      view.yaw -= dx * .4 / Math.sqrt(view.zoom); view.pitch = clamp(view.pitch + dy * .4 / Math.sqrt(view.zoom), -85, 85);
+      canvas.style.cursor = "grabbing"; pick(null); moved(); paint();
     }
     return;
   }
   const hit = hitAt(...local(e));
-  canvas.style.cursor = hit == null ? "" : "pointer";
-  pick(hit, e.clientX, e.clientY);
+  canvas.style.cursor = hit ? "pointer" : "";
+  pick(hit && hit.i, e.clientX, e.clientY);
 });
 const lift = e => {
+  fingers.delete(e.pointerId);
+  if (pinch) {   // the finger left after a pinch turns on from where it is; it is never a tap
+    if (fingers.size < 2) pinch = null;
+    const [rest] = fingers.values();
+    drag = rest ? { ...rest, moved: 5 } : null;
+    return;
+  }
   if (!drag) return;
   const tap = drag.moved <= 4 && e.type === "pointerup";
   drag = null; canvas.style.cursor = "";
-  if (tap) pick(hitAt(...local(e)), e.clientX, e.clientY);
+  if (!tap) return;
+  const [px, py] = local(e), hit = hitAt(px, py);
+  pick(hit && hit.i, e.clientX, e.clientY);
+  clearTimeout(clickWait); clickWait = setTimeout(() => goTo(px, py), 250);   // wait: it may be the first of a double-click
 };
 canvas.addEventListener("pointerup", lift);
 canvas.addEventListener("pointercancel", lift);
 canvas.addEventListener("pointerleave", e => { if (!drag && e.pointerType !== "touch") pick(null); });
-canvas.addEventListener("dblclick", () => { view = { ...HOME }; paint(); });
+canvas.addEventListener("dblclick", home);
+canvas.addEventListener("wheel", e => {   // only over the picture; at ×1 a scroll down is left to the page, so it never traps the reader
+  if (e.deltaY > 0 && view.zoom <= 1 + 1e-6) return;
+  e.preventDefault();
+  const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? H : 1;
+  zoomAt(Math.exp(-e.deltaY * unit * (e.ctrlKey ? .01 : .002)), ...local(e));   // ctrlKey: a trackpad pinch
+}, { passive: false });
 
 /* ---------- the chips: one per satellite while they fit in a row, else one per plane ---------- */
 function addChips(entries) {
@@ -286,7 +512,8 @@ function addChips(entries) {
     }
     button.append(el("span", null, label));
     const on = () => one != null ? pick(one, 0, 0, button) : (tip.classList.remove("on"), light(members));
-    const off = () => { if (same(lit, new Set(members))) pick(null); };
+    const off = () => { if (same(lit, new Set(members)) || (one != null && carded === one)) pick(null); };
+    button.addEventListener("click", () => { const i = members.find(j => SATS[j].loop); if (i != null) enter(i); });
     button.addEventListener("pointerenter", on); button.addEventListener("focus", on);
     button.addEventListener("pointerleave", off); button.addEventListener("blur", off);
     $("sats").append(button);
@@ -319,7 +546,8 @@ function buildKey() {
 
 /* ---------- in service, or all of the generation: switched here, no round trip ---------- */
 function choose(next) {
-  mode = next;
+  clearTimeout(clickWait); mode = next;
+  if (focus) leave();
   shown = SATS.map((_, i) => i).filter(i => mode === "all" || SATS[i].service);
   $("mode").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
   $("note").textContent = DATA.notes[mode];
