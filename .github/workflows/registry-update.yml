@@ -71,10 +71,10 @@ jobs:
           git commit -m "Registry update from the IGS satellite metadata file"
           git push --force origin registry-update
           if [ -n "$(gh pr list --head registry-update --state open --json number --jq '.[].number')" ]; then
-            gh pr edit registry-update --body-file "$RUNNER_TEMP/registry-changes.md"
+            gh pr edit registry-update --add-label "decision: registry update" --body-file "$RUNNER_TEMP/registry-changes.md"
           else
             gh pr create --base main --head registry-update \
-              --title "Registry update from the IGS satellite metadata file" --body-file "$RUNNER_TEMP/registry-changes.md"
+              --title "Registry update from the IGS satellite metadata file" --label "decision: registry update" --body-file "$RUNNER_TEMP/registry-changes.md"
           fi
 
       - name: Add this run's line to the run log
