@@ -48,7 +48,8 @@ if state != "in":
         st.button("Sign out", key="console_sign_out", on_click=_sign_out)
     st.stop()
 
-page = st.navigation({"Overview": [st.Page("console/summary.py", title="Summary", default=True)],
+page = st.navigation({"Overview": [st.Page("console/summary.py", title="Summary", default=True),
+                                   st.Page("console/design.py", title="System design", url_path="design")],
                       "Monitoring": [st.Page("console/jobs.py", title="Jobs")],
                       "Work": [st.Page("console/work.py", title="Issues and pull requests", url_path="work"),
                                st.Page("console/approvals.py", title="Approvals")]}, position="sidebar")

@@ -12,7 +12,8 @@ CSS_FILE = Path(__file__).with_name("console.css")
 SCHEMES = {"auto": "Auto", "light": "Light", "dark": "Dark"}
 TONES = ("ok", "warn", "bad", "info", "idle")
 
-_COMMON = {"font": '"Segoe UI", Tahoma, "Helvetica Neue", Arial, sans-serif', "mono": 'Consolas, "SF Mono", Menlo, monospace'}
+FONT = '"Segoe UI", Tahoma, "Helvetica Neue", Arial, sans-serif'
+_COMMON = {"font": FONT, "mono": 'Consolas, "SF Mono", Menlo, monospace'}
 LIGHT = {  # Classic bold
     "ink": "#000", "muted": "#4a4a4a", "link": "#0645ad", "frame": "#000", "edge": "#808080", "edge-soft": "#e3e1d8",
     "shadow": "4px 4px 0 rgba(0,0,0,.45)", "title-bg": "linear-gradient(90deg, #0a246a, #3a6ea5 65%, #a6caf0)",
@@ -60,6 +61,7 @@ ICONS = {
     "summary": '<rect x="1" y="2" width="14" height="10" fill="#e3edf9" stroke="#4a6fa5"/><rect x="3" y="4" width="10" height="6" fill="#9cc3ec"/><rect x="6" y="12" width="4" height="2" fill="#4a6fa5"/>',
     "jobs": '<circle cx="8" cy="8" r="6.5" fill="#fff" stroke="#6a7f9a"/><path d="M8 4v4.5l3 1.5" fill="none" stroke="#1d3c66" stroke-width="1.5"/>',
     "approvals": '<path d="M3 1h7l3 3v11H3z" fill="#fff" stroke="#5f7da6"/><path d="M5.5 9l2 2 3.5-4" fill="none" stroke="#217a2b" stroke-width="1.6"/>',
+    "design": '<rect x="1" y="2" width="5" height="4" fill="#fff" stroke="#3a6db0"/><rect x="10" y="2" width="5" height="4" fill="#fff" stroke="#3a6db0"/><rect x="5.5" y="10" width="5" height="4" fill="#dff1e1" stroke="#217a2b"/><path d="M6 4h4M3.5 6v2h9V6M8 8v2" fill="none" stroke="#3a6db0"/>',
     "work": '<rect x="2" y="1.5" width="12" height="13" fill="#fff" stroke="#5f7da6"/><path d="M4.5 5h7M4.5 8h7M4.5 11h4.5" stroke="#1d3c66" stroke-width="1.4"/>'
 }
 
@@ -68,11 +70,15 @@ def _block(tokens):
     return ":root {" + "".join(f"--{name}: {value};" for name, value in {**_COMMON, **tokens}.items()) + "}"
 
 
-def theme_css(scheme):
-    """The stylesheet for a scheme: 'light', 'dark', or 'auto', which follows the computer's setting."""
-    tokens = {"light": _block(LIGHT), "dark": _block(DARK)}.get(
+def token_css(scheme):
+    """The colour tokens for a scheme: 'light', 'dark', or 'auto', which follows the computer's setting."""
+    return {"light": _block(LIGHT), "dark": _block(DARK)}.get(
         scheme, _block(LIGHT) + "@media (prefers-color-scheme: dark) {" + _block(DARK) + "}")
-    return f"<style>{tokens}{CSS_FILE.read_text(encoding='utf-8')}</style>"
+
+
+def theme_css(scheme):
+    """The console's stylesheet for a scheme."""
+    return f"<style>{token_css(scheme)}{CSS_FILE.read_text(encoding='utf-8')}</style>"
 
 
 def _tone(tone):
