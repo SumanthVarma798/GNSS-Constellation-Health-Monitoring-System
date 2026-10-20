@@ -126,9 +126,9 @@ def _counts(members):
             sum(any(check[4] < 80 for check in row["checks"]) for row in members))
 
 
-def _fact(name, words, status):
+def _fact(name, words, status, plane=""):
     """One figure on a plane card: its name, which opens what it means, then the figure in words and colour."""
-    return f'<span>{tooltip.tip(name, PLANE_MEANINGS[name])} {surfaces.chip(words, status)}</span>'
+    return f'<span>{tooltip.tip(name, PLANE_MEANINGS[name], key=plane)} {surfaces.chip(words, status)}</span>'
 
 
 def _against(value, limit):
@@ -141,7 +141,7 @@ def _against(value, limit):
 def _plane_card(plane, members, drift):
     """One plane, plane-level only: its strip, how many in step and need a look, and its drift."""
     in_step, look = _counts(members)
-    facts = [_fact("Need a look", reveal.count(look, "satellite") if look else "none", "warn" if look else "ok")]
+    facts = [_fact("Need a look", reveal.count(look, "satellite") if look else "none", "warn" if look else "ok", plane)]
     if plane == EXTENDED:   # not a plane of slots: no strip, nothing to be in step with or drift from
         facts.append('<span>Its own orbit: no slots, no plane to drift from</span>')
         return surfaces.raised(f'<div class="facts">{"".join(facts)}</div>', title=f"Eccentric orbit · {len(members)}")
@@ -149,11 +149,12 @@ def _plane_card(plane, members, drift):
     rate, offset = drift["rate"], drift["offset"]
     moving = "steady" if abs(rate) < 0.005 else f"{abs(rate):.2f}° a year" + (   # away from or back to the pattern;
         "" if abs(offset) < 0.05 else ", away" if rate * offset > 0 else ", back")   # neither from a node shown at 0.0°
-    facts = [_fact("In step", f"{in_step} of {len(members)}", "warn" if out_of_step else "ok"), *facts,
-             _fact("Node", *_against(offset, drift["offset_limit"])),
-             _fact("Drift", moving, "idle"),
+    in_step_status = "ok" if in_step == len(members) else "warn" if out_of_step else "idle"   # unknown is not ok
+    facts = [_fact("In step", f"{in_step} of {len(members)}", in_step_status, plane), *facts,
+             _fact("Node", *_against(offset, drift["offset_limit"]), plane),
+             _fact("Drift", moving, "idle", plane),
              _fact("Gaps", *(_against(drift["gap"], drift["gap_limit"]) if drift["gap"] is not None
-                             else ("not measured", "idle")))]
+                             else ("not measured", "idle")), plane)]
     return surfaces.raised(_strip(members) + f'<div class="facts">{"".join(facts)}</div>',
                            title=f"Plane {plane} · {len(members)}")
 
