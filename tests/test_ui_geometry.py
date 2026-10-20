@@ -248,10 +248,10 @@ def test_trends_draw_a_row_per_satellite_with_its_bands():
 def test_spacing_card_and_wheel(beidou):
     group = analyze_raan_spacing(beidou)[0]
 
-    card = gf.spacing_card(group)
+    card, table = gf.spacing_card(group), gf.spacing_table(group)
     wheel = gf.spacing_wheel(group)
 
-    assert f'{group["ideal_spacing_deg"]:g}° apart' in card and card.count('<div class="sr">') == group["satellite_count"]
+    assert f'{group["ideal_spacing_deg"]:g}° apart' in card and table.count('<div class="sr">') == group["satellite_count"]
     assert len(wheel.data[-2].theta) == group["satellite_count"]   # the even-spacing rings
 
 

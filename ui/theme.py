@@ -5,6 +5,7 @@ Every colour comes from ui/palette.py. The rules that use them are in ui/theme.c
 from pathlib import Path
 
 from ui import palette
+from ui.tooltip import CARD_CSS
 
 CSS_FILE = Path(__file__).with_name("theme.css")
 
@@ -49,8 +50,8 @@ def font_rules():
 
 
 def theme_css():
-    """The full stylesheet text: variables, typefaces, then the rules."""
-    return root_block() + font_rules() + CSS_FILE.read_text(encoding="utf-8")
+    """The full stylesheet text: variables, typefaces, the tooltip's card (shared with the canvas components), the rules."""
+    return root_block() + font_rules() + CARD_CSS + CSS_FILE.read_text(encoding="utf-8")
 
 
 def apply_theme():

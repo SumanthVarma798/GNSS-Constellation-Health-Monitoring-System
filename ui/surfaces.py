@@ -9,9 +9,6 @@ from html import escape
 
 STATUSES = ("ok", "warn", "bad", "idle", "accent")
 
-# A legend swatch may only be a hex colour or one of the theme variables, nothing that could carry other CSS.
-_SWATCH = re.compile(r"#[0-9a-fA-F]{3,8}|var\(--[a-z-]+\)")
-
 
 def _check_status(status):
     if status not in STATUSES:
@@ -95,9 +92,10 @@ def compare_grid(tile_htmls, matrix_html):
             + matrix_html)
 
 
-def group_head(title, line):
-    """The heading of one group of satellites: a short name and one plain line after it."""
-    return f'<div class="group"><span class="gt">{escape(title)}</span><span class="muted">{escape(line)}</span></div>'
+def group_head(title, line, extra_html=""):
+    """The heading of one group of satellites: a short name, one plain line after it, and optionally a tip."""
+    return (f'<div class="group"><span class="gt">{escape(title)}</span><span class="muted">{escape(line)}</span>'
+            f'{extra_html}</div>')
 
 
 def measure(cell):
@@ -121,25 +119,6 @@ def table(columns, rows):
     body = "".join(f"<tr><th scope=\"row\">{escape(name)}</th>{''.join(f'<td>{measure(c)}</td>' for c in cells)}</tr>"
                    for name, cells in rows)
     return f'<div class="tablewrap"><table class="grid"><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>'
-
-
-def _legend_row(colour, text):
-    if not _SWATCH.fullmatch(colour):
-        raise ValueError(f"legend colour {colour!r} must be a hex colour or a var(--name)")
-    return f'<li><span class="swatch" style="background:{colour}"></span>{escape(text)}</li>'
-
-
-def hover_legend(entries, label="Legend", opens_left=False):
-    """A collapsed control that opens on hover or keyboard focus. entries: (colour, meaning) pairs.
-
-    Set opens_left for a legend near the right edge of the page, so its list is not cut off.
-    """
-    rows = "".join(_legend_row(colour, text) for colour, text in entries)
-    side = " opens-left" if opens_left else ""
-    return (
-        f'<div class="legend{side}" tabindex="0" role="group" aria-label="{escape(label, quote=True)}">'
-        f'<span class="legend-label">{escape(label)}</span><ul>{rows}</ul></div>'
-    )
 
 
 _SVG = re.compile(r"<svg\b([^>]*)>.*?</svg>", re.DOTALL)

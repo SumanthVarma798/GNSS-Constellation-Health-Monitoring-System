@@ -1,11 +1,15 @@
-"""Station-keeping: how often each satellite's orbit is corrected, and whether the rhythm holds."""
+"""Station-keeping: how often each satellite's orbit is corrected, and whether the rhythm holds.
+
+The burns in the window first, then each satellite's rhythm and the two charts; then the tables, each in a section
+(ui/reveal.py): burns per satellite, open, and every burn in the window, closed.
+"""
 from datetime import datetime, timezone
 from html import escape
 
 import pandas as pd
 import streamlit as st
 
-from ui import data, measures, shell, surfaces
+from ui import data, measures, reveal, shell, surfaces, tooltip
 from ui.figures.burns import EAST_WEST, burn_cadence, burn_timeline, rhythm
 
 PATTERN_STATUS = {"regular": "ok", "irregular": "warn", "too few": "idle"}
@@ -63,10 +67,12 @@ def _rhythm(rows):
 
 
 def _detection(p):
-    """How a burn is found, with the thresholds in use."""
-    return (f'<p class="small">A burn is found where the orbit\'s size jumps by {p["sma_threshold"]:g} km or more '
-            f'(east-west) or its tilt by {p["inc_threshold"]:g}° or more (north-south), standing out at a z-score of '
-            f'{p["z_threshold"]:g} and holding for {int(p["persist_window"])} element sets.</p>')
+    """How a burn is found, with the thresholds in use, behind a pill."""
+    return tooltip.tip("How a burn is found",
+                       f"A burn is found where the orbit's size jumps by {p['sma_threshold']:g} km or more "
+                       f"(east-west) or its tilt by {p['inc_threshold']:g}° or more (north-south), standing out at a "
+                       f"z-score of {p['z_threshold']:g} and holding for {int(p['persist_window'])} element sets.",
+                       pill=True)
 
 
 def _counts(results, chosen, window_days, today):
@@ -128,14 +134,18 @@ start, end = min(e.min() for e in epochs), max(e.max() for e in epochs)
 window_days = st.session_state["window_days"]
 counts, recent = _counts(results, chosen, window_days, pd.Timestamp(datetime.now(timezone.utc).date()))
 
-surfaces.show(_rhythm(rhythm(burns, satellites, end)))
 surfaces.show(surfaces.group_head(shell.WINDOWS[window_days],
                                   f"{len(recent)} burns: {(recent['kind'] == EAST_WEST).sum()} east-west, "
-                                  f"{(recent['kind'] != EAST_WEST).sum()} north-south"))
-surfaces.show(surfaces.table([("Satellite", "")] + measures.BURN_COLUMNS, counts))
-surfaces.show(_detection(measures.thresholds(None, st.session_state["params"])))
-if len(recent):
-    with st.expander("Every burn in the window"):
-        surfaces.show(_events(recent))
+                                  f"{(recent['kind'] != EAST_WEST).sum()} north-south",
+                                  _detection(measures.thresholds(None, st.session_state["params"]))))
+surfaces.show(_rhythm(rhythm(burns, satellites, end)))
 st.plotly_chart(burn_cadence(burns, satellites), **CHART)
 st.plotly_chart(burn_timeline(burns, satellites, start, end), **CHART)
+late = sum(any(c["status"] == "warn" for c in cells) for _, cells in counts)
+reveal.section("burns_per_satellite", "Burns per satellite",
+               f"{reveal.count(len(counts), 'satellite')} · " + (f"{late} overdue" if late else "none overdue"),
+               surfaces.table([("Satellite", "")] + measures.BURN_COLUMNS, counts), open=True)
+if len(recent):
+    newest = pd.Timestamp(recent["window_end"].max())
+    reveal.section("every_burn", "Every burn in the window",
+                   f"{reveal.count(len(recent), 'burn')} · newest {newest.day} {newest:%b %Y}", _events(recent))

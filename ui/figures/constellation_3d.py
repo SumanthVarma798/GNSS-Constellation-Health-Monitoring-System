@@ -14,6 +14,7 @@ import plotly.graph_objects as go
 
 from ui import palette
 from ui.figures.slot_rows import group_by_position, state_words
+from ui.tooltip import PLOTLY_HOVER
 
 EARTH_RADIUS = 1.0
 BELT_RADIUS = 6.62   # the geostationary belt, in Earth radii
@@ -119,7 +120,7 @@ def constellation_3d(rows, caption=""):
     axis = {"visible": False, "range": [-8, 8]}
     figure = go.Figure(traces)
     figure.update_layout(
-        paper_bgcolor=CLEAR, showlegend=False, margin={"l": 0, "r": 0, "t": 0, "b": 0},
+        paper_bgcolor=CLEAR, showlegend=False, margin={"l": 0, "r": 0, "t": 0, "b": 0}, hoverlabel=PLOTLY_HOVER,
         scene={"xaxis": axis, "yaxis": axis, "zaxis": {"visible": False, "range": [-4, 4]},
                "aspectmode": "manual", "aspectratio": {"x": 1, "y": 1, "z": 0.5},
                "bgcolor": CLEAR, "camera": CAMERA})

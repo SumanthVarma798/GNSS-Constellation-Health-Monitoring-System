@@ -3,12 +3,13 @@
 Counts come from registry/library_counts.csv (built from GCAT by scripts/build_library_table.py); cost figures
 from registry/library_figures.csv (kept by hand, each with its public source). Every builder returns an HTML string.
 Ratios are shown plainly, each with its definition in a footnote; nothing here ranks one system above another.
+Each footnote opens from its column heading as a tooltip, and all of them are listed by notes().
 """
 from html import escape
 
 from evidence.library_settings import OTHER_PROGRAMME, SYSTEMS
 from evidence.settings import GCAT_CITATION
-from ui import palette, surfaces
+from ui import palette, surfaces, tooltip
 
 COUNTS = ("launched", "failed_at_launch", "failed_in_orbit", "retired", "operating", "status_not_recorded")
 NOT_KNOWN = "not known"
@@ -92,16 +93,17 @@ def _years(value):
     return '<span class="muted">&ndash;</span>' if value is None else f'<span class="num">{value:,.1f}</span>'
 
 
-def _heads(*titles):
-    return "".join(f"<th scope='col'>{title}</th>" for title in titles)
+def _heads(updated, *titles):
+    """Column headings: a plain title, or (title, footnote number) for one that opens its footnote as a tooltip."""
+    notes = _notes(updated)
+    return "".join(f"<th scope='col'>{title}</th>" if isinstance(title, str) else
+                   f"<th scope='col'>{tooltip.tip_html(f'{title[0]}<sup>{title[1]}</sup>', notes[title[1] - 1])}</th>"
+                   for title in titles)
 
 
-def _foot(*numbers):
-    return "".join(f"<sup>{n}</sup>" for n in numbers)
-
-
-def _footnotes(updated):
-    notes = [
+def _notes(updated):
+    """The footnotes, in number order, as markup."""
+    return [
         f"Launched: spacecraft launched, as GCAT lists them: those that reached orbit (payload catalogue, grouped by programme name, the list of names being in our settings) plus launches that never reached orbit (GCAT's failed-launch catalogue, found by name). GCAT as of {escape(updated)}.",
         "Failed at launch: the launch never put the spacecraft in orbit (GCAT failed-launch catalogue).",
         "Failed in orbit: reached orbit, then GCAT's result flag says it failed early in its mission.",
@@ -111,10 +113,15 @@ def _footnotes(updated):
         "Orbit success rate = (reached orbit &minus; failed in orbit) &divide; reached orbit.",
         "Satellite-years: for each retired satellite, launch to the end of regular operations; for each operating one, launch to GCAT's update date; added up. A date given only to the month or year is taken at mid-month or mid-year (count of such satellites in the generation table).",
         "Average service, retired: years in service of retired satellites &divide; number retired. Design life is not in GCAT, so service is not compared with it here.",
-        "Money: only figures a public source states, listed with their source below. They cover different things in different years and currencies and cannot be put side by side.",
+        "Money: only figures a public source states, listed with their source. They cover different things in different years and currencies and cannot be put side by side.",
     ]
-    return ('<div class="lib-notes"><b>Notes</b><ol>' + "".join(f"<li>{n}</li>" for n in notes) + "</ol>"
-            f"<p>Counts: {escape(GCAT_CITATION)}, files satcat, psatcat and ftocat.</p></div>")
+
+
+def notes(counts):
+    """Every footnote, numbered, and where the counts come from."""
+    rows = system_rows(counts)
+    return ('<div class="lib-notes"><ol>' + "".join(f"<li>{n}</li>" for n in _notes(rows[0]["updated"] if rows else ""))
+            + f"</ol><p>Counts: {escape(GCAT_CITATION)}, files satcat, psatcat and ftocat.</p></div>")
 
 
 def scoreboard(counts, figures):
@@ -140,17 +147,18 @@ def scoreboard(counts, figures):
     table = (
         '<table><caption>Navigation satellites per system, counted from GCAT. Counts are not like for like: the systems began in '
         'different decades and early generations were tests.</caption><thead><tr>'
-        + _heads("System, country", "Launched" + _foot(1), "Failed at launch" + _foot(2), "Failed in orbit" + _foot(3),
-                 "Retired" + _foot(4), "Operating" + _foot(5), "Launch success rate" + _foot(6), "Orbit success rate" + _foot(7),
-                 "Satellite-years in service" + _foot(8), "Average service, retired (years)" + _foot(9), "Money" + _foot(10))
+        + _heads(rows[0]["updated"] if rows else "", "System, country", ("Launched", 1), ("Failed at launch", 2),
+                 ("Failed in orbit", 3), ("Retired", 4), ("Operating", 5), ("Launch success rate", 6),
+                 ("Orbit success rate", 7), ("Satellite-years in service", 8), ("Average service, retired (years)", 9),
+                 ("Money", 10))
         + f"</tr></thead><tbody>{lines}</tbody></table>")
-    return surfaces.raised(f'<div class="lib">{table}</div>') + surfaces.raised(_footnotes(rows[0]["updated"] if rows else ""))
+    return f'<div class="lib">{table}</div>'
 
 
 def generations(counts):
     """The same counts by design generation, with the number of satellites whose service dates are approximate."""
-    lines = ""
-    for row in programme_rows(counts):
+    lines, rows = "", programme_rows(counts)
+    for row in rows:
         label = row["programme"] if row["programme"] != OTHER_PROGRAMME else row["programme"] + " (not in the programme list)"
         lines += (f'<tr><td class="who"><b>{escape(row["system"])}</b><span class="small">{escape(label)}, launched {_span(row["first_launch"], row["last_launch"])}</span></td>'
                   + _count(row["launched"]) + _count(row["failed_at_launch"], bad=True) + _count(row["failed_in_orbit"], bad=True)
@@ -158,11 +166,12 @@ def generations(counts):
                   + f'<td>{_years(average_retired_years(row))}</td><td>{_years(row["years_retired"] + row["years_operating"])}</td>'
                     f'<td>{_count_plain(row["approximate_dates"])}</td></tr>')
     table = ('<table><caption>By design generation, as GCAT groups them.</caption><thead><tr>'
-             + _heads("System, generation", "Launched" + _foot(1), "Failed at launch" + _foot(2), "Failed in orbit" + _foot(3),
-                      "Retired" + _foot(4), "Operating" + _foot(5), "Average service, retired (years)" + _foot(9),
-                      "Satellite-years in service" + _foot(8), "Dates approximate" + _foot(8))
+             + _heads(rows[0]["gcat_updated"] if rows else "", "System, generation", ("Launched", 1),
+                      ("Failed at launch", 2), ("Failed in orbit", 3), ("Retired", 4), ("Operating", 5),
+                      ("Average service, retired (years)", 9), ("Satellite-years in service", 8),
+                      ("Dates approximate", 8))
              + f"</tr></thead><tbody>{lines}</tbody></table>")
-    return surfaces.raised(f'<div class="lib">{table}</div>', "By design generation")
+    return f'<div class="lib">{table}</div>'
 
 
 def _span(first, last):
@@ -195,9 +204,9 @@ def costs(figures):
                   f'<td class="words">{surfaces.chip(figure["status"], "idle")}</td></tr>')
     table = ('<table><caption>Figures a public source states, in the currency and year it states them. Nothing here is converted, '
              'averaged or estimated by us. Awaiting review by the owner.</caption><thead><tr>'
-             + _heads("System", "Figure" + _foot(10), "Year", "What it covers", "Source", "Status")
+             + _heads("", "System", ("Figure", 10), "Year", "What it covers", "Source", "Status")
              + f"</tr></thead><tbody>{lines}</tbody></table>")
-    return surfaces.raised(f'<div class="lib">{table}</div>', "Money stated by public sources")
+    return f'<div class="lib">{table}</div>'
 
 
 def matching(rows):

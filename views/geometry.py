@@ -2,6 +2,8 @@
 sky and over the ground, how their orbits trend, and how evenly inclined orbits share a track.
 
 What app.py showed in its DOP Analysis, Visualizations and RAAN Spacing tabs, worked out with the same functions.
+What each section shows is behind a pill ("What this shows"); the tables are in sections (ui/reveal.py): position
+quality by place open, each plane spacing group's satellites closed.
 """
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -10,7 +12,7 @@ import pandas as pd
 import streamlit as st
 
 from analysis.raan_analysis import analyze_raan_spacing
-from ui import data, shell, surfaces
+from ui import data, reveal, shell, surfaces, tooltip
 from ui import geometry_data as gd
 from ui import geometry_settings as gs
 from ui.figures import geometry as gf
@@ -19,15 +21,15 @@ CSS = Path(__file__).resolve().parent.parent / "ui" / "geometry.css"
 CHART = {"use_container_width": True, "config": {"displayModeBar": False}}
 ALL_SATELLITES_NOTE = "Position quality, the sky view and plane spacing count every satellite of each constellation."
 WHOLE_CONSTELLATION = ("Position quality", "Sky view", "Plane spacing")
-# What each section shows, said once above it.
+# What each section shows, behind a pill above it.
 SECTION_KEYS = {
     "Position quality": gf.dop_key(),
-    "Sky view": ('<p class="small">Overhead in the middle, the horizon at the edge; the dotted ring is the elevation '
+    "Sky view": ('<p>Overhead in the middle, the horizon at the edge; the dotted ring is the elevation '
                  'mask. Play or drag through the next 24 hours.</p>'),
-    "Ground tracks": ('<p class="small">Where each satellite passes over the ground, and where it is now. '
+    "Ground tracks": ('<p>Where each satellite passes over the ground, and where it is now. '
                       'The marks are the places position quality is worked out for.</p>'),
     "Orbit trends": gf.trends_key(),
-    "Plane spacing": f'<p class="small">{gs.SPACING_INTRO}</p>',
+    "Plane spacing": f'<p>{gs.SPACING_INTRO}</p>',
 }
 
 
@@ -58,7 +60,11 @@ def _place(constellation, key):
 
 def _position_quality(constellation, satellites, now, mask):
     rows = gd.dop_rows(satellites, gs.PLACES[constellation], now, mask)
-    surfaces.show(gf.dop_grid(rows))
+    unfixed = sum(row["GDOP"] is None for row in rows)
+    reveal.section(f"geo_dop_{constellation}", "Position quality by place",
+                   f"{reveal.count(len(rows), 'place')} · " + (f"{unfixed} without a position" if unfixed
+                                                               else "a position at every place"),
+                   gf.dop_grid(rows), open=True)
     if all(row["GDOP"] is None for row in rows):
         surfaces.show(surfaces.notice("Fewer than 4 of these satellites are in view at every place, so no position "
                                       "can be worked out.", "bad"))
@@ -94,14 +100,16 @@ def _trends(constellation, result, names, types, now):
     st.plotly_chart(gf.orbit_trends(series, names, types, bands, since, pd.Timestamp(now).tz_localize(None)), **CHART)
 
 
-def _spacing(satellites):
+def _spacing(constellation, satellites):
     groups = analyze_raan_spacing(satellites)
     if not groups:
         surfaces.show(surfaces.notice("No inclined orbits here share a ground track, so there is no spacing to check.", "idle"))
-    for group in groups:
+    for i, group in enumerate(groups):
         card, wheel = st.columns([3, 2], vertical_alignment="center")
         with card:
             surfaces.show(gf.spacing_card(group))
+            reveal.section(f"geo_spacing_{constellation}_{i}", "Each satellite's node", gf.spacing_title(group),
+                           gf.spacing_table(group))
         with wheel:
             st.plotly_chart(gf.spacing_wheel(group), **CHART)
 
@@ -130,7 +138,7 @@ def constellation(name, picks, section, choice, mask, window, now):
     elif section == "Orbit trends":
         _trends(name, result, own, types, now)
     else:
-        _spacing(satellites)
+        _spacing(name, satellites)
 
 
 st.html(f"<style>{CSS.read_text(encoding='utf-8')}</style>")
@@ -153,8 +161,10 @@ if section in ("Position quality", "Sky view"):
     with right:
         mask = st.number_input("Elevation mask (degrees)", *gs.ELEVATION_MASK_RANGE, gs.ELEVATION_MASK_DEG, 1,
                                key="geo_mask", help="A satellite lower in the sky than this is not counted")
-surfaces.show(SECTION_KEYS[section] + (f'<p class="small">{ALL_SATELLITES_NOTE}</p>'
-                                         if st.session_state["compare"] and section in WHOLE_CONSTELLATION else ""))
+if any(name in gs.PLACES for name in chosen):   # nothing to explain where the page says it does not cover them yet
+    surfaces.show(f'<div class="facts">{tooltip.tip_html("What this shows", SECTION_KEYS[section], pill=True)}'
+                  + (f"<span>{ALL_SATELLITES_NOTE}</span>" if st.session_state["compare"] and section in WHOLE_CONSTELLATION
+                     else "") + "</div>")
 try:
     for name, picks in chosen.items():
         if st.session_state["compare"]:
