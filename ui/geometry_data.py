@@ -199,3 +199,11 @@ def targets(constellation, name, orbit_type, params):
     elif slot is not None:
         out["central_lon"] = (slot, slot)
     return out
+
+
+def clicked_place(point):
+    """(latitude, longitude) of a click on the ground map. The click layer's squares carry their (lat, lon); tracks and
+    markers carry words, so for those the point's own position is used."""
+    custom = point.get("customdata")
+    numbers = custom is not None and len(custom) == 2 and all(isinstance(v, (int, float)) for v in custom)
+    return tuple(custom) if numbers else (point["y"], point["x"])

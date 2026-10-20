@@ -465,3 +465,11 @@ def test_coming_back_to_the_section_the_inputs_show_the_place_still_chosen():
 
     assert at.selectbox(key="geo_pick_BeiDou-3").value == "Westernmost (Wuqia, Xinjiang)"
     assert at.text_input(key="geo_coords_BeiDou-3").value == "39.7, 75.3"
+
+
+def test_a_click_on_a_satellite_marker_uses_its_position_not_its_words():
+    from ui import geometry_data
+    assert geometry_data.clicked_place({"customdata": [12.0, 80.0], "x": 1, "y": 2}) == (12.0, 80.0)            # a square
+    assert geometry_data.clicked_place({"customdata": ["NVS-01", "0.0° N, 129.5° E"], "x": 129.5, "y": 0.0}) == (0.0, 129.5)
+    assert geometry_data.clicked_place({"customdata": ["2026-10-20 05:00", "over …", "35,800 km"], "x": 55, "y": 9}) == (9, 55)
+    assert geometry_data.clicked_place({"x": 55, "y": 9}) == (9, 55)

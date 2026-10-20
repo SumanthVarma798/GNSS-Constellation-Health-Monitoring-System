@@ -115,7 +115,7 @@ function paint() {
     mark(p, p.s === hovered ? 8 : 6);
     ctx.fillStyle = C("ink"); ctx.textBaseline = "bottom"; ctx.fillText(p.s.label, p.x, p.y - 9);
   }
-  if (hovered) card();
+  card();   // also takes the card down once the pointer is off every satellite
 }
 function head() {
   const step = STEPS[Math.round(at)];

@@ -122,7 +122,7 @@ def _clicked(constellation):
     if not points:
         return
     point = points[0]
-    lat, lon = point["customdata"] if point.get("customdata") else (point["y"], point["x"])   # a square, or a point
+    lat, lon = gd.clicked_place(point)
     key_place = next((p for p, at in gs.PLACES[constellation].items() if at == (lat, lon)), None)
     _go(constellation, key_place or gf.latlon_words(lat, lon), lat, lon, key_place)
 
