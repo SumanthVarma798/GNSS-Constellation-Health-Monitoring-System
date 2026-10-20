@@ -13,7 +13,7 @@ import streamlit as st
 
 from evidence import decisions
 from evidence.decision_settings import ACTIONS, AFTER_CHANGES, CHOICES, READ_EVERY_SECONDS, SECRETS_SECTION
-from ui import admin, reveal, surfaces
+from ui import admin, reveal, sign_in_fix, surfaces
 
 # What Google sign-in (st.login) needs in [auth]; one left empty means it is not set up.
 SIGN_IN_FIELDS = ("redirect_uri", "cookie_secret", "client_id", "client_secret", "server_metadata_url")
@@ -68,16 +68,20 @@ def decide_controls(item, config, who, email):
             st.rerun()
 
 
-def github_trouble(error):
-    """What went wrong reading GitHub, in plain words. Never the token."""
+def github_trouble(error, reading=False):
+    """What went wrong with GitHub, in plain words. Never the token."""
     code = getattr(getattr(error, "response", None), "status_code", None)
     if code in (401, 403):
         return "GitHub refused the page's token: it may have expired or lost its access."
+    if reading and code == 404:   # how GitHub answers a token that cannot see a private repository
+        return ("GitHub cannot find the private mirror with the page's token: it may not have access to that "
+                "repository. Give it access under Repository access in the token's settings.")
     if code in (404, 405, 409, 422):
         return "GitHub would not do that. Nothing more was written; look at the pull request on GitHub."
     return "GitHub did not answer, so it cannot be shown or changed now. Try again when the page is next opened."
 
 
+sign_in_fix.apply()   # before anyone presses Sign in
 surfaces.show(admin.CSS)
 config, sign_in_ready = settings()
 if not (sign_in_ready and config.get("allowed") and config.get("github_token")):
@@ -102,7 +106,7 @@ sign_out()
 try:
     prs, read_at = read(config["github_token"])
 except requests.RequestException as error:
-    surfaces.show(surfaces.notice(github_trouble(error), "bad"))
+    surfaces.show(surfaces.notice(github_trouble(error, reading=True), "bad"))
     st.stop()
 
 items = decisions.pending(prs, datetime.now(timezone.utc))
