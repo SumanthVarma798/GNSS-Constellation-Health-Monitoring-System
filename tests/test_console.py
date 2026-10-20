@@ -262,3 +262,33 @@ def test_google_sign_in_keeps_its_state_with_the_installed_authlib():
     assert sign_in.get_state_data(None, "state") == {"nonce": "n"}
     sign_in.clear_state_data(None, "state")
     assert sign_in.get_state_data(None, "state") is None
+
+
+def test_runs_are_read_page_by_page_and_the_tests_on_main_on_their_own(monkeypatch):
+    asked = []
+
+    def ask(method, path, token, repository=None, **request):
+        asked.append((path, request["params"]))
+        page = request["params"].get("page", 1)
+        return {"workflow_runs": [{}] * (100 if page == 1 and "archive" in path else 3)}
+
+    monkeypatch.setattr(common.github_api, "ask", ask)
+
+    assert len(common._runs("t", "archive.yml")) == 103 and len(common._runs("t", "tests.yml")) == 3
+    assert asked[0][1]["created"].startswith(">=") and asked[1][1]["page"] == 2
+    assert asked[2][1] == {"branch": "main", "event": "push", "per_page": 10}
+
+
+def test_a_workflow_missing_on_github_is_named_and_the_rest_still_shows(monkeypatch):
+    def ask(method, path, token, repository=None, **request):
+        if "update-tle-data" in path:
+            raise requests.HTTPError("404", response=SimpleNamespace(status_code=404))
+        return {"workflow_runs": [], "workflows": []}
+
+    monkeypatch.setattr(common.github_api, "ask", ask)
+    monkeypatch.setattr(common.github_api, "file_text", lambda *args: "job,started,ended,result,changed\n")
+    monkeypatch.setattr(decisions, "fetch_open", lambda token: [])
+
+    seen = common.github.__wrapped__("t") if hasattr(common.github, "__wrapped__") else common.github("t")
+
+    assert any("update-tle-data.yml" in problem for problem in seen["problems"])

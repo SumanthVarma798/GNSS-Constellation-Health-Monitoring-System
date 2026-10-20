@@ -43,8 +43,8 @@ def decide(item, config, who, email):
             except requests.RequestException as error:
                 result = "bad", common.github_trouble(error)
             st.session_state["admin_result"] = (number, *result)
+            common.github.clear()   # read again: GitHub may have changed, whatever the outcome
             if result[0] == "ok":
-                common.github.clear()   # the list has changed on GitHub
                 for key in (f"choice_{number}", f"reason_{number}", f"changes_{number}"):
                     st.session_state.pop(key, None)
             st.rerun()

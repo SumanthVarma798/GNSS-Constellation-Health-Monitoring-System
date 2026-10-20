@@ -28,5 +28,5 @@ TESTS_WORKFLOW = "tests.yml"
 
 RELIABILITY_DAYS = 14   # columns in the day-by-day reliability grid
 RECENT_EVENTS = 10      # lines in the Summary's recent events
-RUNS_READ = 100         # GitHub's largest page: the newest runs read for each workflow
+RUNS_READ = 100         # GitHub's largest page of runs
 LOOK_AHEAD_DAYS = 8     # a schedule with no run within this many days says "none in the next week"

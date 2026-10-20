@@ -1,12 +1,13 @@
 """What every console page shares: its settings, one cached reading of GitHub, plain words for GitHub's errors, and
 the page's layout (its header band, its body, and the Actions pane on the right)."""
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import requests
 import streamlit as st
 
 from evidence import decisions, github_api, jobs
-from evidence.console_settings import ARCHIVE_REPOSITORY, JOBS, RUN_LOGS, RUNS_READ, WORKFLOWS_DIR
+from evidence.console_settings import (ARCHIVE_REPOSITORY, JOBS, RELIABILITY_DAYS, RUN_LOGS, RUNS_READ, TESTS_WORKFLOW,
+                                       WORKFLOWS_DIR)
 from evidence.decision_settings import READ_EVERY_SECONDS, SECRETS_SECTION
 from ui import console
 
@@ -36,12 +37,33 @@ def github(token):
         except requests.RequestException:
             problems.append(f"The run log {path} could not be read from the archive repository: the token may not "
                             "have access to it. Jobs show GitHub's own record instead.")
-    return {"workflows": github_api.ask("GET", "/actions/workflows", token)["workflows"],
-            # Each workflow's own newest runs, so many test runs never push older scheduled runs out of view.
-            "runs": [run for workflow in dict.fromkeys(w for w, *_ in JOBS)
-                     for run in github_api.ask("GET", f"/actions/workflows/{workflow}/runs", token,
-                                               params={"per_page": RUNS_READ})["workflow_runs"]],
+    runs = []
+    for workflow in dict.fromkeys(w for w, *_ in JOBS):
+        try:
+            runs += _runs(token, workflow)
+        except requests.HTTPError as error:
+            if getattr(error.response, "status_code", None) != 404:
+                raise
+            problems.append(f"GitHub has no workflow {workflow}: it may have been renamed or removed.")
+    return {"workflows": github_api.ask("GET", "/actions/workflows", token)["workflows"], "runs": runs,
             "log": log, "prs": decisions.fetch_open(token), "problems": problems, "read_at": datetime.now(timezone.utc)}
+
+
+def _runs(token, workflow):
+    """A workflow's runs: the tests' runs on main (pull requests' runs would push them out of a page), every other
+    workflow's runs back to the start of the reliability grid, page by page."""
+    if workflow == TESTS_WORKFLOW:
+        return github_api.ask("GET", f"/actions/workflows/{workflow}/runs", token,
+                              params={"branch": "main", "event": "push", "per_page": 10})["workflow_runs"]
+    since = (datetime.now(timezone.utc) - timedelta(days=RELIABILITY_DAYS)).date().isoformat()
+    runs, page = [], 1
+    while True:
+        got = github_api.ask("GET", f"/actions/workflows/{workflow}/runs", token,
+                             params={"per_page": RUNS_READ, "page": page, "created": f">={since}"})["workflow_runs"]
+        runs += got
+        if len(got) < RUNS_READ:
+            return runs
+        page += 1
 
 
 def workflow_texts():

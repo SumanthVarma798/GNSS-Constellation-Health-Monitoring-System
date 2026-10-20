@@ -14,6 +14,9 @@ from evidence.console_settings import JOBS, LOOK_AHEAD_DAYS, RELIABILITY_DAYS, R
 _CRON = re.compile(r"cron:\s*'([^']+)'(?:\s*#\s*([a-z]+):)?")
 _DAYS = ["Sundays", "Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays"]
 _OK_RESULTS = ("ok", "success")   # the archive writes "ok"; jobs logged by scripts/log_run.py write GitHub's word
+# How each of GitHub's conclusions reads; anything else ("cancelled", "skipped", ...) is neither a success nor a failure.
+_CONCLUSIONS = {"success": ("ok", "Succeeded"), "failure": ("bad", "Failed"), "timed_out": ("bad", "Timed out"),
+                "startup_failure": ("bad", "Failed to start")}
 
 
 def schedules(workflow_text):
@@ -92,6 +95,11 @@ def _on_main(run):
     return run["head_branch"] == "main" and run["event"] == "push"
 
 
+def conclusion(run):
+    """(tone, words) for a finished run, from GitHub's conclusion."""
+    return _CONCLUSIONS.get(run["conclusion"], ("idle", (run["conclusion"] or "unknown").replace("_", " ").capitalize()))
+
+
 def job_rows(workflows, runs, log, workflow_texts, now):
     """One row per job in JOBS: its schedule in words, state, next run, last run and result, and a link to its runs."""
     state = {_file(w): w["state"] for w in workflows}
@@ -102,13 +110,15 @@ def job_rows(workflows, runs, log, workflow_texts, now):
         turned_off = state.get(workflow, "active").startswith("disabled")
         done = sorted((r for r in runs if _file(r) == workflow and r["status"] == "completed"
                        and (workflow != TESTS_WORKFLOW or _on_main(r))), key=lambda r: r["created_at"])
-        if log_name:
-            lines = sorted((line for line in log if line["job"] == log_name), key=lambda line: line["started"])
-            last, result = (lines[-1]["started"], log_result(lines[-1])) if lines else (None, ("idle", "No run recorded yet"))
-        elif done:
-            last = parse_time(done[-1]["created_at"])
-            passed = done[-1]["conclusion"] == "success"
-            result = ("ok", "Passed" if workflow == TESTS_WORKFLOW else "Succeeded") if passed else ("bad", "Failed")
+        lines = sorted((line for line in log if line["job"] == log_name), key=lambda line: line["started"]) if log_name else []
+        if lines:
+            last, result = lines[-1]["started"], log_result(lines[-1])
+        elif log_name and log:
+            last, result = None, ("idle", "No run recorded yet")
+        elif done:   # no run log to read: GitHub's own record (for an archive group, the whole archive job's last run)
+            last, result = parse_time(done[-1]["created_at"]), conclusion(done[-1])
+            if workflow == TESTS_WORKFLOW and result[0] == "ok":
+                result = ("ok", "Passed")
         else:
             last, result = None, ("idle", "No run in GitHub's recent record")
         rows.append({"name": name, "what": what, "workflow": workflow,
@@ -127,10 +137,11 @@ def reliability(runs, now, days=RELIABILITY_DAYS):
     rows = {workflow: [None] * days for workflow in scheduled}
     for run in runs:
         workflow, day = _file(run), parse_time(run["created_at"]).date()
-        if workflow in rows and run["event"] in ("schedule", "workflow_dispatch") and day in dates and run["conclusion"]:
-            i = dates.index(day)
+        tone = conclusion(run)[0] if run["conclusion"] else "idle"
+        if workflow in rows and run["event"] in ("schedule", "workflow_dispatch") and day in dates and tone != "idle":
+            i = dates.index(day)   # a cancelled or skipped run counts as neither
             ok, failed = rows[workflow][i] or (0, 0)
-            rows[workflow][i] = (ok + (run["conclusion"] == "success"), failed + (run["conclusion"] == "failure"))
+            rows[workflow][i] = (ok + (tone == "ok"), failed + (tone == "bad"))
     return {"days": [f"{d.day} {d:%b}" for d in dates], "rows": rows}
 
 
@@ -154,7 +165,7 @@ def events(log, runs, limit=RECENT_EVENTS):
     """The newest happenings, newest first: every run-log line, and every run of the tests on main."""
     happened = [{"when": line["started"], "tone": log_result(line)[0], "source": line["job"],
                  "text": log_result(line)[1]} for line in log]
-    happened += [{"when": parse_time(r["created_at"]), "tone": "ok" if r["conclusion"] == "success" else "bad", "source": "Tests",
-                  "text": "Passed on main" if r["conclusion"] == "success" else "Failed on main"}
+    happened += [{"when": parse_time(r["created_at"]), "tone": conclusion(r)[0], "source": "Tests",
+                  "text": "Passed on main" if conclusion(r)[0] == "ok" else f"{conclusion(r)[1]} on main"}
                  for r in runs if _file(r) == TESTS_WORKFLOW and _on_main(r) and r["status"] == "completed"]
     return sorted(happened, key=lambda e: e["when"], reverse=True)[:limit]

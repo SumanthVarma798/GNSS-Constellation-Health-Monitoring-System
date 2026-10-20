@@ -125,3 +125,22 @@ def test_recent_events_mix_the_run_log_and_the_tests_on_main_newest_first():
 
     assert [(e["when"].strftime("%H:%M"), e["tone"], e["source"]) for e in events] == [
         ("14:35", "ok", "Tests"), ("12:15", "bad", "archive news"), ("06:00", "ok", "archive orbital")]
+
+
+@pytest.mark.parametrize("conclusion, said", [("success", ("ok", "Succeeded")), ("failure", ("bad", "Failed")),
+                                              ("timed_out", ("bad", "Timed out")), ("cancelled", ("idle", "Cancelled"))])
+def test_each_conclusion_is_said_in_words(conclusion, said):
+    assert jobs.conclusion({"conclusion": conclusion}) == said
+
+
+def test_a_cancelled_run_is_neither_a_success_nor_a_failure_in_the_grid():
+    grid = jobs.reliability([run("archive.yml", "2026-10-20T01:00:00Z", conclusion="cancelled")], NOW, days=1)
+
+    assert grid["rows"]["archive.yml"] == [None]
+
+
+def test_without_a_readable_run_log_a_job_shows_githubs_own_record():
+    texts = {"archive.yml": (WORKFLOWS_DIR / "archive.yml").read_text()}
+    news = {r["name"]: r for r in jobs.job_rows(WORKFLOWS, RUNS, [], texts, NOW)}["Archive: news"]
+
+    assert news["result"] == ("bad", "Failed") and news["last"] == datetime(2026, 10, 20, 12, 15, tzinfo=timezone.utc)

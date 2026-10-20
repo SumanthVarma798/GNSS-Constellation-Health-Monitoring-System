@@ -214,3 +214,13 @@ def test_an_item_decided_meanwhile_is_left_alone_whatever_the_choice(monkeypatch
     status, words = decide(monkeypatch, github, choice, changes="Fix G01")
 
     assert status == "warn" and "already decided" in words and github.writes == []
+
+
+def test_an_item_whose_branch_was_deleted_still_shows_and_cannot_be_approved(monkeypatch):
+    gone = {**pr(5, ["decision: slot"]), "head": None}
+    item = decisions.pending([gone], NOW)[0]
+
+    monkeypatch.setattr(decisions, "_ask", lambda method, path, token, **request: {"state": "open", "head": None})
+    status, words = decisions.decide("t", item, APPROVE, "Checked", "", "A Member", "m@example.com", {}, NOW)
+
+    assert item["sha"] is None and status == "warn" and "branch no longer exists" in words

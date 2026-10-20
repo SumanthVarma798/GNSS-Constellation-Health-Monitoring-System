@@ -46,7 +46,7 @@ def pending(prs, now):
         login = (pr.get("user") or {}).get("login", "a deleted account")   # GitHub sends no user for a deleted one
         items.append({"number": pr["number"], "title": pr["title"], "kind": kind, "group": KINDS.get(kind, OTHER_GROUP),
                       "summary": summary(pr["body"]), "body": pr["body"] or "", "link": pr["html_url"],
-                      "login": login, "raised_by": RAISED_BY.get(login, login), "sha": pr["head"]["sha"],
+                      "login": login, "raised_by": RAISED_BY.get(login, login), "sha": (pr.get("head") or {}).get("sha"),
                       "opened": opened, "waited_days": (now - opened).days})
     return sorted(items, key=lambda item: item["opened"])
 
@@ -129,6 +129,8 @@ def decide(token, item, choice, reason, changes, who, email, accounts, now):
     number = item["number"]
     pull = _ask("GET", f"/pulls/{number}", token)   # read again: someone may have decided it meanwhile
     read = {"state": pull["state"]}
+    if choice == APPROVE and pull["state"] == "open" and not (pull.get("head") or {}).get("sha"):
+        return "warn", "Its branch no longer exists, so it cannot be merged. Look at the pull request on GitHub."
     if choice == APPROVE and pull["state"] == "open":
         read |= {"sha": pull["head"]["sha"], "mergeable": pull["mergeable"], "tests": tests_state(token, pull["head"]["sha"])}
     problem = blocker(choice, item, reason, changes, email, accounts, **read)

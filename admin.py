@@ -10,10 +10,18 @@ import streamlit as st
 
 from console import common
 from evidence import decisions, jobs
+from evidence.decision_settings import READ_EVERY_SECONDS
 from ui import console, sign_in_fix
 
 st.set_page_config(page_title="GNSS Health Monitor - Administration", layout="wide", initial_sidebar_state="auto")
 sign_in_fix.apply()   # before anyone presses Sign in
+
+
+def _sign_out():
+    """Forget everything typed or chosen in this browser before signing out, so nothing carries over to the next person."""
+    for key in list(st.session_state):
+        del st.session_state[key]
+    st.logout()
 
 
 def _pick_scheme():
@@ -37,7 +45,7 @@ if state != "in":
     if state == "sign in":
         st.button("Sign in with Google", key="console_sign_in", on_click=st.login, type="primary")
     else:
-        st.button("Sign out", key="console_sign_out", on_click=st.logout)
+        st.button("Sign out", key="console_sign_out", on_click=_sign_out)
     st.stop()
 
 page = st.navigation({"Overview": [st.Page("console/summary.py", title="Summary", default=True)],
@@ -54,7 +62,7 @@ with st.container(key="console_bar"):
     pick.segmented_control("Colours", list(console.SCHEMES), format_func=console.SCHEMES.get, key="console_scheme_pick",
                            on_change=_pick_scheme, label_visibility="collapsed", help="Light, dark, or as this computer is set")
     person.html(f'<span class="c-who">Signed in as <b>{escape(who)}</b></span>')
-    out.button("Sign out", key="console_sign_out", on_click=st.logout)
+    out.button("Sign out", key="console_sign_out", on_click=_sign_out)
 
 page.run()
 
@@ -67,4 +75,4 @@ st.html(console.status_bar(
     [console.status("bad" if failing else "ok", f"{failing} job{'' if failing == 1 else 's'} failing"),
      console.status("warn" if off else "ok", f"{off} turned off"),
      console.status("warn" if waiting else "ok", f"{waiting} waiting for a decision")],
-    f"Read from GitHub {seen['read_at']:%H:%M} UTC · read again every 5 minutes"))
+    f"Read from GitHub {seen['read_at']:%H:%M} UTC · read again every {READ_EVERY_SECONDS // 60} minutes"))
