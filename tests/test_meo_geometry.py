@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from analysis.meo_geometry import EXTENDED, assess, fit_planes, part_score, semi_major_axis_km, status_of
+from analysis.meo_geometry import (EXTENDED, assess, fit_planes, part_score, plane_drift, semi_major_axis_km,
+                                   status_of)
 from config.meo_nominal import NOMINAL
 
 EPOCH = datetime(2026, 10, 17)
@@ -141,3 +142,35 @@ def test_a_glonass_slot_written_with_a_leading_zero_is_found():
     registry = {name: {"plane": "1", "slot": name, "signal_id_now": f"R{name}"} for name in elements}
 
     assert all("spacing" in checks(row) for row in assess("GLONASS", elements, registry))
+
+
+def drift_row(plane, offset, node_rate, spacing_error=None):
+    checks = [("plane", 0.0, offset, offset, 100)] + ([("spacing", 45.0, 45.0 + spacing_error, spacing_error, 100)]
+                                                     if spacing_error is not None else [])
+    return {"plane": plane, "checks": checks, "node_rate": node_rate}
+
+
+def test_a_planes_drift_is_its_mean_node_offset_its_node_rate_against_the_patterns_and_its_worst_gap():
+    rows = [drift_row("A", 1.0, -0.040, 0.5), drift_row("A", 2.0, -0.040, -1.5), drift_row("B", -1.5, -0.042),
+            {"plane": EXTENDED, "checks": [], "node_rate": -0.1}]   # the eccentric orbit counts for nothing
+
+    drift = plane_drift("GPS", rows)
+
+    assert set(drift) == {"A", "B"}
+    pattern = (-0.040 - 0.040 - 0.042) / 3
+    assert drift["A"] == pytest.approx({"offset": 1.5, "offset_limit": 5.0, "rate": (-0.040 - pattern) * 365.25,
+                                        "gap": 1.5, "gap_limit": 8.0})
+    assert drift["B"]["rate"] == pytest.approx((-0.042 - pattern) * 365.25)   # -0.49 a year: B's node falls behind
+    assert drift["B"]["gap"] is None
+
+
+def test_a_plane_tilted_one_degree_more_drifts_against_the_pattern_and_the_rest_do_not_drift_apart():
+    level = galileo()
+    assert all(d["rate"] == pytest.approx(0, abs=1e-9) for d in plane_drift("Galileo", level.values()).values())
+
+    # Plane A one degree steeper: its node turns back more slowly, by hand about 0.25 degrees a year against
+    # the others, and the pattern (a third of it plane A) moves a third of that: 0.25 x 2/3 = 0.165.
+    tilted = galileo({slot: {"inclination": 57.0} for slot in GALILEO_SLOTS if slot[0] == "A"})
+    drift = plane_drift("Galileo", tilted.values())
+    assert drift["A"]["rate"] == pytest.approx(0.165, abs=0.005)
+    assert drift["B"]["rate"] == drift["C"]["rate"] == pytest.approx(-0.0823, abs=0.003)

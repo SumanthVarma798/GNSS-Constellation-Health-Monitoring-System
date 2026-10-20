@@ -1,19 +1,23 @@
-"""The Overview for a medium Earth orbit (MEO) system: GPS, GLONASS or Galileo, one row per orbital plane.
+"""The Overview for a medium Earth orbit (MEO) system: GPS, GLONASS or Galileo, by orbital plane.
 
-Each plane: a strip of its slots and satellites along the orbit, then a tile per satellite in orbit
-order. Under the planes the 3D view, then every measure against its limit, in its section (ui/reveal.py). The numbers come from
-analysis/meo_run.py; the nominal values and their sources from config/meo_nominal.py.
+Two views, one switch (remembered for the session). Planes, the default: a card per plane with only what is
+true of the plane, its strip of slots and satellites along the orbit, how many are in step and how many need a
+look, and how the plane drifts (analysis/meo_geometry.plane_drift). Satellites: a tile per satellite, grouped by
+plane in orbit order. Under either the 3D view, then every measure against its limit, in its section
+(ui/reveal.py). The numbers come from analysis/meo_run.py; the nominal values and their sources from
+config/meo_nominal.py.
 """
 from html import escape
 
-from analysis.meo_geometry import EXTENDED
+from analysis.meo_geometry import EXTENDED, part_score, plane_drift
 from config.config import TRACKED_NOT_IN_REGISTRY
-from config.meo_nominal import MEANINGS, NOMINAL
-from ui import orbit_section, palette, reveal, surfaces, tooltip
+from config.meo_nominal import MEANINGS, NOMINAL, PLANE_MEANINGS
+from ui import orbit_section, palette, reveal, shell, surfaces, tooltip
 from ui.data import SATELLITES
 from ui.figures.plane_strip import plane_strip
 
 HEALTHY_FROM = 80
+VIEWS = ["Planes", "Satellites"]   # the switch over the planes, kept in session_state["meo_view"]
 LABELS = {"plane": "Plane", "spacing": "Spacing", "inclination": "Inclination", "height": "Height",
           "eccentricity": "Eccentricity"}
 # For Compare: the parts the other systems do not have, (label, column of the health table).
@@ -116,8 +120,48 @@ def _strip(members):
     return surfaces.picture(plane_strip(sats))
 
 
+def _counts(members):
+    """(in step, need a look) among one plane's satellites."""
+    return (sum(state_of(row)[0] == palette.SLOT_IN for row in members),
+            sum(any(check[4] < 80 for check in row["checks"]) for row in members))
+
+
+def _fact(name, words, status, plane=""):
+    """One figure on a plane card: its name, which opens what it means, then the figure in words and colour."""
+    return f'<span>{tooltip.tip(name, PLANE_MEANINGS[name], key=plane)} {surfaces.chip(words, status)}</span>'
+
+
+def _against(value, limit):
+    """'0.8° · within 5°' and its status: never ok over the limit, though its score still is up to 1.4 times it."""
+    if abs(value) <= limit:
+        return f"{abs(value):.1f}° · within {limit:g}°", "ok"
+    return f"{abs(value):.1f}° · over {limit:g}°", "bad" if part_score(value, limit) < 60 else "warn"
+
+
+def _plane_card(plane, members, drift):
+    """One plane, plane-level only: its strip, how many in step and need a look, and its drift."""
+    in_step, look = _counts(members)
+    facts = [_fact("Need a look", reveal.count(look, "satellite") if look else "none", "warn" if look else "ok", plane)]
+    if plane == EXTENDED:   # not a plane of slots: no strip, nothing to be in step with or drift from
+        facts.append('<span>Its own orbit: no slots, no plane to drift from</span>')
+        return surfaces.raised(f'<div class="facts">{"".join(facts)}</div>', title=f"Eccentric orbit · {len(members)}")
+    out_of_step = any(state_of(row)[0] == palette.SLOT_OFF for row in members)
+    rate, offset = drift["rate"], drift["offset"]
+    moving = "steady" if abs(rate) < 0.005 else f"{abs(rate):.2f}° a year" + (   # away from or back to the pattern;
+        "" if abs(offset) < 0.05 else ", away" if rate * offset > 0 else ", back")   # neither from a node shown at 0.0°
+    in_step_status = "ok" if in_step == len(members) else "warn" if out_of_step else "idle"   # unknown is not ok
+    facts = [_fact("In step", f"{in_step} of {len(members)}", in_step_status, plane), *facts,
+             _fact("Node", *_against(offset, drift["offset_limit"]), plane),
+             _fact("Drift", moving, "idle", plane),
+             _fact("Gaps", *(_against(drift["gap"], drift["gap_limit"]) if drift["gap"] is not None
+                             else ("not measured", "idle")), plane)]
+    return surfaces.raised(_strip(members) + f'<div class="facts">{"".join(facts)}</div>',
+                           title=f"Plane {plane} · {len(members)}")
+
+
 def page(name, result):
-    """The count, the history line, one row per plane, the 3D view, then measured against limits in its section, open."""
+    """The count, the history line, the planes (cards or tiles, by the switch), the 3D view, then measured against
+    limits in its section, open."""
     shown = tiles(result)
     healthy = sum(ok for _, ok, _ in shown.values())
     surfaces.show(f'<div class="head"><span class="big num">{healthy} of {len(shown)}</span>'
@@ -125,17 +169,21 @@ def page(name, result):
     surfaces.show(surfaces.notice(result["history_note"], "idle"))
     _gaps(name, result)
     planes = _planes(result["rows"])
-    for plane, members in planes.items():
-        tiles_html = f'<div class="tiles meo">{"".join(shown[row["name"]][0] for row in members)}</div>'
-        if plane == EXTENDED:   # not a plane of slots: no strip
-            surfaces.show(f'<div class="part-title">Eccentric orbit · {len(members)}</div>' + tiles_html)
-        else:
-            surfaces.show(surfaces.raised(_strip(members), title=f"Plane {plane} · {len(members)}") + tiles_html)
+    if shell.segment("meo_view", VIEWS, label="Show planes or satellites") == "Planes":
+        drift = plane_drift(name, result["rows"])
+        for plane, members in planes.items():
+            surfaces.show(_plane_card(plane, members, drift.get(plane)))
+    else:
+        for plane, members in planes.items():
+            line = reveal.count(len(members), "satellite") + ("" if plane == EXTENDED
+                                                             else f" · {_counts(members)[0]} in step")
+            surfaces.show(surfaces.group_head("Eccentric orbit" if plane == EXTENDED else f"Plane {plane}", line)
+                          + f'<div class="tiles meo">{"".join(shown[row["name"]][0] for row in members)}</div>')
     in_order = [row for members in planes.values() for row in members]
     rows = [{"name": row["name"], "slot_lon": None, "actual_lon": None, "note": "", "state": state,
              "deviation_deg": off} for row in in_order for state, _, off in [state_of(row)]]
     orbit_section.render_belt(rows, "3D", result["history"], result["health"], name)
-    look = sum(any(check[4] < 80 for check in row["checks"]) for row in in_order)
+    look = sum(_counts(members)[1] for members in planes.values())
     reveal.section("meo_should_be", "Measured against limits, every satellite",
                    f"{reveal.count(len(in_order), 'satellite')} · "
                    + (f"{look} need{'s' if look == 1 else ''} a look" if look else "all within limits"),

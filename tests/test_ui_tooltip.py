@@ -50,3 +50,9 @@ def test_pages_and_both_canvases_share_the_card_rules():
     assert tooltip.CARD_CSS in theme_css()
     assert tooltip.CARD_CSS in master_map_html(load_master_map_data())
     assert tooltip.CARD_CSS in orbit_view_html([], None, None)
+
+
+def test_the_same_tip_twice_gets_two_ids_when_keyed():
+    from ui import tooltip
+    a, b = tooltip.tip("Node", "How far the plane sits", key="A"), tooltip.tip("Node", "How far the plane sits", key="B")
+    assert a != b and tooltip.tip("Node", "x") == tooltip.tip("Node", "x")

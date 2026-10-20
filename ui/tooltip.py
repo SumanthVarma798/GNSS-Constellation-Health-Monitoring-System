@@ -37,18 +37,19 @@ def _id(*parts):
     return "tt-" + hashlib.sha1("\0".join(parts).encode("utf-8")).hexdigest()[:10]
 
 
-def tip_html(trigger_html, body_html, pill=False):
+def tip_html(trigger_html, body_html, pill=False, key=""):
     """The trigger and the card it opens. Set pill for a stand-alone control (a raised pill with a label);
-    without it the trigger is a word or heading with a dotted underline."""
-    card = _id(trigger_html, body_html)
+    without it the trigger is a word or heading with a dotted underline. key tells apart the same tip shown
+    more than once on a page, so each card's id is unique."""
+    card = _id(trigger_html, body_html, key)
     kind = "tt-trigger pill" if pill else "tt-trigger"
     return (f'<span class="tt"><span class="{kind}" tabindex="0" aria-describedby="{card}">{trigger_html}</span>'
             f'<span class="tt-card" role="tooltip" id="{card}">{body_html}</span></span>')
 
 
-def tip(trigger, text, pill=False):
+def tip(trigger, text, pill=False, key=""):
     """A tip from plain words: both are escaped."""
-    return tip_html(escape(trigger), escape(text), pill)
+    return tip_html(escape(trigger), escape(text), pill, key)
 
 
 def legend(entries, label="Legend"):
