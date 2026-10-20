@@ -5,13 +5,22 @@ and passes None, so signing in failed with "'NoneType' object does not support i
 1.6.11 has published security holes, so the fix goes here instead: keep the state in the cache only, as Streamlit 1.53
 does (streamlit/web/server/authlib_tornado_integration.py, Apache License 2.0). tests/test_admin_page.py says when
 this file is no longer needed.
+
+Known limit, as in Streamlit 1.53: the state is not tied to the browser that started signing in, so someone could start
+a sign-in and trick another person into finishing it, signing them in as the first. The allow-list still decides who
+gets in, and every decision names the signed-in person.
 """
 import json
 
 import streamlit
-from streamlit.web.server.authlib_tornado_integration import TornadoIntegration
+from packaging.version import InvalidVersion, Version
 
-FIXED_IN = (1, 53)
+try:
+    from streamlit.web.server.authlib_tornado_integration import TornadoIntegration
+except ImportError:   # a later Streamlit moved it, and by then has the fix itself
+    TornadoIntegration = None
+
+FIXED_IN = Version("1.53")
 
 
 def _key(integration, state):
@@ -35,7 +44,10 @@ def clear_state_data(self, session, state):
 
 
 def needed():
-    return tuple(int(part) for part in streamlit.__version__.split(".")[:2]) < FIXED_IN
+    try:
+        return TornadoIntegration is not None and Version(streamlit.__version__) < FIXED_IN
+    except InvalidVersion:
+        return False
 
 
 def apply():
