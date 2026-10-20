@@ -438,3 +438,11 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: 12px; }
 .change::details-content { block-size: 0; overflow: hidden; transition: block-size 200ms ease, content-visibility 200ms allow-discrete; }
 .change[open]::details-content { block-size: auto; }
 @media (prefers-reduced-motion: reduce) { .change::details-content { transition: none; } }
+
+/* the page tabs: one constellation's pages, then the pages across every system, set apart by a label */
+.st-key-pagetabs { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
+.st-key-pagetabs > div { width: auto !important; flex: 0 1 auto; min-width: 0; max-width: 100%; }
+.st-key-page_all_group { flex-direction: row; align-items: center; gap: 10px; padding-left: 22px; border-left: 1px solid var(--edge); }
+.st-key-page_all_group > div { width: auto !important; }
+.tabs-label { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+@media (max-width: 639.98px) { .st-key-page_all_group { padding-left: 0; border-left: 0; } }
