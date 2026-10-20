@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 import requests
 import streamlit as st
 
-from evidence import decisions, github_api, jobs
+from evidence import decisions, github_api, jobs, work
 from evidence.console_settings import (ARCHIVE_REPOSITORY, JOBS, RELIABILITY_DAYS, RUN_LOGS, RUNS_READ, TESTS_WORKFLOW,
                                        WORKFLOWS_DIR)
 from evidence.decision_settings import READ_EVERY_SECONDS, SECRETS_SECTION
@@ -46,7 +46,8 @@ def github(token):
                 raise
             problems.append(f"GitHub has no workflow {workflow}: it may have been renamed or removed.")
     return {"workflows": github_api.ask("GET", "/actions/workflows", token)["workflows"], "runs": runs,
-            "log": log, "prs": decisions.fetch_open(token), "problems": problems, "read_at": datetime.now(timezone.utc)}
+            "log": log, "prs": decisions.fetch_open(token), "issues": work.fetch_open_issues(token), "problems": problems,
+            "read_at": datetime.now(timezone.utc)}
 
 
 def _runs(token, workflow):

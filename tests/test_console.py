@@ -26,14 +26,15 @@ SECRETS = {"auth": {field: "set" for field in common.SIGN_IN_FIELDS},
 class GitHub:
     """Stands in for console.common.github: the figures above, and any pull requests a test gives it."""
 
-    def __init__(self, prs=(), fail=None):
-        self.prs, self.fail, self.asked = list(prs), fail, 0
+    def __init__(self, prs=(), fail=None, issues=()):
+        self.prs, self.fail, self.asked, self.issues = list(prs), fail, 0, list(issues)
 
     def __call__(self, token):
         self.asked += 1
         if self.fail:
             raise self.fail
-        return {"workflows": WORKFLOWS, "runs": RUNS, "log": jobs.run_log(LOG), "prs": self.prs, "problems": [], "read_at": NOW}
+        return {"workflows": WORKFLOWS, "runs": RUNS, "log": jobs.run_log(LOG), "prs": self.prs, "issues": self.issues,
+                "problems": [], "read_at": NOW}
 
     def clear(self):
         pass
@@ -292,3 +293,31 @@ def test_a_workflow_missing_on_github_is_named_and_the_rest_still_shows(monkeypa
     seen = common.github.__wrapped__("t") if hasattr(common.github, "__wrapped__") else common.github("t")
 
     assert any("update-tle-data.yml" in problem for problem in seen["problems"])
+
+
+def test_the_work_page_lists_open_pull_requests_and_issues_and_finds_by_title(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    issues = [{"number": 87, "title": "Signal-to-noise per source", "user": {"login": "SumanthVarma798"}, "comments": 0,
+               "created_at": "2026-10-19T16:04:46Z", "updated_at": "2026-10-19T16:04:46Z", "html_url": "https://github.com/x/issues/87",
+               "labels": []},
+              {"number": 47, "title": "Demo tracker", "user": {"login": "SumanthVarma798"}, "comments": 4,
+               "created_at": "2026-10-10T00:00:00Z", "updated_at": "2026-10-20T07:00:00Z", "html_url": "https://github.com/x/issues/47",
+               "labels": [{"name": "documentation", "color": "0075ca"}]}]
+    at = run(monkeypatch, GitHub([REGISTRY_PR], issues=issues), page="console/work.py")
+
+    page = text(at)
+    assert "Registry update from the IGS satellite metadata file" in page and "waits on a decision: registry update" in page
+    assert page.index("Demo tracker") < page.index("Signal-to-noise per source")   # the most recently updated first
+    assert "background:#0075ca" in page
+
+    at.text_input(key="work_find").set_value("signal").run()
+    assert "Signal-to-noise per source" in text(at) and "Demo tracker" not in text(at)
+
+
+def test_the_summary_leads_with_one_figure_and_draws_grades_in_one_blue_ramp(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+
+    page = text(run(monkeypatch))
+
+    assert page.count('class="c-hero') == 1 and "things need a look" in page
+    assert "var(--g-a)" in page and "var(--c-ok)\" title=\"A" not in page
