@@ -370,6 +370,7 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: 12px; }
 /* GPS, GLONASS and Galileo: a row per orbital plane, and every measure against its limit */
 .tiles.meo { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin: 12px 0 22px; }
 .tiles.meo .tile .s { font-size: 22px; }
+.raised > .facts { margin: 12px 0 0; }   /* a plane card's figures, under its strip */
 .meanings { margin: 0 0 10px; padding-left: 18px; }
 .sb-wrap { overflow-x: auto; }
 .sb { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }

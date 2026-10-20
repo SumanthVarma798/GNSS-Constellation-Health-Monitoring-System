@@ -113,3 +113,14 @@ MEANINGS = {
     "height": "Height: the size of its orbit (semi-major axis)",
     "eccentricity": "Eccentricity: how far its orbit is from a circle",
 }
+
+# One line each: what a plane card's figures mean (ui/meo_overview.py, analysis/meo_geometry.plane_drift).
+PLANE_MEANINGS = {
+    "In step": "In step: the satellites whose gaps to their neighbours along the plane are within the limit of the "
+               "gaps between their slots",
+    "Need a look": "Need a look: the satellites with any measure well past its limit (a part score under 80)",
+    "Node": "Node: how far this plane's node sits from the pattern of equally spaced planes fitted to every satellite",
+    "Drift": "Drift: how fast that distance changes, from the Earth's flattening acting on its satellites' tilt and "
+             "height. Worked out from the newest orbits, not measured over time",
+    "Gaps": "Gaps: the worst gap between neighbours in this plane, against the gap between their slots",
+}
