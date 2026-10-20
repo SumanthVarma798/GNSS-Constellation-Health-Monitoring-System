@@ -459,7 +459,7 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: 12px; }
 .st-key-pagetabs > div { width: auto !important; flex: 0 1 auto; min-width: 0; max-width: 100%; }
 .st-key-page_all_group { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px; padding-left: 22px; border-left: 1px solid var(--edge); }
 .st-key-page_all_group > div { width: auto !important; }
-@media (max-width: 639.98px) { .st-key-page_all_group { padding-left: 0; border-left: 0; } }
+@media (max-width: 639.98px) { .st-key-page_all_group { padding: 10px 0 0; border-left: 0; border-top: 1px solid var(--edge); } }   /* still set apart when it wraps under */
 
 /* the time range's panel: the presets in a pressed track, the chosen one raised in the accent colour; a greyed preset
    is longer than the orbit records held. Then a date of the reader's own to now, and what bounds the range. */

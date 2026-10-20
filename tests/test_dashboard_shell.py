@@ -374,3 +374,10 @@ def test_the_master_map_draws_its_canvas_and_hides_the_constellation_controls():
 
     labels = [getattr(w, "label", None) for w in at.get("button_group")]
     assert "Constellation" not in labels and "Page" in labels
+
+
+def test_under_compare_the_range_fits_the_constellation_with_least_history(monkeypatch):
+    from datetime import date
+    from ui import time_range
+    monkeypatch.setattr(time_range, "firsts", lambda names, w, p: {"NavIC": date(2025, 10, 4), "GPS": date(2026, 9, 22)})
+    assert time_range.oldest(["NavIC", "GPS"], 90, {}) == date(2026, 9, 22)

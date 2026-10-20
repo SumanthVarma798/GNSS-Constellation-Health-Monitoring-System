@@ -41,15 +41,22 @@ def words(days):
     return PRESETS.get(days, f"{days} day{'' if days == 1 else 's'}")
 
 
-def oldest(names, window_days, params):
-    """The date of the oldest orbit record held for any of `names`, or None when none has any."""
-    found = []
+def firsts(names, window_days, params):
+    """{name: date of its oldest orbit record held, or None when it has none yet}."""
+    found = {}
     for name in names:
         try:
-            found.append(pd.to_datetime(data.load(name, window_days, params)["history"]["EPOCH"]).min().date())
+            found[name] = pd.to_datetime(data.load(name, window_days, params)["history"]["EPOCH"]).min().date()
         except ValueError:   # no orbit data for it yet
-            continue
-    return min(found) if found else None
+            found[name] = None
+    return found
+
+
+def oldest(names, window_days, params):
+    """The first day every one of `names` has records for: the latest of their oldest records (under Compare a
+    range must fit the constellation with the least history). None when none has any."""
+    held = [first for first in firsts(names, window_days, params).values() if first]
+    return max(held) if held else None
 
 
 def held_days(first, today):
@@ -87,14 +94,19 @@ def control(names, params):
     """The range button and its panel, for the constellations `names` in view."""
     today = datetime.now(timezone.utc).date()
     window_days = st.session_state.setdefault("window_days", DEFAULT_DAYS)
-    first = oldest(names, window_days, params)
+    first_of = firsts(names, window_days, params)
+    first = max((f for f in first_of.values() if f), default=None)   # the span they all share
     held = held_days(first, today)
+    if held >= MIN_DAYS and window_days > held:   # less is held here than was chosen: the range shrinks to fit
+        window_days = st.session_state["window_days"] = held
     with st.container(key="range"):
-        with st.popover(f"Last {words(window_days)}", icon=":material/date_range:"):
+        label = f"Last {words(window_days)}" if held >= MIN_DAYS else ("Only " + words(held) if held else "No records yet")
+        with st.popover(label, icon=":material/date_range:"):
             st.html('<p class="range-title">Time range, ending now</p>')
             with st.container(key="range_presets"):
                 for days, label in PRESETS.items():
-                    reason = too_long(days, held, names)
+                    short = [n for n, f in first_of.items() if held_days(f, today) < days]   # who lacks it
+                    reason = too_long(days, held, short or names)
                     st.button(label, key=f"window_{days}", disabled=reason is not None, help=reason,
                               type="primary" if days == window_days else "secondary", on_click=_choose, args=(days,))
             bounds = from_bounds(first, today)
