@@ -22,6 +22,7 @@ canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: 
 .seg button:hover { color: var(--accent); }
 .seg button[aria-pressed="true"] { background: var(--platform); color: var(--accent); border-color: var(--edge); box-shadow: var(--raised-sm); }
 .note { color: var(--muted); font-size: 12px; }
+.note.named { color: var(--ink); font-weight: 600; font-size: 13px; }   /* the clicked orbit or plane */
 
 /* the satellites, one chip each: the legend, and the keyboard's way in */
 .sats { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0 4px; }
@@ -73,7 +74,7 @@ __TIP__
 </head>
 <body>
 <div class="card">
-  <canvas id="orbits" role="img" aria-label="Each satellite's orbit around Earth. Drag to turn, scroll or pinch to zoom, click a satellite, an orbit or Earth to zoom to it, double-click to go back."></canvas>
+  <canvas id="orbits" role="img" aria-label="Each satellite's orbit around Earth. Drag to turn, scroll or pinch to zoom. Click an orbit or a satellite to turn its plane toward you, with its node, inclination and height drawn; click empty space or press Escape to go back. Click Earth to face that place, double-click for the whole view."></canvas>
   <div class="top">
     <div class="seg" id="mode" role="group" aria-label="Which satellites">
       <button type="button" data-mode="all" aria-pressed="true">All</button><button type="button" data-mode="service" aria-pressed="false">In service</button>
@@ -101,7 +102,7 @@ const SATS = DATA.satellites;
 const $ = id => document.getElementById(id);
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const css = getComputedStyle(document.documentElement);
-const C = Object.fromEntries(["platform", "lift", "sink", "track", "fill", "ok", "warn", "bad", "idle", "muted"].map(n => [n, css.getPropertyValue("--" + n).trim()]));
+const C = Object.fromEntries(["platform", "lift", "sink", "track", "fill", "ink", "ok", "warn", "bad", "idle", "muted"].map(n => [n, css.getPropertyValue("--" + n).trim()]));
 const canvas = $("orbits"), ctx = canvas.getContext("2d"), tip = $("tip"), readout = $("readout");
 
 const HOME = { yaw: -45, pitch: 22, zoom: 1, c: [0, 0, 0] };   // degrees, looking in from above the equator; c: the point at the centre
@@ -112,7 +113,10 @@ const BELT = Array.from({ length: 121 }, (_, k) => [DATA.belt * Math.cos(k * Mat
 const REACH = Math.max(DATA.belt, ...SATS.flatMap(s => (s.loop || []).map(p => Math.hypot(...p))));   // over all: no jump on a switch
 const ORDER = ["ok", "warn", "bad", "idle", "muted"];   // in slot, off it, left it, not known, not scored
 const KM = DATA.earth_km, SPAN = REACH * 1.05;           // SPAN: Earth radii from the centre to the short side's edge at ×1
-const MAX_ZOOM = SPAN * KM / 1000, FOCUS_KM = 4000;      // closest: 1,000 km to the edge; a click flies in to 4,000 km
+const MAX_ZOOM = SPAN * KM / 1000, FOCUS_KM = 4000;      // closest: 1,000 km to the edge; a click on Earth flies in to 4,000 km
+// a clicked orbit: its plane turned TILT degrees off face-on (face-on, the inclination angle would be edge-on and unseen),
+// fitted with ROOM to spare for the labels. FLAT: an orbit tilted less than this lies on the equator and has no node to draw
+const TILT = 40, ROOM = 1.3, FLAT = .5;
 const MOVE_MS = 300, FADE_MS = 1500, BAR_PX = 110;       // a flight's length; the readout stays this long after the last change
 const STILL = matchMedia("(prefers-reduced-motion: reduce)");
 let view = { ...HOME }, dpr = 1, W = 0, H = 0, fit = 1, scale = 1, queued = 0;
@@ -129,14 +133,17 @@ function el(tag, cls, text) {
 }
 
 /* ---------- projection: orthographic, z along the pole ---------- */
-function axes() {
-  const a = view.yaw * Math.PI / 180, b = view.pitch * Math.PI / 180;
+function axes(v = view) {
+  const a = v.yaw * Math.PI / 180, b = v.pitch * Math.PI / 180;
   const ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b);
   const A = { r: [-sa, ca, 0], u: [-sb * ca, -sb * sa, cb], d: [cb * ca, cb * sa, sb] };
-  A.cx = dot3(view.c, A.r); A.cy = dot3(view.c, A.u);
+  A.cx = dot3(v.c, A.r); A.cy = dot3(v.c, A.u);
   return A;
 }
 const dot3 = (p, v) => p[0] * v[0] + p[1] * v[1] + p[2] * v[2];
+const cross = (p, v) => [p[1] * v[2] - p[2] * v[1], p[2] * v[0] - p[0] * v[2], p[0] * v[1] - p[1] * v[0]];
+const unit = p => { const r = Math.hypot(...p) || 1; return p.map(x => x / r); };
+const RAD = Math.PI / 180;
 function project(p, A) {   // screen position, depth toward the viewer, and whether Earth hides it
   const x = dot3(p, A.r), y = dot3(p, A.u), z = dot3(p, A.d);
   return { x: W / 2 + (x - A.cx) * scale, y: H / 2 - (y - A.cy) * scale, z, hidden: z < 0 && x * x + y * y < 1 };
@@ -186,25 +193,27 @@ function draw() {
   const order = lit ? shown.filter(i => !lit.has(i)).concat(shown.filter(i => lit.has(i))) : shown;   // the picked on top
   for (const back of [true, false]) {
     if (!back) earth(A);
-    line(belt, back, C.track, 1, lit ? .4 : .8);
+    line(belt, back, C.track, 1, focus ? .25 : lit ? .4 : .8);
+    if (focus) line(focus.equator.map(p => project(p, A)), back, C.muted, 1, .7);   // the equator's plane, at the orbit's height
     for (const i of order) {
       const on = !!lit && lit.has(i), s = screen[i];
       // not scored: orbits in the quiet fill colour at full strength, so a dozen in one MEO plane stay quiet; lit when picked
       const colour = SATS[i].tracked || on ? C[SATS[i].status] : C.fill, k = (!lit || on ? 1 : DIM) * (faint(i) ? OFF : 1);
       ctx.setLineDash(faint(i) ? [4, 4] : []);
-      if (s.loop) line(s.loop, back, colour, on ? 2.5 : 1.25, lit || !SATS[i].tracked ? k : rest * k);
+      if (s.loop) line(s.loop, back, colour, on ? (focus ? 3 : 2.5) : 1.25, lit || !SATS[i].tracked ? k : rest * k);
       ctx.setLineDash([]);
       ctx.globalAlpha = k * (back ? BACK : 1);
       if (s.slot && (s.slot.z < 0) === back) {
-        ctx.strokeStyle = colour; ctx.lineWidth = on ? 1.75 : 1.25;
-        ctx.beginPath(); ctx.arc(s.slot.x, s.slot.y, on ? 5.5 : 4, 0, 2 * Math.PI); ctx.stroke();
+        ctx.strokeStyle = colour; ctx.lineWidth = on ? (focus ? 2 : 1.75) : 1.25;
+        ctx.beginPath(); ctx.arc(s.slot.x, s.slot.y, on ? (focus ? 7.5 : 5.5) : 4, 0, 2 * Math.PI); ctx.stroke();
       }
       if (s.at && (s.at.z < 0) === back) {
         ctx.fillStyle = C[SATS[i].status];
-        ctx.beginPath(); ctx.arc(s.at.x, s.at.y, on ? 4.5 : 3, 0, 2 * Math.PI); ctx.fill();
+        ctx.beginPath(); ctx.arc(s.at.x, s.at.y, on ? (focus ? 6 : 4.5) : 3, 0, 2 * Math.PI); ctx.fill();
       }
     }
   }
+  if (focus) geometry(A);
   ctx.globalAlpha = 1;
 }
 const paint = () => { if (!queued) queued = requestAnimationFrame(draw); };
@@ -270,38 +279,39 @@ function place(x, y, chip) {   // beside the pointer, or just above a chip; alwa
   tip.style.top = clamp(y, 4, innerHeight - h - 4) + "px";
 }
 const same = (a, b) => a === b || (!!a && !!b && a.size === b.size && [...a].every(i => b.has(i)));
-function light(members) {   // pick out these satellites (or none), and press the chips that hold them
+function light(members, force) {   // pick out these satellites (or none), and press the chips that hold them
+  if (focus && !force) return;      // a clicked orbit stays picked out while the pointer roams
   const next = members && members.length ? new Set(members) : null;
   if (same(next, lit)) return;
   lit = next; paint();
   chips.forEach(c => c.button.classList.toggle("on", !!lit && c.members.some(i => lit.has(i))));
 }
+let carded = null;   // the satellite the card is filled for
 function pick(index, x, y, chip) {   // one satellite, with its card
-  const changed = !same(index == null ? null : new Set([index]), lit);
   light(index == null ? null : [index]);
-  if (index != null && changed) fill(SATS[index]);
+  if (index != null && index !== carded) fill(SATS[index]);
+  carded = index;
   tip.classList.toggle("on", index != null);
   if (index != null) readout.classList.remove("on");   // never both: the card is about the pointer, the readout the view
   if (index != null) place(x, y, chip);
 }
 
 /* ---------- zoom and flights: the view keeps c at the centre; zoom 1 is the whole system, c then Earth's centre ---------- */
-let flight = 0, clickWait = 0, fading = 0, focus = null;   // focus: {name, p} for a satellite, {name, loop} for an orbit
+let flight = 0, clickWait = 0, fading = 0, focus = null;   // focus: the clicked orbit, its plane and the view to go back to
 const wrap = deg => ((deg % 360) + 540) % 360 - 180;
 function settle(v) {   // zoom within its limits; c pulled in toward Earth's centre below ×2 so that ×1 shows everything
-  v.zoom = clamp(v.zoom, 1, MAX_ZOOM);
-  const room = SPAN * Math.min(1, v.zoom - 1), far = Math.hypot(...v.c);
+  v.zoom = clamp(v.zoom, focus ? 1 / ROOM : 1, MAX_ZOOM);   // a clicked outermost orbit may go below ×1, for its labels
+  const room = SPAN * clamp(v.zoom - 1, 0, 1), far = Math.hypot(...v.c);
   if (far > room) v.c = v.c.map(x => x * room / far);
   return v;
 }
 function zoomAt(factor, px = W / 2, py = H / 2) {   // the point under (px, py) stays under it
   cancelAnimationFrame(flight); pick(null);
   const A = axes(), before = fit * view.zoom;
-  view.zoom = clamp(view.zoom * factor, 1, MAX_ZOOM);
+  view.zoom = clamp(view.zoom * factor, focus ? 1 / ROOM : 1, MAX_ZOOM);
   const k = 1 / before - 1 / (fit * view.zoom), dx = (px - W / 2) * k, dy = -(py - H / 2) * k;
   view.c = view.c.map((x, j) => x + A.r[j] * dx + A.u[j] * dy);
   settle(view);
-  if (view.zoom <= 1 + 1e-6) focus = null;   // zoomed right out: nothing is in focus any more
   moved(); paint();
 }
 function fly(to) {   // ease to the new view; at once when the reader asks for less motion
@@ -317,25 +327,95 @@ function fly(to) {   // ease to the new view; at once when the reader asks for l
   };
   flight = requestAnimationFrame(step);
 }
-function home() { clearTimeout(clickWait); focus = null; fly(HOME); }
-function goTo(px, py) {   // a satellite: centre on it; an orbit: fit it; Earth: face that place; empty space: nothing
+function home() { clearTimeout(clickWait); if (focus) unfocus(); fly(HOME); }
+function goTo(px, py) {   // an orbit or a satellite: its plane; else, in focus, go back; Earth: face that place
   const hit = hitAt(px, py), A = axes();
-  if (hit && hit.p) {
-    focus = { name: SATS[hit.i].name + (hit.p === SATS[hit.i].at ? "" : "'s slot"), p: hit.p };
-    return fly({ c: hit.p, zoom: Math.max(view.zoom, SPAN * KM / FOCUS_KM) });
-  }
-  if (hit) {
-    const loop = SATS[hit.i].loop.slice(1), c = [0, 1, 2].map(j => loop.reduce((t, p) => t + p[j], 0) / loop.length);
-    const reach = Math.max(...loop.map(p => Math.max(Math.abs(dot3(p, A.r) - dot3(c, A.r)), Math.abs(dot3(p, A.u) - dot3(c, A.u)))));
-    focus = { name: SATS[hit.i].name + "'s orbit", loop };
-    return fly({ c, zoom: SPAN / (reach * 1.1) });
-  }
+  if (hit && SATS[hit.i].loop) return enter(hit.i);
+  if (focus) return leave();
+  if (hit) return;
   const x = (px - W / 2) / scale + A.cx, y = -(py - H / 2) / scale + A.cy;
   if (x * x + y * y >= 1) return;
   const p = [0, 1, 2].map(j => x * A.r[j] + y * A.u[j] + Math.sqrt(1 - x * x - y * y) * A.d[j]);
-  focus = null;
-  fly({ yaw: Math.atan2(p[1], p[0]) * 180 / Math.PI, pitch: clamp(Math.asin(p[2]) * 180 / Math.PI, -85, 85),
+  fly({ yaw: Math.atan2(p[1], p[0]) / RAD, pitch: clamp(Math.asin(p[2]) / RAD, -85, 85),
         zoom: SPAN * KM / FOCUS_KM, c: [0, 0, 0] });
+}
+
+/* ---------- focus: a clicked orbit turned toward the viewer, the rest dimmed, its geometry drawn ---------- */
+function plane(i) {   // from the drawn loop (which runs the way the satellite moves): normal, node direction, angles
+  const L = SATS[i].loop, n = unit(cross(L[0], L[45])), N = unit([-n[1], n[0], 0]);
+  return { n, N, incl: Math.acos(clamp(n[2], -1, 1)) / RAD, raan: (Math.atan2(N[1], N[0]) / RAD + 360) % 360 };
+}
+function enter(i) {
+  const s = SATS[i], g = plane(i), loop = s.loop.slice(1);
+  // its plane as the registry names it (the plane chips' groups, cross-checked by node in analysis/meo_geometry.py)
+  const members = s.group.startsWith("Plane") ? shown.filter(j => SATS[j].group === s.group && SATS[j].loop) : [i];
+  const name = members.length < 2 ? s.name + "'s orbit" : `${s.group} · ${members.length} satellites`;
+  const side = g.incl < FLAT ? unit([s.at[0], s.at[1], 0]) : g.N;   // look from the node's side (a flat orbit: the satellite's)
+  const d = g.n.map((x, j) => Math.cos(TILT * RAD) * x + Math.sin(TILT * RAD) * side[j]);
+  const c = [0, 1, 2].map(j => loop.reduce((t, p) => t + p[j], 0) / loop.length);
+  const to = { yaw: Math.atan2(d[1], d[0]) / RAD, pitch: clamp(Math.asin(d[2]) / RAD, -85, 85), c }, A = axes(to);
+  const reach = Math.max(...loop.map(p => Math.max(Math.abs(dot3(p, A.r) - A.cx), Math.abs(dot3(p, A.u) - A.cy))));
+  let node = null;   // where it crosses the equator going north
+  for (let k = 1; k < loop.length && g.incl >= FLAT; k++) {
+    const a = loop[k - 1], b = loop[k];
+    if (a[2] < 0 && b[2] >= 0) { const f = -a[2] / (b[2] - a[2]); node = a.map((x, j) => x + f * (b[j] - x)); }
+  }
+  const r = node ? Math.hypot(...node) : Math.hypot(...s.at), heights = loop.map(p => Math.hypot(...p) * KM - KM);
+  focus = { i, name, loop, g, node, heights, before: focus ? focus.before : { ...view },
+            equator: BELT.map(p => p.map(x => x * r / DATA.belt)) };
+  $("note").textContent = name; $("note").classList.add("named");
+  light(members, true); fly({ ...to, zoom: SPAN / (reach * ROOM) });
+}
+function unfocus() { focus = null; $("note").textContent = DATA.notes[mode]; $("note").classList.remove("named"); light(null, true); }
+function leave() { const back = focus.before; unfocus(); fly(back); }
+addEventListener("keydown", e => { if (e.key === "Escape" && focus) leave(); });
+
+const FONT = getComputedStyle(document.body).fontFamily;
+function geometry(A) {   // the node, the inclination, the height and the slot, drawn and said in words
+  const f = focus, s = SATS[f.i], g = f.g, P = p => project(p, A), marks = [];
+  ctx.globalAlpha = 1; ctx.setLineDash([]); ctx.strokeStyle = ctx.fillStyle = C.ink; ctx.lineWidth = 1.5;
+  const path = pts => { ctx.beginPath(); pts.forEach((q, k) => k ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); ctx.stroke(); };
+  const spot = q => { ctx.beginPath(); ctx.arc(q.x, q.y, 3.5, 0, 2 * Math.PI); ctx.fill(); };
+  let anchor = P(s.at);
+  if (f.node) {   // the angle from the equator (heading east) up to the orbit (heading north), at the node
+    const east = [-g.N[1], g.N[0], 0], rho = 56 / scale, arc = [];
+    const at = (t, far) => P(f.node.map((x, j) => x + far * (Math.cos(t) * east[j] + Math.sin(t) * (j === 2 ? 1 : 0))));
+    for (let k = 0; k <= 16; k++) arc.push(at(g.incl * RAD * k / 16, rho));
+    path(arc); path([at(0, 1.4 * rho), P(f.node), at(g.incl * RAD, 1.4 * rho)]); spot(P(f.node)); anchor = at(g.incl * RAD / 2, 1.5 * rho);
+    marks.push([P(f.node), `Ascending node: RAAN ${g.raan.toFixed(1)}°`]);
+  }
+  marks.push([anchor, `Inclination ${g.incl.toFixed(1)}°` + (f.node ? "" : ", on the equator")]);
+  const lo = Math.min(...f.heights), hi = Math.max(...f.heights);
+  if (hi - lo < 50) {   // round: one height, a line from the ground up to the satellite
+    const u = unit(s.at);
+    ctx.setLineDash([3, 4]); path([P(u), P(s.at)]); ctx.setLineDash([]);
+    marks.push([P(s.at), `Height ${km(Math.hypot(...s.at) * KM - KM)}`]);
+  } else for (const [h, words] of [[lo, "Perigee"], [hi, "Apogee"]]) {
+    const q = P(f.loop[f.heights.indexOf(h)]);
+    spot(q); marks.push([q, `${words} ${km(h)}`]);
+  }
+  if (s.slot_at) {
+    const lon = wrap(Math.atan2(s.slot_at[1], s.slot_at[0]) / RAD - DATA.turn);
+    marks.push([P(s.slot_at), `Slot ${deg(lon, "E", "W")}: ${s.slot}`]);
+  }
+  labels(marks, W / 2 - A.cx * scale, H / 2 + A.cy * scale);
+}
+function labels(marks, ex, ey) {   // just outside each point as seen from Earth, so off its orbit; pushed on past any put already
+  ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+  const put = [], h = 17, zoom = document.querySelector(".zoom"), top = document.querySelector(".top");
+  const below = top.offsetTop + top.offsetHeight + h / 2, zx = zoom.offsetLeft - 8, zy = zoom.offsetTop - h / 2;   // clear of the controls
+  ctx.font = "12px " + FONT;
+  for (const [p, text] of marks) {
+    const w = ctx.measureText(text).width, r = Math.hypot(p.x - ex, p.y - ey) || 1, ux = (p.x - ex) / r, uy = (p.y - ey) / r;
+    let x = p.x + 12 * ux, y = p.y + 18 * uy;
+    x = clamp(ux > .35 ? x : ux < -.35 ? x - w : x - w / 2, 4, W - w - 4);
+    for (let k = 0; k < 20 && put.some(b => Math.abs(b.y - y) < h && x < b.x + b.w + 6 && b.x < x + w + 6); k++) y += uy < 0 ? -h : h;
+    y = clamp(y, below, H - h);
+    if (y > zy && x + w > zx) x = Math.max(4, zx - w);
+    put.push({ x, y, w });
+    ctx.lineWidth = 4; ctx.strokeStyle = C.platform; ctx.strokeText(text, x, y);   // a cut-out of the background, so lines never cross the words
+    ctx.fillStyle = C.ink; ctx.fillText(text, x, y);
+  }
 }
 
 /* ---------- the readout: zoom, a scale bar, what is in focus and which way the view faces ---------- */
@@ -347,11 +427,8 @@ function moved() {
   $("zl").textContent = "×" + (view.zoom < 10 ? view.zoom.toFixed(1) : Math.round(view.zoom));
   $("bar").style.width = Math.round(bar / perPx) + "px"; $("barkm").textContent = km(bar);
   let words = "";
-  if (focus && focus.p) {
-    const r = Math.hypot(...focus.p) * KM;
-    words = `${focus.name}: ${km(r - KM)} above Earth, ${km(r)} from its centre`;
-  } else if (focus) {
-    const heights = focus.loop.map(p => Math.hypot(...p) * KM - KM), lo = Math.min(...heights), hi = Math.max(...heights);
+  if (focus) {
+    const lo = Math.min(...focus.heights), hi = Math.max(...focus.heights);
     words = `${focus.name}: ${hi - lo < 50 ? km(lo) : km(lo) + " to " + km(hi)} above Earth`;
   }
   $("focus").textContent = words;
@@ -433,7 +510,8 @@ function addChips(entries) {
     }
     button.append(el("span", null, label));
     const on = () => one != null ? pick(one, 0, 0, button) : (tip.classList.remove("on"), light(members));
-    const off = () => { if (same(lit, new Set(members))) pick(null); };
+    const off = () => { if (same(lit, new Set(members)) || (one != null && carded === one)) pick(null); };
+    button.addEventListener("click", () => { const i = members.find(j => SATS[j].loop); if (i != null) enter(i); });
     button.addEventListener("pointerenter", on); button.addEventListener("focus", on);
     button.addEventListener("pointerleave", off); button.addEventListener("blur", off);
     $("sats").append(button);
@@ -467,6 +545,7 @@ function buildKey() {
 /* ---------- in service, or all of the generation: switched here, no round trip ---------- */
 function choose(next) {
   mode = next;
+  if (focus) leave();
   shown = SATS.map((_, i) => i).filter(i => mode === "all" || SATS[i].service);
   $("mode").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
   $("note").textContent = DATA.notes[mode];
