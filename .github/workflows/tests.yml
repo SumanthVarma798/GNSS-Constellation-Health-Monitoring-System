@@ -2,6 +2,9 @@ name: Tests
 
 on:
   pull_request:
+  # The weekly registry job starts this on its own branch: GitHub does not start jobs from a pull request its
+  # built-in token opened, but does from this. The admin page merges only once these tests pass (issue 17).
+  workflow_dispatch:
   push:
     branches: [main]
 

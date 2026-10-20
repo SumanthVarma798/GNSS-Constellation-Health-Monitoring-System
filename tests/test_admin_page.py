@@ -8,7 +8,8 @@ import streamlit
 from streamlit.testing.v1 import AppTest
 
 from evidence import decisions
-from evidence.decision_settings import KINDS, LABEL_PREFIX
+from evidence.decision_settings import AFTER_CHANGES, APPROVE, KINDS, LABEL_PREFIX
+from test_dashboard_shell import segmented_controls_rerun  # noqa: F401  (AppTest 1.45's segmented controls)
 from test_decisions import NOW, pr
 from ui import admin
 
@@ -28,10 +29,13 @@ def signed_in(monkeypatch, email):
     monkeypatch.setattr(streamlit, "user", SimpleNamespace(is_logged_in=bool(email), get=user.get))
 
 
-def run(secrets=SECRETS):
+def run(secrets=SECRETS, then=None):
     at = AppTest.from_file(str(ROOT / "views/admin.py"), default_timeout=60)
     at.secrets = secrets
     at.run()
+    if then:
+        then(at)
+        at.run()
     assert not at.exception, [e.value for e in at.exception]
     return at
 
@@ -139,3 +143,59 @@ def test_the_weekly_registry_job_labels_its_pull_request_with_a_kind_the_page_kn
     workflow = (ROOT / ".github/workflows/registry-update.yml").read_text()
 
     assert f'--label "{LABEL_PREFIX}registry update"' in workflow and "registry update" in KINDS
+
+
+def one_waiting(monkeypatch, decided):
+    signed_in(monkeypatch, "member@example.com")
+    monkeypatch.setattr(decisions, "fetch_open", lambda token: [pr(5, ["decision: registry update"])])
+    monkeypatch.setattr(decisions, "decide", lambda *args: decided.append(args) or ("ok", "Approved and merged."))
+
+
+def test_the_reason_box_appears_only_once_a_choice_is_made(monkeypatch):
+    one_waiting(monkeypatch, [])
+
+    assert not run().text_area
+    at = run(then=lambda at: at.session_state.__setitem__("choice_5", AFTER_CHANGES))
+    assert [t.label for t in at.text_area] == ["Reason (every decision needs one)", "Changes asked for"]
+    assert "and leaves it open until the changes are made" in page_text(at)
+
+
+def test_recording_a_decision_passes_who_decided_and_says_what_happened(monkeypatch):
+    decided = []
+    one_waiting(monkeypatch, decided)
+
+    def decide(at):
+        at.session_state["choice_5"] = APPROVE
+        at.run()
+        at.text_area(key="reason_5").set_value("Checked against the IGS file")
+        at.button(key="record_5").click()
+
+    at = run(then=decide)
+
+    token, item, choice, reason, changes, who, email, accounts, _ = decided[0]
+    assert (token, item["number"], choice, reason, who, email) == (
+        "t0ken", 5, APPROVE, "Checked against the IGS file", "A Member", "member@example.com")
+    assert "Approved and merged." in page_text(at)
+
+
+def test_a_decision_that_cannot_go_through_is_said_beside_its_item(monkeypatch):
+    one_waiting(monkeypatch, [])
+    monkeypatch.setattr(decisions, "decide", lambda *args: ("warn", "Write the reason first: every decision needs one."))
+
+    def decide(at):
+        at.session_state["choice_5"] = APPROVE
+        at.run()
+        at.button(key="record_5").click()
+
+    at = run(then=decide)
+
+    beside = [h.proto.body for h in at.get("html") if "Write the reason first" in h.proto.body]
+    assert beside and at.session_state["choice_5"] == APPROVE   # the choice is kept, to try again
+
+
+def test_the_weekly_registry_job_starts_the_tests_on_its_pull_request():
+    registry = (ROOT / ".github/workflows/registry-update.yml").read_text()
+    tests = (ROOT / ".github/workflows/tests.yml").read_text()
+
+    assert "gh workflow run tests.yml --ref registry-update" in registry and "actions: write" in registry
+    assert "workflow_dispatch:" in tests

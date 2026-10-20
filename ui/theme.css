@@ -88,13 +88,14 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 [data-testid="stAlert"] [data-baseweb="notification"]:has([data-testid="stAlertContentSuccess"]) { border-left: 4px solid var(--ok); }
 
 /* ---- text inputs and select boxes: pressed into the page, visible edge, ring on focus ---- */
-[data-testid="stTextInput"] label, [data-testid="stSelectbox"] label, [data-testid="stWidgetLabel"] { color: var(--muted); }
+[data-testid="stTextInput"] label, [data-testid="stTextArea"] label, [data-testid="stSelectbox"] label, [data-testid="stWidgetLabel"] { color: var(--muted); }
 [data-testid="stTextInput"] [data-baseweb="input"], [data-testid="stTextInput"] [data-baseweb="base-input"],
+[data-testid="stTextArea"] [data-baseweb="textarea"],
 [data-testid="stSelectbox"] [data-baseweb="select"] > div {
   background: var(--well); border: 1px solid var(--edge); border-radius: 14px; box-shadow: var(--pressed); color: var(--ink);
 }
-[data-testid="stTextInput"] input, [data-testid="stSelectbox"] input, [data-testid="stSelectbox"] [data-baseweb="select"] div { color: var(--ink); background: transparent; }
-[data-testid="stTextInput"] [data-baseweb="input"]:focus-within, [data-testid="stSelectbox"] [data-baseweb="select"] > div:focus-within {
+[data-testid="stTextInput"] input, [data-testid="stTextArea"] textarea, [data-testid="stSelectbox"] input, [data-testid="stSelectbox"] [data-baseweb="select"] div { color: var(--ink); background: transparent; }
+[data-testid="stTextInput"] [data-baseweb="input"]:focus-within, [data-testid="stTextArea"] [data-baseweb="textarea"]:focus-within, [data-testid="stSelectbox"] [data-baseweb="select"] > div:focus-within {
   outline: 2px solid var(--accent); outline-offset: 2px; border-color: var(--accent);
 }
 [data-baseweb="popover"] ul, [data-baseweb="menu"] { background: var(--platform); color: var(--ink); border-radius: 14px; }
