@@ -103,8 +103,12 @@ def orbit_view_html(rows, history, health_df, fleet=(), live=None):
     return page.replace("const DATA = __DATA__;", f"const DATA = {embed(payload)};", 1)
 
 
-def orbit_view(rows, history, health_df, constellation, height=600):
-    """Show the view. rows from slot_rows, history and health_df from the constellation's result."""
+def orbit_view(rows, history, health_df, constellation, height=680):
+    """Show the view. rows from slot_rows, history and health_df from the constellation's result.
+
+    680 px: on a 900 px laptop screen (about 780 px of window under the browser's bars) the whole view, its chips
+    and key fit on screen at once, with the Flat | 3D switch above it. Phones cap it at 72% of the screen (ui/theme.css).
+    """
     from streamlit.components.v1 import html
 
     fleet = fleet_rows(GENERATION[constellation], load_master_map_data())

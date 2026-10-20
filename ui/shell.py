@@ -230,10 +230,25 @@ def top_bar(current):
 
 
 def _page_tabs(current):
-    """The pages sit under the bar, as tabs: there is room for more of them there."""
+    """The pages under the bar, in two groups: those that look at one constellation at a time, and those that look
+    across every system (OWN_FILTERS). One page is chosen across both groups."""
     with st.container(key="pagetabs"):
         if st.session_state.get("shown_page") != current.title:   # arrived by address or switch: tabs follow the page
             st.session_state["page"] = current.title
         st.session_state["shown_page"] = current.title
-        if segment("page", [title for title, _ in PAGES], label="Page") != current.title:
+        page = st.session_state["page"]
+        for key, label, titles in (("page_one", "Page", [t for t, _ in PAGES if t not in OWN_FILTERS]),
+                                   ("page_all", "Across all systems", [t for t, _ in PAGES if t in OWN_FILTERS])):
+            st.session_state[key] = page if page in titles else None
+            with st.container(key=f"{key}_group"):
+                if key == "page_all":
+                    st.html(f'<span class="tabs-label">{label}</span>')
+                st.segmented_control(label, titles, key=key, label_visibility="collapsed", on_change=_pick_page, args=(key,))
+        if st.session_state["page"] != current.title:
             st.switch_page(next(p for p in pages() if p.title == st.session_state["page"]))
+
+
+def _pick_page(key):
+    """A tab in either group chooses the page; clicking the chosen tab again keeps it chosen."""
+    if st.session_state[key] is not None:
+        st.session_state["page"] = st.session_state[key]

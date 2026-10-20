@@ -108,7 +108,8 @@ def _land_points(turn_deg):
 def orbit_scene(rows, elements):
     """Plain numbers for the page, in Earth radii, space-fixed, z along the pole.
 
-    {"land": [[x, y, z], ...], "belt": radius of the slots' ring, "satellites": one entry per row, in row
+    {"land": [[x, y, z], ...], "belt": radius of the slots' ring, "turn": degrees Earth is turned by (an Earth-fixed
+    longitude L lies at angle L + turn), "earth_km": Earth's radius in km, "satellites": one entry per row, in row
     order, with its "state", its orbit "loop" and position "at" (None without elements), and its slot "slot_at" on
     the equator (None without one)}. rows come from slot_rows; elements from latest_elements.
     """
@@ -124,4 +125,5 @@ def orbit_scene(rows, elements):
         satellites.append({"state": row["state"], "slot_at": slot,
                            "loop": None if el is None else np.round(orbit_points(el).T, 3).tolist(),
                            "at": None if el is None else np.round(position_at(el, when), 3).tolist()})
-    return {"land": _land_points(turn), "belt": BELT_RADIUS, "satellites": satellites}
+    return {"land": _land_points(turn), "belt": BELT_RADIUS, "turn": round(turn, 3), "earth_km": EARTH_KM,
+            "satellites": satellites}

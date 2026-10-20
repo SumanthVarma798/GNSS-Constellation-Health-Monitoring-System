@@ -141,7 +141,7 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
   .tt { anchor-scope: --tt; }
   .tt-trigger { anchor-name: --tt; }
   .tt-card { position-anchor: --tt; inset: auto; margin: 8px 16px; position-area: bottom span-all; justify-self: anchor-center;
-    position-try-fallbacks: flip-block; }
+    position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline; }
 }
 /* Streamlit's own help tips on its buttons and inputs (help=) cannot be our part: they take the same card */
 [data-baseweb="tooltip"] { background: transparent; box-shadow: none; border: 0; }
@@ -295,7 +295,8 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 [data-testid="stHtml"]:has(> .tiles.cmp) { overflow-x: auto; }
 .tiles.cmp, .mrow { --label: 120px; grid-template-columns: var(--label) repeat(var(--n), minmax(0, 1fr)); min-width: calc(var(--label) + var(--n) * 156px); }
 @media (max-width: 639.98px) { .tiles.cmp, .mrow { --label: 88px; } }
-.mrow .ml { position: sticky; left: 0; z-index: 1; background: var(--platform); align-self: stretch; display: flex; align-items: center; }
+.mrow .ml, .tiles.cmp > :first-child { position: sticky; left: 0; z-index: 1; background: var(--platform); align-self: stretch; }
+.mrow .ml { display: flex; align-items: center; }   /* the tiles' empty gutter is held too, so tiles stay over their scores */
 .tiles.cmp { margin-bottom: 8px; align-items: start; }
 .mrow { display: grid; gap: 16px; align-items: center; padding: 11px 0; font-size: 14px; }
 .mrow + .mrow { border-top: 1px solid var(--edge); }
@@ -439,3 +440,11 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: 12px; }
 .change::details-content { block-size: 0; overflow: hidden; transition: block-size 200ms ease, content-visibility 200ms allow-discrete; }
 .change[open]::details-content { block-size: auto; }
 @media (prefers-reduced-motion: reduce) { .change::details-content { transition: none; } }
+
+/* the page tabs: one constellation's pages, then the pages across every system, set apart by a label */
+.st-key-pagetabs { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
+.st-key-pagetabs > div { width: auto !important; flex: 0 1 auto; min-width: 0; max-width: 100%; }
+.st-key-page_all_group { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px; padding-left: 22px; border-left: 1px solid var(--edge); }
+.st-key-page_all_group > div { width: auto !important; }
+.tabs-label { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+@media (max-width: 639.98px) { .st-key-page_all_group { padding-left: 0; border-left: 0; } .tabs-label { white-space: normal; } }
