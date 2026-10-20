@@ -12,7 +12,7 @@ import pandas as pd
 import streamlit as st
 
 from config.config import MEO_SATS, TRACKED_NOT_IN_REGISTRY
-from ui import data, limits, measures, meo_overview, orbit_section, palette, reveal, shell, surfaces, tooltip
+from ui import data, limits, measures, meo_overview, orbit_section, palette, reveal, shell, surfaces, time_range, tooltip
 from ui.data import SATELLITES
 from ui.figures.constellation_3d import slot_legend
 from ui.figures.slot_rows import as_number, slot_words
@@ -94,7 +94,7 @@ def _period(result, window, window_days, today):
         [("var(--fill)", f"{label} {weight}%") for label, weight in limits.SCORE_WEIGHTS]
         + [(f"var(--{STATUS_CHIP[word]})", f"{word} from {low}" if low else f"{word} under {limits.STATUS_FROM[i - 1][1]}")
            for i, (word, low) in enumerate(limits.STATUS_FROM)], label="How the score is made")
-    surfaces.show(f'<div class="facts">{chips}<span>{shell.WINDOWS[window_days]}: {_day(start)} to {_day(today)}</span>'
+    surfaces.show(f'<div class="facts">{chips}<span>{time_range.words(window_days)}: {_day(start)} to {_day(today)}</span>'
                   f'<span>{len(shown):,} orbit records</span>{year}{legend}</div>')
 
 

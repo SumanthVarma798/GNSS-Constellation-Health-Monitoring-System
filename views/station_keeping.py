@@ -9,7 +9,7 @@ from html import escape
 import pandas as pd
 import streamlit as st
 
-from ui import data, measures, reveal, shell, surfaces, tooltip
+from ui import data, measures, reveal, shell, surfaces, time_range, tooltip
 from ui.figures.burns import EAST_WEST, burn_cadence, burn_timeline, rhythm
 
 PATTERN_STATUS = {"regular": "ok", "irregular": "warn", "too few": "idle"}
@@ -134,7 +134,7 @@ start, end = min(e.min() for e in epochs), max(e.max() for e in epochs)
 window_days = st.session_state["window_days"]
 counts, recent = _counts(results, chosen, window_days, pd.Timestamp(datetime.now(timezone.utc).date()))
 
-surfaces.show(surfaces.group_head(shell.WINDOWS[window_days],
+surfaces.show(surfaces.group_head(time_range.words(window_days),
                                   f"{len(recent)} burns: {(recent['kind'] == EAST_WEST).sum()} east-west, "
                                   f"{(recent['kind'] != EAST_WEST).sum()} north-south",
                                   _detection(measures.thresholds(None, st.session_state["params"]))))

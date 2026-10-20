@@ -162,38 +162,46 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .stApp:has(.st-key-topbar) :is([data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"], [data-testid="collapsedControl"], [data-testid="stHeader"]) { display: none; }
 .stApp:has(.st-key-topbar) [data-testid="stMainBlockContainer"] { padding-top: 22px; }
 .st-key-topbar { background: var(--platform); border: 1px solid var(--edge); border-radius: 18px; box-shadow: var(--raised); padding: 10px 16px; margin-bottom: 22px; }
-/* The bar's five groups (brand, constellations, Compare, window, data) each as wide as they need. Three arrangements:
-   from 1400px one row; from 640px two rows, brand and data above, the filters below; under 640px brand and buttons,
-   then the data chip, then the constellations (scrolling sideways), then Compare and the window. */
-.st-key-topbar [data-testid="stHorizontalBlock"] { flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+/* The bar's three groups: the product name, the filters (constellations, Compare, time range) and the data's state
+   (clock, next update, data chip, refresh, gear). Three arrangements: from 1400px one row, the filters set apart by a
+   rule; from 640px the name and the data's state above, the filters as their own strip under them; under 640px the name
+   with refresh and the gear, then the clock and the data chip, then the filters with the constellations as a menu. */
+.st-key-topbar [data-testid="stHorizontalBlock"] { flex-wrap: wrap; gap: 10px 16px; align-items: center; }
 .st-key-topbar [data-testid="stColumn"] { flex: 0 1 auto !important; width: auto !important; min-width: 0; }
-.st-key-topbar [data-testid="stColumn"]:nth-child(3), .st-key-topbar [data-testid="stColumn"]:nth-child(4) { flex: none !important; }
-/* the constellations give way first: they narrow and scroll rather than push the bar onto another row */
+/* the filters give way first: the constellations narrow and scroll rather than push the bar onto another row */
 .st-key-topbar [data-testid="stColumn"]:nth-child(2) { flex: 1 1 0 !important; max-width: max-content; }
 .st-key-topbar [data-testid="stColumn"]:last-child { margin-left: auto; }
+.st-key-topbar [data-testid="stColumn"]:nth-child(2):not(:has(.st-key-filters)) { display: none; }   /* Master map, Library */
+.st-key-filters { flex-direction: row; align-items: center; gap: 10px; flex-wrap: nowrap; padding-left: 16px; border-left: 1px solid var(--edge); }
+.st-key-filters > div { width: auto !important; flex: none; min-width: 0; }
+.st-key-filters > div:first-child { flex: 0 1 auto; }
+.st-key-filters > div:has(.st-key-scope_menu) { display: none; }   /* the phone's menu */
 @media (max-width: 1399.98px) {
   .st-key-topbar [data-testid="stColumn"]:first-child { order: 1; }
   .st-key-topbar [data-testid="stColumn"]:last-child { order: 2; }
-  .st-key-topbar [data-testid="stHorizontalBlock"]:has(.st-key-window_days)::after { content: ""; order: 3; flex-basis: 100%; margin-top: -8px; }
-  .st-key-topbar [data-testid="stColumn"]:nth-child(2) { order: 4; }
-  .st-key-topbar [data-testid="stColumn"]:nth-child(3) { order: 5; }
-  .st-key-topbar [data-testid="stColumn"]:nth-child(4) { order: 6; margin-left: auto; }
+  .st-key-topbar [data-testid="stColumn"]:nth-child(2) { order: 3; flex-basis: 100% !important; max-width: none; }
+  .st-key-filters { padding: 10px 0 0; border-left: 0; border-top: 1px solid var(--edge); }
+  .st-key-filters > div:has(.st-key-range) { margin-left: auto; }
 }
-@media (max-width: 639.98px) {   /* the data group opens up so its buttons can sit by the brand and its chip below */
+@media (max-width: 639.98px) {   /* the data group opens up so its buttons can sit by the name and the rest below */
   .st-key-topbar :is([data-testid="stColumn"], [data-testid="stVerticalBlockBorderWrapper"], [data-testid="stVerticalBlock"]):has(.st-key-refresh),
   .st-key-refresh { display: contents; }
-  .st-key-topbar [data-testid="stHorizontalBlock"]::after { content: none; }
   .st-key-topbar [data-testid="stColumn"]:first-child { flex: 1 1 auto !important; }
   .st-key-refresh_button { order: 2; }
   .st-key-refresh [data-testid="stPopover"] { order: 3; }
-  .st-key-refresh > div:first-child { order: 4; flex-basis: 100%; }
-  .st-key-refresh [data-testid="stHtml"] { justify-content: flex-start; }
-  .st-key-refresh .next { margin-left: 6px; }
-  .st-key-topbar [data-testid="stColumn"]:nth-child(2) { order: 5; flex-basis: 100% !important; }
-  .st-key-topbar [data-testid="stColumn"]:nth-child(3) { order: 6; }
-  .st-key-topbar [data-testid="stColumn"]:nth-child(4) { order: 7; }
+  .st-key-refresh > div:first-child { order: 4; }
+  .st-key-refresh > div:nth-child(2) { order: 5; }
+  .st-key-topbar [data-testid="stColumn"]:nth-child(2) { order: 6; }
+  .st-key-topbar [data-testid="stHorizontalBlock"] { column-gap: 10px; }   /* the clock and the data chip share a row */
+  .st-key-topbar .st-key-clock [data-testid="stHtml"] { align-items: flex-start; }
+  .st-key-filters { flex-wrap: wrap; gap: 8px; }
+  .st-key-range button span:has(> [data-testid="stIconMaterial"]) { display: none; }   /* room for the menu, Compare and the range in one row */
+  .st-key-filters > div:first-child { display: none; }               /* the chips give way to... */
+  .st-key-filters > div:has(.st-key-scope_menu) { display: block; }  /* ...the menu */
+  .st-key-filters > div:has(.st-key-range) { margin-left: 0; }
 }
-.brand { font-size: 16px; letter-spacing: .01em; white-space: nowrap; }
+.brand { display: block; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: -.01em; color: var(--ink); white-space: nowrap; }
+@media (max-width: 639.98px) { .brand { font-size: 18px; } }
 .right { display: flex; justify-content: flex-end; }
 
 /* segmented controls: a pressed track, the chosen item raised in the accent colour */
@@ -205,14 +213,16 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 [data-testid="stButtonGroup"] button[data-testid^="stBaseButton-segmented"] :is([data-testid="stMarkdownContainer"], p) { color: inherit; }
 [data-testid="stButtonGroup"] button[data-testid="stBaseButton-segmented_controlActive"] { background: var(--platform); color: var(--accent); border-color: var(--edge); box-shadow: var(--raised-sm); }
 
-/* the gear and its panel */
-[data-testid="stPopover"] > div > button, [data-testid="stPopover"] button {
-  width: 36px; height: 36px; min-height: 0; padding: 0; border-radius: 50%; background: var(--platform); color: var(--muted); border: 1px solid var(--edge); box-shadow: var(--raised-sm);
+/* the bar's buttons that open a panel: the gear (round), the time range and the phone's constellation menu (pills) */
+[data-testid="stPopover"] button {
+  min-height: 0; padding: 5px 12px 5px 16px; gap: 6px; border-radius: 999px; background: var(--platform); color: var(--muted);
+  border: 1px solid var(--edge); box-shadow: var(--raised-sm); font-size: 13px; font-weight: 600; white-space: nowrap;
 }
-[data-testid="stPopover"] button:hover { color: var(--accent); }
+[data-testid="stPopover"] button:hover { color: var(--accent); border-color: var(--accent); }
 [data-testid="stPopover"] button[aria-expanded="true"] { box-shadow: var(--pressed); background: var(--well); color: var(--accent); }
-[data-testid="stPopover"] button svg, [data-testid="stPopover"] button span { color: inherit; }
-[data-testid="stPopover"] button > :not(:first-child) { display: none; }   /* only the gear: no words, no arrow (its margins pushed the gear sideways) */
+[data-testid="stPopover"] button :is(svg, span, p, [data-testid="stMarkdownContainer"]) { color: inherit; }
+.st-key-refresh [data-testid="stPopover"] button { width: 36px; height: 36px; padding: 0; border-radius: 50%; }
+.st-key-refresh [data-testid="stPopover"] button > :not(:first-child) { display: none; }   /* only the gear: no words, no arrow (its margins pushed the gear sideways) */
 [data-testid="stPopoverBody"] { background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); color: var(--ink); }
 [data-testid="stNumberInput"] [data-baseweb="input"] { background: var(--well); border: 1px solid var(--edge); border-radius: 14px; box-shadow: var(--pressed); }
 [data-testid="stNumberInput"] [data-baseweb="base-input"] { background: transparent; border: 0; box-shadow: none; }
@@ -239,9 +249,11 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .st-key-refresh { flex-direction: row; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: nowrap; }
 .st-key-refresh > div { width: auto !important; flex: 0 1 auto; min-width: 0; }
 .st-key-refresh .chip + .chip { margin-left: 6px; }
-.st-key-refresh > div:first-child { flex: 0 1 auto; min-width: 0; }   /* when room runs out, "next update" drops under the chip; the bar keeps one row */
 .st-key-refresh [data-testid="stHtml"] { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; row-gap: 2px; }
-.st-key-refresh .next { margin-left: 10px; font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+/* the UTC clock over the wait to the next automatic refresh */
+.st-key-clock [data-testid="stHtml"] { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.25; }
+.st-key-clock .clock { font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; }
+.st-key-clock .next { font-size: 12px; color: var(--muted); white-space: nowrap; }
 .st-key-refresh_button { margin-inline: 5px; }   /* room for the ring, so the gaps either side are even */
 .st-key-refresh_button button {
   position: relative; width: 36px; height: 36px; min-height: 0; padding: 0; border-radius: 50%; color: var(--muted); overflow: visible;
@@ -394,7 +406,8 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: 12px; }
   [data-testid="stMain"] :is([data-testid="stButton"], [data-testid="stDownloadButton"]) button,
   .st-key-compare_toggle button, .st-key-picker [data-testid="stButton"] button,
   .st-key-changes [data-testid="stColumn"]:last-child button { min-height: 40px; }
-  [data-testid="stPopover"] button, .st-key-refresh_button button { width: 40px; height: 40px; }
+  [data-testid="stPopover"] button { min-height: 40px; }
+  .st-key-refresh [data-testid="stPopover"] button, .st-key-refresh_button button { width: 40px; height: 40px; }
   [data-testid="stNumberInput"] [data-baseweb="input"] { min-height: 40px; }
   [data-testid="stNumberInput"] button { min-width: 40px; min-height: 40px; }
   .tt-trigger.pill { padding-block: 10px; }
@@ -441,10 +454,38 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: 12px; }
 .change[open]::details-content { block-size: auto; }
 @media (prefers-reduced-motion: reduce) { .change::details-content { transition: none; } }
 
-/* the page tabs: one constellation's pages, then the pages across every system, set apart by a label */
+/* the page tabs: one constellation's pages, then the pages across every system, set apart by a rule */
 .st-key-pagetabs { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
 .st-key-pagetabs > div { width: auto !important; flex: 0 1 auto; min-width: 0; max-width: 100%; }
 .st-key-page_all_group { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px; padding-left: 22px; border-left: 1px solid var(--edge); }
 .st-key-page_all_group > div { width: auto !important; }
-.tabs-label { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
-@media (max-width: 639.98px) { .st-key-page_all_group { padding-left: 0; border-left: 0; } .tabs-label { white-space: normal; } }
+@media (max-width: 639.98px) { .st-key-page_all_group { padding: 10px 0 0; border-left: 0; border-top: 1px solid var(--edge); } }   /* still set apart when it wraps under */
+
+/* the time range's panel: the presets in a pressed track, the chosen one raised in the accent colour; a greyed preset
+   is longer than the orbit records held. Then a date of the reader's own to now, and what bounds the range. */
+.range-title { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.st-key-range_presets { flex-direction: row; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); width: max-content; max-width: 100%; }
+.st-key-range_presets > div { width: auto !important; }
+.st-key-range_presets button { padding: 4px 13px; min-height: 0; font-size: 13px; background: transparent; color: var(--muted); border-color: transparent; box-shadow: none; }
+.st-key-range_presets button:hover { color: var(--accent); border-color: transparent; }
+.st-key-range_presets button[data-testid="stBaseButton-secondary"]:focus:not(:focus-visible) { box-shadow: none; }   /* the panel focuses its first preset on opening */
+.st-key-range_presets button[data-testid="stBaseButton-primary"] { background: var(--platform); color: var(--accent); border-color: var(--edge); box-shadow: var(--raised-sm); }
+.st-key-range_presets button:disabled { opacity: .4; cursor: not-allowed; }
+.st-key-range_presets button :is(p, span) { color: inherit; }
+.st-key-range_custom { flex-direction: row; align-items: flex-end; gap: 10px; margin-top: 12px; }
+.st-key-range_custom > div { width: auto !important; }
+.range-to { display: block; padding-bottom: 10px; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.range-note { margin: 10px 0 0; max-width: 34ch; font-size: 12.5px; line-height: 1.45; color: var(--muted); }
+[data-testid="stDateInput"] [data-baseweb="input"] { background: var(--well); border: 1px solid var(--edge); border-radius: 14px; box-shadow: var(--pressed); }
+[data-testid="stDateInput"] [data-baseweb="base-input"] { background: transparent; border: 0; }
+[data-testid="stDateInput"] input { color: var(--ink); background: transparent; }
+[data-testid="stDateInput"] [data-baseweb="input"]:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; border-color: var(--accent); }
+/* the calendar it opens: the platform, the chosen day raised in the accent colour, days out of range faint */
+[data-baseweb="calendar"], [data-baseweb="calendar"] > div, [data-baseweb="calendar"] [role="grid"] { background: var(--platform) !important; color: var(--ink); }
+[data-baseweb="calendar"] { border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); overflow: hidden; }
+[data-baseweb="calendar"] button, [data-baseweb="calendar"] [role="gridcell"] div { color: var(--ink); }
+[data-baseweb="calendar"] [role="gridcell"][aria-disabled="true"] div { color: var(--track); }
+/* the phone's constellation menu: the chips as a list */
+[data-testid="stPopoverBody"]:has(:is([class*="st-key-_scope_menu"], [class*="st-key-_compare_constellations_menu"])) { min-width: 0; width: 220px; }
+[data-testid="stPopoverBody"] :is([class*="st-key-_scope_menu"], [class*="st-key-_compare_constellations_menu"]) [data-baseweb="button-group"] { display: flex; width: 100%; max-width: none; flex-direction: column; align-items: stretch; border-radius: 18px; }
+[data-testid="stPopoverBody"] :is([class*="st-key-_scope_menu"], [class*="st-key-_compare_constellations_menu"]) button { justify-content: flex-start; min-height: 40px; }
