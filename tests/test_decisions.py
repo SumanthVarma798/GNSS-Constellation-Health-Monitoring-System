@@ -64,7 +64,7 @@ def test_groups_come_in_the_settings_order_with_other_kinds_last_and_empty_group
 
 @pytest.mark.parametrize("days, words, status", [
     (0, "opened today", "ok"), (1, "waiting 1 day", "ok"), (14, "waiting 14 days", "ok"),
-    (15, "waiting 15 days, past a fortnightly call", "warn")])
+    (15, "waiting 15 days, over 14 days", "warn")])
 def test_waiting_is_said_in_words_and_turns_to_a_warning_after_a_fortnight(days, words, status):
     assert decisions.waited(days) == (words, status)
 

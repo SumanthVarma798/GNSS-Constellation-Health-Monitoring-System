@@ -24,7 +24,7 @@ KINDS = {
 GROUPS = ["Sources", "Satellites", "Rules"]   # issue 17's three groups, in the order the page shows them
 OTHER_GROUP = "Other kinds"
 
-# An item waiting longer than this has been past at least one fortnightly call.
+# An item waiting longer than this is shown as a warning.
 WAIT_WARN_DAYS = 14
 
 # GitHub accounts that are the system, not a person, in the words the page uses.

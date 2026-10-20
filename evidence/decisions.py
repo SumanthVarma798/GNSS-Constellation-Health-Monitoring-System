@@ -8,21 +8,10 @@ from datetime import datetime
 import requests
 
 from evidence.decision_settings import (AFTER_CHANGES, APPROVE, DECISION_MARKER, GROUPS, KINDS, LABEL_PREFIX,
-                                        MERGE_METHOD, OTHER_GROUP, RAISED_BY, REJECT, REPOSITORY, REQUIRED_CHECK,
-                                        WAIT_WARN_DAYS)
+                                        MERGE_METHOD, OTHER_GROUP, RAISED_BY, REJECT, REQUIRED_CHECK, WAIT_WARN_DAYS)
+from evidence.github_api import ask as _ask
 
-API = "https://api.github.com"
 PAGE_SIZE = 100   # GitHub's largest page
-TIMEOUT_SECONDS = 20
-
-
-def _ask(method, path, token, **request):
-    """One call to GitHub's API for this repository; its JSON answer. Raises requests' errors when GitHub refuses."""
-    answer = requests.request(method, f"{API}/repos/{REPOSITORY}{path}", timeout=TIMEOUT_SECONDS,
-                              headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"},
-                              **request)
-    answer.raise_for_status()
-    return answer.json() if answer.content else None
 
 
 def fetch_open(token):
@@ -68,9 +57,9 @@ def grouped(items):
 
 
 def waited(days):
-    """('waiting 3 days', 'ok'); a warning once an item has waited past a fortnightly call."""
+    """('waiting 3 days', 'ok'); a warning once an item has waited longer than WAIT_WARN_DAYS."""
     words = "opened today" if days < 1 else f"waiting {days} day{'' if days == 1 else 's'}"
-    return (f"{words}, past a fortnightly call", "warn") if days > WAIT_WARN_DAYS else (words, "ok")
+    return (f"{words}, over {WAIT_WARN_DAYS} days", "warn") if days > WAIT_WARN_DAYS else (words, "ok")
 
 
 def access(logged_in, email, allowed):
