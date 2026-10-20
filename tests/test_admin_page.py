@@ -230,3 +230,14 @@ def test_google_sign_in_keeps_its_state_with_the_installed_authlib():
     assert sign_in.get_state_data(None, "state") == {"nonce": "n"}
     sign_in.clear_state_data(None, "state")
     assert sign_in.get_state_data(None, "state") is None
+
+
+def test_a_token_that_cannot_see_the_private_mirror_is_told_so_in_plain_words(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+
+    def not_found(token):
+        raise requests.HTTPError("404", response=SimpleNamespace(status_code=404))
+
+    monkeypatch.setattr(decisions, "fetch_open", not_found)
+
+    assert "may not have access to that repository" in page_text(run())
