@@ -16,6 +16,7 @@ on:
 permissions:
   contents: write        # to push the proposal branch
   pull-requests: write   # to open the pull request
+  actions: write         # to start the Tests job on the proposal branch
 
 jobs:
   propose:
@@ -76,6 +77,9 @@ jobs:
             gh pr create --base main --head registry-update \
               --title "Registry update from the IGS satellite metadata file" --label "decision: registry update" --body-file "$RUNNER_TEMP/registry-changes.md"
           fi
+          # A pull request opened with this job's token starts no other job, so start the Tests job on its branch:
+          # its result shows on the pull request, and the admin page merges only once it has passed.
+          gh workflow run tests.yml --ref registry-update
 
       - name: Add this run's line to the run log
         if: always()

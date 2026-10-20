@@ -30,5 +30,15 @@ WAIT_WARN_DAYS = 14
 # GitHub accounts that are the system, not a person, in the words the page uses.
 RAISED_BY = {"github-actions[bot]": "the weekly job"}
 
-SECRETS_SECTION = "admin"   # in .streamlit/secrets.toml: allowed = [emails], github_token = "..."
+SECRETS_SECTION = "admin"   # in .streamlit/secrets.toml: allowed = [emails], github_token = "...", accounts = {email = login}
+
+# The three calls the team can make (issue 16), and what each does to the pull request (decided 20 Oct 2026, issue 17):
+# the decision is always written on the pull request first, as a comment; then it is merged, left open or closed.
+APPROVE, AFTER_CHANGES, REJECT = "approved as proposed", "approved after changes", "rejected"
+CHOICES = {APPROVE: "Approve as proposed", AFTER_CHANGES: "Approve after changes", REJECT: "Reject"}
+ACTIONS = {APPROVE: "then merges it, once its tests have passed", AFTER_CHANGES: "and leaves it open until the changes are made",
+           REJECT: "then closes it"}
+DECISION_MARKER = "admin-decision"   # an HTML comment in each decision, so the outcomes can be counted from GitHub
+REQUIRED_CHECK = "pytest"            # the Tests job (.github/workflows/tests.yml); it must pass on the commit merged
+MERGE_METHOD = "squash"
 READ_EVERY_SECONDS = 300    # how long one reading of GitHub is kept before the page reads again
