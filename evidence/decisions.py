@@ -89,20 +89,25 @@ def tests_state(token, sha):
     return "running" if newest["status"] != "completed" else "passed" if newest["conclusion"] == "success" else "failed"
 
 
-def blocker(choice, item, reason, changes, email, accounts, tests=None, mergeable=None, sha=None):
+def blocker(choice, item, reason, changes, email, accounts, state="open", tests=None, mergeable=None, sha=None):
     """Why this decision cannot be made now, in plain words, or None when it can.
 
-    accounts: {email: GitHub account} for the people on the list, so the person who raised an item is known. For an
-    approval as proposed, `tests`, `mergeable` and `sha` are GitHub's answers read just now.
+    accounts: {email: GitHub account} for the people on the list, so the person who raised an item is known. `state`
+    is the pull request's, read just now; for an approval as proposed, so are `tests`, `mergeable` and `sha`.
     """
+    if state != "open":
+        return "It was already decided (merged or closed) after the page read it. Nothing more was written."
     if not reason.strip():
         return "Write the reason first: every decision needs one."
     if choice == AFTER_CHANGES and not changes.strip():
         return "Say which changes are asked for."
-    if {e.lower(): login for e, login in accounts.items()}.get((email or "").lower()) == item["login"]:
+    if {e.lower(): login.lower() for e, login in accounts.items()}.get((email or "").lower()) == item["login"].lower():
         return "You raised this item, so someone else must decide it."
     if choice != APPROVE:
         return None
+    # ponytail: the tests ran on the branch as it stands, not merged with a newer main; the Tests job runs on main
+    # after every merge. Requiring the branch to be up to date would block most weekly registry updates, which
+    # wait up to a fortnight for a call; add it with an "update the branch" step if a merge ever breaks main.
     if sha != item["sha"]:
         return "The pull request changed after the page read it. Read the new version before approving it."
     if tests != "passed":
@@ -124,18 +129,19 @@ def decision_text(choice, reason, changes, who, when):
         return text.strip().replace("<!--", "&lt;!--")
     return "\n".join([f"<!-- {DECISION_MARKER}: {choice} -->", f"**Decision on the admin page: {choice}.**", "",
                       f"Reason: {plain(reason)}"] + (["", f"Changes asked for: {plain(changes)}"] if changes.strip() else [])
-                     + ["", f"Decided by {who} on {when.day} {when:%b %Y, %H:%M} UTC, signed in on the admin page."])
+                     + ["", f"Decided by {plain(who)} on {when.day} {when:%b %Y, %H:%M} UTC, signed in on the admin page."])
 
 
 def decide(token, item, choice, reason, changes, who, email, accounts, now):
     """Write the decision on the pull request, then merge it, leave it open or close it. ('ok' | 'warn' | 'bad', words).
 
     For an approval the pull request, its tests and whether it can merge are read again first, and the merge names
-    the commit that was checked, so what is merged is what was approved."""
-    number, read = item["number"], {}
-    if choice == APPROVE:
-        pull = _ask("GET", f"/pulls/{number}", token)
-        read = {"sha": pull["head"]["sha"], "mergeable": pull["mergeable"], "tests": tests_state(token, pull["head"]["sha"])}
+    the commit that was checked, so what is merged is what was approved. Every choice first checks it is still open."""
+    number = item["number"]
+    pull = _ask("GET", f"/pulls/{number}", token)   # read again: someone may have decided it meanwhile
+    read = {"state": pull["state"]}
+    if choice == APPROVE and pull["state"] == "open":
+        read |= {"sha": pull["head"]["sha"], "mergeable": pull["mergeable"], "tests": tests_state(token, pull["head"]["sha"])}
     problem = blocker(choice, item, reason, changes, email, accounts, **read)
     if problem:
         return "warn", problem

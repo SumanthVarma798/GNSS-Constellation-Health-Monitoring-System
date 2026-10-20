@@ -99,10 +99,6 @@ if state == "not on the list":
 who = st.user.get("name") or email
 surfaces.show(f'<p class="small">Signed in as {escape(who)}.</p>')
 sign_out()
-said = st.session_state.get("admin_result")
-if said and said[1] == "ok":   # a decision that went through: its item has left the list, so it is said up here
-    surfaces.show(surfaces.notice(said[2], "ok"))
-    del st.session_state["admin_result"]
 try:
     prs, read_at = read(config["github_token"])
 except requests.RequestException as error:
@@ -110,6 +106,10 @@ except requests.RequestException as error:
     st.stop()
 
 items = decisions.pending(prs, datetime.now(timezone.utc))
+said = st.session_state.get("admin_result")
+if said and (said[1] == "ok" or said[0] not in {i["number"] for i in items}):   # its item has left the list
+    surfaces.show(surfaces.notice(said[2], said[1]))
+    del st.session_state["admin_result"]
 groups = decisions.grouped(items)
 surfaces.show(admin.headline(items, groups))
 if not items:

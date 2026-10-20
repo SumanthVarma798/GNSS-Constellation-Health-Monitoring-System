@@ -123,7 +123,7 @@ def test_every_decision_needs_a_reason_and_after_changes_needs_the_changes(choic
 
 
 def test_the_person_who_raised_an_item_cannot_decide_it():
-    accounts = {"Raiser@Example.com": "raiser"}
+    accounts = {"Raiser@Example.com": "Raiser"}   # addresses and GitHub accounts both ignore capitals
 
     assert "someone else must decide" in decisions.blocker(REJECT, HUMAN_ITEM, "No", "", "raiser@example.com", accounts)
     assert decisions.blocker(REJECT, HUMAN_ITEM, "No", "", "other@example.com", accounts) is None
@@ -150,18 +150,20 @@ def test_the_decision_comment_carries_its_marker_and_typed_text_cannot_add_one()
                                    "A Member", NOW)
 
     assert text.startswith("<!-- admin-decision: approved after changes -->\n**Decision on the admin page: approved after")
-    assert text.count("<!--") == 1 and "Changes asked for: Fix G01" in text and "Decided by A Member on 20 Oct 2026" in text
+    assert text.count("<!--") == 1 and decisions.decision_text(REJECT, "x", "", "<!-- y -->", NOW).count("<!--") == 1
+    assert "Changes asked for: Fix G01" in text and "Decided by A Member on 20 Oct 2026" in text
 
 
 class GitHub:
     """A stand-in for GitHub's API: answers reads, records writes."""
 
-    def __init__(self, tests="passed", mergeable=True, sha="sha5", merge_fails=False):
+    def __init__(self, tests="passed", mergeable=True, sha="sha5", merge_fails=False, state="open"):
         self.tests, self.mergeable, self.sha, self.merge_fails, self.writes = tests, mergeable, sha, merge_fails, []
+        self.state = state
 
     def __call__(self, method, path, token, **request):
         if method == "GET" and path.startswith("/pulls/"):
-            return {"head": {"sha": self.sha}, "mergeable": self.mergeable}
+            return {"state": self.state, "head": {"sha": self.sha}, "mergeable": self.mergeable}
         if method == "GET":
             status, conclusion = ("completed", "success") if self.tests == "passed" else ("in_progress", None)
             return {"check_runs": [{"id": 1, "status": status, "conclusion": conclusion}]}
@@ -203,3 +205,12 @@ def test_a_merge_github_refuses_after_the_decision_is_written_is_said_plainly(mo
     status, words = decide(monkeypatch, GitHub(merge_fails=True), APPROVE)
 
     assert status == "bad" and "written on pull request 5, but GitHub did not merge it" in words
+
+
+@pytest.mark.parametrize("choice", [APPROVE, AFTER_CHANGES, REJECT])
+def test_an_item_decided_meanwhile_is_left_alone_whatever_the_choice(monkeypatch, choice):
+    github = GitHub(state="closed")
+
+    status, words = decide(monkeypatch, github, choice, changes="Fix G01")
+
+    assert status == "warn" and "already decided" in words and github.writes == []
