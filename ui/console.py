@@ -28,6 +28,10 @@ LIGHT = {  # Classic bold
     "ok": "#007a1f", "warn": "#a15c00", "bad": "#c00000", "info": "#0a246a", "idle": "#5f5f5f",
     "c-ok": "#00a03c", "c-bad": "#e81123", "c-warn": "#ff8c00", "c-info": "#0063b1", "c-c": "#f2c80f", "c-idle": "#a8a8a8",
     "axis": "#606060", "cell-off-bg": "#eeeeee", "tile-bg": "#fff",
+    # Chart roles, validated with the dataviz skill's validate_palette.js (20 Oct 2026): normal runs in a quiet grey,
+    # failures in red (they separate for red-green colour blindness; green against red does not), and the source
+    # grades as one ordered blue ramp, A darkest, every step clear of the surface.
+    "c-quiet": "#858585", "g-a": "#1c5cab", "g-b": "#2a78d6", "g-c": "#5598e7", "g-d": "#86b6ef", "g-none": "#c9c9c9",
 }
 DARK = {  # Operations dark
     "ink": "#e6edf3", "muted": "#9aa7b4", "link": "#4cc2ff", "frame": "#2f81f7", "edge": "#30363d", "edge-soft": "#1c2128",
@@ -42,6 +46,7 @@ DARK = {  # Operations dark
     "ok": "#3fb950", "warn": "#e3b341", "bad": "#ff7b72", "info": "#58a6ff", "idle": "#8b949e",
     "c-ok": "#3fb950", "c-bad": "#f85149", "c-warn": "#db6d28", "c-info": "#2f81f7", "c-c": "#d29922", "c-idle": "#484f58",
     "axis": "#6e7681", "cell-off-bg": "#161b22", "tile-bg": "#11161d",
+    "c-quiet": "#6e7681", "g-a": "#9ec5f4", "g-b": "#6da7ec", "g-c": "#3987e5", "g-d": "#256abf", "g-none": "#30363d",
 }
 
 # Each icon's drawing, 16 by 16. st.html drops <svg> elements, so icon() hands each one over as an image.
@@ -54,7 +59,8 @@ ICONS = {
     "sat": '<rect x="6" y="6" width="4" height="4" fill="#9aa7b8" stroke="#46566b"/><rect x="1" y="6.5" width="4" height="3" fill="#5b8fd6" stroke="#2c4f86"/><rect x="11" y="6.5" width="4" height="3" fill="#5b8fd6" stroke="#2c4f86"/>',
     "summary": '<rect x="1" y="2" width="14" height="10" fill="#e3edf9" stroke="#4a6fa5"/><rect x="3" y="4" width="10" height="6" fill="#9cc3ec"/><rect x="6" y="12" width="4" height="2" fill="#4a6fa5"/>',
     "jobs": '<circle cx="8" cy="8" r="6.5" fill="#fff" stroke="#6a7f9a"/><path d="M8 4v4.5l3 1.5" fill="none" stroke="#1d3c66" stroke-width="1.5"/>',
-    "approvals": '<path d="M3 1h7l3 3v11H3z" fill="#fff" stroke="#5f7da6"/><path d="M5.5 9l2 2 3.5-4" fill="none" stroke="#217a2b" stroke-width="1.6"/>'
+    "approvals": '<path d="M3 1h7l3 3v11H3z" fill="#fff" stroke="#5f7da6"/><path d="M5.5 9l2 2 3.5-4" fill="none" stroke="#217a2b" stroke-width="1.6"/>',
+    "work": '<rect x="2" y="1.5" width="12" height="13" fill="#fff" stroke="#5f7da6"/><path d="M4.5 5h7M4.5 8h7M4.5 11h4.5" stroke="#1d3c66" stroke-width="1.4"/>'
 }
 
 
@@ -76,7 +82,7 @@ def _tone(tone):
 
 
 def icon(name, size=16):
-    """An icon as an image carrying its drawing; words beside it always say what it means, so it has no alt text."""
+    """An icon; words beside it always say what it means, so it has no alt text."""
     svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="{size}" height="{size}">{ICONS[name]}</svg>'
     return (f'<img class="ic" alt="" width="{size}" height="{size}" '
             f'src="data:image/svg+xml;base64,{base64.b64encode(svg.encode()).decode()}">')
@@ -117,18 +123,54 @@ def attention(items):
     return f'<ul class="c-attn">{rows}</ul>'
 
 
+def day_columns(days, labels):
+    """A small column per day, as plain blocks so they follow light and dark: the day's runs as height, failures in red
+    above the quiet grey successes, a day with no run a short tick. Each column says its day on hover."""
+    top = max((sum(day) for day in days if day), default=1) or 1
+    columns = ""
+    for label, day in zip(labels, days):
+        if not day:
+            columns += f'<span class="none" title="{escape(label, quote=True)}: did not run"></span>'
+            continue
+        ok, failed = day
+        words = escape(f"{label}: {ok} succeeded" + (f", {failed} failed" if failed else ""), quote=True)
+        columns += (f'<span title="{words}" style="height:{100 * (ok + failed) / top:.0f}%">'
+                    + (f'<i class="bad" style="flex:{failed}"></i>' if failed else "")
+                    + (f'<i class="ok" style="flex:{ok}"></i>' if ok else "") + "</span>")
+    failures = [f"{label} {day[1]}" for label, day in zip(labels, days) if day and day[1]]
+    succeeded = sum(day[0] for day in days if day)
+    alt = (f"Runs per day over {len(days)} days: {succeeded} succeeded; "
+           + (f"failed: {', '.join(failures)}" if failures else "none failed"))
+    return f'<div class="c-trend" role="img" aria-label="{escape(alt, quote=True)}">{columns}</div>'
+
+
 def stack(parts, label):
-    """A bar in parts, then its legend: parts are (count, colour token, words)."""
+    """A bar in parts with a 2px gap between them, then its legend: parts are (count, colour token, words). Each part
+    says its count on hover; the legend says them all."""
     total = sum(count for count, _, _ in parts) or 1
-    bars = "".join(f'<i style="width:{100 * count / total:.1f}%;background:var(--{token})"></i>' for count, token, _ in parts)
+    bars = "".join(f'<i style="flex:{count / total:.4f} 1 0;background:var(--{token})" title="{escape(words, quote=True)}: {count}"></i>'
+                   for count, token, words in parts if count)
     legend = "".join(f'<span><b style="background:var(--{token})"></b>{escape(words)} {count}</span>' for count, token, words in parts)
     return f'<div class="c-stack" role="img" aria-label="{escape(label, quote=True)}">{bars}</div><div class="c-legend">{legend}</div>'
 
 
 def tile(tone, title, status_html, big, sub, extra_html=""):
-    """One tile: a coloured top edge, the title and its status, a large figure, a line under it, and a picture."""
+    """One stat tile: a top edge in the status colour, the label and its status in words, the value in ink, a line
+    under it, and a picture (a trend, a meter or a bar in parts)."""
     return (f'<div class="c-tile {_tone(tone)}"><h4>{escape(title)}{status_html}</h4><div class="big">{escape(big)}</div>'
             f'<div class="sub">{escape(sub)}</div>{extra_html}</div>')
+
+
+def hero(value, words, tone):
+    """The one figure a page leads with."""
+    return f'<div class="c-hero {_tone(tone)}"><span class="v">{escape(str(value))}</span><span class="w">{escape(words)}</span></div>'
+
+
+def meter(share, tone, label):
+    """A track filled to `share` (0 to 1) in the status colour, the rest a lighter track."""
+    filled = max(0.0, min(1.0, share))
+    return (f'<div class="c-meter" role="img" aria-label="{escape(label, quote=True)}" title="{escape(label, quote=True)}">'
+            f'<i class="{_tone(tone)}" style="width:{100 * filled:.1f}%"></i></div>')
 
 
 def tiles(tile_htmls):
@@ -157,12 +199,14 @@ def reliability_grid(grid, names):
         cells = ""
         for i, day in enumerate(days):
             today = " today" if i == len(days) - 1 else ""
+            when = escape(grid["days"][i])
             if day is None:
-                cells += f'<td class="none{today}" title="did not run">–</td>'
+                cells += f'<td class="{today.strip()}"><span class="m none" title="{when}: did not run">–</span></td>'
             elif day[1]:
-                cells += f'<td class="bad{today}" title="{day[1]} failed, {day[0]} succeeded">✕ {day[1]}</td>'
+                cells += (f'<td class="{today.strip()}"><span class="m bad" title="{when}: {day[1]} failed, {day[0]} succeeded">'
+                          f'✕{day[1] if day[1] > 1 else ""}</span></td>')
             else:
-                cells += f'<td class="ok{today}" title="{day[0]} succeeded">✓</td>'
+                cells += f'<td class="{today.strip()}"><span class="m ok" title="{when}: {day[0]} succeeded">✓</span></td>'
         body += f'<tr><td class="name">{escape(names.get(workflow, workflow))}</td>{cells}</tr>'
     return f'<div class="c-rel"><table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>'
 

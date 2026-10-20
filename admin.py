@@ -50,7 +50,8 @@ if state != "in":
 
 page = st.navigation({"Overview": [st.Page("console/summary.py", title="Summary", default=True)],
                       "Monitoring": [st.Page("console/jobs.py", title="Jobs")],
-                      "Decisions": [st.Page("console/approvals.py", title="Approvals")]}, position="sidebar")
+                      "Work": [st.Page("console/work.py", title="Issues and pull requests", url_path="work"),
+                               st.Page("console/approvals.py", title="Approvals")]}, position="sidebar")
 who = st.user.get("name") or email
 st.html(console.title_bar(page.title) + console.current_page_css(page.url_path))
 with st.container(key="console_bar"):

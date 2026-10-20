@@ -31,10 +31,17 @@ with body:
         right="GitHub often starts scheduled runs late", flush=True))
 
     names = {"archive.yml": "Archive (all groups)", **{w: name for w, _, name, *_ in JOBS if w != "archive.yml"}}
-    st.html(console.section("Reliability, day by day", console.reliability_grid(jobs.reliability(seen["runs"], now), names)
-                            + '<div class="c-legend" style="margin-top:6px"><span>✓ every run that day succeeded</span>'
-                              '<span>✕ n: n runs failed</span><span>– did not run</span></div>',
+    grid = jobs.reliability(seen["runs"], now)
+    st.html(console.section("Reliability, day by day", console.reliability_grid(grid, names)
+                            + '<div class="c-legend" style="margin-top:8px"><span><span class="m ok">✓</span> every run that day '
+                              'succeeded</span><span><span class="m bad">✕2</span> runs failed (how many)</span>'
+                              '<span><span class="m none">–</span> did not run</span><span>Hover a day for its counts.</span></div>',
                             right=f"scheduled runs on GitHub, last {RELIABILITY_DAYS} days"))
+    with st.expander("The same, as a table"):
+        st.html(console.list_view(["Job", "Day", "Succeeded", "Failed"],
+                                  [[escape(names.get(w, w)), escape(day), str(counts[0]), str(counts[1])]
+                                   for w, days in grid["rows"].items() for day, counts in zip(grid["days"], days) if counts],
+                                  numeric=("Succeeded", "Failed")))
 
     newest = sorted(seen["log"], key=lambda line: line["started"], reverse=True)[:LOG_LINES]
     st.html(console.section("Run log", console.list_view(
