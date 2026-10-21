@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parent.parent
 OLLAMA_URL = "http://localhost:11434"
 MODEL = "qwen3:8b"            # about 5 GB; `ollama pull qwen3:8b` once
 CONTEXT_TOKENS = 20480        # the material is about 13,000 tokens; the rest is the conversation and the answer
-ANSWER_SECONDS = 180          # a first answer reads all the material; later ones reuse it and are quicker
+ANSWER_SECONDS = 180          # the longest a whole answer may take; a first answer reads all the material (about 50 s)
 HISTORY_TURNS = 6             # earlier questions and answers sent along, so "and that one?" makes sense
 
 # What it may answer from: these documents whole, the first paragraph of each module's description, the System design

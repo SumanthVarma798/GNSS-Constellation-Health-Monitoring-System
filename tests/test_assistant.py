@@ -38,7 +38,7 @@ class Reply:
             raise requests.HTTPError(str(self.status_code))
 
     def iter_lines(self):
-        return [json.dumps(line).encode() for line in self.lines]
+        return [line if isinstance(line, bytes) else json.dumps(line).encode() for line in self.lines]
 
 
 def test_it_sends_the_rules_and_material_first_then_recent_turns_then_the_question(monkeypatch):
@@ -66,6 +66,8 @@ def test_it_sends_the_rules_and_material_first_then_recent_turns_then_the_questi
     (Reply([], status=404), f"ollama pull {MODEL}"),
     (Reply([{"error": "out of memory"}]), "out of memory"),
     (Reply([], status=500), "did not answer"),
+    (requests.ReadTimeout(), "did not answer"),
+    (Reply([b"<html>not json</html>"]), "expected shape"),
 ])
 def test_each_failure_says_in_plain_words_what_to_do(monkeypatch, trouble, words):
     def post(*_, **__):
@@ -75,6 +77,15 @@ def test_each_failure_says_in_plain_words_what_to_do(monkeypatch, trouble, words
 
     monkeypatch.setattr(assistant.requests, "post", post)
     with pytest.raises(assistant.Unavailable, match=words):
+        list(assistant.answer("?", [], ""))
+
+
+def test_an_answer_that_runs_past_its_time_is_stopped(monkeypatch):
+    clock = iter([0, 1, assistant.ANSWER_SECONDS + 1])
+    monkeypatch.setattr(assistant.time, "monotonic", lambda: next(clock))
+    monkeypatch.setattr(assistant.requests, "post", lambda *_, **__: Reply([{"message": {"content": "a"}}] * 3))
+
+    with pytest.raises(assistant.Unavailable, match="longer than"):
         list(assistant.answer("?", [], ""))
 
 
