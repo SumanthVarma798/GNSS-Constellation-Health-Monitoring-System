@@ -22,6 +22,14 @@ class Unavailable(Exception):
     """The model cannot answer; the message says why in plain words."""
 
 
+def available():
+    """Whether the model can be asked here: Ollama answers at OLLAMA_URL. False on the shared console, which has none."""
+    try:
+        return requests.get(f"{OLLAMA_URL}/api/version", timeout=2).ok
+    except requests.RequestException:
+        return False
+
+
 def material(issues, parts):
     """Everything the assistant may answer from, each piece under its [label]. `issues` are GitHub's open issues,
     `parts` the System design page's words (ui/components/system_design.PARTS)."""

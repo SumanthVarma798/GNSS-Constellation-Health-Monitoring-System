@@ -41,7 +41,7 @@ flowchart TB
   trigger -.-> pr
   store -.-> pages["History and scoreboard pages"]:::planned
   registry --> orbit["Orbit health dashboard"]:::built
-  admin["Admin page"]:::later -.-> pr
+  admin["Administration console"]:::built --> pr
 
   classDef built fill:#d4edda,stroke:#2e7d32,color:#1b1b1b
   classDef planned fill:#dbeafe,stroke:#1d4ed8,color:#1b1b1b
@@ -108,7 +108,7 @@ pie showData title Estimated hours, all guesses
 | 8, 9 | Phone database trend; NavIC signal status | 18 | Open |
 | 19, 20 | Service column; announced versus observed | 25 | Open |
 | 21, 22 | Per-satellite history; scoreboard | 40 | Open |
-| 17 | Admin page | 15 | Later |
+| 17 | Administration console | 15 | Built in steps (pull requests 102 to 109): Google sign-in, Summary, Jobs, Approvals, open work, and System design with a local-model assistant. Shared copy at <https://gnss-admin-console.streamlit.app/> |
 | 23 | Team call, Sat 17 Oct 2026: run-through, handout, fallback pictures | 5 | Open |
 
 ## 4. How one item travels
@@ -229,7 +229,7 @@ Produced from the code. A test fails if this table and the code disagree.
 | 5 | Sources for version one | Official pages, press feeds, and social posts only when they contain a link |
 | 6 | Claim extraction | A language model in the scheduled job; model and spending ceiling chosen after a test |
 | 7 | When to propose a change | A claim clears the bar and implies a registry change |
-| 8 | How a person reviews | A pull request with a plain-language summary; an admin page later |
+| 8 | How a person reviews | A pull request with a plain-language summary, decided in the administration console |
 | 9 | Scoreboard | Satellites within a constellation by default; weights set by hand later |
 | 10 | Team call, 17 Oct | Show findings and two questions; say the private copy exists |
 | - | Archive layout | Each copy named by its hash, never overwritten |
@@ -245,6 +245,7 @@ Produced from the code. A test fails if this table and the code disagree.
 | - | The dashboard's look | Neumorphic, after CRED's Synth: dark, one accent, pictures before text. Every colour is named once in `ui/palette.py`; pages compose reusable parts and carry no styling of their own. A status is always said in words as well as colour. |
 | - | A satellite and its slot | Each satellite is judged against its own slot, never the nearest one, so one that drifts onto another's slot still shows as drifted. |
 | - | How the work is run | One lead session talks to Sumanth, tracks progress, briefs helper sessions, reviews their work and is the only one that pushes. Sumanth approves every pull request. |
+| - | Where the console runs | Streamlit Community Cloud, free, from `main` of this private repository, behind the console's own Google sign-in and list; the app itself is set public on Streamlit so the team signs in once. Its settings and token live in the app's secrets there, never in the repository. The assistant's questions work only where Ollama runs, so they are off on the shared copy. Decided 21 Oct 2026 at Sumanth's request (issue 17). |
 | - | Parts out of step | Anything a person approves arrives late. Every part must keep working, and say so visibly, while another part is behind. Tests are strict at the point of approval; the running system is tolerant. |
 
 ## 9. Assumptions

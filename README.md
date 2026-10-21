@@ -3,6 +3,11 @@
 > repository has no licence file, so this copy must stay private and must not be
 > redistributed. Nothing here has been agreed with the team.
 >
+> - **Administration console, for the team: <https://gnss-admin-console.streamlit.app/>**
+>   What runs, what is waiting for a decision, the open work, and the system design in one picture.
+>   Sign in with a Google account on the console's list; ask Sumanth to be added. It is hosted free on
+>   Streamlit Community Cloud from this repository's `main`. Questions to the assistant work only where
+>   Ollama runs (`streamlit run admin.py` on your own computer); they are off on the shared copy.
 > - **Remotes:** `origin` is this mirror. `upstream` is the team's repository and is
 >   fetch-only: its push address is set to `DISABLED`. After a fresh clone, run
 >   `git remote set-url --push upstream DISABLED` before anything else.
