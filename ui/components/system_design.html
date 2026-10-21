@@ -56,7 +56,7 @@ html, body { margin: 0; background: var(--pane); color: var(--ink); font: 13px/1
 <body>
 <div class="facts" id="facts"></div>
 <div class="diagram">
-<svg id="sysmap" viewBox="0 0 1000 470" role="img" aria-labelledby="sysmap-t">
+<svg id="sysmap" viewBox="0 0 1000 470" role="group" aria-labelledby="sysmap-t">
 <title id="sysmap-t">The system: sources, archive, registry and evidence, pull requests, dashboard and console</title>
 <defs>
 <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--axis)"/></marker>
@@ -64,7 +64,7 @@ html, body { margin: 0; background: var(--pane); color: var(--ink); font: 13px/1
 </defs>
 <g class="cols"><text x="85" y="16">SOURCES</text><text x="270" y="16">COLLECT</text><text x="450" y="16">KEEP</text><text x="645" y="16">BUILD AND JUDGE</text><text x="875" y="16">DECIDE AND USE</text></g>
 <g id="edges">
-<path data-e="src-job" d="M160 52H180V165H200"/><path data-e="src-job" d="M160 112H180"/><path data-e="src-job" d="M160 172H180"/><path data-e="src-job" d="M160 232H180"/><path data-e="src-job" d="M160 292H180V190"/>
+<path data-e="src-job" d="M160 52H180V165H200"/><path data-e="src-job" d="M160 112H180"/><path data-e="src-job" d="M160 172H180"/><path data-e="src-job" d="M160 232H180"/><path data-e="src-job" d="M160 292H180V165"/>
 <path data-e="job-arc" d="M340 165H380"/>
 <path data-e="arc-reg" d="M520 150H540V52H560"/>
 <path data-e="arc-store" d="M520 175H560"/>
@@ -77,7 +77,7 @@ html, body { margin: 0; background: var(--pane); color: var(--ink); font: 13px/1
 <path data-e="bar-prop" class="planned" d="M875 234V270"/>
 <path data-e="prop-pr" class="planned" d="M980 292H992V40H980"/>
 <path data-e="tab-dash" d="M770 140H758V392H730"/>
-<path data-e="admin-pr" d="M875 370V316"/>
+<path data-e="admin-pr" d="M980 392H992V40H980"/>
 <path data-e="cel-dash" d="M85 194V446H645V414"/>
 <path data-e="job-hc" d="M270 210V300"/>
 </g>
