@@ -123,6 +123,7 @@ def test_where_no_model_runs_the_page_says_questions_are_off_and_offers_no_box(m
     at = run(monkeypatch, page="console/design.py")
 
     assert "Questions are off on this copy" in at.info[0].value and not at.chat_input
+    assert "runs on this computer" not in " ".join(c.value for c in at.caption)
 
 
 def test_the_model_counts_as_here_only_when_ollama_answers(monkeypatch):

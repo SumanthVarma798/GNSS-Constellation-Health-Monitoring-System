@@ -40,13 +40,13 @@ def model_here():
 def ask_the_project():
     """Questions about the system, answered by a local model from the project's own material only."""
     st.subheader("Ask about the system")
-    st.caption(f"Answers come only from the design documents, the code's own descriptions and the open issues, each "
-               f"fact with its source in [brackets]. The model ({MODEL}) runs on this computer; it can still be "
-               "wrong, so check the source it names.")
     if not model_here():
         st.info("Questions are off on this copy of the console: the assistant needs the local model (Ollama) on the "
                 "same computer, and there is none here. On a computer that runs it, start it with `ollama serve`.")
         return
+    st.caption(f"Answers come only from the design documents, the code's own descriptions and the open issues, each "
+               f"fact with its source in [brackets]. The model ({MODEL}) runs on this computer; it can still be "
+               "wrong, so check the source it names.")
     chat = st.session_state.setdefault(CHAT, [])
     log = st.container()   # the conversation, always above the question box
     question = st.chat_input("For example: where does the orbit data come from, and how often?")
