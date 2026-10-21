@@ -18,7 +18,7 @@ LIGHT = {  # Classic bold
     "ink": "#000", "muted": "#4a4a4a", "link": "#0645ad", "frame": "#000", "edge": "#808080", "edge-soft": "#e3e1d8",
     "shadow": "4px 4px 0 rgba(0,0,0,.45)", "title-bg": "linear-gradient(90deg, #0a246a, #3a6ea5 65%, #a6caf0)",
     "title-ink": "#fff", "title-edge": "1px solid #808080", "chrome": "#d4d0c8", "chrome-ink": "#000", "chrome-edge": "#808080",
-    "status-bg": "#d4d0c8", "status-ink": "#000", "tree-bg": "#fff", "tree-ink": "#000", "pane": "#fff", "pane-alt": "#f1efe2",
+    "status-bg": "#d4d0c8", "status-ink": "#000", "tree-bg": "#fff", "tree-ink": "#000", "tree-line": "#808080", "pane": "#fff", "pane-alt": "#f1efe2",
     "head-bg": "#0a246a", "head-ink": "#fff", "vhead-bg": "linear-gradient(90deg, #0a246a, #2b5797)", "vhead-ink": "#fff",
     "vhead-sub": "#dce6f7", "th-bg": "#d4d0c8", "th-ink": "#000", "th-bevel": "inset -1px -1px #808080, inset 1px 1px #fff",
     "row-alt": "#f7f6f1", "hover": "#e5ecf7", "select": "#0a246a", "select-ink": "#fff", "select-edge": "#0a246a",
@@ -38,7 +38,7 @@ DARK = {  # Operations dark
     "ink": "#e6edf3", "muted": "#9aa7b4", "link": "#4cc2ff", "frame": "#2f81f7", "edge": "#30363d", "edge-soft": "#1c2128",
     "shadow": "0 0 0 1px #2f81f7, 0 12px 34px rgba(0,0,0,.7)", "title-bg": "#0d1117", "title-ink": "#e6edf3",
     "title-edge": "2px solid #2f81f7", "chrome": "#161b22", "chrome-ink": "#e6edf3", "chrome-edge": "#30363d",
-    "status-bg": "#1f6feb", "status-ink": "#fff", "tree-bg": "#0d1117", "tree-ink": "#e6edf3", "pane": "#0d1117", "pane-alt": "#11161d",
+    "status-bg": "#1f6feb", "status-ink": "#fff", "tree-bg": "#0d1117", "tree-ink": "#e6edf3", "tree-line": "#6e7681", "pane": "#0d1117", "pane-alt": "#11161d",
     "head-bg": "#1f6feb", "head-ink": "#fff", "vhead-bg": "#161b22", "vhead-ink": "#58a6ff", "vhead-sub": "#9aa7b4",
     "th-bg": "#161b22", "th-ink": "#c9d1d9", "th-bevel": "none", "row-alt": "#10151c", "hover": "#1c2633",
     "select": "#1f4f8f", "select-ink": "#fff", "select-edge": "#2f81f7", "btn-bg": "#21262d", "btn-ink": "#e6edf3",
@@ -103,7 +103,7 @@ def current_page_css(url_path):
     """Selects the current page in the console tree. Streamlit 1.45 marks it only with a generated class name, so the
     link is found by its address instead: the default page's ends in '/', the others in '/<url_path>'."""
     link = f'[data-testid="stSidebarNavLink"][href$="/{escape(url_path, quote=True)}"]'
-    return (f"<style>{link} {{ background: var(--select); border-color: var(--select-edge); }}"
+    return (f"<style>:is({link}, {link}:hover) {{ background: var(--select); border-color: var(--select-edge); }}"
             f"{link} * {{ color: var(--select-ink) !important; font-weight: 700; }}</style>")
 
 

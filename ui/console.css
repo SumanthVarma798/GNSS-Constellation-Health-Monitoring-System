@@ -16,15 +16,34 @@ a { color: var(--link); }
 [data-testid="stMain"] .block-container, [data-testid="stMainBlockContainer"] { max-width: 1600px; padding: 0 0 48px; }
 [data-testid="stMainBlockContainer"] > div > [data-testid="stVerticalBlock"] { gap: 0; }
 
-/* ---- the console tree: Streamlit's page list in the sidebar ---- */
-[data-testid="stSidebar"] { background: var(--tree-bg); border-right: 2px solid var(--chrome-edge); min-width: 230px; max-width: 280px; }
+/* ---- the console tree: Streamlit's page list in the sidebar, drawn like the Windows console tree. Sections are
+   folders in bold; their pages hang under them on dotted lines, each with its own icon. ---- */
+[data-testid="stSidebar"] { background: var(--tree-bg); border-right: 2px solid var(--chrome-edge); }
+[data-testid="stSidebar"][aria-expanded="true"] { min-width: 230px; max-width: 280px; }   /* closed, it must give its room back */
 [data-testid="stSidebar"] * { color: var(--tree-ink); }
 [data-testid="stSidebarHeader"] { padding: 4px 8px; height: auto; min-height: 0; }
 [data-testid="stSidebarNav"]::before { content: "Console tree"; display: block; padding: 6px 12px; font-weight: 700; color: var(--head-ink);
   background: var(--head-bg); border-bottom: 1px solid var(--chrome-edge); }
-[data-testid="stNavSectionHeader"] { padding: 8px 12px 2px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted) !important; }
-[data-testid="stSidebarNavLink"] { padding: 3px 12px 3px 24px; margin: 0; border: 1px solid transparent; font-size: 13px; }
+[data-testid="stSidebarNavItems"] { padding: 6px 0; }
+[data-testid="stNavSectionHeader"] { display: flex; align-items: center; gap: 6px; margin: 6px 0 0; padding: 2px 10px; font-size: 13px;
+  font-weight: 700; letter-spacing: 0; text-transform: none; color: var(--tree-ink) !important; }
+[data-testid="stNavSectionHeader"]::before { content: ""; width: 16px; height: 16px; flex: none;   /* an open folder */
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M1 3h5l1 1.5h7V13H1z' fill='%23f3d26b' stroke='%23a07d1c'/%3E%3Cpath d='M1 13l2-6h12l-2 6z' fill='%23fbe7a1' stroke='%23a07d1c'/%3E%3C/svg%3E") no-repeat; }
+[data-testid="stSidebarNavItems"] li { position: relative; padding-left: 30px; }
+[data-testid="stSidebarNavItems"] li::before, [data-testid="stSidebarNavItems"] li::after { content: ""; position: absolute; left: 17px; }
+[data-testid="stSidebarNavItems"] li::before { top: 0; bottom: 0; border-left: 1px dotted var(--tree-line); }   /* down from the folder */
+[data-testid="stSidebarNavItems"] li:is(:last-child, :has(+ header))::before { bottom: 50%; }   /* the last page ends the line */
+[data-testid="stSidebarNavItems"] li::after { top: 50%; width: 11px; border-top: 1px dotted var(--tree-line); }   /* across to the page */
+[data-testid="stSidebarNavLink"] { gap: 6px; padding: 2px 8px 2px 4px; margin: 0; min-height: 0; border: 1px dotted transparent; font-size: 13px; line-height: 20px; }
 [data-testid="stSidebarNavLink"]:hover { background: var(--hover); }
+[data-testid="stSidebarNavLink"] [data-testid="stIconMaterial"] { font-size: 16px; color: var(--link) !important; }
+/* Streamlit shows the tree's close button only under the pointer; it stays in view here, and the open button too */
+[data-testid="stSidebarCollapseButton"] { display: flex !important; visibility: visible !important; opacity: 1 !important; }
+[data-testid="stSidebarCollapseButton"] button, [data-testid="stExpandSidebarButton"], [data-testid="stSidebarCollapsedControl"] button {
+  border: 1px solid var(--btn-edge); background: var(--btn-bg); box-shadow: var(--btn-bevel); }
+[data-testid="stSidebarCollapsedControl"] { top: 5px; left: 8px; z-index: 1000101; }   /* at the title bar's left end */
+.stApp:has([data-testid="stSidebar"][aria-expanded="false"]) .c-title { padding-left: 68px; }
+.stApp:has([data-testid="stSidebar"][aria-expanded="true"]) [data-testid="stSidebarCollapsedControl"] { display: none; }
 
 /* ---- the window's top: title bar, then the toolbar of real controls ---- */
 .c-title { display: flex; align-items: center; gap: 8px; padding: 7px 12px; background: var(--title-bg); color: var(--title-ink);
@@ -33,7 +52,7 @@ a { color: var(--link); }
 .st-key-console_bar { background: var(--chrome); color: var(--chrome-ink); border-bottom: 2px solid var(--chrome-edge); padding: 4px 10px; }
 .st-key-console_bar [data-testid="stHorizontalBlock"] { align-items: center; gap: 8px; flex-wrap: wrap; }
 .st-key-console_bar [data-testid="stColumn"] { width: auto !important; flex: 0 1 auto !important; min-width: 0; }
-.st-key-console_bar [data-testid="stColumn"]:first-child { flex: 1 1 260px !important; }
+.st-key-console_bar [data-testid="stColumn"]:has(.c-crumb) { flex: 1 1 260px !important; }   /* the address takes the room left */
 .c-crumb { display: block; padding: 3px 8px; border: 1px solid var(--input-edge); background: var(--input-bg); color: var(--ink);
   box-shadow: var(--well-bevel); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .c-who { white-space: nowrap; color: var(--chrome-ink); }
@@ -121,7 +140,7 @@ a { color: var(--link); }
 .c-lv { width: 100%; border-collapse: collapse; font-size: 12px; }
 .c-lv th { text-align: left; font-weight: 600; color: var(--th-ink); padding: 4px 8px; background: var(--th-bg); box-shadow: var(--th-bevel);
   border-right: 1px solid var(--edge); border-bottom: 1px solid var(--edge); white-space: nowrap; }
-.c-lv td { padding: 4px 8px; border-bottom: 1px solid var(--edge-soft); vertical-align: top; color: var(--ink); }
+.c-lv td { padding: 4px 8px; border-bottom: 1px solid var(--edge-soft); vertical-align: top; color: var(--ink); overflow-wrap: normal; }   /* whole words; the frame scrolls sideways */
 .c-lv tbody tr:nth-child(even) td { background: var(--row-alt); }
 .c-lv tbody tr:hover td { background: var(--hover); }
 .c-lv td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -164,8 +183,7 @@ dl.c-kv dt { color: var(--muted); } dl.c-kv dd { margin: 0; color: var(--ink); }
 .c-signin .in { padding: 14px 16px; color: var(--ink); }
 
 @media (max-width: 700px) {
-  .c-title { padding-left: 52px; } .c-title span { display: none; }   /* room for the tree's open button; the path below names the page */
-  .st-key-console_bar { padding-left: 52px; }
+  .c-title span { display: none; }   /* the address below names the page */
   dl.c-kv { grid-template-columns: 1fr; } dl.c-kv dt { margin-top: 6px; }
   .c-statusbar { position: static; } .c-statusbar span:last-child { margin-left: 0; }
   .st-key-console_page { padding: 10px 10px 0; }

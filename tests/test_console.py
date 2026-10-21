@@ -339,3 +339,44 @@ def test_the_system_design_page_opens_with_its_picture(monkeypatch):
     at = run(monkeypatch, page="console/design.py")
 
     assert "How the system works" in text(at) and at.get("iframe")
+
+
+def test_back_and_forward_follow_the_pages_visited_and_the_browser_own_buttons():
+    trail = {"back": [], "forward": [], "at": None}
+    for path in ("", "jobs", "work"):
+        common.follow(trail, path)
+    assert trail == {"back": ["", "jobs"], "forward": [], "at": "work"}
+
+    common.follow(trail, "jobs")   # back one step
+    assert trail == {"back": [""], "forward": ["work"], "at": "jobs"}
+    common.follow(trail, "work")   # forward again
+    assert trail == {"back": ["", "jobs"], "forward": [], "at": "work"}
+    common.follow(trail, "jobs")
+    common.follow(trail, "approvals")   # somewhere new: forward is gone
+    assert trail == {"back": ["", "jobs"], "forward": [], "at": "approvals"}
+    common.follow(trail, "approvals")   # the same page again (a refresh) is no step
+    assert trail["back"] == ["", "jobs"]
+
+
+def test_back_and_forward_show_only_when_there_is_a_page_that_way(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    at = run(monkeypatch)
+    assert not [b for b in at.button if b.key in ("console_back", "console_forward")]
+
+    at.switch_page("console/jobs.py").run()
+    assert [b.key for b in at.button if b.key in ("console_back", "console_forward")] == ["console_back"]
+    assert "Monitoring › <b>Jobs</b>" in text(at)
+
+    at.button(key="console_back").click().run()
+    assert "Overview › <b>Summary</b>" in text(at)
+    assert [b.key for b in at.button if b.key in ("console_back", "console_forward")] == ["console_forward"]
+
+
+def test_back_is_not_offered_to_a_page_that_no_longer_exists(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    at = run(monkeypatch)
+    at.session_state["console_trail"] = {"back": ["gone"], "forward": [], "at": ""}
+
+    at.run()
+
+    assert not at.exception and not [b for b in at.button if b.key == "console_back"]

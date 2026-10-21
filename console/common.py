@@ -115,5 +115,24 @@ def refresh_action():
         st.rerun()
 
 
+def follow(trail, path):
+    """Moves the console's Back and Forward history to the page at `path`. The page just behind or just ahead is a step
+    back or forward (the toolbar's buttons and the browser's own both arrive here); any other page is a new step, which
+    clears Forward. `trail` is {"back": [paths], "forward": [paths], "at": path or None}; it is changed and returned."""
+    back, forward, at = trail["back"], trail["forward"], trail["at"]
+    if at is not None and path != at:
+        if back and back[-1] == path:
+            back.pop()
+            forward.append(at)
+        elif forward and forward[-1] == path:
+            forward.pop()
+            back.append(at)
+        else:
+            back.append(at)
+            forward.clear()
+    trail["at"] = path
+    return trail
+
+
 def now():
     return datetime.now(timezone.utc)
