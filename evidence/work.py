@@ -43,16 +43,18 @@ def _days(text, now):
 def issue_rows(issues, now, find=""):
     """Open issues, the most recently updated first; `find` keeps only titles that contain it (any case)."""
     rows = [{"number": i["number"], "title": i["title"], "by": _who(i), "labels": labels(i), "comments": i.get("comments", 0),
-             "opened_days": _days(i["created_at"], now), "updated_days": _days(i["updated_at"], now), "link": i["html_url"]}
+             "opened_days": _days(i["created_at"], now), "updated_days": _days(i["updated_at"], now), "link": i["html_url"],
+             "updated_at": i["updated_at"]}
             for i in issues if find.lower() in i["title"].lower()]
-    return sorted(rows, key=lambda r: (r["updated_days"], -r["number"]))
+    return sorted(rows, key=lambda r: (r["updated_at"], r["number"]), reverse=True)   # by the moment, not the rounded day
 
 
 def pull_rows(prs, now):
     """Open pull requests, the newest first, each saying whether it waits on a decision and of what kind."""
     rows = [{"number": p["number"], "title": p["title"], "by": _who(p), "labels": labels(p), "draft": bool(p.get("draft")),
-             "decision": kind_of(p), "opened_days": _days(p["created_at"], now), "link": p["html_url"]} for p in prs]
-    return sorted(rows, key=lambda r: (r["opened_days"], -r["number"]))
+             "decision": kind_of(p), "opened_days": _days(p["created_at"], now), "link": p["html_url"],
+             "created_at": p["created_at"]} for p in prs]
+    return sorted(rows, key=lambda r: (r["created_at"], r["number"]), reverse=True)
 
 
 def age_words(days):

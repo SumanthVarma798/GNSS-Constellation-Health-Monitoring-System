@@ -333,3 +333,9 @@ def test_the_hero_says_in_words_whether_any_of_it_is_failing(monkeypatch):
     signed_in(monkeypatch, "member@example.com")
 
     assert "things need a look, 1 of them failing" in text(run(monkeypatch))
+def test_the_system_design_page_opens_with_its_picture(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+
+    at = run(monkeypatch, page="console/design.py")
+
+    assert "How the system works" in text(at) and at.get("iframe")
