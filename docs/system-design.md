@@ -108,7 +108,7 @@ pie showData title Estimated hours, all guesses
 | 8, 9 | Phone database trend; NavIC signal status | 18 | Open |
 | 19, 20 | Service column; announced versus observed | 25 | Open |
 | 21, 22 | Per-satellite history; scoreboard | 40 | Open |
-| 17 | Administration console | 15 | Built in steps (pull requests 102 to 109): Google sign-in, Summary, Jobs, Approvals, open work, and System design with a local-model assistant. Shared copy at <https://gnss-admin-console.streamlit.app/> |
+| 17 | Administration console | 15 | Built in steps (pull requests 102 to 109): Google sign-in, Summary, Jobs, Approvals, open work, and System design with a local-model assistant. Shared copy at <https://gnss-master-cosole.streamlit.app/> |
 | 23 | Team call, Sat 17 Oct 2026: run-through, handout, fallback pictures | 5 | Open |
 
 ## 4. How one item travels
