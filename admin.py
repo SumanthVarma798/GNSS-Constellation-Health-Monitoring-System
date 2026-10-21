@@ -63,7 +63,8 @@ trail = common.follow(st.session_state.setdefault("console_trail", {"back": [], 
 who = st.user.get("name") or email
 st.html(console.title_bar(page.title) + console.current_page_css(page.url_path))
 with st.container(key="console_bar"):
-    steps = [way for way in ("back", "forward") if trail[way]]   # each shown only when there is a page that way
+    # each shown only when there is a page that way, and that page still exists (one may be removed mid-session)
+    steps = [way for way in ("back", "forward") if trail[way] and trail[way][-1] in where]
     *step_cols, crumb, refresh, pick, person, out = st.columns(len(steps) + 5, vertical_alignment="center")
     for col, way in zip(step_cols, steps):
         to = where[trail[way][-1]][1]

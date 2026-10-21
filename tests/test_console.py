@@ -370,3 +370,13 @@ def test_back_and_forward_show_only_when_there_is_a_page_that_way(monkeypatch):
     at.button(key="console_back").click().run()
     assert "Overview › <b>Summary</b>" in text(at)
     assert [b.key for b in at.button if b.key in ("console_back", "console_forward")] == ["console_forward"]
+
+
+def test_back_is_not_offered_to_a_page_that_no_longer_exists(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    at = run(monkeypatch)
+    at.session_state["console_trail"] = {"back": ["gone"], "forward": [], "at": ""}
+
+    at.run()
+
+    assert not at.exception and not [b for b in at.button if b.key == "console_back"]
