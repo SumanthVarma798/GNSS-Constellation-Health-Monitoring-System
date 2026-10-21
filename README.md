@@ -3,7 +3,7 @@
 > repository has no licence file, so this copy must stay private and must not be
 > redistributed. Nothing here has been agreed with the team.
 >
-> - **Administration console, for the team: <https://gnss-master-cosole.streamlit.app/>**
+> - **Administration console, for the team: <https://gnss-master-console.streamlit.app/>**
 >   What runs, what is waiting for a decision, the open work, and the system design in one picture.
 >   Sign in with a Google account on the console's list; ask Sumanth to be added. It is hosted free on
 >   Streamlit Community Cloud from this repository's `main`. Questions to the assistant work only where
