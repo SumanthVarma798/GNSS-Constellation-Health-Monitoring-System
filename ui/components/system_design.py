@@ -103,10 +103,11 @@ PARTS = {
              ["The weekly job that refreshes its bundled orbit data is turned off on GitHub"], "dashboard.py · views/ · ui/"),
     "admin": ("Administration console", "key",
               "This console: what the system is doing, all in one place, and the place a person approves changes.",
-              ["Google sign-in with an allow-list; one GitHub token kept on this computer",
+              ["Google sign-in with an allow-list; one GitHub token, kept in the console's secrets",
                "Reads GitHub's record of jobs, issues and pull requests, and the archive's run logs",
                "Every change it makes goes out as a pull request"],
-              ["Runs on one computer for now (localhost:48973); hosting is undecided"],
+              ["Shared copy on Streamlit Community Cloud's free tier (gnss-master-cosole.streamlit.app); it sleeps after a while unvisited and wakes on a click",
+               "The assistant answers only where Ollama runs, so not on the shared copy"],
               "admin.py · console/ · evidence/decisions.py"),
 }
 

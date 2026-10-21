@@ -31,10 +31,19 @@ with body:
          height=HEIGHT, scrolling=True)
 
 
+@st.cache_data(ttl=60, show_spinner=False)
+def model_here():
+    return assistant.available()
+
+
 @st.fragment
 def ask_the_project():
     """Questions about the system, answered by a local model from the project's own material only."""
     st.subheader("Ask about the system")
+    if not model_here():
+        st.info("Questions are off on this copy of the console: the assistant needs the local model (Ollama) on the "
+                "same computer, and there is none here. On a computer that runs it, start it with `ollama serve`.")
+        return
     st.caption(f"Answers come only from the design documents, the code's own descriptions and the open issues, each "
                f"fact with its source in [brackets]. The model ({MODEL}) runs on this computer; it can still be "
                "wrong, so check the source it names.")

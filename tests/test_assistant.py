@@ -3,6 +3,7 @@ import json
 
 import pytest
 import requests
+import streamlit
 
 from evidence import assistant
 from evidence.assistant_settings import ISSUE_CHARACTERS, MODEL
@@ -32,6 +33,10 @@ class Reply:
 
     def __exit__(self, *_):
         return False
+
+    @property
+    def ok(self):
+        return self.status_code < 400
 
     def raise_for_status(self):
         if self.status_code >= 400:
@@ -97,7 +102,9 @@ def test_a_source_the_material_does_not_have_is_named():
 
 
 def test_the_design_page_shows_the_question_the_answer_and_any_unknown_source(monkeypatch):
+    streamlit.cache_data.clear()
     signed_in(monkeypatch, "member@example.com")
+    monkeypatch.setattr(assistant, "available", lambda: True)
     monkeypatch.setattr(assistant, "answer", lambda question, history, text: iter(["Built ", "[docs/made-up.md]."]))
     at = run(monkeypatch, page="console/design.py")
 
@@ -106,3 +113,24 @@ def test_the_design_page_shows_the_question_the_answer_and_any_unknown_source(mo
     assert not at.exception
     assert [m.name for m in at.chat_message] == ["user", "assistant"]
     assert "docs/made-up.md" in at.warning[0].value
+
+
+def test_where_no_model_runs_the_page_says_questions_are_off_and_offers_no_box(monkeypatch):
+    streamlit.cache_data.clear()
+    signed_in(monkeypatch, "member@example.com")
+    monkeypatch.setattr(assistant, "available", lambda: False)
+
+    at = run(monkeypatch, page="console/design.py")
+
+    assert "Questions are off on this copy" in at.info[0].value and not at.chat_input
+    assert "runs on this computer" not in " ".join(c.value for c in at.caption)
+
+
+def test_the_model_counts_as_here_only_when_ollama_answers(monkeypatch):
+    def refused(*_, **__):
+        raise requests.ConnectionError()
+
+    monkeypatch.setattr(assistant.requests, "get", refused)
+    assert assistant.available() is False
+    monkeypatch.setattr(assistant.requests, "get", lambda *_, **__: Reply([]))
+    assert assistant.available() is True
