@@ -434,6 +434,15 @@ def test_the_pipeline_diagram_numbers_the_chain_without_dangling_right_arrows():
     assert picture.count('class="order"') == len(chain_names)
 
 
+def test_the_pipeline_diagram_does_not_hide_stage_words_from_screen_readers():
+    stage_rows = live_pipeline.stages(WORKFLOWS, RUNS, jobs.run_log(LOG), [], common.workflow_texts(), NOW)
+    picture = ui_console.pipeline_diagram(stage_rows)
+
+    assert 'role="img"' not in picture
+    assert "Archive: documents" in picture
+    assert "Registry update" in picture
+
+
 def test_back_and_forward_follow_the_pages_visited_and_the_browser_own_buttons():
     trail = {"back": [], "forward": [], "at": None}
     for path in ("", "jobs", "work"):

@@ -42,6 +42,16 @@ def test_a_failed_archive_group_stage_takes_its_result_from_the_run_log():
     assert news["last"]["changed"] == "https://c"
 
 
+def test_archive_groups_without_their_own_log_line_stay_waiting():
+    stages = stage_map(pipeline.stages(WORKFLOWS, RUNS, jobs.run_log(LOG), [], workflow_texts(), NOW))
+
+    for name in ("Archive: documents", "Archive: catalogues", "Archive: social"):
+        assert stages[name]["state"] == "waiting"
+        assert stages[name]["last"] is None
+        assert stages[name]["proof"]["run_url"] is None
+    assert stages["Archive"]["state"] == "failed"
+
+
 def test_a_disabled_workflow_stage_is_off_and_has_no_next_run():
     workflows = [*WORKFLOWS, {"path": ".github/workflows/registry-update.yml", "state": "disabled_manually"}]
     stages = pipeline.stages(workflows, RUNS, jobs.run_log(LOG), [], workflow_texts(), NOW)
@@ -128,6 +138,19 @@ def test_a_rejected_decision_does_not_mark_merged_to_main_as_failed():
     assert stages["Merged to main"]["state"] == "waiting"
 
 
+def test_decided_and_merged_stages_follow_decision_time_not_creation_time():
+    merged_later = {**pr(9, ["decision: registry update"], created="2026-10-18T06:05:00Z"), "state": "closed",
+                    "merged_at": "2026-10-20T06:15:00Z", "closed_at": "2026-10-20T06:15:00Z"}
+    rejected_earlier = {**pr(10, ["decision: registry update"], created="2026-10-19T06:05:00Z"), "state": "closed",
+                        "merged_at": None, "closed_at": "2026-10-19T06:15:00Z"}
+
+    stages = stage_map(pipeline.stages(WORKFLOWS, RUNS, jobs.run_log(LOG), [merged_later, rejected_earlier],
+                                       workflow_texts(), NOW))
+
+    assert stages["Decided on the Approvals page"]["proof"]["pr_number"] == 9
+    assert stages["Merged to main"]["proof"]["pr_number"] == 9
+
+
 def test_an_old_log_line_without_a_matching_recent_run_has_no_run_link():
     old = jobs.run_log("""job,started,ended,result,changed
 archive social,2026-09-01T00:00:00Z,2026-09-01T00:01:00Z,ok,nothing
@@ -158,6 +181,16 @@ def test_the_proof_feed_is_newest_first_and_kept_to_the_limit():
     assert feed[0]["words"].startswith("Pull request #72 merged")
     assert any(event["words"].startswith("Pull request #71 opened") for event in feed)
     assert all(event.get("link_words") for event in feed if event.get("link"))
+
+
+def test_the_proof_feed_links_manual_archive_all_runs():
+    log = jobs.run_log("""job,started,ended,result,changed
+archive all,2026-10-20T05:00:00Z,2026-10-20T05:02:00Z,ok,all groups
+""")
+    feed = pipeline.proof_feed([run("archive.yml", "2026-10-20T05:00:00Z")], log, [], limit=20)
+
+    assert feed[0]["words"] == "archive all finished: ok"
+    assert feed[0]["link"] == "https://github.com/x"
 
 
 def test_a_run_without_an_actions_run_number_is_named_as_a_github_run():

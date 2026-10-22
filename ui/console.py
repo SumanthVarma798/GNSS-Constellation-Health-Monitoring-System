@@ -250,7 +250,7 @@ def pipeline_diagram(stages, next_stage_name=None, next_at=None):
     archives = "".join(box(by_name[name]) for name in archive_names if name in by_name)
     chain_rows = [name for name in chain_names if name in by_name]
     chain = [box(by_name[name], order=index + 1) for index, name in enumerate(chain_rows)]
-    return ('<div class="c-pipe" role="img" aria-label="The live pipeline and each stage state">'
+    return ('<div class="c-pipe">'
             f'<div class="c-pipe-archives">{archives}</div>'
             '<div class="c-pipe-arrow c-pipe-join" aria-hidden="true">→</div>'
             f'<div class="c-pipe-chain">{"".join(chain)}</div>'

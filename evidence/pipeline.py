@@ -11,6 +11,7 @@ _SHA = re.compile(r"\b([0-9a-fA-F]{7,40})\b")
 _RUN_NUMBER = re.compile(r"/actions/runs/(\d+)")
 _LABEL_WAITING = "decision: "
 _LOG_TO_WORKFLOW = {log_name: workflow for workflow, _, _, _, log_name in JOBS if log_name}
+_LOG_TO_WORKFLOW["archive all"] = "archive.yml"
 
 
 def _file(path):
@@ -127,8 +128,9 @@ def _job_stage(name, what, workflow, group, log_name, runs_by_workflow, workflow
     running_run = _running_run(workflow_runs) if allow_running else None
     running = running_run is not None
     line = _line_for(log, log_name) if log_name else None
-    run = _run_for(workflow_runs, line["started"] if line else None)
-    last = _last_from_line(line) if line else _last_from_run(run)
+    archive_group_without_log = workflow == "archive.yml" and bool(group) and line is None
+    run = None if archive_group_without_log else _run_for(workflow_runs, line["started"] if line else None)
+    last = _last_from_line(line) if line else (None if archive_group_without_log else _last_from_run(run))
     return {"name": name, "what": what, "state": _state_from_last(last, running, turned_off), "last": last,
             "next": None if turned_off else _next_for(workflow, group, workflow_texts, now),
             "proof": _proof(run, (last or {}).get("changed", "")),
@@ -139,6 +141,13 @@ def _decision_prs(prs):
     rows = [pr for pr in prs if any(label.get("name", "").startswith(_LABEL_WAITING) for label in pr.get("labels", []))]
     rows.sort(key=lambda pr: pr.get("created_at", ""))
     return rows
+
+
+def _decision_time(pr):
+    for field in ("merged_at", "closed_at", "updated_at", "created_at"):
+        if pr.get(field):
+            return jobs.parse_time(pr[field])
+    return jobs.parse_time("1970-01-01T00:00:00Z")
 
 
 def _pr_stage(name, what, pr, state):
@@ -189,6 +198,9 @@ def stages(workflows, runs, log, prs, workflow_texts, now):
     waiting_open = [pr for pr in waiting if pr.get("state", "open") == "open"]
     decided = [pr for pr in waiting if pr.get("state", "open") != "open" or pr.get("merged_at")]
     merged = [pr for pr in waiting if pr.get("merged_at")]
+    decided.sort(key=_decision_time)
+    merged.sort(key=lambda pr: jobs.parse_time(pr["merged_at"]) if pr.get("merged_at")
+                else jobs.parse_time("1970-01-01T00:00:00Z"))
     latest_waiting = waiting_open[-1] if waiting_open else None
     latest_decided = decided[-1] if decided else None
     latest_merged = merged[-1] if merged else None
@@ -237,6 +249,8 @@ def proof_feed(runs, log, prs, limit=20):
     events = []
     for line in log:
         workflow = _LOG_TO_WORKFLOW.get(line["job"])
+        if workflow is None and line["job"].startswith("archive "):
+            workflow = "archive.yml"
         run = _run_for(runs_by_workflow.get(workflow, []), line["started"]) if workflow else None
         finished = jobs.parse_time(line["ended"])
         events.append({"time": finished, "words": f"{line['job']} finished: {line['result']}", "link": (run or {}).get("html_url"),
