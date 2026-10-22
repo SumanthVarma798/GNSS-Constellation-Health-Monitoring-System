@@ -17,6 +17,7 @@ NOT_SET_UP = ("This copy of the console is not set up. It needs Google sign-in, 
               "a GitHub token, in its secrets: .streamlit/secrets.toml on a computer, or Settings > Secrets on Streamlit "
               "Community Cloud (see .streamlit/secrets.example.toml).")
 NEEDED_ADMIN = ("allowed", "github_token")
+REFRESH_PENDING = "console_refresh_pending"   # set when Refresh is pressed; cleared after the toast for the new reading
 
 
 def settings():
@@ -37,7 +38,7 @@ def missing():
             + [f"[{SECRETS_SECTION}] {field}" for field in NEEDED_ADMIN if not admin.get(field)])
 
 
-@st.cache_data(ttl=READ_EVERY_SECONDS, show_spinner=False)
+@st.cache_data(ttl=READ_EVERY_SECONDS, show_spinner="Reading GitHub…")
 def github(token):
     """Everything the console reads from GitHub, kept for READ_EVERY_SECONDS. A run log that cannot be read is left
     out and named in 'problems'; anything else GitHub refuses is raised, since nothing can be shown without it."""
@@ -123,6 +124,7 @@ def refresh_action():
     """The Actions pane's Refresh: read GitHub again now."""
     if st.button("Refresh", key="console_refresh_action", icon=":material/refresh:", help="Read everything again from GitHub"):
         github.clear()
+        st.session_state[REFRESH_PENDING] = True
         st.rerun()
 
 

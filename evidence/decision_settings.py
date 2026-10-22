@@ -15,6 +15,7 @@ LABEL_PREFIX = "decision: "
 # Each kind (the label after the prefix) and the group it is shown in. A pull request whose kind is not listed is
 # still shown, under OTHER_GROUP, so nothing waiting is hidden. The four news kinds are the labels issue 16 names.
 KINDS = {
+    "source grade": "Sources",   # a batch of candidate sources whose proposed grade the team confirms
     "registry update": "Satellites",   # the weekly rebuild from the IGS file (.github/workflows/registry-update.yml)
     "status": "Satellites",
     "slot": "Satellites",
