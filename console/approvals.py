@@ -64,7 +64,8 @@ with body:
         st.html(console.notice(said[2], said[1]))
         del st.session_state["admin_result"]
     if not items:
-        st.html(console.notice("Nothing is waiting for a decision.", "ok"))
+        st.html(console.notice(f"Nothing is waiting for a decision. GitHub lists {len(seen['prs'])} open pull "
+                               f"request{'' if len(seen['prs']) == 1 else 's'}, none labelled for a decision.", "ok"))
     for group, its in decisions.grouped(items):
         st.html(console.section(group, console.list_view(
             ["Item", "Kind", "Raised by", "Waiting"],
