@@ -153,6 +153,18 @@ def test_payload_visual_data_contains_no_markup():
     assert "<" not in news["retry_backoff"]["note"] and ">" not in news["retry_backoff"]["note"]
 
 
+def test_payload_includes_overview_link_cadence_words_for_scheduled_and_event_links():
+    rows = _stage_rows()
+    upcoming = pipeline.what_next(rows, NOW, hours=24)
+    next_key, next_at = ((upcoming[0]["key"], upcoming[0]["at"]) if upcoming else (None, None))
+    data = payload(rows, next_key, next_at, _workflow_texts())
+
+    links = {(item["from"], item["to"]): item["cadence_words"] for item in data["overview_links"]}
+    assert links[("archive_documents", "archive")] == "daily 00:30 UTC"
+    assert links[("archive_news", "archive")] == "every 3 h from 00:50 UTC"
+    assert links[("decision_waiting", "decision_made")] == "when a person decides"
+
+
 def test_level_2_words_avoid_internal_jargon():
     banned = ("collector", "graded source", "candidate sources", "claim extraction", "evidence trail", "workflow")
     for key, words in STAGES.items():

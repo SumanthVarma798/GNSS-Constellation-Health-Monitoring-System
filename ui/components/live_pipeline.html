@@ -10,18 +10,54 @@ __TOKENS__
 html, body { margin: 0; background: var(--pane); color: var(--ink); font: 13px/1.45 __FONT__; }
 body { overflow-x: hidden; }
 :focus-visible { outline: 2px solid var(--c-info); outline-offset: 2px; }
-.lp-wrap { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 12px; }
+.lp-wrap { display: grid; grid-template-columns: 1fr; gap: 14px; }
 .lp-pane { border: 2px solid var(--outline); background: var(--pane); box-shadow: var(--hard); min-width: 0; }
 .lp-pane > h3 { margin: 0; padding: 5px 10px; font-size: 12px; font-weight: 800; color: var(--head-ink); background: var(--head-bg);
   box-shadow: var(--th-bevel); }
 .lp-pane > .in { padding: 10px; }
+.overview-note { margin: 0 0 8px; color: var(--muted); }
+.overview-map { position: relative; border: 2px solid var(--outline); background: var(--pane-alt); box-shadow: var(--hard-sm); padding: 10px; }
+.overview-grid { position: relative; z-index: 2; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 12px; align-items: stretch; }
+.overview-node { min-width: 0; }
+.overview-svg { position: absolute; inset: 0; pointer-events: none; overflow: visible; z-index: 1; }
+.stage.overview { min-height: 84px; padding-right: 26px; }
+.stage .order { position: absolute; top: 6px; right: 6px; border: 2px solid var(--outline); box-shadow: var(--hard-sm); background: var(--c-info);
+  color: var(--badge-ink); font-size: 10px; font-weight: 900; line-height: 1; padding: 2px 5px; }
+.stage .cadence { display: flex; align-items: center; gap: 4px; margin: -2px 0 7px; font-size: 11px; color: var(--muted); font-weight: 700; }
+.stage .cadence .ic { width: 1.1em; text-align: center; font-size: 10px; }
+.overview-layout { display: grid; grid-template-columns: minmax(0, 1fr) 180px minmax(0, 1fr); gap: 10px; align-items: start; }
+.overview-collect, .overview-chain { display: grid; gap: 8px; }
+.overview-handoff { display: grid; grid-template-rows: auto 1fr; align-items: start; min-height: 100%; }
+.overview-brace { justify-self: end; width: 24px; min-height: 100%; margin-top: 4px; border-right: 3px solid var(--c-info); border-top: 3px solid var(--c-info); border-bottom: 3px solid var(--c-info); }
+.overview-link-row { display: grid; gap: 8px; align-items: center; min-height: 34px; }
+.overview-link-row.handoff { grid-template-columns: 50px minmax(0, 1fr); margin-top: 8px; }
+.overview-link-row.chain { grid-template-columns: 24px minmax(0, 1fr); }
+.overview-link-label { font-size: 11px; line-height: 1.35; font-weight: 700; color: var(--ink); }
+.overview-arrow { position: relative; color: var(--c-info); }
+.overview-arrow.right { width: 46px; height: 12px; justify-self: center; }
+.overview-arrow.right::before { content: ""; position: absolute; left: 0; right: 10px; top: 4px; height: 3px; background: currentColor; }
+.overview-arrow.right::after { content: ""; position: absolute; right: 0; top: 0; border-top: 6px solid transparent; border-bottom: 6px solid transparent;
+  border-left: 10px solid currentColor; }
+.overview-arrow.down { width: 14px; height: 34px; justify-self: center; }
+.overview-arrow.down::before { content: ""; position: absolute; left: 5px; top: 0; bottom: 10px; width: 3px; background: currentColor; }
+.overview-arrow.down::after { content: ""; position: absolute; left: 0; bottom: 0; border-left: 7px solid transparent; border-right: 7px solid transparent;
+  border-top: 10px solid currentColor; }
+.overview-arrow.running.right::before { background-image: repeating-linear-gradient(90deg, currentColor 0 8px, transparent 8px 14px);
+  background-size: 28px 100%; animation: lp-dash-right 1.2s linear infinite; }
+.overview-arrow.running.down::before { background-image: repeating-linear-gradient(180deg, currentColor 0 8px, transparent 8px 14px);
+  background-size: 100% 28px; animation: lp-dash-down 1.2s linear infinite; }
+.pipe-link { stroke: color-mix(in srgb, var(--c-info) 70%, var(--pane)); stroke-width: 2.5; fill: none; }
+.pipe-link.active { stroke: var(--c-info); }
+.pipe-link.running { stroke: var(--c-info); stroke-dasharray: 8 6; animation: lp-dash 1.35s linear infinite; }
+.pipe-label { font-size: 10px; font-weight: 800; fill: var(--ink); }
+.pipe-label-bg { fill: var(--pane); stroke: var(--outline); stroke-width: 1; }
 .lp-stage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
 .lp-group { margin-bottom: 10px; }
 .lp-group:last-child { margin-bottom: 0; }
 .lp-group p { margin: 0 0 6px; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
 .lp-arrow { display: grid; place-items: center; height: 20px; color: var(--muted); font-weight: 800; }
 .lp-arrow::before { content: "↓"; }
-.stage { display: block; width: 100%; border: 2px solid var(--outline); background: var(--pane-alt); box-shadow: var(--hard-sm);
+.stage { position: relative; display: block; width: 100%; border: 2px solid var(--outline); background: var(--pane-alt); box-shadow: var(--hard-sm);
   border-left: 6px solid var(--c-idle); text-align: left; color: var(--ink); padding: 8px 10px; cursor: pointer; min-height: 78px; }
 .stage .name { display: block; font-weight: 800; margin-bottom: 6px; line-height: 1.25; }
 .stage .state { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 800; }
@@ -47,9 +83,27 @@ body { overflow-x: hidden; }
   50% { box-shadow: 0 0 0 2px var(--c-info), var(--hard-sm); }
   100% { box-shadow: var(--hard-sm); }
 }
+@keyframes lp-dash {
+  to { stroke-dashoffset: -28; }
+}
+@keyframes lp-dash-right {
+  to { background-position: -28px 0; }
+}
+@keyframes lp-dash-down {
+  to { background-position: 0 -28px; }
+}
 .panel-head { display: grid; gap: 2px; margin-bottom: 8px; }
 .panel-head h4 { margin: 0; font-size: 15px; line-height: 1.25; }
 .panel-head p { margin: 0; color: var(--muted); }
+.panel-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.tile { border: 2px solid var(--outline); background: var(--pane-alt); box-shadow: var(--hard-sm); padding: 8px; min-width: 0; }
+.tile h5 { margin: 0 0 6px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.tile p { margin: 0; }
+.span-3 { grid-column: span 3; }
+.span-4 { grid-column: span 4; }
+.span-6 { grid-column: span 6; }
+.span-8 { grid-column: span 8; }
+.span-12 { grid-column: 1 / -1; }
 .block { margin-top: 10px; }
 .block h5 { margin: 0 0 2px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .block p { margin: 0; }
@@ -65,7 +119,7 @@ body { overflow-x: hidden; }
 .kv dd { margin: 0; overflow-wrap: anywhere; }
 .mono { font-family: var(--mono); background: var(--pane-alt); border: 1px solid var(--edge-soft); padding: 4px 6px; display: block; }
 a { color: var(--link); }
-.viz { margin-top: 10px; border: 2px solid var(--outline); background: var(--pane-alt); box-shadow: var(--hard-sm); padding: 8px; }
+.viz { margin: 0; border: 2px solid var(--outline); background: var(--pane-alt); box-shadow: var(--hard-sm); padding: 8px; }
 .viz h6 { margin: 0 0 7px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
 .viz small { color: var(--muted); }
 .tone-chip { display: inline-block; border: 2px solid var(--outline); box-shadow: var(--hard-sm); padding: 1px 6px; font-weight: 800; font-size: 11px; }
@@ -87,7 +141,7 @@ a { color: var(--link); }
 .flow-node.active { background: var(--select); color: var(--select-ink); }
 .flow-node.connected { border-color: var(--c-info); }
 .flow-svg { position: absolute; inset: 0; pointer-events: none; overflow: visible; z-index: 1; }
-.flow-line { stroke: var(--edge-soft); stroke-width: 2; fill: none; }
+.flow-line { stroke-width: 2.5; }
 .flow-line.active { stroke: var(--c-info); }
 .flow-detail { border: 2px solid var(--outline); background: var(--pane); box-shadow: var(--hard-sm); padding: 6px; }
 .flow-detail p { margin: 0 0 4px; }
@@ -127,7 +181,7 @@ a { color: var(--link); }
 .set-card .val { font-weight: 800; overflow-wrap: anywhere; }
 .set-card .src { color: var(--muted); font-size: 11px; margin-top: 2px; }
 .set-card .why { margin-top: 6px; font-size: 12px; }
-.stairs { margin-top: 8px; border: 2px solid var(--outline); box-shadow: var(--hard-sm); padding: 6px; background: var(--pane); display: grid; gap: 6px; }
+.stairs { margin: 0; border: 2px solid var(--outline); box-shadow: var(--hard-sm); padding: 6px; background: var(--pane); display: grid; gap: 6px; }
 .stairs .chart { border: 1px solid var(--edge-soft); background: var(--pane-alt); padding: 4px; }
 .stairs svg { width: 100%; height: 66px; display: block; }
 .stairs .legend { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--muted);
@@ -138,29 +192,47 @@ a { color: var(--link); }
   padding: 3px 7px; background: var(--pane); color: var(--ink); text-decoration: none; }
 .chip .lbl { color: var(--muted); font-size: 11px; }
 .chip.off { opacity: .65; background: var(--pane-alt); color: var(--muted); }
-.proof-row { margin-top: 8px; display: grid; gap: 6px; }
+.proof-row { margin-top: 0; display: grid; gap: 6px; }
 .copy-row { display: flex; gap: 8px; align-items: flex-start; }
 .copy-row .mono { flex: 1; min-width: 0; }
 
-@media (max-width: 950px) {
+@media (min-width: 1400px) {
   .lp-wrap { grid-template-columns: 1fr; }
 }
-@media (max-width: 700px) {
-  .kv { grid-template-columns: 1fr; }
+@media (min-width: 1720px) {
+  .lp-wrap { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); }
+}
+@media (max-width: 900px) {
+  .tile.span-3, .tile.span-4, .tile.span-6, .tile.span-8 { grid-column: span 6; }
   .flow-grid, .flow-grid.repos-1, .flow-grid.repos-2, .flow-grid.repos-3, .flow-grid.repos-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .last-run-range { grid-template-columns: 1fr; }
 }
+@media (max-width: 700px) {
+  .kv { grid-template-columns: 1fr; }
+  .overview-layout { grid-template-columns: 1fr; gap: 10px; }
+  .overview-handoff { grid-template-rows: auto; justify-items: center; min-height: 0; }
+  .overview-brace { display: none; }
+  .overview-link-row.handoff { grid-template-columns: 1fr; justify-items: center; margin-top: 0; text-align: center; }
+  .overview-link-row.chain { min-height: 38px; }
+}
 @media (max-width: 600px) {
   .lp-pane { box-shadow: var(--hard-sm); }
+  .panel-grid { grid-template-columns: 1fr; }
+  .tile.span-3, .tile.span-4, .tile.span-6, .tile.span-8, .tile.span-12 { grid-column: 1 / -1; }
+  .overview-grid { grid-template-columns: 1fr; }
+  .overview-node { grid-column: 1 / -1 !important; grid-row: auto !important; }
 }
 @media (max-width: 375px) {
   .settings-grid { grid-template-columns: 1fr; }
   .flow-grid, .flow-grid.repos-1, .flow-grid.repos-2, .flow-grid.repos-3, .flow-grid.repos-4 { grid-template-columns: 1fr; }
   .flow-stage { min-height: 0; }
   .strip { padding-inline: 4px; }
+  .overview-map { padding-inline: 6px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .stage.running { animation: none; }
+  .pipe-link.running { animation: none; stroke-dasharray: none; }
+  .overview-arrow.running.right::before, .overview-arrow.running.down::before { animation: none; background-image: none; }
   .btn:active { transform: none; }
   .flow-node, .flow-line { transition: none !important; }
 }
@@ -171,15 +243,8 @@ a { color: var(--link); }
   <section class="lp-pane">
     <h3>The pipeline at a glance</h3>
     <div class="in">
-      <div class="lp-group">
-        <p>Collect from sources</p>
-        <div class="lp-stage-grid" id="collect"></div>
-      </div>
-      <div class="lp-arrow" aria-hidden="true"></div>
-      <div class="lp-group">
-        <p>Then review and go live</p>
-        <div class="lp-stage-grid" id="chain"></div>
-      </div>
+      <p class="overview-note">Collect from sources. Then review and go live. The numbered chain carries each change to dashboard readiness.</p>
+      <div class="overview-map" id="overview"></div>
     </div>
   </section>
   <aside class="lp-pane">
@@ -195,7 +260,8 @@ let selected = cards[DATA.default_key] ? DATA.default_key : DATA.cards[0].key;
 let technical = false;
 const flowSelection = {};
 let flowRedraw = null;
-let flowResizeBound = false;
+let overviewRedraw = null;
+let resizeBound = false;
 
 function el(tag, cls, text) {
   const node = document.createElement(tag);
@@ -252,12 +318,20 @@ function clamp(value, low, high) {
   return Math.max(low, Math.min(high, value));
 }
 
-function drawFlowEdges(host, svg, nodeById, edges) {
+function bindResize() {
+  if (resizeBound) return;
+  window.addEventListener("resize", () => {
+    if (overviewRedraw) overviewRedraw();
+    if (flowRedraw) flowRedraw();
+  });
+  resizeBound = true;
+}
+
+function ensureArrowMarker(svg, markerId) {
   const ns = "http://www.w3.org/2000/svg";
-  svg.replaceChildren();
   const defs = document.createElementNS(ns, "defs");
   const marker = document.createElementNS(ns, "marker");
-  marker.setAttribute("id", "flow-arrow");
+  marker.setAttribute("id", markerId);
   marker.setAttribute("viewBox", "0 0 10 10");
   marker.setAttribute("refX", "9");
   marker.setAttribute("refY", "5");
@@ -266,10 +340,16 @@ function drawFlowEdges(host, svg, nodeById, edges) {
   marker.setAttribute("orient", "auto-start-reverse");
   const tip = document.createElementNS(ns, "path");
   tip.setAttribute("d", "M 0 0 L 10 5 L 0 10 z");
-  tip.setAttribute("fill", "currentColor");
+  tip.setAttribute("fill", "var(--c-info)");
   marker.append(tip);
   defs.append(marker);
   svg.append(defs);
+}
+
+function drawFlowEdges(host, svg, nodeById, edges) {
+  const ns = "http://www.w3.org/2000/svg";
+  svg.replaceChildren();
+  ensureArrowMarker(svg, "flow-arrow");
   const hostRect = host.getBoundingClientRect();
   svg.setAttribute("viewBox", `0 0 ${Math.max(1, Math.round(hostRect.width))} ${Math.max(1, Math.round(hostRect.height))}`);
   svg.setAttribute("width", `${Math.max(1, Math.round(hostRect.width))}`);
@@ -302,7 +382,7 @@ function drawFlowEdges(host, svg, nodeById, edges) {
       y2 = (dy >= 0 ? toRect.top : toRect.bottom) - hostRect.top;
     }
     const line = document.createElementNS(ns, "line");
-    line.classList.add("flow-line");
+    line.classList.add("pipe-link", "flow-line");
     line.dataset.from = edge.from;
     line.dataset.to = edge.to;
     line.setAttribute("x1", `${x1}`);
@@ -311,6 +391,82 @@ function drawFlowEdges(host, svg, nodeById, edges) {
     line.setAttribute("y2", `${y2}`);
     line.setAttribute("marker-end", "url(#flow-arrow)");
     svg.append(line);
+  });
+}
+
+function drawOverviewEdges(host, svg, nodeById, links) {
+  const ns = "http://www.w3.org/2000/svg";
+  svg.replaceChildren();
+  ensureArrowMarker(svg, "overview-arrow");
+  const hostRect = host.getBoundingClientRect();
+  const width = Math.max(1, Math.round(hostRect.width));
+  const height = Math.max(1, Math.round(hostRect.height));
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  svg.setAttribute("width", `${width}`);
+  svg.setAttribute("height", `${height}`);
+  links.forEach((edge) => {
+    const from = nodeById[edge.from];
+    const to = nodeById[edge.to];
+    if (!from || !to) return;
+    const fromRect = from.getBoundingClientRect();
+    const toRect = to.getBoundingClientRect();
+    const points = [];
+    let labelX = 0;
+    let labelY = 0;
+    if (edge.turn_back) {
+      const startX = fromRect.right - hostRect.left;
+      const startY = (fromRect.top + (fromRect.height / 2)) - hostRect.top;
+      const turnX = width - 10;
+      const endX = toRect.left - hostRect.left;
+      const endY = (toRect.top + (toRect.height / 2)) - hostRect.top;
+      points.push([startX, startY], [turnX, startY], [turnX, endY], [endX, endY]);
+      labelX = turnX - 6;
+      labelY = ((startY + endY) / 2) - 6;
+    } else if (Math.abs((fromRect.top - toRect.top)) < 4) {
+      const toRight = toRect.left > fromRect.left;
+      const y = ((fromRect.top + (fromRect.height / 2)) - hostRect.top);
+      const startX = (toRight ? fromRect.right : fromRect.left) - hostRect.left;
+      const endX = (toRight ? toRect.left : toRect.right) - hostRect.left;
+      points.push([startX, y], [endX, y]);
+      labelX = (startX + endX) / 2;
+      labelY = y - 6;
+    } else {
+      const startX = (fromRect.left + (fromRect.width / 2)) - hostRect.left;
+      const startY = fromRect.bottom - hostRect.top;
+      const endX = (toRect.left + (toRect.width / 2)) - hostRect.left;
+      const endY = toRect.top - hostRect.top;
+      const midY = startY + ((endY - startY) / 2);
+      points.push([startX, startY], [startX, midY], [endX, midY], [endX, endY]);
+      labelX = (startX + endX) / 2;
+      labelY = midY - 6;
+    }
+
+    const path = document.createElementNS(ns, "path");
+    path.classList.add("pipe-link");
+    if (edge.running) path.classList.add("running");
+    path.setAttribute("d", points.map((point, index) =>
+      `${index === 0 ? "M" : "L"} ${Math.round(point[0])} ${Math.round(point[1])}`).join(" "));
+    path.setAttribute("marker-end", "url(#overview-arrow)");
+    svg.append(path);
+
+    const group = document.createElementNS(ns, "g");
+    const text = document.createElementNS(ns, "text");
+    text.classList.add("pipe-label");
+    text.textContent = edge.cadence_words || "not recorded";
+    text.setAttribute("x", `${Math.round(labelX)}`);
+    text.setAttribute("y", `${Math.round(labelY)}`);
+    text.setAttribute("text-anchor", "middle");
+    text.setAttribute("dominant-baseline", "auto");
+    group.append(text);
+    svg.append(group);
+    const box = text.getBBox();
+    const back = document.createElementNS(ns, "rect");
+    back.classList.add("pipe-label-bg");
+    back.setAttribute("x", `${Math.round(box.x - 3)}`);
+    back.setAttribute("y", `${Math.round(box.y - 1)}`);
+    back.setAttribute("width", `${Math.round(box.width + 6)}`);
+    back.setAttribute("height", `${Math.round(box.height + 2)}`);
+    group.prepend(back);
   });
 }
 
@@ -389,12 +545,7 @@ function flowPicture(stage) {
   drawDetail(activeId);
   setFlowHighlight(wrap, activeId, flow.edges);
   flowRedraw = redraw;
-  if (!flowResizeBound) {
-    window.addEventListener("resize", () => {
-      if (flowRedraw) flowRedraw();
-    });
-    flowResizeBound = true;
-  }
+  bindResize();
   queueMicrotask(redraw);
   return viz;
 }
@@ -503,7 +654,6 @@ function lastRunPicture(stage) {
 
 function settingsPicture(stage) {
   const viz = el("div", "viz");
-  viz.append(el("h6", "", "Settings"));
   const grid = el("div", "settings-grid");
   const settings = stage.settings_cards && stage.settings_cards.length ? stage.settings_cards : [];
   settings.forEach((item) => {
@@ -520,43 +670,44 @@ function settingsPicture(stage) {
     grid.append(el("p", "", "not recorded"));
   }
   viz.append(grid);
-  const backoff = stage.retry_backoff;
-  if (backoff) {
-    const stairs = el("div", "stairs");
-    stairs.append(el("p", "", backoff.note || "not recorded"));
-    const chart = el("div", "chart");
-    const ns = "http://www.w3.org/2000/svg";
-    const svg = document.createElementNS(ns, "svg");
-    svg.setAttribute("viewBox", "0 0 280 62");
-    const count = Math.max(1, backoff.steps_seconds.length);
-    const stepWidth = 260 / count;
-    backoff.steps_seconds.forEach((seconds, index) => {
-      const rect = document.createElementNS(ns, "rect");
-      const height = 12 + Math.round((index / Math.max(1, count - 1)) * 34);
-      rect.setAttribute("x", `${10 + index * stepWidth}`);
-      rect.setAttribute("y", `${54 - height}`);
-      rect.setAttribute("width", `${Math.max(8, stepWidth - 4)}`);
-      rect.setAttribute("height", `${height}`);
-      rect.setAttribute("fill", "var(--c-info)");
-      rect.setAttribute("stroke", "var(--outline)");
-      rect.setAttribute("stroke-width", "2");
-      rect.setAttribute("title", `${seconds} seconds`);
-      svg.append(rect);
-    });
-    chart.append(svg);
-    stairs.append(chart);
-    const legend = el("div", "legend");
-    legend.append(el("span", "", `tries: ${backoff.tries}, pause: ${backoff.wait_between_tries_seconds} s`));
-    legend.append(el("span", "", `cap: ${backoff.steps_words[backoff.steps_words.length - 1]}`));
-    stairs.append(legend);
-    viz.append(stairs);
-  }
   return viz;
+}
+
+function backoffPicture(stage) {
+  const backoff = stage.retry_backoff;
+  if (!backoff) return el("p", "", "not recorded");
+  const stairs = el("div", "stairs");
+  stairs.append(el("p", "", backoff.note || "not recorded"));
+  const chart = el("div", "chart");
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", "0 0 280 62");
+  const count = Math.max(1, backoff.steps_seconds.length);
+  const stepWidth = 260 / count;
+  backoff.steps_seconds.forEach((seconds, index) => {
+    const rect = document.createElementNS(ns, "rect");
+    const height = 12 + Math.round((index / Math.max(1, count - 1)) * 34);
+    rect.setAttribute("x", `${10 + index * stepWidth}`);
+    rect.setAttribute("y", `${54 - height}`);
+    rect.setAttribute("width", `${Math.max(8, stepWidth - 4)}`);
+    rect.setAttribute("height", `${height}`);
+    rect.setAttribute("fill", "var(--c-info)");
+    rect.setAttribute("stroke", "var(--outline)");
+    rect.setAttribute("stroke-width", "2");
+    rect.setAttribute("title", `${seconds} seconds`);
+    svg.append(rect);
+  });
+  chart.append(svg);
+  stairs.append(chart);
+  const legend = el("div", "legend");
+  legend.append(el("span", "", `tries: ${backoff.tries}, pause: ${backoff.wait_between_tries_seconds} s`));
+  legend.append(el("span", "", `cap: ${backoff.steps_words[backoff.steps_words.length - 1]}`));
+  stairs.append(legend);
+  return stairs;
 }
 
 function proofPicture(stage) {
   const viz = el("div", "viz");
-  viz.append(el("h6", "", "Proof"));
   const chips = el("div", "chips");
   (stage.proof_chips || []).forEach((chip) => {
     let item;
@@ -572,8 +723,11 @@ function proofPicture(stage) {
     chips.append(item);
   });
   viz.append(chips);
+  return viz;
+}
+
+function rawLogPicture(stage) {
   const row = el("div", "proof-row");
-  row.append(el("small", "", "Raw run-log line"));
   const copy = el("div", "copy-row");
   copy.append(el("code", "mono", stage.raw_log_line || "not recorded for this stage"));
   const button = el("button", "btn", "Copy");
@@ -590,17 +744,58 @@ function proofPicture(stage) {
   });
   copy.append(button);
   row.append(copy);
-  viz.append(row);
-  return viz;
+  return row;
 }
 
-function stageButton(key) {
+function tile(title, span) {
+  const card = el("section", `tile ${span}`);
+  card.append(el("h5", "", title));
+  return card;
+}
+
+function settingsTiles(stage) {
+  const settings = stage.settings_cards && stage.settings_cards.length ? stage.settings_cards : [];
+  if (!settings.length) {
+    const empty = tile("Settings", "span-12");
+    empty.append(el("p", "", "not recorded"));
+    return [empty];
+  }
+  return settings.map((item) => {
+    const card = tile(item.name, "span-3");
+    const body = el("div", "set-card");
+    body.title = item.raw_value || "not recorded";
+    const eq = el("div", "eq");
+    eq.append(settingName(item.name), el("div", "val", `= ${item.value}`));
+    body.append(eq);
+    body.append(el("div", "src", item.file || "unknown file"));
+    body.append(el("div", "why", item.sentence || "not recorded"));
+    card.append(body);
+    return card;
+  });
+}
+
+function stageCadenceWords(stage) {
+  if (stage.schedule_words && stage.schedule_words.length) {
+    return stage.schedule_words.join("; ");
+  }
+  return stage.schedule_note || "not recorded";
+}
+
+function stageButton(key, options = {}) {
   const stage = cards[key];
-  const button = el("button", `stage ${stage.tone}${stage.running ? " running" : ""}${selected === key ? " sel" : ""}`);
+  const button = el("button", `stage overview ${stage.tone}${stage.running ? " running" : ""}${selected === key ? " sel" : ""}`);
   button.type = "button";
   button.title = stage.technical_name;
   button.setAttribute("aria-label", `${stage.plain_name}. ${stage.state_plain}.`);
   button.append(el("span", "name", stage.plain_name));
+  if (options.cadence) {
+    const cadence = el("span", "cadence");
+    cadence.append(el("span", "ic", "🕒"), el("span", "words", options.cadence));
+    button.append(cadence);
+  }
+  if (options.order) {
+    button.append(el("span", "order", String(options.order)));
+  }
   const state = el("span", `state ${stage.tone}`);
   const icon = el("span", "ic", STATE_ICONS[stage.tone] || "•");
   icon.setAttribute("aria-hidden", "true");
@@ -628,27 +823,82 @@ function stageButton(key) {
   return button;
 }
 
+function overviewArrow(direction, running) {
+  const arrow = el("div", `overview-arrow ${direction}${running ? " running" : ""}`);
+  arrow.setAttribute("aria-hidden", "true");
+  return arrow;
+}
+
 function renderPicture() {
-  const collect = document.querySelector("#collect");
-  const chain = document.querySelector("#chain");
-  collect.replaceChildren();
-  chain.replaceChildren();
-  DATA.collect_keys.forEach((key) => collect.append(stageButton(key)));
-  DATA.chain_keys.forEach((key) => chain.append(stageButton(key)));
+  const host = document.querySelector("#overview");
+  host.replaceChildren();
+  const compact = window.matchMedia("(max-width: 700px)").matches;
+  const layout = el("div", `overview-layout${compact ? " compact" : ""}`);
+  const collectCol = el("div", "overview-collect");
+  const handoffCol = el("div", "overview-handoff");
+  const chainCol = el("div", "overview-chain");
+  const links = new Map((DATA.overview_links || []).map((edge) => [`${edge.from}->${edge.to}`, edge]));
+
+  DATA.collect_keys.forEach((key) => {
+    const stage = cards[key];
+    if (!stage) return;
+    collectCol.append(stageButton(key, { cadence: stageCadenceWords(stage) }));
+  });
+
+  const handoff = el("div", "overview-link-row handoff");
+  handoff.append(overviewArrow(compact ? "down" : "right", Boolean((cards.archive || {}).running)));
+  handoff.append(el("div", "overview-link-label", "each copy goes to the archive"));
+  handoffCol.append(handoff);
+  handoffCol.append(el("div", "overview-brace"));
+
+  DATA.chain_keys.forEach((key, index) => {
+    chainCol.append(stageButton(key, { order: index + 1 }));
+    const nextKey = DATA.chain_keys[index + 1];
+    if (!nextKey) return;
+    const edge = links.get(`${key}->${nextKey}`) || {};
+    const row = el("div", "overview-link-row chain");
+    row.append(overviewArrow("down", Boolean((cards[nextKey] || {}).running)));
+    row.append(el("div", "overview-link-label", edge.cadence_words || "when the previous step finishes"));
+    chainCol.append(row);
+  });
+
+  layout.append(collectCol, handoffCol, chainCol);
+  host.append(layout);
+  overviewRedraw = renderPicture;
+  bindResize();
 }
 
 function renderSimple(panel, stage) {
   document.querySelector("#panel-title").textContent = "About this step";
   const head = el("div", "panel-head");
-  head.append(el("h4", "", stage.plain_name), el("p", "", `Status: ${stage.state_plain}.`));
+  head.append(el("h4", "", stage.plain_name));
+  if (stage.what_happens && stage.what_happens[0]) {
+    head.append(el("p", "", stage.what_happens[0]));
+  }
   panel.append(head);
-  addList(panel, "What happens here", stage.what_happens);
-  panel.append(el("div", "block"));
-  panel.lastChild.append(el("h5", "", "Why it matters"), el("p", "", stage.why_it_matters));
-  panel.append(el("div", "block"));
-  panel.lastChild.append(el("h5", "", "Last time"), el("p", "", stage.last_sentence));
-  panel.append(el("div", "block"));
-  panel.lastChild.append(el("h5", "", "Next time"), el("p", "", stage.next_sentence));
+  const grid = el("div", "panel-grid");
+
+  const whatTile = tile("What happens here", "span-8");
+  const whatList = el("ul");
+  (stage.what_happens || []).forEach((item) => whatList.append(el("li", "", item)));
+  whatTile.append(whatList);
+  grid.append(whatTile);
+
+  const statusTile = tile("Status + next run", "span-4");
+  statusTile.append(toneChip(stage.tone, stage.state_plain));
+  statusTile.append(el("p", "", `Next: ${stage.next_sentence.replace("Next time: ", "").replace(/\.$/, "")}`));
+  statusTile.append(el("p", "", `Cadence: ${stageCadenceWords(stage)}`));
+  grid.append(statusTile);
+
+  const whyTile = tile("Why it matters", "span-6");
+  whyTile.append(el("p", "", stage.why_it_matters));
+  grid.append(whyTile);
+
+  const lastTile = tile("Last time", "span-6");
+  lastTile.append(el("p", "", stage.last_sentence));
+  grid.append(lastTile);
+
+  panel.append(grid);
   const actions = el("div", "actions");
   const button = el("button", "btn", "Show the technical details");
   button.type = "button";
@@ -673,12 +923,41 @@ function renderTechnical(panel, stage) {
   actions.append(back);
   panel.append(actions);
 
-  panel.append(flowPicture(stage));
-  panel.append(schedulePicture(stage));
-  panel.append(lastRunPicture(stage));
-  panel.append(settingsPicture(stage));
-  panel.append(proofPicture(stage));
-  addList(panel, "Limits and risks", stage.limits.length ? stage.limits : ["not recorded"]);
+  const grid = el("div", "panel-grid");
+
+  const flowTile = tile("Flow", "span-12");
+  flowTile.append(flowPicture(stage));
+  grid.append(flowTile);
+
+  const scheduleTile = tile("Schedule", "span-8");
+  scheduleTile.append(schedulePicture(stage));
+  grid.append(scheduleTile);
+
+  const lastTile = tile("Last run", "span-4");
+  lastTile.append(lastRunPicture(stage));
+  grid.append(lastTile);
+
+  settingsTiles(stage).forEach((card) => grid.append(card));
+
+  const backoffTile = tile("Back-off staircase", "span-6");
+  backoffTile.append(backoffPicture(stage));
+  grid.append(backoffTile);
+
+  const proofTile = tile("Proof", "span-6");
+  proofTile.append(proofPicture(stage));
+  grid.append(proofTile);
+
+  const rawTile = tile("Raw run-log line", "span-12");
+  rawTile.append(rawLogPicture(stage));
+  grid.append(rawTile);
+
+  const limitsTile = tile("Limits and risks", "span-12");
+  const limitsList = el("ul");
+  (stage.limits && stage.limits.length ? stage.limits : ["not recorded"]).forEach((item) => limitsList.append(el("li", "", item)));
+  limitsTile.append(limitsList);
+  grid.append(limitsTile);
+
+  panel.append(grid);
 }
 
 function renderPanel() {

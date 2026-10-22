@@ -21,6 +21,12 @@ _COLLECT = ["archive_documents", "archive_catalogues", "archive_orbital", "archi
 _CHAIN = ["archive", "registry_update", "decision_waiting", "decision_made", "merged_main", "dashboard"]
 _WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 _EVENT_DRIVEN_KEYS = {"decision_waiting", "decision_made", "merged_main", "dashboard"}
+_EVENT_LINK_CADENCE = {
+    ("registry_update", "decision_waiting"): "after the weekly rebuild",
+    ("decision_waiting", "decision_made"): "when a person decides",
+    ("decision_made", "merged_main"): "when merge is approved",
+    ("merged_main", "dashboard"): "after tests pass on main",
+}
 
 
 def _when(moment):
@@ -68,6 +74,55 @@ def _schedule(workflow_file, schedule_group, workflow_texts):
     if crons:
         return {"crons": crons, "words": [jobs.schedule_words(cron) for cron in crons], "note": "UTC"}
     return {"crons": [], "words": [], "note": "No cron in this workflow for this stage."}
+
+
+def _cadence_words(schedule_words):
+    said = []
+    for words in schedule_words or []:
+        if match := re.fullmatch(r"every (\d+) hours from (\d{2}:\d{2})", words):
+            said.append(f"every {match.group(1)} h from {match.group(2)} UTC")
+            continue
+        if match := re.fullmatch(r"daily (\d{2}:\d{2})", words):
+            said.append(f"daily {match.group(1)} UTC")
+            continue
+        if match := re.fullmatch(r"(Sundays|Mondays|Tuesdays|Wednesdays|Thursdays|Fridays|Saturdays) (\d{2}:\d{2})", words):
+            said.append(f"{match.group(1)} {match.group(2)} UTC")
+            continue
+        said.append(words if words.endswith("UTC") else f"{words} UTC")
+    return "; ".join(said) if said else "not recorded"
+
+
+def _overview_links(cards):
+    by_key = {card["key"]: card for card in cards}
+    links = []
+    for key in _COLLECT:
+        source = by_key.get(key)
+        target = by_key.get("archive")
+        if not source or not target:
+            continue
+        links.append({
+            "from": key,
+            "to": "archive",
+            "cadence_words": _cadence_words(source.get("schedule_words", [])),
+            "running": bool(source.get("running") or target.get("running")),
+            "turn_back": False,
+        })
+
+    chain = [key for key in _CHAIN if key in by_key]
+    for index in range(len(chain) - 1):
+        from_key, to_key = chain[index], chain[index + 1]
+        if from_key == "archive" and to_key == "registry_update":
+            cadence = _cadence_words((by_key.get("registry_update") or {}).get("schedule_words", []))
+        else:
+            cadence = _EVENT_LINK_CADENCE.get((from_key, to_key), "when the previous step finishes")
+        links.append({
+            "from": from_key,
+            "to": to_key,
+            "cadence_words": cadence,
+            "running": bool((by_key.get(from_key) or {}).get("running") or (by_key.get(to_key) or {}).get("running")),
+            "turn_back": from_key == "decision_waiting" and to_key == "decision_made",
+        })
+    return links
 
 
 def _raw_log_line(stage):
@@ -413,6 +468,7 @@ def payload(stages, next_stage_key, next_at, workflow_texts, now=None):
         "cards": cards,
         "collect_keys": [key for key in _COLLECT if key in by_key],
         "chain_keys": [key for key in _CHAIN if key in by_key],
+        "overview_links": _overview_links(cards),
         "default_key": next((stage["key"] for stage in stages if stage["state"] == "running now"), next_stage_key or stages[0]["key"]),
     }
 
