@@ -97,7 +97,8 @@ def answer(question, history, material_text, url=OLLAMA_URL, key=""):
         raise Unavailable(f"The model did not answer ({error.__class__.__name__}). Try again.") from error
     with reply:
         if reply.status_code == 404:
-            raise Unavailable(f"The model {MODEL} is not on this computer. Get it once with `ollama pull {MODEL}`.")
+            raise Unavailable(f"The model {MODEL} is not on the computer that runs it. There, get it once with "
+                              f"`ollama pull {MODEL}`.")
         if reply.status_code == 429:
             raise Unavailable("The model is answering someone else's question. Try again in a minute.")
         if reply.status_code in (401, 403):
