@@ -7,7 +7,7 @@ from streamlit.components.v1 import html
 
 from console import common
 from evidence import assistant
-from evidence.assistant_settings import MODEL
+from evidence.assistant_settings import MODEL, OLLAMA_URL, SECRETS_SECTION
 from evidence.console_settings import JOBS, TESTS_WORKFLOW
 from evidence.decision_settings import REPOSITORY
 from evidence.source_overview import overview
@@ -31,21 +31,33 @@ with body:
          height=HEIGHT, scrolling=True)
 
 
+def where_the_model_is():
+    """(url, key): the shared copy's [assistant] secrets when set, else the Ollama on this computer, with no key."""
+    try:
+        place = st.secrets.get(SECRETS_SECTION, {})
+    except FileNotFoundError:
+        place = {}
+    return place.get("url", OLLAMA_URL).rstrip("/"), place.get("key", "")
+
+
 @st.cache_data(ttl=60, show_spinner=False)
-def model_here():
-    return assistant.available()
+def model_here(url, key):
+    return assistant.available(url, key)
 
 
 @st.fragment
 def ask_the_project():
     """Questions about the system, answered by a local model from the project's own material only."""
     st.subheader("Ask about the system")
-    if not model_here():
+    url, key = where_the_model_is()
+    if not model_here(url, key):
         st.info("Questions are off on this copy of the console: the assistant needs the local model (Ollama) on the "
                 "same computer, and there is none here. On a computer that runs it, start it with `ollama serve`.")
         return
+    runs_on = "this computer" if url == OLLAMA_URL else "a team member's computer, reached through a private tunnel"
     st.caption(f"Answers come only from the design documents, the code's own descriptions and the open issues, each "
-               f"fact with its source in [brackets]. The model ({MODEL}) runs on this computer; it can still be "
+               f"fact with its source in [brackets]. The model ({MODEL}) runs on "
+               f"{runs_on}; it can still be "
                "wrong, so check the source it names.")
     chat = st.session_state.setdefault(CHAT, [])
     if chat and st.button("Start over", key="design_chat_start_over", icon=":material/restart_alt:"):
@@ -63,7 +75,7 @@ def ask_the_project():
         with st.chat_message("assistant"):
             try:
                 with st.spinner("Reading the project's material…"):
-                    said = st.write_stream(assistant.answer(question, chat, text))
+                    said = st.write_stream(assistant.answer(question, chat, text, url, key))
             except assistant.Unavailable as error:
                 st.error(str(error))
                 return

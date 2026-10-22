@@ -8,7 +8,17 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-OLLAMA_URL = "http://localhost:11434"
+OLLAMA_URL = "http://localhost:11434"   # on a computer that runs Ollama; the shared copy uses [assistant] url instead
+# The shared copy reaches the Ollama on Sumanth's Mac through a tunnel (Tailscale Funnel) to a gate,
+# scripts/ollama_gate.py, which passes only questions for MODEL and needs a key. In the shared copy's secrets:
+#   [assistant]
+#   url = "https://<the Mac's name>.ts.net"     key = "<the same value as OLLAMA_GATE_KEY in the Mac's .env>"
+SECRETS_SECTION = "assistant"
+GATE_PORT = 11435                 # the gate listens here on the Mac, for the tunnel only (127.0.0.1)
+GATE_KEY_NAME = "OLLAMA_GATE_KEY"   # in the Mac's git-ignored .env
+GATE_MAX_BODY = 1_000_000         # bytes in one question with its material and conversation; the material is ~55,000
+GATE_MAX_CONNECTIONS = 8          # open connections at once; more are closed at once, so slow clients cannot pile up
+GATE_IDLE_SECONDS = 30            # a connection silent this long is dropped (reading the request or the answer)
 MODEL = "qwen3:8b"            # about 5 GB; `ollama pull qwen3:8b` once
 CONTEXT_TOKENS = 20480        # the material is about 13,500 tokens; the rest is the conversation and the answer
 ANSWER_SECONDS = 180          # the longest a whole answer may take; a first answer reads all the material (about 50 s)

@@ -105,8 +105,8 @@ def test_a_source_the_material_does_not_have_is_named():
 def test_the_design_page_shows_the_question_the_answer_and_any_unknown_source(monkeypatch):
     streamlit.cache_data.clear()
     signed_in(monkeypatch, "member@example.com")
-    monkeypatch.setattr(assistant, "available", lambda: True)
-    monkeypatch.setattr(assistant, "answer", lambda question, history, text: iter(["Built ", "[docs/made-up.md]."]))
+    monkeypatch.setattr(assistant, "available", lambda *_: True)
+    monkeypatch.setattr(assistant, "answer", lambda question, history, text, *_: iter(["Built ", "[docs/made-up.md]."]))
     at = run(monkeypatch, page="console/design.py")
 
     at.chat_input[0].set_value("What is built?").run()
@@ -119,8 +119,8 @@ def test_the_design_page_shows_the_question_the_answer_and_any_unknown_source(mo
 def test_the_chat_survives_leaving_the_design_page_and_coming_back(monkeypatch):
     streamlit.cache_data.clear()
     signed_in(monkeypatch, "member@example.com")
-    monkeypatch.setattr(assistant, "available", lambda: True)
-    monkeypatch.setattr(assistant, "answer", lambda question, history, text: iter(["Built [docs/system-design.md]."]))
+    monkeypatch.setattr(assistant, "available", lambda *_: True)
+    monkeypatch.setattr(assistant, "answer", lambda question, history, text, *_: iter(["Built [docs/system-design.md]."]))
     at = run(monkeypatch, page="console/design.py")
 
     at.chat_input[0].set_value("What is built?").run()
@@ -137,8 +137,8 @@ def test_the_chat_survives_leaving_the_design_page_and_coming_back(monkeypatch):
 def test_start_over_empties_the_chat(monkeypatch):
     streamlit.cache_data.clear()
     signed_in(monkeypatch, "member@example.com")
-    monkeypatch.setattr(assistant, "available", lambda: True)
-    monkeypatch.setattr(assistant, "answer", lambda question, history, text: iter(["Built [docs/system-design.md]."]))
+    monkeypatch.setattr(assistant, "available", lambda *_: True)
+    monkeypatch.setattr(assistant, "answer", lambda question, history, text, *_: iter(["Built [docs/system-design.md]."]))
     at = run(monkeypatch, page="console/design.py")
 
     at.chat_input[0].set_value("What is built?").run()
@@ -155,7 +155,7 @@ def test_start_over_empties_the_chat(monkeypatch):
 def test_where_no_model_runs_the_page_says_questions_are_off_and_offers_no_box(monkeypatch):
     streamlit.cache_data.clear()
     signed_in(monkeypatch, "member@example.com")
-    monkeypatch.setattr(assistant, "available", lambda: False)
+    monkeypatch.setattr(assistant, "available", lambda *_: False)
 
     at = run(monkeypatch, page="console/design.py")
 
