@@ -65,18 +65,104 @@ body { overflow-x: hidden; }
 .kv dd { margin: 0; overflow-wrap: anywhere; }
 .mono { font-family: var(--mono); background: var(--pane-alt); border: 1px solid var(--edge-soft); padding: 4px 6px; display: block; }
 a { color: var(--link); }
+.viz { margin-top: 10px; border: 2px solid var(--outline); background: var(--pane-alt); box-shadow: var(--hard-sm); padding: 8px; }
+.viz h6 { margin: 0 0 7px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.viz small { color: var(--muted); }
+.tone-chip { display: inline-block; border: 2px solid var(--outline); box-shadow: var(--hard-sm); padding: 1px 6px; font-weight: 800; font-size: 11px; }
+.tone-chip.ok { background: var(--c-ok); color: var(--badge-ink); }
+.tone-chip.warn { background: var(--c-warn); color: var(--badge-ink); }
+.tone-chip.bad { background: var(--c-bad); color: var(--badge-ink); }
+.tone-chip.info { background: var(--c-info); color: var(--badge-ink); }
+.tone-chip.idle { background: var(--pane); color: var(--muted); }
+
+.flow-wrap { display: grid; gap: 8px; }
+.flow-stage { position: relative; min-height: 118px; }
+.flow-grid { position: relative; z-index: 2; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; min-height: 106px; }
+.flow-grid.repos-1 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.flow-grid.repos-2, .flow-grid.repos-3, .flow-grid.repos-4 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.flow-node { position: relative; z-index: 2; min-width: 0; border: 2px solid var(--outline); background: var(--pane); box-shadow: var(--hard-sm); padding: 6px;
+  text-align: left; font: inherit; color: var(--ink); cursor: pointer; }
+.flow-node .nm { display: block; font-weight: 800; }
+.flow-node .st { display: block; font-size: 11px; color: var(--muted); }
+.flow-node.active { background: var(--select); color: var(--select-ink); }
+.flow-node.connected { border-color: var(--c-info); }
+.flow-svg { position: absolute; inset: 0; pointer-events: none; overflow: visible; z-index: 1; }
+.flow-line { stroke: var(--edge-soft); stroke-width: 2; fill: none; }
+.flow-line.active { stroke: var(--c-info); }
+.flow-detail { border: 2px solid var(--outline); background: var(--pane); box-shadow: var(--hard-sm); padding: 6px; }
+.flow-detail p { margin: 0 0 4px; }
+.flow-detail p:last-child { margin-bottom: 0; }
+
+.strip { position: relative; border: 2px solid var(--outline); background: var(--pane); box-shadow: var(--hard-sm); min-height: 72px; padding: 10px 6px 6px; }
+.strip-track { position: relative; height: 22px; border: 2px solid var(--edge-soft); background: var(--pane-alt); }
+.strip-last { position: absolute; top: 0; bottom: 0; border-right: 2px solid var(--outline); }
+.strip-last.ok { background: color-mix(in srgb, var(--c-ok) 70%, var(--pane)); }
+.strip-last.warn { background: color-mix(in srgb, var(--c-warn) 70%, var(--pane)); }
+.strip-last.bad { background: color-mix(in srgb, var(--c-bad) 70%, var(--pane)); }
+.strip-last.info { background: color-mix(in srgb, var(--c-info) 70%, var(--pane)); }
+.strip-now { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--c-info); }
+.strip-mark { position: absolute; top: -4px; width: 8px; height: 28px; margin-left: -4px; border: 2px solid var(--outline);
+  background: var(--pane); box-shadow: var(--hard-sm); cursor: help; }
+.strip-mark.next { background: var(--c-warn); }
+.strip-ticks { margin-top: 5px; font-size: 10px; color: var(--muted); display: flex; justify-content: space-between; gap: 4px; }
+.strip-note { margin-top: 5px; font-size: 11px; }
+.strip-legend { margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.strip-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); margin-top: 5px; font-size: 10px; color: var(--muted); }
+
+.last-run-card { border: 2px solid var(--outline); box-shadow: var(--hard-sm); padding: 6px; background: var(--pane); }
+.last-run-range { display: grid; grid-template-columns: 1fr auto 1fr; gap: 6px; align-items: center; margin-top: 6px; font-size: 11px; }
+.last-run-bar { position: relative; height: 16px; border: 2px solid var(--edge-soft); background: var(--pane-alt); min-width: 90px; }
+.last-run-bar > span { position: absolute; inset: 0; }
+.last-run-bar > span.ok { background: color-mix(in srgb, var(--c-ok) 75%, var(--pane)); }
+.last-run-bar > span.warn { background: color-mix(in srgb, var(--c-warn) 75%, var(--pane)); }
+.last-run-bar > span.bad { background: color-mix(in srgb, var(--c-bad) 75%, var(--pane)); }
+.last-run-bar > span.info { background: color-mix(in srgb, var(--c-info) 75%, var(--pane)); }
+.last-run-side { color: var(--muted); overflow-wrap: anywhere; }
+
+.settings-grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.set-card { border: 2px solid var(--outline); box-shadow: var(--hard-sm); padding: 7px; background: var(--pane); }
+.set-card .eq { display: grid; gap: 4px; overflow-wrap: normal; word-break: normal; }
+.set-card .set-name { display: flex; flex-wrap: wrap; font: 10px/1.3 var(--mono); overflow-wrap: normal; word-break: normal; }
+.set-card .set-name .chunk { white-space: nowrap; }
+.set-card .val { font-weight: 800; overflow-wrap: anywhere; }
+.set-card .src { color: var(--muted); font-size: 11px; margin-top: 2px; }
+.set-card .why { margin-top: 6px; font-size: 12px; }
+.stairs { margin-top: 8px; border: 2px solid var(--outline); box-shadow: var(--hard-sm); padding: 6px; background: var(--pane); display: grid; gap: 6px; }
+.stairs .chart { border: 1px solid var(--edge-soft); background: var(--pane-alt); padding: 4px; }
+.stairs svg { width: 100%; height: 66px; display: block; }
+.stairs .legend { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--muted);
+  border-top: 1px solid var(--edge-soft); padding-top: 4px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; border: 2px solid var(--outline); box-shadow: var(--hard-sm);
+  padding: 3px 7px; background: var(--pane); color: var(--ink); text-decoration: none; }
+.chip .lbl { color: var(--muted); font-size: 11px; }
+.chip.off { opacity: .65; background: var(--pane-alt); color: var(--muted); }
+.proof-row { margin-top: 8px; display: grid; gap: 6px; }
+.copy-row { display: flex; gap: 8px; align-items: flex-start; }
+.copy-row .mono { flex: 1; min-width: 0; }
+
 @media (max-width: 950px) {
   .lp-wrap { grid-template-columns: 1fr; }
 }
 @media (max-width: 700px) {
   .kv { grid-template-columns: 1fr; }
+  .flow-grid, .flow-grid.repos-1, .flow-grid.repos-2, .flow-grid.repos-3, .flow-grid.repos-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .last-run-range { grid-template-columns: 1fr; }
 }
 @media (max-width: 600px) {
   .lp-pane { box-shadow: var(--hard-sm); }
 }
+@media (max-width: 375px) {
+  .settings-grid { grid-template-columns: 1fr; }
+  .flow-grid, .flow-grid.repos-1, .flow-grid.repos-2, .flow-grid.repos-3, .flow-grid.repos-4 { grid-template-columns: 1fr; }
+  .flow-stage { min-height: 0; }
+  .strip { padding-inline: 4px; }
+}
 @media (prefers-reduced-motion: reduce) {
   .stage.running { animation: none; }
   .btn:active { transform: none; }
+  .flow-node, .flow-line { transition: none !important; }
 }
 </style>
 </head>
@@ -107,12 +193,25 @@ const cards = Object.fromEntries(DATA.cards.map((c) => [c.key, c]));
 const STATE_ICONS = { ok: "✓", warn: "▲", bad: "✕", info: "i", idle: "−" };
 let selected = cards[DATA.default_key] ? DATA.default_key : DATA.cards[0].key;
 let technical = false;
+const flowSelection = {};
+let flowRedraw = null;
+let flowResizeBound = false;
 
 function el(tag, cls, text) {
   const node = document.createElement(tag);
   if (cls) node.className = cls;
   if (text !== undefined) node.textContent = text;
   return node;
+}
+
+function settingName(name) {
+  const box = el("div", "set-name");
+  const parts = String(name || "").split("_");
+  parts.forEach((part, index) => {
+    const chunk = part + (index < parts.length - 1 ? "_" : "");
+    box.append(el("span", "chunk", chunk));
+  });
+  return box;
 }
 
 function addList(parent, title, items) {
@@ -143,6 +242,356 @@ function addLinkLine(parent, label, url, fallback) {
     box.append(el("p", "", "not recorded"));
   }
   parent.append(box);
+}
+
+function toneChip(tone, words) {
+  return el("span", `tone-chip ${tone || "idle"}`, words || "not recorded");
+}
+
+function clamp(value, low, high) {
+  return Math.max(low, Math.min(high, value));
+}
+
+function drawFlowEdges(host, svg, nodeById, edges) {
+  const ns = "http://www.w3.org/2000/svg";
+  svg.replaceChildren();
+  const defs = document.createElementNS(ns, "defs");
+  const marker = document.createElementNS(ns, "marker");
+  marker.setAttribute("id", "flow-arrow");
+  marker.setAttribute("viewBox", "0 0 10 10");
+  marker.setAttribute("refX", "9");
+  marker.setAttribute("refY", "5");
+  marker.setAttribute("markerWidth", "7");
+  marker.setAttribute("markerHeight", "7");
+  marker.setAttribute("orient", "auto-start-reverse");
+  const tip = document.createElementNS(ns, "path");
+  tip.setAttribute("d", "M 0 0 L 10 5 L 0 10 z");
+  tip.setAttribute("fill", "currentColor");
+  marker.append(tip);
+  defs.append(marker);
+  svg.append(defs);
+  const hostRect = host.getBoundingClientRect();
+  svg.setAttribute("viewBox", `0 0 ${Math.max(1, Math.round(hostRect.width))} ${Math.max(1, Math.round(hostRect.height))}`);
+  svg.setAttribute("width", `${Math.max(1, Math.round(hostRect.width))}`);
+  svg.setAttribute("height", `${Math.max(1, Math.round(hostRect.height))}`);
+  edges.forEach((edge) => {
+    const from = nodeById[edge.from];
+    const to = nodeById[edge.to];
+    if (!from || !to) return;
+    const fromRect = from.getBoundingClientRect();
+    const toRect = to.getBoundingClientRect();
+    const fromCenterX = fromRect.left + (fromRect.width / 2);
+    const fromCenterY = fromRect.top + (fromRect.height / 2);
+    const toCenterX = toRect.left + (toRect.width / 2);
+    const toCenterY = toRect.top + (toRect.height / 2);
+    const dx = toCenterX - fromCenterX;
+    const dy = toCenterY - fromCenterY;
+    let x1;
+    let y1;
+    let x2;
+    let y2;
+    if (Math.abs(dx) >= Math.abs(dy)) {
+      x1 = (dx >= 0 ? fromRect.right : fromRect.left) - hostRect.left;
+      y1 = fromCenterY - hostRect.top;
+      x2 = (dx >= 0 ? toRect.left : toRect.right) - hostRect.left;
+      y2 = toCenterY - hostRect.top;
+    } else {
+      x1 = fromCenterX - hostRect.left;
+      y1 = (dy >= 0 ? fromRect.bottom : fromRect.top) - hostRect.top;
+      x2 = toCenterX - hostRect.left;
+      y2 = (dy >= 0 ? toRect.top : toRect.bottom) - hostRect.top;
+    }
+    const line = document.createElementNS(ns, "line");
+    line.classList.add("flow-line");
+    line.dataset.from = edge.from;
+    line.dataset.to = edge.to;
+    line.setAttribute("x1", `${x1}`);
+    line.setAttribute("y1", `${y1}`);
+    line.setAttribute("x2", `${x2}`);
+    line.setAttribute("y2", `${y2}`);
+    line.setAttribute("marker-end", "url(#flow-arrow)");
+    svg.append(line);
+  });
+}
+
+function setFlowHighlight(wrap, focusId, edges) {
+  const connected = new Set();
+  if (focusId) {
+    connected.add(focusId);
+    edges.forEach((edge) => {
+      if (edge.from === focusId || edge.to === focusId) {
+        connected.add(edge.from);
+        connected.add(edge.to);
+      }
+    });
+  }
+  wrap.querySelectorAll(".flow-node").forEach((node) => {
+    node.classList.toggle("connected", connected.has(node.dataset.id) && node.dataset.id !== focusId);
+    node.classList.toggle("active", node.dataset.id === focusId);
+  });
+  wrap.querySelectorAll(".flow-line").forEach((line) => {
+    const on = line.dataset.from === focusId || line.dataset.to === focusId;
+    line.classList.toggle("active", on);
+  });
+}
+
+function flowPicture(stage) {
+  const viz = el("div", "viz");
+  viz.append(el("h6", "", "Flow"));
+  const flow = stage.flow || { nodes: [], edges: [], default_node: "" };
+  const repos = flow.nodes.filter((node) => node.id.startsWith("repo_")).length;
+  const wrap = el("div", "flow-wrap");
+  const stageBox = el("div", "flow-stage");
+  const grid = el("div", `flow-grid repos-${Math.max(1, repos)}`);
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.classList.add("flow-svg");
+  const nodeById = {};
+  let activeId = flowSelection[stage.key] || flow.default_node || (flow.nodes[0] || {}).id || "";
+  let hoverId = "";
+
+  const detail = el("div", "flow-detail");
+  function drawDetail(nodeId) {
+    const item = flow.nodes.find((row) => row.id === nodeId) || flow.nodes[0];
+    detail.replaceChildren();
+    if (!item) return;
+    detail.append(el("p", "", `${item.label}: ${item.status_words}`));
+    const pathLabel = item.id.startsWith("repo_") ? "Full owner/name" : "Path";
+    detail.append(el("p", "", `${pathLabel}: ${item.path || "not recorded"}`));
+    detail.append(el("p", "", `What: ${item.what || "not recorded"}`));
+  }
+
+  flow.nodes.forEach((item) => {
+    const button = el("button", "flow-node");
+    button.type = "button";
+    button.dataset.id = item.id;
+    button.title = `${item.label} — ${item.status_words}${item.path ? ` (${item.path})` : ""}`;
+    button.append(el("span", "nm", item.label), el("span", "st", item.status_words));
+    button.addEventListener("mouseenter", () => { hoverId = item.id; setFlowHighlight(wrap, hoverId, flow.edges); });
+    button.addEventListener("mouseleave", () => { hoverId = ""; setFlowHighlight(wrap, activeId, flow.edges); });
+    button.addEventListener("focus", () => { hoverId = item.id; setFlowHighlight(wrap, hoverId, flow.edges); });
+    button.addEventListener("blur", () => { hoverId = ""; setFlowHighlight(wrap, activeId, flow.edges); });
+    button.addEventListener("click", () => {
+      activeId = item.id;
+      flowSelection[stage.key] = item.id;
+      drawDetail(item.id);
+      setFlowHighlight(wrap, item.id, flow.edges);
+    });
+    nodeById[item.id] = button;
+    grid.append(button);
+  });
+
+  stageBox.append(grid, svg);
+  wrap.append(stageBox, detail);
+  viz.append(wrap);
+
+  const redraw = () => drawFlowEdges(stageBox, svg, nodeById, flow.edges);
+  redraw();
+  drawDetail(activeId);
+  setFlowHighlight(wrap, activeId, flow.edges);
+  flowRedraw = redraw;
+  if (!flowResizeBound) {
+    window.addEventListener("resize", () => {
+      if (flowRedraw) flowRedraw();
+    });
+    flowResizeBound = true;
+  }
+  queueMicrotask(redraw);
+  return viz;
+}
+
+function schedulePicture(stage) {
+  const viz = el("div", "viz");
+  viz.append(el("h6", "", "Schedule"));
+  const schedule = stage.schedule_visual || { kind: "event", note: "not recorded" };
+  if (schedule.kind === "event") {
+    const note = el("p", "strip-note", schedule.note || "not recorded");
+    viz.append(note);
+    return viz;
+  }
+
+  const strip = el("div", "strip");
+  const track = el("div", "strip-track");
+  strip.append(track);
+  const last = schedule.last_run || {};
+  if (last.recorded) {
+    const bar = el("span", `strip-last ${last.tone || "idle"}`);
+    let start = 0;
+    let width = 1;
+    if (schedule.kind === "daily") {
+      const startMinute = clamp(last.start_minute_of_day || 0, 0, 1439);
+      const endMinute = clamp(last.end_minute_of_day || (startMinute + 1), startMinute + 1, 1440);
+      start = (startMinute / 1440) * 100;
+      width = Math.max(0.2, ((endMinute - startMinute) / 1440) * 100);
+    } else {
+      const startPoint = ((last.start_weekday_index || 0) * 1440) + (last.start_minute_of_day || 0);
+      const spanMinutes = Math.max(1, Math.ceil((last.duration_seconds || 60) / 60));
+      start = (startPoint / (7 * 1440)) * 100;
+      width = Math.max(0.2, (spanMinutes / (7 * 1440)) * 100);
+    }
+    bar.style.left = `${start}%`;
+    bar.style.width = `${width}%`;
+    bar.title = `${last.start_utc} to ${last.end_utc} (${last.result_words})`;
+    track.append(bar);
+  }
+
+  const now = el("span", "strip-now");
+  const nowMinute = (schedule.now || {}).minute_of_day || 0;
+  const nowDay = (schedule.now || {}).weekday_index || 0;
+  const nowPercent = schedule.kind === "daily"
+    ? (clamp(nowMinute, 0, 1440) / 1440) * 100
+    : ((((nowDay * 1440) + clamp(nowMinute, 0, 1440)) / (7 * 1440)) * 100);
+  now.style.left = `${nowPercent}%`;
+  now.title = "now (UTC)";
+  track.append(now);
+
+  (schedule.marks || []).forEach((mark) => {
+    const dot = el("span", `strip-mark${mark.is_next ? " next" : ""}`);
+    dot.title = mark.utc;
+    dot.setAttribute("aria-label", `scheduled run at ${mark.utc} UTC`);
+    const pct = schedule.kind === "daily"
+      ? (mark.minute_of_day / 1440) * 100
+      : ((((mark.weekday_index * 1440) + mark.minute_of_day) / (7 * 1440)) * 100);
+    dot.style.left = `${pct}%`;
+    track.append(dot);
+  });
+
+  if (schedule.kind === "daily") {
+    for (let hour = 0; hour <= 24; hour += 1) {
+      const tick = document.createElement("span");
+      tick.style.position = "absolute";
+      tick.style.left = `${(hour / 24) * 100}%`;
+      tick.style.top = "0";
+      tick.style.bottom = "0";
+      tick.style.width = "1px";
+      tick.style.background = "var(--edge-soft)";
+      track.append(tick);
+    }
+    const labels = el("div", "strip-ticks");
+    ["00", "06", "12", "18", "24"].forEach((tick) => labels.append(el("span", "", tick)));
+    strip.append(labels);
+  } else {
+    const week = el("div", "strip-week");
+    (schedule.days || ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]).forEach((day) => week.append(el("span", "", day)));
+    strip.append(week);
+  }
+
+  const legend = el("div", "strip-legend");
+  legend.append(toneChip((last || {}).tone || "idle", (last || {}).result_words || "not recorded"));
+  legend.append(el("span", "", `Next: ${schedule.next_utc || "not recorded"}`));
+  strip.append(legend);
+  viz.append(strip);
+  return viz;
+}
+
+function lastRunPicture(stage) {
+  const viz = el("div", "viz");
+  viz.append(el("h6", "", "Last run"));
+  const run = stage.last_run_visual || {};
+  const card = el("div", "last-run-card");
+  card.append(toneChip(run.tone || "idle", run.result_words || "not recorded"));
+  card.append(el("p", "", `Duration: ${run.duration_words || "not recorded"}`));
+  const range = el("div", "last-run-range");
+  range.append(el("div", "last-run-side", run.start_utc || "not recorded"));
+  const bar = el("div", "last-run-bar");
+  bar.append(el("span", run.tone || "idle", ""));
+  range.append(bar);
+  range.append(el("div", "last-run-side", run.end_utc || "not recorded"));
+  card.append(range);
+  viz.append(card);
+  return viz;
+}
+
+function settingsPicture(stage) {
+  const viz = el("div", "viz");
+  viz.append(el("h6", "", "Settings"));
+  const grid = el("div", "settings-grid");
+  const settings = stage.settings_cards && stage.settings_cards.length ? stage.settings_cards : [];
+  settings.forEach((item) => {
+    const card = el("div", "set-card");
+    card.title = item.raw_value || "not recorded";
+    const eq = el("div", "eq");
+    eq.append(settingName(item.name), el("div", "val", `= ${item.value}`));
+    card.append(eq);
+    card.append(el("div", "src", item.file || "unknown file"));
+    card.append(el("div", "why", item.sentence || "not recorded"));
+    grid.append(card);
+  });
+  if (!settings.length) {
+    grid.append(el("p", "", "not recorded"));
+  }
+  viz.append(grid);
+  const backoff = stage.retry_backoff;
+  if (backoff) {
+    const stairs = el("div", "stairs");
+    stairs.append(el("p", "", backoff.note || "not recorded"));
+    const chart = el("div", "chart");
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 280 62");
+    const count = Math.max(1, backoff.steps_seconds.length);
+    const stepWidth = 260 / count;
+    backoff.steps_seconds.forEach((seconds, index) => {
+      const rect = document.createElementNS(ns, "rect");
+      const height = 12 + Math.round((index / Math.max(1, count - 1)) * 34);
+      rect.setAttribute("x", `${10 + index * stepWidth}`);
+      rect.setAttribute("y", `${54 - height}`);
+      rect.setAttribute("width", `${Math.max(8, stepWidth - 4)}`);
+      rect.setAttribute("height", `${height}`);
+      rect.setAttribute("fill", "var(--c-info)");
+      rect.setAttribute("stroke", "var(--outline)");
+      rect.setAttribute("stroke-width", "2");
+      rect.setAttribute("title", `${seconds} seconds`);
+      svg.append(rect);
+    });
+    chart.append(svg);
+    stairs.append(chart);
+    const legend = el("div", "legend");
+    legend.append(el("span", "", `tries: ${backoff.tries}, pause: ${backoff.wait_between_tries_seconds} s`));
+    legend.append(el("span", "", `cap: ${backoff.steps_words[backoff.steps_words.length - 1]}`));
+    stairs.append(legend);
+    viz.append(stairs);
+  }
+  return viz;
+}
+
+function proofPicture(stage) {
+  const viz = el("div", "viz");
+  viz.append(el("h6", "", "Proof"));
+  const chips = el("div", "chips");
+  (stage.proof_chips || []).forEach((chip) => {
+    let item;
+    if (chip.recorded && chip.url) {
+      item = el("a", "chip");
+      item.href = chip.url;
+      item.target = "_blank";
+      item.rel = "noopener noreferrer";
+    } else {
+      item = el("span", "chip off");
+    }
+    item.append(el("span", "lbl", `${chip.label}:`), el("span", "val", chip.words || "not recorded"));
+    chips.append(item);
+  });
+  viz.append(chips);
+  const row = el("div", "proof-row");
+  row.append(el("small", "", "Raw run-log line"));
+  const copy = el("div", "copy-row");
+  copy.append(el("code", "mono", stage.raw_log_line || "not recorded for this stage"));
+  const button = el("button", "btn", "Copy");
+  button.type = "button";
+  button.addEventListener("click", async () => {
+    const startWords = button.textContent;
+    try {
+      await navigator.clipboard.writeText(stage.raw_log_line || "");
+      button.textContent = "Copied";
+    } catch (error) {
+      button.textContent = "Copy failed";
+    }
+    window.setTimeout(() => { button.textContent = startWords; }, 1200);
+  });
+  copy.append(button);
+  row.append(copy);
+  viz.append(row);
+  return viz;
 }
 
 function stageButton(key) {
@@ -211,7 +660,10 @@ function renderSimple(panel, stage) {
 function renderTechnical(panel, stage) {
   document.querySelector("#panel-title").textContent = "Technical details";
   const head = el("div", "panel-head");
-  head.append(el("h4", "", stage.technical_name), el("p", "", `plain name: ${stage.plain_name}`));
+  head.append(el("h4", "", stage.technical_name));
+  const status = el("p", "", `Status: ${stage.state_plain}`);
+  status.prepend(toneChip(stage.tone, stage.state_technical), document.createTextNode(" "));
+  head.append(status, el("p", "", `plain name: ${stage.plain_name}`));
   panel.append(head);
 
   const actions = el("div", "actions");
@@ -221,49 +673,11 @@ function renderTechnical(panel, stage) {
   actions.append(back);
   panel.append(actions);
 
-  const kvWrap = el("div", "block");
-  kvWrap.append(el("h5", "", "Workflow and schedule"));
-  const kv = el("dl", "kv");
-  addKv(kv, "Workflow file", stage.workflow_file || "not recorded");
-  addKv(kv, "Workflow job", stage.workflow_job || "not recorded");
-  addKv(kv, "Cron", stage.schedule_crons.length ? stage.schedule_crons.join(" | ") : "none");
-  addKv(kv, "In words (UTC)", stage.schedule_words.length ? stage.schedule_words.join(" | ") : stage.schedule_note);
-  kvWrap.append(kv);
-  panel.append(kvWrap);
-
-  addList(panel, "Script and command", stage.commands.length ? stage.commands : ["not recorded"]);
-  addList(panel, "Inputs", stage.inputs.length ? stage.inputs : ["not recorded"]);
-  addList(panel, "Outputs", stage.outputs.length ? stage.outputs : ["not recorded"]);
-  addList(panel, "Repositories", stage.repositories.length ? stage.repositories : ["not recorded"]);
-  addList(panel, "Settings", stage.settings.length ? stage.settings : ["not recorded"]);
-  addList(panel, "Settings files", stage.settings_files.length ? stage.settings_files : ["not recorded"]);
-
-  const run = el("div", "block");
-  run.append(el("h5", "", "Last run (exact)"));
-  const runKv = el("dl", "kv");
-  addKv(runKv, "Start", stage.last_start_exact);
-  addKv(runKv, "End", stage.last_end_exact);
-  addKv(runKv, "Duration", stage.last_duration_exact);
-  addKv(runKv, "Result", stage.last_result_exact);
-  run.append(runKv);
-  panel.append(run);
-
-  const runWords = stage.run_id ? `GitHub run ${stage.run_id}` : "GitHub run";
-  addLinkLine(panel, "GitHub run", stage.run_url, runWords);
-  addLinkLine(panel, "Archive commit", stage.commit_url, stage.commit ? `commit ${stage.commit.slice(0, 7)}` : "GitHub commit");
-  addLinkLine(panel, "Pull request", stage.pr_url, stage.pr_number ? `pull request ${stage.pr_number}` : "GitHub pull request");
-
-  if (stage.pr_state) {
-    const prState = el("div", "block");
-    prState.append(el("h5", "", "Pull request state"), el("p", "", stage.pr_state));
-    panel.append(prState);
-  }
-
-  const raw = el("div", "block");
-  raw.append(el("h5", "", "Raw run-log line"));
-  raw.append(el("code", "mono", stage.raw_log_line));
-  panel.append(raw);
-
+  panel.append(flowPicture(stage));
+  panel.append(schedulePicture(stage));
+  panel.append(lastRunPicture(stage));
+  panel.append(settingsPicture(stage));
+  panel.append(proofPicture(stage));
   addList(panel, "Limits and risks", stage.limits.length ? stage.limits : ["not recorded"]);
 }
 

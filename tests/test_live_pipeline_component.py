@@ -5,7 +5,7 @@ from pathlib import Path
 from evidence import jobs, pipeline
 from evidence import console_settings
 from evidence.console_settings import WORKFLOWS_DIR
-from evidence.pipeline_words import STAGES
+from evidence.pipeline_words import SETTING_SENTENCES, STAGES
 from test_jobs import LOG, NOW, RUNS, WORKFLOWS
 from ui.components.live_pipeline import live_pipeline_html, payload
 
@@ -82,6 +82,77 @@ def test_settings_show_name_equals_value_and_source_file_from_runtime_module(mon
     assert "TESTS_WORKFLOW = tests-from-test.yml (evidence/console_settings.py)" in dashboard["settings"]
 
 
+def test_flow_repository_nodes_use_short_names_with_full_paths():
+    rows = _stage_rows()
+    data = payload(rows, None, None, _workflow_texts())
+    news = next(card for card in data["cards"] if card["key"] == "archive_news")
+
+    repositories = [node for node in news["flow"]["nodes"] if node["id"].startswith("repo_")]
+    assert [node["label"] for node in repositories] == ["project repository", "archive repository"]
+    assert repositories[0]["path"] == "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System"
+    assert repositories[1]["path"] == "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive"
+
+
+def test_payload_carries_schedule_marks_for_daily_weekly_and_event_stages():
+    rows = _stage_rows()
+    upcoming = pipeline.what_next(rows, NOW, hours=24)
+    next_key, next_at = ((upcoming[0]["key"], upcoming[0]["at"]) if upcoming else (None, None))
+    data = payload(rows, next_key, next_at, _workflow_texts())
+
+    news = next(card for card in data["cards"] if card["key"] == "archive_news")
+    assert news["schedule_visual"]["kind"] == "daily"
+    assert len(news["schedule_visual"]["marks"]) == 8
+    assert [mark["utc"] for mark in news["schedule_visual"]["marks"][:4]] == ["00:50", "03:50", "06:50", "09:50"]
+    next_marks = [mark for mark in news["schedule_visual"]["marks"] if mark["is_next"]]
+    assert len(next_marks) == 1 and next_marks[0]["utc"] == "15:50"
+
+    registry = next(card for card in data["cards"] if card["key"] == "registry_update")
+    assert registry["schedule_visual"]["kind"] == "weekly"
+    assert registry["schedule_visual"]["marks"] == [{"weekday": "Sun", "weekday_index": 6, "minute_of_day": 60,
+                                                     "utc": "Sun 01:00", "is_next": True}]
+
+    waiting = next(card for card in data["cards"] if card["key"] == "decision_waiting")
+    assert waiting["schedule_visual"] == {"kind": "event", "note": "runs when the step before it finishes"}
+
+
+def test_payload_settings_cards_have_sentences_and_backoff_steps():
+    rows = _stage_rows()
+    data = payload(rows, None, None, _workflow_texts())
+    news = next(card for card in data["cards"] if card["key"] == "archive_news")
+
+    cards = {row["name"]: row for row in news["settings_cards"]}
+    assert cards["DOWNLOAD_TRIES"]["value"] == "3"
+    assert cards["WAIT_BETWEEN_TRIES_SECONDS"]["value"] == "60 seconds"
+    assert cards["REFUSAL_STATUSES"]["value"] == "403, 429"
+    assert cards["BACKOFF_FIRST"]["value"] == "1 hour"
+    assert cards["BACKOFF_FIRST"]["raw_value"] == "datetime.timedelta(seconds=3600)"
+    assert cards["BACKOFF_LONGEST"]["value"] == "7 days"
+    assert cards["NEVER_FETCH"]["value"] == "vimpel, spacemapper"
+    assert cards["DOWNLOAD_TRIES"]["file"] == "evidence/settings.py"
+    assert cards["DOWNLOAD_TRIES"]["sentence"].startswith("How many times one failed download")
+    assert cards["BACKOFF_FIRST"]["sentence"].startswith("How long a source is held off")
+
+    backoff = news["retry_backoff"]
+    assert backoff["tries"] == 3
+    assert backoff["wait_between_tries_seconds"] == 60
+    assert backoff["first_wait_seconds"] == 3600
+    assert backoff["longest_wait_seconds"] == 7 * 24 * 60 * 60
+    assert backoff["steps_seconds"][:4] == [3600, 7200, 14400, 28800]
+    assert backoff["steps_seconds"][-1] == 7 * 24 * 60 * 60
+
+
+def test_payload_visual_data_contains_no_markup():
+    rows = _stage_rows()
+    data = payload(rows, None, None, _workflow_texts())
+    news = next(card for card in data["cards"] if card["key"] == "archive_news")
+
+    for mark in news["schedule_visual"]["marks"]:
+        assert "<" not in mark["utc"] and ">" not in mark["utc"]
+    for setting in news["settings_cards"]:
+        assert "<" not in setting["sentence"] and ">" not in setting["sentence"]
+    assert "<" not in news["retry_backoff"]["note"] and ">" not in news["retry_backoff"]["note"]
+
+
 def test_level_2_words_avoid_internal_jargon():
     banned = ("collector", "graded source", "candidate sources", "claim extraction", "evidence trail", "workflow")
     for key, words in STAGES.items():
@@ -90,3 +161,21 @@ def test_level_2_words_avoid_internal_jargon():
             assert term not in text, (key, term)
         if "pull request" in text:
             assert "(pull request)" in text, key
+
+
+def test_fact_checked_setting_sentence_entries_are_exact():
+    assert SETTING_SENTENCES["ARCHIVE_VERSIONS_FILE"] == (
+        "CSV file name inside the archive repository that records every change (a changed copy or a page becoming gone)."
+    )
+    assert SETTING_SENTENCES["BACKOFF_FIRST"] == (
+        "How long a source is held off after its first refusal before it may be asked again."
+    )
+    assert SETTING_SENTENCES["MIN_GAP_BETWEEN_DOWNLOADS"] == (
+        "Per-site minimum wait between two requests to the same site (a named host or any host under it)."
+    )
+    assert SETTING_SENTENCES["NEVER_FETCH"] == (
+        "Host-name fragments the archive fetcher refuses before any request, including redirects to them."
+    )
+    assert SETTING_SENTENCES["WAIT_WARN_DAYS"] == (
+        "Days a waiting decision item may wait before it is shown as overdue (warning once it has waited longer than this)."
+    )

@@ -11,6 +11,36 @@ PLAIN_STATES = {
     "off": "switched off",
 }
 
+SETTING_SENTENCES = {
+    "ACTIONS": "What each decision choice does to the pull request after the decision comment is written.",
+    "ARCHIVE_OBJECTS_DIR": "Folder name inside the archive repository where raw copies are stored by fingerprint.",
+    "ARCHIVE_RUNS_DIR": "Folder name inside the archive repository where run-log CSV files are kept.",
+    "ARCHIVE_RUN_COLUMNS": "Exact column order used when writing each run-log line.",
+    "ARCHIVE_VERSIONS_FILE": "CSV file name inside the archive repository that records every change (a changed copy or a page becoming gone).",
+    "BACKOFF_FIRST": "How long a source is held off after its first refusal before it may be asked again.",
+    "BACKOFF_LONGEST": "Maximum refusal back-off wait, even after repeated refusals.",
+    "CHOICES": "Decision words shown to reviewers for approve, approve-after-changes, or reject.",
+    "DECISION_MARKER": "HTML marker added to decision comments so outcomes can be counted later.",
+    "DOWNLOAD_TRIES": "How many times one failed download is attempted in a single run.",
+    "GROUPS": "Display groups and order used on the Approvals page.",
+    "KINDS": "Maps each decision label kind to the group shown on the Approvals page.",
+    "LABEL_PREFIX": "Prefix that marks pull-request labels as decision labels.",
+    "MAX_COPY_BYTES": "Largest raw copy size accepted before a fetch is stopped.",
+    "MERGE_METHOD": "GitHub merge method used when an approved pull request is merged.",
+    "MIN_GAP_BETWEEN_DOWNLOADS": "Per-site minimum wait between two requests to the same site (a named host or any host under it).",
+    "NEVER_FETCH": "Host-name fragments the archive fetcher refuses before any request, including redirects to them.",
+    "REFUSAL_STATUSES": "HTTP statuses treated as refusals that trigger persistent back-off.",
+    "REGISTRY_CONSTELLATIONS_FILE": "Registry file name that maps system letters to constellation names.",
+    "REGISTRY_DASHBOARD_SATELLITES_FILE": "Registry file name listing satellites shown on the dashboard, in display order.",
+    "REGISTRY_SATELLITES_FILE": "Registry table file name for core satellite identity rows.",
+    "REGISTRY_SIGNAL_IDS_FILE": "Registry table file name for signal-ID history rows.",
+    "REQUEST_TIMEOUT_SECONDS": "Per-request timeout for calls to outside servers.",
+    "REQUIRED_CHECK": "Name of the GitHub check that must pass before merge approval can merge.",
+    "TESTS_WORKFLOW": "Workflow file name treated as the tests-on-main source in the console.",
+    "WAIT_BETWEEN_TRIES_SECONDS": "Base pause between download tries inside one run.",
+    "WAIT_WARN_DAYS": "Days a waiting decision item may wait before it is shown as overdue (warning once it has waited longer than this).",
+}
+
 STAGES = {
     "archive_documents": {
         "plain_name": "Collect official documents",
