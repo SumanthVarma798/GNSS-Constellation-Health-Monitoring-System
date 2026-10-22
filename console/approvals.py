@@ -20,7 +20,7 @@ def waiting(days):
     return console.status(tone, words)
 
 
-def decide(item, config, who, email):
+def decide(item, config, who):
     """The call on one item: a choice, then the reason (and the changes asked for), then one button that records it."""
     number = item["number"]
     with st.container(key=f"decide_{number}"):
@@ -38,8 +38,7 @@ def decide(item, config, who, email):
         st.html(f'<p class="c-legend">This writes the decision on pull request {number}, {escape(ACTIONS[choice])}.</p>')
         if st.button(f"Record: {CHOICES[choice]}", key=f"record_{number}", type="primary"):
             try:
-                result = decisions.decide(config["github_token"], item, choice, reason, changes, who, email,
-                                          dict(config.get("accounts", {})), common.now())
+                result = decisions.decide(config["github_token"], item, choice, reason, changes, who, common.now())
             except requests.RequestException as error:
                 result = "bad", common.github_trouble(error)
             st.session_state["admin_result"] = (number, *result)
@@ -81,7 +80,7 @@ with body:
                               f'pull request {item["number"]}</a>')])))
             with st.expander("What the pull request says, in full"):
                 st.html(admin.text_html(item["body"]))
-            decide(item, config, who, email)
+            decide(item, config, who)
 
 with actions:
     common.refresh_action()

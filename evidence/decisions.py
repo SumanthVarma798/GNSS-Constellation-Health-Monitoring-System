@@ -78,11 +78,11 @@ def tests_state(token, sha):
     return "running" if newest["status"] != "completed" else "passed" if newest["conclusion"] == "success" else "failed"
 
 
-def blocker(choice, item, reason, changes, email, accounts, state="open", tests=None, mergeable=None, sha=None):
+def blocker(choice, item, reason, changes, state="open", tests=None, mergeable=None, sha=None):
     """Why this decision cannot be made now, in plain words, or None when it can.
 
-    accounts: {email: GitHub account} for the people on the list, so the person who raised an item is known. `state`
-    is the pull request's, read just now; for an approval as proposed, so are `tests`, `mergeable` and `sha`.
+    `state` is the pull request's, read just now; for an approval as proposed, so are `tests`, `mergeable` and `sha`.
+    Anyone on the list may decide any item, including one they raised (decided 22 Oct 2026, issue 17).
     """
     if state != "open":
         return "It was already decided (merged or closed) after the page read it. Nothing more was written."
@@ -90,8 +90,6 @@ def blocker(choice, item, reason, changes, email, accounts, state="open", tests=
         return "Write the reason first: every decision needs one."
     if choice == AFTER_CHANGES and not changes.strip():
         return "Say which changes are asked for."
-    if {e.lower(): login.lower() for e, login in accounts.items()}.get((email or "").lower()) == item["login"].lower():
-        return "You raised this item, so someone else must decide it."
     if choice != APPROVE:
         return None
     # ponytail: the tests ran on the branch as it stands, not merged with a newer main; the Tests job runs on main
@@ -121,7 +119,7 @@ def decision_text(choice, reason, changes, who, when):
                      + ["", f"Decided by {plain(who)} on {when.day} {when:%b %Y, %H:%M} UTC, signed in on the admin page."])
 
 
-def decide(token, item, choice, reason, changes, who, email, accounts, now):
+def decide(token, item, choice, reason, changes, who, now):
     """Write the decision on the pull request, then merge it, leave it open or close it. ('ok' | 'warn' | 'bad', words).
 
     For an approval the pull request, its tests and whether it can merge are read again first, and the merge names
@@ -133,7 +131,7 @@ def decide(token, item, choice, reason, changes, who, email, accounts, now):
         return "warn", "Its branch no longer exists, so it cannot be merged. Look at the pull request on GitHub."
     if choice == APPROVE and pull["state"] == "open":
         read |= {"sha": pull["head"]["sha"], "mergeable": pull["mergeable"], "tests": tests_state(token, pull["head"]["sha"])}
-    problem = blocker(choice, item, reason, changes, email, accounts, **read)
+    problem = blocker(choice, item, reason, changes, **read)
     if problem:
         return "warn", problem
     _ask("POST", f"/issues/{number}/comments", token, json={"body": decision_text(choice, reason, changes, who, now)})
