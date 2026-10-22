@@ -11,12 +11,12 @@ import streamlit
 from streamlit.testing.v1 import AppTest
 
 from console import common
-from evidence import decisions, jobs
+from evidence import decisions, jobs, pipeline as live_pipeline
 from evidence.decision_settings import AFTER_CHANGES, APPROVE, KINDS, LABEL_PREFIX
 from test_dashboard_shell import segmented_controls_rerun  # noqa: F401  (AppTest 1.45's segmented controls)
 from test_decisions import NOW, pr
-from test_jobs import LOG, RUNS, WORKFLOWS
-from ui import admin
+from test_jobs import LOG, RUNS, WORKFLOWS, run as workflow_run
+from ui import admin, console as ui_console
 
 ROOT = Path(__file__).resolve().parent.parent
 SECRETS = {"auth": {field: "set" for field in common.SIGN_IN_FIELDS},
@@ -33,7 +33,8 @@ class GitHub:
         self.asked += 1
         if self.fail:
             raise self.fail
-        return {"workflows": WORKFLOWS, "runs": RUNS, "log": jobs.run_log(LOG), "prs": self.prs, "issues": self.issues,
+        return {"workflows": WORKFLOWS, "runs": RUNS, "log": jobs.run_log(LOG), "prs": self.prs, "decision_prs": self.prs,
+                "issues": self.issues,
                 "problems": [], "read_at": NOW}
 
     def clear(self):
@@ -169,6 +170,8 @@ def test_the_ask_about_section_styles_follow_the_console_palette():
     assert '[data-testid="stHeading"], [data-testid="stCaptionContainer"], [data-testid="stSpinner"] { color: var(--ink); }' in css
     assert '[data-testid="stCaptionContainer"] { color: var(--muted); }' in css
     assert '[data-testid="stChatInputTextArea"] { background: var(--input-bg) !important; color: var(--ink) !important;' in css
+    assert '.c-sect > .in.flush { padding: 0; display: flow-root; }' in css
+    assert '[data-testid="stButtonGroup"] [data-baseweb="button-group"] { display: flex; flex-wrap: wrap;' in css
 
 
 # ---- approvals ----
@@ -304,6 +307,7 @@ def test_a_workflow_missing_on_github_is_named_and_the_rest_still_shows(monkeypa
     monkeypatch.setattr(common.github_api, "ask", ask)
     monkeypatch.setattr(common.github_api, "file_text", lambda *args: "job,started,ended,result,changed\n")
     monkeypatch.setattr(decisions, "fetch_open", lambda token: [])
+    monkeypatch.setattr(decisions, "fetch_recent_closed", lambda token: [])
 
     seen = common.github.__wrapped__("t") if hasattr(common.github, "__wrapped__") else common.github("t")
 
@@ -369,6 +373,74 @@ def test_the_system_design_page_opens_with_its_picture(monkeypatch):
     at = run(monkeypatch, page="console/design.py")
 
     assert "How the system works" in text(at) and at.get("iframe")
+
+
+def test_the_live_pipeline_page_opens_with_its_sections_and_links(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+
+    at = run(monkeypatch, page="console/pipeline.py")
+    page = text(at)
+    links = [link.label for link in at.get("page_link")]
+
+    assert "Live pipeline" in page
+    assert "Running now" in page and "Next up" in page and "Proof of work" in page
+    assert "Collect official documents" in page and "Collect news" in page
+    assert "Open proof" not in page
+    assert at.get("iframe")
+    assert links == ["Jobs", "Approvals"]
+
+
+def test_the_live_pipeline_component_defaults_to_what_runs_next(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    stage_rows = live_pipeline.stages(WORKFLOWS, RUNS, jobs.run_log(LOG), [], common.workflow_texts(), NOW)
+    upcoming = live_pipeline.what_next(stage_rows, NOW, hours=24)
+    expected = upcoming[0]["key"] if upcoming else stage_rows[0]["key"]
+
+    at = run(monkeypatch, page="console/pipeline.py")
+    frame = at.get("iframe")[0].proto.srcdoc
+
+    assert '"default_key"' in frame and expected in frame
+
+
+def test_the_live_pipeline_component_defaults_to_the_stage_running_now(monkeypatch):
+    class RunningGitHub(GitHub):
+        def __call__(self, token):
+            seen = super().__call__(token)
+            seen["runs"] = [workflow_run("registry-update.yml", "2026-10-20T14:30:00Z", status="in_progress"),
+                            *seen["runs"]]
+            return seen
+
+    signed_in(monkeypatch, "member@example.com")
+    at = run(monkeypatch, github=RunningGitHub(), page="console/pipeline.py")
+    frame = at.get("iframe")[0].proto.srcdoc
+
+    assert '"default_key"' in frame and "registry_update" in frame
+
+
+def test_the_live_pipeline_uses_clear_fallback_words_for_proof_links(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    page = text(run(monkeypatch, page="console/pipeline.py"))
+
+    assert "GitHub run" in page and ">run</a>" not in page
+
+
+def test_the_pipeline_diagram_numbers_the_chain_without_dangling_right_arrows():
+    stage_rows = live_pipeline.stages(WORKFLOWS, RUNS, jobs.run_log(LOG), [], common.workflow_texts(), NOW)
+    picture = ui_console.pipeline_diagram(stage_rows)
+    chain_names = ["Archive", "Registry update", "Pull request waiting for a decision",
+                   "Decided on the Approvals page", "Merged to main", "Dashboard"]
+
+    assert picture.count("c-pipe-arrow") == 1
+    assert picture.count('class="order"') == len(chain_names)
+
+
+def test_the_pipeline_diagram_does_not_hide_stage_words_from_screen_readers():
+    stage_rows = live_pipeline.stages(WORKFLOWS, RUNS, jobs.run_log(LOG), [], common.workflow_texts(), NOW)
+    picture = ui_console.pipeline_diagram(stage_rows)
+
+    assert 'role="img"' not in picture
+    assert "Archive: documents" in picture
+    assert "Registry update" in picture
 
 
 def test_back_and_forward_follow_the_pages_visited_and_the_browser_own_buttons():

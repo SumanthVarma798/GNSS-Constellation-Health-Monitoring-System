@@ -14,14 +14,26 @@ from evidence.github_api import ask as _ask
 PAGE_SIZE = 100   # GitHub's largest page
 
 
-def fetch_open(token):
-    """Every open pull request, as GitHub's JSON."""
+def _fetch(token, state):
+    """Pull requests in one GitHub state, as GitHub's JSON."""
     rows, page = [], 1
     while True:
-        rows += (got := _ask("GET", "/pulls", token, params={"state": "open", "per_page": PAGE_SIZE, "page": page}))
+        rows += (got := _ask("GET", "/pulls", token, params={"state": state, "per_page": PAGE_SIZE, "page": page}))
         if len(got) < PAGE_SIZE:
             return rows
         page += 1
+
+
+def fetch_open(token):
+    """Every open pull request, as GitHub's JSON."""
+    return _fetch(token, "open")
+
+
+def fetch_recent_closed(token):
+    """The most recently updated closed pull requests: one page, enough for the Live pipeline's recent decisions and
+    merges. Not every closed one ever: that list only grows, and the page reads GitHub every few minutes."""
+    return _ask("GET", "/pulls", token, params={"state": "closed", "sort": "updated", "direction": "desc",
+                                                 "per_page": PAGE_SIZE})
 
 
 def kind_of(pr):
