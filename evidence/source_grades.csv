@@ -2,3 +2,20 @@ source_id,name,reliability,graded_by,graded_on,reason
 files.igs.org,International GNSS Service (IGS),B,Sumanth Varma (awaiting the team's review),2026-10-09,"A scientific body; its satellite metadata file is maintained for it by the German Aerospace Center (DLR)"
 planet4589.org,General Catalog of Artificial Space Objects (GCAT),C,Sumanth Varma (awaiting the team's review),2026-10-09,"One expert's catalogue, widely cited, with sources listed; not an institution, and its author says some dates are updated patchily"
 celestrak.org,CelesTrak,B,Proposed with issue 31 (awaiting the team's review),2026-10-19,"Republishes the US Space Force's public orbit records, the same data Space-Track holds; run by a non-profit and widely used by researchers. It says where an object is, not what its operator says about it"
+insidegnss.com,Inside GNSS,C,"the team, decided in the administration console",2026-10-22,Specialist GNSS press
+spacenews.com,SpaceNews,C,"the team, decided in the administration console",2026-10-22,Specialist space press
+gpsworld.com,GPS World (its own feed),C,"the team, decided in the administration console",2026-10-22,Specialist GNSS press
+spaceflightnow.com,Spaceflight Now,C,"the team, decided in the administration console",2026-10-22,Specialist space press; strong on launches
+nasaspaceflight.com,NASASpaceFlight,C,"the team, decided in the administration console",2026-10-22,Specialist space press; strong on launches
+breakingdefense.com,Breaking Defense: space,C,"the team, decided in the administration console",2026-10-22,Specialist defence press; covers military GPS
+airandspaceforces.com,Air & Space Forces Magazine,C,"the team, decided in the administration console",2026-10-22,Specialist defence press; covers GPS and the Space Force
+europeanspaceflight.com,European Spaceflight (Andrew Parsonson),C,"the team, decided in the administration console",2026-10-22,"Independent specialist press on European space, Galileo launches included"
+payloadspace.com,Payload,C,"the team, decided in the administration console",2026-10-22,Specialist space-industry press
+orbitalindex.com,The Orbital Index,C,"the team, decided in the administration console",2026-10-22,Weekly specialist digest; mostly points to other sources
+thespacereview.com,The Space Review,C,"the team, decided in the administration console",2026-10-22,Specialist analysis; its writers include observers of the Russian and Chinese programmes
+sattrackcam.blogspot.com,SatTrackCam Leiden (Marco Langbroek),C,"the team, decided in the administration console",2026-10-22,An independent observer who publishes his own measurements and method
+russianspaceweb.com,RussianSpaceWeb (Anatoly Zak): GLONASS,C,"the team, decided in the administration console",2026-10-22,"A specialist journalist on the Russian programme, GLONASS included"
+chinaspacenewsroundup.substack.com,China Space Bulletin (Andrew Jones),C,"the team, decided in the administration console",2026-10-22,A specialist journalist on China's space programme; reports for SpaceNews (source summary)
+chinaspacemonitor.substack.com,China Space Monitor (Blaine Curcio),C,"the team, decided in the administration console",2026-10-22,An industry analyst's monthly newsletter on China's space sector
+locationbusinessnews.substack.com,Location Business News (Kevin Dennehy),C,"the team, decided in the administration console",2026-10-22,A trade newsletter on the location and GNSS industry
+jatan.space,Indian Space Progress (Jatan Mehta),C,"the team, decided in the administration console",2026-10-22,An independent journalist's monthly report on Indian space; said to be read at ISRO (source summary)
