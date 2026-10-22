@@ -159,6 +159,18 @@ def test_light_and_dark_can_be_chosen_and_auto_follows_the_computer(monkeypatch,
     assert "prefers-color-scheme" not in style
 
 
+def test_the_ask_about_section_styles_follow_the_console_palette():
+    css = (ROOT / "ui" / "console.css").read_text()
+
+    for selector in ('[data-testid="stHeading"]', '[data-testid="stCaptionContainer"]',
+                     '[data-testid="stAlertContainer"]', '[data-testid="stChatMessage"]',
+                     '[data-testid="stChatInput"]', '[data-testid="stSpinner"]'):
+        assert selector in css
+    assert '[data-testid="stHeading"], [data-testid="stCaptionContainer"], [data-testid="stSpinner"] { color: var(--ink); }' in css
+    assert '[data-testid="stCaptionContainer"] { color: var(--muted); }' in css
+    assert '[data-testid="stChatInputTextArea"] { background: var(--input-bg) !important; color: var(--ink) !important;' in css
+
+
 # ---- approvals ----
 
 REGISTRY_PR = pr(5, ["decision: registry update"], title="Registry update from the IGS satellite metadata file",
