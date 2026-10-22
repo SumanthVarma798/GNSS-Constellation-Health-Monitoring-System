@@ -410,3 +410,15 @@ def test_back_is_not_offered_to_a_page_that_no_longer_exists(monkeypatch):
     at.run()
 
     assert not at.exception and not [b for b in at.button if b.key == "console_back"]
+
+
+def test_sign_out_forgets_the_session_and_signs_out(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    out = []
+    monkeypatch.setattr(streamlit, "logout", lambda: out.append(True))
+    at = run(monkeypatch)
+    at.session_state["design_chat"] = [{"role": "user", "content": "kept?"}]
+
+    at.button(key="console_sign_out").click().run()
+
+    assert out == [True] and "design_chat" not in at.session_state
