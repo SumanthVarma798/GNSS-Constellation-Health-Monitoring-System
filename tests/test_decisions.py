@@ -119,14 +119,11 @@ READY = {"tests": "passed", "mergeable": True, "sha": "sha5"}
     (APPROVE, "  ", "", "every decision needs one"),
     (AFTER_CHANGES, "Mostly right", "", "which changes are asked for")])
 def test_every_decision_needs_a_reason_and_after_changes_needs_the_changes(choice, reason, changes, words):
-    assert words in decisions.blocker(choice, ITEM, reason, changes, "m@example.com", {}, **READY)
+    assert words in decisions.blocker(choice, ITEM, reason, changes, **READY)
 
 
-def test_the_person_who_raised_an_item_cannot_decide_it():
-    accounts = {"Raiser@Example.com": "Raiser"}   # addresses and GitHub accounts both ignore capitals
-
-    assert "someone else must decide" in decisions.blocker(REJECT, HUMAN_ITEM, "No", "", "raiser@example.com", accounts)
-    assert decisions.blocker(REJECT, HUMAN_ITEM, "No", "", "other@example.com", accounts) is None
+def test_the_person_who_raised_an_item_may_decide_it():
+    assert decisions.blocker(REJECT, HUMAN_ITEM, "No", "") is None   # one approval, anyone on the list (22 Oct 2026)
 
 
 @pytest.mark.parametrize("read, words", [
@@ -137,12 +134,12 @@ def test_the_person_who_raised_an_item_cannot_decide_it():
     ({**READY, "mergeable": None}, "still working out"),
     ({**READY, "mergeable": False}, "needs updating first")])
 def test_an_approval_waits_for_passed_tests_on_the_same_commit_and_a_clean_merge(read, words):
-    assert words in decisions.blocker(APPROVE, ITEM, "Checked", "", "m@example.com", {}, **read)
+    assert words in decisions.blocker(APPROVE, ITEM, "Checked", "", **read)
 
 
 def test_rejecting_or_asking_for_changes_does_not_wait_for_the_tests():
     for choice in (REJECT, AFTER_CHANGES):
-        assert decisions.blocker(choice, ITEM, "Because", "Fix the slot", "m@example.com", {}) is None
+        assert decisions.blocker(choice, ITEM, "Because", "Fix the slot") is None
 
 
 def test_the_decision_comment_carries_its_marker_and_typed_text_cannot_add_one():
@@ -174,7 +171,7 @@ class GitHub:
 
 def decide(monkeypatch, github, choice, changes=""):
     monkeypatch.setattr(decisions, "_ask", github)
-    return decisions.decide("t", ITEM, choice, "Checked against the IGS file", changes, "A Member", "m@example.com", {}, NOW)
+    return decisions.decide("t", ITEM, choice, "Checked against the IGS file", changes, "A Member", NOW)
 
 
 def test_approving_writes_the_decision_then_merges_the_commit_that_was_checked(monkeypatch):
@@ -221,6 +218,6 @@ def test_an_item_whose_branch_was_deleted_still_shows_and_cannot_be_approved(mon
     item = decisions.pending([gone], NOW)[0]
 
     monkeypatch.setattr(decisions, "_ask", lambda method, path, token, **request: {"state": "open", "head": None})
-    status, words = decisions.decide("t", item, APPROVE, "Checked", "", "A Member", "m@example.com", {}, NOW)
+    status, words = decisions.decide("t", item, APPROVE, "Checked", "", "A Member", NOW)
 
     assert item["sha"] is None and status == "warn" and "branch no longer exists" in words

@@ -207,9 +207,8 @@ def test_recording_a_decision_passes_who_decided_and_says_what_happened(monkeypa
     at.text_area(key="reason_5").set_value("Checked against the IGS file")
     at.button(key="record_5").click().run()
 
-    token, item, choice, reason, changes, who, email, accounts, _ = decided[0]
-    assert (token, item["number"], choice, reason, who, email) == (
-        "t0ken", 5, APPROVE, "Checked against the IGS file", "A Member", "member@example.com")
+    token, item, choice, reason, changes, who, _ = decided[0]
+    assert (token, item["number"], choice, reason, who) == ("t0ken", 5, APPROVE, "Checked against the IGS file", "A Member")
     assert "Approved and merged." in text(at)
 
 

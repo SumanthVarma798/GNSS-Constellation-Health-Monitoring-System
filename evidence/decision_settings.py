@@ -31,7 +31,7 @@ WAIT_WARN_DAYS = 14
 # GitHub accounts that are the system, not a person, in the words the page uses.
 RAISED_BY = {"github-actions[bot]": "the weekly job"}
 
-SECRETS_SECTION = "admin"   # in .streamlit/secrets.toml: allowed = [emails], github_token = "...", accounts = {email = login}
+SECRETS_SECTION = "admin"   # in .streamlit/secrets.toml: allowed = [emails], github_token = "..."
 
 # The three calls the team can make (issue 16), and what each does to the pull request (decided 20 Oct 2026, issue 17):
 # the decision is always written on the pull request first, as a comment; then it is merged, left open or closed.
