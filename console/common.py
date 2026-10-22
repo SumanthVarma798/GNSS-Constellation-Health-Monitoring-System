@@ -13,17 +13,28 @@ from ui import console
 
 # What Google sign-in (st.login) needs in [auth]; one left empty means it is not set up.
 SIGN_IN_FIELDS = ("redirect_uri", "cookie_secret", "client_id", "client_secret", "server_metadata_url")
-NOT_SET_UP = ("The console is not set up on this computer. It needs Google sign-in, the list of people who may sign in, "
-              "and a GitHub token, all in .streamlit/secrets.toml (see .streamlit/secrets.example.toml).")
+NOT_SET_UP = ("This copy of the console is not set up. It needs Google sign-in, the list of people who may sign in, and "
+              "a GitHub token, in its secrets: .streamlit/secrets.toml on a computer, or Settings > Secrets on Streamlit "
+              "Community Cloud (see .streamlit/secrets.example.toml).")
+NEEDED_ADMIN = ("allowed", "github_token")
 
 
 def settings():
-    """The [admin] settings, and whether Google sign-in is set up. Both empty without a secrets file."""
+    """The [admin] settings; empty without a secrets file."""
     try:
-        auth = st.secrets.get("auth", {})
-        return dict(st.secrets.get(SECRETS_SECTION, {})), all(auth.get(field) for field in SIGN_IN_FIELDS)
+        return dict(st.secrets.get(SECRETS_SECTION, {}))
     except FileNotFoundError:
-        return {}, False
+        return {}
+
+
+def missing():
+    """The secrets the console needs that are absent or empty, by name only, never their values."""
+    try:
+        auth, admin = st.secrets.get("auth", {}), st.secrets.get(SECRETS_SECTION, {})
+    except FileNotFoundError:
+        return ["the secrets themselves"]
+    return ([f"[auth] {field}" for field in SIGN_IN_FIELDS if not auth.get(field)]
+            + [f"[{SECRETS_SECTION}] {field}" for field in NEEDED_ADMIN if not admin.get(field)])
 
 
 @st.cache_data(ttl=READ_EVERY_SECONDS, show_spinner=False)
@@ -87,7 +98,7 @@ def github_trouble(error, reading=False):
 def read():
     """The cached reading, or a plain notice and a stop when GitHub cannot be read."""
     try:
-        return github(settings()[0]["github_token"])
+        return github(settings()["github_token"])
     except requests.RequestException as error:
         st.html(console.notice(github_trouble(error, reading=True), "bad"))
     except (KeyError, TypeError, ValueError):   # GitHub answered, but not in the shape the console reads

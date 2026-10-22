@@ -75,7 +75,9 @@ def test_without_its_settings_the_console_says_it_is_not_set_up(monkeypatch):
 
     at = run(monkeypatch, secrets={"admin": {"allowed": ["member@example.com"]}})
 
-    assert "not set up on this computer" in text(at) and not at.button
+    page = text(at)
+    assert "not set up" in page and not at.button
+    assert "[auth] client_id" in page and "[admin] github_token" in page and "[admin] allowed" not in page
 
 
 def test_a_sign_in_block_with_an_empty_field_counts_as_not_set_up(monkeypatch):
@@ -83,7 +85,9 @@ def test_a_sign_in_block_with_an_empty_field_counts_as_not_set_up(monkeypatch):
 
     at = run(monkeypatch, secrets={**SECRETS, "auth": {**SECRETS["auth"], "client_secret": ""}})
 
-    assert "not set up on this computer" in text(at)
+    page = text(at)
+    assert "Missing or empty: [auth] client_secret." in page   # named, and only that one
+    assert "t0ken" not in page   # names only, never a value
 
 
 def test_someone_not_signed_in_is_offered_google_sign_in_and_github_is_not_read(monkeypatch):

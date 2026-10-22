@@ -32,9 +32,10 @@ def _pick_scheme():
 scheme = st.session_state.setdefault("console_scheme", "auto")
 st.html(console.theme_css(scheme))
 
-config, sign_in_ready = common.settings()
-if not (sign_in_ready and config.get("allowed") and config.get("github_token")):
-    st.html(console.title_bar("Not set up") + f'<div class="c-signin"><div class="in">{escape(common.NOT_SET_UP)}</div></div>')
+config = common.settings()
+if missing := common.missing():
+    words = f"{common.NOT_SET_UP} Missing or empty: {', '.join(missing)}."
+    st.html(console.title_bar("Not set up") + f'<div class="c-signin"><div class="in">{escape(words)}</div></div>')
     st.stop()
 
 email = st.user.get("email")
