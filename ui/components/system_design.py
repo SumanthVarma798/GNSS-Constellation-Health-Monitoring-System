@@ -106,7 +106,7 @@ PARTS = {
               ["Google sign-in with an allow-list; one GitHub token, kept in the console's secrets",
                "Reads GitHub's record of jobs, issues and pull requests, and the archive's run logs",
                "Every change it makes goes out as a pull request"],
-              ["Shared copy on Streamlit Community Cloud's free tier (gnss-master-cosole.streamlit.app); it sleeps after a while unvisited and wakes on a click",
+              ["Shared copy on Streamlit Community Cloud's free tier (gnss-master-console.streamlit.app); it sleeps after a while unvisited and wakes on a click",
                "The assistant answers only where Ollama runs, so not on the shared copy"],
               "admin.py · console/ · evidence/decisions.py"),
 }
