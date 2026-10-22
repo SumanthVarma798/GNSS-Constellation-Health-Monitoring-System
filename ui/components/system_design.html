@@ -110,6 +110,7 @@ const DATA = __DATA__;
 const $ = (s) => document.querySelector(s), $$ = (s) => [...document.querySelectorAll(s)];
 function el(tag, text, cls) { const e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (cls) e.className = cls; return e; }
 const STATES = { built: "Built and running", planned: "Planned", key: "Where a person decides" };
+let stepIndex = -1;   // no step chosen yet; the arrows step from there, and wrap at both ends
 for (const f of DATA.facts) { const d = el("div"); d.append(el("b", f.figure), el("span", f.words)); $("#facts").append(d); }
 function list(items) { const u = el("ul"); for (const t of items) u.append(el("li", t)); return u; }
 function show(key) {
@@ -122,15 +123,33 @@ function show(key) {
   c.append(el("h3", p.name), el("div", STATES[p.kind], "st " + p.kind), el("h4", "In simple terms"), el("p", p.simple), cols, where);
 }
 function step(i) {
+  i = ((i % DATA.steps.length) + DATA.steps.length) % DATA.steps.length;
+  stepIndex = i;
   const s = DATA.steps[i];
-  $$("#steps button").forEach((b, j) => b.setAttribute("aria-pressed", String(j === i)));
+  $$("#steps button.step").forEach((b, j) => b.setAttribute("aria-pressed", String(j === i)));
   $$("#nodes g").forEach((g) => g.classList.toggle("lit", s.nodes.includes(g.dataset.n)));
   $$("#edges path").forEach((e) => e.classList.toggle("on", s.edges.includes(e.dataset.e)));
   const w = $("#stepword"); w.replaceChildren(el("b", `Step ${i + 1} of ${DATA.steps.length}. `), document.createTextNode(s.words + "."));
   show(s.nodes[0]);
 }
-DATA.steps.forEach((_, i) => { const b = el("button", String(i + 1)); b.type = "button"; b.setAttribute("aria-pressed", "false");
-  b.setAttribute("aria-label", `Step ${i + 1}`); b.addEventListener("click", () => step(i)); $("#steps").append(b); });
+function move(delta) {
+  const n = DATA.steps.length;
+  const current = stepIndex < 0 ? (delta > 0 ? -1 : 0) : stepIndex;
+  step((current + delta + n) % n);
+}
+const steps = $("#steps");
+const prev = el("button", "‹", "arrow"); prev.type = "button"; prev.setAttribute("aria-label", "Previous step");
+prev.addEventListener("click", () => move(-1)); steps.append(prev);
+DATA.steps.forEach((_, i) => { const b = el("button", String(i + 1), "step"); b.type = "button";
+  b.setAttribute("aria-pressed", "false"); b.setAttribute("aria-label", `Step ${i + 1}`);
+  b.addEventListener("click", () => step(i)); steps.append(b); });
+const next = el("button", "›", "arrow"); next.type = "button"; next.setAttribute("aria-label", "Next step");
+next.addEventListener("click", () => move(1)); steps.append(next);
+steps.setAttribute("tabindex", "0"); steps.setAttribute("role", "group"); steps.setAttribute("aria-label", "Steps");
+steps.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowLeft") { e.preventDefault(); move(-1); }
+  else if (e.key === "ArrowRight") { e.preventDefault(); move(1); }
+});
 $$("#nodes g").forEach((g) => { g.setAttribute("tabindex", "0"); g.setAttribute("role", "button");
   g.addEventListener("click", () => show(g.dataset.n));
   g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); show(g.dataset.n); } }); });
