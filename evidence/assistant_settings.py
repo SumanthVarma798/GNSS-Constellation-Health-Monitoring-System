@@ -8,7 +8,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-OLLAMA_URL = "http://localhost:11434"   # on a computer that runs Ollama; the shared copy uses [assistant] url instead
+OLLAMA_URL = "http://127.0.0.1:11434"   # on a computer that runs Ollama; the shared copy uses [assistant] url instead
+# 127.0.0.1, not "localhost": on a Mac "localhost" tries IPv6 (::1) first, and another Ollama there (a Docker
+# container on the same port, found 22 Oct 2026) answered without this model.
 # The shared copy reaches the Ollama on Sumanth's Mac through a tunnel (Tailscale Funnel) to a gate,
 # scripts/ollama_gate.py, which passes only questions for MODEL and needs a key. In the shared copy's secrets:
 #   [assistant]
