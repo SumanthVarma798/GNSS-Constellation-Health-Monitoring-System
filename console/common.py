@@ -32,7 +32,9 @@ def missing():
     """The secrets the console needs that are absent or empty, by name only, never their values."""
     try:
         auth, admin = st.secrets.get("auth", {}), st.secrets.get(SECRETS_SECTION, {})
-    except FileNotFoundError:
+    except FileNotFoundError as error:   # Streamlit raises it too for a file it cannot read, with the reason as its cause
+        if error.__cause__:   # the reader's message gives the line and position, never a value
+            return [f"a readable secrets file ({error.__cause__}): a key set twice, or a line that is not key = value"]
         return ["the secrets themselves"]
     return ([f"[auth] {field}" for field in SIGN_IN_FIELDS if not auth.get(field)]
             + [f"[{SECRETS_SECTION}] {field}" for field in NEEDED_ADMIN if not admin.get(field)])
