@@ -30,3 +30,6 @@ RELIABILITY_DAYS = 14   # columns in the day-by-day reliability grid
 RECENT_EVENTS = 10      # lines in the Summary's recent events
 RUNS_READ = 100         # GitHub's largest page of runs
 LOOK_AHEAD_DAYS = 8     # a schedule with no run within this many days says "none in the next week"
+PIPELINE_FEED_EVENTS = 20        # lines in the live pipeline's proof feed
+PIPELINE_LOOK_AHEAD_HOURS = 24   # how far ahead the live pipeline's Next up panel looks
+PIPELINE_READ_EVERY_SECONDS = 30   # how often the live pipeline page refreshes itself

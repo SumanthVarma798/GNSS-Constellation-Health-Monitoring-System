@@ -60,8 +60,9 @@ def github(token):
                 raise
             problems.append(f"GitHub has no workflow {workflow}: it may have been renamed or removed.")
     return {"workflows": github_api.ask("GET", "/actions/workflows", token)["workflows"], "runs": runs,
-            "log": log, "prs": decisions.fetch_open(token), "issues": work.fetch_open_issues(token), "problems": problems,
-            "read_at": datetime.now(timezone.utc)}
+            "log": log, "prs": (open_prs := decisions.fetch_open(token)),
+            "decision_prs": open_prs + decisions.fetch_recent_closed(token),
+            "issues": work.fetch_open_issues(token), "problems": problems, "read_at": datetime.now(timezone.utc)}
 
 
 def _runs(token, workflow):

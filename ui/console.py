@@ -69,7 +69,8 @@ ICONS = {
     "jobs": '<circle cx="8" cy="8" r="6.5" fill="#fff" stroke="#6a7f9a"/><path d="M8 4v4.5l3 1.5" fill="none" stroke="#1d3c66" stroke-width="1.5"/>',
     "approvals": '<path d="M3 1h7l3 3v11H3z" fill="#fff" stroke="#5f7da6"/><path d="M5.5 9l2 2 3.5-4" fill="none" stroke="#217a2b" stroke-width="1.6"/>',
     "design": '<rect x="1" y="2" width="5" height="4" fill="#fff" stroke="#3a6db0"/><rect x="10" y="2" width="5" height="4" fill="#fff" stroke="#3a6db0"/><rect x="5.5" y="10" width="5" height="4" fill="#dff1e1" stroke="#217a2b"/><path d="M6 4h4M3.5 6v2h9V6M8 8v2" fill="none" stroke="#3a6db0"/>',
-    "work": '<rect x="2" y="1.5" width="12" height="13" fill="#fff" stroke="#5f7da6"/><path d="M4.5 5h7M4.5 8h7M4.5 11h4.5" stroke="#1d3c66" stroke-width="1.4"/>'
+    "work": '<rect x="2" y="1.5" width="12" height="13" fill="#fff" stroke="#5f7da6"/><path d="M4.5 5h7M4.5 8h7M4.5 11h4.5" stroke="#1d3c66" stroke-width="1.4"/>',
+    "pipeline": '<rect x="1.5" y="4.5" width="4" height="7" fill="#fff" stroke="#3a6db0"/><rect x="6.5" y="2.5" width="4" height="11" fill="#dff1e1" stroke="#217a2b"/><rect x="11.5" y="5.5" width="3" height="5" fill="#fff" stroke="#3a6db0"/><path d="M5.7 8h.6M10.7 8h.6" stroke="#1d3c66" stroke-width="1.2"/>'
 }
 
 
@@ -226,6 +227,34 @@ def reliability_grid(grid, names):
 
 def notice(text, tone):
     return f'<div class="c-notice {_tone(tone)}" role="status">{escape(text)}</div>'
+
+
+def pipeline_diagram(stages, next_stage_name=None, next_at=None):
+    """The pipeline as connected stage boxes, with each stage's state in words and colour."""
+    tones = {"running now": "info", "done": "ok", "failed": "bad", "waiting": "warn", "off": "idle"}
+    by_name = {stage["name"]: stage for stage in stages}
+    archive_names = [stage["name"] for stage in stages if stage["name"].startswith("Archive: ")]
+    chain_names = ["Archive", "Registry update", "Pull request waiting for a decision", "Decided on the Approvals page",
+                   "Merged to main", "Dashboard"]
+
+    def box(stage, order=None):
+        tone = tones.get(stage["state"], "idle")
+        badge = ""
+        if next_stage_name and stage["name"] == next_stage_name and next_at:
+            badge = f'<span class="next">{escape(f"Next {when(next_at)} UTC")}</span>'
+        order_badge = f'<span class="order" aria-hidden="true">{order}</span>' if order is not None else ""
+        running = " running" if stage["state"] == "running now" else ""
+        return (f'<div class="c-pipe-stage {tone}{running}"><h4>{order_badge}{escape(stage["name"])}{badge}</h4>'
+                f'<p>{status(tone, stage["state"])}</p></div>')
+
+    archives = "".join(box(by_name[name]) for name in archive_names if name in by_name)
+    chain_rows = [name for name in chain_names if name in by_name]
+    chain = [box(by_name[name], order=index + 1) for index, name in enumerate(chain_rows)]
+    return ('<div class="c-pipe" role="img" aria-label="The live pipeline and each stage state">'
+            f'<div class="c-pipe-archives">{archives}</div>'
+            '<div class="c-pipe-arrow c-pipe-join" aria-hidden="true">→</div>'
+            f'<div class="c-pipe-chain">{"".join(chain)}</div>'
+            "</div>")
 
 
 def status_bar(parts_html, right):
