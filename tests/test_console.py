@@ -422,3 +422,20 @@ def test_sign_out_forgets_the_session_and_signs_out(monkeypatch):
     at.button(key="console_sign_out").click().run()
 
     assert out == [True] and "design_chat" not in at.session_state
+
+
+def test_a_secrets_file_that_cannot_be_read_is_named_with_its_line(monkeypatch):
+    import toml
+    from streamlit.errors import StreamlitSecretNotFoundError
+
+    class Broken:
+        def get(self, *_):
+            try:
+                toml.loads('a = "1"\na = "2"\n')
+            except toml.TomlDecodeError as reason:
+                raise StreamlitSecretNotFoundError("Error parsing secrets file") from reason
+
+    monkeypatch.setattr(streamlit, "secrets", Broken())
+    said = common.missing()[0]
+
+    assert said.startswith("a readable secrets file (Duplicate keys!") and "line 2" in said and '"2"' not in said
