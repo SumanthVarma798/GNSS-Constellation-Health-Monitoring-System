@@ -6,7 +6,7 @@ import requests
 import streamlit
 
 from evidence import assistant
-from evidence.assistant_settings import ISSUE_CHARACTERS, MODEL
+from evidence.assistant_settings import DOCUMENTS, ISSUE_CHARACTERS, MODEL, SOURCE_FILES
 from test_console import run, signed_in
 from test_dashboard_shell import segmented_controls_rerun  # noqa: F401  (AppTest 1.45's segmented controls)
 from ui.components.system_design import PARTS
@@ -17,8 +17,9 @@ ISSUES = [{"number": 19, "title": "Operator status", "body": "word " * 500}]
 def test_the_material_holds_the_documents_the_page_the_code_and_the_issues_each_under_its_label():
     text = assistant.material(ISSUES, PARTS)
 
-    for label in ("[docs/system-design.md]", "[docs/evidence-model.md]", f"[{assistant.PAGE_LABEL}]",
-                  "[evidence/assistant.py]", "[console/design.py]", "[issue #19] Operator status"):
+    for label in (*[f"[{path}]" for path in DOCUMENTS], *[f"[{path}]" for path in SOURCE_FILES],
+                  f"[{assistant.PAGE_LABEL}]", "[evidence/assistant.py]", "[console/design.py]",
+                  "[issue #19] Operator status"):
         assert label in text, label
     issue_line = next(line for line in text.splitlines() if line.startswith("[issue #19]"))
     assert len(issue_line) < ISSUE_CHARACTERS + 40 and issue_line.endswith("…")
