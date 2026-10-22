@@ -9,7 +9,12 @@ from evidence import pipeline
 from evidence.console_settings import PIPELINE_FEED_EVENTS, PIPELINE_LOOK_AHEAD_HOURS, PIPELINE_READ_EVERY_SECONDS
 from evidence.pipeline_words import PLAIN_STATES, STAGES
 from ui import console
-from ui.components.live_pipeline import live_pipeline_html, payload as pipeline_payload
+from ui.components.live_pipeline import (
+    live_pipeline_html,
+    overview_frame_height,
+    panel_frame_height,
+    payload as pipeline_payload,
+)
 
 _STATE_TONE = {"running now": "info", "done": "ok", "failed": "bad", "waiting": "warn", "off": "idle"}
 _EVENT_STAGE_KEY = {
@@ -95,50 +100,73 @@ def _event_words(event, stage_by_key):
             f'<div class="muted">{escape(event["words"])}</div></div>')
 
 
-@st.fragment(run_every=PIPELINE_READ_EVERY_SECONDS)
-def live_page():
-    body, actions = common.layout("pipeline", "Live pipeline", "The pipeline from archive runs to approvals and dashboard, "
-                                                                "with what is running now, what happens next, and proof links.")
+def _snapshot(workflow_texts):
     seen = common.read()
     now = common.now()
-    workflow_texts = common.workflow_texts()
     stages = pipeline.stages(seen["workflows"], seen["runs"], seen["log"], seen["decision_prs"], workflow_texts, now)
     upcoming = pipeline.what_next(stages, now, hours=PIPELINE_LOOK_AHEAD_HOURS)
     running = [stage for stage in stages if stage["state"] == "running now"]
     feed = pipeline.proof_feed(seen["runs"], seen["log"], seen["decision_prs"], limit=PIPELINE_FEED_EVENTS)
     stage_by_key = {stage["key"]: stage for stage in stages}
     next_key, next_at = ((upcoming[0]["key"], upcoming[0]["at"]) if upcoming else (None, None))
+    return seen, stages, upcoming, running, feed, stage_by_key, next_key, next_at
+
+
+@st.fragment(run_every=PIPELINE_READ_EVERY_SECONDS)
+def _live_status_fragment(workflow_texts):
+    seen, stages, upcoming, running, feed, stage_by_key, _, _ = _snapshot(workflow_texts)
+    st.caption(f"Read from GitHub {seen['read_at']:%H:%M} UTC")
+
+    left, right = st.columns(2)
+    with left:
+        st.html(console.section("Running now", console.list_view(
+            ["Stage", "State", "Started"],
+            [[_stage_cell(stage), console.status(_STATE_TONE[stage["state"]], _plain_state(stage["state"])),
+              escape(console.when(stage.get("running_start") or (stage["last"] or {}).get("start")))] for stage in running], numeric=())
+            if running else console.notice("No stage is running now.", "info"), flush=bool(running)))
+    with right:
+        st.html(console.section("Next up", console.list_view(
+            ["Stage", "When (UTC)", "What it does"],
+            [[_stage_cell(next(stage for stage in stages if stage["key"] == item["key"])),
+              escape(console.when(item["at"])),
+              escape(_stage_what(next(stage for stage in stages if stage["key"] == item["key"])))]
+             for item in upcoming], numeric=())
+            if upcoming else console.notice(f"No scheduled runs in the next {PIPELINE_LOOK_AHEAD_HOURS} hours.", "info"),
+            right="soonest first", flush=bool(upcoming)))
+
+    st.html(console.section("Proof of work", console.list_view(
+        ["Time (UTC)", "Event", "Link"],
+        [[escape(console.when(event["time"])), _event_words(event, stage_by_key),
+          _link(event.get("link"), _proof_link_words(event))]
+         for event in feed], numeric=()) if feed else console.notice("No proof events yet.", "info"),
+        right=f"newest {PIPELINE_FEED_EVENTS}", flush=bool(feed)))
+
+
+def live_page():
+    body, actions = common.layout(
+        "pipeline",
+        "Live pipeline",
+        "The pipeline from archive runs to approvals and dashboard, with what is running now, what happens next, and proof links.",
+    )
+    workflow_texts = common.workflow_texts()
+    seen, stages, _, _, _, _, next_key, next_at = _snapshot(workflow_texts)
+    component_data = pipeline_payload(stages, next_key, next_at, workflow_texts)
+
     with body:
         for problem in seen["problems"]:
             st.html(console.notice(problem, "warn"))
-        st.caption(f"Read from GitHub {seen['read_at']:%H:%M} UTC")
-        component_html(live_pipeline_html(console.token_css(st.session_state.get("console_scheme", "auto")), console.FONT,
-                                          pipeline_payload(stages, next_key, next_at, workflow_texts)),
-                       height=1220, scrolling=True)
-
-        left, right = st.columns(2)
-        with left:
-            st.html(console.section("Running now", console.list_view(
-                ["Stage", "State", "Started"],
-                [[_stage_cell(stage), console.status(_STATE_TONE[stage["state"]], _plain_state(stage["state"])),
-                  escape(console.when(stage.get("running_start") or (stage["last"] or {}).get("start")))] for stage in running], numeric=())
-                if running else console.notice("No stage is running now.", "info"), flush=bool(running)))
-        with right:
-            st.html(console.section("Next up", console.list_view(
-                ["Stage", "When (UTC)", "What it does"],
-                [[_stage_cell(next(stage for stage in stages if stage["key"] == item["key"])),
-                  escape(console.when(item["at"])),
-                  escape(_stage_what(next(stage for stage in stages if stage["key"] == item["key"])))]
-                 for item in upcoming], numeric=())
-                if upcoming else console.notice(f"No scheduled runs in the next {PIPELINE_LOOK_AHEAD_HOURS} hours.", "info"),
-                right="soonest first", flush=bool(upcoming)))
-
-        st.html(console.section("Proof of work", console.list_view(
-            ["Time (UTC)", "Event", "Link"],
-            [[escape(console.when(event["time"])), _event_words(event, stage_by_key),
-              _link(event.get("link"), _proof_link_words(event))]
-             for event in feed], numeric=()) if feed else console.notice("No proof events yet.", "info"),
-            right=f"newest {PIPELINE_FEED_EVENTS}", flush=bool(feed)))
+        tokens = console.token_css(st.session_state.get("console_scheme", "auto"))
+        component_html(
+            live_pipeline_html(tokens, console.FONT, component_data, mode="overview"),
+            height=overview_frame_height(),
+            scrolling=False,
+        )
+        component_html(
+            live_pipeline_html(tokens, console.FONT, component_data, mode="panel"),
+            height=panel_frame_height(component_data),
+            scrolling=False,
+        )
+        _live_status_fragment(workflow_texts)
     with actions:
         common.refresh_action()
         st.html('<p class="c-actions-sub">Go to</p>')

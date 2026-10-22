@@ -15,6 +15,9 @@ body { overflow-x: hidden; }
 .lp-pane > h3 { margin: 0; padding: 5px 10px; font-size: 12px; font-weight: 800; color: var(--head-ink); background: var(--head-bg);
   box-shadow: var(--th-bevel); }
 .lp-pane > .in { padding: 10px; }
+.hidden { display: none !important; }
+body[data-view-mode="overview"] .lp-wrap,
+body[data-view-mode="panel"] .lp-wrap { grid-template-columns: 1fr !important; }
 .overview-note { margin: 0 0 8px; color: var(--muted); }
 .overview-map { position: relative; border: 2px solid var(--outline); background: var(--pane-alt); box-shadow: var(--hard-sm); padding: 10px; }
 .overview-grid { position: relative; z-index: 2; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 12px; align-items: stretch; }
@@ -256,12 +259,71 @@ a { color: var(--link); }
 const DATA = __DATA__;
 const cards = Object.fromEntries(DATA.cards.map((c) => [c.key, c]));
 const STATE_ICONS = { ok: "✓", warn: "▲", bad: "✕", info: "i", idle: "−" };
-let selected = cards[DATA.default_key] ? DATA.default_key : DATA.cards[0].key;
-let technical = false;
+const VIEW_MODE = DATA.view_mode || "combined";
+const VIEW_KEY = "live_pipeline_view";
+const VIEW_CHANNEL_NAME = "live_pipeline_view_channel";
+const PANEL_NODE = document.querySelector("#panel");
+const OVERVIEW_NODE = document.querySelector("#overview");
+const OVERVIEW_PANE = OVERVIEW_NODE ? OVERVIEW_NODE.closest(".lp-pane") : null;
+const PANEL_PANE = PANEL_NODE ? PANEL_NODE.closest(".lp-pane") : null;
+const isOverviewOnly = VIEW_MODE === "overview";
+const isPanelOnly = VIEW_MODE === "panel";
+let channel = null;
+
+if ("BroadcastChannel" in window) {
+  try {
+    channel = new BroadcastChannel(VIEW_CHANNEL_NAME);
+  } catch (error) {
+    channel = null;
+  }
+}
+
+function readStoredView() {
+  try {
+    const raw = window.sessionStorage.getItem(VIEW_KEY);
+    if (!raw) return {};
+    const loaded = JSON.parse(raw);
+    return (loaded && typeof loaded === "object") ? loaded : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function viewLevel() {
+  return technical ? "technical" : "about";
+}
+
+function viewScrollTop() {
+  return Math.max(window.scrollY || 0, document.documentElement.scrollTop || 0, document.body.scrollTop || 0);
+}
+
+function normalizeView(base = {}) {
+  const fallback = cards[DATA.default_key] ? DATA.default_key : DATA.cards[0].key;
+  const chosen = (typeof base.stage === "string" && cards[base.stage]) ? base.stage : fallback;
+  const level = base.level === "technical" ? "technical" : "about";
+  const parsed = Number(base.scroll);
+  const scroll = Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+  return { stage: chosen, level, scroll };
+}
+
+function writeStoredView(partial = {}, options = {}) {
+  const merged = normalizeView({ ...readStoredView(), ...partial });
+  window.sessionStorage.setItem(VIEW_KEY, JSON.stringify(merged));
+  if (options.broadcast !== false && channel) {
+    channel.postMessage({ type: "live_pipeline_view", payload: merged });
+  }
+  return merged;
+}
+
+const initialView = normalizeView(readStoredView());
+let selected = initialView.stage;
+let technical = initialView.level === "technical";
 const flowSelection = {};
 let flowRedraw = null;
 let overviewRedraw = null;
 let resizeBound = false;
+let restorePending = false;
+let syncingExternally = false;
 
 function el(tag, cls, text) {
   const node = document.createElement(tag);
@@ -325,6 +387,85 @@ function bindResize() {
     if (flowRedraw) flowRedraw();
   });
   resizeBound = true;
+}
+
+function restorePanelScroll() {
+  if (!isPanelOnly) return;
+  const state = normalizeView(readStoredView());
+  if (!state.scroll || restorePending) return;
+  restorePending = true;
+  window.requestAnimationFrame(() => {
+    window.scrollTo(0, state.scroll);
+    restorePending = false;
+  });
+}
+
+function syncViewState(options = {}) {
+  if (syncingExternally) return;
+  const partial = { stage: selected, level: viewLevel() };
+  if (!isOverviewOnly) {
+    partial.scroll = viewScrollTop();
+  }
+  writeStoredView(partial, options);
+}
+
+function setSelection(key, wantsTechnical, options = {}) {
+  if (!cards[key]) return;
+  selected = key;
+  if (typeof wantsTechnical === "boolean") {
+    technical = wantsTechnical;
+  }
+  render();
+  syncViewState(options);
+}
+
+function applyExternalView(raw) {
+  const next = normalizeView(raw || {});
+  if (!cards[next.stage]) return;
+  const changed = next.stage !== selected || (next.level === "technical") !== technical;
+  selected = next.stage;
+  technical = next.level === "technical";
+  if (changed) {
+    syncingExternally = true;
+    render();
+    syncingExternally = false;
+  }
+  if (isPanelOnly) {
+    restorePanelScroll();
+  }
+}
+
+function contentHeight() {
+  // The page's own height, not the frame's: scrollHeight can never be less than the frame, so it cannot shrink.
+  const parts = [...document.body.children].filter((e) => e.tagName !== "SCRIPT");
+  const bottom = Math.max(0, ...parts.map((e) => e.getBoundingClientRect().bottom + window.scrollY));
+  return Math.ceil(bottom) + 12;   // room for the hard shadow
+}
+
+function postFrameHeight() {
+  if (!isPanelOnly) return;
+  // Streamlit 1.45 ignores "streamlit:setFrameHeight" from st.components.v1.html frames, but the frame is the same
+  // origin as the page (allow-same-origin), so it sets its own height: the panel grows and shrinks with its content
+  // and never scrolls inside itself (checked in the browser, 22 Oct 2026).
+  if (window.frameElement) window.frameElement.style.height = contentHeight() + "px";
+}
+
+function setupCrossFrameSync() {
+  window.addEventListener("storage", (event) => {
+    if (event.key !== VIEW_KEY || !event.newValue) return;
+    try {
+      applyExternalView(JSON.parse(event.newValue));
+    } catch (error) {
+      // ignore malformed state from other contexts
+    }
+  });
+  if (channel) {
+    channel.addEventListener("message", (event) => {
+      const message = event.data || {};
+      if (message.type !== "live_pipeline_view") return;
+      applyExternalView(message.payload);
+    });
+  }
 }
 
 function ensureArrowMarker(svg, markerId) {
@@ -586,8 +727,9 @@ function schedulePicture(stage) {
   }
 
   const now = el("span", "strip-now");
-  const nowMinute = (schedule.now || {}).minute_of_day || 0;
-  const nowDay = (schedule.now || {}).weekday_index || 0;
+  const nowUtc = new Date();
+  const nowMinute = (nowUtc.getUTCHours() * 60) + nowUtc.getUTCMinutes();
+  const nowDay = (nowUtc.getUTCDay() + 6) % 7;
   const nowPercent = schedule.kind === "daily"
     ? (clamp(nowMinute, 0, 1440) / 1440) * 100
     : ((((nowDay * 1440) + clamp(nowMinute, 0, 1440)) / (7 * 1440)) * 100);
@@ -805,19 +947,15 @@ function stageButton(key, options = {}) {
     state.append(badge);
   }
   button.append(state);
-  button.addEventListener("click", () => { selected = key; technical = false; render(); });
-  button.addEventListener("dblclick", () => { selected = key; technical = true; render(); });
+  button.addEventListener("click", () => { setSelection(key, false); });
+  button.addEventListener("dblclick", () => { setSelection(key, true); });
   button.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && event.shiftKey) {
       event.preventDefault();
-      selected = key;
-      technical = true;
-      render();
+      setSelection(key, true);
     } else if (event.key === "Enter") {
       event.preventDefault();
-      selected = key;
-      technical = false;
-      render();
+      setSelection(key, false);
     }
   });
   return button;
@@ -831,6 +969,7 @@ function overviewArrow(direction, running) {
 
 function renderPicture() {
   const host = document.querySelector("#overview");
+  if (!host) return;
   host.replaceChildren();
   const compact = window.matchMedia("(max-width: 700px)").matches;
   const layout = el("div", `overview-layout${compact ? " compact" : ""}`);
@@ -902,7 +1041,7 @@ function renderSimple(panel, stage) {
   const actions = el("div", "actions");
   const button = el("button", "btn", "Show the technical details");
   button.type = "button";
-  button.addEventListener("click", () => { technical = true; render(); });
+  button.addEventListener("click", () => { setSelection(selected, true); });
   actions.append(button);
   panel.append(actions);
 }
@@ -919,7 +1058,7 @@ function renderTechnical(panel, stage) {
   const actions = el("div", "actions");
   const back = el("button", "btn", "Back to the simple view");
   back.type = "button";
-  back.addEventListener("click", () => { technical = false; render(); });
+  back.addEventListener("click", () => { setSelection(selected, false); });
   actions.append(back);
   panel.append(actions);
 
@@ -962,6 +1101,7 @@ function renderTechnical(panel, stage) {
 
 function renderPanel() {
   const panel = document.querySelector("#panel");
+  if (!panel) return;
   panel.replaceChildren();
   const stage = cards[selected];
   if (!stage) return;
@@ -970,18 +1110,58 @@ function renderPanel() {
 }
 
 function render() {
-  renderPicture();
-  renderPanel();
+  if (!isPanelOnly) renderPicture();
+  if (!isOverviewOnly) renderPanel();
+  if (isPanelOnly) {
+    postFrameHeight();
+    restorePanelScroll();
+  }
+}
+
+function setupMode() {
+  document.body.dataset.viewMode = VIEW_MODE;
+  if (isOverviewOnly && PANEL_PANE) {
+    PANEL_PANE.classList.add("hidden");
+  }
+  if (isPanelOnly && OVERVIEW_PANE) {
+    OVERVIEW_PANE.classList.add("hidden");
+  }
+}
+
+let scrollSyncTimer = null;
+function queuePanelScrollSync() {
+  if (!isPanelOnly || syncingExternally) return;
+  if (scrollSyncTimer) return;
+  scrollSyncTimer = window.setTimeout(() => {
+    scrollSyncTimer = null;
+    syncViewState({ broadcast: false });
+  }, 120);
+}
+
+function setupPanelResizeSync() {
+  if (!isPanelOnly) return;
+  if ("ResizeObserver" in window) {
+    const observer = new ResizeObserver(() => postFrameHeight());
+    [...document.body.children].filter((e) => e.tagName !== "SCRIPT").forEach((e) => observer.observe(e));
+  }
+  window.addEventListener("scroll", queuePanelScrollSync, { passive: true });
 }
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && technical) {
-    technical = false;
-    render();
+    setSelection(selected, false);
   }
 });
 
+setupCrossFrameSync();
+setupMode();
 render();
+if (isPanelOnly) {
+  writeStoredView({ stage: selected, level: viewLevel() }, { broadcast: false });
+} else {
+  syncViewState({ broadcast: false });
+}
+setupPanelResizeSync();
 </script>
 </body>
 </html>

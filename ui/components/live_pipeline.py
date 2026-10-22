@@ -1,8 +1,9 @@
 """Interactive live-pipeline component with three wording depths per stage."""
 import csv
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 import importlib
 import io
+import math
 from pathlib import PurePosixPath
 from pathlib import Path
 import re
@@ -13,6 +14,17 @@ from evidence.pipeline_words import PLAIN_STATES, SETTING_SENTENCES, STAGES
 from ui.components.master_map import embed
 
 PAGE_FILE = Path(__file__).with_name("live_pipeline.html")
+
+_OVERVIEW_COLLECT_ROWS = 5
+_OVERVIEW_CHAIN_ROWS = 6
+_OVERVIEW_STAGE_MIN_HEIGHT = 84
+_OVERVIEW_LINK_MIN_HEIGHT = 34
+_OVERVIEW_ROW_GAP = 8
+_OVERVIEW_HEADER_HEIGHT = 28
+_OVERVIEW_INNER_PADDING = 20
+_OVERVIEW_NOTE_HEIGHT = 38
+_OVERVIEW_MAP_PADDING = 24
+_OVERVIEW_SAFE_MARGIN = 36
 
 _RUN_NUMBER = re.compile(r"/actions/runs/(\d+)")
 _FAILED_SOURCES = re.compile(r"failed:\s*(\d+)\s+of\s+(\d+)\s+sources")
@@ -373,7 +385,7 @@ def _retry_backoff_data(setting_values):
                      f"{_seconds_words(longest_wait)} cap.")}
 
 
-def _schedule_visual(stage_key, schedule, stage, now):
+def _schedule_visual(stage_key, schedule, stage):
     crons = schedule["crons"]
     if not crons:
         if stage_key in _EVENT_DRIVEN_KEYS:
@@ -382,14 +394,13 @@ def _schedule_visual(stage_key, schedule, stage, now):
 
     next_at = stage.get("next")
     last_run = _last_run_visual(stage.get("last"))
-    now_words = {"weekday_index": now.weekday(), "minute_of_day": now.hour * 60 + now.minute}
 
     if any(cron.split()[4] != "*" for cron in crons):
         return {"kind": "weekly", "timezone": "UTC", "days": _WEEKDAYS, "marks": _schedule_marks_weekly(crons, next_at),
-                "now": now_words, "next_utc": _when(next_at), "last_run": last_run}
+                "next_utc": _when(next_at), "last_run": last_run}
 
     return {"kind": "daily", "timezone": "UTC", "ticks": list(range(0, 25)), "marks": _schedule_marks_daily(crons, next_at),
-            "now": now_words, "next_utc": _when(next_at), "last_run": last_run}
+            "next_utc": _when(next_at), "last_run": last_run}
 
 
 def _proof_chips(proof):
@@ -405,11 +416,10 @@ def _proof_chips(proof):
     ]
 
 
-def payload(stages, next_stage_key, next_at, workflow_texts, now=None):
+def payload(stages, next_stage_key, next_at, workflow_texts):
     """Data for the live-pipeline component."""
     by_key = {stage["key"]: stage for stage in stages}
     cards = []
-    now = now or datetime.now(timezone.utc)
     for key, words in STAGES.items():
         stage = by_key.get(key)
         if stage is None:
@@ -438,7 +448,7 @@ def payload(stages, next_stage_key, next_at, workflow_texts, now=None):
             "schedule_crons": schedule["crons"],
             "schedule_words": schedule["words"],
             "schedule_note": schedule["note"],
-            "schedule_visual": _schedule_visual(key, schedule, stage, now),
+            "schedule_visual": _schedule_visual(key, schedule, stage),
             "commands": facts.get("commands", []),
             "inputs": facts.get("inputs", []),
             "outputs": facts.get("outputs", []),
@@ -473,7 +483,39 @@ def payload(stages, next_stage_key, next_at, workflow_texts, now=None):
     }
 
 
-def live_pipeline_html(tokens_css, font, data):
+def overview_frame_height():
+    """Height that fits the static overview layout (5 collect rows, 6 chain rows) without internal scrolling."""
+    collect_height = (_OVERVIEW_COLLECT_ROWS * _OVERVIEW_STAGE_MIN_HEIGHT) + ((_OVERVIEW_COLLECT_ROWS - 1) * _OVERVIEW_ROW_GAP)
+    chain_rows = _OVERVIEW_CHAIN_ROWS + (_OVERVIEW_CHAIN_ROWS - 1)
+    chain_height = (_OVERVIEW_CHAIN_ROWS * _OVERVIEW_STAGE_MIN_HEIGHT) + (
+        (_OVERVIEW_CHAIN_ROWS - 1) * _OVERVIEW_LINK_MIN_HEIGHT
+    ) + ((chain_rows - 1) * _OVERVIEW_ROW_GAP)
+    map_height = max(collect_height, chain_height) + _OVERVIEW_MAP_PADDING
+    return _OVERVIEW_HEADER_HEIGHT + _OVERVIEW_INNER_PADDING + _OVERVIEW_NOTE_HEIGHT + map_height + _OVERVIEW_SAFE_MARGIN
+
+
+def panel_frame_height(data):
+    """Conservative panel height for the tallest technical view so the iframe never scrolls."""
+    cards = data.get("cards", [])
+    largest_settings = max((len(card.get("settings_cards") or []) for card in cards), default=0)
+    settings_rows = max(1, math.ceil(largest_settings / 4))
+
+    # Approximate stacked section heights from the panel's grid structure.
+    fixed_sections = (
+        110 +  # panel title + intro
+        300 +  # flow tile
+        220 +  # schedule + last run row
+        240 +  # back-off + proof row
+        120 +  # raw run-log tile
+        150    # limits + risks
+    )
+    settings_height = settings_rows * 200
+    return fixed_sections + settings_height + 220
+
+
+def live_pipeline_html(tokens_css, font, data, mode="combined"):
     """HTML for the live-pipeline component."""
     page = PAGE_FILE.read_text(encoding="utf-8").replace("__TOKENS__", tokens_css).replace("__FONT__", font)
-    return page.replace("const DATA = __DATA__;", f"const DATA = {embed(data)};", 1)
+    view_data = dict(data)
+    view_data["view_mode"] = mode
+    return page.replace("const DATA = __DATA__;", f"const DATA = {embed(view_data)};", 1)

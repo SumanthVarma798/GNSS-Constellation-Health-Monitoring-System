@@ -165,6 +165,32 @@ def test_payload_includes_overview_link_cadence_words_for_scheduled_and_event_li
     assert links[("decision_waiting", "decision_made")] == "when a person decides"
 
 
+def test_component_modes_embed_view_sync_and_frame_height_message():
+    rows = _stage_rows()
+    data = payload(rows, None, None, _workflow_texts())
+
+    overview_page = live_pipeline_html(":root{}", "sans-serif", data, mode="overview")
+    panel_page = live_pipeline_html(":root{}", "sans-serif", data, mode="panel")
+
+    overview_json = overview_page[overview_page.index("const DATA = ") + len("const DATA = "):overview_page.index(";\nconst cards")]
+    panel_json = panel_page[panel_page.index("const DATA = ") + len("const DATA = "):panel_page.index(";\nconst cards")]
+    assert json.loads(overview_json)["view_mode"] == "overview"
+    assert json.loads(panel_json)["view_mode"] == "panel"
+    assert "live_pipeline_view" in overview_page and "live_pipeline_view" in panel_page
+    assert "BroadcastChannel" in panel_page
+    assert "window.frameElement.style.height" in panel_page   # the panel sizes its own frame; it never scrolls inside
+
+
+def test_schedule_visual_uses_client_clock_for_now_marker():
+    rows = _stage_rows()
+    data = payload(rows, None, None, _workflow_texts())
+    daily = next(card for card in data["cards"] if card["key"] == "archive_news")
+    weekly = next(card for card in data["cards"] if card["key"] == "registry_update")
+
+    assert "now" not in daily["schedule_visual"]
+    assert "now" not in weekly["schedule_visual"]
+
+
 def test_level_2_words_avoid_internal_jargon():
     banned = ("collector", "graded source", "candidate sources", "claim extraction", "evidence trail", "workflow")
     for key, words in STAGES.items():
