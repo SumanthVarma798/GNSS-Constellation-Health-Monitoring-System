@@ -265,3 +265,20 @@ dl.c-kv dt { color: var(--muted); } dl.c-kv dd { margin: 0; color: var(--ink); }
   .stApp button[data-testid^="stBaseButton"]:active,
   [data-testid="stButtonGroup"] button:active { transform: none; }
 }
+
+/* ---- loading: Streamlit's spinner (a spinning circle, square here) becomes a bento strip scrolling without end ---- */
+[data-testid="stSpinner"] > div { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 12px 0; }
+[data-testid="stSpinner"] > div > i { display: block; width: min(100%, 720px) !important; height: 120px !important;
+  border: 2px solid var(--outline) !important; border-radius: 0 !important; box-shadow: var(--hard);
+  background-color: var(--pane) !important; background-image: var(--bento) !important; background-repeat: repeat-x !important;
+  background-size: 240px 120px !important; background-position: 0 0;   /* not !important: the animation moves it */
+  animation: bento-scroll 3s linear infinite !important; }
+[data-testid="stSpinner"] p { font-weight: 700; color: var(--ink); }
+[data-testid="stChatMessage"] [data-testid="stSpinner"] > div > i { width: min(100%, 360px) !important; height: 60px !important;
+  background-size: 120px 60px !important; animation-name: bento-scroll-small !important; box-shadow: var(--hard-sm); }
+@keyframes bento-scroll { from { background-position: 0 0; } to { background-position: -240px 0; } }
+@keyframes bento-scroll-small { from { background-position: 0 0; } to { background-position: -120px 0; } }
+@media (prefers-reduced-motion: reduce) { [data-testid="stSpinner"] > div > i { animation: none !important; } }
+@media (max-width: 600px) { [data-testid="stSpinner"] > div > i { height: 80px !important; background-size: 160px 80px !important;
+  animation-name: bento-scroll-phone !important; box-shadow: var(--hard-sm); } }
+@keyframes bento-scroll-phone { from { background-position: 0 0; } to { background-position: -160px 0; } }

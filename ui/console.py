@@ -73,6 +73,24 @@ ICONS = {
 }
 
 
+# The loading strip's tiles (x, y, width, height, colour index), one 240 by 120 repeat of a bento grid with 4px gaps;
+# it scrolls sideways by one repeat, so the loop has no seam (ui/console.css, [data-testid="stSpinner"]).
+BENTO_TILES = [(4, 4, 72, 52, 0), (80, 4, 52, 24, 1), (80, 32, 52, 24, 2), (136, 4, 100, 52, 3), (4, 60, 40, 56, 2),
+               (48, 60, 88, 26, 1), (48, 90, 88, 26, 0), (140, 60, 48, 56, 1), (192, 60, 44, 56, 2)]
+
+
+def bento(colours, edge):
+    """The loading strip's repeating picture as a CSS url(): the tiles filled with `colours`, outlined in `edge`."""
+    rects = "".join(f"<rect x='{x}' y='{y}' width='{w}' height='{h}' fill='{colours[c]}' stroke='{edge}' stroke-width='2'/>"
+                    for x, y, w, h, c in BENTO_TILES)
+    svg = f"<svg xmlns='http://www.w3.org/2000/svg' width='240' height='120'>{rects}</svg>"
+    return 'url("data:image/svg+xml,' + svg.replace("#", "%23").replace("<", "%3C").replace(">", "%3E") + '")'
+
+
+LIGHT["bento"] = bento(["#0a246a", "#3a6ea5", "#d4d0c8", "#f2c80f"], "#000")       # navy, blue, button grey, yellow
+DARK["bento"] = bento(["#1f6feb", "#58a6ff", "#30363d", "#d29922"], "#c9d1d9")    # bright blue, sky, panel grey, amber
+
+
 def _block(tokens):
     return ":root {" + "".join(f"--{name}: {value};" for name, value in {**_COMMON, **tokens}.items()) + "}"
 
