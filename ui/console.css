@@ -77,6 +77,26 @@ a { color: var(--link); }
 [data-testid="stExpander"] summary * { color: var(--th-ink); font-weight: 600; }
 [data-baseweb="popover"] :is(ul, li, div) { background: var(--pane); color: var(--ink); }
 
+/* ---- Streamlit's text and chat built-ins, on the console's own palette. The base theme is dark, so in the
+   light scheme these must be told to leave the dark-theme text and backgrounds behind. ---- */
+[data-testid="stHeading"], [data-testid="stCaptionContainer"], [data-testid="stSpinner"] { color: var(--ink); }
+[data-testid="stHeading"] :is(h1, h2, h3, h4, h5, h6, p, span) { color: inherit; }
+[data-testid="stCaptionContainer"] { color: var(--muted); }
+[data-testid="stCaptionContainer"] :is(p, span) { color: inherit; }
+[data-testid="stCaptionContainer"] a { color: var(--link); }
+[data-testid="stSpinner"] :is(p, span) { color: inherit; }
+[data-testid="stAlertContainer"] { background: var(--pane-alt) !important; border-color: var(--edge) !important; }
+[data-testid^="stAlertContent"] { color: var(--ink); }
+[data-testid^="stAlertContent"] :is(p, span, li) { color: inherit; }
+[data-testid^="stAlertContent"] a { color: var(--link); }
+[data-testid="stChatMessage"] { background: var(--pane-alt) !important; }
+[data-testid="stChatMessageContent"] { color: var(--ink); }
+[data-testid="stChatMessageContent"] :is(p, li, code, pre) { color: inherit; }
+[data-testid="stChatMessageContent"] a { color: var(--link); }
+[data-testid="stChatInput"], [data-testid="stChatInput"] div { background: var(--input-bg) !important; border-color: var(--input-edge); color: var(--ink); }
+[data-testid="stChatInputTextArea"] { background: var(--input-bg) !important; color: var(--ink) !important; caret-color: var(--ink); }
+[data-testid="stChatInputTextArea"]::placeholder { color: var(--muted); opacity: 1; }
+
 /* ---- a page: its header band, its body, and the Actions pane on the right ---- */
 .c-view { display: flex; gap: 12px; align-items: center; padding: 12px 16px; background: var(--vhead-bg); color: var(--vhead-ink); border-bottom: 2px solid var(--chrome-edge); }
 .c-view .ic { width: 32px; height: 32px; }
