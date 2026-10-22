@@ -6,6 +6,7 @@ to refuse what the material does not say. A local model can still slip, so the p
 names that is not in the material (unknown_sources).
 """
 import ast
+import csv
 import json
 import re
 import time
@@ -13,7 +14,7 @@ import time
 import requests
 
 from evidence.assistant_settings import (ANSWER_SECONDS, CODE_FOLDERS, CONTEXT_TOKENS, DOCUMENTS, HISTORY_TURNS,
-                                         ISSUE_CHARACTERS, MODEL, OLLAMA_URL, ROOT, RULES)
+                                         ISSUE_CHARACTERS, MODEL, OLLAMA_URL, ROOT, RULES, SOURCE_FILES)
 
 PAGE_LABEL = "System design page"
 
@@ -34,6 +35,7 @@ def material(issues, parts):
     """Everything the assistant may answer from, each piece under its [label]. `issues` are GitHub's open issues,
     `parts` the System design page's words (ui/components/system_design.PARTS)."""
     pieces = [f"=== [{path}] ===\n{(ROOT / path).read_text(encoding='utf-8')}" for path in DOCUMENTS]
+    pieces.extend(f"=== [{path}] ===\n{_source_lines(path)}" for path in SOURCE_FILES)
     pieces.append(f"=== [{PAGE_LABEL}] ===\n" + "\n".join(
         f"{name} ({kind}): {simple} Details: {'; '.join(tech)}. Limits: {'; '.join(limits)}. Lives in: {where}."
         for name, kind, simple, tech, limits, where in parts.values()))
@@ -42,6 +44,21 @@ def material(issues, parts):
     pieces.append("=== Open issues: planned work, not built ===\n" + "\n".join(
         f"[issue #{i['number']}] {i['title']}: {_short(i.get('body') or '')}" for i in issues))
     return "\n\n".join(pieces)
+
+
+def _source_lines(path):
+    """One compact line per source in a source list, with the fields an answer about news sources needs."""
+    with (ROOT / path).open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    if path.endswith("source_candidates.csv"):
+        return "\n".join(
+            f"{row['source_id']} | {row['name']} | {row['kind']} | {row['address']} | check status {row['check_status']}"
+            f" | proposed grade {row['proposed_grade'] or 'none'} | {row['standing']}"
+            for row in rows)
+    return "\n".join(
+        f"{row['source_id']} | {row['name']} | given grade {row['reliability']} | {row['graded_by']} | "
+        f"graded {row['graded_on']} | {row['reason']}"
+        for row in rows)
 
 
 def _descriptions():

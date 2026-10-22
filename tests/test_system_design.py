@@ -23,6 +23,12 @@ def test_each_part_says_what_it_is_its_details_its_limits_and_where_it_lives():
         assert kind in ("built", "planned", "key") and name and simple and tech and limits and where, key
 
 
+def test_the_step_bar_has_previous_and_next_arrow_buttons():
+    assert 'setAttribute("aria-label", "Previous step")' in PAGE
+    assert 'setAttribute("aria-label", "Next step")' in PAGE
+    assert PAGE.count('el("button", "‹"') == 1 and PAGE.count('el("button", "›"') == 1
+
+
 def test_text_cannot_break_out_of_the_page_and_is_put_in_as_text():
     page = sd.system_design_html(":root{}", "sans-serif", [("</script><b>1</b>", "words")])
 

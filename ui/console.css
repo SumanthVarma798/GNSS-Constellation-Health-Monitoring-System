@@ -170,6 +170,24 @@ dl.c-kv dt { color: var(--muted); } dl.c-kv dd { margin: 0; color: var(--ink); }
 .pr-text p, .pr-text ul { margin: 4px 0; } .pr-text a { color: var(--link); }
 .pr-text pre { white-space: pre-wrap; font: 12px var(--mono); background: var(--pane-alt); border: 1px solid var(--edge-soft); padding: 6px 10px; }
 
+/* ---- chat and other markdown: draw code and tables in the console's tokens, not Streamlit's dark base theme ---- */
+:is([data-testid="stMarkdownContainer"], [data-testid="stChatMessageContent"]) code {
+  font-family: var(--mono); color: var(--ink); background: var(--pane-alt); border: 1px solid var(--edge-soft); padding: 0 3px;
+}
+:is([data-testid="stMarkdownContainer"], [data-testid="stChatMessageContent"]) pre {
+  background: var(--input-bg); border: 1px solid var(--edge-soft); padding: 6px 10px; overflow-x: auto;
+}
+:is([data-testid="stMarkdownContainer"], [data-testid="stChatMessageContent"]) pre code {
+  background: transparent; border: 0; padding: 0;
+}
+:is([data-testid="stMarkdownContainer"], [data-testid="stChatMessageContent"]) table { border-collapse: collapse; }
+:is([data-testid="stMarkdownContainer"], [data-testid="stChatMessageContent"]) th {
+  background: var(--th-bg); color: var(--th-ink); border: 1px solid var(--edge-soft); padding: 4px 8px; font-weight: 600;
+}
+:is([data-testid="stMarkdownContainer"], [data-testid="stChatMessageContent"]) td {
+  color: var(--ink); border: 1px solid var(--edge-soft); padding: 4px 8px;
+}
+
 /* ---- notices and the status bar ---- */
 .c-notice { padding: 8px 12px; border: 1px solid var(--edge); border-left: 5px solid var(--tone, var(--idle)); background: var(--pane-alt); color: var(--ink); margin: 0 0 12px; }
 .c-notice.ok { --tone: var(--c-ok); } .c-notice.warn { --tone: var(--c-warn); } .c-notice.bad { --tone: var(--c-bad); } .c-notice.info { --tone: var(--c-info); }
