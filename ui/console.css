@@ -8,6 +8,7 @@
 html, body, .stApp { background: var(--pane); color: var(--ink); font-family: var(--font); }
 .stApp { font-size: 13px; }
 a { color: var(--link); }
+a:hover { text-decoration: underline; }
 :where(p, li, td, th, dd) { overflow-wrap: anywhere; }
 
 /* ---- Streamlit's own frame: no Deploy button or menu; the header only keeps the sidebar's open control ---- */
@@ -35,8 +36,9 @@ a { color: var(--link); }
 [data-testid="stSidebarNavItems"] li:is(:last-child, :has(+ header))::before { bottom: 50%; }   /* the last page ends the line */
 [data-testid="stSidebarNavItems"] li::after { top: 50%; width: 11px; border-top: 1px dotted var(--tree-line); }   /* across to the page */
 [data-testid="stSidebarNavLink"] { gap: 6px; padding: 2px 8px 2px 4px; margin: 0; min-height: 0; border: 1px dotted transparent; font-size: 13px; line-height: 20px; }
-[data-testid="stSidebarNavLink"]:hover { background: var(--hover); }
+[data-testid="stSidebarNavLink"]:hover { background: var(--hover); cursor: pointer; }
 [data-testid="stSidebarNavLink"] [data-testid="stIconMaterial"] { font-size: 16px; color: var(--link) !important; }
+[data-testid="stNavSectionHeader"] { cursor: default; }
 /* Streamlit shows the tree's close button only under the pointer; it stays in view here, and the open button too */
 [data-testid="stSidebarCollapseButton"] { display: flex !important; visibility: visible !important; opacity: 1 !important; }
 [data-testid="stSidebarCollapseButton"] button, [data-testid="stExpandSidebarButton"], [data-testid="stSidebarCollapsedControl"] button {
@@ -59,19 +61,24 @@ a { color: var(--link); }
 
 /* ---- buttons, segmented controls, inputs: square, bevelled in the light scheme ---- */
 .stApp button[data-testid^="stBaseButton"] { min-height: 26px; padding: 0 12px; font: inherit; background: var(--btn-bg); color: var(--btn-ink);
-  border: 1px solid var(--btn-edge); box-shadow: var(--btn-bevel); }
-.stApp button[data-testid^="stBaseButton"]:hover { filter: brightness(1.06); border-color: var(--btn-edge); color: var(--btn-ink); }
+  border: 1px solid var(--btn-edge); box-shadow: var(--btn-bevel); cursor: pointer; }
+.stApp button[data-testid^="stBaseButton"]:hover { background: var(--btn-hover); border-color: var(--select-edge); color: var(--btn-ink); }
 .stApp button[data-testid^="stBaseButton"]:active { box-shadow: inset 1px 1px var(--chrome-edge); }
 .stApp button[data-testid="stBaseButton-primary"] { background: var(--btn-def-bg); color: var(--btn-def-ink); border-width: 2px; }
+.stApp button[data-testid="stBaseButton-primary"]:hover { background: var(--select); border-color: var(--select-edge); color: var(--select-ink); }
 .stApp button[data-testid^="stBaseButton"] p { color: inherit; }
 .stApp button:focus-visible { outline: 2px solid var(--c-info) !important; outline-offset: 1px; }
 [data-testid="stButtonGroup"] button { background: var(--btn-bg); color: var(--btn-ink); border: 1px solid var(--btn-edge); box-shadow: var(--th-bevel); }
+[data-testid="stButtonGroup"] button:hover { background: var(--btn-hover); border-color: var(--select-edge); color: var(--btn-ink); cursor: pointer; }
 [data-testid="stButtonGroup"] button[data-testid$="Active"] { background: var(--select); color: var(--select-ink); box-shadow: none; }
+[data-testid="stButtonGroup"] button[data-testid$="Active"]:hover { background: var(--select); border-color: var(--select-edge); color: var(--select-ink); }
 [data-testid="stButtonGroup"] button[data-testid$="Active"] * { color: var(--select-ink); }
 :is([data-testid="stTextArea"], [data-testid="stTextInput"], [data-testid="stSelectbox"]) [data-baseweb] { background: var(--input-bg); border-color: var(--input-edge); box-shadow: var(--well-bevel); }
 :is([data-testid="stTextArea"], [data-testid="stTextInput"]) :is(textarea, input) { background: var(--input-bg); color: var(--ink); font: inherit; }
 [data-testid="stWidgetLabel"] * { color: var(--muted); font-size: 12px; }
 [data-testid="stRadio"] label * { color: var(--ink); }
+[data-testid="stRadio"] [data-baseweb="radio"] { cursor: pointer; border: 1px solid transparent; }
+[data-testid="stRadio"] [data-baseweb="radio"]:hover { background: var(--btn-hover); border-color: var(--select-edge); }
 [data-testid="stExpander"] details { border: 1px solid var(--edge); background: var(--pane); }
 [data-testid="stExpander"] summary { background: var(--th-bg); color: var(--th-ink); box-shadow: var(--th-bevel); padding: 4px 10px; }
 [data-testid="stExpander"] summary * { color: var(--th-ink); font-weight: 600; }
@@ -96,6 +103,9 @@ a { color: var(--link); }
 [data-testid="stChatInput"], [data-testid="stChatInput"] div { background: var(--input-bg) !important; border-color: var(--input-edge); color: var(--ink); }
 [data-testid="stChatInputTextArea"] { background: var(--input-bg) !important; color: var(--ink) !important; caret-color: var(--ink); }
 [data-testid="stChatInputTextArea"]::placeholder { color: var(--muted); opacity: 1; }
+[data-testid="stChatInput"]:hover, [data-testid="stChatInput"]:hover div { border-color: var(--select-edge); }
+[data-testid="stChatInputSubmitButton"] { background: var(--btn-bg); color: var(--btn-ink); border: 1px solid var(--btn-edge); cursor: pointer; }
+[data-testid="stChatInputSubmitButton"]:hover { background: var(--select); border-color: var(--select-edge); color: var(--select-ink); }
 
 /* ---- a page: its header band, its body, and the Actions pane on the right ---- */
 .c-view { display: flex; gap: 12px; align-items: center; padding: 12px 16px; background: var(--vhead-bg); color: var(--vhead-ink); border-bottom: 2px solid var(--chrome-edge); }
@@ -107,9 +117,10 @@ a { color: var(--link); }
 .st-key-console_actions { background: var(--pane-alt); border: 1px solid var(--edge); padding-bottom: 6px; }
 .st-key-console_actions [data-testid="stVerticalBlock"] { gap: 0; }
 .st-key-console_actions [data-testid="stPageLink"] a, .st-key-console_actions :is(button[data-testid^="stBaseButton"], a[data-testid^="stBaseLinkButton"]) { justify-content: flex-start; width: 100%;
-  background: transparent; border: 0; box-shadow: none; padding: 2px 12px; min-height: 24px; color: var(--link); }
-.st-key-console_actions [data-testid="stPageLink"] a:hover, .st-key-console_actions button[data-testid^="stBaseButton"]:hover { background: var(--select); }
-.st-key-console_actions [data-testid="stPageLink"] a:hover *, .st-key-console_actions button:hover * { color: var(--select-ink); }
+  background: transparent; border: 1px solid transparent; box-shadow: none; padding: 2px 12px; min-height: 24px; color: var(--link); cursor: pointer; }
+.st-key-console_actions :is([data-testid="stPageLink"] a, button[data-testid^="stBaseButton"], a[data-testid^="stBaseLinkButton"]):hover {
+  background: var(--select); border-color: var(--select-edge); }
+.st-key-console_actions :is([data-testid="stPageLink"] a, button[data-testid^="stBaseButton"], a[data-testid^="stBaseLinkButton"]):hover * { color: var(--select-ink); }
 .st-key-console_actions :is([data-testid="stPageLink"], button, a[data-testid^="stBaseLinkButton"]) * { color: var(--link); }
 .c-actions-head { margin: 0; padding: 6px 10px; font-size: 12px; font-weight: 700; background: var(--head-bg); color: var(--head-ink); }
 .c-actions-sub { margin: 0; padding: 7px 10px 3px; font-size: 12px; font-weight: 700; color: var(--ink); border-bottom: 1px solid var(--edge); }
@@ -179,6 +190,8 @@ dl.c-kv dt { color: var(--muted); } dl.c-kv dd { margin: 0; color: var(--ink); }
 .c-rel :is(th, td).name { text-align: left; padding-left: 8px; white-space: nowrap; }
 .c-rel thead th { background: var(--th-bg); color: var(--th-ink); font-weight: 600; }
 .c-rel .today { background: var(--row-alt); }
+.c-rel tbody tr:hover td { background: var(--hover); }
+.c-rel tbody tr:hover td.today { background: var(--hover); }
 /* a mark per day keeps its symbol, so it never rests on colour (red and green blur for red-green colour blindness) */
 .m { display: inline-grid; place-items: center; min-width: 22px; height: 18px; padding: 0 3px; font-size: 11px; font-weight: 700; }
 .m.ok { background: var(--c-quiet); color: #fff; } .m.bad { background: var(--c-bad); color: #fff; }

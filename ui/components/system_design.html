@@ -26,7 +26,7 @@ html, body { margin: 0; background: var(--pane); color: var(--ink); font: 13px/1
 #sysmap #nodes g.key rect { stroke: var(--c-c); stroke-width: 3; }
 #sysmap #nodes text { fill: var(--ink); font-weight: 700; }
 #sysmap #nodes text.s { font-weight: 400; fill: var(--muted); font-size: 11px; }
-#sysmap #nodes g:hover rect { fill: var(--hover); }
+#sysmap #nodes g:hover rect { fill: var(--hover); stroke: var(--select-edge); stroke-width: 3; }
 #sysmap #nodes g.lit rect { fill: var(--pane-alt); stroke-width: 4; }
 #sysmap #nodes g.sel rect { fill: var(--select); }
 #sysmap #nodes g.sel text { fill: var(--select-ink); }
@@ -39,7 +39,9 @@ html, body { margin: 0; background: var(--pane); color: var(--ink); font: 13px/1
 .seg button { font: inherit; min-width: 30px; height: 26px; border: 0; border-right: 1px solid var(--edge); background: var(--btn-bg); color: var(--btn-ink);
   box-shadow: var(--th-bevel); cursor: pointer; }
 .seg button:last-child { border-right: 0; }
+.seg button:hover { background: var(--hover); color: var(--btn-ink); }
 .seg button[aria-pressed="true"] { background: var(--select); color: var(--select-ink); box-shadow: none; font-weight: 700; }
+.seg button[aria-pressed="true"]:hover { background: var(--select); color: var(--select-ink); }
 #stepword { width: 100%; }
 .card { margin-top: 12px; border: 1px solid var(--edge); border-top: 5px solid var(--c-ok); }
 .card.planned { border-top-color: var(--c-info); } .card.key { border-top-color: var(--c-c); }
