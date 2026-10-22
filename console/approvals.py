@@ -50,7 +50,7 @@ def decide(item, config, who, email):
             st.rerun()
 
 
-config = common.settings()[0]
+config = common.settings()
 email = st.user.get("email")
 who = st.user.get("name") or email
 seen = common.read()
