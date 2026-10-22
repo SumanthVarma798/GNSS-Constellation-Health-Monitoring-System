@@ -2,3 +2,6 @@ source_id,name,reliability,graded_by,graded_on,reason
 files.igs.org,International GNSS Service (IGS),B,Sumanth Varma (awaiting the team's review),2026-10-09,"A scientific body; its satellite metadata file is maintained for it by the German Aerospace Center (DLR)"
 planet4589.org,General Catalog of Artificial Space Objects (GCAT),C,Sumanth Varma (awaiting the team's review),2026-10-09,"One expert's catalogue, widely cited, with sources listed; not an institution, and its author says some dates are updated patchily"
 celestrak.org,CelesTrak,B,Proposed with issue 31 (awaiting the team's review),2026-10-19,"Republishes the US Space Force's public orbit records, the same data Space-Track holds; run by a non-profit and widely used by researchers. It says where an object is, not what its operator says about it"
+esa.int,European Space Agency: navigation,B,"the team, decided in the administration console",2026-10-22,Intergovernmental; designs and procures Galileo for the EU but does not run the service
+unoosa.org,UN International Committee on GNSS (ICG),B,"the team, decided in the administration console",2026-10-22,UN committee papers: an intergovernmental body (issue 12 draft tiers)
+igs.org,International GNSS Service: news,B,"the team, decided in the administration console",2026-10-22,"The same scientific body as files.igs.org, graded B"
