@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live pipeline</title>
+<style>
+__TOKENS__
+*, *::before, *::after { box-sizing: border-box; border-radius: 0 !important; }
+html, body { margin: 0; background: var(--pane); color: var(--ink); font: 13px/1.45 __FONT__; }
+body { overflow-x: hidden; }
+:focus-visible { outline: 2px solid var(--c-info); outline-offset: 2px; }
+.lp-wrap { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 12px; }
+.lp-pane { border: 2px solid var(--outline); background: var(--pane); box-shadow: var(--hard); min-width: 0; }
+.lp-pane > h3 { margin: 0; padding: 5px 10px; font-size: 12px; font-weight: 800; color: var(--head-ink); background: var(--head-bg);
+  box-shadow: var(--th-bevel); }
+.lp-pane > .in { padding: 10px; }
+.lp-stage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+.lp-group { margin-bottom: 10px; }
+.lp-group:last-child { margin-bottom: 0; }
+.lp-group p { margin: 0 0 6px; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.lp-arrow { display: grid; place-items: center; height: 20px; color: var(--muted); font-weight: 800; }
+.lp-arrow::before { content: "↓"; }
+.stage { display: block; width: 100%; border: 2px solid var(--outline); background: var(--pane-alt); box-shadow: var(--hard-sm);
+  border-left: 6px solid var(--c-idle); text-align: left; color: var(--ink); padding: 8px 10px; cursor: pointer; min-height: 78px; }
+.stage .name { display: block; font-weight: 800; margin-bottom: 6px; line-height: 1.25; }
+.stage .state { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 800; }
+.stage .state .ic { width: 1.1em; text-align: center; font-weight: 900; }
+.stage .state.ok { color: var(--ok); }
+.stage .state.warn { color: var(--warn); }
+.stage .state.bad { color: var(--bad); }
+.stage .state.info { color: var(--info); }
+.stage .state.idle { color: var(--idle); }
+.stage .next { margin-left: 6px; font-size: 10px; font-weight: 800; color: var(--badge-ink); background: var(--c-info);
+  border: 1px solid var(--outline); padding: 1px 6px; }
+.stage.ok { border-left-color: var(--c-ok); }
+.stage.warn { border-left-color: var(--c-warn); }
+.stage.bad { border-left-color: var(--c-bad); }
+.stage.info { border-left-color: var(--c-info); }
+.stage.idle { border-left-color: var(--c-idle); }
+.stage.running { animation: lp-pulse 1.6s ease-in-out infinite; }
+.stage.sel { background: var(--select); color: var(--select-ink); }
+.stage:hover { background: var(--hover); }
+.stage.sel:hover { background: var(--select); }
+@keyframes lp-pulse {
+  0% { box-shadow: var(--hard-sm); }
+  50% { box-shadow: 0 0 0 2px var(--c-info), var(--hard-sm); }
+  100% { box-shadow: var(--hard-sm); }
+}
+.panel-head { display: grid; gap: 2px; margin-bottom: 8px; }
+.panel-head h4 { margin: 0; font-size: 15px; line-height: 1.25; }
+.panel-head p { margin: 0; color: var(--muted); }
+.block { margin-top: 10px; }
+.block h5 { margin: 0 0 2px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.block p { margin: 0; }
+.block ul { margin: 0; padding-left: 1.2em; }
+.block li { margin: 1px 0; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.btn { font: inherit; font-weight: 800; border: 2px solid var(--btn-edge); background: var(--btn-bg); color: var(--btn-ink);
+  box-shadow: var(--btn-bevel), var(--hard-sm); padding: 5px 10px; cursor: pointer; }
+.btn:hover { background: var(--btn-hover); }
+.btn:active { transform: translate(2px, 2px); box-shadow: var(--btn-bevel-pressed), var(--hard-sm); }
+.kv { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 4px 10px; }
+.kv dt { margin: 0; color: var(--muted); }
+.kv dd { margin: 0; overflow-wrap: anywhere; }
+.mono { font-family: var(--mono); background: var(--pane-alt); border: 1px solid var(--edge-soft); padding: 4px 6px; display: block; }
+a { color: var(--link); }
+@media (max-width: 950px) {
+  .lp-wrap { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+  .kv { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .lp-pane { box-shadow: var(--hard-sm); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage.running { animation: none; }
+  .btn:active { transform: none; }
+}
+</style>
+</head>
+<body>
+<div class="lp-wrap">
+  <section class="lp-pane">
+    <h3>The pipeline at a glance</h3>
+    <div class="in">
+      <div class="lp-group">
+        <p>Collect from sources</p>
+        <div class="lp-stage-grid" id="collect"></div>
+      </div>
+      <div class="lp-arrow" aria-hidden="true"></div>
+      <div class="lp-group">
+        <p>Then review and go live</p>
+        <div class="lp-stage-grid" id="chain"></div>
+      </div>
+    </div>
+  </section>
+  <aside class="lp-pane">
+    <h3 id="panel-title">About this step</h3>
+    <div class="in" id="panel"></div>
+  </aside>
+</div>
+<script>
+const DATA = __DATA__;
+const cards = Object.fromEntries(DATA.cards.map((c) => [c.key, c]));
+const STATE_ICONS = { ok: "✓", warn: "▲", bad: "✕", info: "i", idle: "−" };
+let selected = cards[DATA.default_key] ? DATA.default_key : DATA.cards[0].key;
+let technical = false;
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function addList(parent, title, items) {
+  const box = el("div", "block");
+  box.append(el("h5", "", title));
+  const list = el("ul");
+  items.forEach((item) => list.append(el("li", "", item)));
+  box.append(list);
+  parent.append(box);
+}
+
+function addKv(parent, label, value) {
+  const dt = el("dt", "", label);
+  const dd = el("dd", "", value);
+  parent.append(dt, dd);
+}
+
+function addLinkLine(parent, label, url, fallback) {
+  const box = el("div", "block");
+  box.append(el("h5", "", label));
+  if (url) {
+    const link = el("a", "", fallback);
+    link.href = url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    box.append(link);
+  } else {
+    box.append(el("p", "", "not recorded"));
+  }
+  parent.append(box);
+}
+
+function stageButton(key) {
+  const stage = cards[key];
+  const button = el("button", `stage ${stage.tone}${stage.running ? " running" : ""}${selected === key ? " sel" : ""}`);
+  button.type = "button";
+  button.title = stage.technical_name;
+  button.setAttribute("aria-label", `${stage.plain_name}. ${stage.state_plain}.`);
+  button.append(el("span", "name", stage.plain_name));
+  const state = el("span", `state ${stage.tone}`);
+  const icon = el("span", "ic", STATE_ICONS[stage.tone] || "•");
+  icon.setAttribute("aria-hidden", "true");
+  state.append(icon, el("span", "words", stage.state_plain));
+  if (stage.next_badge) {
+    const badge = el("span", "next", stage.next_badge_words);
+    state.append(badge);
+  }
+  button.append(state);
+  button.addEventListener("click", () => { selected = key; technical = false; render(); });
+  button.addEventListener("dblclick", () => { selected = key; technical = true; render(); });
+  button.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && event.shiftKey) {
+      event.preventDefault();
+      selected = key;
+      technical = true;
+      render();
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      selected = key;
+      technical = false;
+      render();
+    }
+  });
+  return button;
+}
+
+function renderPicture() {
+  const collect = document.querySelector("#collect");
+  const chain = document.querySelector("#chain");
+  collect.replaceChildren();
+  chain.replaceChildren();
+  DATA.collect_keys.forEach((key) => collect.append(stageButton(key)));
+  DATA.chain_keys.forEach((key) => chain.append(stageButton(key)));
+}
+
+function renderSimple(panel, stage) {
+  document.querySelector("#panel-title").textContent = "About this step";
+  const head = el("div", "panel-head");
+  head.append(el("h4", "", stage.plain_name), el("p", "", `Status: ${stage.state_plain}.`));
+  panel.append(head);
+  addList(panel, "What happens here", stage.what_happens);
+  panel.append(el("div", "block"));
+  panel.lastChild.append(el("h5", "", "Why it matters"), el("p", "", stage.why_it_matters));
+  panel.append(el("div", "block"));
+  panel.lastChild.append(el("h5", "", "Last time"), el("p", "", stage.last_sentence));
+  panel.append(el("div", "block"));
+  panel.lastChild.append(el("h5", "", "Next time"), el("p", "", stage.next_sentence));
+  const actions = el("div", "actions");
+  const button = el("button", "btn", "Show the technical details");
+  button.type = "button";
+  button.addEventListener("click", () => { technical = true; render(); });
+  actions.append(button);
+  panel.append(actions);
+}
+
+function renderTechnical(panel, stage) {
+  document.querySelector("#panel-title").textContent = "Technical details";
+  const head = el("div", "panel-head");
+  head.append(el("h4", "", stage.technical_name), el("p", "", `plain name: ${stage.plain_name}`));
+  panel.append(head);
+
+  const actions = el("div", "actions");
+  const back = el("button", "btn", "Back to the simple view");
+  back.type = "button";
+  back.addEventListener("click", () => { technical = false; render(); });
+  actions.append(back);
+  panel.append(actions);
+
+  const kvWrap = el("div", "block");
+  kvWrap.append(el("h5", "", "Workflow and schedule"));
+  const kv = el("dl", "kv");
+  addKv(kv, "Workflow file", stage.workflow_file || "not recorded");
+  addKv(kv, "Workflow job", stage.workflow_job || "not recorded");
+  addKv(kv, "Cron", stage.schedule_crons.length ? stage.schedule_crons.join(" | ") : "none");
+  addKv(kv, "In words (UTC)", stage.schedule_words.length ? stage.schedule_words.join(" | ") : stage.schedule_note);
+  kvWrap.append(kv);
+  panel.append(kvWrap);
+
+  addList(panel, "Script and command", stage.commands.length ? stage.commands : ["not recorded"]);
+  addList(panel, "Inputs", stage.inputs.length ? stage.inputs : ["not recorded"]);
+  addList(panel, "Outputs", stage.outputs.length ? stage.outputs : ["not recorded"]);
+  addList(panel, "Repositories", stage.repositories.length ? stage.repositories : ["not recorded"]);
+  addList(panel, "Settings", stage.settings.length ? stage.settings : ["not recorded"]);
+  addList(panel, "Settings files", stage.settings_files.length ? stage.settings_files : ["not recorded"]);
+
+  const run = el("div", "block");
+  run.append(el("h5", "", "Last run (exact)"));
+  const runKv = el("dl", "kv");
+  addKv(runKv, "Start", stage.last_start_exact);
+  addKv(runKv, "End", stage.last_end_exact);
+  addKv(runKv, "Duration", stage.last_duration_exact);
+  addKv(runKv, "Result", stage.last_result_exact);
+  run.append(runKv);
+  panel.append(run);
+
+  const runWords = stage.run_id ? `GitHub run ${stage.run_id}` : "GitHub run";
+  addLinkLine(panel, "GitHub run", stage.run_url, runWords);
+  addLinkLine(panel, "Archive commit", stage.commit_url, stage.commit ? `commit ${stage.commit.slice(0, 7)}` : "GitHub commit");
+  addLinkLine(panel, "Pull request", stage.pr_url, stage.pr_number ? `pull request ${stage.pr_number}` : "GitHub pull request");
+
+  if (stage.pr_state) {
+    const prState = el("div", "block");
+    prState.append(el("h5", "", "Pull request state"), el("p", "", stage.pr_state));
+    panel.append(prState);
+  }
+
+  const raw = el("div", "block");
+  raw.append(el("h5", "", "Raw run-log line"));
+  raw.append(el("code", "mono", stage.raw_log_line));
+  panel.append(raw);
+
+  addList(panel, "Limits and risks", stage.limits.length ? stage.limits : ["not recorded"]);
+}
+
+function renderPanel() {
+  const panel = document.querySelector("#panel");
+  panel.replaceChildren();
+  const stage = cards[selected];
+  if (!stage) return;
+  if (technical) renderTechnical(panel, stage);
+  else renderSimple(panel, stage);
+}
+
+function render() {
+  renderPicture();
+  renderPanel();
+}
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && technical) {
+    technical = false;
+    render();
+  }
+});
+
+render();
+</script>
+</body>
+</html>

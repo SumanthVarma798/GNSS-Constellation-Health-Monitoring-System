@@ -12,6 +12,18 @@ _RUN_NUMBER = re.compile(r"/actions/runs/(\d+)")
 _LABEL_WAITING = "decision: "
 _LOG_TO_WORKFLOW = {log_name: workflow for workflow, _, _, _, log_name in JOBS if log_name}
 _LOG_TO_WORKFLOW["archive all"] = "archive.yml"
+_STAGE_KEYS = {
+    "Archive: documents": "archive_documents",
+    "Archive: catalogues": "archive_catalogues",
+    "Archive: orbit records": "archive_orbital",
+    "Archive: news": "archive_news",
+    "Archive: social": "archive_social",
+    "Registry update": "registry_update",
+    "Pull request waiting for a decision": "decision_waiting",
+    "Decided on the Approvals page": "decision_made",
+    "Merged to main": "merged_main",
+    "Dashboard": "dashboard",
+}
 
 
 def _file(path):
@@ -122,7 +134,8 @@ def _next_for(workflow, group, workflow_texts, now):
     return jobs.next_run(crons, now) if crons else None
 
 
-def _job_stage(name, what, workflow, group, log_name, runs_by_workflow, workflow_states, workflow_texts, log, now, allow_running=True):
+def _job_stage(stage_key, name, what, workflow, group, log_name, runs_by_workflow, workflow_states, workflow_texts, log, now,
+               allow_running=True):
     workflow_runs = runs_by_workflow.get(workflow, [])
     turned_off = workflow_states.get(workflow, "active").startswith("disabled")
     running_run = _running_run(workflow_runs) if allow_running else None
@@ -131,10 +144,11 @@ def _job_stage(name, what, workflow, group, log_name, runs_by_workflow, workflow
     archive_group_without_log = workflow == "archive.yml" and bool(group) and line is None
     run = None if archive_group_without_log else _run_for(workflow_runs, line["started"] if line else None)
     last = _last_from_line(line) if line else (None if archive_group_without_log else _last_from_run(run))
-    return {"name": name, "what": what, "state": _state_from_last(last, running, turned_off), "last": last,
+    return {"key": stage_key, "name": name, "what": what, "state": _state_from_last(last, running, turned_off), "last": last,
             "next": None if turned_off else _next_for(workflow, group, workflow_texts, now),
             "proof": _proof(run, (last or {}).get("changed", "")),
-            "running_start": _run_time(running_run, "run_started_at") or _run_time(running_run, "created_at")}
+            "running_start": _run_time(running_run, "run_started_at") or _run_time(running_run, "created_at"),
+            "workflow": workflow, "group": group, "log_job": log_name, "log_line": line}
 
 
 def _decision_prs(prs):
@@ -150,18 +164,19 @@ def _decision_time(pr):
     return jobs.parse_time("1970-01-01T00:00:00Z")
 
 
-def _pr_stage(name, what, pr, state):
+def _pr_stage(stage_key, name, what, pr, state):
     if pr is None:
-        return {"name": name, "what": what, "state": "waiting", "last": None, "next": None,
-                "proof": {"pr_number": None, "pr_url": None, "pr_state": None}}
+        return {"key": stage_key, "name": name, "what": what, "state": "waiting", "last": None, "next": None,
+                "proof": {"pr_number": None, "pr_url": None, "pr_state": None}, "running_start": None, "workflow": "",
+                "group": "", "log_job": "", "log_line": None}
     opened = jobs.parse_time(pr["created_at"])
     merged_at = jobs.parse_time(pr["merged_at"]) if pr.get("merged_at") else None
     closed_at = jobs.parse_time(pr["closed_at"]) if pr.get("closed_at") else None
     end = merged_at or closed_at or opened
     words = "merged" if merged_at else (pr.get("state") or "open")
-    return {"name": name, "what": what, "state": state,
+    return {"key": stage_key, "name": name, "what": what, "state": state,
             "last": {"start": opened, "end": end, "duration": end - opened if end and opened else None, "result": words, "changed": ""},
-            "next": None,
+            "next": None, "running_start": None, "workflow": "", "group": "", "log_job": "", "log_line": None,
             "proof": {"pr_number": pr["number"], "pr_url": pr["html_url"], "pr_state": pr.get("state", "open")}}
 
 
@@ -173,8 +188,8 @@ def stages(workflows, runs, log, prs, workflow_texts, now):
     for workflow, group, name, what, log_name in JOBS:
         if workflow == TESTS_WORKFLOW or workflow == "update-tle-data.yml":
             continue
-        items.append(_job_stage(name, what, workflow, group, log_name, runs_by_workflow, workflow_states, workflow_texts, log, now,
-                                allow_running=(workflow != "archive.yml")))
+        items.append(_job_stage(_STAGE_KEYS.get(name, ""), name, what, workflow, group, log_name, runs_by_workflow, workflow_states,
+                                workflow_texts, log, now, allow_running=(workflow != "archive.yml")))
 
     archive_stages = [stage for stage in items if stage["name"].startswith("Archive: ")]
     archive_runs = runs_by_workflow.get("archive.yml", [])
@@ -187,10 +202,14 @@ def stages(workflows, runs, log, prs, workflow_texts, now):
     archive_proof = next((stage["proof"] for stage in sorted(archive_stages, key=lambda row: (row["last"] or {}).get("start")
                           or jobs.parse_time("1970-01-01T00:00:00Z"), reverse=True) if stage["proof"].get("run_url")),
                          _proof(archive_running_row, ""))
-    items.insert(5, {"name": "Archive", "what": "The private archive repository that keeps each changed copy by fingerprint",
+    archive_with_log = max((stage for stage in archive_stages if stage["last"]),
+                           key=lambda stage: stage["last"]["start"], default=None)
+    items.insert(5, {"key": "archive", "name": "Archive",
+                     "what": "The private archive repository that keeps each changed copy by fingerprint",
                      "state": ("off" if archive_off else "running now" if archive_running else "failed" if archive_failed else
                                "waiting" if archive_waiting else "done"),
-                     "last": archive_last, "next": None, "proof": archive_proof,
+                     "last": archive_last, "next": None, "proof": archive_proof, "workflow": "archive.yml", "group": "",
+                     "log_job": "archive all", "log_line": archive_with_log["log_line"] if archive_with_log else None,
                      "running_start": _run_time(archive_running_row, "run_started_at")
                      or _run_time(archive_running_row, "created_at")})
 
@@ -205,12 +224,14 @@ def stages(workflows, runs, log, prs, workflow_texts, now):
     latest_decided = decided[-1] if decided else None
     latest_merged = merged[-1] if merged else None
 
-    items.append(_pr_stage("Pull request waiting for a decision", "A person reviews pull requests labelled for a decision",
-                           latest_waiting or latest_decided, "waiting" if latest_waiting else "done" if latest_decided else "waiting"))
-    items.append(_pr_stage("Decided on the Approvals page", "A person records the decision and reason on the pull request",
-                           latest_decided or latest_waiting, "done" if latest_decided else "waiting"))
+    items.append(_pr_stage("decision_waiting", "Pull request waiting for a decision",
+                           "A person reviews pull requests labelled for a decision", latest_waiting or latest_decided,
+                           "waiting" if latest_waiting else "done" if latest_decided else "waiting"))
+    items.append(_pr_stage("decision_made", "Decided on the Approvals page",
+                           "A person records the decision and reason on the pull request", latest_decided or latest_waiting,
+                           "done" if latest_decided else "waiting"))
     merged_state = "done" if latest_merged else "waiting"
-    items.append(_pr_stage("Merged to main", "An approved pull request is merged, then tests run on main",
+    items.append(_pr_stage("merged_main", "Merged to main", "An approved pull request is merged, then tests run on main",
                            latest_merged or latest_decided or latest_waiting, merged_state))
 
     tests_runs = [run for run in runs_by_workflow.get(TESTS_WORKFLOW, [])
@@ -222,8 +243,10 @@ def stages(workflows, runs, log, prs, workflow_texts, now):
     tests_off = tests_state.startswith("disabled")
     tests_last_row = _last_from_run(tests_last)
     dashboard_state = _state_from_last(tests_last_row, tests_running, tests_off)
-    items.append({"name": "Dashboard", "what": "The merged result is visible on the dashboard after tests on main",
+    items.append({"key": "dashboard", "name": "Dashboard",
+                  "what": "The merged result is visible on the dashboard after tests on main",
                   "state": dashboard_state, "last": tests_last_row, "next": None, "proof": _proof(tests_last, ""),
+                  "workflow": TESTS_WORKFLOW, "group": "", "log_job": "", "log_line": None,
                   "running_start": _run_time(tests_running_row, "run_started_at")
                   or _run_time(tests_running_row, "created_at")})
 
@@ -238,7 +261,7 @@ def stages(workflows, runs, log, prs, workflow_texts, now):
 def what_next(stages_rows, now, hours=24):
     """Upcoming stage runs within `hours`, soonest first."""
     until = now + timedelta(hours=hours)
-    upcoming = [{"name": stage["name"], "at": stage["next"], "state": stage["state"]}
+    upcoming = [{"name": stage["name"], "key": stage.get("key"), "at": stage["next"], "state": stage["state"]}
                 for stage in stages_rows if stage.get("next") and now < stage["next"] <= until]
     return sorted(upcoming, key=lambda row: row["at"])
 

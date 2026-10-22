@@ -383,27 +383,26 @@ def test_the_live_pipeline_page_opens_with_its_sections_and_links(monkeypatch):
     links = [link.label for link in at.get("page_link")]
 
     assert "Live pipeline" in page
-    assert "Running now" in page and "Next up" in page and "Proof of work" in page and "Stage details" in page
-    assert "Archive: documents" in page and "Registry update" in page
+    assert "Running now" in page and "Next up" in page and "Proof of work" in page
+    assert "Collect official documents" in page and "Collect news" in page
     assert "Open proof" not in page
+    assert at.get("iframe")
     assert links == ["Jobs", "Approvals"]
 
 
-def test_the_live_pipeline_stage_picker_defaults_to_what_runs_next_and_keeps_the_choice(monkeypatch):
+def test_the_live_pipeline_component_defaults_to_what_runs_next(monkeypatch):
     signed_in(monkeypatch, "member@example.com")
     stage_rows = live_pipeline.stages(WORKFLOWS, RUNS, jobs.run_log(LOG), [], common.workflow_texts(), NOW)
     upcoming = live_pipeline.what_next(stage_rows, NOW, hours=24)
-    expected = upcoming[0]["name"] if upcoming else stage_rows[0]["name"]
+    expected = upcoming[0]["key"] if upcoming else stage_rows[0]["key"]
 
     at = run(monkeypatch, page="console/pipeline.py")
+    frame = at.get("iframe")[0].proto.srcdoc
 
-    assert at.button_group(key="pipeline_stage").value == expected
-    at.button_group(key="pipeline_stage").set_value("Registry update").run()
-    at.run()
-    assert at.button_group(key="pipeline_stage").value == "Registry update"
+    assert '"default_key"' in frame and expected in frame
 
 
-def test_the_live_pipeline_stage_picker_defaults_to_the_stage_running_now(monkeypatch):
+def test_the_live_pipeline_component_defaults_to_the_stage_running_now(monkeypatch):
     class RunningGitHub(GitHub):
         def __call__(self, token):
             seen = super().__call__(token)
@@ -413,8 +412,9 @@ def test_the_live_pipeline_stage_picker_defaults_to_the_stage_running_now(monkey
 
     signed_in(monkeypatch, "member@example.com")
     at = run(monkeypatch, github=RunningGitHub(), page="console/pipeline.py")
+    frame = at.get("iframe")[0].proto.srcdoc
 
-    assert at.button_group(key="pipeline_stage").value == "Registry update"
+    assert '"default_key"' in frame and "registry_update" in frame
 
 
 def test_the_live_pipeline_uses_clear_fallback_words_for_proof_links(monkeypatch):
