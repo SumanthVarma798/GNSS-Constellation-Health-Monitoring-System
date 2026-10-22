@@ -48,6 +48,9 @@ def ask_the_project():
                f"fact with its source in [brackets]. The model ({MODEL}) runs on this computer; it can still be "
                "wrong, so check the source it names.")
     chat = st.session_state.setdefault(CHAT, [])
+    if chat and st.button("Start over", key="design_chat_start_over", icon=":material/restart_alt:"):
+        st.session_state[CHAT] = []
+        st.rerun()
     log = st.container()   # the conversation, always above the question box
     question = st.chat_input("For example: where does the orbit data come from, and how often?")
     with log:

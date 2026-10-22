@@ -75,6 +75,7 @@ with st.container(key="console_bar"):
                f'<b>{escape(page.title)}</b></span>')
     if refresh.button("Refresh", key="console_refresh", icon=":material/refresh:", help="Read everything again from GitHub"):
         common.github.clear()
+        st.session_state[common.REFRESH_PENDING] = True
     st.session_state["console_scheme_pick"] = scheme
     pick.segmented_control("Colours", list(console.SCHEMES), format_func=console.SCHEMES.get, key="console_scheme_pick",
                            on_change=_pick_scheme, label_visibility="collapsed", help="Light, dark, or as this computer is set")
@@ -84,6 +85,8 @@ with st.container(key="console_bar"):
 page.run()
 
 seen = common.read()
+if st.session_state.pop(common.REFRESH_PENDING, False):
+    st.toast(f"Read again from GitHub at {seen['read_at']:%H:%M} UTC")
 rows = jobs.job_rows(seen["workflows"], seen["runs"], seen["log"], common.workflow_texts(), common.now())
 failing = sum(r["result"][0] == "bad" for r in rows)
 off = sum(r["state"] == "Turned off" for r in rows)

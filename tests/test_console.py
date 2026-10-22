@@ -349,6 +349,21 @@ def test_the_hero_says_in_words_whether_any_of_it_is_failing(monkeypatch):
     signed_in(monkeypatch, "member@example.com")
 
     assert "things need a look, 1 of them failing" in text(run(monkeypatch))
+
+
+def test_refresh_reads_github_again_and_shows_when_it_was_read(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    github = GitHub()
+    at = run(monkeypatch, github)
+    asked = github.asked
+    assert not at.toast
+
+    at.button(key="console_refresh").click().run()
+
+    assert github.asked > asked
+    assert at.toast and "Read again from GitHub at" in at.toast[0].value
+
+
 def test_the_system_design_page_opens_with_its_picture(monkeypatch):
     signed_in(monkeypatch, "member@example.com")
 
