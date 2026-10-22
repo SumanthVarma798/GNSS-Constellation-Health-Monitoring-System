@@ -16,19 +16,21 @@ FONT = '"Segoe UI", Tahoma, "Helvetica Neue", Arial, sans-serif'
 _COMMON = {"font": FONT, "mono": 'Consolas, "SF Mono", Menlo, monospace'}
 LIGHT = {  # Classic bold
     "ink": "#000", "muted": "#4a4a4a", "link": "#0645ad", "frame": "#000", "edge": "#808080", "edge-soft": "#e3e1d8",
-    "shadow": "4px 4px 0 rgba(0,0,0,.45)", "title-bg": "linear-gradient(90deg, #0a246a, #3a6ea5 65%, #a6caf0)",
-    "title-ink": "#fff", "title-edge": "1px solid #808080", "chrome": "#d4d0c8", "chrome-ink": "#000", "chrome-edge": "#808080",
+    "outline": "#000", "hard": "4px 4px 0 #000", "hard-sm": "2px 2px 0 #000",
+    "title-bg": "linear-gradient(90deg, #0a246a, #3a6ea5 65%, #a6caf0)",
+    "title-ink": "#fff", "title-edge": "2px solid #000", "chrome": "#d4d0c8", "chrome-ink": "#000", "chrome-edge": "#808080",
     "status-bg": "#d4d0c8", "status-ink": "#000", "tree-bg": "#fff", "tree-ink": "#000", "tree-line": "#808080", "pane": "#fff", "pane-alt": "#f1efe2",
     "head-bg": "#0a246a", "head-ink": "#fff", "vhead-bg": "linear-gradient(90deg, #0a246a, #2b5797)", "vhead-ink": "#fff",
     "vhead-sub": "#dce6f7", "th-bg": "#d4d0c8", "th-ink": "#000", "th-bevel": "inset -1px -1px #808080, inset 1px 1px #fff",
     "row-alt": "#f7f6f1", "hover": "#e5ecf7", "select": "#0a246a", "select-ink": "#fff", "select-edge": "#0a246a",
     "btn-bg": "#d4d0c8", "btn-hover": "#ece9e2", "btn-ink": "#000", "btn-edge": "#000",
     "btn-bevel": "inset -1px -1px #404040, inset 1px 1px #fff, inset -2px -2px #808080, inset 2px 2px #dfdfdf",
-    "btn-def-bg": "#d4d0c8", "btn-def-ink": "#000", "input-bg": "#fff", "input-edge": "#7a7a7a",
+    "btn-bevel-pressed": "inset 1px 1px #808080, inset -1px -1px #fff", "btn-def-bg": "#0a246a", "btn-def-ink": "#fff",
+    "input-bg": "#fff", "input-edge": "#7a7a7a",
     "well-bevel": "inset 1px 1px #808080, inset -1px -1px #fff", "big": "#0a246a",
     "ok": "#007a1f", "warn": "#a15c00", "bad": "#c00000", "info": "#0a246a", "idle": "#5f5f5f",
     "c-ok": "#00a03c", "c-bad": "#e81123", "c-warn": "#ff8c00", "c-info": "#0063b1", "c-c": "#f2c80f", "c-idle": "#a8a8a8",
-    "axis": "#606060", "cell-off-bg": "#eeeeee", "tile-bg": "#fff",
+    "axis": "#606060", "cell-off-bg": "#eeeeee", "tile-bg": "#fff", "badge-ink": "#fff",
     # Chart roles, validated with the dataviz skill's validate_palette.js (20 Oct 2026): normal runs in a quiet grey,
     # failures in red (they separate for red-green colour blindness; green against red does not), and the source
     # grades as one ordered blue ramp, A darkest, every step clear of the surface.
@@ -36,17 +38,22 @@ LIGHT = {  # Classic bold
 }
 DARK = {  # Operations dark
     "ink": "#e6edf3", "muted": "#9aa7b4", "link": "#4cc2ff", "frame": "#2f81f7", "edge": "#30363d", "edge-soft": "#1c2128",
-    "shadow": "0 0 0 1px #2f81f7, 0 12px 34px rgba(0,0,0,.7)", "title-bg": "#0d1117", "title-ink": "#e6edf3",
+    "outline": "#c9d1d9", "hard": "4px 4px 0 #6e7681", "hard-sm": "2px 2px 0 #6e7681",
+    "title-bg": "#0d1117", "title-ink": "#e6edf3",
     "title-edge": "2px solid #2f81f7", "chrome": "#161b22", "chrome-ink": "#e6edf3", "chrome-edge": "#30363d",
     "status-bg": "#1f6feb", "status-ink": "#fff", "tree-bg": "#0d1117", "tree-ink": "#e6edf3", "tree-line": "#6e7681", "pane": "#0d1117", "pane-alt": "#11161d",
     "head-bg": "#1f6feb", "head-ink": "#fff", "vhead-bg": "#161b22", "vhead-ink": "#58a6ff", "vhead-sub": "#9aa7b4",
-    "th-bg": "#161b22", "th-ink": "#c9d1d9", "th-bevel": "none", "row-alt": "#10151c", "hover": "#1c2633",
+    "th-bg": "#161b22", "th-ink": "#c9d1d9", "th-bevel": "inset -1px -1px #010409, inset 1px 1px #8b949e",
+    "row-alt": "#10151c", "hover": "#1c2633",
     "select": "#1f4f8f", "select-ink": "#fff", "select-edge": "#2f81f7", "btn-bg": "#21262d", "btn-hover": "#3a4553", "btn-ink": "#e6edf3",
-    "btn-edge": "#3d444d", "btn-bevel": "none", "btn-def-bg": "#238636", "btn-def-ink": "#fff", "input-bg": "#0d1117",
-    "input-edge": "#3d444d", "well-bevel": "none", "big": "#e6edf3",
+    "btn-edge": "#3d444d",
+    "btn-bevel": "inset -1px -1px #010409, inset 1px 1px #8b949e, inset -2px -2px #000, inset 2px 2px #6e7681",
+    "btn-bevel-pressed": "inset 1px 1px #010409, inset -1px -1px #6e7681",
+    "btn-def-bg": "#238636", "btn-def-ink": "#fff", "input-bg": "#0d1117",
+    "input-edge": "#3d444d", "well-bevel": "inset 1px 1px #010409, inset -1px -1px #6e7681", "big": "#e6edf3",
     "ok": "#3fb950", "warn": "#e3b341", "bad": "#ff7b72", "info": "#58a6ff", "idle": "#8b949e",
     "c-ok": "#3fb950", "c-bad": "#f85149", "c-warn": "#db6d28", "c-info": "#2f81f7", "c-c": "#d29922", "c-idle": "#484f58",
-    "axis": "#6e7681", "cell-off-bg": "#161b22", "tile-bg": "#11161d",
+    "axis": "#6e7681", "cell-off-bg": "#161b22", "tile-bg": "#11161d", "badge-ink": "#fff",
     "c-quiet": "#6e7681", "g-a": "#9ec5f4", "g-b": "#6da7ec", "g-c": "#3987e5", "g-d": "#256abf", "g-none": "#30363d",
 }
 
