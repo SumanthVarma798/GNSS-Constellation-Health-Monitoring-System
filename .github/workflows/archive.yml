@@ -99,10 +99,10 @@ jobs:
           # The registry job may have saved its own run log line meanwhile; it never touches these files.
           git push --quiet || { git pull --rebase --quiet && git push --quiet; }
 
-      - name: Fail if any source could not be fetched
+      - name: Fail if the fetch run broke or a graded source could not be fetched
         if: steps.fetch.outcome == 'failure'
         run: |
-          echo "At least one source could not be fetched. See the step above."
+          echo "The fetch run did not finish cleanly, or a graded source could not be fetched. See the step above."
           exit 1
 
       - name: Tell Healthchecks.io how the run went

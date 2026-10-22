@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import archive_sources  # noqa: E402
 
 RUN_TIME = datetime(2026, 10, 19, 5, 18, 51, tzinfo=timezone.utc)   # when the documents job ran today (checked)
+ARCHIVE_WORKFLOW = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "archive.yml").read_text()
 
 
 class Reply:
@@ -112,3 +113,33 @@ def test_a_run_that_stops_unexpectedly_still_leaves_its_line(monkeypatch, tmp_pa
     with pytest.raises(OSError):
         run_job(monkeypatch, tmp_path, "documents")
     assert [line["result"] for line in read_runs(tmp_path, "archive")] == ["stopped early"]
+
+
+def test_provisional_source_failures_are_logged_but_do_not_fail_the_job(monkeypatch, tmp_path):
+    addresses = ["https://celestrak.org/one", "https://celestrak.org/two"]
+    monkeypatch.setattr(archive_sources, "archived_addresses", lambda group: addresses)
+    answers(monkeypatch, Reply(200, b"kept"), requests.ConnectionError("blocked"))
+
+    run_job(monkeypatch, tmp_path, "news")
+
+    assert latest_version(tmp_path, addresses[0])["sha256"]
+    assert read_runs(tmp_path, "archive") == [{"job": "archive news", "started": "2026-10-19T05:18:51Z",
+                                               "ended": "2026-10-19T05:18:51Z", "result": "failed: 1 of 2 sources",
+                                               "changed": addresses[0]}]
+
+
+def test_a_provisional_run_that_fetches_nothing_fails(monkeypatch, tmp_path):
+    addresses = ["https://news.example/one"]
+    monkeypatch.setattr(archive_sources, "archived_addresses", lambda group: addresses)
+    answers(monkeypatch, Reply(403))
+
+    with pytest.raises(SystemExit):
+        run_job(monkeypatch, tmp_path, "news")
+    assert read_runs(tmp_path, "archive")[0]["result"] == "failed: 1 of 1 sources"
+
+
+def test_the_alert_ping_does_not_fail_for_a_missing_check_or_an_unset_key():
+    health_step = ARCHIVE_WORKFLOW.split("Tell Healthchecks.io how the run went", 1)[1]
+
+    assert 'if [ -z "$KEY" ]' in health_step and "exit 0" in health_step
+    assert '|| echo "::warning::Healthchecks.io did not take this report.' in health_step
