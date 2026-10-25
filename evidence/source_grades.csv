@@ -2,3 +2,16 @@ source_id,name,reliability,graded_by,graded_on,reason
 files.igs.org,International GNSS Service (IGS),B,Sumanth Varma (awaiting the team's review),2026-10-09,"A scientific body; its satellite metadata file is maintained for it by the German Aerospace Center (DLR)"
 planet4589.org,General Catalog of Artificial Space Objects (GCAT),C,Sumanth Varma (awaiting the team's review),2026-10-09,"One expert's catalogue, widely cited, with sources listed; not an institution, and its author says some dates are updated patchily"
 celestrak.org,CelesTrak,B,Proposed with issue 31 (awaiting the team's review),2026-10-19,"Republishes the US Space Force's public orbit records, the same data Space-Track holds; run by a non-profit and widely used by researchers. It says where an object is, not what its operator says about it"
+isro.gov.in,ISRO press releases,A,"the team, decided in the administration console",2026-10-22,The operator of NavIC
+pib.gov.in,"Press Information Bureau, Government of India",A,"the team, decided in the administration console",2026-10-22,The Government of India's own release channel; carries Department of Space statements
+qzss.go.jp,"QZSS (Michibiki), Cabinet Office of Japan: news",A,"the team, decided in the administration console",2026-10-22,The operator of QZSS
+sys.qzss.go.jp,QZSS notices to users (NAQU),A,"the team, decided in the administration console",2026-10-22,The operator's own notices to users
+global.jaxa.jp,JAXA press releases,A,"the team, decided in the administration console",2026-10-22,"Japan's space agency; first-hand for the QZSS launches it carries out, and only for those"
+en.beidou.gov.cn,"BeiDou, China Satellite Navigation Office: news",A,"the team, decided in the administration console",2026-10-22,The office that runs BeiDou
+csno-tarc.cn,BeiDou test and assessment centre (CSNO): constellation status,A,"the team, decided in the administration console",2026-10-22,Part of the BeiDou office; publishes the constellation status
+navcen.uscg.gov,US Coast Guard Navigation Center: GPS notices (NANU),A,"the team, decided in the administration console",2026-10-22,The official channel for civil GPS notices
+gps.gov,GPS.gov (US government GPS site): news,A,"the team, decided in the administration console",2026-10-22,The US government's official GPS information site
+ssc.spaceforce.mil,US Space Force Space Systems Command: news,A,"the team, decided in the administration console",2026-10-22,Buys and launches the GPS satellites
+gsc-europa.eu,European GNSS Service Centre: notices (NAGU),A,"the team, decided in the administration console",2026-10-22,Galileo's service centre; its notices are operator advisories
+euspa.europa.eu,EU Agency for the Space Programme (EUSPA): news,A,"the team, decided in the administration console",2026-10-22,Galileo's service provider
+arianespace.com,Arianespace (launches Galileo): press releases,A,"the team, decided in the administration console",2026-10-22,"The launch provider; first-hand for launch outcomes, and only for those"
