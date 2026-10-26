@@ -18,6 +18,7 @@ import archive_sources  # noqa: E402
 
 RUN_TIME = datetime(2026, 10, 19, 5, 18, 51, tzinfo=timezone.utc)   # when the documents job ran today (checked)
 ARCHIVE_WORKFLOW = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "archive.yml").read_text()
+UPDATE_TLE_WORKFLOW = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "update-tle-data.yml").read_text()
 
 
 class Reply:
@@ -142,4 +143,13 @@ def test_the_alert_ping_does_not_fail_for_a_missing_check_or_an_unset_key():
     health_step = ARCHIVE_WORKFLOW.split("Tell Healthchecks.io how the run went", 1)[1]
 
     assert 'if [ -z "$KEY" ]' in health_step and "exit 0" in health_step
+    assert '|| echo "::warning::Healthchecks.io did not take this report.' in health_step
+
+
+def test_update_tle_data_reports_to_healthchecks_without_breaking_the_job():
+    health_step = UPDATE_TLE_WORKFLOW.split("Tell Healthchecks.io how the run went", 1)[1]
+
+    assert 'if [ -z "$KEY" ]' in health_step and "exit 0" in health_step
+    assert '--data-raw "Update TLE Data run ${{ github.run_id }}: ${{ job.status }}"' in health_step
+    assert 'https://hc-ping.com/$KEY/update-tle-data/$OUTCOME' in health_step
     assert '|| echo "::warning::Healthchecks.io did not take this report.' in health_step
