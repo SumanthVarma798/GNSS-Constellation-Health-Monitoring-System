@@ -59,7 +59,9 @@ SECTIONS = {"Overview": [st.Page("console/summary.py", title="Summary", icon=":m
                                  url_path="design")],
             "Monitoring": [st.Page("console/jobs.py", title="Jobs", icon=":material/schedule:"),
                            st.Page("console/pipeline.py", title="Live pipeline", icon=":material/conveyor_belt:",
-                                   url_path="pipeline")],
+                                   url_path="pipeline"),
+                           st.Page("console/alerts.py", title="Alerts", icon=":material/notifications_active:",
+                                   url_path="alerts")],
             "Work": [st.Page("console/work.py", title="Issues and pull requests", icon=":material/list_alt:",
                              url_path="work"),
                      st.Page("console/approvals.py", title="Approvals", icon=":material/task_alt:")]}
