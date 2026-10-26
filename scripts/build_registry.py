@@ -11,8 +11,9 @@ The output has a fixed order and no build date, so `git diff registry/`
 is the change report: no difference means nothing changed at the source.
 """
 import argparse
-import re
+import csv
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import requests
@@ -20,16 +21,18 @@ import requests
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from data import celestrak
+from evidence.confidence import read_source_grades
 from evidence.archive import latest_version, object_path
 from evidence.igs_metadata import OPEN_END, block_rows, read_metadata, sinex_time
-from evidence.registry_changes import change_report, describe_satellite_changes, describe_signal_id_changes
+from evidence import news
+from evidence.registry_changes import (change_report, describe_satellite_changes, describe_signal_id_changes,
+                                      registry_findings, BRACKETED, signal_row_tuple)
 from evidence.registry_tables import constellation_names, read_table, tracked_list_in_step, write_table
 from evidence.sources import IGS_SATELLITE_METADATA_URL
 from evidence.settings import (REGISTRY_CONSTELLATIONS_FILE, REGISTRY_DIR, REGISTRY_SATELLITE_COLUMNS,
                                REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_DASHBOARD_TRACKED_SYSTEMS,
-                               REGISTRY_SATELLITES_FILE, REGISTRY_SIGNAL_ID_COLUMNS, REGISTRY_SIGNAL_IDS_FILE)
-
-BRACKETED = re.compile(r"\s*\[[^\]]*]\s*")
+                               REGISTRY_SATELLITES_FILE, REGISTRY_SIGNAL_ID_COLUMNS, REGISTRY_SIGNAL_IDS_FILE,
+                               SOURCE_CANDIDATES_FILE)
 
 
 def build_tables(text):
@@ -72,22 +75,23 @@ def dashboard_name_for_new_satellite(satellite, catalogue_row):
     return satellite["svn"], "its SVN"
 
 
-def dashboard_updates(before, satellites):
-    """(updated rows, report lines): keep tracked satellites in step with signal IDs for the three MEO systems."""
+def dashboard_updates(before, satellites, celestrak_reads=None):
+    """(updated rows, report lines, detail-by-svn, reads): keep dashboard tracking in step."""
     by_svn = {row["svn"]: row for row in satellites}
     had = {row["svn"] for row in before}
     wanted = {row["svn"] for row in satellites
               if row["constellation"] in REGISTRY_DASHBOARD_TRACKED_SYSTEMS and row["signal_id_now"]}
     new_svns = [row["svn"] for row in satellites if row["svn"] in wanted - had]
+    reads = dict(celestrak_reads or {})
     names, source_words = {}, {}
     for svn in new_svns:
         satellite = by_svn[svn]
-        entry, failed = None, False
-        if satellite["catalogue_no"].isdigit():
-            try:
-                entry = celestrak.catalogue_entry(int(satellite["catalogue_no"]))
-            except (requests.RequestException, ValueError, KeyError, TypeError):
-                failed = True
+        read = reads.get(svn)
+        if read is None:
+            read = celestrak_read(satellite.get("catalogue_no", ""))
+            reads[svn] = read
+        entry = read.get("catalogue_entry")
+        failed = read.get("checked") and read.get("catalogue_status") == "error"
         name, source = dashboard_name_for_new_satellite(satellite, entry)
         if failed and source == "the registry note":
             source = "the registry note (CelesTrak could not be read)"
@@ -100,7 +104,77 @@ def dashboard_updates(before, satellites):
              for svn in [row["svn"] for row in updated if row["svn"] in now - had]]
     lines += [f"The dashboard will stop tracking {svn}: it has no signal ID today."
               for svn in [row["svn"] for row in before if row["svn"] in had - now]]
-    return updated, lines
+    details = {svn: f"Approving also adds it to the dashboard as {names.get(svn, svn)}."
+               for svn in [row["svn"] for row in updated if row["svn"] in now - had]}
+    details.update({svn: "Approving also stops the dashboard tracking it: it has no signal ID today."
+                    for svn in [row["svn"] for row in before if row["svn"] in had - now]})
+    return updated, lines, details, reads
+
+
+def metadata_lines(text):
+    """({svn: raw IDENTIFIER line}, {(svn, signal row): raw PRN line}) from the IGS text."""
+    identifiers, prn_lines = {}, {}
+    for line in block_rows(text, "IDENTIFIER"):
+        identifiers[line.split(None, 1)[0]] = line.strip()
+    for line in block_rows(text, "PRN"):
+        svn, start, end, signal_id, *note = line.split(None, 4)
+        row = signal_row_tuple({"svn": svn, "signal_id": signal_id, "valid_from": sinex_time(start),
+                                "valid_to": sinex_time(end), "note": note[0].strip() if note else ""})
+        prn_lines[row] = line.strip()
+    return identifiers, prn_lines
+
+
+def new_prn_lines(before_signal_ids, after_signal_ids, prn_lines):
+    """{svn: [raw PRN line, ...]} for signal-ID rows that are new in after_signal_ids."""
+    old, new = ({signal_row_tuple(row) for row in rows} for rows in (before_signal_ids, after_signal_ids))
+    by_svn = {}
+    for row in sorted(new - old):
+        if row in prn_lines:
+            by_svn.setdefault(row[0], []).append(prn_lines[row])
+    return by_svn
+
+
+def celestrak_read(catalogue_no):
+    """One satellite's CelesTrak catalogue and orbit read, with non-fatal read status."""
+    read = {"checked": False, "catalogue_status": "none", "catalogue_entry": None,
+            "orbit_status": "none", "orbit_row": None}
+    if not str(catalogue_no).isdigit():
+        return read
+    read["checked"] = True
+    catnr = int(catalogue_no)
+    try:
+        read["catalogue_entry"] = celestrak.catalogue_entry(catnr)
+    except (requests.RequestException, ValueError, KeyError, TypeError):
+        read["catalogue_status"] = "error"
+    else:
+        read["catalogue_status"] = "ok" if read["catalogue_entry"] else "none"
+    try:
+        rows = celestrak._get(CATNR=catnr, empty_text="No GP data found")
+    except (requests.RequestException, ValueError, KeyError, TypeError):
+        read["orbit_status"] = "error"
+    else:
+        read["orbit_status"] = "ok" if rows else "none"
+        read["orbit_row"] = rows[0] if rows else None
+    return read
+
+
+def read_source_candidates():
+    """Candidate-source rows from evidence/source_candidates.csv."""
+    with open(SOURCE_CANDIDATES_FILE, newline="", encoding="utf-8") as handle:
+        return list(csv.DictReader(handle))
+
+
+def findings_news(archive):
+    """(news items, error words) for findings; reading errors are reported, never fatal."""
+    if not archive:
+        return [], ""
+    try:
+        items, unreadable = news.collected_items(archive)
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        return [], f"News could not be read from the archive: {error}"
+    if unreadable:
+        return items, f"News: {len(unreadable)} archived feed copies could not be read, so their items are left out."
+    return items, ""
 
 
 def main():
@@ -127,17 +201,24 @@ def main():
               read_table(REGISTRY_DASHBOARD_SATELLITES_FILE))
     write_table(REGISTRY_SATELLITES_FILE, REGISTRY_SATELLITE_COLUMNS, satellites)
     write_table(REGISTRY_SIGNAL_IDS_FILE, REGISTRY_SIGNAL_ID_COLUMNS, signal_ids)
-    dashboard_rows, dashboard_lines = dashboard_updates(before[2], read_table(REGISTRY_SATELLITES_FILE))
+    after_satellites, after_signal_ids = read_table(REGISTRY_SATELLITES_FILE), read_table(REGISTRY_SIGNAL_IDS_FILE)
+    dashboard_rows, dashboard_lines, dashboard_details, celestrak_reads = dashboard_updates(before[2], after_satellites)
     write_table(REGISTRY_DASHBOARD_SATELLITES_FILE, ("svn", "dashboard_name"),
                 [[row["svn"], row["dashboard_name"]] for row in dashboard_rows])
     print(f"{len(satellites)} satellites, {len(signal_ids)} signal-ID periods written to {REGISTRY_DIR}")
     if args.report:
-        after = (read_table(REGISTRY_SATELLITES_FILE), read_table(REGISTRY_SIGNAL_IDS_FILE),
-                 read_table(REGISTRY_DASHBOARD_SATELLITES_FILE))
+        today = datetime.now(timezone.utc).date()
+        identifier_lines, prn_lines = metadata_lines(text)
+        news_items, news_error = findings_news(args.archive)
+        findings = registry_findings(before[0], after_satellites, before[1], after_signal_ids, dashboard_details,
+                                     identifier_lines, new_prn_lines(before[1], after_signal_ids, prn_lines),
+                                     celestrak_reads, today, news_items, read_source_grades(), read_source_candidates())
+        if news_error:
+            copy_used = f"{copy_used}\n\n{news_error}".strip() if copy_used else news_error
         Path(args.report).write_text(change_report(text.splitlines()[0].strip(),
-                                                   describe_satellite_changes(before[0], after[0]),
-                                                   describe_signal_id_changes(before[1], after[1]),
-                                                   copy_used, dashboard_lines))
+                                                   describe_satellite_changes(before[0], after_satellites),
+                                                   describe_signal_id_changes(before[1], after_signal_ids),
+                                                   copy_used, dashboard_lines, findings=findings))
 
 
 if __name__ == "__main__":
