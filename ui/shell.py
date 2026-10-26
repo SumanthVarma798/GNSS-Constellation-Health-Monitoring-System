@@ -17,6 +17,7 @@ import streamlit as st
 
 from config.config import DEFAULT_PARAMS
 from data import celestrak
+from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS
 from ui import changes, data, surfaces, time_range
 
 # Pages with their own filters: the bar shows no constellation, window or thresholds there.
@@ -35,7 +36,6 @@ PAGES = [
     # ("How it works", "views/how_it_works.py"),
 ]
 CONSTELLATIONS = tuple(data.SATELLITES)
-STALE_DAYS = 7
 # The clock and "next update" are redrawn this often, alone: never a page redraw, at most this far behind.
 CLOCK_TICK_SECONDS = 15
 
@@ -78,7 +78,7 @@ def segment(key, options, labels=None, label="Choose"):
 def age_words(data_time, now, tz=timezone.utc):
     """('Orbit data 15 Oct 10:42', 'ok') for data from today, ('Orbit data 4 Oct, 10 days old', 'warn') for older.
 
-    Days and times are counted in `tz`, the viewer's time zone. Warn after STALE_DAYS days.
+    Days and times are counted in `tz`, the viewer's time zone.
     """
     try:
         taken = datetime.fromisoformat(data_time)
@@ -87,7 +87,9 @@ def age_words(data_time, now, tz=timezone.utc):
     taken = (taken if taken.tzinfo else taken.replace(tzinfo=timezone.utc)).astimezone(tz)
     days = (now.astimezone(tz).date() - taken.date()).days
     age = f" {taken:%H:%M}" if days <= 0 else ", 1 day old" if days == 1 else f", {days} days old"
-    return f"Orbit data {taken.day} {taken:%b}{age}", "warn" if days > STALE_DAYS else "ok"
+    elapsed = (now - taken).total_seconds() / 86400   # coloured by time passed, as the orbit-age strip is
+    status = "bad" if elapsed >= ORBIT_STALE_DAYS else "warn" if elapsed >= ORBIT_ALERT_DAYS else "ok"
+    return f"Orbit data {taken.day} {taken:%b}{age}", status
 
 
 def failing_words(since, now, tz=timezone.utc):
@@ -196,10 +198,45 @@ def _refresh(names, window_days, gear_scope):
         if gear_scope:
             with st.popover("", icon=":material/settings:", help="Detection thresholds"):
                 st.session_state["params"] = _thresholds(gear_scope)
+        _own_login()
         live, now = data.refresh(clicked), datetime.now(timezone.utc)
         chip.html(_data_chip(names, window_days, st.session_state["params"], live, now) + _ring(live, now))
         with clock:   # after the refresh, so it reads the try just made
             _clock()
+
+
+_OWN_NOTE_WORDS = {"busy": "busy, will try again in an hour", "login refused": "login refused"}
+
+
+def _own_login():
+    """The key popover next to the gear: the viewer's own Space-Track login, kept only for this visit."""
+    with st.popover("", icon=":material/key:", help="Your Space-Track login (this session only)"):
+        login = st.session_state.get(data.OWN_LOGIN)
+        if login:
+            st.write("Using your Space-Track login for this visit")
+            note = st.session_state.get(data.OWN_NOTE)
+            if note and note != "ok":
+                st.write(_OWN_NOTE_WORDS.get(note, note))
+            if st.button("Forget my login", key="forget_login"):
+                # The last try's time stays, so a new login still waits out the hour.
+                for key in (data.OWN_LOGIN, data.OWN_ROWS, data.OWN_NOTE):
+                    st.session_state.pop(key, None)
+                st.rerun()
+            return
+        if st.session_state.get(data.OWN_NOTE) == "login refused":
+            st.write("Space-Track refused that login, so it was forgotten. Check it on space-track.org and try again.")
+        st.write("Space-Track fills in satellites CelesTrak has not updated for 2 days. "
+                 "Your login is kept only for this visit, on the server, and never saved.")
+        with st.form("own_login_form", clear_on_submit=True):
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
+            use = st.form_submit_button("Use my login for this visit")
+        if use and not (username and password):
+            st.write("Enter both the username and the password.")
+        elif use:
+            st.session_state[data.OWN_LOGIN] = (username, password)
+            st.session_state[data.OWN_NOTE] = "ok"
+            st.rerun()
 
 
 def _toggle_compare():

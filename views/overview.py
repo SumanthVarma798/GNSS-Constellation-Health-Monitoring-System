@@ -12,7 +12,7 @@ import pandas as pd
 import streamlit as st
 
 from config.config import MEO_SATS, TRACKED_NOT_IN_REGISTRY
-from ui import data, limits, measures, meo_overview, orbit_section, palette, reveal, shell, surfaces, time_range, tooltip
+from ui import data, limits, measures, meo_overview, orbit_age, orbit_section, palette, reveal, shell, surfaces, time_range, tooltip
 from ui.data import SATELLITES
 from ui.figures.constellation_3d import slot_legend
 from ui.figures.slot_rows import as_number, slot_words
@@ -175,6 +175,7 @@ def constellation(name, window_days, params):
     surfaces.show(f'<div class="head"><span class="big num">{healthy} of {len(tiles)}</span>'
                   '<span class="muted">healthy and in their slot</span></div>')
     _period(result, window, window_days, today)
+    orbit_age.show(name, result)
     _gaps(name, result)
     groups = measures.grouped(_types(tiles, result, classes))
     for kind, names in groups.items():

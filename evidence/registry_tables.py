@@ -7,7 +7,7 @@ file names and columns are in evidence/settings.py.
 import csv
 
 from evidence.settings import (REGISTRY_CONSTELLATIONS_FILE, REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_DIR,
-                               REGISTRY_SATELLITES_FILE)
+                               REGISTRY_DASHBOARD_TRACKED_SYSTEMS, REGISTRY_SATELLITES_FILE)
 
 
 def read_table(name):
@@ -67,3 +67,37 @@ def generation_satellites(constellation, block_start):
     """Registry rows of one constellation whose block starts with block_start, in registry order."""
     return [row for row in read_table(REGISTRY_SATELLITES_FILE)
             if row["constellation"] == constellation and row["block"].startswith(block_start)]
+
+
+def tracked_list_in_step(satellites, tracked, names):
+    """dashboard_satellites.csv rows with GPS/GLONASS/Galileo kept in step with today's signal IDs.
+
+    `satellites` and `tracked` are table rows as read_table() returns; `names` maps SVN to a dashboard
+    name for new rows. Systems outside REGISTRY_DASHBOARD_TRACKED_SYSTEMS are left exactly as they are.
+    """
+    target = set(REGISTRY_DASHBOARD_TRACKED_SYSTEMS)
+    by_svn = {row["svn"]: row for row in satellites}
+    letters = {row["svn"][0]: row["constellation"] for row in satellites if row["constellation"] in target and row["svn"]}
+    wanted = {system: [row["svn"] for row in satellites if row["constellation"] == system and row["signal_id_now"]]
+              for system in REGISTRY_DASHBOARD_TRACKED_SYSTEMS}
+    wanted_sets = {system: set(svns) for system, svns in wanted.items()}
+    kept, seen = [], set()
+    for row in tracked:
+        system = by_svn.get(row["svn"], {}).get("constellation") or letters.get(row["svn"][:1], "")
+        if system in target:
+            if row["svn"] in wanted_sets[system]:
+                kept.append(row)
+                seen.add(row["svn"])
+            continue
+        kept.append(row)
+    updated = list(kept)
+    for system in REGISTRY_DASHBOARD_TRACKED_SYSTEMS:
+        missing = [svn for svn in wanted[system] if svn not in seen]
+        if not missing:
+            continue
+        insert_at = max((i for i, row in enumerate(updated)
+                         if (by_svn.get(row["svn"], {}).get("constellation") or letters.get(row["svn"][:1], "")) == system),
+                        default=len(updated) - 1)   # a system with no rows yet goes last
+        added = [{"svn": svn, "dashboard_name": names.get(svn) or svn} for svn in missing]
+        updated[insert_at + 1:insert_at + 1] = added
+    return updated

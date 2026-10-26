@@ -88,7 +88,13 @@ def test_the_dashboard_asks_for_the_meo_satellites_it_tracks_and_not_the_retired
     from ui import data
 
     asked = []
-    monkeypatch.setattr(celestrak, "refresh", lambda norads, now, clicked: asked.extend(norads))
+    monkeypatch.setattr(
+        celestrak, "refresh",
+        lambda norads, now, clicked: (asked.extend(norads),
+                                      {"rows": {}, "listed": set(), "tried": now, "fetched": None, "ok": True,
+                                       "failing_since": None})[1],
+    )
+    monkeypatch.setattr(data.spacetrack, "refresh", lambda norads, now, login: None)
     data.refresh()
     assert {37846, 39533, 100460} <= set(asked)   # GSAT0101, NAVSTAR 69 and COSMOS 2619
     assert 10893 not in asked                     # a GPS-I satellite, retired

@@ -39,6 +39,7 @@ def test_report_says_nothing_changed_rather_than_leaving_a_gap():
 
     assert "- C217 (BeiDou): signal ID was C62, now C04." in report
     assert "- Nothing." in report
+    assert "## What changes on the dashboard" in report
     assert "Nothing changes until a person approves it" in report
 
 

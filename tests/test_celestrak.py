@@ -30,6 +30,17 @@ class Reply:
         return self.rows
 
 
+class ReplyText:
+    def __init__(self, text):
+        self.status_code, self.text = 200, text
+
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        raise ValueError("not json")
+
+
 def empty_state():
     return {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True, "failing_since": None}
 
@@ -111,7 +122,13 @@ def test_the_dashboard_asks_for_every_satellite_of_its_generations_and_no_other(
     from ui import data
 
     asked = []
-    monkeypatch.setattr(celestrak, "refresh", lambda norads, now, clicked: asked.extend(norads))
+    monkeypatch.setattr(
+        celestrak, "refresh",
+        lambda norads, now, clicked: (asked.extend(norads),
+                                      {"rows": {}, "listed": set(), "tried": now, "fetched": None, "ok": True,
+                                       "failing_since": None})[1],
+    )
+    monkeypatch.setattr(data.spacetrack, "refresh", lambda norads, now, login: None)
     data.refresh()
     # IRNSS-1B tracked; BeiDou-3 M7 (plane A, slot A-4), IRNSS-1A and a BeiDou-3S test satellite are not
     assert {39635, 43107, 39199, 40549} <= set(asked)
@@ -172,3 +189,8 @@ def test_failing_since_is_the_first_failure_in_a_row_and_survives_a_restart(monk
     monkeypatch.setattr(celestrak, "state", empty_state())               # the dashboard restarts
     assert celestrak.refresh([39635], NOW + timedelta(hours=2, minutes=5))["failing_since"] == NOW
     assert celestrak.refresh([39635], NOW + timedelta(hours=4))["failing_since"] is None
+
+
+def test_catalogue_entry_returns_none_when_celestrak_lists_nothing(monkeypatch):
+    monkeypatch.setattr(requests, "get", lambda *args, **kwargs: ReplyText("No SATCAT records found"))
+    assert celestrak.catalogue_entry(100744) is None

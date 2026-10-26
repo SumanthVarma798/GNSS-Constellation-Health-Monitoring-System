@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def _workflow_texts():
-    names = ("archive.yml", "registry-update.yml", "tests.yml")
+    names = ("archive.yml", "registry-update.yml", "orbit-ages.yml", "rinex-check.yml", "tests.yml")
     return {name: (WORKFLOWS_DIR / name).read_text(encoding="utf-8") for name in names}
 
 

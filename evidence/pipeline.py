@@ -8,6 +8,7 @@ from evidence.console_settings import JOBS, TESTS_WORKFLOW
 _OK_RESULTS = {"ok", "success"}
 _COMMIT_URL = re.compile(r"(https://github\.com/[^/\s]+/[^/\s]+/(?:commit|tree|blob)/([0-9a-fA-F]{7,40}))")
 _SHA = re.compile(r"\b([0-9a-fA-F]{7,40})\b")
+_ARCHIVE_RUN = re.compile(r"^Archive run (\d+),")
 _RUN_NUMBER = re.compile(r"/actions/runs/(\d+)")
 _LABEL_WAITING = "decision: "
 _LOG_TO_WORKFLOW = {log_name: workflow for workflow, _, _, _, log_name in JOBS if log_name}
@@ -19,6 +20,8 @@ _STAGE_KEYS = {
     "Archive: news": "archive_news",
     "Archive: social": "archive_social",
     "Registry update": "registry_update",
+    "Orbit ages": "orbit_ages",
+    "Orbit record check": "rinex_check",
     "Pull request waiting for a decision": "decision_waiting",
     "Decided on the Approvals page": "decision_made",
     "Merged to main": "merged_main",
@@ -84,8 +87,21 @@ def _run_words(run):
     return "GitHub run"
 
 
-def _proof(run, changed):
-    commit, commit_url = _commit_from_changed(changed)
+def archive_commits(commits):
+    """Archive commit proof keyed by run id from messages like 'Archive run 123,'. GitHub lists commits newest first,
+    and a re-run keeps its run id, so the newest commit of a run wins."""
+    rows = {}
+    for commit in commits:
+        message = ((commit.get("commit") or {}).get("message") or "")
+        if not (found := _ARCHIVE_RUN.match(message)):
+            continue
+        rows.setdefault(int(found.group(1)), {"sha": commit.get("sha"), "url": commit.get("html_url")})
+    return rows
+
+
+def _proof(run, changed, archive_commits_by_run=None):
+    found = (archive_commits_by_run or {}).get((run or {}).get("id"))
+    commit, commit_url = (found["sha"], found["url"]) if found else _commit_from_changed(changed)
     return {"run_url": (run or {}).get("html_url"), "run_words": _run_words(run), "archive_commit": commit,
             "archive_commit_url": commit_url}
 
@@ -135,7 +151,7 @@ def _next_for(workflow, group, workflow_texts, now):
 
 
 def _job_stage(stage_key, name, what, workflow, group, log_name, runs_by_workflow, workflow_states, workflow_texts, log, now,
-               allow_running=True):
+               archive_commits_by_run, allow_running=True):
     workflow_runs = runs_by_workflow.get(workflow, [])
     turned_off = workflow_states.get(workflow, "active").startswith("disabled")
     running_run = _running_run(workflow_runs) if allow_running else None
@@ -144,9 +160,10 @@ def _job_stage(stage_key, name, what, workflow, group, log_name, runs_by_workflo
     archive_group_without_log = workflow == "archive.yml" and bool(group) and line is None
     run = None if archive_group_without_log else _run_for(workflow_runs, line["started"] if line else None)
     last = _last_from_line(line) if line else (None if archive_group_without_log else _last_from_run(run))
+    commit_rows = archive_commits_by_run if workflow == "archive.yml" else None
     return {"key": stage_key, "name": name, "what": what, "state": _state_from_last(last, running, turned_off), "last": last,
             "next": None if turned_off else _next_for(workflow, group, workflow_texts, now),
-            "proof": _proof(run, (last or {}).get("changed", "")),
+            "proof": _proof(run, (last or {}).get("changed", ""), commit_rows),
             "running_start": _run_time(running_run, "run_started_at") or _run_time(running_run, "created_at"),
             "workflow": workflow, "group": group, "log_job": log_name, "log_line": line}
 
@@ -180,8 +197,9 @@ def _pr_stage(stage_key, name, what, pr, state):
             "proof": {"pr_number": pr["number"], "pr_url": pr["html_url"], "pr_state": pr.get("state", "open")}}
 
 
-def stages(workflows, runs, log, prs, workflow_texts, now):
+def stages(workflows, runs, log, prs, workflow_texts, now, archive_commits=None):
     """The pipeline's stages, in order, each with state, last run details, next run, and proof links."""
+    archive_commits_by_run = archive_commits or {}
     runs_by_workflow = _workflow_rows(runs)
     workflow_states = _workflow_states(workflows)
     items = []
@@ -189,7 +207,7 @@ def stages(workflows, runs, log, prs, workflow_texts, now):
         if workflow == TESTS_WORKFLOW or workflow == "update-tle-data.yml":
             continue
         items.append(_job_stage(_STAGE_KEYS.get(name, ""), name, what, workflow, group, log_name, runs_by_workflow, workflow_states,
-                                workflow_texts, log, now, allow_running=(workflow != "archive.yml")))
+                                workflow_texts, log, now, archive_commits_by_run, allow_running=(workflow != "archive.yml")))
 
     archive_stages = [stage for stage in items if stage["name"].startswith("Archive: ")]
     archive_runs = runs_by_workflow.get("archive.yml", [])

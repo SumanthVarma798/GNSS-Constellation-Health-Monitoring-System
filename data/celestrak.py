@@ -24,6 +24,7 @@ from sgp4.api import Satrec
 from evidence.archive import min_gap
 
 URL = "https://celestrak.org/NORAD/elements/gp.php"
+CATALOGUE_URL = "https://celestrak.org/satcat/records.php"
 TIMEOUT = 8          # seconds per request
 EVERY = min_gap(URL)
 # One saved copy per user, shared by every checkout and worktree on the machine, outside the repository.
@@ -50,12 +51,17 @@ def as_history_row(row):
             "TLE_LINE1": line1, "TLE_LINE2": line2}
 
 
-def _get(**query):
-    reply = requests.get(URL, params={**query, "FORMAT": "json"}, timeout=TIMEOUT)
+def _get(url=URL, empty_text="", **query):
+    reply = requests.get(url, params={**query, "FORMAT": "json"}, timeout=TIMEOUT)
     if reply.status_code == 404:   # "No GP data found" for that satellite
         return []
     reply.raise_for_status()
-    return reply.json()
+    try:
+        return reply.json()
+    except ValueError:
+        if empty_text and getattr(reply, "text", "").strip().startswith(empty_text):
+            return []
+        raise
 
 
 def fetch(norad_ids):
@@ -70,6 +76,12 @@ def fetch(norad_ids):
     for norad in sorted(wanted - listed):
         rows += _get(CATNR=norad)
     return {int(row["NORAD_CAT_ID"]): as_history_row(row) for row in rows}, listed
+
+
+def catalogue_entry(norad):
+    """The first SATCAT row for one catalogue number, or None when SATCAT lists nothing."""
+    rows = _get(url=CATALOGUE_URL, empty_text="No SATCAT records found", CATNR=norad)
+    return rows[0] if rows else None
 
 
 def _save():

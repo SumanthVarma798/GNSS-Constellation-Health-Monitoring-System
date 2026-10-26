@@ -29,12 +29,16 @@ SETTING_SENTENCES = {
     "MERGE_METHOD": "GitHub merge method used when an approved pull request is merged.",
     "MIN_GAP_BETWEEN_DOWNLOADS": "Per-site minimum wait between two requests to the same site (a named host or any host under it).",
     "NEVER_FETCH": "Host-name fragments the archive fetcher refuses before any request, including redirects to them.",
+    "ORBIT_ALERT_DAYS": "Age in days from which an orbit record is marked as alert.",
+    "ORBIT_STALE_DAYS": "Age in days from which an orbit record is marked as stale.",
+    "ORBIT_AGE_COLUMNS": "Exact column order used when writing the per-satellite orbit-age table.",
     "REFUSAL_STATUSES": "HTTP statuses treated as refusals that trigger persistent back-off.",
     "REGISTRY_CONSTELLATIONS_FILE": "Registry file name that maps system letters to constellation names.",
     "REGISTRY_DASHBOARD_SATELLITES_FILE": "Registry file name listing satellites shown on the dashboard, in display order.",
     "REGISTRY_SATELLITES_FILE": "Registry table file name for core satellite identity rows.",
     "REGISTRY_SIGNAL_IDS_FILE": "Registry table file name for signal-ID history rows.",
     "REQUEST_TIMEOUT_SECONDS": "Per-request timeout for calls to outside servers.",
+    "RUN_LOGS": "Run-log CSV files the console reads from the private archive repository.",
     "REQUIRED_CHECK": "Name of the GitHub check that must pass before merge approval can merge.",
     "TESTS_WORKFLOW": "Workflow file name treated as the tests-on-main source in the console.",
     "WAIT_BETWEEN_TRIES_SECONDS": "Base pause between download tries inside one run.",
@@ -354,6 +358,100 @@ STAGES = {
             "limits": [
                 "If the IGS file layout changes, the build exits and no tables are written.",
                 "A proposal is created only when registry/ actually changes.",
+            ],
+        },
+    },
+    "orbit_ages": {
+        "plain_name": "Measure orbit record ages",
+        "what_happens": [
+            "Once a day, a program checks the newest orbit record for each tracked satellite.",
+            "If CelesTrak has old or missing rows, one Space-Track read can fill them in.",
+            "It saves one run-log line and one per-satellite age table in the private archive.",
+        ],
+        "why_it_matters": "This gives a daily watch of record freshness across every tracked constellation.",
+        "technical": {
+            "workflow_file": ".github/workflows/orbit-ages.yml",
+            "workflow_job": "run",
+            "schedule_group": "",
+            "commands": [
+                "python scripts/orbit_ages.py --archive archive --outcome \"$RUNNER_TEMP/orbit-ages.json\"",
+                "jq -r '.line // \"\"' \"$RUNNER_TEMP/orbit-ages.json\"",
+            ],
+            "inputs": [
+                "Tracked NORAD IDs from config/config.py",
+                "Newest CelesTrak rows and optional Space-Track login credentials",
+            ],
+            "outputs": [
+                "archive/runs/orbit-ages.csv",
+                "archive/runs/orbit-age-by-satellite.csv",
+                "Outcome JSON for Healthchecks.io pings",
+            ],
+            "repositories": [
+                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System",
+                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive",
+            ],
+            "settings": [
+                "ORBIT_ALERT_DAYS",
+                "ORBIT_STALE_DAYS",
+                "ORBIT_AGE_COLUMNS",
+            ],
+            "settings_files": ["evidence/settings.py"],
+            "paths": [
+                ".github/workflows/orbit-ages.yml",
+                "scripts/orbit_ages.py",
+                "data/celestrak.py",
+                "data/spacetrack.py",
+                "evidence/settings.py",
+            ],
+            "limits": [
+                "Space-Track can be skipped when no login is set or when it refuses this run.",
+                "Old or missing orbit records do not fail the run; they are recorded as alert, stale, or missing.",
+            ],
+        },
+    },
+    "rinex_check": {
+        "plain_name": "Measure orbit-record broadcast gaps",
+        "what_happens": [
+            "Once a day, a program compares each tracked satellite's nearest orbit record with its own broadcast orbit over the day.",
+            "It saves the day's markdown report and derived JSON in the private archive, then records one run-log line.",
+            "It publishes only the day's derived JSON to branch orbit-checks for the public dashboard to read.",
+        ],
+        "why_it_matters": "This checks daily whether orbit records still match broadcast orbits within expected kilometre gaps.",
+        "technical": {
+            "workflow_file": ".github/workflows/rinex-check.yml",
+            "workflow_job": "run",
+            "schedule_group": "",
+            "commands": [
+                "python scripts/orbit_record_gap.py --json \"$RUNNER_TEMP/gap.json\" --summary-out \"$RUNNER_TEMP/gap-summary.txt\" > \"$RUNNER_TEMP/gap.md\"",
+                "python scripts/log_run.py --archive . --log rinex-check --job \"rinex check\" --started \"$STARTED\" --result \"$RESULT\" --changed \"$CHANGED\"",
+            ],
+            "inputs": [
+                "Tracked satellites from registry tables",
+                "The IGS merged navigation file for the checked day",
+                "Bundled and current GNSS orbit records",
+            ],
+            "outputs": [
+                "archive/orbits/broadcast-gap/<day>.md and <day>.json in the private archive repository",
+                "Run log line in archive/runs/rinex-check.csv",
+                "orbit_gap.json on branch orbit-checks in the project repository",
+            ],
+            "repositories": [
+                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System",
+                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive",
+            ],
+            "settings": [
+                "RUN_LOGS",
+            ],
+            "settings_files": ["evidence/console_settings.py"],
+            "paths": [
+                ".github/workflows/rinex-check.yml",
+                "scripts/orbit_record_gap.py",
+                "scripts/log_run.py",
+                "evidence/console_settings.py",
+            ],
+            "limits": [
+                "The schedule assumes BKG's copy of yesterday's file is complete by 06:00 UTC; this is a best guess.",
+                "The branch publish step touches only orbit-checks, never main.",
             ],
         },
     },

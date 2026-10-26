@@ -211,7 +211,7 @@ Produced from the code. A test fails if this table and the code disagree.
 | The three labels | confirmed, probable, unconfirmed | `evidence/settings.py` |
 | Longest wait for an outside server | 60 seconds | `evidence/settings.py` |
 | A failed download is tried | 3 times, 60 seconds apart; once a run where that is sooner than the source's gap | `evidence/settings.py` |
-| Shortest gap between two requests to one site | celestrak.org: 2 hours, reddit.com: 2 minutes, news.google.com: 10 seconds, any other site: 5 seconds | `evidence/settings.py` |
+| Shortest gap between two requests to one site | celestrak.org: 2 hours, space-track.org: 1 hour, reddit.com: 2 minutes, news.google.com: 10 seconds, any other site: 5 seconds | `evidence/settings.py` |
 | A site that refuses us waits | 1 hour, doubling with each refusal in a row, at most 7 days; refusals are 403, 429 or no answer | `evidence/settings.py` |
 | Largest copy the archive keeps | 50 MB | `evidence/settings.py` |
 | Statuses that mean a page is gone | 404, 410 | `evidence/settings.py` |
@@ -236,7 +236,7 @@ Produced from the code. A test fails if this table and the code disagree.
 | - | What the archive records | Only changes, plus one line per run of each scheduled job in its run log (`runs/<job file>.csv`). "Last checked" is the last run logged as ok. |
 | - | When a failed source fails the job | A failed graded source fails the whole job. A failed news or social candidate is recorded in the run log but does not fail the job; the job fails only if the run breaks, nothing could be fetched at all, or a graded source fails. |
 | - | Run log | A file in the archive, not a hosted logging service: the free ones found (Grafana Cloud, Axiom, Better Stack) keep logs 3 to 30 days and need an account, for about four lines a day. Decided 19 Oct 2026 at Sumanth's request. |
-| - | Alerts | Healthchecks.io (open source, free hosted tier of 20 checks). Each scheduled run reports how it went, with its run log line, to one check per job: `archive-documents`, `archive-catalogues`, `archive-orbital`, `registry-update`. It emails when a run fails, or when none arrives within 8 hours of its written time, which also catches a run GitHub never starts. GitHub's own failure email does not reach Sumanth (checked by him, 19 Oct 2026). |
+| - | Alerts | Healthchecks.io (open source, free hosted tier of 20 checks). Each scheduled run reports how it went, with its run log line, to one check per job: `archive-documents`, `archive-catalogues`, `archive-orbital`, `archive-news`, `archive-social`, `registry-update`, `update-tle-data` (which has no run log line, so it sends a short line of its own). It emails when a run fails, or when none arrives within 8 hours of its written time, which also catches a run GitHub never starts. GitHub's own failure email does not reach Sumanth (checked by him, 19 Oct 2026). |
 | - | Limits per source | One place, `MIN_GAP_BETWEEN_DOWNLOADS` in `evidence/settings.py`, read by the archive job and the dashboard. A retry that would come sooner than a source's gap is not made. |
 | - | Storage rule | The database keeps a reference to a document, never the document |
 | - | Cadence | Documents daily at 6 AM India time; catalogues daily at 6:15 AM; orbit records daily at 6:45 AM; news every 3 hours, to measure how often each feed changes (issue 13); social media daily at 7:10 AM; registry on Sundays at 6:30 AM. Short cadences first, accepting the storage; lengthen them as the product matures. |

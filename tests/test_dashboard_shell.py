@@ -11,7 +11,7 @@ import time_machine
 from streamlit.testing.v1 import AppTest
 from streamlit.testing.v1.element_tree import ButtonGroup
 
-from data import celestrak
+from data import celestrak, spacetrack
 from test_celestrak import IRNSS_1B
 from test_golden_scores import GOLDEN
 from ui import time_range
@@ -37,6 +37,11 @@ def celestrak_answers_with_nothing_new(monkeypatch):
     monkeypatch.setattr(celestrak, "state", {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True,
                                              "failing_since": None})
     monkeypatch.setattr(celestrak, "fetch", lambda norads: ({}, set()))
+    monkeypatch.setattr(spacetrack, "state", {"rows": {}, "tried": None, "fetched": None,
+                                              "refused_until": None, "note": "ok"})
+    monkeypatch.setattr(spacetrack, "refresh",
+                        lambda norads, now, login: {"rows": {}, "tried": now if login else None, "fetched": None,
+                                                    "refused_until": None, "note": "ok" if login else "no login"})
 
 
 def run(setup=lambda at: None, now=FROZEN):
@@ -106,9 +111,10 @@ def test_the_overview_groups_satellites_by_orbit_type_each_with_its_table():
 
     assert groups(at) == ["GEO", "IGSO"]
     tables = table_rows(at)
-    assert tables[:2] == [["IRNSS-1C", "IRNSS-1F", "IRNSS-1G", "NVS-01"],
-                                                  ["IRNSS-1B", "IRNSS-1E", "IRNSS-1I"]]   # IRNSS-1D is set aside
-    assert len(tables[2]) == 8   # how each was classed from the window, the set-aside one too
+    assert len(tables[0]) == 8 and "IRNSS-1D" in tables[0]   # orbit record age: every satellite, set-aside too
+    assert tables[1:3] == [["IRNSS-1C", "IRNSS-1F", "IRNSS-1G", "NVS-01"],
+                           ["IRNSS-1B", "IRNSS-1E", "IRNSS-1I"]]   # IRNSS-1D is set aside
+    assert len(tables[3]) == 8   # how each was classed from the window, the set-aside one too
     assert len(tiles(at)) == 8
 
 
@@ -222,12 +228,12 @@ def test_the_window_is_kept_for_pages_to_read():
     assert len(tiles(at)) == 8
 
 
-def test_the_data_chip_is_amber_after_a_week():
+def test_the_data_chip_turns_warn_then_bad_at_the_orbit_age_limits():
     fresh = " ".join(htmls(run()))
     stale = " ".join(htmls(run(now=FROZEN + timedelta(days=8))))
 
-    assert 'class="chip ok">Orbit data 4 Oct, 2 days old' in fresh
-    assert 'class="chip warn">Orbit data 4 Oct, 10 days old' in stale
+    assert 'class="chip warn">Orbit data 4 Oct, 2 days old' in fresh
+    assert 'class="chip bad">Orbit data 4 Oct, 10 days old' in stale
     assert "failing" not in fresh
 
 
@@ -318,7 +324,7 @@ def test_a_failed_refresh_keeps_the_archive_and_says_so(monkeypatch):
     at = run(lambda at: at.button(key="refresh_button").click())
     chips = " ".join(htmls(at))
 
-    assert 'class="chip ok">Orbit data 4 Oct, 2 days old' in chips
+    assert 'class="chip warn">Orbit data 4 Oct, 2 days old' in chips
     assert 'class="chip warn">CelesTrak failing since 12:00' in chips   # the frozen clock's time, in UTC
     assert len(tiles(at)) == 8
 
@@ -331,15 +337,15 @@ def test_a_source_failing_since_yesterday_says_since_when(monkeypatch):
     chips = " ".join(htmls(run(now=FROZEN + timedelta(days=1))))   # due again: tried, and refused again
 
     assert 'class="chip warn">CelesTrak failing since 6 Oct 12:00' in chips
-    assert 'class="chip ok">Orbit data 4 Oct, 3 days old' in chips   # the saved copies stay in use
+    assert 'class="chip bad">Orbit data 4 Oct, 3 days old' in chips   # the saved copies stay in use
 
 
 def test_age_words():
     taken = "2026-10-04T04:19:57.724789+00:00"
     now = datetime.fromisoformat("2026-10-14T10:00:00+00:00")
 
-    assert age_words(taken, now) == ("Orbit data 4 Oct, 10 days old", "warn")
-    assert age_words(taken, now.replace(day=11)) == ("Orbit data 4 Oct, 7 days old", "ok")
+    assert age_words(taken, now) == ("Orbit data 4 Oct, 10 days old", "bad")
+    assert age_words(taken, now.replace(day=11)) == ("Orbit data 4 Oct, 7 days old", "bad")
     assert age_words(taken, now.replace(day=5)) == ("Orbit data 4 Oct, 1 day old", "ok")
     assert age_words(taken, now.replace(day=4)) == ("Orbit data 4 Oct 04:19", "ok")
     assert age_words("Unknown", now)[1] == "idle"
