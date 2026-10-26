@@ -30,6 +30,17 @@ class Reply:
         return self.rows
 
 
+class ReplyText:
+    def __init__(self, text):
+        self.status_code, self.text = 200, text
+
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        raise ValueError("not json")
+
+
 def empty_state():
     return {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True, "failing_since": None}
 
@@ -172,3 +183,8 @@ def test_failing_since_is_the_first_failure_in_a_row_and_survives_a_restart(monk
     monkeypatch.setattr(celestrak, "state", empty_state())               # the dashboard restarts
     assert celestrak.refresh([39635], NOW + timedelta(hours=2, minutes=5))["failing_since"] == NOW
     assert celestrak.refresh([39635], NOW + timedelta(hours=4))["failing_since"] is None
+
+
+def test_catalogue_entry_returns_none_when_celestrak_lists_nothing(monkeypatch):
+    monkeypatch.setattr(requests, "get", lambda *args, **kwargs: ReplyText("No SATCAT records found"))
+    assert celestrak.catalogue_entry(100744) is None

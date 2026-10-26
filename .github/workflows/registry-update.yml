@@ -43,6 +43,7 @@ jobs:
       - run: pip install -r requirements-dev.txt
 
       - name: Rebuild the tables and describe what changed
+        id: build
         run: python scripts/build_registry.py --archive archive --report "$RUNNER_TEMP/registry-changes.md"
 
       - name: Did anything change?
@@ -56,6 +57,7 @@ jobs:
           fi
 
       - name: Run the tests on the new tables
+        id: tests
         if: steps.tables.outputs.changed == 'true'
         run: python -m pytest -q
 
@@ -88,7 +90,12 @@ jobs:
           STARTED: ${{ steps.start.outputs.at }}
           RESULT: ${{ job.status }}
           CHANGED: >-
-            ${{ steps.propose.outcome == 'success' && 'tables changed, proposal opened or updated'
+            ${{ job.status != 'success' && (steps.build.outcome == 'failure' && 'failed at: rebuilding the tables'
+            || steps.tests.outcome == 'failure' && 'failed at: the tests on the new tables'
+            || steps.propose.outcome == 'failure' && 'failed at: opening the proposal'
+            || steps.build.outcome == 'skipped' && 'failed at: checking out or installing'
+            || 'failed at a step not named here: see the run on GitHub')
+            || steps.propose.outcome == 'success' && 'tables changed, proposal opened or updated'
             || steps.tables.outputs.changed == 'true' && 'tables changed, no proposal made'
             || 'nothing' }}
         run: |

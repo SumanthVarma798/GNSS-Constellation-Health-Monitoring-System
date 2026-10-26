@@ -377,8 +377,23 @@ def test_real_orbit_feed_days_are_the_bundled_files_fetch_days(real):
 
 
 def test_real_summary(real):
-    assert summary(real["satellites"], real["catalogue"], real["signal_ids"]) == {
-        "spacecraft": 294, "systems": 6, "confirmed": 292, "signal_ids": 170, "signal_ids_reused": 90}
+    catalogue = {row["svn"]: row for row in real["catalogue"]}
+    holders = {}
+    for row in real["signal_ids"]:
+        holders.setdefault(row["signal_id"], set()).add(row["svn"])
+    expected = {
+        "spacecraft": len(real["satellites"]),
+        "systems": len({row["constellation"] for row in real["satellites"]}),
+        # "confirmed" in summary means the two sources agree on the launch designator.
+        "confirmed": sum(
+            bool(catalogue.get(row["svn"], {}).get("cospar_id"))
+            and catalogue[row["svn"]]["cospar_id"] == row["cospar_id"]
+            for row in real["satellites"]
+        ),
+        "signal_ids": len(holders),
+        "signal_ids_reused": sum(len(svns) > 1 for svns in holders.values()),
+    }
+    assert summary(real["satellites"], real["catalogue"], real["signal_ids"]) == expected
 
 
 def test_real_signal_ids_of_c217(real):
