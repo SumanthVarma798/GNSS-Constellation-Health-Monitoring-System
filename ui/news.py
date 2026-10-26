@@ -29,6 +29,8 @@ CSS = """
 .st-key-news_filters [data-testid="stButtonGroup"] [data-baseweb="button-group"] { flex-wrap: wrap; gap: 6px; padding: 2px;
   background: transparent; box-shadow: none; }
 .st-key-news_filters [data-testid="stBaseButton-pillsActive"] { border-color: var(--accent); }
+.st-key-news_filters > [data-testid="stElementContainer"]:has(.news-sr) {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .st-key-news_filters [data-testid="stButtonGroup"] button { white-space: normal; padding: 4px 12px; }
 .news-cat-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 10px 0 14px; }
 .news-cat-tile { display: grid; place-items: center; gap: 4px; min-height: 104px; text-align: center; font-size: 14px;
@@ -226,6 +228,11 @@ def sorting_rules_html():
         "<p>Grade standing: confirmed means the source is in the team's source table; provisional means a grade is "
         "proposed and waiting for the team's review; not graded means no grade is recorded yet.</p>"
     )
+
+
+def screen_reader_heading(label):
+    """A filter's name for screen readers: Streamlit hides the pills' own label from them (aria-hidden)."""
+    st.html(f'<span class="news-sr" role="heading" aria-level="3">{escape(label)}</span>')
 
 
 def seen_note(seen_at):

@@ -35,12 +35,16 @@ else:
         st.session_state[f"_{key}_was"] = st.session_state[key]
     # One band: each filter's heading on the same line as its choices, the groups side by side (ui/news.py CSS).
     with st.container(key="news_filters"):
+        news.screen_reader_heading("Category")
         picked_categories = st.pills("Category", categories, default=categories, selection_mode="multi",
                                      key="news_category")
+        news.screen_reader_heading("Source grade")
         standings = st.pills("Source grade", news.GRADE_STANDINGS, default=news.GRADE_STANDINGS,
                              selection_mode="multi", key="news_grade")
+        news.screen_reader_heading("Published within")
         window = st.pills("Published within", news.DATE_FILTERS, selection_mode="single", key="news_date",
                           on_change=keep, args=("news_date", "90 days"))
+        news.screen_reader_heading("Show")
         show = st.pills("Show", news.SHOW_FILTERS, selection_mode="single", key="news_show",
                         on_change=keep, args=("news_show", "all"))
     only_new = show == "new only"
