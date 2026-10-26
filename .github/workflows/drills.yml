@@ -1,0 +1,156 @@
+# Failure drills are started by hand only (workflow_dispatch).
+# They prove retry and refusal handling with a stand-in site on the runner and
+# a throwaway archive folder: no real source is fetched, and no real archive
+# main branch is touched. Drill runs do not count in the console's green streak
+# (only scheduled runs count). Recorded on issue 130.
+
+name: Failure drills
+
+on:
+  workflow_dispatch:
+    inputs:
+      drill:
+        description: Which drill to run
+        type: choice
+        options:
+          - source-down
+          - news-source-down
+          - site-refusing
+          - push-conflict
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: failure-drills
+  cancel-in-progress: false
+
+jobs:
+  drill:
+    if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install the one library the archive needs
+        run: pip install "$(grep '^requests==' requirements.txt)"
+
+      - name: Run in-process drill
+        if: inputs.drill != 'push-conflict'
+        id: drill
+        env:
+          DRILL: ${{ inputs.drill }}
+        run: python scripts/drill.py "$DRILL" --archive "$RUNNER_TEMP/drill-archive"
+
+      - name: Branch name for push-conflict
+        if: inputs.drill == 'push-conflict'
+        id: branch
+        run: echo "name=drill/push-conflict-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
+
+      - name: Check out archive copy one
+        if: inputs.drill == 'push-conflict'
+        uses: actions/checkout@v4
+        with:
+          repository: SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive
+          ssh-key: ${{ secrets.ARCHIVE_DEPLOY_KEY }}
+          path: first
+
+      - name: Check out archive copy two
+        if: inputs.drill == 'push-conflict'
+        uses: actions/checkout@v4
+        with:
+          repository: SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive
+          ssh-key: ${{ secrets.ARCHIVE_DEPLOY_KEY }}
+          path: second
+
+      - name: Run push-conflict drill
+        if: inputs.drill == 'push-conflict'
+        id: push_conflict
+        env:
+          BR: ${{ steps.branch.outputs.name }}
+        run: |
+          set -euo pipefail
+
+          git -C first config user.name "github-actions[bot]"
+          git -C first config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C first switch -c "$BR"
+          mkdir -p first/drills
+          printf 'first run %s\n' "${{ github.run_id }}" > first/drills/first.txt
+          git -C first add drills/first.txt
+          FIRST_MSG="Drill push-conflict first ${{ github.run_id }}"
+          git -C first commit --quiet -m "$FIRST_MSG"
+          git -C first push --quiet -u origin "$BR"
+
+          git -C second config user.name "github-actions[bot]"
+          git -C second config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C second switch -c "$BR"
+          mkdir -p second/drills
+          printf 'second run %s\n' "${{ github.run_id }}" > second/drills/second.txt
+          git -C second add drills/second.txt
+          SECOND_MSG="Drill push-conflict second ${{ github.run_id }}"
+          git -C second commit --quiet -m "$SECOND_MSG"
+          git -C second fetch --quiet origin "$BR"
+          git -C second branch --quiet -u "origin/$BR"
+
+          LINE=$(grep -m1 -o 'git push --quiet || {.*}' "$GITHUB_WORKSPACE/.github/workflows/archive.yml") || LINE=""
+          if [ -z "$LINE" ]; then
+            echo "Could not find the archive save line in archive.yml."
+            echo "person_needed=true" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          (
+            cd second
+            eval "$LINE"
+          )
+
+          git -C second fetch --quiet origin "$BR"
+          LOG=$(git -C second log --format=%s "origin/$BR")
+          if printf '%s\n' "$LOG" | grep -qx "$FIRST_MSG" && printf '%s\n' "$LOG" | grep -qx "$SECOND_MSG"; then
+            SUMMARY="DRILL push-conflict: PASSED — the second push was refused, rebased and pushed; both commits are on the branch"
+            echo "$SUMMARY"
+            [ -n "${GITHUB_STEP_SUMMARY:-}" ] && echo "$SUMMARY" >> "$GITHUB_STEP_SUMMARY"
+            echo "person_needed=false" >> "$GITHUB_OUTPUT"
+          else
+            SUMMARY="DRILL push-conflict: FAILED — expected both commits on origin/$BR after the archive save line, but one or both messages were missing"
+            echo "$SUMMARY"
+            [ -n "${GITHUB_STEP_SUMMARY:-}" ] && echo "$SUMMARY" >> "$GITHUB_STEP_SUMMARY"
+            echo "person_needed=true" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      - name: Delete push-conflict drill branch
+        if: always() && inputs.drill == 'push-conflict'
+        env:
+          BR: ${{ steps.branch.outputs.name }}
+        run: |
+          git -C first push --quiet origin --delete "$BR" \
+            || echo "::warning::The drill branch $BR is still in the archive. Delete it by hand: git push origin --delete $BR"
+
+      - name: Tell Healthchecks.io how the drill went
+        if: always()
+        env:
+          KEY: ${{ secrets.HEALTHCHECKS_PING_KEY }}
+          DRILL: ${{ inputs.drill }}
+          RUN_ID: ${{ github.run_id }}
+          PERSON_NEEDED: ${{ steps.drill.outputs.person_needed || steps.push_conflict.outputs.person_needed || 'true' }}
+          DRILL_FAILED: ${{ job.status != 'success' }}  # a drill that did not behave as expected needs a person too
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "Not reported to Healthchecks.io: no key."
+            exit 0
+          fi
+          KEY=$(printf %s "$KEY" | tr -d '[:space:]')
+          URL="https://hc-ping.com/$KEY/drill?create=1"
+          NEEDED=no
+          if [ "$PERSON_NEEDED" = "true" ] || [ "$DRILL_FAILED" = "true" ]; then
+            URL="https://hc-ping.com/$KEY/drill/fail?create=1"
+            NEEDED=yes
+          fi
+          BODY="Drill $DRILL, run $RUN_ID: person needed: $NEEDED"
+          printf '%s' "$BODY" \
+            | curl -fsS -m 10 --retry 3 --data-binary @- "$URL" \
+            || echo "::warning::Healthchecks.io did not take this report. It will report the drill as late."
