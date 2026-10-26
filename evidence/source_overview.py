@@ -10,8 +10,9 @@ _ANSWER_WORDS = {"403": "refused (403)", "404": "not found (404)"}
 
 
 def _rows(path):
+    """The table's rows; a field a short line leaves out reads as empty, never as None."""
     with open(path, newline="", encoding="utf-8") as handle:
-        return list(csv.DictReader(handle))
+        return [{key: value or "" for key, value in row.items() if key} for row in csv.DictReader(handle)]
 
 
 def overview(grades_file=SOURCE_GRADES_FILE, candidates_file=SOURCE_CANDIDATES_FILE):
@@ -28,13 +29,13 @@ GROUPS = ("not answering", "held", "graded", "awaiting a grade", "no grade")
 HELD = "held: not fetched"
 
 
-def _answer(status):
+def _answer(status, held):
     """(tone, words) for the answer at the last check."""
     if status == CANDIDATE_WORKED:
         return "ok", "answered"
     if status == NOT_CHECKED:
-        return "idle", "not fetched: held by rule"
-    return "warn", _ANSWER_WORDS.get(status, status)
+        return "idle", "not fetched: held by rule" if held else "not fetched"
+    return "warn", _ANSWER_WORDS.get(status, status or "not checked")
 
 
 def source_rows(grades_file=SOURCE_GRADES_FILE, candidates_file=SOURCE_CANDIDATES_FILE):
@@ -50,7 +51,7 @@ def source_rows(grades_file=SOURCE_GRADES_FILE, candidates_file=SOURCE_CANDIDATE
         rows.append({"source": c["source_id"], "name": c["name"], "kind": c["kind"], "address": c["address"],
                      "grade": confirmed["reliability"] if confirmed else c["proposed_grade"], "confirmed": bool(confirmed),
                      "reason": confirmed["reason"] if confirmed else c["grade_reason"], "checked_on": c["checked_on"],
-                     "answer": _answer(c["check_status"]), "held": c["standing"] == HELD})
+                     "answer": _answer(c["check_status"], c["standing"] == HELD), "held": c["standing"] == HELD})
     named = {c["source"] for c in rows}
     rows += [{"source": g["source_id"], "name": g["name"], "kind": "", "address": "", "grade": g["reliability"],
               "confirmed": True, "reason": g["reason"], "checked_on": "", "answer": ("idle", "not checked here"),

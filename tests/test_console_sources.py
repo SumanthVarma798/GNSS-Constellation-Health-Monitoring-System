@@ -29,3 +29,14 @@ def test_a_filter_and_find_narrow_the_list(monkeypatch):
     at.session_state["sources_show"] = "all"
     at.text_input(key="sources_find").set_value("isro.gov").run()   # an address finds the site's own pages only
     assert "ISRO press releases" in text(at) and "Reddit" not in text(at)
+
+
+def test_the_graded_tile_counts_sites_whatever_their_last_check(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    from evidence.source_overview import source_rows
+
+    sites = {r["source"] for r in source_rows() if r["confirmed"]}
+    page = text(run(monkeypatch, page="console/sources.py"))
+
+    assert "Graded sites" in page
+    assert f'<div class="big">{len(sites)}</div>' in page

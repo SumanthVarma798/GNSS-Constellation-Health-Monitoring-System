@@ -22,6 +22,7 @@ RAMP = {"A": "g-a", "B": "g-b", "C": "g-c", "D": "g-d"}   # the validated ordere
 seen = common.read()
 rows = source_rows()
 counts = {group: sum(r["group"] == group for r in rows) for group in GROUPS}
+confirmed_sites = {r["source"] for r in rows if r["confirmed"]}   # a grade belongs to a site, whatever its last check
 grade_waits = [i for i in decisions.pending(seen["prs"], common.now()) if i["kind"] == "source grade"]
 
 body, actions = common.layout("sources", "Sources", "Everything the system reads, how far each is trusted, and whether it "
@@ -49,7 +50,7 @@ with body:
         st.html(console.notice(problem, "warn"))
     st.html(console.tiles([
         console.tile("info", "Sources known", "", str(len(rows)), f"{len({r['source'] for r in rows})} sites"),
-        console.tile("ok", "Graded", console.status("ok", "confirmed"), str(counts["graded"]), "a person confirmed the grade"),
+        console.tile("ok", "Graded sites", console.status("ok", "confirmed"), str(len(confirmed_sites)), "a person confirmed the grade"),
         console.tile("warn" if grade_waits else "info", "Awaiting a grade",
                      console.status("warn", f"{len(grade_waits)} decision{'' if len(grade_waits) == 1 else 's'} waiting")
                      if grade_waits else "", str(counts["awaiting a grade"]),
@@ -58,11 +59,12 @@ with body:
                      console.status("warn" if counts["not answering"] else "ok", "at the last check"),
                      str(counts["not answering"]), "refused, not found or timed out")]))
 
-    graded = [r for r in rows if r["grade"]]
+    others = sorted({r["grade"] for r in rows if r["grade"] and r["grade"] not in RAMP})   # E and F: one neutral part
     st.html(console.section("Grades", console.stack(
-        [(sum(r["grade"] == g for r in graded), RAMP[g], f"{g}: {RELIABILITY_GRADES[g]}") for g in RAMP]
-        + [(sum(1 for r in rows if not r["grade"]), "g-none", "no grade")], "Grades, confirmed and proposed"),
-        right="confirmed and proposed together; A the most trusted"))
+        [(sum(r["grade"] == g for r in rows), RAMP[g], f"{g}: {RELIABILITY_GRADES[g]}") for g in RAMP]
+        + ([(sum(r["grade"] in others for r in rows), "g-none", f"{' and '.join(others)}: {', '.join(RELIABILITY_GRADES.get(g, g) for g in others)}")] if others else [])
+        + [(sum(1 for r in rows if not r["grade"]), "g-none", "no grade")], "Grades of the feeds and pages, confirmed and proposed"),
+        right="per feed or page, confirmed and proposed together; A the most trusted"))
 
     st.session_state.setdefault("sources_show", "all")
     shown_as = st.segmented_control("Show", list(SHOW), format_func=lambda k: f"{SHOW[k]} ({len(rows) if k == 'all' else counts[k]})",

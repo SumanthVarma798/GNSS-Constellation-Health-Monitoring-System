@@ -66,3 +66,13 @@ def test_the_answer_at_the_last_check_is_said_in_words(tmp_path):
 
     assert rows["Site news"]["answer"] == ("ok", "answered") and rows["Site page"]["answer"] == ("warn", "refused (403)")
     assert rows["Held centre"]["answer"] == ("idle", "not fetched: held by rule") and rows["Alone"]["answer"] == ("idle", "not checked here")
+
+
+def test_a_short_line_reads_as_empty_fields_and_not_fetched_is_held_only_when_held(tmp_path):
+    grades, candidates = tables(tmp_path)
+    candidates.write_text(CANDIDATES + "short.org,Short\n" + "odd.org,Odd,page,https://odd.org/,2026-10-19,not fetched,C,Why,provisional\n")
+
+    rows = {r["name"]: r for r in source_rows(grades, candidates)}
+
+    assert rows["Short"]["address"] == "" and rows["Short"]["group"] == "not answering"
+    assert rows["Odd"]["answer"] == ("idle", "not fetched") and rows["Held centre"]["answer"][1] == "not fetched: held by rule"
