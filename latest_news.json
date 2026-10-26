@@ -1,6 +1,54 @@
 {
- "generated_at": "2026-10-26T07:26:35Z",
+ "generated_at": "2026-10-26T13:38:13Z",
  "items": [
+  {
+   "address": "https://news.google.com/rss/articles/CBMi_gFBVV95cUxQclNHQ1ZIakRKbzdGdHJiVWN4WURJUWUwdUtiaGpTMVU0R1lwaGZ4Rko4ejZMYU0tclZqOU1PRU9Ucjc1Ri1OZkpYNWRXaDEwRzZ1TkhOVGpHcjFDSFAwYkR3T2dMRU1xb2hFMVoxVW1EQTVWcnlLRVd4ZUstUkxNa0tGaVFxdWs5NWFrd2I3Y3JDVGtVNnNhNlByT2R4Q3N2U05CUnpiTVJpYlVfUmpzTjFOdlR0S3ZVUGlzRjhDNkFKZkx4WkdCeGxwaGh4ZTdPWVgwaE4tcWZHdkRCQjdzM1hOQW42dkk4amdmNktjS0lRanRHNjN4Tmo5OWJCQQ?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-26T13:37:10Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "The CSR Journal",
+   "published_at": "2026-10-26T12:53:48Z",
+   "source_id": "thecsrjournal.in",
+   "summary": "",
+   "title": "NVS-03 Satellite Launch Set for October 30, 2026",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMihgFBVV95cUxOZl9qbmg2NzdoNnQybW1jZ3BjYmlmUURaSGhVdUZSRUZheEY2UFlDVWRTWHZWWmY1ZXo4RjlocUwxdXU0OFFEWGxoRTJ1eHNnMkF2Wm1lQTFSYlpRb1lfNnZZZjlFQV8wVWJfTllQdzU3R2ctSzVxczBZRl9jTzhqQ2h6ZG40Z9IBiwFBVV95cUxPaE9UclBkQWxlV000TlFhS3pUUVFkZEF5XzQ0MEVLT19YLTZwV0JjYXgyWUdoYTlZcnp5YUtGaHV5a25yRm9FRndIU1dHXy1VV0ppU3V4dWtYYjBzVDFpaE43TVhab0RIV3FVcS1zT2EzMlRnZi1xTkpCMFNaUUdZZ0tNTXVjeHJoQ25j?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-26T13:37:10Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "ThePrint",
+   "published_at": "2026-10-26T12:48:59Z",
+   "source_id": "theprint.in",
+   "summary": "",
+   "title": "ISRO to launch NVS-03 satellite as India looks to revive NavIC navigation system",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiywFBVV95cUxPZ3QxNVBMNnh0XzBxM1JKQlFfR1R4T05sZjVWNm1vTVdxcjZ4WEdtT1pOcFNzYVo4dkhQOXZDMEdqYndxQUhKTE9TT2NEYUNkNVkwTnN3ZVlaUngteHhCcEpZSEc2R1BZTTVyLVZXT0JpSlhjeS1xejRoa1d4Wl9kcmpWM0pIQWlIUlQ2bVQtUkdxS1FqTlp6TWpvWjdUREZEMmtyU1dJQWMxd0luNVp4MlBEM1djRUk4S3d3ell6YTZoQ24tSFFJOHRLNNIB0AFBVV95cUxNZHQyNVg1WkV4MzRfOXdWcWRxTGF0ei1ZbnBrVGJLMVVSbmlMSHZfQkJuNnEzMmlWNHZlcWZBVkttSHZfcnNKZWhDai1hZEY0R1FlTWRWSlZ5eGlELXJkeWVHNzhsVjRDQXh5aUJlZFdvVXVTdjh5VUlsVkNlUVZZRkhvTnRxV2VmYVVkZEVyMHRFUkNyQWZhbDdnOGZ5TXV4WXRSMmFBY3Q3ejRuUElxZnh3VkRJQmpmOE5sbXB1QWZSOVEtSjU5cVFqQVBzZzd4?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-26T13:37:10Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "India Today",
+   "published_at": "2026-10-26T11:38:41Z",
+   "source_id": "indiatoday.in",
+   "summary": "",
+   "title": "Isro in final prep to launch NVS-03 satellite aboard GSLV-F18: Here's when",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
   {
    "address": "https://rntfnd.org/2026/10/25/367000-ship-study-22-gps-spoofing-hot-spots-georgia-tech/",
    "category": "signal and service",
@@ -2111,6 +2159,22 @@
    "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE1vSG00V0JmQXQzWDNRQ2E5b0l2SkpXUG1nX2pSM0NHRzRBbjJuMEhGejYtMlVoMS04T0h6a1dwM1dUM0hpRkY1ZWJFUTRSanV0TXZueFdGSlpWTV8tUDdPTXJGZ1Q?oc=5",
+   "category": "launch",
+   "constellations": [
+    "QZSS"
+   ],
+   "fetched_at": "2026-10-26T13:37:20Z",
+   "grade": "A",
+   "grade_standing": "provisional",
+   "outlet": "Japan Aerospace Exploration Agency",
+   "published_at": "2026-08-03T07:00:00Z",
+   "source_id": "global.jaxa.jp",
+   "summary": "",
+   "title": "Launch Postponement of MICHIBIKI No. 7, Quasi-Zenith Satellite System (QZS-7) aboard H3 Launch Vehicle flight No.9",
+   "via": "https://news.google.com/rss/search?q=QZSS+OR+Michibiki+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxPdVZXS1RjTnBZOUdVRjZPMlZuVmoyM1BwODZ4bGpQUjIxRnpXSW5DanVuRmd5Q28zOXN3c2txd2tsTmFINUR6cXBaQkl2UUk3ZmFDU0VoTVdZSnhBbzh4Ry14V2JSTW5SVWthUGN4amh1SG1DUF8zWUgtNWtKaVYwZUllQXJKTXlUY0Vr0gGLAUFVX3lxTE1ZeXZKSVU1UHFsRGx3WFZvWk9NTlBJSlNiY3FnMHZQWUdMUzAzMDBRcENOTnVCbWtLMlBZb2lDT20zMjMzTUdMZEFITW0zM20zRmNiQnF2UzBxUnRjeEtQb2pZSkVVVjhoLXhmVDZienBPU0V5b24yYlRULThiQmNLSURHc3NUSUJJUEE?oc=5",
    "category": "other",
    "constellations": [
@@ -2447,6 +2511,22 @@
    "summary": "",
    "title": "Two Galileo Satellites Enter Service for Europe",
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMitAFBVV95cUxORzN4bVU3cFBlME50WHFMQ2VNTk83azB3MHlNZHhlbnJBTHdvM29MOGNQaHRyWUdTVF9LVVRGR0VNQzZNY2E5TkNIbzRNQVUxYS1GN18zczJhTnNOYWxFZFgwTWFvaFdXYm9PamxlN0J5cjRXZHlmQklBZkp3a3BRQTI0UVk0alltNUxsdVVfWndEY0NJM2FDWW1IVjQtMThPSzBSSjFGaEd5Q3RRdmt4bjBVMnI?oc=5",
+   "category": "other",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-10-26T13:37:41Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Department of Energy (.gov)",
+   "published_at": "2026-07-23T07:00:00Z",
+   "source_id": "energy.gov",
+   "summary": "",
+   "title": "NNSA Delivers Next-Generation Global Burst Detector for Space Force GPS Satellite",
+   "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTE9BLXN0cEExYVM2QWVkM205WVUzcldhbzVKNlItbHF3UzZDYnd1aFB2TFJ6U2llYXJJd2NCczlfbE10VTRlT1VqQ1M3UzB6T0hKQlh5TE82TmVPdmNELXRCUmF4RUYyem8?oc=5",
@@ -4266,6 +4346,22 @@
    "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMiwwFBVV95cUxQVjVQa2hKVHpoOHRvN19raFdBREtvUWl0R1Voa190eHVzdF9UZmZBb3l6M0JRZ2JsYjFhVC05Z0pJelQ1M19BOW5KYml3Wm9PcXdnUWpLRkF1dGNWS2VuNlR4RzlsQ2JDWXlRa09GTW1RQ0pBb1R4YnBsVGxIcjFoLVdCZlVKX2d0WXNwX0VuNklVU3BfVlUxYkRKX3BDQ3I0NXQ5YzFzbHNBUUltTHVTT0JsQURvWllHdjhrRG9DUmlxcGPSAcoBQVVfeXFMT044UXZXdHM1M2EydGhpaUE0VzRLSHBhdGk2UEllRVFVdmM0WGlBMC1FYXZoYnR1R3JCZkpsZ1dJc25SS2RKMkpDdUJQd0ZQRHUybWpPb0l1MkxVeXNSNDVrdFJJYU12ZjJiUzlDX3hhd2pjTWwyQzlfdFRrUlFGemhaTFlkRmdIZmhjVDZELTNHRVNXdHpGWi1GOE1CaF93dHpMZHNMR2tPWWNUeUtMRmp3UEoyS0Fod1p0Q05pR24ta0U1UzRxLWxhZw?oc=5",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-26T13:37:10Z",
+   "grade": "D",
+   "grade_standing": "provisional",
+   "outlet": "The Hindu",
+   "published_at": "2026-03-20T07:00:00Z",
+   "source_id": "thehindu.com",
+   "summary": "",
+   "title": "Losing the way: On ISRO and issues with its NavIC constellation",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMiwAFBVV95cUxPZDEyMXBhYnFPRi1tV2pqT1p3Umt2QV9VNS0waGg5MWRGQlpfMHBROUFDQU1WT214b1FkclhhSVVOMy1kRFJ4ZnRSMmh3ZUZJM3NnWUJfZ19lXzItYmItTEUxV1hmY1Zvb21ja2ZOVXl3QTVQVXZfZXN6VElCaTBmNzNHbzV5bExlOFZEeEFjZ19wVnVNTFU3OUFUajZTUm05Tk8zLUs1c2tUSGVTWXlvRDhjZmVwbzFsanlsaFk2Q00?oc=5",
    "category": "other",
    "constellations": [
@@ -5241,22 +5337,6 @@
    "summary": "",
    "title": "Three ways R&D has shaped Galileo Second Generation",
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE9vSTJCcXZBS0wxUmVyMkRQZ1dEWXYxN2hSdi1DOU1ZNmpYb1Q1bkZaem5aODNlVXB1Q3hRM0xnMFJVdExuSl9pNXNCVWIwMzA1WEdYVEt5bEx4SlhtcE8zQUktNHA?oc=5",
-   "category": "launch",
-   "constellations": [
-    "QZSS"
-   ],
-   "fetched_at": "2026-10-19T22:40:08Z",
-   "grade": "A",
-   "grade_standing": "provisional",
-   "outlet": "Japan Aerospace Exploration Agency",
-   "published_at": "2026-02-03T08:00:00Z",
-   "source_id": "global.jaxa.jp",
-   "summary": "",
-   "title": "Launch Postponement of MICHIBIKI No. 7, Quasi-Zenith Satellite System (QZS-7) aboard H3 Launch Vehicle flight No.9",
-   "via": "https://news.google.com/rss/search?q=QZSS+OR+Michibiki+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMijAFBVV95cUxNN3pkUmNadUxvSllOcmN3WEdPWTY3UDNZZzZ2N2xlUUtGYlBqbm83c2FGaVoybzBWSzRDOFR6b0E4LXgweUtmZ2dIYkVCMHlLUWFab0pyVDJXcXczOExYMkdsZDBmWm5EdWE0bHR3NXFrR2dzbV94cXp6dnNMVUl0QzJaVmYzc2RlSVl6cA?oc=5",
@@ -6432,7 +6512,6 @@
    "address": "https://news.google.com/rss/articles/CBMiX0FVX3lxTE1ZWERpd19kVWgwVG1wVEtRcmQtR3MxZnZIaFFhZXJqMlV4bnFLR2dnQ0FueVN0aFdMT05hU1JPaWZxTXN2OGxybzQ4OF9xTXBnZ2RZSXFpVGpQS2hhR2lB?oc=5",
    "category": "other",
    "constellations": [
-    "GPS",
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:40:40Z",
@@ -10217,6 +10296,22 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMigAFBVV95cUxOQTlWdmt0VTdvWXRGQkQwRjFQSWVNdTc1cEFCSzNtdUJrbXJha0ZmVXB5VzFCN3h1aHg0bTFCeHg4REVfekNRUE13ZG55N1BzZnB3VXl1MFU2RnY2UEVhQUR4aldPd1dzbTNVSnc3dXQyM0lmNmFfUDNCU19DVnpsUdIBhgFBVV95cUxPTWVaQXF5dFNyMjhtRFhjQ01sdDdSeUtJZmRRQUV5YnUzQzlENm16TERpMzBVOU8xNjhURDBGVWtDakJkMUFhX0Q2QXJUdktTa2ZaVEtFUmJmT3hNbTNfcUV0RXlHam1rMDRwMnRFdzVIMWpnOVY0UkFqV2JZZFdwVDJZQmVuQQ?oc=5",
+   "category": "launch",
+   "constellations": [
+    "GLONASS"
+   ],
+   "fetched_at": "2026-10-26T13:38:02Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "MundoGEO",
+   "published_at": "2013-05-02T07:00:00Z",
+   "source_id": "mundogeo.com",
+   "summary": "",
+   "title": "Russia launches new Glonass-M satellite",
+   "via": "https://news.google.com/rss/search?q=GLONASS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMiYkFVX3lxTE1sMFZRV2ZsQndPUjRHUVNua29TbXBJMm85aWRvdGpSRFhXYnk1NlNjVURXYTJhYWVvM3RieEF3eThEa1FCbnhZNW1TMkJMd1ktMXJlbmJLNHQ1T0p5Z2FWWVdR?oc=5",
    "category": "launch",
    "constellations": [
@@ -11358,6 +11453,15 @@
    "note": "",
    "reason": ""
   },
+  "energy.gov": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "energy.gov",
+   "note": "",
+   "reason": ""
+  },
   "english.news.cn": {
    "grade": "",
    "grade_standing": "not graded",
@@ -12042,6 +12146,15 @@
    "note": "",
    "reason": ""
   },
+  "mundogeo.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "mundogeo.com",
+   "note": "",
+   "reason": ""
+  },
   "myanmaritv.com": {
    "grade": "",
    "grade_standing": "not graded",
@@ -12669,6 +12782,15 @@
    "graded_by": "",
    "kind": "",
    "name": "thebrighterside.news",
+   "note": "",
+   "reason": ""
+  },
+  "thecsrjournal.in": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "thecsrjournal.in",
    "note": "",
    "reason": ""
   },
