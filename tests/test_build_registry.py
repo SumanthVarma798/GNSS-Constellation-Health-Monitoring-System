@@ -146,7 +146,60 @@ def test_dashboard_updates_falls_back_to_the_note_when_celestrak_cannot_be_read(
                    "note": "Launched 2026-09-17; COSMOS 2???"}]
     monkeypatch.setattr(build_registry.celestrak, "catalogue_entry", lambda *args: (_ for _ in ()).throw(requests.Timeout("down")))
 
-    updated, lines = build_registry.dashboard_updates(before, satellites)
+    updated, lines, details, reads = build_registry.dashboard_updates(before, satellites)
 
     assert next(row for row in updated if row["svn"] == "R809")["dashboard_name"] == "COSMOS 2???"
     assert "CelesTrak could not be read" in lines[0]
+    assert details["R809"] == "Approving also adds it to the dashboard as COSMOS 2???."
+    assert reads["R809"]["checked"] is True and reads["R809"]["catalogue_status"] == "error"
+
+
+def test_dashboard_updates_uses_passed_celestrak_reads_without_fetching_again(monkeypatch):
+    before = [{"svn": "R801", "dashboard_name": "COSMOS 2471"}]
+    satellites = [{"svn": "R801", "constellation": "GLONASS", "signal_id_now": "R01", "catalogue_no": "37372",
+                   "note": "Launched 2011-02-26; COSMOS 2471"},
+                  {"svn": "R809", "constellation": "GLONASS", "signal_id_now": "R10", "catalogue_no": "100744",
+                   "note": "Launched 2026-09-17; COSMOS 2???"}]
+    monkeypatch.setattr(build_registry.celestrak, "catalogue_entry",
+                        lambda *args: (_ for _ in ()).throw(AssertionError("should not fetch")))
+
+    updated, _, _, reads = build_registry.dashboard_updates(
+        before, satellites, {"R809": {"checked": True, "catalogue_status": "ok",
+                                      "catalogue_entry": {"OBJECT_NAME": "COSMOS 2620 [GLONASS-K1]"},
+                                      "orbit_status": "none", "orbit_row": None}})
+
+    assert next(row for row in updated if row["svn"] == "R809")["dashboard_name"] == "COSMOS 2620"
+    assert reads["R809"]["checked"] is True
+
+
+def test_celestrak_read_handles_no_orbit_record_and_read_failures(monkeypatch):
+    monkeypatch.setattr(build_registry.celestrak, "catalogue_entry", lambda norad: {"OBJECT_NAME": f"N{norad}"})
+    monkeypatch.setattr(build_registry.celestrak, "_get", lambda **kwargs: [])
+    read = build_registry.celestrak_read("100744")
+
+    assert read["catalogue_status"] == "ok" and read["orbit_status"] == "none" and read["orbit_row"] is None
+
+    monkeypatch.setattr(build_registry.celestrak, "catalogue_entry",
+                        lambda norad: (_ for _ in ()).throw(requests.Timeout("down")))
+    monkeypatch.setattr(build_registry.celestrak, "_get",
+                        lambda **kwargs: (_ for _ in ()).throw(requests.Timeout("down")))
+    read = build_registry.celestrak_read("100744")
+
+    assert read["catalogue_status"] == "error" and read["orbit_status"] == "error"
+
+
+def test_finding_news_reads_archive_and_reports_errors(monkeypatch):
+    monkeypatch.setattr(build_registry.news, "collected_items", lambda archive: ([{"title": "one"}], []))
+    items, words = build_registry.findings_news("archive")
+    assert items == [{"title": "one"}] and words == ""
+
+    monkeypatch.setattr(build_registry.news, "collected_items",
+                        lambda archive: ([{"title": "one"}], [("feed", "2026-10-20T00:00:00Z", "bad xml")]))
+    items, words = build_registry.findings_news("archive")
+    assert items == [{"title": "one"}]
+    assert words == "News: 1 archived feed copies could not be read, so their items are left out."
+
+    monkeypatch.setattr(build_registry.news, "collected_items",
+                        lambda archive: (_ for _ in ()).throw(ValueError("broken feed")))
+    items, words = build_registry.findings_news("archive")
+    assert items == [] and words == "News could not be read from the archive: broken feed"
