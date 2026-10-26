@@ -49,15 +49,17 @@ def state_of(row):
     return palette.SLOT_UNKNOWN, f"slot {row['slot']} not listed" if row["slot"] else "no slot given", None
 
 
-def tiles(result):
+def tiles(result, tags=None):
     """{name: (tile html, counts as healthy, health row)}, in the order of result["rows"]."""
+    tags = tags or {}
     health = {h["Satellite"]: h for h in result["health"].to_dict("records")}
     out = {}
     for row in result["rows"]:
         state, words, _ = state_of(row)
         weakest = min(((LABELS[m], s) for m, s in row["parts"].items()), key=lambda part: part[1], default=None)
         html = surfaces.tile(row["name"], row["signal_id"], row["score"], row["status"].split(" ", 1)[-1], words,
-                             orbit_section.CHIP_STATUS[state], weakest if weakest and weakest[1] < 100 else None)
+                             orbit_section.CHIP_STATUS[state], weakest if weakest and weakest[1] < 100 else None,
+                             age_html=tags.get(row["name"], ""))
         out[row["name"]] = (html, row["score"] >= HEALTHY_FROM and state != palette.SLOT_OFF, health[row["name"]])
     return out
 
@@ -166,7 +168,8 @@ def _plane_card(plane, members, drift):
 def page(name, result):
     """The count, the history line, the planes (cards or tiles, by the switch), the 3D view, then measured against
     limits in its section, open."""
-    shown = tiles(result)
+    tags = orbit_age.tags(name, result)
+    shown = tiles(result, tags)
     healthy = sum(ok for _, ok, _ in shown.values())
     today = datetime.now(timezone.utc).date()
     surfaces.show(f'<div class="head"><span class="big num">{healthy} of {len(shown)}</span>'

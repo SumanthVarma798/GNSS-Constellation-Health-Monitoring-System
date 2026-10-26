@@ -82,6 +82,14 @@ def test_navic_is_the_default_and_shows_a_tile_per_satellite_with_its_count():
     assert any(f"{healthy_in_slot('NavIC')} of 8</span>" in body and "healthy and in their slot" in body for body in htmls(at))
 
 
+def test_every_navic_tile_carries_an_orbit_record_age_tag():
+    at = run()
+
+    assert len(tiles(at)) == 8
+    for tile in tiles(at):
+        assert ("orbit " in tile and "days old" in tile) or "no orbit record" in tile
+
+
 def test_a_satellite_set_aside_is_a_tile_that_says_so():
     set_aside = [t for t in tiles(run()) if "IRNSS-1D" in t]
 

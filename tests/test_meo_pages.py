@@ -75,6 +75,7 @@ def test_gps_opens_on_its_planes_without_tiles_and_the_switch_shows_the_tiles(mo
 
     at.button_group(key="meo_view").set_value("Satellites").run()
     assert len(tiles(at)) == 2
+    assert all("orbit " in tile and "days old" in tile for tile in tiles(at))
     assert any("Plane D</span><span class=\"muted\">2 satellites · 2 in step" in body for body in htmls(at))
     assert not any("part-title\">Plane D" in body for body in htmls(at))
 

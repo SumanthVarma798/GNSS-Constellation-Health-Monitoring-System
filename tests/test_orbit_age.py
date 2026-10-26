@@ -1,4 +1,4 @@
-"""Orbit record ages: source choice, age bands, and the overview strip/section markup."""
+"""Orbit record ages: source choice, age bands, the tile tags, and the details section."""
 from datetime import datetime, timedelta, timezone
 
 import requests
@@ -65,7 +65,33 @@ def test_statuses_are_ok_warn_bad_at_1_9_2_0_3_0_days_and_oldest_first():
     assert [row["satellite"] for row in rows] == ["Bad", "Warn", "OK", "None"]
 
 
-def test_strip_markup_has_a_dot_tip_per_satellite_and_legend_uses_thresholds():
+def test_tag_says_its_age_source_and_limits_and_is_coloured_by_status():
+    rows = [
+        {"satellite": "IRNSS-1B", "epoch": datetime(2026, 10, 25, 9, 12, tzinfo=timezone.utc),
+         "source": "CelesTrak", "age_days": 1.4, "status": "ok"},
+        {"satellite": "IRNSS-1C", "epoch": datetime(2026, 10, 23, 9, 12, tzinfo=timezone.utc),
+         "source": "Space-Track", "age_days": 3.1, "status": "bad"},
+        {"satellite": "IRNSS-1D", "epoch": None, "source": "", "age_days": None, "status": "idle"},
+    ]
+
+    ok = orbit_age.tag(rows[0])
+    bad = orbit_age.tag(rows[1])
+    idle = orbit_age.tag(rows[2])
+
+    assert 'class="chip ok">orbit 1.4 days old' in ok
+    assert "Orbit record from 25 Oct 09:12 UTC, CelesTrak" in ok
+    assert "alert at 2 days, stale at 3" in ok
+    assert "off by" not in ok
+
+    assert 'class="chip bad">orbit 3.1 days old' in bad
+    assert "Orbit record from 23 Oct 09:12 UTC, Space-Track" in bad
+    assert "alert at 2 days, stale at 3" in bad
+
+    assert 'class="chip idle">no orbit record' in idle
+    assert "No orbit record" in idle
+
+
+def test_tag_and_table_add_the_broadcast_gap_when_one_is_published():
     rows = [
         {"satellite": "IRNSS-1B", "epoch": datetime(2026, 10, 25, 9, 12, tzinfo=timezone.utc),
          "source": "CelesTrak", "age_days": 1.4, "status": "ok"},
@@ -73,30 +99,10 @@ def test_strip_markup_has_a_dot_tip_per_satellite_and_legend_uses_thresholds():
          "source": "Space-Track", "age_days": 3.1, "status": "bad"},
     ]
 
-    html = orbit_age.strip_html(rows)
-
-    assert "Orbit record age" in html
-    assert "under 2 days" in html
-    assert "2 days or more: alert" in html
-    assert "3 days or more: stale" in html
-    assert "no record" in html
-    assert "IRNSS-1B · 1.4 days old · CelesTrak · 25 Oct 09:12 UTC" in html
-    assert "IRNSS-1C · 3.1 days old · Space-Track · 23 Oct 09:12 UTC" in html
-    assert html.count('class="oa-dot ') == 2
-
-
-def test_strip_and_table_add_the_broadcast_gap_when_one_is_published():
-    rows = [
-        {"satellite": "IRNSS-1B", "epoch": datetime(2026, 10, 25, 9, 12, tzinfo=timezone.utc),
-         "source": "CelesTrak", "age_days": 1.4, "status": "ok"},
-        {"satellite": "IRNSS-1C", "epoch": datetime(2026, 10, 23, 9, 12, tzinfo=timezone.utc),
-         "source": "Space-Track", "age_days": 3.1, "status": "bad"},
-    ]
-
-    html = orbit_age.strip_html(rows, GAP)
+    html = orbit_age.tag(rows[0], orbit_age._gap_by_satellite(GAP)["IRNSS-1B"])
     summary, body, stale_notice = orbit_age.section_markup(rows, gap=GAP)
 
-    assert "IRNSS-1B · 1.4 days old · CelesTrak · 25 Oct 09:12 UTC · off by 3.2 km on 25 Oct" in html
+    assert "Orbit record from 25 Oct 09:12 UTC, CelesTrak · off by 3.2 km on 25 Oct · alert at 2 days, stale at 3" in html
     assert summary.endswith(" · broadcast check 25 Oct")
     assert "Off from its broadcast orbit" in body
     assert 'class="num idle">3.2 km</b><span class="nt">25 Oct</span>' in body
