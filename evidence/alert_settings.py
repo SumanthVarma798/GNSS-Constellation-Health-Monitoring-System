@@ -14,6 +14,8 @@ CHECKS = [
     ("archive-social", "Archive: social"),
     ("registry-update", "Registry update"),
     ("update-tle-data", "Update orbit data"),
+    ("orbit-ages", "Orbit ages"),
+    ("orbit-fresh", "Orbit ages: every satellite under 2 days"),   # fails when any orbit record passes 2 days (D3)
 ]
 
 FLIPS_DAYS = 14
