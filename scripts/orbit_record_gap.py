@@ -4,7 +4,7 @@ For one UTC day, every 15 minutes: where the orbit record nearest in time (TLE, 
 puts each dashboard satellite, against where the satellite's broadcast orbit puts it (good to
 metres). Prints a Markdown report. Read-only.
 
-    python scripts/orbit_record_gap.py                   # yesterday, from BKG's copy of the IGS file
+    python scripts/orbit_record_gap.py                   # the newest day BKG has, from its copy of the IGS file
     python scripts/orbit_record_gap.py --day 2026-10-17 --file BRDC00IGS_R_20262900000_01D_MN.rnx
 
 Orbit records: the bundled history, plus CelesTrak's newest through data.celestrak (which keeps to
@@ -38,6 +38,10 @@ HISTORIES = ("navic", "qzss", "beidou3")
 _ts = load.timescale()
 
 
+def _iso_utc(moment):
+    return moment.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def navigation_text(day, file=None):
     """The day's navigation file as text: the given file, the saved copy, or BKG's (then saved)."""
     if file:
@@ -50,6 +54,23 @@ def navigation_text(day, file=None):
         saved.parent.mkdir(parents=True, exist_ok=True)
         saved.write_bytes(reply.content)
     return gzip.decompress(saved.read_bytes()).decode("ascii", "replace")
+
+
+def newest_day(today):
+    """The newest day BKG has the IGS file for: yesterday, else up to three days back. The file for a day appeared
+    about 25 hours after the day ended (checked 26 Oct 2026: 24 Oct's at 00:56 on 26 Oct), so yesterday's is often
+    not there yet. When none answers, yesterday, so the download says why."""
+    for back in (1, 2, 3):
+        day = today - timedelta(days=back)
+        doy = day.timetuple().tm_yday
+        if (SAVED / f"BRDC00IGS_R_{day.year}{doy:03d}0000_01D_MN.rnx.gz").exists():
+            return day
+        try:
+            if requests.head(BKG.format(year=day.year, doy=doy), timeout=30).status_code == 200:
+                return day
+        except requests.RequestException:
+            continue
+    return today - timedelta(days=1)
 
 
 def leap_seconds(text):
@@ -116,25 +137,26 @@ def compare(broadcast, records, signal_id, leap, day):
     return samples, used
 
 
-def report(day, file=None, now=None):
+def rows_for_day(day, file=None, now=None):
+    """Rows for each tracked satellite, plus the leap-second value and check time."""
     now = now or datetime.now(timezone.utc)
+    checked = _iso_utc(now)
     text = navigation_text(day, file)
     leap, broadcast = leap_seconds(text), read_navigation(text)
     satellites = tracked(day)
     records = orbit_records([norad for _, _, norad, _ in satellites], now)
-    lines = [f"# How far off each orbit record is, {day.isoformat()}", "",
-             "Gap = distance between where the orbit record nearest in time (rolled to the moment with SGP4) puts the satellite and "
-             "where its own broadcast orbit puts it, every 15 minutes over the day (UTC) that a broadcast record covers. Along: + means the satellite "
-             "is ahead of where the record says. Broadcast orbits are good to metres; a gap of kilometres is the record's.",
-             "", "| Satellite | Signal ID | Record from | Days between record and last sample | Typical gap | Largest gap | Mostly | Mean longitude (broadcast) |",
-             "|---|---|---|---|---|---|---|---|"]
+    rows = []
     for svn, name, norad, signal_id in satellites:
+        row = {"satellite": name, "signal_id": signal_id, "record_epoch": None, "typical_km": None, "largest_km": None,
+               "mostly": "", "note": "", "age_days": None, "mean_longitude_deg": None}
         if signal_id not in broadcast:
-            lines.append(f"| {name} | {signal_id or 'none'} | | | | | not in the day's broadcast file | |")
+            row["note"] = "not in the day's broadcast file"
+            rows.append(row)
             continue
         samples, used = compare(broadcast[signal_id], records.get(norad, []), signal_id, leap, day)
         if not samples:
-            lines.append(f"| {name} | {signal_id} | no orbit record | | | | | |")
+            row["note"] = "no orbit record"
+            rows.append(row)
             continue
         gaps = [s[0] for s in samples]
         parts = [statistics.mean(abs(s[i]) for s in samples) for i in (1, 2, 3)]
@@ -145,17 +167,87 @@ def report(day, file=None, now=None):
         longitude = math.degrees(math.atan2(statistics.mean(math.sin(math.radians(s[4])) for s in samples),
                                             statistics.mean(math.cos(math.radians(s[4])) for s in samples)))
         age = abs(samples[-1][5] - used).total_seconds() / 86400
-        lines.append(f"| {name} | {signal_id} | {used:%d %b %H:%M} | {age:.1f} days | {statistics.median(gaps):.1f} km | "
-                     f"{max(gaps):.1f} km | {mostly} | {longitude:.2f}° |")
+        row |= {"record_epoch": _iso_utc(used), "typical_km": statistics.median(gaps), "largest_km": max(gaps), "mostly": mostly,
+                "age_days": age, "mean_longitude_deg": longitude}
+        rows.append(row)
+    return rows, leap, checked
+
+
+def markdown_report(day, leap, rows):
+    """Markdown report for one day from precomputed satellite rows."""
+    lines = [f"# How far off each orbit record is, {day.isoformat()}", "",
+             "Gap = distance between where the orbit record nearest in time (rolled to the moment with SGP4) puts the satellite and "
+             "where its own broadcast orbit puts it, every 15 minutes over the day (UTC) that a broadcast record covers. Along: + means the satellite "
+             "is ahead of where the record says. Broadcast orbits are good to metres; a gap of kilometres is the record's.",
+             "", "| Satellite | Signal ID | Record from | Days between record and last sample | Typical gap | Largest gap | Mostly | Mean longitude (broadcast) |",
+             "|---|---|---|---|---|---|---|---|"]
+    for row in rows:
+        satellite, signal = row["satellite"], row["signal_id"] or "none"
+        if row["note"] == "not in the day's broadcast file":
+            lines.append(f"| {satellite} | {signal} | | | | | not in the day's broadcast file | |")
+            continue
+        if row["note"] == "no orbit record":
+            lines.append(f"| {satellite} | {signal} | no orbit record | | | | | |")
+            continue
+        when = datetime.fromisoformat(row["record_epoch"].replace("Z", "+00:00"))
+        lines.append(f"| {satellite} | {signal} | {when:%d %b %H:%M} | {row['age_days']:.1f} days | "
+                     f"{row['typical_km']:.1f} km | {row['largest_km']:.1f} km | {row['mostly']} | "
+                     f"{row['mean_longitude_deg']:.2f}° |")
     lines += ["", f"Broadcast file: IGS merged navigation file for the day, GPS - UTC = {leap} s from its header. "
               "Orbit records: the bundled history plus CelesTrak's newest."]
     return "\n".join(lines)
 
 
+def summary(rows):
+    """One line for run logs from the row model."""
+    total = len(rows)
+    compared = [row for row in rows if row["typical_km"] is not None and row["largest_km"] is not None]
+    if compared:
+        typical = statistics.median([row["typical_km"] for row in compared])
+        worst = max(compared, key=lambda row: row["largest_km"])
+        said = (f"{total} satellites: orbit records off by {typical:.1f} km typical, worst {worst['largest_km']:.1f} km "
+                f"({worst['satellite']})")
+    else:
+        said = f"{total} satellites: no orbit records to compare"
+    not_in_broadcast = sum(1 for row in rows if row["note"] == "not in the day's broadcast file")
+    if not_in_broadcast:
+        said += f"; {not_in_broadcast} not in the broadcast file"
+    no_record = sum(1 for row in rows if row["note"] == "no orbit record")
+    if no_record:
+        said += f"; {no_record} with no orbit record"
+    return said
+
+
+def json_payload(day, checked, rows):
+    """Public JSON payload with the rows needed by the dashboard."""
+    keys = ("satellite", "signal_id", "record_epoch", "typical_km", "largest_km", "mostly", "note")
+    return {"day": day.isoformat(), "checked": checked, "satellites": [{key: row[key] for key in keys} for row in rows]}
+
+
+def write_json(path, day, checked, rows):
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(json_payload(day, checked, rows)), encoding="utf-8")
+
+
+def report(day, file=None, now=None):
+    rows, leap, _ = rows_for_day(day, file, now)
+    return markdown_report(day, leap, rows)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--day", type=lambda s: datetime.strptime(s, "%Y-%m-%d").date(),
-                        default=(datetime.now(timezone.utc) - timedelta(days=1)).date())
+                        help="the UTC day to check; default: the newest day BKG has the IGS file for")
     parser.add_argument("--file", help="a local RINEX 3 navigation file instead of BKG's copy")
+    parser.add_argument("--json", help="where to write a JSON payload for this day")
+    parser.add_argument("--summary-out", help="where to write one line that summarises the rows")
     arguments = parser.parse_args()
-    print(report(arguments.day, arguments.file))
+    day = arguments.day or (arguments.file and (datetime.now(timezone.utc) - timedelta(days=1)).date()) \
+        or newest_day(datetime.now(timezone.utc).date())
+    rows, leap, checked_at = rows_for_day(day, arguments.file)
+    print(markdown_report(day, leap, rows))
+    if arguments.json:
+        write_json(arguments.json, day, checked_at, rows)
+    if arguments.summary_out:
+        Path(arguments.summary_out).write_text(summary(rows) + "\n", encoding="utf-8")

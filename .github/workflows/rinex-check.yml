@@ -1,0 +1,141 @@
+# Measures once a day how far each tracked satellite's orbit record is from its own broadcast orbit.
+# It writes the day report and run log to the private archive, pings Healthchecks.io (rinex-check),
+# and publishes only the derived JSON (no orbit records) to branch orbit-checks as orbit_gap.json, which the
+# public dashboard reads; it never touches main. The report to Healthchecks.io comes last, so it covers the publish.
+
+name: RINEX check
+
+on:
+  schedule:
+    # 06:00 UTC = 11:30 India time. By then, BKG's copy of yesterday's IGS file is usually complete (best guess).
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rinex-check
+  cancel-in-progress: false
+
+jobs:
+  run:
+    # Only in the private working copy. Anyone who copies this file elsewhere must opt in.
+    if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Note the start
+        id: start
+        run: echo "at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+      - name: Check out the archive
+        uses: actions/checkout@v4
+        with:
+          repository: SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive
+          ssh-key: ${{ secrets.ARCHIVE_DEPLOY_KEY }}
+          path: archive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'  # matches runtime.txt
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements.txt
+
+      - name: Measure orbit-record broadcast gaps
+        id: gap
+        run: |
+          python scripts/orbit_record_gap.py --json "$RUNNER_TEMP/gap.json" --summary-out "$RUNNER_TEMP/gap-summary.txt" > "$RUNNER_TEMP/gap.md"
+          echo "day=$(jq -r '.day' "$RUNNER_TEMP/gap.json")" >> "$GITHUB_OUTPUT"
+
+      - name: Copy reports to the archive and add one run-log line
+        if: always()
+        id: archive_line
+        working-directory: archive
+        env:
+          STARTED: ${{ steps.start.outputs.at }}
+          RESULT: ${{ job.status }}
+        run: |
+          if [ -f "$RUNNER_TEMP/gap.json" ] && [ -f "$RUNNER_TEMP/gap.md" ] && [ -f "$RUNNER_TEMP/gap-summary.txt" ]; then
+            DAY=$(jq -r '.day' "$RUNNER_TEMP/gap.json")
+            mkdir -p orbits/broadcast-gap
+            cp "$RUNNER_TEMP/gap.md" "orbits/broadcast-gap/$DAY.md"
+            cp "$RUNNER_TEMP/gap.json" "orbits/broadcast-gap/$DAY.json"
+            CHANGED=$(tr -d '\n' < "$RUNNER_TEMP/gap-summary.txt")
+          else
+            DAY=$(date -u +%Y-%m-%d)
+            CHANGED="failed at: measuring orbit-record broadcast gaps"
+          fi
+          python ../scripts/log_run.py --archive . --log rinex-check --job "rinex check" \
+            --started "$STARTED" --result "$RESULT" --changed "$CHANGED"
+          echo "day=$DAY" >> "$GITHUB_OUTPUT"
+
+      - name: Commit this run's archive files
+        if: always()
+        working-directory: archive
+        env:
+          DAY: ${{ steps.archive_line.outputs.day }}
+          RESULT: ${{ job.status }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          [ -f runs/rinex-check.csv ] && git add runs/rinex-check.csv
+          if [ -f "orbits/broadcast-gap/$DAY.md" ] && [ -f "orbits/broadcast-gap/$DAY.json" ]; then
+            git add "orbits/broadcast-gap/$DAY.md" "orbits/broadcast-gap/$DAY.json"
+          fi
+          if git diff --cached --quiet; then
+            echo "No archive changes to commit."
+            exit 0
+          fi
+          git commit --quiet -m "RINEX check run: $RESULT"
+          # The archive job may have saved meanwhile; it never touches these files.
+          git push --quiet || { git pull --rebase --quiet && git push --quiet; }
+
+      - name: Publish today's derived gap JSON to orbit-checks
+        if: success()
+        env:
+          DAY: ${{ steps.archive_line.outputs.day }}
+        run: |
+          ORBIT_BRANCH_DIR="$RUNNER_TEMP/orbit-checks"
+          rm -rf "$ORBIT_BRANCH_DIR"
+          if git ls-remote --exit-code --heads origin orbit-checks >/dev/null 2>&1; then
+            git fetch --quiet origin orbit-checks
+            git worktree add "$ORBIT_BRANCH_DIR" --detach FETCH_HEAD
+            cd "$ORBIT_BRANCH_DIR"
+            git switch -C orbit-checks
+          else
+            git worktree add "$ORBIT_BRANCH_DIR" --detach
+            cd "$ORBIT_BRANCH_DIR"
+            git checkout --orphan orbit-checks
+            git rm -rf . >/dev/null 2>&1 || true
+          fi
+          cp "$RUNNER_TEMP/gap.json" orbit_gap.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add orbit_gap.json
+          if git diff --cached --quiet; then
+            echo "No orbit-checks changes to commit."
+            cd "$GITHUB_WORKSPACE"
+            git worktree remove --force "$ORBIT_BRANCH_DIR"
+            exit 0
+          fi
+          git commit --quiet -m "Orbit record check for $DAY"
+          git push --quiet --set-upstream origin orbit-checks \
+            || { git pull --rebase --quiet origin orbit-checks && git push --quiet origin orbit-checks; }
+          cd "$GITHUB_WORKSPACE"
+          git worktree remove --force "$ORBIT_BRANCH_DIR"
+
+      - name: Tell Healthchecks.io how rinex-check went
+        if: always()
+        env:
+          KEY: ${{ secrets.HEALTHCHECKS_PING_KEY }}  # set by Sumanth; nothing is sent until it exists
+          OUTCOME: ${{ job.status == 'success' && '0' || '1' }}  # 0 = it worked, 1 = it failed
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "Not reported to Healthchecks.io: no key."
+            exit 0
+          fi
+          KEY=$(printf %s "$KEY" | tr -d '[:space:]')  # a pasted key can carry a newline
+          tail -n 1 archive/runs/rinex-check.csv 2>/dev/null \
+            | curl -fsS -m 10 --retry 3 --data-binary @- "https://hc-ping.com/$KEY/rinex-check/$OUTCOME" \
+            || echo "::warning::Healthchecks.io did not take this report. A 404 means the ping key is wrong or there is no check with the slug rinex-check. It will report the run as late."

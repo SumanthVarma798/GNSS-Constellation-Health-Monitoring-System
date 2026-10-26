@@ -2,6 +2,7 @@
 import os
 from datetime import datetime, timezone
 
+import requests
 import streamlit as st
 
 from analysis.bundled_run import assess_constellation
@@ -14,11 +15,24 @@ from evidence.registry_tables import dashboard_registry_rows, generation_satelli
 
 SATELLITES = {"NavIC": NAVIK_SATS, "QZSS": QZSS_SATS, "BeiDou-3": BEIDOU3_SATS, **MEO_SATS}
 TRACKED = {name: [norad for norad in sats.values() if norad is not None] for name, sats in SATELLITES.items()}
+# The public copy the daily RINEX job publishes to the orbit-checks branch.
+ORBIT_GAP_URL = ("https://raw.githubusercontent.com/SumanthVarma798/"
+                 "GNSS-Constellation-Health-Monitoring-System/orbit-checks/orbit_gap.json")
 # Every registry satellite of the generation each constellation shows, tracked or not (the 3D view's "All").
 # A MEO system's is the satellites it tracks: CelesTrak's GNSS group holds them, and asking for each
 # retired one by itself would mean dozens of requests every refresh.
 GENERATION = {name: generation_satellites(*GENERATIONS[name]) for name in GENERATIONS}
 GENERATION |= {name: list(dashboard_registry_rows(name).values()) for name in MEO_SATS}
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def orbit_gap():
+    """The published orbit-record broadcast-gap JSON, or {} when it cannot be read."""
+    try:
+        payload = requests.get(ORBIT_GAP_URL, timeout=8).json()
+    except (requests.RequestException, ValueError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
 
 
 @st.cache_data(show_spinner=False)

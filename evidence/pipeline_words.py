@@ -38,6 +38,7 @@ SETTING_SENTENCES = {
     "REGISTRY_SATELLITES_FILE": "Registry table file name for core satellite identity rows.",
     "REGISTRY_SIGNAL_IDS_FILE": "Registry table file name for signal-ID history rows.",
     "REQUEST_TIMEOUT_SECONDS": "Per-request timeout for calls to outside servers.",
+    "RUN_LOGS": "Run-log CSV files the console reads from the private archive repository.",
     "REQUIRED_CHECK": "Name of the GitHub check that must pass before merge approval can merge.",
     "TESTS_WORKFLOW": "Workflow file name treated as the tests-on-main source in the console.",
     "WAIT_BETWEEN_TRIES_SECONDS": "Base pause between download tries inside one run.",
@@ -405,6 +406,52 @@ STAGES = {
             "limits": [
                 "Space-Track can be skipped when no login is set or when it refuses this run.",
                 "Old or missing orbit records do not fail the run; they are recorded as alert, stale, or missing.",
+            ],
+        },
+    },
+    "rinex_check": {
+        "plain_name": "Measure orbit-record broadcast gaps",
+        "what_happens": [
+            "Once a day, a program compares each tracked satellite's nearest orbit record with its own broadcast orbit over the day.",
+            "It saves the day's markdown report and derived JSON in the private archive, then records one run-log line.",
+            "It publishes only the day's derived JSON to branch orbit-checks for the public dashboard to read.",
+        ],
+        "why_it_matters": "This checks daily whether orbit records still match broadcast orbits within expected kilometre gaps.",
+        "technical": {
+            "workflow_file": ".github/workflows/rinex-check.yml",
+            "workflow_job": "run",
+            "schedule_group": "",
+            "commands": [
+                "python scripts/orbit_record_gap.py --json \"$RUNNER_TEMP/gap.json\" --summary-out \"$RUNNER_TEMP/gap-summary.txt\" > \"$RUNNER_TEMP/gap.md\"",
+                "python scripts/log_run.py --archive . --log rinex-check --job \"rinex check\" --started \"$STARTED\" --result \"$RESULT\" --changed \"$CHANGED\"",
+            ],
+            "inputs": [
+                "Tracked satellites from registry tables",
+                "The IGS merged navigation file for the checked day",
+                "Bundled and current GNSS orbit records",
+            ],
+            "outputs": [
+                "archive/orbits/broadcast-gap/<day>.md and <day>.json in the private archive repository",
+                "Run log line in archive/runs/rinex-check.csv",
+                "orbit_gap.json on branch orbit-checks in the project repository",
+            ],
+            "repositories": [
+                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System",
+                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive",
+            ],
+            "settings": [
+                "RUN_LOGS",
+            ],
+            "settings_files": ["evidence/console_settings.py"],
+            "paths": [
+                ".github/workflows/rinex-check.yml",
+                "scripts/orbit_record_gap.py",
+                "scripts/log_run.py",
+                "evidence/console_settings.py",
+            ],
+            "limits": [
+                "The schedule assumes BKG's copy of yesterday's file is complete by 06:00 UTC; this is a best guess.",
+                "The branch publish step touches only orbit-checks, never main.",
             ],
         },
     },
