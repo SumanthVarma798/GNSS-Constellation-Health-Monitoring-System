@@ -13,6 +13,7 @@ from evidence.settings import RELIABILITY_GRADES
 from ui import surfaces, tooltip
 
 DATE_FILTERS = ["7 days", "30 days", "90 days", "1 year", "all"]
+SHOW_FILTERS = ["all", "new only"]
 GRADE_STANDINGS = ["confirmed", "provisional", "not graded"]
 GRADE_TONES = {"confirmed": "ok", "provisional": "warn", "not graded": "idle"}
 CATEGORY_TONES = {"launch": "accent", "satellite status and outages": "warn", "signal and service": "ok",
@@ -20,12 +21,15 @@ CATEGORY_TONES = {"launch": "accent", "satellite status and outages": "warn", "s
 CSS = """
 .news-asof { margin: 6px 0 12px; font-size: 14px; color: var(--muted); }
 .news-topline { margin: 6px 0 14px; font-size: 16px; color: var(--ink); }
-.st-key-news_filters [data-testid="stHorizontalBlock"] { flex-wrap: wrap; gap: 8px 10px; align-items: flex-end; }
-.st-key-news_filters [data-testid="stColumn"] { min-width: 160px; flex: 1 1 220px !important; width: auto !important; }
-.st-key-news_filters [data-testid="stButtonGroup"] [data-baseweb="button-group"] { flex-wrap: wrap; gap: 8px; padding: 2px;
+.st-key-news_filters { flex-direction: row !important; flex-wrap: wrap; align-items: center; gap: 10px 32px; margin: 4px 0 8px; }
+.st-key-news_filters > [data-testid="stElementContainer"] { width: auto !important; flex: 0 1 auto; max-width: 100%; }
+.st-key-news_filters [data-testid="stButtonGroup"] { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; overflow: visible; }
+.st-key-news_filters [data-testid="stWidgetLabel"] { margin: 0; min-height: 0; }
+.st-key-news_filters [data-testid="stWidgetLabel"] p { margin: 0; font-size: 14px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+.st-key-news_filters [data-testid="stButtonGroup"] [data-baseweb="button-group"] { flex-wrap: wrap; gap: 6px; padding: 2px;
   background: transparent; box-shadow: none; }
 .st-key-news_filters [data-testid="stBaseButton-pillsActive"] { border-color: var(--accent); }
-.st-key-news_filters [data-testid="stButtonGroup"] button { white-space: normal; }
+.st-key-news_filters [data-testid="stButtonGroup"] button { white-space: normal; padding: 4px 12px; }
 .news-cat-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 10px 0 14px; }
 .news-cat-tile { display: grid; place-items: center; gap: 4px; min-height: 104px; text-align: center; font-size: 14px;
   border-radius: var(--r); border: 1px solid var(--edge); background: var(--platform); box-shadow: var(--raised-sm); padding: 10px 12px; }
