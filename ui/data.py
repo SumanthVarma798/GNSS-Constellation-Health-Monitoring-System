@@ -15,6 +15,12 @@ from evidence.registry_tables import dashboard_registry_rows, generation_satelli
 
 SATELLITES = {"NavIC": NAVIK_SATS, "QZSS": QZSS_SATS, "BeiDou-3": BEIDOU3_SATS, **MEO_SATS}
 TRACKED = {name: [norad for norad in sats.values() if norad is not None] for name, sats in SATELLITES.items()}
+# A viewer's own Space-Track login, rows and bookkeeping. These are session_state keys only: the login is
+# never written to disk, cached, logged, or put on the page. Streamlit drops session_state when the visit ends.
+OWN_LOGIN = "_spacetrack_login"
+OWN_ROWS = "_spacetrack_rows"
+OWN_TRIED = "_spacetrack_tried"
+OWN_NOTE = "_spacetrack_note"
 # The public copy the daily RINEX job publishes to the orbit-checks branch.
 ORBIT_GAP_URL = ("https://raw.githubusercontent.com/SumanthVarma798/"
                  "GNSS-Constellation-Health-Monitoring-System/orbit-checks/orbit_gap.json")
@@ -111,13 +117,20 @@ def _merge_rows(*groups):
     return merged
 
 
-def _stale_or_missing_tracked(now, celestrak_rows):
+def _own_rows():
+    """The viewer's Space-Track rows, held only in their session."""
+    return st.session_state.get(OWN_ROWS, {})
+
+
+def _stale_or_missing_tracked(now, celestrak_rows, own_rows=None):
     stale = []
     bundled = _bundled_newest()
+    own_rows = {} if own_rows is None else own_rows
     for norad in sorted({norad for norads in TRACKED.values() for norad in norads}):
         held = [{"EPOCH": bundled[norad]}] if norad in bundled else []
         newest_row, newest_at = _newest(_merge_rows(held, celestrak_rows.get(norad, []),
-                                                    spacetrack.state["rows"].get(norad, [])))
+                                                    spacetrack.state["rows"].get(norad, []),
+                                                    own_rows.get(norad, [])))
         if newest_row is None or newest_at is None:
             stale.append(norad)
             continue
@@ -138,7 +151,39 @@ def refresh(clicked=False):
     stale = _stale_or_missing_tracked(now, live["rows"])
     # Always called: with none stale it asks nothing, but reads the saved copy after a restart.
     spacetrack.refresh(stale, now, _server_login())
+    # The viewer's own login is asked about the same stale set, recomputed so their rows already held count too.
+    own_refresh(_stale_or_missing_tracked(now, live["rows"], _own_rows()), now)
     return live
+
+
+def own_refresh(stale, now):
+    """Fetch stale satellites with the viewer's own Space-Track login, at most once an hour, into session_state.
+
+    The login and rows stay in st.session_state only. A refused login is forgotten immediately; a busy or bad
+    reply is left for the next hour and never retried inside this call.
+    """
+    login = st.session_state.get(OWN_LOGIN)
+    if not login or not stale:
+        return
+    tried = st.session_state.get(OWN_TRIED)
+    if tried is not None and now - tried < spacetrack.EVERY:
+        return
+    st.session_state[OWN_TRIED] = now
+    try:
+        found = spacetrack.fetch(login[0], login[1], stale)
+    except spacetrack.LoginRefused:
+        st.session_state[OWN_NOTE] = "login refused"
+        st.session_state.pop(OWN_LOGIN, None)
+        st.session_state.pop(OWN_ROWS, None)
+    except (spacetrack.Busy, spacetrack.SpaceTrackError):
+        st.session_state[OWN_NOTE] = "busy"
+    else:
+        rows = st.session_state.setdefault(OWN_ROWS, {})
+        for norad, row in found.items():
+            held = rows.setdefault(norad, [])
+            if row["EPOCH"] not in {old["EPOCH"] for old in held}:
+                held.append(row)
+        st.session_state[OWN_NOTE] = "ok"
 
 
 def load(constellation, window_days, params=None):
@@ -147,27 +192,30 @@ def load(constellation, window_days, params=None):
     params holds only the thresholds moved off their defaults. Raises ValueError as assess_constellation does.
     """
     now = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
-    held_celestrak, held_spacetrack = celestrak.state["rows"], spacetrack.state["rows"]
+    held_celestrak, held_spacetrack, held_own = celestrak.state["rows"], spacetrack.state["rows"], _own_rows()
     fresh = {}
     for norad in TRACKED.get(constellation, []):
-        rows = _merge_rows(held_celestrak.get(norad, []), held_spacetrack.get(norad, []))
+        rows = _merge_rows(held_celestrak.get(norad, []), held_spacetrack.get(norad, []), held_own.get(norad, []))
         if rows:
             fresh[norad] = rows
     return _assess(constellation, window_days, params or {}, now, fresh)
 
 
-def orbit_age_rows(tracked, history_rows_by_satellite, celestrak_rows, spacetrack_rows, now):
+def orbit_age_rows(tracked, history_rows_by_satellite, celestrak_rows, spacetrack_rows, now, own_rows=None):
     """Orbit ages from plain rows, oldest first. tracked: [(satellite name, norad), ...]."""
     out = []
+    own_rows = _own_rows() if own_rows is None else own_rows
     for satellite, norad in tracked:
         newest = []
         for source, rows in (("Space-Track history", history_rows_by_satellite.get(satellite, [])),
                              ("CelesTrak", celestrak_rows.get(norad, [])),
-                             ("Space-Track", spacetrack_rows.get(norad, []))):
+                             ("Space-Track", spacetrack_rows.get(norad, [])),
+                             ("Space-Track (your login)", own_rows.get(norad, []))):
             row, at = _newest(rows)
             if row is not None and at is not None:
                 # On ties, keep explicit live sources ahead of bundled history.
-                newest.append((at, 2 if source == "CelesTrak" else 1 if source == "Space-Track" else 0, source))
+                newest.append((at, 2 if source == "CelesTrak" else
+                               1 if source in ("Space-Track", "Space-Track (your login)") else 0, source))
         if newest:
             at, _, source = max(newest, key=lambda item: (item[0], item[1]))
             age_days = (now - at).total_seconds() / 86400
@@ -176,6 +224,15 @@ def orbit_age_rows(tracked, history_rows_by_satellite, celestrak_rows, spacetrac
         else:
             out.append({"satellite": satellite, "epoch": None, "source": "", "age_days": None, "status": "idle"})
     return sorted(out, key=lambda row: (row["age_days"] is None, -(row["age_days"] or 0), row["satellite"]))
+
+
+def own_note():
+    """The section's Space-Track note words when the viewer's own login should speak, else None."""
+    if st.session_state.get(OWN_LOGIN):
+        return "your login"
+    if st.session_state.get(OWN_NOTE) == "login refused":
+        return "your login was refused"
+    return None
 
 
 def orbit_ages(constellation, result):

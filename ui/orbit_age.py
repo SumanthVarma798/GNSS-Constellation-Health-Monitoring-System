@@ -111,7 +111,8 @@ def show(constellation, result):
     """Draw stale warnings, the strip, and the details section."""
     rows = dashboard_data.orbit_ages(constellation, result)
     gap = dashboard_data.orbit_gap()
-    summary, body, stale_notice = section_markup(rows, spacetrack.state.get("note", "ok"), gap)
+    own_note = dashboard_data.own_note()
+    summary, body, stale_notice = section_markup(rows, own_note or spacetrack.state.get("note", "ok"), gap)
     if stale_notice:
         surfaces.show(surfaces.notice(stale_notice, "warn"))
     surfaces.show(strip_html(rows, gap))
