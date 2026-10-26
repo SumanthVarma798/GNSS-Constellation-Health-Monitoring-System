@@ -12,7 +12,7 @@ from html import escape
 from analysis.meo_geometry import EXTENDED, part_score, plane_drift
 from config.config import TRACKED_NOT_IN_REGISTRY
 from config.meo_nominal import MEANINGS, NOMINAL, PLANE_MEANINGS
-from ui import orbit_section, palette, reveal, shell, surfaces, tooltip
+from ui import orbit_age, orbit_section, palette, reveal, shell, surfaces, tooltip
 from ui.data import SATELLITES
 from ui.figures.plane_strip import plane_strip
 
@@ -167,6 +167,7 @@ def page(name, result):
     surfaces.show(f'<div class="head"><span class="big num">{healthy} of {len(shown)}</span>'
                   '<span class="muted">healthy and in step</span></div>')
     surfaces.show(surfaces.notice(result["history_note"], "idle"))
+    orbit_age.show(name, result)
     _gaps(name, result)
     planes = _planes(result["rows"])
     if shell.segment("meo_view", VIEWS, label="Show planes or satellites") == "Planes":

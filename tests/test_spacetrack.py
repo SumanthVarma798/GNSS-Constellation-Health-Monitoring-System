@@ -1,10 +1,14 @@
 """Space-Track fetches one newest orbit row per satellite and always logs out. No network."""
+from datetime import datetime, timedelta, timezone
+import json
 
 import pytest
 import requests
 
 from data import spacetrack
 from test_celestrak import IRNSS_1B
+
+NOW = datetime(2026, 10, 26, 3, 30, tzinfo=timezone.utc)
 
 
 def gp_row(norad, epoch):
@@ -58,6 +62,16 @@ def install_session(monkeypatch, session):
 
     monkeypatch.setattr(spacetrack.requests, "Session", make)
     return made
+
+
+def empty_state():
+    return {"rows": {}, "tried": None, "fetched": None, "refused_until": None, "note": "ok"}
+
+
+@pytest.fixture(autouse=True)
+def fresh_state(monkeypatch, tmp_path):
+    monkeypatch.setattr(spacetrack, "state", empty_state())
+    monkeypatch.setattr(spacetrack, "SAVED", tmp_path / "spacetrack.json")
 
 
 def test_login_refused_from_a_200_reply_body_raises_and_never_queries(monkeypatch):
@@ -150,3 +164,63 @@ def test_requests_name_us(monkeypatch):
     install_session(monkeypatch, session)
     spacetrack.fetch("user", "pass", [39635])
     assert session.headers["User-Agent"].startswith("gnss-evidence-archive")
+
+
+def test_no_login_makes_no_request_and_marks_the_note(monkeypatch):
+    called = []
+    monkeypatch.setattr(spacetrack, "fetch", lambda username, password, norads: called.append((username, password, norads)))
+
+    live = spacetrack.refresh([39635], NOW, None)
+
+    assert called == []
+    assert live["note"] == "no login"
+    assert live["tried"] is None
+
+
+def test_refresh_tries_at_most_once_per_hour_and_passes_exact_ids(monkeypatch):
+    asked = []
+
+    def fetch(username, password, norads):
+        asked.append(list(norads))
+        return {39635: gp_row(39635, "2026-10-25T01:00:00.000000")}
+
+    monkeypatch.setattr(spacetrack, "fetch", fetch)
+    login = ("member@example.com", "secret")
+    spacetrack.refresh([40547, 39635], NOW, login)
+    spacetrack.refresh([39635], NOW + timedelta(minutes=30), login)
+    live = spacetrack.refresh([39635], NOW + timedelta(hours=1), login)
+
+    assert asked == [[40547, 39635], [39635]]
+    assert live["note"] == "ok"
+    assert len(live["rows"][39635]) == 1
+
+
+def test_login_refused_waits_a_day_before_the_next_try(monkeypatch):
+    asked = []
+
+    def fetch(username, password, norads):
+        asked.append(list(norads))
+        raise spacetrack.LoginRefused("no")
+
+    monkeypatch.setattr(spacetrack, "fetch", fetch)
+    login = ("member@example.com", "secret")
+    first = spacetrack.refresh([39635], NOW, login)
+    second = spacetrack.refresh([39635], NOW + timedelta(hours=1), login)
+    third = spacetrack.refresh([39635], NOW + timedelta(hours=23, minutes=59), login)
+    fourth = spacetrack.refresh([39635], NOW + timedelta(hours=24), login)
+
+    assert asked == [[39635], [39635]]
+    assert first["note"] == second["note"] == third["note"] == fourth["note"] == "login refused"
+
+
+def test_saved_state_never_contains_login_details(monkeypatch):
+    monkeypatch.setattr(spacetrack, "fetch", lambda username, password, norads: {
+        39635: gp_row(39635, "2026-10-25T01:00:00.000000")
+    })
+    username, password = "member@example.com", "no-leaks-please"
+    spacetrack.refresh([39635], NOW, (username, password))
+    saved = spacetrack.SAVED.read_text(encoding="utf-8")
+    loaded = json.loads(saved)
+
+    assert username not in saved and password not in saved
+    assert "username" not in loaded and "password" not in loaded

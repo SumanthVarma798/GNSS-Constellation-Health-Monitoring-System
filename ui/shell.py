@@ -17,6 +17,7 @@ import streamlit as st
 
 from config.config import DEFAULT_PARAMS
 from data import celestrak
+from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS
 from ui import changes, data, surfaces, time_range
 
 # Pages with their own filters: the bar shows no constellation, window or thresholds there.
@@ -32,7 +33,6 @@ PAGES = [
     # ("How it works", "views/how_it_works.py"),
 ]
 CONSTELLATIONS = tuple(data.SATELLITES)
-STALE_DAYS = 7
 # The clock and "next update" are redrawn this often, alone: never a page redraw, at most this far behind.
 CLOCK_TICK_SECONDS = 15
 
@@ -75,7 +75,7 @@ def segment(key, options, labels=None, label="Choose"):
 def age_words(data_time, now, tz=timezone.utc):
     """('Orbit data 15 Oct 10:42', 'ok') for data from today, ('Orbit data 4 Oct, 10 days old', 'warn') for older.
 
-    Days and times are counted in `tz`, the viewer's time zone. Warn after STALE_DAYS days.
+    Days and times are counted in `tz`, the viewer's time zone.
     """
     try:
         taken = datetime.fromisoformat(data_time)
@@ -84,7 +84,9 @@ def age_words(data_time, now, tz=timezone.utc):
     taken = (taken if taken.tzinfo else taken.replace(tzinfo=timezone.utc)).astimezone(tz)
     days = (now.astimezone(tz).date() - taken.date()).days
     age = f" {taken:%H:%M}" if days <= 0 else ", 1 day old" if days == 1 else f", {days} days old"
-    return f"Orbit data {taken.day} {taken:%b}{age}", "warn" if days > STALE_DAYS else "ok"
+    elapsed = (now - taken).total_seconds() / 86400   # coloured by time passed, as the orbit-age strip is
+    status = "bad" if elapsed >= ORBIT_STALE_DAYS else "warn" if elapsed >= ORBIT_ALERT_DAYS else "ok"
+    return f"Orbit data {taken.day} {taken:%b}{age}", status
 
 
 def failing_words(since, now, tz=timezone.utc):
