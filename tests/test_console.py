@@ -12,9 +12,9 @@ from streamlit.testing.v1 import AppTest
 
 from console import common
 from evidence import alerts, decisions, jobs, pipeline as live_pipeline
-from evidence.decision_settings import AFTER_CHANGES, APPROVE, KINDS, LABEL_PREFIX
+from evidence.decision_settings import AFTER_CHANGES, APPROVE, KINDS, LABEL_PREFIX, REJECT
 from test_dashboard_shell import segmented_controls_rerun  # noqa: F401  (AppTest 1.45's segmented controls)
-from test_decisions import NOW, pr
+from test_decisions import FINDINGS_STAND_IN, NOW, finding_comment, findings_body, pr
 from test_jobs import LOG, RUNS, WORKFLOWS, run as workflow_run
 from ui import admin, console as ui_console
 
@@ -26,14 +26,16 @@ SECRETS = {"auth": {field: "set" for field in common.SIGN_IN_FIELDS},
 class GitHub:
     """Stands in for console.common.github: the figures above, and any pull requests a test gives it."""
 
-    def __init__(self, prs=(), fail=None, issues=()):
+    def __init__(self, prs=(), fail=None, issues=(), comments=None):
         self.prs, self.fail, self.asked, self.issues = list(prs), fail, 0, list(issues)
+        self.comments = comments or {}
 
     def __call__(self, token):
         self.asked += 1
         if self.fail:
             raise self.fail
         return {"workflows": WORKFLOWS, "runs": RUNS, "log": jobs.run_log(LOG), "prs": self.prs, "decision_prs": self.prs,
+                "comments": self.comments,
                 "issues": self.issues, "archive_commits": {},
                 "problems": [], "read_at": NOW}
 
@@ -221,12 +223,15 @@ def test_the_ask_about_section_styles_follow_the_console_palette():
     assert '[data-testid="stChatInputTextArea"] { background: var(--input-bg) !important; color: var(--ink) !important;' in css
     assert '.c-sect > .in.flush { padding: 0; display: flow-root; }' in css
     assert '[data-testid="stButtonGroup"] [data-baseweb="button-group"] { display: flex; flex-wrap: wrap;' in css
+    assert '.c-subhead { margin: 8px 0 4px; font-size: 12px; font-weight: 800; color: var(--ink); }' in css
 
 
 # ---- approvals ----
 
 REGISTRY_PR = pr(5, ["decision: registry update"], title="Registry update from the IGS satellite metadata file",
                  body="This is a proposed update.\n\n## What changed\n- G01: slot was blank, now A1.")
+FINDINGS_PR = pr(8, ["decision: registry update"], title="Weekly registry findings",
+                 body=findings_body(FINDINGS_STAND_IN))
 
 
 def test_approvals_list_each_waiting_item_with_its_evidence(monkeypatch):
@@ -237,6 +242,69 @@ def test_approvals_list_each_waiting_item_with_its_evidence(monkeypatch):
     page = text(at)
     assert "Registry update from the IGS satellite metadata file" in page and "Some code change" not in page
     assert "<li>G01: slot was blank, now A1.</li>" in page and "pull request 5" in page
+
+
+def test_approvals_show_findings_by_category_before_old_style_items(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    findings = [{**FINDINGS_STAND_IN[0], "statement": "We saw <script>alert(1)</script> in one source."},
+                FINDINGS_STAND_IN[1]]
+    findings_pr = {**FINDINGS_PR, "body": findings_body(findings)}
+    at = run(monkeypatch, GitHub([findings_pr, REGISTRY_PR], comments={8: []}), page="console/approvals.py")
+
+    page = text(at)
+    assert "New satellite" in page and "Signal ID change" in page
+    assert "Pull request 5: Registry update from the IGS satellite metadata file" in page
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in page and "<script>alert(1)</script>" not in page
+
+
+def test_approvals_show_a_finding_result_notice_once_at_the_top_of_the_findings_area(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+
+    def after_read(at):
+        at.session_state["admin_finding_result"] = ((8, "R809"), "ok", "Approved one finding.")
+
+    at = run(monkeypatch, GitHub([FINDINGS_PR], comments={8: [{"body": finding_comment(APPROVE, "R809", "sha8")}]}),
+             page="console/approvals.py", then=after_read)
+
+    assert "Approved one finding." in text(at)
+    assert "admin_finding_result" not in at.session_state
+
+
+def test_approvals_show_a_finish_notice_and_merge_button_when_all_findings_are_approved(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    comments = {8: [{"body": finding_comment(APPROVE, "R809", "sha8")},
+                    {"body": finding_comment(APPROVE, "R723", "sha8")}]}
+
+    at = run(monkeypatch, GitHub([FINDINGS_PR], comments=comments), page="console/approvals.py")
+
+    page = text(at)
+    assert "Pull request 8: every finding is approved, but it is not merged yet." in page
+    assert [b.label for b in at.button if b.key == "finish_8"] == ["Merge pull request 8"]
+
+
+def test_the_finish_button_calls_finish_and_shows_its_result_notice(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    comments = {8: [{"body": finding_comment(REJECT, "R809", "sha8")},
+                    {"body": finding_comment(REJECT, "R723", "sha8")}]}
+    called = []
+    monkeypatch.setattr(decisions, "finish", lambda *args: called.append(args) or ("ok", "Closed from Findings."))
+    at = run(monkeypatch, GitHub([FINDINGS_PR], comments=comments), page="console/approvals.py")
+
+    at.button(key="finish_8").click().run()
+
+    token, item, who, _ = called[0]
+    assert (token, item["number"], who) == ("t0ken", 8, "A Member")
+    assert "Closed from Findings." in text(at)
+
+
+def test_finding_statement_is_listed_once_and_expander_label_uses_the_finding_id(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+
+    at = run(monkeypatch, GitHub([FINDINGS_PR], comments={8: []}), page="console/approvals.py")
+    page = text(at)
+
+    assert page.count(FINDINGS_STAND_IN[0]["statement"]) == 1
+    assert "R809: sources, what we measured, decision" in [expander.label for expander in at.expander]
 
 
 def test_the_reason_box_appears_only_once_a_choice_is_made(monkeypatch):
@@ -363,6 +431,23 @@ def test_a_workflow_missing_on_github_is_named_and_the_rest_still_shows(monkeypa
     seen = common.github.__wrapped__("t") if hasattr(common.github, "__wrapped__") else common.github("t")
 
     assert any("update-tle-data.yml" in problem for problem in seen["problems"])
+
+
+def test_github_reads_comments_only_for_open_decision_pull_requests_with_findings_blocks(monkeypatch):
+    called = []
+
+    monkeypatch.setattr(decisions, "fetch_open", lambda token: [FINDINGS_PR, REGISTRY_PR, pr(9, ["enhancement"])])
+    monkeypatch.setattr(decisions, "fetch_recent_closed", lambda token: [])
+    monkeypatch.setattr(decisions, "fetch_comments", lambda token, number: called.append(number) or [{"id": number}])
+    monkeypatch.setattr(common.github_api, "ask", lambda *args, **kwargs: {"workflows": [], "workflow_runs": []})
+    monkeypatch.setattr(common.github_api, "file_text", lambda *args: "job,started,ended,result,changed\n")
+    monkeypatch.setattr(common.work, "fetch_open_issues", lambda token: [])
+    monkeypatch.setattr(common, "_archive_commits", lambda token: {})
+
+    seen = common.github.__wrapped__("t") if hasattr(common.github, "__wrapped__") else common.github("t")
+
+    assert called == [8]
+    assert seen["comments"] == {8: [{"id": 8}]}
 
 
 def test_the_work_page_lists_open_pull_requests_and_issues_and_finds_by_title(monkeypatch):
