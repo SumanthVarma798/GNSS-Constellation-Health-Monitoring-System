@@ -173,6 +173,10 @@ def test_alerts_page_with_a_key_lists_checks_and_missing_slugs_without_showing_t
          "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
         {"slug": "update-tle-data", "name": "Update TLE data", "unique_key": "u-tle", "status": "up",
          "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
+        {"slug": "orbit-ages", "name": "Orbit ages", "unique_key": "u-ages", "status": "up",
+         "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
+        {"slug": "orbit-fresh", "name": "Orbit fresh", "unique_key": "u-fresh", "status": "up",
+         "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
         {"slug": "extra-watch", "name": "Extra watch", "unique_key": "u-extra", "status": "down",
          "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
     ]

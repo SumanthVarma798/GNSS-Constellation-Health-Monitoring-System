@@ -65,6 +65,8 @@ def test_missing_slugs_are_reported_in_checks_order():
         "archive-news",
         "archive-social",
         "registry-update",
+        "orbit-ages",
+        "orbit-fresh",
     ]
 
 
