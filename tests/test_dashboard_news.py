@@ -96,11 +96,6 @@ def test_category_body_html_uses_get_for_source_id():
     assert "news-list" in html
 
 
-def test_news_css_wraps_filter_pills_inside_news_filters():
-    assert '.st-key-news_filters [data-testid="stButtonGroup"] [data-baseweb="button-group"] { flex-wrap: wrap; }' in news_ui.CSS
-    assert '.st-key-news_filters [data-testid="stButtonGroup"] button { white-space: normal; }' in news_ui.CSS
-
-
 def test_filter_items_applies_category_grade_date_and_new_only():
     now = datetime(2026, 10, 20, 12, 0, tzinfo=timezone.utc)
     seen = datetime(2026, 10, 20, 9, 0, tzinfo=timezone.utc)

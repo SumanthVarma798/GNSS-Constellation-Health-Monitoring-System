@@ -10,7 +10,7 @@ from ui import news, reveal, shell, surfaces, tooltip
 st.html(f"<style>{news.CSS}</style>")
 data, problem = news.load_news()
 if problem:
-    surfaces.show(surfaces.notice(f"News could not be read just now: {problem}. The rest of the dashboard works as usual; "
+    surfaces.show(surfaces.notice(f"No news to show just now: {problem}. The rest of the dashboard works as usual; "
                                   f"news collection runs every {news.NEWS_CYCLE_HOURS} hours.", "warn"))
 else:
     now = datetime.now(timezone.utc)
@@ -43,7 +43,7 @@ else:
                                  selection_mode="multi", key="news_grade", label_visibility="collapsed")
         with c3:
             st.html(tooltip.tip("Date", "Published date, falling back to fetched date when needed."))
-            window = st.pills("Date filter", news.DATE_FILTERS, default="90 days", selection_mode="single",
+            window = st.pills("Date filter", news.DATE_FILTERS, selection_mode="single",
                               key="news_date", label_visibility="collapsed", on_change=keep_date)
         with c4:
             st.html(tooltip.tip("New", "Show only items fetched after your last stored visit."))

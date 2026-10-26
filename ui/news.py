@@ -7,6 +7,7 @@ from pathlib import Path
 import requests
 import streamlit as st
 
+from evidence.news import host_id
 from evidence.news_settings import CATEGORY_RULE_WORDS, NEWS_CATEGORIES, NEWS_CYCLE_HOURS, NEWS_LATE_HOURS, NEWS_URL
 from evidence.settings import RELIABILITY_GRADES
 from ui import surfaces, tooltip
@@ -21,7 +22,9 @@ CSS = """
 .news-topline { margin: 6px 0 14px; font-size: 16px; color: var(--ink); }
 .st-key-news_filters [data-testid="stHorizontalBlock"] { flex-wrap: wrap; gap: 8px 10px; align-items: flex-end; }
 .st-key-news_filters [data-testid="stColumn"] { min-width: 160px; flex: 1 1 220px !important; width: auto !important; }
-.st-key-news_filters [data-testid="stButtonGroup"] [data-baseweb="button-group"] { flex-wrap: wrap; }
+.st-key-news_filters [data-testid="stButtonGroup"] [data-baseweb="button-group"] { flex-wrap: wrap; gap: 8px; padding: 2px;
+  background: transparent; box-shadow: none; }
+.st-key-news_filters [data-testid="stBaseButton-pillsActive"] { border-color: var(--accent); }
 .st-key-news_filters [data-testid="stButtonGroup"] button { white-space: normal; }
 .news-cat-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 10px 0 14px; }
 .news-cat-tile { display: grid; place-items: center; gap: 4px; min-height: 104px; text-align: center; font-size: 14px;
@@ -77,8 +80,10 @@ def load_news(source=NEWS_URL):
             payload = reply.text
         else:
             payload = Path(source).read_text(encoding="utf-8")
-    except Exception as error:
-        return {}, f"it could not be read ({error})"
+    except requests.HTTPError as error:
+        return {}, f"the news file could not be read (GitHub answered {error.response.status_code})"
+    except Exception:  # no answer, no file, or anything else: the page must still draw
+        return {}, "the news file could not be read"
     try:
         data = json.loads(payload)
     except ValueError:
@@ -165,25 +170,15 @@ def item_html(item, source, is_new=False, zone=timezone.utc):
     """One item with details and source details, escaped."""
     summary = escape(item.get("summary") or "The feed gives no summary beyond the headline.")
     published = date_label(item, zone)
-    standing = item.get("grade_standing", "not graded")
-    grade = item.get("grade", "")
-    meaning = RELIABILITY_GRADES.get(grade, "No grade yet in the team's source table.")
-    chip = surfaces.chip(f"Grade {grade or 'none'} · {standing}", GRADE_TONES.get(standing, "idle"))
-    chip = tooltip.tip_html(chip, escape(meaning), key=item.get("address", ""))
-    source_grade = source.get("grade", "")
-    source_meaning = RELIABILITY_GRADES.get(source_grade, "No grade yet in the team's source table.")
-    source_lines = [
-        f"<span><b>Name:</b> {escape(source.get('name', item.get('source_id', '')))}</span>",
-        f"<span><b>Kind:</b> {escape(source.get('kind', '') or 'not stated')}</span>",
-        f"<span><b>Grade:</b> {escape(source_grade or 'none')} ({escape(source_meaning)})</span>",
-        f"<span><b>Standing:</b> {escape(source.get('grade_standing', 'not graded'))}</span>",
-        f"<span><b>Reason:</b> {escape(source.get('reason', '') or 'not stated')}</span>",
-        f"<span><b>Via:</b> {escape(item.get('via', '') or 'not stated')}</span>",
-    ]
-    if source.get("graded_by"):
-        source_lines.append(f"<span><b>Graded by:</b> {escape(source['graded_by'])}</span>")
-    if source.get("note"):
-        source_lines.append(f"<span><b>Note:</b> {escape(source['note'])}</span>")
+    chip = tooltip.tip_html(surfaces.chip(grade_words(item), GRADE_TONES.get(item.get("grade_standing"), "idle")),
+                            escape(RELIABILITY_GRADES.get(item.get("grade", ""), "No grade yet in the team's source table.")),
+                            key=item.get("address", ""))
+    name, source_id = source.get("name") or item.get("source_id", ""), item.get("source_id", "")
+    lines = [("Name", name if name == source_id else f"{name} ({source_id})"), ("What it is", source.get("kind", "")),
+             ("Grade", grade_words(source, meaning=True)), ("Why this grade", source.get("reason", "")),
+             ("Graded by", source.get("graded_by", "")), ("Note", source.get("note", "")),
+             ("Found through", host_id(item.get("via", "")))]
+    source_lines = [f"<span><b>{label}:</b> {escape(value)}</span>" for label, value in lines if value]
     address = _safe_link(item.get("address", ""))
     if address:
         source_lines.append(
@@ -193,11 +188,19 @@ def item_html(item, source, is_new=False, zone=timezone.utc):
         f'<details class="news-item{" new" if is_new else ""}"><summary><span class="news-mark"><i aria-hidden="true"></i></span>'
         f'<span><span class="news-head">{escape(item.get("title", ""))}</span>'
         f'<span class="news-meta">{escape(item.get("outlet", ""))} · {escape(published)}</span></span>{new_words}</summary>'
-        f'<div class="news-body"><p>{summary}</p><p><b>Outlet:</b> {escape(item.get("outlet", "") or item.get("source_id", ""))}'
-        f'</p><p><b>Published:</b> {escape(published)}</p><p>{chip}</p>'
+        f'<div class="news-body"><p>{summary}</p><p>{chip}</p>'
         f'<details class="news-source"><summary>Source</summary><div class="news-source-body">'
         f'{"".join(source_lines)}</div></details></div></details>'
     )
+
+
+def grade_words(row, meaning=False):
+    """'Grade C · provisional', or 'Not graded yet'; with meaning, the grade's meaning follows the letter."""
+    grade = row.get("grade", "")
+    if not grade:
+        return "Not graded yet"
+    said = f", {RELIABILITY_GRADES[grade]}" if meaning and grade in RELIABILITY_GRADES else ""
+    return f"Grade {grade}{said} · {row.get('grade_standing', '')}"
 
 
 def category_body_html(items, sources, zone=timezone.utc):
