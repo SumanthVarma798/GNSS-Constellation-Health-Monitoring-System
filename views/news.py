@@ -22,32 +22,32 @@ else:
         surfaces.show(surfaces.notice(
             f'{data["invalid_items"]} news items in the file were not in the expected shape and are not shown', "idle"))
 
-    def keep_date():
-        if st.session_state["news_date"] is None:
-            st.session_state["news_date"] = st.session_state.get("_news_date_was", "90 days")
-        st.session_state["_news_date_was"] = st.session_state["news_date"]
+    def keep(key, default):
+        """A single-choice filter always keeps one choice: clicking the chosen pill puts it back."""
+        if st.session_state[key] is None:
+            st.session_state[key] = st.session_state.get(f"_{key}_was", default)
+        st.session_state[f"_{key}_was"] = st.session_state[key]
 
     categories = list(news.NEWS_CATEGORIES)
     seen_at = news.cookie_seen()
-    st.session_state.setdefault("news_date", st.session_state.get("_news_date_was", "90 days"))
-    st.session_state["_news_date_was"] = st.session_state["news_date"]
+    for key, default in (("news_date", "90 days"), ("news_show", "all")):
+        st.session_state.setdefault(key, st.session_state.get(f"_{key}_was", default))
+        st.session_state[f"_{key}_was"] = st.session_state[key]
+    # One band: each filter's heading on the same line as its choices, the groups side by side (ui/news.py CSS).
     with st.container(key="news_filters"):
-        c1, c2, c3, c4 = st.columns(4)
-        with c1:
-            st.html(tooltip.tip("Category", "Show one or more categories from the sorting rules."))
-            picked_categories = st.pills("Category filter", categories, default=categories, selection_mode="multi",
-                                         key="news_category", label_visibility="collapsed")
-        with c2:
-            st.html(tooltip.tip("Source grade", "Filter by standing in the source tables."))
-            standings = st.pills("Source grade filter", news.GRADE_STANDINGS, default=news.GRADE_STANDINGS,
-                                 selection_mode="multi", key="news_grade", label_visibility="collapsed")
-        with c3:
-            st.html(tooltip.tip("Date", "Published date, falling back to fetched date when needed."))
-            window = st.pills("Date filter", news.DATE_FILTERS, selection_mode="single",
-                              key="news_date", label_visibility="collapsed", on_change=keep_date)
-        with c4:
-            st.html(tooltip.tip("New", "Show only items fetched after your last stored visit."))
-            only_new = st.toggle("New since your last visit", key="news_new_only", help=news.seen_note(seen_at))
+        news.screen_reader_heading("Category")
+        picked_categories = st.pills("Category", categories, default=categories, selection_mode="multi",
+                                     key="news_category")
+        news.screen_reader_heading("Source grade")
+        standings = st.pills("Source grade", news.GRADE_STANDINGS, default=news.GRADE_STANDINGS,
+                             selection_mode="multi", key="news_grade")
+        news.screen_reader_heading("Published within")
+        window = st.pills("Published within", news.DATE_FILTERS, selection_mode="single", key="news_date",
+                          on_change=keep, args=("news_date", "90 days"))
+        news.screen_reader_heading("Show")
+        show = st.pills("Show", news.SHOW_FILTERS, selection_mode="single", key="news_show",
+                        on_change=keep, args=("news_show", "all"))
+    only_new = show == "new only"
 
     category_filter, grade_filter = set(picked_categories or []), set(standings or [])
     if not category_filter:
@@ -57,8 +57,9 @@ else:
     filtered = news.filter_items(data["items"], scope, category_filter, grade_filter, window or "90 days",
                                  only_new, seen_at, now)
     new_count = sum(1 for item in filtered if item["_new"])
+    new_words = tooltip.tip_html(f'<span class="num">{new_count}</span> new', escape(news.seen_note(seen_at)))
     surfaces.show(f'<p class="news-topline"><span class="num">{len(filtered)}</span> news items for {escape(scope)} · '
-                  f'<span class="num">{new_count}</span> new</p>')
+                  f'{new_words}</p>')
     surfaces.show(news.category_tiles_html(filtered))
 
     opened = False
