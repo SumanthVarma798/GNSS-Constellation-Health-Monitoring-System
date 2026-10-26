@@ -165,3 +165,15 @@ def test_update_tle_data_reports_to_healthchecks_without_breaking_the_job():
     assert '--data-raw "Update TLE Data run ${{ github.run_id }}: ${{ job.status }}"' in health_step
     assert 'https://hc-ping.com/$KEY/update-tle-data/$OUTCOME' in health_step
     assert '|| echo "::warning::Healthchecks.io did not take this report.' in health_step
+
+
+def test_rinex_check_workflow_logs_archives_and_reports_to_healthchecks():
+    workflow = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "rinex-check.yml").read_text()
+
+    assert "name: RINEX check" in workflow
+    assert "- cron: '0 6 * * *'" in workflow
+    assert "python scripts/orbit_record_gap.py --json" in workflow
+    assert "scripts/log_run.py --archive . --log rinex-check --job \"rinex check\"" in workflow
+    assert "https://hc-ping.com/$KEY/rinex-check/$OUTCOME" in workflow
+    assert "git checkout --orphan orbit-checks" in workflow
+    assert "Orbit record check for $DAY" in workflow

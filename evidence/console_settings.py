@@ -7,7 +7,8 @@ from pathlib import Path
 
 WORKFLOWS_DIR = Path(__file__).resolve().parent.parent / ".github" / "workflows"
 ARCHIVE_REPOSITORY = "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive"   # private; holds the run logs
-RUN_LOGS = ("runs/archive.csv", "runs/registry-update.csv", "runs/orbit-ages.csv")  # in the archive: one line per run
+RUN_LOGS = ("runs/archive.csv", "runs/registry-update.csv", "runs/orbit-ages.csv",
+            "runs/rinex-check.csv")  # in the archive: one line per run
 
 # Every job the console lists, in this order: (workflow file, schedule group, name, what it does, its name in the run
 # log). The group is the word that starts the comment after a cron line in archive.yml ("documents", "news", ...);
@@ -22,6 +23,8 @@ JOBS = [
      "registry update"),
     ("orbit-ages.yml", "", "Orbit ages", "Measures each satellite's orbit record age; Space-Track fills in old ones",
      "orbit ages"),
+    ("rinex-check.yml", "", "Orbit record check", "Measures each orbit record against the satellite's broadcast orbit",
+     "rinex check"),
     ("update-tle-data.yml", "", "Update orbit data", "Refreshes the dashboard's bundled orbit data", None),
     ("tests.yml", "", "Tests", "Runs every test on each change", None),
 ]
