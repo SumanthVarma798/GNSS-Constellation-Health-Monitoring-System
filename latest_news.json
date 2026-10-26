@@ -1,6 +1,22 @@
 {
- "generated_at": "2026-10-26T13:38:13Z",
+ "generated_at": "2026-10-26T20:47:35Z",
  "items": [
+  {
+   "address": "https://rntfnd.org/2026/10/26/highway-thieves-are-spoofing-gps-to-steal-millions-in-data-center-bound-cargo-ars-technica/",
+   "category": "signal and service",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-10-26T20:46:24Z",
+   "grade": "D",
+   "grade_standing": "provisional",
+   "outlet": "Resilient Navigation and Timing Foundation",
+   "published_at": "2026-10-26T19:38:40Z",
+   "source_id": "rntfnd.org",
+   "summary": "Image: Shutterstock What’s new: A report about spoofing-enabled theft in the U.S. Why it’s important: It is more evidence about over-reliance on GPS signals, and the vulnerabilities that most people are ignorant of or ignore. What else to know: It is not illegal to own a GPS jammer or spoofer in the…",
+   "title": "Highway thieves are spoofing GPS to steal millions in data center-bound cargo – Ars Technica",
+   "via": "https://rntfnd.org/feed/"
+  },
   {
    "address": "https://news.google.com/rss/articles/CBMi_gFBVV95cUxQclNHQ1ZIakRKbzdGdHJiVWN4WURJUWUwdUtiaGpTMVU0R1lwaGZ4Rko4ejZMYU0tclZqOU1PRU9Ucjc1Ri1OZkpYNWRXaDEwRzZ1TkhOVGpHcjFDSFAwYkR3T2dMRU1xb2hFMVoxVW1EQTVWcnlLRVd4ZUstUkxNa0tGaVFxdWs5NWFrd2I3Y3JDVGtVNnNhNlByT2R4Q3N2U05CUnpiTVJpYlVfUmpzTjFOdlR0S3ZVUGlzRjhDNkFKZkx4WkdCeGxwaGh4ZTdPWVgwaE4tcWZHdkRCQjdzM1hOQW42dkk4amdmNktjS0lRanRHNjN4Tmo5OWJCQQ?oc=5",
    "category": "launch",
@@ -6475,22 +6491,6 @@
    "summary": "",
    "title": "GPS III-7 Mission Sets Launch Record, Executes On Rapid Timescale",
    "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMinAFBVV95cUxPbWhtaFdRYVhfLUtva0szeGZjdFp0WlJRNENzNE9rRkVZQUwzemdudGVkN3g2Y25kbHdqM0tFTWRtWUN4U2t2a29yWmNDR1Rad2t6VVl2Ykt1NzlfV2ZRQkgxSE1kazdsYkR4a2UwdVdjZlFxTEtjOFBiSmxHY2FtbHhGLXFuUFRYMXgzVl9ZRm1ET25Mc25LUFNMRFU?oc=5",
-   "category": "other",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-20T05:22:53Z",
-   "grade": "C",
-   "grade_standing": "provisional",
-   "outlet": "GPS World",
-   "published_at": "2025-07-16T07:00:00Z",
-   "source_id": "gpsworld.com",
-   "summary": "",
-   "title": "Australian Navy trials validate quantum solution for GPS denial at sea",
-   "via": "https://news.google.com/rss/search?q=site%3Agpsworld.com&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMingFBVV95cUxNQ3FWdVpGdmZ4ZnZ0Mm1JVEpkWjZaZlROd0NLZzlXMWw5blhKS2J1T1QweFVrcGhqVHd3LTJuMDNJcVZsM2U2RG1tTEZXV20teFlJZVMwWURVcDIwM1QxQTZaamVIUUdWRUZvSlVZanAwYmtUTzRKbXFFMzN2Z3FGS292ZUg3SnVwNkhTRnZSUmhRWXpRb0ZSRXlSdldxdw?oc=5",
