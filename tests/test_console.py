@@ -261,6 +261,17 @@ def test_approvals_show_findings_by_category_before_old_style_items(monkeypatch)
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in page and "<script>alert(1)</script>" not in page
 
 
+def test_a_finding_stays_open_once_a_decision_on_it_is_under_way(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    at = run(monkeypatch, GitHub([FINDINGS_PR], comments={8: []}), page="console/approvals.py")
+    assert not any(e.proto.expanded for e in at.expander)
+
+    at.radio(key=f"finding_choice_8_{FINDINGS_STAND_IN[0]['id']}").set_value(APPROVE).run()
+
+    opened = [e.label for e in at.expander if e.proto.expanded]
+    assert opened == [f"{FINDINGS_STAND_IN[0]['id']}: sources, what we measured, decision"]
+
+
 def test_approvals_show_a_finding_result_notice_once_at_the_top_of_the_findings_area(monkeypatch):
     signed_in(monkeypatch, "member@example.com")
 
