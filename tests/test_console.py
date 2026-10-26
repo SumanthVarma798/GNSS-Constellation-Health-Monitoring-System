@@ -34,7 +34,7 @@ class GitHub:
         if self.fail:
             raise self.fail
         return {"workflows": WORKFLOWS, "runs": RUNS, "log": jobs.run_log(LOG), "prs": self.prs, "decision_prs": self.prs,
-                "issues": self.issues,
+                "issues": self.issues, "archive_commits": {},
                 "problems": [], "read_at": NOW}
 
     def clear(self):
@@ -300,6 +300,8 @@ def test_runs_are_read_page_by_page_and_the_tests_on_main_on_their_own(monkeypat
 
 def test_a_workflow_missing_on_github_is_named_and_the_rest_still_shows(monkeypatch):
     def ask(method, path, token, repository=None, **request):
+        if path == "/commits":
+            return []
         if "update-tle-data" in path:
             raise requests.HTTPError("404", response=SimpleNamespace(status_code=404))
         return {"workflow_runs": [], "workflows": []}

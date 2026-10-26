@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 import requests
 import streamlit as st
 
-from evidence import decisions, github_api, jobs, work
+from evidence import decisions, github_api, jobs, pipeline, work
 from evidence.console_settings import (ARCHIVE_REPOSITORY, JOBS, RELIABILITY_DAYS, RUN_LOGS, RUNS_READ, TESTS_WORKFLOW,
                                        WORKFLOWS_DIR)
 from evidence.decision_settings import READ_EVERY_SECONDS, SECRETS_SECTION
@@ -59,10 +59,16 @@ def github(token):
             if getattr(error.response, "status_code", None) != 404:
                 raise
             problems.append(f"GitHub has no workflow {workflow}: it may have been renamed or removed.")
+    try:
+        archive_commits = _archive_commits(token)
+    except requests.RequestException:
+        archive_commits = {}
+        problems.append("The archive's commits could not be read, so the Live pipeline cannot link each run's commit.")
     return {"workflows": github_api.ask("GET", "/actions/workflows", token)["workflows"], "runs": runs,
             "log": log, "prs": (open_prs := decisions.fetch_open(token)),
             "decision_prs": open_prs + decisions.fetch_recent_closed(token),
-            "issues": work.fetch_open_issues(token), "problems": problems, "read_at": datetime.now(timezone.utc)}
+            "issues": work.fetch_open_issues(token), "archive_commits": archive_commits,
+            "problems": problems, "read_at": datetime.now(timezone.utc)}
 
 
 def _runs(token, workflow):
@@ -71,7 +77,7 @@ def _runs(token, workflow):
     if workflow == TESTS_WORKFLOW:
         return github_api.ask("GET", f"/actions/workflows/{workflow}/runs", token,
                               params={"branch": "main", "event": "push", "per_page": 10})["workflow_runs"]
-    since = (datetime.now(timezone.utc) - timedelta(days=RELIABILITY_DAYS)).date().isoformat()
+    since = _since()
     runs, page = [], 1
     while True:
         got = github_api.ask("GET", f"/actions/workflows/{workflow}/runs", token,
@@ -79,6 +85,22 @@ def _runs(token, workflow):
         runs += got
         if len(got) < RUNS_READ:
             return runs
+        page += 1
+
+
+def _since():
+    return (datetime.now(timezone.utc) - timedelta(days=RELIABILITY_DAYS)).date().isoformat()
+
+
+def _archive_commits(token):
+    since = _since()
+    commits, page = [], 1
+    while True:
+        got = github_api.ask("GET", "/commits", token, ARCHIVE_REPOSITORY,
+                             params={"path": "runs/archive.csv", "since": since, "per_page": RUNS_READ, "page": page})
+        commits += got
+        if len(got) < RUNS_READ:
+            return pipeline.archive_commits(commits)
         page += 1
 
 

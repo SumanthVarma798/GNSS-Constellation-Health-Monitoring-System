@@ -16,6 +16,21 @@ def stage_map(stages):
     return {stage["name"]: stage for stage in stages}
 
 
+def test_archive_commits_keeps_only_archive_run_ids_with_sha_and_url():
+    commits = [
+        {"sha": "a" * 40, "html_url": "https://github.com/x/commit/a", "commit": {"message": "Archive run 123, new copies: 5"}},
+        {"sha": "b" * 40, "html_url": "https://github.com/x/commit/b", "commit": {"message": "Archive run 999 new copies: 1"}},
+        {"sha": "c" * 40, "html_url": "https://github.com/x/commit/c", "commit": {"message": "Docs"}},
+        {"sha": "d" * 40, "html_url": "https://github.com/x/commit/d", "commit": {"message": "Archive run 42, new copies: 2"}},
+        {"sha": "e" * 40, "html_url": "https://github.com/x/commit/e", "commit": {"message": "Archive run 42, new copies: 0"}},
+    ]
+
+    assert pipeline.archive_commits(commits) == {
+        123: {"sha": "a" * 40, "url": "https://github.com/x/commit/a"},
+        42: {"sha": "d" * 40, "url": "https://github.com/x/commit/d"},
+    }
+
+
 def test_a_stage_with_an_in_progress_run_is_running_now():
     stages = pipeline.stages(WORKFLOWS, [run("archive.yml", "2026-10-20T14:30:00Z", status="in_progress")], [],
                              [], workflow_texts(), NOW)
@@ -85,6 +100,19 @@ registry update,2026-10-20T06:00:00Z,2026-10-20T06:02:00Z,ok,tables changed, pro
     assert registry["proof"]["pr_number"] == 8
     assert registry["proof"]["pr_url"].endswith("/pull/8")
     assert registry["proof"]["pr_state"] == "open"
+
+
+def test_a_stage_uses_the_archive_commit_from_the_matched_run_id_when_present():
+    log = jobs.run_log("""job,started,ended,result,changed
+archive documents,2026-10-20T05:00:00Z,2026-10-20T05:01:00Z,ok,files updated
+""")
+    run_row = {**run("archive.yml", "2026-10-20T05:00:00Z"), "id": 456}
+    commits = {456: {"sha": "f" * 40, "url": "https://github.com/acme/archive/commit/ffffffff"}}
+
+    stages = pipeline.stages(WORKFLOWS, [run_row], log, [], workflow_texts(), NOW, archive_commits=commits)
+
+    assert stage_map(stages)["Archive: documents"]["proof"]["archive_commit"] == "f" * 40
+    assert stage_map(stages)["Archive: documents"]["proof"]["archive_commit_url"] == "https://github.com/acme/archive/commit/ffffffff"
 
 
 def test_without_an_explicit_archive_commit_the_stage_says_not_recorded():
