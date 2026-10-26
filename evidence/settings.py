@@ -80,8 +80,10 @@ REGISTRY_SIGNAL_ID_COLUMNS = ["svn", "signal_id", "valid_from", "valid_to", "not
 REGISTRY_CONSTELLATIONS_FILE = "constellations.csv"  # kept by hand: system letter -> constellation
 # Kept by hand: which satellites the dashboard tracks, in display order, and its name for each.
 REGISTRY_DASHBOARD_SATELLITES_FILE = "dashboard_satellites.csv"
+REGISTRY_DASHBOARD_SATELLITE_COLUMNS = ["svn", "dashboard_name", "added"]
 # The tracked list that must stay in step with today's signal IDs when the registry is rebuilt.
 REGISTRY_DASHBOARD_TRACKED_SYSTEMS = ("GPS", "GLONASS", "Galileo")
+NEW_ON_DASHBOARD_DAYS = 30  # a tracked satellite is shown as "new" on the dashboard for this many days
 
 # Built from the General Catalog of Artificial Space Objects (GCAT): owner and status per satellite.
 REGISTRY_CATALOGUE_FILE = "catalogue.csv"

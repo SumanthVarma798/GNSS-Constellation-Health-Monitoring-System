@@ -30,6 +30,7 @@ from evidence.registry_changes import (change_report, describe_satellite_changes
 from evidence.registry_tables import constellation_names, read_table, tracked_list_in_step, write_table
 from evidence.sources import IGS_SATELLITE_METADATA_URL
 from evidence.settings import (REGISTRY_CONSTELLATIONS_FILE, REGISTRY_DIR, REGISTRY_SATELLITE_COLUMNS,
+                               REGISTRY_DASHBOARD_SATELLITE_COLUMNS,
                                REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_DASHBOARD_TRACKED_SYSTEMS,
                                REGISTRY_SATELLITES_FILE, REGISTRY_SIGNAL_ID_COLUMNS, REGISTRY_SIGNAL_IDS_FILE,
                                SOURCE_CANDIDATES_FILE)
@@ -75,8 +76,8 @@ def dashboard_name_for_new_satellite(satellite, catalogue_row):
     return satellite["svn"], "its SVN"
 
 
-def dashboard_updates(before, satellites, celestrak_reads=None):
-    """(updated rows, report lines, detail-by-svn, reads): keep dashboard tracking in step."""
+def dashboard_updates(before, satellites, today, celestrak_reads=None):
+    """(updated rows, report lines, detail-by-svn, reads): keep dashboard tracking in step; new rows are added `today`."""
     by_svn = {row["svn"]: row for row in satellites}
     had = {row["svn"] for row in before}
     wanted = {row["svn"] for row in satellites
@@ -98,7 +99,7 @@ def dashboard_updates(before, satellites, celestrak_reads=None):
         elif failed and source == "its SVN":
             source = "its SVN (CelesTrak could not be read)"
         names[svn], source_words[svn] = name, source
-    updated = tracked_list_in_step(satellites, before, names)
+    updated = tracked_list_in_step(satellites, before, names, today)
     now = {row["svn"] for row in updated}
     lines = [f"The dashboard will track {svn} as {names.get(svn, svn)} (name from {source_words.get(svn, 'its SVN')})."
              for svn in [row["svn"] for row in updated if row["svn"] in now - had]]
@@ -202,12 +203,13 @@ def main():
     write_table(REGISTRY_SATELLITES_FILE, REGISTRY_SATELLITE_COLUMNS, satellites)
     write_table(REGISTRY_SIGNAL_IDS_FILE, REGISTRY_SIGNAL_ID_COLUMNS, signal_ids)
     after_satellites, after_signal_ids = read_table(REGISTRY_SATELLITES_FILE), read_table(REGISTRY_SIGNAL_IDS_FILE)
-    dashboard_rows, dashboard_lines, dashboard_details, celestrak_reads = dashboard_updates(before[2], after_satellites)
-    write_table(REGISTRY_DASHBOARD_SATELLITES_FILE, ("svn", "dashboard_name"),
-                [[row["svn"], row["dashboard_name"]] for row in dashboard_rows])
+    today = datetime.now(timezone.utc).date()
+    dashboard_rows, dashboard_lines, dashboard_details, celestrak_reads = dashboard_updates(before[2], after_satellites,
+                                                                                            today.isoformat())
+    write_table(REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_DASHBOARD_SATELLITE_COLUMNS,
+                [[row["svn"], row["dashboard_name"], row.get("added", "")] for row in dashboard_rows])
     print(f"{len(satellites)} satellites, {len(signal_ids)} signal-ID periods written to {REGISTRY_DIR}")
     if args.report:
-        today = datetime.now(timezone.utc).date()
         identifier_lines, prn_lines = metadata_lines(text)
         news_items, news_error = findings_news(args.archive)
         findings = registry_findings(before[0], after_satellites, before[1], after_signal_ids, dashboard_details,

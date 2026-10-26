@@ -8,9 +8,11 @@ plane in orbit order. Under either the 3D view, then every measure against its l
 config/meo_nominal.py.
 """
 from html import escape
+from datetime import datetime, timezone
 
 from analysis.meo_geometry import EXTENDED, part_score, plane_drift
 from config.config import TRACKED_NOT_IN_REGISTRY
+from evidence.registry_tables import new_on_dashboard
 from config.meo_nominal import MEANINGS, NOMINAL, PLANE_MEANINGS
 from ui import orbit_age, orbit_section, palette, reveal, shell, surfaces, tooltip
 from ui.data import SATELLITES
@@ -94,7 +96,9 @@ def _sources(system):
     return "".join(f'<li>{escape(source)} <span class="muted">({label})</span></li>' for source, label in seen.items())
 
 
-def _gaps(name, result):
+def _gaps(name, result, today):
+    if new := new_on_dashboard(name, today):
+        surfaces.show(surfaces.notice(new, "accent"))
     shown = set(result["health"]["Satellite"])
     missing = [s for s in SATELLITES[name] if s not in shown]
     for text in (*result["warnings"], *([f"No orbit data: {', '.join(missing)}"] if missing else []),
@@ -164,11 +168,12 @@ def page(name, result):
     limits in its section, open."""
     shown = tiles(result)
     healthy = sum(ok for _, ok, _ in shown.values())
+    today = datetime.now(timezone.utc).date()
     surfaces.show(f'<div class="head"><span class="big num">{healthy} of {len(shown)}</span>'
                   '<span class="muted">healthy and in step</span></div>')
     surfaces.show(surfaces.notice(result["history_note"], "idle"))
     orbit_age.show(name, result)
-    _gaps(name, result)
+    _gaps(name, result, today)
     planes = _planes(result["rows"])
     if shell.segment("meo_view", VIEWS, label="Show planes or satellites") == "Planes":
         drift = plane_drift(name, result["rows"])
