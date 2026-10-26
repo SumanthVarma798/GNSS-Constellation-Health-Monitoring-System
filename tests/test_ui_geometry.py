@@ -377,10 +377,10 @@ def test_spacing_card_and_wheel(beidou):
 
 # ---- the page ----
 
-def test_the_page_sits_between_station_keeping_and_the_master_map():
+def test_the_page_sits_between_station_keeping_and_news():
     titles = [title for title, _ in shell.PAGES]
 
-    assert titles.index("Geometry") == titles.index("Station-keeping") + 1 == titles.index("Master map") - 1
+    assert titles.index("Geometry") == titles.index("Station-keeping") + 1 == titles.index("News") - 1
 
 
 @pytest.mark.parametrize("section", gs.SECTIONS)

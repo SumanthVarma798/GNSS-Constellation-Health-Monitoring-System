@@ -21,12 +21,15 @@ from ui import changes, data, surfaces, time_range
 
 # Pages with their own filters: the bar shows no constellation, window or thresholds there.
 OWN_FILTERS = {"Master map", "Library"}
+# Pages that use only the constellation choice in the bar.
+SCOPE_ONLY = {"News"}
 
 # The pages, in one place. Add a page by adding a line: (title, file).
 PAGES = [
     ("Overview", "views/overview.py"),
     ("Station-keeping", "views/station_keeping.py"),
     ("Geometry", "views/geometry.py"),
+    ("News", "views/news.py"),
     ("Master map", "views/master_map.py"),
     ("Library", "views/library.py"),
     # ("How it works", "views/how_it_works.py"),
@@ -226,9 +229,9 @@ def _menu(plain, multi):
                              label_visibility="collapsed", on_change=_from_menu, args=(plain, f"_{plain}_menu"))
 
 
-def _scope():
+def _scope(force_single=False):
     """Constellation chips: one chosen, or under Compare any number (none means all). Returns the names in view."""
-    if not st.session_state.get("compare"):
+    if force_single or not st.session_state.get("compare"):
         name = segment("scope", list(CONSTELLATIONS), label="Constellation")
         _menu("scope", multi=False)
         return [name]
@@ -254,6 +257,11 @@ def top_bar(current):
         if current.title in OWN_FILTERS:
             names = [st.session_state.get("scope", CONSTELLATIONS[0])]
             gear_scope = None
+        elif current.title in SCOPE_ONLY:
+            with filters:
+                with st.container(key="filters"):
+                    names = _scope(force_single=True)
+            gear_scope = None
         else:
             with filters:
                 filter_box = st.container(key="filters")
@@ -266,7 +274,7 @@ def top_bar(current):
             gear_scope = "Compare" if on else names[0]
         with refresh_box:
             _refresh(names, window_days, gear_scope)
-        if current.title not in OWN_FILTERS:   # after the gear, so the range's bounds read this run's thresholds
+        if current.title not in OWN_FILTERS | SCOPE_ONLY:   # after the gear, so the range's bounds read this run's thresholds
             with filter_box:
                 time_range.control(names, st.session_state["params"])
     _page_tabs(current)

@@ -5,6 +5,7 @@
 # again (see DOWNLOAD_TRIES in evidence/settings.py), never sooner than the source's minimum gap.
 # Each run then tells Healthchecks.io how it went, with its log line: one check per group, named
 # archive-<group>. Healthchecks.io emails when a run fails, or when none arrives within its grace time.
+# A second job publishes latest_news.json on this repo's news-data branch for the dashboard.
 #
 # CADENCE IS SET HERE. Each group of sources (see evidence/sources.py) has one
 # schedule line below. To change how often a group is fetched, change its line
@@ -41,6 +42,8 @@ jobs:
     # Only in the private working copy. Anyone who copies this file elsewhere must opt in.
     if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System'
     runs-on: ubuntu-latest
+    outputs:
+      group: ${{ steps.due.outputs.group }}
     timeout-minutes: 35  # the fetch step's limit below, plus time to save
     steps:
       - uses: actions/checkout@v4
@@ -120,3 +123,45 @@ jobs:
           tail -n 1 archive/runs/archive.csv 2>/dev/null \
             | curl -fsS -m 10 --retry 3 --data-binary @- "https://hc-ping.com/$KEY/archive-$GROUP/$OUTCOME" \
             || echo "::warning::Healthchecks.io did not take this report. A 404 means the ping key is wrong or there is no check with the slug archive-$GROUP. It will report the run as late."
+
+  publish-news:
+    # The dashboard reads this file from news-data; main gets no commit noise, history stays there, and no run
+    # with unchanged news makes a commit.
+    if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System' && always() && (needs.archive.outputs.group == 'news' || needs.archive.outputs.group == 'all')
+    needs: archive
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out the archive
+        uses: actions/checkout@v4
+        with:
+          repository: SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive
+          ssh-key: ${{ secrets.ARCHIVE_DEPLOY_KEY }}
+          path: archive
+      - name: Check out news-data
+        uses: actions/checkout@v4
+        with:
+          ref: news-data
+          path: news-data
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'  # matches runtime.txt
+      - name: Install the one library the archive needs
+        run: pip install "$(grep '^requests==' requirements.txt)"
+      - name: Build latest news for the dashboard
+        run: python scripts/news_items.py --archive archive --latest news-data/latest_news.json
+      - name: Commit and push only when latest_news.json changed
+        working-directory: news-data
+        run: |
+          git add latest_news.json
+          if git diff --cached --quiet; then
+            echo "No latest-news change."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --quiet -m "Latest news for the dashboard"
+          git push --quiet
