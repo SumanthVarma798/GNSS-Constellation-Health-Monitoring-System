@@ -106,7 +106,9 @@ def finding_decide(item, finding, by_id, config, who):
 
 
 def one_finding(item, finding, by_id, stale, decided_count, config, who):
-    with st.expander(f"{escape(finding['id'])}: sources, what we measured, decision"):
+    # Kept open while a decision on it is under way: choosing or typing reruns the page, which would fold it shut.
+    deciding = st.session_state.get(f"finding_choice_{item['number']}_{finding['id']}") is not None
+    with st.expander(f"{escape(finding['id'])}: sources, what we measured, decision", expanded=deciding):
         if finding.get("detail"):
             st.html(f"<p class='c-pr-tag'>{escape(finding['detail'])}</p>")
         st.html("<p class='c-subhead'>Sources</p>")
