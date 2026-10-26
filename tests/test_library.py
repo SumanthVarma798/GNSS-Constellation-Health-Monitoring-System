@@ -127,8 +127,9 @@ def test_committed_tables_are_sound():
     # Every registry satellite is accounted for once.
     registry = Counter(row["constellation"] for row in read_table(REGISTRY_SATELLITES_FILE))
     for row in matching:
-        assert int(row["registry_satellites"]) == registry[row["system"]]
-        assert int(row["registry_found_in_gcat"]) + int(row["registry_not_in_gcat"]) == registry[row["system"]]
+        counted = int(row["registry_satellites"])
+        assert int(row["registry_found_in_gcat"]) + int(row["registry_not_in_gcat"]) == counted
+        assert counted <= registry[row["system"]]                              # the library can lag behind the registry
         assert row["registry_and_programme_disagree"] == "0"                      # a person looks at any disagreement
 
 
@@ -155,4 +156,20 @@ def test_the_scoreboard_shows_its_sources_and_cites_gcat():
     assert rows["GPS"]["launched"] == 82
     assert library.launch_success(rows["GPS"]) == 80 / 82
     assert library.orbit_success({"launched": 0, "failed_at_launch": 0, "failed_in_orbit": 0}) is None
+
+
+def test_the_library_note_says_when_the_registry_now_lists_more_satellites():
+    matching = [{
+        "system": "GLONASS",
+        "registry_satellites": "101",
+        "registry_found_in_gcat": "98",
+        "registry_not_in_gcat": "3",
+        "also_found_by_programme": "98",
+        "found_by_programme_only": "10",
+        "registry_and_programme_disagree": "0",
+    }]
+    registry = [{"constellation": "GLONASS"}] * 102
+
+    note = library.registry_lag_note(matching, registry)
+    assert note == "The library was counted when the registry listed 101 GLONASS satellites; it now lists 102."
 

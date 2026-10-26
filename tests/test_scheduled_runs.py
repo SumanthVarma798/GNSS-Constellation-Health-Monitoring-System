@@ -18,6 +18,7 @@ import archive_sources  # noqa: E402
 
 RUN_TIME = datetime(2026, 10, 19, 5, 18, 51, tzinfo=timezone.utc)   # when the documents job ran today (checked)
 ARCHIVE_WORKFLOW = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "archive.yml").read_text()
+REGISTRY_WORKFLOW = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "registry-update.yml").read_text()
 UPDATE_TLE_WORKFLOW = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "update-tle-data.yml").read_text()
 
 
@@ -144,6 +145,17 @@ def test_the_alert_ping_does_not_fail_for_a_missing_check_or_an_unset_key():
 
     assert 'if [ -z "$KEY" ]' in health_step and "exit 0" in health_step
     assert '|| echo "::warning::Healthchecks.io did not take this report.' in health_step
+
+
+def test_the_registry_run_log_names_the_step_when_a_failure_happens():
+    assert "id: build" in REGISTRY_WORKFLOW
+    assert "id: tables" in REGISTRY_WORKFLOW
+    assert "id: tests" in REGISTRY_WORKFLOW
+    assert "id: propose" in REGISTRY_WORKFLOW
+    assert "failed at: rebuilding the tables" in REGISTRY_WORKFLOW
+    assert "failed at: the tests on the new tables" in REGISTRY_WORKFLOW
+    assert "failed at: opening the proposal" in REGISTRY_WORKFLOW
+    assert "failed at: checking out or installing" in REGISTRY_WORKFLOW
 
 
 def test_update_tle_data_reports_to_healthchecks_without_breaking_the_job():

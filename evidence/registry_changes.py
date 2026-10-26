@@ -29,7 +29,7 @@ def describe_signal_id_changes(before, after):
     return lines
 
 
-def change_report(source_line, satellite_lines, signal_id_lines, copy_used=""):
+def change_report(source_line, satellite_lines, signal_id_lines, copy_used="", dashboard_lines=()):
     """The pull request text for a registry update. `copy_used` says which archived copy was read."""
     def section(lines):
         return "\n".join(f"- {line}" for line in lines) or "- Nothing."
@@ -42,6 +42,10 @@ def change_report(source_line, satellite_lines, signal_id_lines, copy_used=""):
 ## What changed in the signal-ID history
 
 {section(signal_id_lines)}
+
+## What changes on the dashboard
+
+{section(dashboard_lines)}
 
 ## Where this came from
 

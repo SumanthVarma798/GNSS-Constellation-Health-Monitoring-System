@@ -4,12 +4,14 @@ from collections import Counter
 from pathlib import Path
 
 import pytest
+import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
+import build_registry
 from build_registry import build_tables
 from evidence.igs_metadata import sinex_time
-from evidence.registry_tables import read_table
+from evidence.registry_tables import read_table, tracked_list_in_step
 from evidence.settings import (REGISTRY_SATELLITE_COLUMNS, REGISTRY_SATELLITES_FILE, REGISTRY_SIGNAL_ID_COLUMNS,
                                REGISTRY_SIGNAL_IDS_FILE)
 from test_check_satellite_ids import SAMPLE
@@ -94,3 +96,57 @@ def test_every_tracked_satellite_is_in_the_committed_registry():
 
     assert config.config.TRACKED_NOT_IN_REGISTRY == {"NavIC": [], "QZSS": [], "BeiDou-3": [],
                                                      "GPS": [], "GLONASS": [], "Galileo": []}
+
+
+def test_tracked_list_in_step_adds_and_drops_satellites_for_the_three_meo_systems():
+    satellites = [
+        {"svn": "I002", "constellation": "NavIC", "signal_id_now": "I01"},
+        {"svn": "G001", "constellation": "GPS", "signal_id_now": "G01"},
+        {"svn": "G002", "constellation": "GPS", "signal_id_now": ""},
+        {"svn": "R801", "constellation": "GLONASS", "signal_id_now": "R01"},
+        {"svn": "R802", "constellation": "GLONASS", "signal_id_now": "R02"},
+        {"svn": "R809", "constellation": "GLONASS", "signal_id_now": "R10"},
+        {"svn": "E101", "constellation": "Galileo", "signal_id_now": "E01"},
+        {"svn": "C217", "constellation": "BeiDou", "signal_id_now": "C04"},
+    ]
+    tracked = [
+        {"svn": "I002", "dashboard_name": "IRNSS-1B"},
+        {"svn": "G001", "dashboard_name": "NAVSTAR 1"},
+        {"svn": "G002", "dashboard_name": "NAVSTAR 2"},
+        {"svn": "R801", "dashboard_name": "COSMOS 1"},
+        {"svn": "R802", "dashboard_name": "COSMOS 2"},
+        {"svn": "E101", "dashboard_name": "GSAT0101"},
+        {"svn": "C217", "dashboard_name": "BeiDou-3 G1"},
+    ]
+
+    updated = tracked_list_in_step(satellites, tracked, {"R809": "COSMOS 2620"})
+
+    assert [row["svn"] for row in updated] == ["I002", "G001", "R801", "R802", "R809", "E101", "C217"]
+    assert next(row for row in updated if row["svn"] == "R809")["dashboard_name"] == "COSMOS 2620"
+    assert next(row for row in updated if row["svn"] == "I002")["dashboard_name"] == "IRNSS-1B"
+    assert next(row for row in updated if row["svn"] == "C217")["dashboard_name"] == "BeiDou-3 G1"
+
+
+def test_dashboard_name_for_a_new_satellite_prefers_catalogue_then_note_then_svn():
+    from build_registry import dashboard_name_for_new_satellite
+
+    satellite = {"svn": "R809", "note": "Launched 2026-09-17; COSMOS 2???"}
+    named = {"OBJECT_NAME": "COSMOS 2620 [GLONASS-K1]"}
+
+    assert dashboard_name_for_new_satellite(satellite, named) == ("COSMOS 2620", "CelesTrak's catalogue")
+    assert dashboard_name_for_new_satellite(satellite, None) == ("COSMOS 2???", "the registry note")
+    assert dashboard_name_for_new_satellite({"svn": "R809", "note": "Launched 2026-09-17"}, None) == ("R809", "its SVN")
+
+
+def test_dashboard_updates_falls_back_to_the_note_when_celestrak_cannot_be_read(monkeypatch):
+    before = [{"svn": "R801", "dashboard_name": "COSMOS 2471"}]
+    satellites = [{"svn": "R801", "constellation": "GLONASS", "signal_id_now": "R01", "catalogue_no": "37372",
+                   "note": "Launched 2011-02-26; COSMOS 2471"},
+                  {"svn": "R809", "constellation": "GLONASS", "signal_id_now": "R10", "catalogue_no": "100744",
+                   "note": "Launched 2026-09-17; COSMOS 2???"}]
+    monkeypatch.setattr(build_registry.celestrak, "catalogue_entry", lambda *args: (_ for _ in ()).throw(requests.Timeout("down")))
+
+    updated, lines = build_registry.dashboard_updates(before, satellites)
+
+    assert next(row for row in updated if row["svn"] == "R809")["dashboard_name"] == "COSMOS 2???"
+    assert "CelesTrak could not be read" in lines[0]
