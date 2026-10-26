@@ -70,7 +70,8 @@ ICONS = {
     "approvals": '<path d="M3 1h7l3 3v11H3z" fill="#fff" stroke="#5f7da6"/><path d="M5.5 9l2 2 3.5-4" fill="none" stroke="#217a2b" stroke-width="1.6"/>',
     "design": '<rect x="1" y="2" width="5" height="4" fill="#fff" stroke="#3a6db0"/><rect x="10" y="2" width="5" height="4" fill="#fff" stroke="#3a6db0"/><rect x="5.5" y="10" width="5" height="4" fill="#dff1e1" stroke="#217a2b"/><path d="M6 4h4M3.5 6v2h9V6M8 8v2" fill="none" stroke="#3a6db0"/>',
     "work": '<rect x="2" y="1.5" width="12" height="13" fill="#fff" stroke="#5f7da6"/><path d="M4.5 5h7M4.5 8h7M4.5 11h4.5" stroke="#1d3c66" stroke-width="1.4"/>',
-    "pipeline": '<rect x="1.5" y="4.5" width="4" height="7" fill="#fff" stroke="#3a6db0"/><rect x="6.5" y="2.5" width="4" height="11" fill="#dff1e1" stroke="#217a2b"/><rect x="11.5" y="5.5" width="3" height="5" fill="#fff" stroke="#3a6db0"/><path d="M5.7 8h.6M10.7 8h.6" stroke="#1d3c66" stroke-width="1.2"/>'
+    "pipeline": '<rect x="1.5" y="4.5" width="4" height="7" fill="#fff" stroke="#3a6db0"/><rect x="6.5" y="2.5" width="4" height="11" fill="#dff1e1" stroke="#217a2b"/><rect x="11.5" y="5.5" width="3" height="5" fill="#fff" stroke="#3a6db0"/><path d="M5.7 8h.6M10.7 8h.6" stroke="#1d3c66" stroke-width="1.2"/>',
+    "alerts": '<path d="M8 1.8a4.2 4.2 0 0 0-4.2 4.2v2.2l-1.5 2.5h11.4l-1.5-2.5V6A4.2 4.2 0 0 0 8 1.8z" fill="#fff" stroke="#3a6db0"/><circle cx="8" cy="12.8" r="1.2" fill="#f3b32a" stroke="#9a6a00"/>'
 }
 
 
