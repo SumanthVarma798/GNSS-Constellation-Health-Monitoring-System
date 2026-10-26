@@ -25,6 +25,19 @@ KINDS = {
 GROUPS = ["Sources", "Satellites", "Rules"]   # issue 17's three groups, in the order the page shows them
 OTHER_GROUP = "Other kinds"
 
+# Findings on approvals: shown in this order, grouped by what changed.
+FINDING_CATEGORIES = [
+    "New satellite",      # a satellite to add to the registry and dashboard
+    "Satellite removed",  # a satellite to remove from the registry and dashboard
+    "Signal ID change",   # a signal ID on a known satellite changed
+    "Satellite change",   # other satellite metadata changed (slot, launch date, name, etc.)
+    "News",               # a news finding that may become a visible note
+    "Status change",      # a source or signal status changed
+    "Error",              # a bad line, parse issue or data error to fix
+    "Rule change",        # a proposal to change how the weekly job decides
+]
+OTHER_FINDINGS = "Other findings"
+
 # An item waiting longer than this is shown as a warning.
 WAIT_WARN_DAYS = 14
 
@@ -39,6 +52,10 @@ APPROVE, AFTER_CHANGES, REJECT = "approved as proposed", "approved after changes
 CHOICES = {APPROVE: "Approve as proposed", AFTER_CHANGES: "Approve after changes", REJECT: "Reject"}
 ACTIONS = {APPROVE: "then merges it, once its tests have passed", AFTER_CHANGES: "and leaves it open until the changes are made",
            REJECT: "then closes it"}
+FINDING_ACTIONS = {
+    APPROVE: "records this finding as approved on the pull request",
+    REJECT: "records this finding as rejected on the pull request",
+}
 DECISION_MARKER = "admin-decision"   # an HTML comment in each decision, so the outcomes can be counted from GitHub
 REQUIRED_CHECK = "pytest"            # the Tests job (.github/workflows/tests.yml); it must pass on the commit merged
 MERGE_METHOD = "squash"

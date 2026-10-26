@@ -209,6 +209,9 @@ a:hover { text-decoration: underline; }
 .c-lv tbody tr:hover td { background: var(--hover); }
 .c-lv td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .c-lv .muted { color: var(--muted); }
+.muted { color: var(--muted); }
+.c-pr-tag { margin: 8px 0 0; font-size: 11px; }
+.c-subhead { margin: 8px 0 4px; font-size: 12px; font-weight: 800; color: var(--ink); }
 
 .c-label { display: inline-flex; align-items: center; gap: 5px; margin-right: 8px; white-space: nowrap; color: var(--ink); }
 .c-label b { display: inline-block; width: 10px; height: 10px; }

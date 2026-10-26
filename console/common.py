@@ -64,9 +64,16 @@ def github(token):
     except requests.RequestException:
         archive_commits = {}
         problems.append("The archive's commits could not be read, so the Live pipeline cannot link each run's commit.")
+    open_prs = decisions.fetch_open(token)
+    comments = {}
+    for pr in open_prs:
+        if decisions.kind_of(pr) is None or not decisions.has_findings_block(pr.get("body") or ""):
+            continue
+        comments[pr["number"]] = decisions.fetch_comments(token, pr["number"])
     return {"workflows": github_api.ask("GET", "/actions/workflows", token)["workflows"], "runs": runs,
-            "log": log, "prs": (open_prs := decisions.fetch_open(token)),
+            "log": log, "prs": open_prs,
             "decision_prs": open_prs + decisions.fetch_recent_closed(token),
+            "comments": comments,
             "issues": work.fetch_open_issues(token), "archive_commits": archive_commits,
             "problems": problems, "read_at": datetime.now(timezone.utc)}
 
