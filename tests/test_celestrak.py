@@ -122,7 +122,13 @@ def test_the_dashboard_asks_for_every_satellite_of_its_generations_and_no_other(
     from ui import data
 
     asked = []
-    monkeypatch.setattr(celestrak, "refresh", lambda norads, now, clicked: asked.extend(norads))
+    monkeypatch.setattr(
+        celestrak, "refresh",
+        lambda norads, now, clicked: (asked.extend(norads),
+                                      {"rows": {}, "listed": set(), "tried": now, "fetched": None, "ok": True,
+                                       "failing_since": None})[1],
+    )
+    monkeypatch.setattr(data.spacetrack, "refresh", lambda norads, now, login: None)
     data.refresh()
     # IRNSS-1B tracked; BeiDou-3 M7 (plane A, slot A-4), IRNSS-1A and a BeiDou-3S test satellite are not
     assert {39635, 43107, 39199, 40549} <= set(asked)
