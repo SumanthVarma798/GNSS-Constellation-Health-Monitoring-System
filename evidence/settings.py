@@ -151,6 +151,10 @@ FEED_REPORT_COLUMNS = ["via", "group", "runs", "copies", "copies_per_run", "item
 LABELLING_SHEET_FILE = Path(__file__).resolve().parent / "labelling_sheet.csv"
 LABELLING_SHEET_COLUMNS = ["system", "title", "source_id", "published_at", "address", "claims_in_this_item", "none"]
 LABELLING_SHEET_SIZE = 30
+# For a new-satellite finding, a news item in the launch window counts only when its title also names the satellite
+# or says it launched (whole words, any case): naming the system alone matched unrelated articles (R809, 26 Oct 2026).
+NEWS_LAUNCH_WORDS = ("launch", "launched", "launches", "liftoff", "lifts off", "lifted off")
+
 # Words that put an item under a system, for spreading the sheet across all six. Matched as whole words,
 # any case. A cheap pointer, not the relevance filter: an item may name several systems or none.
 SYSTEM_WORDS = {

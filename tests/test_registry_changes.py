@@ -75,6 +75,9 @@ def test_registry_findings_for_a_new_satellite_uses_igs_celestrak_and_news_in_wi
          "published_at": "2026-08-01T05:00:00Z", "fetched_at": "2026-08-01T06:00:00Z"},
         {"source_id": "spacenews.com", "address": "https://spacenews.com/gps", "title": "GPS mission this week",
          "published_at": "2026-09-18T05:00:00Z", "fetched_at": "2026-09-18T06:00:00Z"},
+        # Names the system in the window, but is not about this satellite: matched for R809 on 26 Oct 2026.
+        {"source_id": "bgr.com", "address": "https://bgr.com/watch", "published_at": "2026-09-20T05:00:00Z",
+         "title": "What Is GLONASS And Why Is It Missing From The Apple Watch Ultra 4?", "fetched_at": "2026-09-20T06:00:00Z"},
     ]
     celestrak_reads = {"R809": {"checked": True, "catalogue_status": "ok",
                                 "catalogue_entry": {"OBJECT_NAME": "COSMOS 2620 [GLONASS-K1]", "OBJECT_ID": "2026-216A",

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import re
 
 from evidence.news import systems_named
-from evidence.settings import REGISTRY_COLUMN_PLAIN_NAMES, SIGNAL_ID_ISSUERS
+from evidence.settings import NEWS_LAUNCH_WORDS, REGISTRY_COLUMN_PLAIN_NAMES, SIGNAL_ID_ISSUERS
 from evidence.sources import IGS_SATELLITE_METADATA_URL
 
 BRACKETED = re.compile(r"\s*\[[^\]]*]\s*")
@@ -163,20 +163,24 @@ def _new_satellite_sources(row, celestrak_read, news_items, grade_rows, candidat
         grade = _source_grade("celestrak.org", grade_rows, candidate_rows)
         rows.append(_source_row("CelesTrak satellite catalogue", _catalogue_line(celestrak_read["catalogue_entry"]),
                                 grade, f"https://celestrak.org/satcat/records.php?CATNR={catalogue_no}"))
-    rows += _news_sources(row, news_items, grade_rows, candidate_rows)
+    rows += _news_sources(row, _name_for_new_satellite(row, celestrak_read), news_items, grade_rows, candidate_rows)
     return rows
 
 
-def _news_sources(row, news_items, grade_rows, candidate_rows):
+def _news_sources(row, name, news_items, grade_rows, candidate_rows):
     if not (launch := _launch_date(row.get("note", ""))):
         return []
+    # The system named, and also this satellite (its name, or its SVN) or its launch: see NEWS_LAUNCH_WORDS.
+    words = [*NEWS_LAUNCH_WORDS, row["svn"], *([name] if name and "?" not in name else [])]
+    about_it = re.compile(r"\b(" + "|".join(map(re.escape, words)) + r")\b", re.I)
     start, end = launch - timedelta(days=3), launch + timedelta(days=30)
     named = []
     for item in news_items:
         published = _news_item_datetime(item)
         if not published or published.date() < start or published.date() > end:
             continue
-        if row["constellation"] not in systems_named(item.get("title", "")):
+        title = item.get("title", "")
+        if row["constellation"] not in systems_named(title) or not about_it.search(title):
             continue
         named.append(item)
     newest_first = sorted(named, key=lambda item: _news_item_datetime(item) or datetime.min, reverse=True)[:5]
