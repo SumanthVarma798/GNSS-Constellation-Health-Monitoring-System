@@ -1,4 +1,4 @@
-"""Orbit record age strip and details section for one constellation."""
+"""Orbit record age tags and details section for one constellation."""
 from datetime import datetime
 from html import escape
 
@@ -8,8 +8,8 @@ from ui import data as dashboard_data
 from ui import measures, reveal, surfaces, tooltip
 
 
-def _age_words(row):
-    return "no record" if row["age_days"] is None else f"{row['age_days']:.1f} days old"
+def _tag_words(row):
+    return "no orbit record" if row["age_days"] is None else f"orbit {row['age_days']:.1f} days old"
 
 
 def _when(epoch):
@@ -47,33 +47,22 @@ def _gap_cell(gap):
     return measures.cell("–") if gap is None else measures.cell(f"{gap[0]:.1f} km", note=gap[1] or "")
 
 
-def _dot_card(row, gap=None):
+def _tag_card(row, gap=None):
+    """The tooltip card's words for one satellite, with the source, any published gap, and the age limits."""
     if row["epoch"] is None:
-        return f"{row['satellite']} · no record"
-    card = f"{row['satellite']} · {_age_words(row)} · {row['source']} · {_when(row['epoch'])}"
+        return "No orbit record"
+    card = f"Orbit record from {_when(row['epoch'])}, {row['source']}"
     if gap is not None:
         card += f" · off by {gap[0]:.1f} km" + (f" on {gap[1]}" if gap[1] else "")
+    card += f" · alert at {ORBIT_ALERT_DAYS:g} days, stale at {ORBIT_STALE_DAYS:g}"
     return card
 
 
-def strip_html(rows, gap=None):
-    """The dot strip with one tooltip per satellite."""
-    gaps = _gap_by_satellite(gap or {})
-    dots = ""
-    for row in rows:
-        trigger = f'<span class="oa-dot {row["status"]}" aria-hidden="true"></span><span class="oa-sr">{escape(row["satellite"])}</span>'
-        dots += tooltip.tip_html(trigger, escape(_dot_card(row, gaps.get(row["satellite"]))), key=row["satellite"])
-    legend = tooltip.legend(
-        [
-            ("var(--ok)", f"under {ORBIT_ALERT_DAYS:g} days"),
-            ("var(--warn)", f"{ORBIT_ALERT_DAYS:g} days or more: alert"),
-            ("var(--bad)", f"{ORBIT_STALE_DAYS:g} days or more: stale"),
-            ("var(--idle)", "no record"),
-        ],
-        label="Legend",
-    )
-    return (f'<div class="oa-strip"><span class="oa-label">Orbit record age</span><span class="oa-dots">{dots}</span>'
-            f'<span class="oa-legend">{legend}</span></div>')
+def tag(row, gap=None, scope=""):
+    """One satellite's orbit-record age as a chip in the tile's tag row, opening its tooltip card. scope (the
+    constellation) keeps each card's id unique where tiles of several constellations share a page (Compare)."""
+    trigger = surfaces.chip(_tag_words(row), row["status"])
+    return tooltip.tip_html(trigger, escape(_tag_card(row, gap)), key=f"{scope}:{row['satellite']}")
 
 
 def section_markup(rows, spacetrack_note="ok", gap=None):
@@ -107,13 +96,19 @@ def section_markup(rows, spacetrack_note="ok", gap=None):
     return summary, body, notice
 
 
+def tags(constellation, result):
+    """{satellite name: orbit-age tag html} for one constellation's tiles."""
+    rows = dashboard_data.orbit_ages(constellation, result)
+    gaps = _gap_by_satellite(dashboard_data.orbit_gap() or {})
+    return {row["satellite"]: tag(row, gaps.get(row["satellite"]), constellation) for row in rows}
+
+
 def show(constellation, result):
-    """Draw stale warnings, the strip, and the details section."""
+    """Draw stale warnings and the details section; the tiles carry the orbit-age tags."""
     rows = dashboard_data.orbit_ages(constellation, result)
     gap = dashboard_data.orbit_gap()
     own_note = dashboard_data.own_note()
     summary, body, stale_notice = section_markup(rows, own_note or spacetrack.state.get("note", "ok"), gap)
     if stale_notice:
         surfaces.show(surfaces.notice(stale_notice, "warn"))
-    surfaces.show(strip_html(rows, gap))
     reveal.section(f"orbit_age_{constellation}", "Orbit record age and source", summary, body)

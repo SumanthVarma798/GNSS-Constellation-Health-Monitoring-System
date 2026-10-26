@@ -299,6 +299,7 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .tile .s { font-size: 28px; font-weight: 700; line-height: 1.1; margin: 6px 0; }
 .tile .s.ok { color: var(--ok); } .tile .s.warn { color: var(--warn); } .tile .s.bad { color: var(--bad); } .tile .s.idle { color: var(--idle); font-size: 22px; font-family: inherit; }
 .tile .r { display: flex; gap: 6px; flex-wrap: wrap; }
+.tile .r .tt-trigger { text-decoration: none; }
 .tile .low { font-size: 13px; margin-top: 8px; }
 .muted { color: var(--muted); font-weight: 400; }
 
@@ -360,14 +361,6 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
   .st-key-changes [data-testid="stColumn"]:last-child { margin-left: auto; }
 }
 /* groups of satellites by orbit type, and the "Measured against limits" tables */
-.oa-strip { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: -2px 0 14px; }
-.oa-label { font-size: 14px; font-weight: 600; color: var(--muted); }
-.oa-dots { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.oa-dots .tt-trigger { display: inline-flex; text-decoration: none; border: 0; }
-.oa-dot { width: 12px; height: 12px; border-radius: 999px; border: 1px solid var(--edge); box-shadow: var(--raised-sm); background: var(--idle); }
-.oa-dot.ok { background: var(--ok); } .oa-dot.warn { background: var(--warn); } .oa-dot.bad { background: var(--bad); }
-.oa-dot.idle { background: var(--idle); }
-.oa-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .group { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 8px 0 12px; }
 .group .gt { font-size: 18px; font-weight: 700; letter-spacing: .02em; }
 .facts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: -4px 0 16px; font-size: 14px; color: var(--muted); }
