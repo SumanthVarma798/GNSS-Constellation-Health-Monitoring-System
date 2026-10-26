@@ -35,6 +35,19 @@ def test_galileo_shows_its_planes_and_says_what_is_missing():
     assert any("No orbit data: GSAT0210" in body for body in bodies)
 
 
+def test_a_recent_addition_is_shown_in_a_coloured_notice_before_warnings(monkeypatch):
+    from evidence import registry_tables
+
+    monkeypatch.setattr(registry_tables, "recently_added", lambda constellation, today: [("GSAT0999", "2026-10-26")])
+    bodies = htmls(run(scope("Galileo")))
+    new_at = next(i for i, body in enumerate(bodies) if "New on the dashboard: GSAT0999" in body)
+    missing_at = next(i for i, body in enumerate(bodies) if "No orbit data: GSAT0210" in body)
+
+    assert "notice accent" in bodies[new_at]
+    assert "New on the dashboard: GSAT0999 (added 26 Oct 2026 after an approved registry proposal)." in bodies[new_at]
+    assert new_at < missing_at
+
+
 def test_a_system_with_no_orbit_data_yet_says_so_and_the_page_still_runs():
     bodies = htmls(run(scope("GPS")))
 

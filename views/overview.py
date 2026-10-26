@@ -12,6 +12,7 @@ import pandas as pd
 import streamlit as st
 
 from config.config import MEO_SATS, TRACKED_NOT_IN_REGISTRY
+from evidence.registry_tables import new_on_dashboard
 from ui import data, limits, measures, meo_overview, orbit_age, orbit_section, palette, reveal, shell, surfaces, time_range, tooltip
 from ui.data import SATELLITES
 from ui.figures.constellation_3d import slot_legend
@@ -62,8 +63,10 @@ def _grid(htmls):
     surfaces.show(f'<div class="tiles">{"".join(htmls)}</div>')
 
 
-def _gaps(constellation, result):
+def _gaps(constellation, result, today):
     """Notices for what is missing, so that nothing is left out in silence."""
+    if new := new_on_dashboard(constellation, today):
+        surfaces.show(surfaces.notice(new, "accent"))
     shown = set(result["health"]["Satellite"]) | set(result["set_aside"])
     no_data = [name for name, norad in SATELLITES[constellation].items() if norad is not None and name not in shown]
     unlisted = TRACKED_NOT_IN_REGISTRY[constellation]
@@ -176,7 +179,7 @@ def constellation(name, window_days, params):
                   '<span class="muted">healthy and in their slot</span></div>')
     _period(result, window, window_days, today)
     orbit_age.show(name, result)
-    _gaps(name, result)
+    _gaps(name, result, today.date())
     groups = measures.grouped(_types(tiles, result, classes))
     for kind, names in groups.items():
         count = f"{len(names)} satellite{'s' if len(names) > 1 else ''}"

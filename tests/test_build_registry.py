@@ -1,6 +1,7 @@
 """The registry tables: built correctly from a sample, and sound as committed."""
 import sys
 from collections import Counter
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -11,9 +12,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import build_registry
 from build_registry import build_tables
 from evidence.igs_metadata import sinex_time
-from evidence.registry_tables import read_table, tracked_list_in_step
+from evidence.registry_tables import read_table, recently_added, tracked_list_in_step
 from evidence.settings import (REGISTRY_SATELLITE_COLUMNS, REGISTRY_SATELLITES_FILE, REGISTRY_SIGNAL_ID_COLUMNS,
-                               REGISTRY_SIGNAL_IDS_FILE)
+                               REGISTRY_SIGNAL_IDS_FILE, REGISTRY_DASHBOARD_SATELLITES_FILE,
+                               REGISTRY_DASHBOARD_SATELLITE_COLUMNS)
 from test_check_satellite_ids import SAMPLE
 
 
@@ -110,21 +112,23 @@ def test_tracked_list_in_step_adds_and_drops_satellites_for_the_three_meo_system
         {"svn": "C217", "constellation": "BeiDou", "signal_id_now": "C04"},
     ]
     tracked = [
-        {"svn": "I002", "dashboard_name": "IRNSS-1B"},
-        {"svn": "G001", "dashboard_name": "NAVSTAR 1"},
-        {"svn": "G002", "dashboard_name": "NAVSTAR 2"},
-        {"svn": "R801", "dashboard_name": "COSMOS 1"},
-        {"svn": "R802", "dashboard_name": "COSMOS 2"},
-        {"svn": "E101", "dashboard_name": "GSAT0101"},
-        {"svn": "C217", "dashboard_name": "BeiDou-3 G1"},
+        {"svn": "I002", "dashboard_name": "IRNSS-1B", "added": ""},
+        {"svn": "G001", "dashboard_name": "NAVSTAR 1", "added": ""},
+        {"svn": "G002", "dashboard_name": "NAVSTAR 2", "added": ""},
+        {"svn": "R801", "dashboard_name": "COSMOS 1", "added": "2026-09-05"},
+        {"svn": "R802", "dashboard_name": "COSMOS 2", "added": ""},
+        {"svn": "E101", "dashboard_name": "GSAT0101", "added": ""},
+        {"svn": "C217", "dashboard_name": "BeiDou-3 G1", "added": ""},
     ]
 
-    updated = tracked_list_in_step(satellites, tracked, {"R809": "COSMOS 2620"})
+    updated = tracked_list_in_step(satellites, tracked, {"R809": "COSMOS 2620"}, "2026-10-26")
 
     assert [row["svn"] for row in updated] == ["I002", "G001", "R801", "R802", "R809", "E101", "C217"]
     assert next(row for row in updated if row["svn"] == "R809")["dashboard_name"] == "COSMOS 2620"
+    assert next(row for row in updated if row["svn"] == "R809")["added"] == "2026-10-26"
     assert next(row for row in updated if row["svn"] == "I002")["dashboard_name"] == "IRNSS-1B"
     assert next(row for row in updated if row["svn"] == "C217")["dashboard_name"] == "BeiDou-3 G1"
+    assert next(row for row in updated if row["svn"] == "R801")["added"] == "2026-09-05"
 
 
 def test_dashboard_name_for_a_new_satellite_prefers_catalogue_then_note_then_svn():
@@ -139,14 +143,110 @@ def test_dashboard_name_for_a_new_satellite_prefers_catalogue_then_note_then_svn
 
 
 def test_dashboard_updates_falls_back_to_the_note_when_celestrak_cannot_be_read(monkeypatch):
-    before = [{"svn": "R801", "dashboard_name": "COSMOS 2471"}]
+    before = [{"svn": "R801", "dashboard_name": "COSMOS 2471", "added": "2026-08-10"}]
     satellites = [{"svn": "R801", "constellation": "GLONASS", "signal_id_now": "R01", "catalogue_no": "37372",
                    "note": "Launched 2011-02-26; COSMOS 2471"},
                   {"svn": "R809", "constellation": "GLONASS", "signal_id_now": "R10", "catalogue_no": "100744",
                    "note": "Launched 2026-09-17; COSMOS 2???"}]
     monkeypatch.setattr(build_registry.celestrak, "catalogue_entry", lambda *args: (_ for _ in ()).throw(requests.Timeout("down")))
 
-    updated, lines = build_registry.dashboard_updates(before, satellites)
+    updated, lines, details, reads = build_registry.dashboard_updates(before, satellites, "2026-10-26")
 
     assert next(row for row in updated if row["svn"] == "R809")["dashboard_name"] == "COSMOS 2???"
+    assert next(row for row in updated if row["svn"] == "R809")["added"] == "2026-10-26"
+    assert next(row for row in updated if row["svn"] == "R801")["added"] == "2026-08-10"
     assert "CelesTrak could not be read" in lines[0]
+    assert details["R809"] == "Approving also adds it to the dashboard as COSMOS 2???."
+    assert reads["R809"]["checked"] is True and reads["R809"]["catalogue_status"] == "error"
+
+
+def test_dashboard_updates_uses_passed_celestrak_reads_without_fetching_again(monkeypatch):
+    before = [{"svn": "R801", "dashboard_name": "COSMOS 2471"}]
+    satellites = [{"svn": "R801", "constellation": "GLONASS", "signal_id_now": "R01", "catalogue_no": "37372",
+                   "note": "Launched 2011-02-26; COSMOS 2471"},
+                  {"svn": "R809", "constellation": "GLONASS", "signal_id_now": "R10", "catalogue_no": "100744",
+                   "note": "Launched 2026-09-17; COSMOS 2???"}]
+    monkeypatch.setattr(build_registry.celestrak, "catalogue_entry",
+                        lambda *args: (_ for _ in ()).throw(AssertionError("should not fetch")))
+
+    updated, _, _, reads = build_registry.dashboard_updates(
+        before, satellites, "2026-10-26", {"R809": {"checked": True, "catalogue_status": "ok",
+                                      "catalogue_entry": {"OBJECT_NAME": "COSMOS 2620 [GLONASS-K1]"},
+                                      "orbit_status": "none", "orbit_row": None}})
+
+    assert next(row for row in updated if row["svn"] == "R809")["dashboard_name"] == "COSMOS 2620"
+    assert reads["R809"]["checked"] is True
+
+
+def test_celestrak_read_handles_no_orbit_record_and_read_failures(monkeypatch):
+    monkeypatch.setattr(build_registry.celestrak, "catalogue_entry", lambda norad: {"OBJECT_NAME": f"N{norad}"})
+    monkeypatch.setattr(build_registry.celestrak, "_get", lambda **kwargs: [])
+    read = build_registry.celestrak_read("100744")
+
+    assert read["catalogue_status"] == "ok" and read["orbit_status"] == "none" and read["orbit_row"] is None
+
+    monkeypatch.setattr(build_registry.celestrak, "catalogue_entry",
+                        lambda norad: (_ for _ in ()).throw(requests.Timeout("down")))
+    monkeypatch.setattr(build_registry.celestrak, "_get",
+                        lambda **kwargs: (_ for _ in ()).throw(requests.Timeout("down")))
+    read = build_registry.celestrak_read("100744")
+
+    assert read["catalogue_status"] == "error" and read["orbit_status"] == "error"
+
+
+def test_finding_news_reads_archive_and_reports_errors(monkeypatch):
+    monkeypatch.setattr(build_registry.news, "collected_items", lambda archive: ([{"title": "one"}], []))
+    items, words = build_registry.findings_news("archive")
+    assert items == [{"title": "one"}] and words == ""
+
+    monkeypatch.setattr(build_registry.news, "collected_items",
+                        lambda archive: ([{"title": "one"}], [("feed", "2026-10-20T00:00:00Z", "bad xml")]))
+    items, words = build_registry.findings_news("archive")
+    assert items == [{"title": "one"}]
+    assert words == "News: 1 archived feed copies could not be read, so their items are left out."
+
+    monkeypatch.setattr(build_registry.news, "collected_items",
+                        lambda archive: (_ for _ in ()).throw(ValueError("broken feed")))
+    items, words = build_registry.findings_news("archive")
+    assert items == [] and words == "News could not be read from the archive: broken feed"
+
+
+def test_recently_added_filters_by_date_and_ignores_blank_or_bad_dates(monkeypatch):
+    from evidence import registry_tables
+
+    tracked = [
+        {"svn": "G001", "dashboard_name": "NAVSTAR 1", "added": "2026-10-26"},
+        {"svn": "G002", "dashboard_name": "NAVSTAR 2", "added": "2026-09-26"},
+        {"svn": "G003", "dashboard_name": "NAVSTAR 3", "added": "2026-09-25"},
+        {"svn": "G004", "dashboard_name": "NAVSTAR 4", "added": ""},
+        {"svn": "G005", "dashboard_name": "NAVSTAR 5", "added": "not-a-date"},
+        {"svn": "R801", "dashboard_name": "COSMOS 1", "added": "2026-10-26"},
+    ]
+    monkeypatch.setattr(registry_tables, "constellation_names", lambda: {"G": "GPS", "R": "GLONASS"})
+    monkeypatch.setattr(registry_tables, "read_table",
+                        lambda name: tracked if name == REGISTRY_DASHBOARD_SATELLITES_FILE else [])
+
+    assert recently_added("GPS", date(2026, 10, 26)) == [("NAVSTAR 1", "2026-10-26"), ("NAVSTAR 2", "2026-09-26")]
+
+
+def test_main_writes_dashboard_satellite_rows_with_the_added_column(monkeypatch):
+    writes = []
+    monkeypatch.setattr(build_registry, "read_metadata", lambda _: "IGS META")
+    monkeypatch.setattr(build_registry, "build_tables",
+                        lambda _: ([["G001", "GPS", "", "", "12345", "G01", "", "", ""]],
+                                   [["G001", "G01", "2026-01-01T00:00:00Z", "", ""]]))
+    monkeypatch.setattr(build_registry, "read_table",
+                        lambda name: [{"svn": "G001", "dashboard_name": "NAVSTAR 1", "added": "2026-08-01"}]
+                        if name == REGISTRY_DASHBOARD_SATELLITES_FILE else [])
+    monkeypatch.setattr(build_registry, "dashboard_updates",
+                        lambda before, satellites, today, reads=None:
+                        ([{"svn": "G001", "dashboard_name": "NAVSTAR 1", "added": "2026-08-01"}], [], {}, {}))
+    monkeypatch.setattr(build_registry, "write_table",
+                        lambda name, columns, rows: writes.append((name, list(columns), [list(row) for row in rows])))
+    monkeypatch.setattr(sys, "argv", ["build_registry.py", "--metadata", "sample.snx"])
+
+    build_registry.main()
+
+    dashboard_write = next(write for write in writes if write[0] == REGISTRY_DASHBOARD_SATELLITES_FILE)
+    assert dashboard_write[1] == REGISTRY_DASHBOARD_SATELLITE_COLUMNS
+    assert dashboard_write[2] == [["G001", "NAVSTAR 1", "2026-08-01"]]
