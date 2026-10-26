@@ -1,0 +1,112 @@
+# Measures how old each tracked satellite's newest orbit record is once a day.
+# It writes only to the private archive repository (run log + per-satellite table),
+# never to this repository, then pings two Healthchecks.io checks: orbit-ages and orbit-fresh.
+
+name: Orbit ages
+
+on:
+  schedule:
+    # 03:30 UTC = 09:00 India time, over 2 hours after archive.yml's CelesTrak fetch at 01:15.
+    - cron: '30 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: orbit-ages  # two runs at once would write the same rows twice
+  cancel-in-progress: false
+
+jobs:
+  run:
+    # Only in the private working copy. Anyone who copies this file elsewhere must opt in.
+    if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15  # a cold pip cache installs the whole requirements.txt
+    steps:
+      - name: Note the start
+        id: start
+        run: echo "at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+      - name: Check out the archive
+        uses: actions/checkout@v4
+        with:
+          repository: SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive
+          ssh-key: ${{ secrets.ARCHIVE_DEPLOY_KEY }}
+          path: archive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'  # matches runtime.txt
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements.txt
+
+      - name: Measure orbit ages
+        run: python scripts/orbit_ages.py --archive archive --outcome "$RUNNER_TEMP/orbit-ages.json"
+        env:
+          SPACETRACK_USERNAME: ${{ secrets.SPACETRACK_USERNAME }}
+          SPACETRACK_PASSWORD: ${{ secrets.SPACETRACK_PASSWORD }}
+
+      - name: Commit this run's archive files
+        if: always()
+        working-directory: archive
+        env:
+          RESULT: ${{ job.status }}
+        run: |
+          if [ ! -f runs/orbit-ages.csv ] || [ ! -f runs/orbit-age-by-satellite.csv ]; then
+            echo "Orbit-age files were not written."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add runs/orbit-ages.csv runs/orbit-age-by-satellite.csv
+          if git diff --cached --quiet; then
+            echo "No archive changes to commit."
+            exit 0
+          fi
+          git commit --quiet -m "Orbit ages run: $RESULT"
+          # The archive job may have saved meanwhile; it never touches these files.
+          git push --quiet || { git pull --rebase --quiet && git push --quiet; }
+
+      - name: Tell Healthchecks.io how orbit-ages went
+        if: always()
+        env:
+          KEY: ${{ secrets.HEALTHCHECKS_PING_KEY }}  # set by Sumanth; nothing is sent until it exists
+          OUTCOME: ${{ job.status == 'success' && '0' || '1' }}  # 0 = it worked, 1 = it failed
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "Not reported to Healthchecks.io: no key."
+            exit 0
+          fi
+          KEY=$(printf %s "$KEY" | tr -d '[:space:]')  # a pasted key can carry a newline
+          tail -n 1 archive/runs/orbit-ages.csv 2>/dev/null \
+            | curl -fsS -m 10 --retry 3 --data-binary @- "https://hc-ping.com/$KEY/orbit-ages/$OUTCOME" \
+            || echo "::warning::Healthchecks.io did not take this report. A 404 means the ping key is wrong or there is no check with the slug orbit-ages. It will report the run as late."
+
+      - name: Tell Healthchecks.io whether every orbit was fresh
+        if: always()
+        env:
+          KEY: ${{ secrets.HEALTHCHECKS_PING_KEY }}  # set by Sumanth; nothing is sent until it exists
+          OUTCOME_FILE: ${{ runner.temp }}/orbit-ages.json
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "Not reported to Healthchecks.io: no key."
+            exit 0
+          fi
+          KEY=$(printf %s "$KEY" | tr -d '[:space:]')  # a pasted key can carry a newline
+          if [ -f "$OUTCOME_FILE" ]; then
+            FRESH=$(jq -r '.all_fresh' "$OUTCOME_FILE" 2>/dev/null || echo false)
+            OUTCOME=$([ "$FRESH" = "true" ] && echo 0 || echo 1)
+            LINE=$(jq -r '.line // ""' "$OUTCOME_FILE" 2>/dev/null)
+            OLD=$(jq -r '(.old // []) | join("; ")' "$OUTCOME_FILE" 2>/dev/null)
+            BODY="$LINE"
+            if [ -n "$OLD" ]; then
+              BODY="$BODY | old: $OLD"
+            fi
+          else
+            OUTCOME=1
+            BODY="Orbit ages outcome file is missing."
+          fi
+          printf '%s\n' "$BODY" \
+            | curl -fsS -m 10 --retry 3 --data-binary @- "https://hc-ping.com/$KEY/orbit-fresh/$OUTCOME" \
+            || echo "::warning::Healthchecks.io did not take this report. A 404 means the ping key is wrong or there is no check with the slug orbit-fresh. It will report the run as late."

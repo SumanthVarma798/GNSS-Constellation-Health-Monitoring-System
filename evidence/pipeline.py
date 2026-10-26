@@ -19,6 +19,7 @@ _STAGE_KEYS = {
     "Archive: news": "archive_news",
     "Archive: social": "archive_social",
     "Registry update": "registry_update",
+    "Orbit ages": "orbit_ages",
     "Pull request waiting for a decision": "decision_waiting",
     "Decided on the Approvals page": "decision_made",
     "Merged to main": "merged_main",
