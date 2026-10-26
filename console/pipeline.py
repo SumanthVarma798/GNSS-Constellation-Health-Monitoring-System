@@ -103,7 +103,8 @@ def _event_words(event, stage_by_key):
 def _snapshot(workflow_texts):
     seen = common.read()
     now = common.now()
-    stages = pipeline.stages(seen["workflows"], seen["runs"], seen["log"], seen["decision_prs"], workflow_texts, now)
+    stages = pipeline.stages(seen["workflows"], seen["runs"], seen["log"], seen["decision_prs"], workflow_texts, now,
+                             seen.get("archive_commits", {}))
     upcoming = pipeline.what_next(stages, now, hours=PIPELINE_LOOK_AHEAD_HOURS)
     running = [stage for stage in stages if stage["state"] == "running now"]
     feed = pipeline.proof_feed(seen["runs"], seen["log"], seen["decision_prs"], limit=PIPELINE_FEED_EVENTS)

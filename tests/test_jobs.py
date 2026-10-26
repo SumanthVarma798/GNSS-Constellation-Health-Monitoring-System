@@ -67,6 +67,7 @@ RUNS = [run("tests.yml", "2026-10-20T14:35:09Z", event="push"),
 
 def rows():
     texts = {"archive.yml": (WORKFLOWS_DIR / "archive.yml").read_text(), "registry-update.yml": "",
+             "orbit-ages.yml": (WORKFLOWS_DIR / "orbit-ages.yml").read_text(),
              "update-tle-data.yml": (WORKFLOWS_DIR / "update-tle-data.yml").read_text(), "tests.yml": ""}
     return {r["name"]: r for r in jobs.job_rows(WORKFLOWS, RUNS, jobs.run_log(LOG), texts, NOW)}
 

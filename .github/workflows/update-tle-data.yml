@@ -110,3 +110,18 @@ jobs:
           else
             echo "ℹ️ No changes to commit"
           fi
+
+      - name: Tell Healthchecks.io how the run went
+        if: always()
+        env:
+          KEY: ${{ secrets.HEALTHCHECKS_PING_KEY }}
+          OUTCOME: ${{ job.status == 'success' && '0' || '1' }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "Not reported to Healthchecks.io: no key."
+            exit 0
+          fi
+          KEY=$(printf %s "$KEY" | tr -d '[:space:]')
+          curl -fsS -m 10 --retry 3 --data-raw "Update TLE Data run ${{ github.run_id }}: ${{ job.status }}" \
+            "https://hc-ping.com/$KEY/update-tle-data/$OUTCOME" \
+            || echo "::warning::Healthchecks.io did not take this report. A 404 means the ping key is wrong or there is no check with the slug update-tle-data. It will report the run as late."

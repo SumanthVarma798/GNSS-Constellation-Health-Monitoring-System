@@ -95,7 +95,8 @@ jobs:
           git add --all
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit --quiet -m "Archive run, new copies: $(git diff --cached --name-only -- objects | wc -l | tr -d ' ')"
+          # The console finds each run's commit by this run id: the hash can change when the push below rebases, the message cannot.
+          git commit --quiet -m "Archive run ${{ github.run_id }}, new copies: $(git diff --cached --name-only -- objects | wc -l | tr -d ' ')"
           # The registry job may have saved its own run log line meanwhile; it never touches these files.
           git push --quiet || { git pull --rebase --quiet && git push --quiet; }
 

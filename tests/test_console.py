@@ -11,7 +11,7 @@ import streamlit
 from streamlit.testing.v1 import AppTest
 
 from console import common
-from evidence import decisions, jobs, pipeline as live_pipeline
+from evidence import alerts, decisions, jobs, pipeline as live_pipeline
 from evidence.decision_settings import AFTER_CHANGES, APPROVE, KINDS, LABEL_PREFIX
 from test_dashboard_shell import segmented_controls_rerun  # noqa: F401  (AppTest 1.45's segmented controls)
 from test_decisions import NOW, pr
@@ -34,7 +34,7 @@ class GitHub:
         if self.fail:
             raise self.fail
         return {"workflows": WORKFLOWS, "runs": RUNS, "log": jobs.run_log(LOG), "prs": self.prs, "decision_prs": self.prs,
-                "issues": self.issues,
+                "issues": self.issues, "archive_commits": {},
                 "problems": [], "read_at": NOW}
 
     def clear(self):
@@ -137,6 +137,55 @@ def test_the_jobs_page_lists_every_job_with_its_schedule_in_words(monkeypatch):
     for words in ("Archive: documents", "daily 00:30", "every 3 hours from 00:50", "Sundays 01:00", "Turned off",
                   "Reliability, day by day", "Run log", "failed: 6 of 44 sources"):
         assert words in page, words
+
+
+def test_the_admin_console_lists_the_alerts_page(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+
+    at = run(monkeypatch, page="console/alerts.py")
+
+    page = text(at)
+    assert "Alerts" in page and "Healthchecks.io checks" in page
+
+
+def test_alerts_page_handles_a_malformed_healthchecks_answer(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    monkeypatch.setattr(alerts, "read_checks", lambda key: {"oops": 1})
+
+    page = text(run(monkeypatch, page="console/alerts.py", secrets={**SECRETS, "alerts": {"key": "s3cr3t-key"}}))
+
+    assert "Healthchecks.io did not answer" in page
+    assert "Checks are not available right now." in page
+
+
+def test_alerts_page_with_a_key_lists_checks_and_missing_slugs_without_showing_the_key(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    checks = [
+        {"slug": "archive-documents", "name": "Archive documents", "unique_key": "u-docs", "status": "up",
+         "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
+        {"slug": "archive-catalogues", "name": "Archive catalogues", "unique_key": "u-catalogues", "status": "up",
+         "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
+        {"slug": "archive-orbital", "name": "Archive orbital", "unique_key": "u-orbital", "status": "up",
+         "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
+        {"slug": "archive-social", "name": "Archive social", "unique_key": "u-social", "status": "up",
+         "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
+        {"slug": "registry-update", "name": "Registry update", "unique_key": "u-registry", "status": "up",
+         "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
+        {"slug": "update-tle-data", "name": "Update TLE data", "unique_key": "u-tle", "status": "up",
+         "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
+        {"slug": "extra-watch", "name": "Extra watch", "unique_key": "u-extra", "status": "down",
+         "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
+    ]
+    flips = {"u-extra": [{"up": 0}], "u-docs": [{"up": 1}]}
+    monkeypatch.setattr(alerts, "read_checks", lambda key: checks)
+    monkeypatch.setattr(alerts, "read_flips", lambda key, unique_key, seconds: flips.get(unique_key, []))
+
+    page = text(run(monkeypatch, page="console/alerts.py", secrets={**SECRETS, "alerts": {"key": "s3cr3t-key"}}))
+
+    assert "Healthchecks.io checks" in page and "Down, last 14 days" in page
+    assert "No check on Healthchecks.io for: archive-news." in page
+    assert "extra-watch" in page
+    assert "s3cr3t-key" not in page
 
 
 def test_when_github_cannot_be_read_the_page_says_why_without_the_token(monkeypatch):
@@ -300,6 +349,8 @@ def test_runs_are_read_page_by_page_and_the_tests_on_main_on_their_own(monkeypat
 
 def test_a_workflow_missing_on_github_is_named_and_the_rest_still_shows(monkeypatch):
     def ask(method, path, token, repository=None, **request):
+        if path == "/commits":
+            return []
         if "update-tle-data" in path:
             raise requests.HTTPError("404", response=SimpleNamespace(status_code=404))
         return {"workflow_runs": [], "workflows": []}
