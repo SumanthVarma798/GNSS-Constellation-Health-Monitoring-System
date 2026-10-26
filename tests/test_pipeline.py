@@ -8,7 +8,7 @@ from test_jobs import LOG, NOW, RUNS, WORKFLOWS, run
 
 
 def workflow_texts():
-    names = ("archive.yml", "registry-update.yml", "tests.yml")
+    names = ("archive.yml", "registry-update.yml", "orbit-ages.yml", "tests.yml")
     return {name: (WORKFLOWS_DIR / name).read_text(encoding="utf-8") for name in names}
 
 

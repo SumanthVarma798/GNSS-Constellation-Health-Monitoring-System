@@ -10,6 +10,8 @@ from pathlib import Path
 
 REQUEST_TIMEOUT_SECONDS = 60  # how long to wait for any outside server
 USER_AGENT = "gnss-evidence-archive/0.1 (scheduled research fetch)"  # how we name ourselves to them
+ORBIT_ALERT_DAYS = 2  # an orbit record this many days old raises an alert (the team's limit is 3; a day of buffer)
+ORBIT_STALE_DAYS = 3  # this old, the dashboard shows it as stale (the team's limit)
 
 # Each site's minimum gap between two of our requests to it. Every fetcher reads it here: the archive job and
 # the dashboard. A site is a host name and every host under it ("reddit.com" covers www.reddit.com).
@@ -18,6 +20,9 @@ USER_AGENT = "gnss-evidence-archive/0.1 (scheduled research fetch)"  # how we na
 MIN_GAP_BETWEEN_DOWNLOADS = {
     # CelesTrak asks for one download per 2 hours at most, and blocked this machine on 17 Oct 2026 for more (issue 76).
     "celestrak.org": timedelta(hours=2),
+    # Space-Track asks that class gp is read no more than once an hour, and says each login is capped at 30 requests
+    # a minute and 300 an hour (its API documentation; to confirm).
+    "space-track.org": timedelta(hours=1),
     # Refused a second request three seconds after the first (8 and 19 Oct 2026); five subreddits read 150 s apart
     # all answered (19 Oct). Read once a day (issue 13). The real limit is not published for feeds (guess).
     "reddit.com": timedelta(minutes=2),
@@ -52,12 +57,14 @@ ARCHIVE_OBJECTS_DIR = "objects"          # folder of raw copies, inside an archi
 ARCHIVE_VERSIONS_FILE = "versions.csv"   # one row per change, inside an archive folder
 ARCHIVE_VERSION_COLUMNS = ["address", "fetched_at", "status", "sha256", "bytes", "content_type", "wayback_url"]
 # The run log: one line per run of a scheduled job, inside an archive folder. One file per job file
-# (runs/archive.csv, runs/registry-update.csv), so two jobs saving at once never edit the same file.
+# (runs/archive.csv, runs/registry-update.csv, runs/orbit-ages.csv), so two jobs saving at once never edit the same file.
+# The orbit-age table (runs/orbit-age-by-satellite.csv) is also in this folder: one line per tracked satellite per run.
 ARCHIVE_RUNS_DIR = "runs"
 # Each site in its back-off, one row per site, rewritten whole every run, inside an archive folder.
 ARCHIVE_LIMITS_FILE = "limits.csv"
 ARCHIVE_LIMIT_COLUMNS = ["site", "refusals", "last_answer", "refused_at", "wait_until"]
 ARCHIVE_RUN_COLUMNS = ["job", "started", "ended", "result", "changed"]
+ORBIT_AGE_COLUMNS = ["day", "checked", "constellation", "satellite", "norad", "epoch", "source", "age_days", "status"]
 
 # --- The registry tables ---
 
