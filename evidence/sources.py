@@ -31,14 +31,19 @@ CELESTRAK_GNSS_URL = "https://celestrak.org/NORAD/elements/gp.php?GROUP=gnss&FOR
 GALMON_SATELLITES_URL = "https://galmon.eu/svs.json"
 
 
+def candidate_rows():
+    """Every candidate row, in file order."""
+    with open(SOURCE_CANDIDATES_FILE, newline="", encoding="utf-8") as handle:
+        return list(csv.DictReader(handle))
+
+
 def working_candidates():
     """The candidate rows (issue 13) whose feed or page answered with something when checked.
 
     Each is provisional: collected, never deciding anything, until the team grades it.
     """
-    with open(SOURCE_CANDIDATES_FILE, newline="", encoding="utf-8") as handle:
-        return [row for row in csv.DictReader(handle)
-                if row["check_status"] == CANDIDATE_WORKED and int(row["check_bytes"] or 0) > 0]
+    return [row for row in candidate_rows()
+            if row["check_status"] == CANDIDATE_WORKED and int(row["check_bytes"] or 0) > 0]
 
 
 # What the archive job keeps a raw copy of, by group. Each group is fetched on

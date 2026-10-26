@@ -147,6 +147,22 @@ def test_the_alert_ping_does_not_fail_for_a_missing_check_or_an_unset_key():
     assert '|| echo "::warning::Healthchecks.io did not take this report.' in health_step
 
 
+def test_the_workflow_publishes_latest_news_on_its_own_branch_with_write_access_only_there():
+    assert "outputs:\n      group: ${{ steps.due.outputs.group }}" in ARCHIVE_WORKFLOW
+    assert "publish-news:" in ARCHIVE_WORKFLOW
+    publish = ARCHIVE_WORKFLOW.split("publish-news:", 1)[1]
+    assert "needs: archive" in publish
+    assert ("if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System' && always() && "
+            "(needs.archive.outputs.group == 'news' || needs.archive.outputs.group == 'all')") in publish
+    assert "permissions:\n      contents: write" in publish
+    assert "git add latest_news.json" in publish and "git diff --cached --quiet" in publish
+    assert 'git commit --quiet -m "Latest news for the dashboard"' in publish and "git push" in publish
+
+    archive_job = ARCHIVE_WORKFLOW.split("archive:", 1)[1].split("publish-news:", 1)[0]
+    assert "permissions:\n  contents: read" in ARCHIVE_WORKFLOW
+    assert "contents: write" not in archive_job
+
+
 def test_the_registry_run_log_names_the_step_when_a_failure_happens():
     assert "id: build" in REGISTRY_WORKFLOW
     assert "id: tables" in REGISTRY_WORKFLOW
