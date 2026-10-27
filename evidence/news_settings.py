@@ -23,6 +23,29 @@ NEWS_CYCLE_HOURS = 3
 # News older than this is shown as late.
 NEWS_LATE_HOURS = 7
 
+# X discovery looks back this many months.
+X_DISCOVERY_MONTHS = 24
+# At most this many API pages are read for each discovery query.
+X_DISCOVERY_PAGES = 15
+# A launch claim with no matching launch in this many days before publication fails.
+X_FAIL_WINDOW_DAYS = 7
+# Launch claims newer than this many days are left unjudged to allow registry lag.
+X_FAIL_SKIP_RECENT_DAYS = 14
+# A source is active when it posted in this many days.
+X_ACTIVE_DAYS = 90
+# A source is listed only after at least this many posts.
+X_MIN_POSTS = 3
+# X discovery queries per constellation plus one status query.
+X_DISCOVERY_QUERIES = (
+    '("GPS III" OR "GPS IIIF") (launch OR launched OR liftoff OR "lifts off")',
+    'BeiDou (launch OR launched OR liftoff OR "lifts off")',
+    'Galileo (satellite OR satellites) (launch OR launched OR liftoff OR "lifts off")',
+    'GLONASS (launch OR launched OR liftoff OR "lifts off")',
+    '(NavIC OR IRNSS OR "NVS-01" OR "NVS-02" OR "NVS-03") (launch OR launched OR liftoff OR "lifts off")',
+    '(QZSS OR Michibiki OR "QZS-6" OR "QZS-7") (launch OR launched OR liftoff OR "lifts off")',
+    '(GPS OR BeiDou OR Galileo OR GLONASS OR NavIC OR QZSS) (outage OR anomaly OR NANU OR NAGU OR "out of service")',
+)
+
 # Bars a source record must meet for B, C or D: (checked claims at least, score at least).
 GRADE_BARS = OrderedDict([("B", (10, 0.90)), ("C", (5, 0.75)), ("D", (3, 0.50))])
 # With this many checked claims, a source at least reaches E.
