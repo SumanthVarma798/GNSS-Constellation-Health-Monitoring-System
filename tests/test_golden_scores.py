@@ -30,9 +30,11 @@ import pytest
 import time_machine
 from streamlit.testing.v1 import AppTest
 
+from data.tle_cache import DATA_DIR
+
 ROOT = Path(__file__).resolve().parent.parent
 GOLDEN_PATH = Path(__file__).parent / "golden" / "health_scores.json"
-DATA_FILES = sorted(p.name for p in (ROOT / "data").glob("*.json"))
+DATA_FILES = sorted(p.name for p in DATA_DIR.glob("*.json"))
 
 # Sidebar label -> satellites the dashboard is configured to track.
 CONSTELLATIONS = ["NavIC", "QZSS", "BeiDou-3"]
@@ -46,7 +48,7 @@ INPUT_FIELDS = ["Incl. (°)", "Current Drift (°/day)", "Lon Slot Deviation (°)
 
 
 def data_fingerprint():
-    return {name: hashlib.sha256((ROOT / "data" / name).read_bytes()).hexdigest()
+    return {name: hashlib.sha256((DATA_DIR / name).read_bytes()).hexdigest()
             for name in DATA_FILES}
 
 
@@ -109,7 +111,7 @@ CASES = [(c, s) for c, sats in (GOLDEN or {}).get("satellites", {}).items() for 
 def golden():
     assert GOLDEN is not None, "No golden file. Record one with RECORD_GOLDEN=1."
     assert GOLDEN["data_sha256"] == data_fingerprint(), (
-        "The bundled data files in data/ have changed since the golden scores were "
+        "The frozen bundled data files used by tests have changed since the golden scores were "
         "recorded. This is a data change, not a code regression. Review the new "
         "scores, then re-record with RECORD_GOLDEN=1."
     )
