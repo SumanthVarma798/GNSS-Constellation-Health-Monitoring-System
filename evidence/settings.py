@@ -131,6 +131,7 @@ CANDIDATE_GRADED = "graded"  # already in the source table; the proposed grade m
 CANDIDATE_STANDINGS = ("provisional", CANDIDATE_GRADED, "no grade: discovery or pointer", "held: not fetched")
 CANDIDATE_WORKED = "200"         # check_status of a row whose feed or page answered
 CANDIDATE_FEED_TYPE = "feed"     # check_type starts with this when the answer was a feed a program can read
+CANDIDATE_X_KIND = "X account"  # an X account read through twitterapi.io (evidence/x_reader.py): its posts are its own
 CANDIDATE_SOCIAL_KIND = "social feed"  # kind of a social media feed: its posts count only for the link they hold
 # A social post's own platform. A link to one of these is not a link to the post's source.
 SOCIAL_PLATFORM_HOSTS = ("reddit.com", "redd.it", "redditmedia.com", "redditstatic.com")

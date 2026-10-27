@@ -5,7 +5,7 @@ for each source belong in the source table, not here.
 """
 import csv
 
-from evidence.settings import CANDIDATE_SOCIAL_KIND, CANDIDATE_WORKED, SOURCE_CANDIDATES_FILE
+from evidence.settings import CANDIDATE_SOCIAL_KIND, CANDIDATE_WORKED, CANDIDATE_X_KIND, SOURCE_CANDIDATES_FILE
 
 # International GNSS Service: which physical satellite is which, with history.
 IGS_SATELLITE_METADATA_URL = "https://files.igs.org/pub/station/general/igs_satellite_metadata.snx"
@@ -69,13 +69,15 @@ ARCHIVED_SOURCES = {
     ],
     # News feeds and pages: every candidate whose check worked (evidence/source_candidates.csv), except
     # social media. Feeds change several times a day; the cadence is being measured (issue 13).
-    "news": [row["address"] for row in working_candidates() if row["kind"] != CANDIDATE_SOCIAL_KIND],
+    "news": [row["address"] for row in working_candidates() if row["kind"] not in (CANDIDATE_SOCIAL_KIND, CANDIDATE_X_KIND)],
     # Social media feeds, read rarely: Reddit refuses a second request in quick succession. A post counts
     # only for the link it holds (decision 5).
     "social": [row["address"] for row in working_candidates() if row["kind"] == CANDIDATE_SOCIAL_KIND],
+    # X accounts, read through a paid API (evidence/x_reader.py), not fetched from x.com. Each post is the account's own.
+    "x": [row["address"] for row in working_candidates() if row["kind"] == CANDIDATE_X_KIND],
 }
 # Groups read from the candidate list: provisional sources, archived before the team grades them.
-PROVISIONAL_GROUPS = ("news", "social")
+PROVISIONAL_GROUPS = ("news", "social", "x")
 
 
 def archived_addresses(group=None):

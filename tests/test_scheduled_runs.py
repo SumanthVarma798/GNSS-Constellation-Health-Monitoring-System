@@ -153,7 +153,7 @@ def test_the_workflow_publishes_latest_news_on_its_own_branch_with_write_access_
     publish = ARCHIVE_WORKFLOW.split("publish-news:", 1)[1]
     assert "needs: archive" in publish
     assert ("if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System' && always() && "
-            "(needs.archive.outputs.group == 'news' || needs.archive.outputs.group == 'all')") in publish
+            "(needs.archive.outputs.group == 'news' || needs.archive.outputs.group == 'x' || needs.archive.outputs.group == 'all')") in publish
     assert "permissions:\n      contents: write" in publish
     assert "git add latest_news.json" in publish and "git diff --cached --quiet" in publish
     assert 'git commit --quiet -m "Latest news for the dashboard"' in publish and "git push" in publish

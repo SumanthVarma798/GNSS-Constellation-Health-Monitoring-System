@@ -16,7 +16,7 @@ NEWS_MAX_AGE_DAYS = 365
 # The summary is cut at this many characters.
 SUMMARY_CHARACTERS = 300
 # These feed kinds may match systems from feed text when the headline names none.
-NEWS_TEXT_MATCH_KINDS = ("Substack feed", "newsletter feed")
+NEWS_TEXT_MATCH_KINDS = ("Substack feed", "newsletter feed", "X account")
 
 # News collection runs on this cadence.
 NEWS_CYCLE_HOURS = 3
@@ -78,3 +78,12 @@ NEWS_CATEGORIES = OrderedDict([
 # Category rules: checked in order on the headline first; if none match there, checked in order on the summary.
 CATEGORY_RULE_WORDS = ('Categories are checked in order: first the headline is checked against every category; only when '
                        'none matches, the feed text is checked in the same order; no match is "other".')
+
+# X accounts (kind "X account" in source_candidates.csv), read through twitterapi.io (key: TWITTERAPI_IO_KEY).
+X_API_URL = "https://api.twitterapi.io/twitter/tweet/advanced_search"
+# Only posts that name a navigation system are read.
+X_POST_WORDS = "(GPS OR BeiDou OR Galileo OR GLONASS OR NavIC OR IRNSS OR QZSS OR Michibiki)"
+# Each read covers this many days back, so a missed run loses nothing.
+X_READ_DAYS = 2
+# A post has no headline: its first words, cut here, stand in for one.
+X_TITLE_CHARACTERS = 120
