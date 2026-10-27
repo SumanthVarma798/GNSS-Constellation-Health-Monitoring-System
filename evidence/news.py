@@ -377,7 +377,7 @@ def latest_news(items):
 
 
 def feed_report(archive, run_log="archive"):
-    """FEED_REPORT_COLUMNS for every feed of the news and social groups, from the archive and its run log.
+    """FEED_REPORT_COLUMNS for every feed of the news, social and X groups, from the archive and its run log.
 
     runs counts the runs of the feed's group (or of every group) in the run log; copies counts the copies kept,
     each one a change. An item names a system when its title holds one of SYSTEM_WORDS.
@@ -389,7 +389,7 @@ def feed_report(archive, run_log="archive"):
     rows = []
     for group in PROVISIONAL_GROUPS:
         runs = sum(job in (f"archive {group}", "archive all") for job in jobs)
-        for address in (address for address in ARCHIVED_SOURCES[group] if address in feeds):
+        for address in (address for address in ARCHIVED_SOURCES.get(group, ()) if address in feeds):
             copies = sum(row["address"] == address and bool(row["sha256"]) for row in versions)
             found = [item for item in items if item["via"] == address]
             naming = sum(bool(systems_named(item["title"])) for item in found)

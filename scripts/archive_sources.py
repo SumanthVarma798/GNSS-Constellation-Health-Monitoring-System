@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from evidence.archive import (FetchFailed, log_run, note_answer, pacer, read_limits, record, waiting_until,
                               write_limits)
+from evidence import x_reader
 from evidence.sources import ARCHIVED_SOURCES, PROVISIONAL_GROUPS, archived_addresses
 
 RUN_LOG = "archive"  # runs/archive.csv in the archive folder
@@ -39,6 +40,7 @@ def main():
     addresses = archived_addresses(args.group)
     result = "stopped early"  # replaced below unless something unexpected ends the run
     paced_fetch, limits = pacer(), read_limits(args.archive)
+    x_addresses = set(ARCHIVED_SOURCES["x"])   # read through the X reader, not fetched from x.com
     if args.group:
         # A named group is either all graded or all provisional, so one flag covers every address in it.
         provisional_addresses, graded_group = set(), args.group not in PROVISIONAL_GROUPS
@@ -58,7 +60,7 @@ def main():
                 continue
             graded = graded_group if graded_group is not None else address not in provisional_addresses
             try:
-                reply = paced_fetch(address)
+                reply = x_reader.fetch(address) if address in x_addresses else paced_fetch(address)
             except FetchFailed as error:
                 note_answer(limits, address, "no answer", now)
                 failures += 1
