@@ -10,6 +10,8 @@ from pathlib import Path
 
 REQUEST_TIMEOUT_SECONDS = 60  # how long to wait for any outside server
 USER_AGENT = "gnss-evidence-archive/0.1 (scheduled research fetch)"  # how we name ourselves to them
+ORBIT_ALERT_DAYS = 2  # an orbit record this many days old raises an alert (the team's limit is 3; a day of buffer)
+ORBIT_STALE_DAYS = 3  # this old, the dashboard shows it as stale (the team's limit)
 
 # Each site's minimum gap between two of our requests to it. Every fetcher reads it here: the archive job and
 # the dashboard. A site is a host name and every host under it ("reddit.com" covers www.reddit.com).
@@ -18,6 +20,9 @@ USER_AGENT = "gnss-evidence-archive/0.1 (scheduled research fetch)"  # how we na
 MIN_GAP_BETWEEN_DOWNLOADS = {
     # CelesTrak asks for one download per 2 hours at most, and blocked this machine on 17 Oct 2026 for more (issue 76).
     "celestrak.org": timedelta(hours=2),
+    # Space-Track asks that class gp is read no more than once an hour, and says each login is capped at 30 requests
+    # a minute and 300 an hour (its API documentation; to confirm).
+    "space-track.org": timedelta(hours=1),
     # Refused a second request three seconds after the first (8 and 19 Oct 2026); five subreddits read 150 s apart
     # all answered (19 Oct). Read once a day (issue 13). The real limit is not published for feeds (guess).
     "reddit.com": timedelta(minutes=2),
@@ -52,12 +57,14 @@ ARCHIVE_OBJECTS_DIR = "objects"          # folder of raw copies, inside an archi
 ARCHIVE_VERSIONS_FILE = "versions.csv"   # one row per change, inside an archive folder
 ARCHIVE_VERSION_COLUMNS = ["address", "fetched_at", "status", "sha256", "bytes", "content_type", "wayback_url"]
 # The run log: one line per run of a scheduled job, inside an archive folder. One file per job file
-# (runs/archive.csv, runs/registry-update.csv), so two jobs saving at once never edit the same file.
+# (runs/archive.csv, runs/registry-update.csv, runs/orbit-ages.csv), so two jobs saving at once never edit the same file.
+# The orbit-age table (runs/orbit-age-by-satellite.csv) is also in this folder: one line per tracked satellite per run.
 ARCHIVE_RUNS_DIR = "runs"
 # Each site in its back-off, one row per site, rewritten whole every run, inside an archive folder.
 ARCHIVE_LIMITS_FILE = "limits.csv"
 ARCHIVE_LIMIT_COLUMNS = ["site", "refusals", "last_answer", "refused_at", "wait_until"]
 ARCHIVE_RUN_COLUMNS = ["job", "started", "ended", "result", "changed"]
+ORBIT_AGE_COLUMNS = ["day", "checked", "constellation", "satellite", "norad", "epoch", "source", "age_days", "status"]
 
 # --- The registry tables ---
 
@@ -73,6 +80,10 @@ REGISTRY_SIGNAL_ID_COLUMNS = ["svn", "signal_id", "valid_from", "valid_to", "not
 REGISTRY_CONSTELLATIONS_FILE = "constellations.csv"  # kept by hand: system letter -> constellation
 # Kept by hand: which satellites the dashboard tracks, in display order, and its name for each.
 REGISTRY_DASHBOARD_SATELLITES_FILE = "dashboard_satellites.csv"
+REGISTRY_DASHBOARD_SATELLITE_COLUMNS = ["svn", "dashboard_name", "added"]
+# The tracked list that must stay in step with today's signal IDs when the registry is rebuilt.
+REGISTRY_DASHBOARD_TRACKED_SYSTEMS = ("GPS", "GLONASS", "Galileo")
+NEW_ON_DASHBOARD_DAYS = 30  # a tracked satellite is shown as "new" on the dashboard for this many days
 
 # Built from the General Catalog of Artificial Space Objects (GCAT): owner and status per satellite.
 REGISTRY_CATALOGUE_FILE = "catalogue.csv"
@@ -103,6 +114,11 @@ REGISTRY_COLUMN_PLAIN_NAMES = {
 # The source table: one row per source, graded by a person. Changed only through review.
 SOURCE_GRADES_FILE = Path(__file__).resolve().parent / "source_grades.csv"
 SOURCE_GRADE_COLUMNS = ["source_id", "name", "reliability", "graded_by", "graded_on", "reason"]
+# Checked claims per source, appended as checks complete.
+SOURCE_RECORD_FILE = Path(__file__).resolve().parent / "source_record.csv"
+# Rejected source-grade findings: source, finding id, claim count then, and decision day.
+SOURCE_RECORD_REJECTED_FILE = Path(__file__).resolve().parent / "source_record_rejected.csv"
+SOURCE_RECORD_REJECTED_COLUMNS = ["source_id", "finding_id", "claims_at_rejection", "decided_on"]
 
 # Candidate sources for the news pipeline (issue 13), one row per feed or page. Each address was fetched once;
 # where it failed, up to two other addresses were tried, and the row records the last one.
@@ -115,6 +131,7 @@ CANDIDATE_GRADED = "graded"  # already in the source table; the proposed grade m
 CANDIDATE_STANDINGS = ("provisional", CANDIDATE_GRADED, "no grade: discovery or pointer", "held: not fetched")
 CANDIDATE_WORKED = "200"         # check_status of a row whose feed or page answered
 CANDIDATE_FEED_TYPE = "feed"     # check_type starts with this when the answer was a feed a program can read
+CANDIDATE_X_KIND = "X account"  # an X account read through twitterapi.io (evidence/x_reader.py): its posts are its own
 CANDIDATE_SOCIAL_KIND = "social feed"  # kind of a social media feed: its posts count only for the link they hold
 # A social post's own platform. A link to one of these is not a link to the post's source.
 SOCIAL_PLATFORM_HOSTS = ("reddit.com", "redd.it", "redditmedia.com", "redditstatic.com")
@@ -140,6 +157,10 @@ FEED_REPORT_COLUMNS = ["via", "group", "runs", "copies", "copies_per_run", "item
 LABELLING_SHEET_FILE = Path(__file__).resolve().parent / "labelling_sheet.csv"
 LABELLING_SHEET_COLUMNS = ["system", "title", "source_id", "published_at", "address", "claims_in_this_item", "none"]
 LABELLING_SHEET_SIZE = 30
+# For a new-satellite finding, a news item in the launch window counts only when its title also names the satellite
+# or says it launched (whole words, any case): naming the system alone matched unrelated articles (R809, 26 Oct 2026).
+NEWS_LAUNCH_WORDS = ("launch", "launched", "launches", "liftoff", "lifts off", "lifted off")
+
 # Words that put an item under a system, for spreading the sheet across all six. Matched as whole words,
 # any case. A cheap pointer, not the relevance filter: an item may name several systems or none.
 SYSTEM_WORDS = {

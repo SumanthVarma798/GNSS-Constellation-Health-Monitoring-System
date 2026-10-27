@@ -11,9 +11,9 @@ import streamlit as st
 from console import common
 from evidence import decisions, jobs
 from evidence.console_settings import ORBIT_LOG_JOB, RELIABILITY_DAYS, TESTS_WORKFLOW
+from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS
 from evidence.source_overview import overview
 from ui import console
-from ui.shell import STALE_DAYS
 
 TESTS_SHOWN = 10   # the newest runs of the tests on main, as marks
 
@@ -61,12 +61,12 @@ with body:
     if orbit_runs:
         latest = max(line["started"] for line in orbit_runs)
         hours = (now - latest).total_seconds() / 3600
-        share = hours / (STALE_DAYS * 24)
-        tone = "ok" if share < 0.5 else "warn" if share < 1 else "bad"
+        share = hours / (ORBIT_STALE_DAYS * 24)
+        tone = "ok" if hours < ORBIT_ALERT_DAYS * 24 else "warn" if hours < ORBIT_STALE_DAYS * 24 else "bad"
         orbit_tile = console.tile(tone, "Orbit data archived",
                                   console.status(tone, {"ok": "fresh", "warn": "getting old", "bad": "old"}[tone]),
-                                  console.when(latest) + " UTC", f"{hours:.0f} hours ago; warns after {STALE_DAYS} days",
-                                  console.meter(share, tone, f"{hours:.0f} of {STALE_DAYS * 24} hours"))
+                                  console.when(latest) + " UTC", f"{hours:.0f} hours ago; warns at {ORBIT_ALERT_DAYS} days, old at {ORBIT_STALE_DAYS}",
+                                  console.meter(share, tone, f"{hours:.0f} of {ORBIT_STALE_DAYS * 24} hours"))
     else:
         orbit_tile = console.tile("warn", "Orbit data archived", console.status("warn", "not known"), "–",
                                   "no orbit run in the run log")

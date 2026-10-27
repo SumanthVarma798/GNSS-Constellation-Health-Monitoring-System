@@ -7,7 +7,8 @@ from pathlib import Path
 
 WORKFLOWS_DIR = Path(__file__).resolve().parent.parent / ".github" / "workflows"
 ARCHIVE_REPOSITORY = "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive"   # private; holds the run logs
-RUN_LOGS = ("runs/archive.csv", "runs/registry-update.csv")   # in the archive: one line per run (ARCHIVE_RUN_COLUMNS)
+RUN_LOGS = ("runs/archive.csv", "runs/registry-update.csv", "runs/orbit-ages.csv",
+            "runs/rinex-check.csv")  # in the archive: one line per run
 
 # Every job the console lists, in this order: (workflow file, schedule group, name, what it does, its name in the run
 # log). The group is the word that starts the comment after a cron line in archive.yml ("documents", "news", ...);
@@ -20,6 +21,10 @@ JOBS = [
     ("archive.yml", "social", "Archive: social", "Copies Reddit feeds, for the links they carry", "archive social"),
     ("registry-update.yml", "", "Registry update", "Rebuilds the satellite tables from the IGS file; proposes any change",
      "registry update"),
+    ("orbit-ages.yml", "", "Orbit ages", "Measures each satellite's orbit record age; Space-Track fills in old ones",
+     "orbit ages"),
+    ("rinex-check.yml", "", "Orbit record check", "Measures each orbit record against the satellite's broadcast orbit",
+     "rinex check"),
     ("update-tle-data.yml", "", "Update orbit data", "Refreshes the dashboard's bundled orbit data", None),
     ("tests.yml", "", "Tests", "Runs every test on each change", None),
 ]
@@ -30,3 +35,6 @@ RELIABILITY_DAYS = 14   # columns in the day-by-day reliability grid
 RECENT_EVENTS = 10      # lines in the Summary's recent events
 RUNS_READ = 100         # GitHub's largest page of runs
 LOOK_AHEAD_DAYS = 8     # a schedule with no run within this many days says "none in the next week"
+PIPELINE_FEED_EVENTS = 20        # lines in the live pipeline's proof feed
+PIPELINE_LOOK_AHEAD_HOURS = 24   # how far ahead the live pipeline's Next up panel looks
+PIPELINE_READ_EVERY_SECONDS = 30   # how often the live pipeline page refreshes itself

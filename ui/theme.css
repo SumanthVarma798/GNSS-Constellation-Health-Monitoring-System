@@ -299,6 +299,7 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .tile .s { font-size: 28px; font-weight: 700; line-height: 1.1; margin: 6px 0; }
 .tile .s.ok { color: var(--ok); } .tile .s.warn { color: var(--warn); } .tile .s.bad { color: var(--bad); } .tile .s.idle { color: var(--idle); font-size: 22px; font-family: inherit; }
 .tile .r { display: flex; gap: 6px; flex-wrap: wrap; }
+.tile .r .tt-trigger { text-decoration: none; }
 .tile .low { font-size: 13px; margin-top: 8px; }
 .muted { color: var(--muted); font-weight: 400; }
 

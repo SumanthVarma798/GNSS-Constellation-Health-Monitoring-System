@@ -58,9 +58,9 @@ def test_the_job_can_be_started_by_hand_for_any_group():
     assert options == ["all", *ARCHIVED_SOURCES]
 
 
-def test_news_and_social_are_the_candidates_whose_check_worked():
+def test_news_social_and_x_are_the_candidates_whose_check_worked():
     worked = {row["address"] for row in working_candidates()}
-    assert set(archived_addresses("news")) | set(archived_addresses("social")) == worked
+    assert set(archived_addresses("news")) | set(archived_addresses("social")) | set(archived_addresses("x")) == worked
     assert not any(address.startswith("https://pib.gov.in/") for address in worked)   # refused (403): via Google News
     assert not any("ssc.spaceforce.mil" in address for address in worked)   # answered with an empty body
 

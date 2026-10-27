@@ -54,11 +54,12 @@ def band(score):
     return "ok" if score >= 80 else "warn" if score >= 60 else "bad"
 
 
-def tile(name, orbit="", score=None, status="", slot="", slot_status="idle", weakest=None):
+def tile(name, orbit="", score=None, status="", slot="", slot_status="idle", weakest=None, age_html=""):
     """One satellite: its name and orbit type, overall score, status word, slot state, weakest part.
 
     A score of None is a satellite set aside: the tile reads "set aside" and shows only the slot state.
     weakest is (label, score) or None. The score decides the tile's colour; a satellite set aside takes the slot state's.
+    age_html, when given, is one more tag drawn in the tile's tag row after the state words.
     """
     _check_status(slot_status)
     edge = slot_status if score is None else band(score)
@@ -67,7 +68,8 @@ def tile(name, orbit="", score=None, status="", slot="", slot_status="idle", wea
            else f'<div class="s num {edge}">{score:.1f}</div>')
     chips = chip(slot, slot_status) if score is None else chip(status, edge) + chip(slot, slot_status)
     low = f'<div class="small low">Weakest: {escape(weakest[0])} {weakest[1]:.0f}</div>' if weakest else ""
-    return f'<div class="tile {edge}"><div class="n">{escape(name)}{kind}</div>{big}<div class="r">{chips}</div>{low}</div>'
+    return (f'<div class="tile {edge}"><div class="n">{escape(name)}{kind}</div>{big}'
+            f'<div class="r">{chips}{age_html}</div>{low}</div>')
 
 
 def parts_matrix(rows):

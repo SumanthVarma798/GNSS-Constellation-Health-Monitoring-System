@@ -18,6 +18,8 @@ import archive_sources  # noqa: E402
 
 RUN_TIME = datetime(2026, 10, 19, 5, 18, 51, tzinfo=timezone.utc)   # when the documents job ran today (checked)
 ARCHIVE_WORKFLOW = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "archive.yml").read_text()
+REGISTRY_WORKFLOW = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "registry-update.yml").read_text()
+UPDATE_TLE_WORKFLOW = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "update-tle-data.yml").read_text()
 
 
 class Reply:
@@ -143,3 +145,51 @@ def test_the_alert_ping_does_not_fail_for_a_missing_check_or_an_unset_key():
 
     assert 'if [ -z "$KEY" ]' in health_step and "exit 0" in health_step
     assert '|| echo "::warning::Healthchecks.io did not take this report.' in health_step
+
+
+def test_the_workflow_publishes_latest_news_on_its_own_branch_with_write_access_only_there():
+    assert "outputs:\n      group: ${{ steps.due.outputs.group }}" in ARCHIVE_WORKFLOW
+    assert "publish-news:" in ARCHIVE_WORKFLOW
+    publish = ARCHIVE_WORKFLOW.split("publish-news:", 1)[1]
+    assert "needs: archive" in publish
+    assert ("if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System' && always() && "
+            "(needs.archive.outputs.group == 'news' || needs.archive.outputs.group == 'x' || needs.archive.outputs.group == 'all')") in publish
+    assert "permissions:\n      contents: write" in publish
+    assert "git add latest_news.json" in publish and "git diff --cached --quiet" in publish
+    assert 'git commit --quiet -m "Latest news for the dashboard"' in publish and "git push" in publish
+
+    archive_job = ARCHIVE_WORKFLOW.split("archive:", 1)[1].split("publish-news:", 1)[0]
+    assert "permissions:\n  contents: read" in ARCHIVE_WORKFLOW
+    assert "contents: write" not in archive_job
+
+
+def test_the_registry_run_log_names_the_step_when_a_failure_happens():
+    assert "id: build" in REGISTRY_WORKFLOW
+    assert "id: tables" in REGISTRY_WORKFLOW
+    assert "id: tests" in REGISTRY_WORKFLOW
+    assert "id: propose" in REGISTRY_WORKFLOW
+    assert "failed at: rebuilding the tables" in REGISTRY_WORKFLOW
+    assert "failed at: the tests on the new tables" in REGISTRY_WORKFLOW
+    assert "failed at: opening the proposal" in REGISTRY_WORKFLOW
+    assert "failed at: checking out or installing" in REGISTRY_WORKFLOW
+
+
+def test_update_tle_data_reports_to_healthchecks_without_breaking_the_job():
+    health_step = UPDATE_TLE_WORKFLOW.split("Tell Healthchecks.io how the run went", 1)[1]
+
+    assert 'if [ -z "$KEY" ]' in health_step and "exit 0" in health_step
+    assert '--data-raw "Update TLE Data run ${{ github.run_id }}: ${{ job.status }}"' in health_step
+    assert 'https://hc-ping.com/$KEY/update-tle-data/$OUTCOME' in health_step
+    assert '|| echo "::warning::Healthchecks.io did not take this report.' in health_step
+
+
+def test_rinex_check_workflow_logs_archives_and_reports_to_healthchecks():
+    workflow = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "rinex-check.yml").read_text()
+
+    assert "name: RINEX check" in workflow
+    assert "- cron: '0 6 * * *'" in workflow
+    assert "python scripts/orbit_record_gap.py --json" in workflow
+    assert "scripts/log_run.py --archive . --log rinex-check --job \"rinex check\"" in workflow
+    assert "https://hc-ping.com/$KEY/rinex-check/$OUTCOME" in workflow
+    assert "git checkout --orphan orbit-checks" in workflow
+    assert "Orbit record check for $DAY" in workflow

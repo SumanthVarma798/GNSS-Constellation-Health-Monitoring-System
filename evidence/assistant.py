@@ -6,6 +6,7 @@ to refuse what the material does not say. A local model can still slip, so the p
 names that is not in the material (unknown_sources).
 """
 import ast
+import csv
 import json
 import re
 import time
@@ -13,7 +14,7 @@ import time
 import requests
 
 from evidence.assistant_settings import (ANSWER_SECONDS, CODE_FOLDERS, CONTEXT_TOKENS, DOCUMENTS, HISTORY_TURNS,
-                                         ISSUE_CHARACTERS, MODEL, OLLAMA_URL, ROOT, RULES)
+                                         ISSUE_CHARACTERS, MODEL, OLLAMA_URL, ROOT, RULES, SOURCE_FILES)
 
 PAGE_LABEL = "System design page"
 
@@ -22,10 +23,14 @@ class Unavailable(Exception):
     """The model cannot answer; the message says why in plain words."""
 
 
-def available():
-    """Whether the model can be asked here: Ollama answers at OLLAMA_URL. False on the shared console, which has none."""
+def _headers(key):
+    return {"Authorization": f"Bearer {key}"} if key else {}
+
+
+def available(url=OLLAMA_URL, key=""):
+    """Whether the model can be asked: Ollama, or the gate in front of it, answers at `url` (with `key`)."""
     try:
-        return requests.get(f"{OLLAMA_URL}/api/version", timeout=2).ok
+        return requests.get(f"{url}/api/version", headers=_headers(key), timeout=5).ok
     except requests.RequestException:
         return False
 
@@ -34,6 +39,7 @@ def material(issues, parts):
     """Everything the assistant may answer from, each piece under its [label]. `issues` are GitHub's open issues,
     `parts` the System design page's words (ui/components/system_design.PARTS)."""
     pieces = [f"=== [{path}] ===\n{(ROOT / path).read_text(encoding='utf-8')}" for path in DOCUMENTS]
+    pieces.extend(f"=== [{path}] ===\n{_source_lines(path)}" for path in SOURCE_FILES)
     pieces.append(f"=== [{PAGE_LABEL}] ===\n" + "\n".join(
         f"{name} ({kind}): {simple} Details: {'; '.join(tech)}. Limits: {'; '.join(limits)}. Lives in: {where}."
         for name, kind, simple, tech, limits, where in parts.values()))
@@ -42,6 +48,21 @@ def material(issues, parts):
     pieces.append("=== Open issues: planned work, not built ===\n" + "\n".join(
         f"[issue #{i['number']}] {i['title']}: {_short(i.get('body') or '')}" for i in issues))
     return "\n\n".join(pieces)
+
+
+def _source_lines(path):
+    """One compact line per source in a source list, with the fields an answer about news sources needs."""
+    with (ROOT / path).open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    if path.endswith("source_candidates.csv"):
+        return "\n".join(
+            f"{row['source_id']} | {row['name']} | {row['kind']} | {row['address']} | check status {row['check_status']}"
+            f" | proposed grade {row['proposed_grade'] or 'none'} | {row['standing']}"
+            for row in rows)
+    return "\n".join(
+        f"{row['source_id']} | {row['name']} | given grade {row['reliability']} | {row['graded_by']} | "
+        f"graded {row['graded_on']} | {row['reason']}"
+        for row in rows)
 
 
 def _descriptions():
@@ -60,22 +81,28 @@ def _short(text):
     return text if len(text) <= ISSUE_CHARACTERS else text[:ISSUE_CHARACTERS].rsplit(" ", 1)[0] + " …"
 
 
-def answer(question, history, material_text):
+def answer(question, history, material_text, url=OLLAMA_URL, key=""):
     """The answer, piece by piece as the model writes it. `history` is the earlier [{role, content}] turns."""
     messages = ([{"role": "system", "content": f"{RULES}\n\nMATERIAL:\n{material_text}"}]
                 + history[-2 * HISTORY_TURNS:] + [{"role": "user", "content": question}])
     deadline = time.monotonic() + ANSWER_SECONDS
     try:
-        reply = requests.post(f"{OLLAMA_URL}/api/chat", stream=True, timeout=ANSWER_SECONDS,
+        reply = requests.post(f"{url}/api/chat", stream=True, timeout=ANSWER_SECONDS, headers=_headers(key),
                               json={"model": MODEL, "messages": messages, "stream": True, "think": False,
                                     "options": {"num_ctx": CONTEXT_TOKENS, "temperature": 0}})
     except requests.ConnectionError as error:
-        raise Unavailable(f"The local model is not running. Start it with `ollama serve` (at {OLLAMA_URL}).") from error
+        raise Unavailable("The model is not reachable. On the computer that runs it, start `ollama serve` (and, for the "
+                          "shared console, the gate and the tunnel).") from error
     except requests.RequestException as error:
         raise Unavailable(f"The model did not answer ({error.__class__.__name__}). Try again.") from error
     with reply:
         if reply.status_code == 404:
-            raise Unavailable(f"The model {MODEL} is not on this computer. Get it once with `ollama pull {MODEL}`.")
+            raise Unavailable(f"The model {MODEL} is not on the computer that runs it. There, get it once with "
+                              f"`ollama pull {MODEL}`.")
+        if reply.status_code == 429:
+            raise Unavailable("The model is answering someone else's question. Try again in a minute.")
+        if reply.status_code in (401, 403):
+            raise Unavailable("The console's key for the model is not accepted. Check [assistant] key in its secrets.")
         try:
             reply.raise_for_status()
             for line in reply.iter_lines():

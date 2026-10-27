@@ -203,7 +203,7 @@ Produced from the code. A test fails if this table and the code disagree.
 | News feeds and pages are fetched | `50 */3 * * *` (news: every 3 hours from 00:50 UTC = 06:20 India time; first, to measure how often feeds change (issue 13)) | `.github/workflows/archive.yml` |
 | Social media feeds are fetched | `40 1 * * *` (social: once a day, 01:40 UTC = 07:10 India time; Reddit refuses requests in quick succession) | `.github/workflows/archive.yml` |
 | The registry is rebuilt | `0 1 * * 0` (Sundays 01:00 UTC = 06:30 India time: half an hour after that day's documents fetch (see archive.yml), so the registry builds from a fresh copy) | `.github/workflows/registry-update.yml` |
-| Sources archived, by group | documents: 1, catalogues: 2, orbital: 1, news: 44, social: 6 | `evidence/sources.py` |
+| Sources archived, by group | documents: 1, catalogues: 2, orbital: 1, news: 44, social: 6, x: 16 | `evidence/sources.py` |
 | Grades that clear the bar alone | A | `evidence/settings.py` |
 | Grades lifted by a second source | B | `evidence/settings.py` |
 | Grades lifted by our own data | B | `evidence/settings.py` |
@@ -211,7 +211,7 @@ Produced from the code. A test fails if this table and the code disagree.
 | The three labels | confirmed, probable, unconfirmed | `evidence/settings.py` |
 | Longest wait for an outside server | 60 seconds | `evidence/settings.py` |
 | A failed download is tried | 3 times, 60 seconds apart; once a run where that is sooner than the source's gap | `evidence/settings.py` |
-| Shortest gap between two requests to one site | celestrak.org: 2 hours, reddit.com: 2 minutes, news.google.com: 10 seconds, any other site: 5 seconds | `evidence/settings.py` |
+| Shortest gap between two requests to one site | celestrak.org: 2 hours, space-track.org: 1 hour, reddit.com: 2 minutes, news.google.com: 10 seconds, any other site: 5 seconds | `evidence/settings.py` |
 | A site that refuses us waits | 1 hour, doubling with each refusal in a row, at most 7 days; refusals are 403, 429 or no answer | `evidence/settings.py` |
 | Largest copy the archive keeps | 50 MB | `evidence/settings.py` |
 | Statuses that mean a page is gone | 404, 410 | `evidence/settings.py` |
@@ -236,7 +236,7 @@ Produced from the code. A test fails if this table and the code disagree.
 | - | What the archive records | Only changes, plus one line per run of each scheduled job in its run log (`runs/<job file>.csv`). "Last checked" is the last run logged as ok. |
 | - | When a failed source fails the job | A failed graded source fails the whole job. A failed news or social candidate is recorded in the run log but does not fail the job; the job fails only if the run breaks, nothing could be fetched at all, or a graded source fails. |
 | - | Run log | A file in the archive, not a hosted logging service: the free ones found (Grafana Cloud, Axiom, Better Stack) keep logs 3 to 30 days and need an account, for about four lines a day. Decided 19 Oct 2026 at Sumanth's request. |
-| - | Alerts | Healthchecks.io (open source, free hosted tier of 20 checks). Each scheduled run reports how it went, with its run log line, to one check per job: `archive-documents`, `archive-catalogues`, `archive-orbital`, `registry-update`. It emails when a run fails, or when none arrives within 8 hours of its written time, which also catches a run GitHub never starts. GitHub's own failure email does not reach Sumanth (checked by him, 19 Oct 2026). |
+| - | Alerts | Healthchecks.io (open source, free hosted tier of 20 checks). Each scheduled run reports how it went, with its run log line, to one check per job: `archive-documents`, `archive-catalogues`, `archive-orbital`, `archive-news`, `archive-social`, `registry-update`, `update-tle-data` (which has no run log line, so it sends a short line of its own). It emails when a run fails, or when none arrives within 8 hours of its written time, which also catches a run GitHub never starts. GitHub's own failure email does not reach Sumanth (checked by him, 19 Oct 2026). |
 | - | Limits per source | One place, `MIN_GAP_BETWEEN_DOWNLOADS` in `evidence/settings.py`, read by the archive job and the dashboard. A retry that would come sooner than a source's gap is not made. |
 | - | Storage rule | The database keeps a reference to a document, never the document |
 | - | Cadence | Documents daily at 6 AM India time; catalogues daily at 6:15 AM; orbit records daily at 6:45 AM; news every 3 hours, to measure how often each feed changes (issue 13); social media daily at 7:10 AM; registry on Sundays at 6:30 AM. Short cadences first, accepting the storage; lengthen them as the product matures. |
@@ -247,6 +247,8 @@ Produced from the code. A test fails if this table and the code disagree.
 | - | A satellite and its slot | Each satellite is judged against its own slot, never the nearest one, so one that drifts onto another's slot still shows as drifted. |
 | - | How the work is run | One lead session talks to Sumanth, tracks progress, briefs helper sessions, reviews their work and is the only one that pushes. Sumanth approves every pull request. |
 | - | Where the console runs | Streamlit Community Cloud, free, from `main` of this private repository, behind the console's own Google sign-in and list; the app itself is set public on Streamlit so the team signs in once. Its settings and token live in the app's secrets there, never in the repository. The assistant's questions work only where Ollama runs, so they are off on the shared copy. Decided 21 Oct 2026 at Sumanth's request (issue 17). |
+| - | Who decides an item | One approval, from anyone on the console's list, including the person who raised it (decided 22 Oct 2026; the earlier rule that the raiser could not decide is gone). Two or more approvals, with an optional standing second approver such as a senior, are planned (issue 120). |
+| - | The assistant on the shared console | It asks the Ollama on Sumanth's Mac through Tailscale Funnel (free, a fixed https address). Funnel exposes only a gate, `scripts/ollama_gate.py`: it passes questions for the one model and the version check, needs a key, and takes one question at a time. Ollama itself is never exposed. Questions work only while the Mac is awake with Ollama, the gate and the tunnel running; otherwise the page says they are off. Decided 22 Oct 2026 at Sumanth's request. |
 | - | Parts out of step | Anything a person approves arrives late. Every part must keep working, and say so visibly, while another part is behind. Tests are strict at the point of approval; the running system is tolerant. |
 
 ## 9. Assumptions

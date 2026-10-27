@@ -5,7 +5,7 @@ for each source belong in the source table, not here.
 """
 import csv
 
-from evidence.settings import CANDIDATE_SOCIAL_KIND, CANDIDATE_WORKED, SOURCE_CANDIDATES_FILE
+from evidence.settings import CANDIDATE_SOCIAL_KIND, CANDIDATE_WORKED, CANDIDATE_X_KIND, SOURCE_CANDIDATES_FILE
 
 # International GNSS Service: which physical satellite is which, with history.
 IGS_SATELLITE_METADATA_URL = "https://files.igs.org/pub/station/general/igs_satellite_metadata.snx"
@@ -31,14 +31,19 @@ CELESTRAK_GNSS_URL = "https://celestrak.org/NORAD/elements/gp.php?GROUP=gnss&FOR
 GALMON_SATELLITES_URL = "https://galmon.eu/svs.json"
 
 
+def candidate_rows():
+    """Every candidate row, in file order."""
+    with open(SOURCE_CANDIDATES_FILE, newline="", encoding="utf-8") as handle:
+        return list(csv.DictReader(handle))
+
+
 def working_candidates():
     """The candidate rows (issue 13) whose feed or page answered with something when checked.
 
     Each is provisional: collected, never deciding anything, until the team grades it.
     """
-    with open(SOURCE_CANDIDATES_FILE, newline="", encoding="utf-8") as handle:
-        return [row for row in csv.DictReader(handle)
-                if row["check_status"] == CANDIDATE_WORKED and int(row["check_bytes"] or 0) > 0]
+    return [row for row in candidate_rows()
+            if row["check_status"] == CANDIDATE_WORKED and int(row["check_bytes"] or 0) > 0]
 
 
 # What the archive job keeps a raw copy of, by group. Each group is fetched on
@@ -64,13 +69,15 @@ ARCHIVED_SOURCES = {
     ],
     # News feeds and pages: every candidate whose check worked (evidence/source_candidates.csv), except
     # social media. Feeds change several times a day; the cadence is being measured (issue 13).
-    "news": [row["address"] for row in working_candidates() if row["kind"] != CANDIDATE_SOCIAL_KIND],
+    "news": [row["address"] for row in working_candidates() if row["kind"] not in (CANDIDATE_SOCIAL_KIND, CANDIDATE_X_KIND)],
     # Social media feeds, read rarely: Reddit refuses a second request in quick succession. A post counts
     # only for the link it holds (decision 5).
     "social": [row["address"] for row in working_candidates() if row["kind"] == CANDIDATE_SOCIAL_KIND],
+    # X accounts, read through a paid API (evidence/x_reader.py), not fetched from x.com. Each post is the account's own.
+    "x": [row["address"] for row in working_candidates() if row["kind"] == CANDIDATE_X_KIND],
 }
 # Groups read from the candidate list: provisional sources, archived before the team grades them.
-PROVISIONAL_GROUPS = ("news", "social")
+PROVISIONAL_GROUPS = ("news", "social", "x")
 
 
 def archived_addresses(group=None):

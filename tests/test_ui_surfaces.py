@@ -112,6 +112,16 @@ def test_tile_set_aside_reads_so_and_has_no_score():
     assert "Weakest" not in html and 'class="chip bad">left its slot' in html
 
 
+def test_tile_appends_age_html_after_the_state_chips_and_defaults_to_nothing():
+    age = '<span class="chip idle">no orbit record</span>'
+    html = surfaces.tile("IRNSS-1D", slot="left its slot", slot_status="bad", age_html=age)
+
+    assert html.index("left its slot") < html.index("no orbit record")
+    assert html.rstrip().endswith("</div>")
+    without_age = surfaces.tile("IRNSS-1D", slot="left its slot", slot_status="bad")
+    assert "no orbit record" not in without_age
+
+
 def test_tile_escapes_text_and_rejects_an_unknown_status():
     html = surfaces.tile(ATTACK, ATTACK, 70, ATTACK, ATTACK, "warn", (ATTACK, 1))
 

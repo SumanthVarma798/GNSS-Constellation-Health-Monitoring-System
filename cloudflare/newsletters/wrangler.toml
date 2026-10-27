@@ -1,0 +1,18 @@
+# The newsletters Worker (issue 152): Substack newsletters arrive by email and are served as RSS for the archive.
+# Deploy from this folder: npm ci && npx wrangler deploy   (docs/infrastructure.md says who can, and how)
+name = "opengnss-newsletters"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+account_id = "16a8736db713b936302230f75fad84b2"   # the OpenGNSS account, not anyone's personal one
+
+# https://feeds.opengnss.org/substack/<publication>/feed
+routes = [{ pattern = "feeds.opengnss.org", custom_domain = true }]
+
+# Kept newsletters: raw:<key> (private), post:<key> (what the feed shows), notice:<time> (sign-in and welcome mail).
+[[kv_namespaces]]
+binding = "NEWSLETTERS"
+id = "ebebf306d0a244baad87cd7136c9a708"
+
+# Optional: a verified address that receives Substack's sign-in and confirmation mail. Unset, those are only logged.
+# [vars]
+# NOTICE_TO = "someone@example.org"

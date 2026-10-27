@@ -5,9 +5,10 @@ line-by-line difference a person can review. See registry/README.md. Their
 file names and columns are in evidence/settings.py.
 """
 import csv
+from datetime import date, timedelta
 
 from evidence.settings import (REGISTRY_CONSTELLATIONS_FILE, REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_DIR,
-                               REGISTRY_SATELLITES_FILE)
+                               REGISTRY_DASHBOARD_TRACKED_SYSTEMS, REGISTRY_SATELLITES_FILE, NEW_ON_DASHBOARD_DAYS)
 
 
 def read_table(name):
@@ -67,3 +68,65 @@ def generation_satellites(constellation, block_start):
     """Registry rows of one constellation whose block starts with block_start, in registry order."""
     return [row for row in read_table(REGISTRY_SATELLITES_FILE)
             if row["constellation"] == constellation and row["block"].startswith(block_start)]
+
+
+def tracked_list_in_step(satellites, tracked, names, today):
+    """dashboard_satellites.csv rows with GPS/GLONASS/Galileo kept in step with today's signal IDs.
+
+    `satellites` and `tracked` are table rows as read_table() returns; `names` maps SVN to a dashboard
+    name for new rows. Systems outside REGISTRY_DASHBOARD_TRACKED_SYSTEMS are left exactly as they are.
+    """
+    target = set(REGISTRY_DASHBOARD_TRACKED_SYSTEMS)
+    by_svn = {row["svn"]: row for row in satellites}
+    letters = {row["svn"][0]: row["constellation"] for row in satellites if row["constellation"] in target and row["svn"]}
+    wanted = {system: [row["svn"] for row in satellites if row["constellation"] == system and row["signal_id_now"]]
+              for system in REGISTRY_DASHBOARD_TRACKED_SYSTEMS}
+    wanted_sets = {system: set(svns) for system, svns in wanted.items()}
+    kept, seen = [], set()
+    for row in tracked:
+        system = by_svn.get(row["svn"], {}).get("constellation") or letters.get(row["svn"][:1], "")
+        if system in target:
+            if row["svn"] in wanted_sets[system]:
+                kept.append(row)
+                seen.add(row["svn"])
+            continue
+        kept.append(row)
+    updated = list(kept)
+    for system in REGISTRY_DASHBOARD_TRACKED_SYSTEMS:
+        missing = [svn for svn in wanted[system] if svn not in seen]
+        if not missing:
+            continue
+        insert_at = max((i for i, row in enumerate(updated)
+                         if (by_svn.get(row["svn"], {}).get("constellation") or letters.get(row["svn"][:1], "")) == system),
+                        default=len(updated) - 1)   # a system with no rows yet goes last
+        added = [{"svn": svn, "dashboard_name": names.get(svn) or svn, "added": today} for svn in missing]
+        updated[insert_at + 1:insert_at + 1] = added
+    return updated
+
+
+def recently_added(constellation, today, days=NEW_ON_DASHBOARD_DAYS):
+    """[(dashboard name, added date)] for tracked satellites recently added in one constellation.
+
+    Rows with a blank or unreadable date are not counted as recently added.
+    """
+    window_start = today - timedelta(days=days)
+    letters = constellation_names()
+    fresh = []
+    for row in read_table(REGISTRY_DASHBOARD_SATELLITES_FILE):
+        if letters.get(row["svn"][:1]) != constellation:
+            continue
+        try:
+            added = date.fromisoformat((row.get("added") or "").strip())
+        except ValueError:
+            continue
+        if window_start <= added <= today:
+            fresh.append((row["dashboard_name"], added.isoformat()))
+    return fresh
+
+
+def new_on_dashboard(constellation, today):
+    """The page's notice for satellites recently added to the tracked list, or "". The pages call BeiDou "BeiDou-3"."""
+    fresh = recently_added("BeiDou" if constellation == "BeiDou-3" else constellation, today)
+    named = "; ".join(f"{name} (added {(day := date.fromisoformat(added)).day} {day:%b %Y} after an approved registry proposal)"
+                      for name, added in fresh)
+    return f"New on the dashboard: {named}." if fresh else ""

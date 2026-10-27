@@ -8,12 +8,13 @@
 __TOKENS__
 *, *::before, *::after { box-sizing: border-box; border-radius: 0 !important; }
 html, body { margin: 0; background: var(--pane); color: var(--ink); font: 13px/1.45 __FONT__; }
+html, body { overflow-x: hidden; }
 :focus-visible { outline: 2px solid var(--c-info); outline-offset: 2px; }
-.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); border: 1px solid var(--edge); margin-bottom: 12px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); border: 2px solid var(--outline); box-shadow: var(--hard); margin-bottom: 18px; }
 .facts div { padding: 8px 12px; border-right: 1px solid var(--edge); border-top: 4px solid var(--c-info); min-width: 0; }
-.facts b { display: block; font-size: 22px; font-weight: 600; line-height: 1.2; }
+.facts b { display: block; font-size: 22px; font-weight: 800; line-height: 1.2; }
 .facts span { color: var(--muted); }
-.diagram { border: 1px solid var(--edge); padding: 10px; overflow-x: auto; }
+.diagram { border: 2px solid var(--outline); box-shadow: var(--hard); padding: 10px; overflow-x: auto; margin-bottom: 18px; }
 #sysmap { display: block; width: 100%; min-width: 760px; height: auto; font: 12px __FONT__; }
 #sysmap .cols text { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-anchor: middle; fill: var(--muted); }
 #sysmap #edges path { fill: none; stroke: var(--axis); stroke-width: 1.5; marker-end: url(#arr); }
@@ -26,7 +27,7 @@ html, body { margin: 0; background: var(--pane); color: var(--ink); font: 13px/1
 #sysmap #nodes g.key rect { stroke: var(--c-c); stroke-width: 3; }
 #sysmap #nodes text { fill: var(--ink); font-weight: 700; }
 #sysmap #nodes text.s { font-weight: 400; fill: var(--muted); font-size: 11px; }
-#sysmap #nodes g:hover rect { fill: var(--hover); }
+#sysmap #nodes g:hover rect { fill: var(--hover); stroke: var(--select-edge); stroke-width: 3; }
 #sysmap #nodes g.lit rect { fill: var(--pane-alt); stroke-width: 4; }
 #sysmap #nodes g.sel rect { fill: var(--select); }
 #sysmap #nodes g.sel text { fill: var(--select-ink); }
@@ -35,22 +36,32 @@ html, body { margin: 0; background: var(--pane); color: var(--ink); font: 13px/1
 .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--muted); font-size: 11px; margin-top: 8px; }
 .legend b { display: inline-block; width: 14px; height: 10px; margin-right: 5px; vertical-align: -1px; border: 2px solid; background: var(--pane); }
 .stepper { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--edge); }
-.seg { display: inline-flex; border: 1px solid var(--btn-edge); }
-.seg button { font: inherit; min-width: 30px; height: 26px; border: 0; border-right: 1px solid var(--edge); background: var(--btn-bg); color: var(--btn-ink);
-  box-shadow: var(--th-bevel); cursor: pointer; }
+.seg { display: inline-flex; border: 2px solid var(--outline); box-shadow: var(--hard); }
+.seg button { font: inherit; font-weight: 800; min-width: 30px; height: 30px; border: 0; border-right: 1px solid var(--edge); background: var(--btn-bg); color: var(--btn-ink);
+  box-shadow: var(--btn-bevel); cursor: pointer; }
 .seg button:last-child { border-right: 0; }
-.seg button[aria-pressed="true"] { background: var(--select); color: var(--select-ink); box-shadow: none; font-weight: 700; }
+.seg button:hover { background: var(--hover); color: var(--btn-ink); }
+.seg button:active { transform: translate(2px, 2px); box-shadow: var(--btn-bevel-pressed), var(--hard-sm); }
+.seg button[aria-pressed="true"] { background: var(--select); color: var(--select-ink); box-shadow: var(--btn-bevel-pressed); font-weight: 800; }
+.seg button[aria-pressed="true"]:hover { background: var(--select); color: var(--select-ink); }
 #stepword { width: 100%; }
-.card { margin-top: 12px; border: 1px solid var(--edge); border-top: 5px solid var(--c-ok); }
+.card { margin-top: 18px; border: 2px solid var(--outline); border-top: 5px solid var(--c-ok); box-shadow: var(--hard); }
 .card.planned { border-top-color: var(--c-info); } .card.key { border-top-color: var(--c-c); }
-.card h3 { margin: 0; padding: 7px 12px; font-size: 14px; background: var(--head-bg); color: var(--head-ink); }
+.card h3 { margin: 0; padding: 7px 12px; font-size: 14px; font-weight: 800; background: var(--head-bg); color: var(--head-ink); box-shadow: var(--th-bevel); }
 .card .st { padding: 6px 12px 0; font-weight: 700; }
 .card .st.built { color: var(--ok); } .card .st.planned { color: var(--info); } .card .st.key { color: var(--warn); }
 .card h4 { margin: 10px 12px 2px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-.card p, .card ul { margin: 0 12px; } .card ul { padding-left: 16px; } .card li { margin: 2px 0; }
+.card p, .card ul { margin: 0 12px; } .card ul { padding-left: 1.4em; } .card li { margin: 2px 0; }
 .cols2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0 12px; }
-.where { margin: 10px 12px 12px; padding: 6px 8px; background: var(--pane-alt); border: 1px solid var(--edge-soft); }
+.where { margin: 10px 12px 12px; padding: 6px 8px; background: var(--pane-alt); border: 2px solid var(--outline); box-shadow: var(--well-bevel); }
 .where code { font: 12px var(--mono); }
+@media (max-width: 600px) {
+  .facts, .diagram, .card, .seg { box-shadow: var(--hard-sm); }
+  .card { margin-top: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .seg button:active { transform: none; }
+}
 </style>
 </head>
 <body>
@@ -110,6 +121,7 @@ const DATA = __DATA__;
 const $ = (s) => document.querySelector(s), $$ = (s) => [...document.querySelectorAll(s)];
 function el(tag, text, cls) { const e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (cls) e.className = cls; return e; }
 const STATES = { built: "Built and running", planned: "Planned", key: "Where a person decides" };
+let stepIndex = -1;   // no step chosen yet; the arrows step from there, and wrap at both ends
 for (const f of DATA.facts) { const d = el("div"); d.append(el("b", f.figure), el("span", f.words)); $("#facts").append(d); }
 function list(items) { const u = el("ul"); for (const t of items) u.append(el("li", t)); return u; }
 function show(key) {
@@ -122,15 +134,33 @@ function show(key) {
   c.append(el("h3", p.name), el("div", STATES[p.kind], "st " + p.kind), el("h4", "In simple terms"), el("p", p.simple), cols, where);
 }
 function step(i) {
+  i = ((i % DATA.steps.length) + DATA.steps.length) % DATA.steps.length;
+  stepIndex = i;
   const s = DATA.steps[i];
-  $$("#steps button").forEach((b, j) => b.setAttribute("aria-pressed", String(j === i)));
+  $$("#steps button.step").forEach((b, j) => b.setAttribute("aria-pressed", String(j === i)));
   $$("#nodes g").forEach((g) => g.classList.toggle("lit", s.nodes.includes(g.dataset.n)));
   $$("#edges path").forEach((e) => e.classList.toggle("on", s.edges.includes(e.dataset.e)));
   const w = $("#stepword"); w.replaceChildren(el("b", `Step ${i + 1} of ${DATA.steps.length}. `), document.createTextNode(s.words + "."));
   show(s.nodes[0]);
 }
-DATA.steps.forEach((_, i) => { const b = el("button", String(i + 1)); b.type = "button"; b.setAttribute("aria-pressed", "false");
-  b.setAttribute("aria-label", `Step ${i + 1}`); b.addEventListener("click", () => step(i)); $("#steps").append(b); });
+function move(delta) {
+  const n = DATA.steps.length;
+  const current = stepIndex < 0 ? (delta > 0 ? -1 : 0) : stepIndex;
+  step((current + delta + n) % n);
+}
+const steps = $("#steps");
+const prev = el("button", "‹", "arrow"); prev.type = "button"; prev.setAttribute("aria-label", "Previous step");
+prev.addEventListener("click", () => move(-1)); steps.append(prev);
+DATA.steps.forEach((_, i) => { const b = el("button", String(i + 1), "step"); b.type = "button";
+  b.setAttribute("aria-pressed", "false"); b.setAttribute("aria-label", `Step ${i + 1}`);
+  b.addEventListener("click", () => step(i)); steps.append(b); });
+const next = el("button", "›", "arrow"); next.type = "button"; next.setAttribute("aria-label", "Next step");
+next.addEventListener("click", () => move(1)); steps.append(next);
+steps.setAttribute("tabindex", "0"); steps.setAttribute("role", "group"); steps.setAttribute("aria-label", "Steps");
+steps.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowLeft") { e.preventDefault(); move(-1); }
+  else if (e.key === "ArrowRight") { e.preventDefault(); move(1); }
+});
 $$("#nodes g").forEach((g) => { g.setAttribute("tabindex", "0"); g.setAttribute("role", "button");
   g.addEventListener("click", () => show(g.dataset.n));
   g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); show(g.dataset.n); } }); });

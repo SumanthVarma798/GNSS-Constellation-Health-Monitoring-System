@@ -67,6 +67,8 @@ RUNS = [run("tests.yml", "2026-10-20T14:35:09Z", event="push"),
 
 def rows():
     texts = {"archive.yml": (WORKFLOWS_DIR / "archive.yml").read_text(), "registry-update.yml": "",
+             "orbit-ages.yml": (WORKFLOWS_DIR / "orbit-ages.yml").read_text(),
+             "rinex-check.yml": (WORKFLOWS_DIR / "rinex-check.yml").read_text(),
              "update-tle-data.yml": (WORKFLOWS_DIR / "update-tle-data.yml").read_text(), "tests.yml": ""}
     return {r["name"]: r for r in jobs.job_rows(WORKFLOWS, RUNS, jobs.run_log(LOG), texts, NOW)}
 
@@ -144,3 +146,10 @@ def test_without_a_readable_run_log_a_job_shows_githubs_own_record():
     news = {r["name"]: r for r in jobs.job_rows(WORKFLOWS, RUNS, [], texts, NOW)}["Archive: news"]
 
     assert news["result"] == ("bad", "Failed") and news["last"] == datetime(2026, 10, 20, 12, 15, tzinfo=timezone.utc)
+
+
+def test_orbit_record_check_job_is_listed():
+    row = next((row for row in JOBS if row[2] == "Orbit record check"), None)
+
+    assert row == ("rinex-check.yml", "", "Orbit record check",
+                   "Measures each orbit record against the satellite's broadcast orbit", "rinex check")

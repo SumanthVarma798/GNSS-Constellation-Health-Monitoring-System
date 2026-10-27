@@ -12,7 +12,8 @@ import pandas as pd
 import streamlit as st
 
 from config.config import MEO_SATS, TRACKED_NOT_IN_REGISTRY
-from ui import data, limits, measures, meo_overview, orbit_section, palette, reveal, shell, surfaces, time_range, tooltip
+from evidence.registry_tables import new_on_dashboard
+from ui import data, limits, measures, meo_overview, orbit_age, orbit_section, palette, reveal, shell, surfaces, time_range, tooltip
 from ui.data import SATELLITES
 from ui.figures.constellation_3d import slot_legend
 from ui.figures.slot_rows import as_number, slot_words
@@ -25,7 +26,7 @@ CLASS_COLUMNS = [("Satellite", ""), ("Type", "From the mean tilt"), ("Mean incli
                  ("Mean height", "In the window"), ("Drift now", "Per day")]
 
 
-def _tile(health, slot):
+def _tile(health, slot, age_html=""):
     """(tile html, whether it counts as healthy and in its slot) for one health row and its slot row."""
     score = as_number(health.get("Overall Score"))
     scored = [(label, as_number(health.get(column))) for label, column in PARTS]
@@ -34,11 +35,12 @@ def _tile(health, slot):
     html = surfaces.tile(
         str(health["Satellite"]), str(health.get("Type", "")), score,
         re.sub(r"^[^A-Za-z]+", "", str(health.get("Health Status", ""))),
-        slot_words(slot), CHIP_STATUS[state], min(scored, key=lambda part: part[1]) if scored else None)
+        slot_words(slot), CHIP_STATUS[state], min(scored, key=lambda part: part[1]) if scored else None,
+        age_html=age_html)
     return html, score is not None and score >= HEALTHY_FROM and state == palette.SLOT_IN
 
 
-def _tiles(result):
+def _tiles(result, tags=None):
     """Everything the page draws from one constellation's result.
 
     Returns {name: (tile html, counts as healthy, health row or None)} in the order shown, and the slot rows
@@ -48,12 +50,14 @@ def _tiles(result):
                                            result["set_aside"], orbit_section.designated_longitude, result["history"])
     rows = positions_rows[1] if positions_rows else []
     slots = {row["name"]: row for row in rows}
+    tags = tags or {}
     tiles = {}
     for health in result["health"].to_dict("records"):
-        html, healthy = _tile(health, slots.get(str(health["Satellite"])))
+        html, healthy = _tile(health, slots.get(str(health["Satellite"])), tags.get(str(health["Satellite"]), ""))
         tiles[str(health["Satellite"])] = (html, healthy, health)
     for name in result["set_aside"]:
-        html = surfaces.tile(name, slot=palette.SLOT_LEFT, slot_status=CHIP_STATUS[palette.SLOT_LEFT])
+        html = surfaces.tile(name, slot=palette.SLOT_LEFT, slot_status=CHIP_STATUS[palette.SLOT_LEFT],
+                             age_html=tags.get(name, ""))
         tiles[name] = (html, False, None)
     return tiles, rows
 
@@ -62,8 +66,10 @@ def _grid(htmls):
     surfaces.show(f'<div class="tiles">{"".join(htmls)}</div>')
 
 
-def _gaps(constellation, result):
+def _gaps(constellation, result, today):
     """Notices for what is missing, so that nothing is left out in silence."""
+    if new := new_on_dashboard(constellation, today):
+        surfaces.show(surfaces.notice(new, "accent"))
     shown = set(result["health"]["Satellite"]) | set(result["set_aside"])
     no_data = [name for name, norad in SATELLITES[constellation].items() if norad is not None and name not in shown]
     unlisted = TRACKED_NOT_IN_REGISTRY[constellation]
@@ -170,12 +176,14 @@ def constellation(name, window_days, params):
     today = pd.Timestamp(datetime.now(timezone.utc).date())
     window = measures.in_window(result["history"], window_days, today)
     classes = measures.classified(window, name)
-    tiles, rows = _tiles(result)
+    tags = orbit_age.tags(name, result)
+    tiles, rows = _tiles(result, tags)
     healthy = sum(healthy for _, healthy, _ in tiles.values())
     surfaces.show(f'<div class="head"><span class="big num">{healthy} of {len(tiles)}</span>'
                   '<span class="muted">healthy and in their slot</span></div>')
     _period(result, window, window_days, today)
-    _gaps(name, result)
+    orbit_age.show(name, result)
+    _gaps(name, result, today.date())
     groups = measures.grouped(_types(tiles, result, classes))
     for kind, names in groups.items():
         count = f"{len(names)} satellite{'s' if len(names) > 1 else ''}"
@@ -202,7 +210,8 @@ def compare(window_days, params):
     picks = picker()
     for name, picked in picks.items():
         result = data.load(name, window_days, params)
-        tiles = meo_overview.tiles(result) if name in MEO_SATS else _tiles(result)[0]
+        tags = orbit_age.tags(name, result)
+        tiles = meo_overview.tiles(result, tags) if name in MEO_SATS else _tiles(result, tags)[0]
         chosen += [(s, *tiles[s]) for s in picked if s in tiles]
         if name not in MEO_SATS:   # the limits table is for slot-keeping satellites
             measured += [(name, result, tiles[s][2]) for s in picked if s in tiles and tiles[s][2] is not None]

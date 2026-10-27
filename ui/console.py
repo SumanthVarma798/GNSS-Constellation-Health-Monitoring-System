@@ -16,19 +16,21 @@ FONT = '"Segoe UI", Tahoma, "Helvetica Neue", Arial, sans-serif'
 _COMMON = {"font": FONT, "mono": 'Consolas, "SF Mono", Menlo, monospace'}
 LIGHT = {  # Classic bold
     "ink": "#000", "muted": "#4a4a4a", "link": "#0645ad", "frame": "#000", "edge": "#808080", "edge-soft": "#e3e1d8",
-    "shadow": "4px 4px 0 rgba(0,0,0,.45)", "title-bg": "linear-gradient(90deg, #0a246a, #3a6ea5 65%, #a6caf0)",
-    "title-ink": "#fff", "title-edge": "1px solid #808080", "chrome": "#d4d0c8", "chrome-ink": "#000", "chrome-edge": "#808080",
+    "outline": "#000", "hard": "4px 4px 0 #000", "hard-sm": "2px 2px 0 #000",
+    "title-bg": "linear-gradient(90deg, #0a246a, #3a6ea5 65%, #a6caf0)",
+    "title-ink": "#fff", "title-edge": "2px solid #000", "chrome": "#d4d0c8", "chrome-ink": "#000", "chrome-edge": "#808080",
     "status-bg": "#d4d0c8", "status-ink": "#000", "tree-bg": "#fff", "tree-ink": "#000", "tree-line": "#808080", "pane": "#fff", "pane-alt": "#f1efe2",
     "head-bg": "#0a246a", "head-ink": "#fff", "vhead-bg": "linear-gradient(90deg, #0a246a, #2b5797)", "vhead-ink": "#fff",
     "vhead-sub": "#dce6f7", "th-bg": "#d4d0c8", "th-ink": "#000", "th-bevel": "inset -1px -1px #808080, inset 1px 1px #fff",
     "row-alt": "#f7f6f1", "hover": "#e5ecf7", "select": "#0a246a", "select-ink": "#fff", "select-edge": "#0a246a",
-    "btn-bg": "#d4d0c8", "btn-ink": "#000", "btn-edge": "#000",
+    "btn-bg": "#d4d0c8", "btn-hover": "#ece9e2", "btn-ink": "#000", "btn-edge": "#000",
     "btn-bevel": "inset -1px -1px #404040, inset 1px 1px #fff, inset -2px -2px #808080, inset 2px 2px #dfdfdf",
-    "btn-def-bg": "#d4d0c8", "btn-def-ink": "#000", "input-bg": "#fff", "input-edge": "#7a7a7a",
+    "btn-bevel-pressed": "inset 1px 1px #808080, inset -1px -1px #fff", "btn-def-bg": "#0a246a", "btn-def-ink": "#fff",
+    "input-bg": "#fff", "input-edge": "#7a7a7a",
     "well-bevel": "inset 1px 1px #808080, inset -1px -1px #fff", "big": "#0a246a",
     "ok": "#007a1f", "warn": "#a15c00", "bad": "#c00000", "info": "#0a246a", "idle": "#5f5f5f",
     "c-ok": "#00a03c", "c-bad": "#e81123", "c-warn": "#ff8c00", "c-info": "#0063b1", "c-c": "#f2c80f", "c-idle": "#a8a8a8",
-    "axis": "#606060", "cell-off-bg": "#eeeeee", "tile-bg": "#fff",
+    "axis": "#606060", "cell-off-bg": "#eeeeee", "tile-bg": "#fff", "badge-ink": "#fff",
     # Chart roles, validated with the dataviz skill's validate_palette.js (20 Oct 2026): normal runs in a quiet grey,
     # failures in red (they separate for red-green colour blindness; green against red does not), and the source
     # grades as one ordered blue ramp, A darkest, every step clear of the surface.
@@ -36,17 +38,22 @@ LIGHT = {  # Classic bold
 }
 DARK = {  # Operations dark
     "ink": "#e6edf3", "muted": "#9aa7b4", "link": "#4cc2ff", "frame": "#2f81f7", "edge": "#30363d", "edge-soft": "#1c2128",
-    "shadow": "0 0 0 1px #2f81f7, 0 12px 34px rgba(0,0,0,.7)", "title-bg": "#0d1117", "title-ink": "#e6edf3",
+    "outline": "#c9d1d9", "hard": "4px 4px 0 #6e7681", "hard-sm": "2px 2px 0 #6e7681",
+    "title-bg": "#0d1117", "title-ink": "#e6edf3",
     "title-edge": "2px solid #2f81f7", "chrome": "#161b22", "chrome-ink": "#e6edf3", "chrome-edge": "#30363d",
     "status-bg": "#1f6feb", "status-ink": "#fff", "tree-bg": "#0d1117", "tree-ink": "#e6edf3", "tree-line": "#6e7681", "pane": "#0d1117", "pane-alt": "#11161d",
     "head-bg": "#1f6feb", "head-ink": "#fff", "vhead-bg": "#161b22", "vhead-ink": "#58a6ff", "vhead-sub": "#9aa7b4",
-    "th-bg": "#161b22", "th-ink": "#c9d1d9", "th-bevel": "none", "row-alt": "#10151c", "hover": "#1c2633",
-    "select": "#1f4f8f", "select-ink": "#fff", "select-edge": "#2f81f7", "btn-bg": "#21262d", "btn-ink": "#e6edf3",
-    "btn-edge": "#3d444d", "btn-bevel": "none", "btn-def-bg": "#238636", "btn-def-ink": "#fff", "input-bg": "#0d1117",
-    "input-edge": "#3d444d", "well-bevel": "none", "big": "#e6edf3",
+    "th-bg": "#161b22", "th-ink": "#c9d1d9", "th-bevel": "inset -1px -1px #010409, inset 1px 1px #8b949e",
+    "row-alt": "#10151c", "hover": "#1c2633",
+    "select": "#1f4f8f", "select-ink": "#fff", "select-edge": "#2f81f7", "btn-bg": "#21262d", "btn-hover": "#3a4553", "btn-ink": "#e6edf3",
+    "btn-edge": "#3d444d",
+    "btn-bevel": "inset -1px -1px #010409, inset 1px 1px #8b949e, inset -2px -2px #000, inset 2px 2px #6e7681",
+    "btn-bevel-pressed": "inset 1px 1px #010409, inset -1px -1px #6e7681",
+    "btn-def-bg": "#238636", "btn-def-ink": "#fff", "input-bg": "#0d1117",
+    "input-edge": "#3d444d", "well-bevel": "inset 1px 1px #010409, inset -1px -1px #6e7681", "big": "#e6edf3",
     "ok": "#3fb950", "warn": "#e3b341", "bad": "#ff7b72", "info": "#58a6ff", "idle": "#8b949e",
     "c-ok": "#3fb950", "c-bad": "#f85149", "c-warn": "#db6d28", "c-info": "#2f81f7", "c-c": "#d29922", "c-idle": "#484f58",
-    "axis": "#6e7681", "cell-off-bg": "#161b22", "tile-bg": "#11161d",
+    "axis": "#6e7681", "cell-off-bg": "#161b22", "tile-bg": "#11161d", "badge-ink": "#fff",
     "c-quiet": "#6e7681", "g-a": "#9ec5f4", "g-b": "#6da7ec", "g-c": "#3987e5", "g-d": "#256abf", "g-none": "#30363d",
 }
 
@@ -61,9 +68,30 @@ ICONS = {
     "summary": '<rect x="1" y="2" width="14" height="10" fill="#e3edf9" stroke="#4a6fa5"/><rect x="3" y="4" width="10" height="6" fill="#9cc3ec"/><rect x="6" y="12" width="4" height="2" fill="#4a6fa5"/>',
     "jobs": '<circle cx="8" cy="8" r="6.5" fill="#fff" stroke="#6a7f9a"/><path d="M8 4v4.5l3 1.5" fill="none" stroke="#1d3c66" stroke-width="1.5"/>',
     "approvals": '<path d="M3 1h7l3 3v11H3z" fill="#fff" stroke="#5f7da6"/><path d="M5.5 9l2 2 3.5-4" fill="none" stroke="#217a2b" stroke-width="1.6"/>',
+    "sources": '<circle cx="8" cy="8" r="6.5" fill="#d8ecff" stroke="#3a6db0"/><path d="M1.5 8h13M8 1.5c-2.5 2.5-2.5 10.5 0 13M8 1.5c2.5 2.5 2.5 10.5 0 13" fill="none" stroke="#3a6db0"/>',
     "design": '<rect x="1" y="2" width="5" height="4" fill="#fff" stroke="#3a6db0"/><rect x="10" y="2" width="5" height="4" fill="#fff" stroke="#3a6db0"/><rect x="5.5" y="10" width="5" height="4" fill="#dff1e1" stroke="#217a2b"/><path d="M6 4h4M3.5 6v2h9V6M8 8v2" fill="none" stroke="#3a6db0"/>',
-    "work": '<rect x="2" y="1.5" width="12" height="13" fill="#fff" stroke="#5f7da6"/><path d="M4.5 5h7M4.5 8h7M4.5 11h4.5" stroke="#1d3c66" stroke-width="1.4"/>'
+    "work": '<rect x="2" y="1.5" width="12" height="13" fill="#fff" stroke="#5f7da6"/><path d="M4.5 5h7M4.5 8h7M4.5 11h4.5" stroke="#1d3c66" stroke-width="1.4"/>',
+    "pipeline": '<rect x="1.5" y="4.5" width="4" height="7" fill="#fff" stroke="#3a6db0"/><rect x="6.5" y="2.5" width="4" height="11" fill="#dff1e1" stroke="#217a2b"/><rect x="11.5" y="5.5" width="3" height="5" fill="#fff" stroke="#3a6db0"/><path d="M5.7 8h.6M10.7 8h.6" stroke="#1d3c66" stroke-width="1.2"/>',
+    "alerts": '<path d="M8 1.8a4.2 4.2 0 0 0-4.2 4.2v2.2l-1.5 2.5h11.4l-1.5-2.5V6A4.2 4.2 0 0 0 8 1.8z" fill="#fff" stroke="#3a6db0"/><circle cx="8" cy="12.8" r="1.2" fill="#f3b32a" stroke="#9a6a00"/>'
 }
+
+
+# The loading strip's tiles (x, y, width, height, colour index), one 240 by 120 repeat of a bento grid with 4px gaps;
+# it scrolls sideways by one repeat, so the loop has no seam (ui/console.css, [data-testid="stSpinner"]).
+BENTO_TILES = [(4, 4, 72, 52, 0), (80, 4, 52, 24, 1), (80, 32, 52, 24, 2), (136, 4, 100, 52, 3), (4, 60, 40, 56, 2),
+               (48, 60, 88, 26, 1), (48, 90, 88, 26, 0), (140, 60, 48, 56, 1), (192, 60, 44, 56, 2)]
+
+
+def bento(colours, edge):
+    """The loading strip's repeating picture as a CSS url(): the tiles filled with `colours`, outlined in `edge`."""
+    rects = "".join(f"<rect x='{x}' y='{y}' width='{w}' height='{h}' fill='{colours[c]}' stroke='{edge}' stroke-width='2'/>"
+                    for x, y, w, h, c in BENTO_TILES)
+    svg = f"<svg xmlns='http://www.w3.org/2000/svg' width='240' height='120'>{rects}</svg>"
+    return 'url("data:image/svg+xml,' + svg.replace("#", "%23").replace("<", "%3C").replace(">", "%3E") + '")'
+
+
+LIGHT["bento"] = bento(["#0a246a", "#3a6ea5", "#d4d0c8", "#f2c80f"], "#000")       # navy, blue, button grey, yellow
+DARK["bento"] = bento(["#1f6feb", "#58a6ff", "#30363d", "#d29922"], "#c9d1d9")    # bright blue, sky, panel grey, amber
 
 
 def _block(tokens):
@@ -219,6 +247,34 @@ def reliability_grid(grid, names):
 
 def notice(text, tone):
     return f'<div class="c-notice {_tone(tone)}" role="status">{escape(text)}</div>'
+
+
+def pipeline_diagram(stages, next_stage_name=None, next_at=None):
+    """The pipeline as connected stage boxes, with each stage's state in words and colour."""
+    tones = {"running now": "info", "done": "ok", "failed": "bad", "waiting": "warn", "off": "idle"}
+    by_name = {stage["name"]: stage for stage in stages}
+    archive_names = [stage["name"] for stage in stages if stage["name"].startswith("Archive: ")]
+    chain_names = ["Archive", "Registry update", "Pull request waiting for a decision", "Decided on the Approvals page",
+                   "Merged to main", "Dashboard"]
+
+    def box(stage, order=None):
+        tone = tones.get(stage["state"], "idle")
+        badge = ""
+        if next_stage_name and stage["name"] == next_stage_name and next_at:
+            badge = f'<span class="next">{escape(f"Next {when(next_at)} UTC")}</span>'
+        order_badge = f'<span class="order" aria-hidden="true">{order}</span>' if order is not None else ""
+        running = " running" if stage["state"] == "running now" else ""
+        return (f'<div class="c-pipe-stage {tone}{running}"><h4>{order_badge}{escape(stage["name"])}{badge}</h4>'
+                f'<p>{status(tone, stage["state"])}</p></div>')
+
+    archives = "".join(box(by_name[name]) for name in archive_names if name in by_name)
+    chain_rows = [name for name in chain_names if name in by_name]
+    chain = [box(by_name[name], order=index + 1) for index, name in enumerate(chain_rows)]
+    return ('<div class="c-pipe">'
+            f'<div class="c-pipe-archives">{archives}</div>'
+            '<div class="c-pipe-arrow c-pipe-join" aria-hidden="true">→</div>'
+            f'<div class="c-pipe-chain">{"".join(chain)}</div>'
+            "</div>")
 
 
 def status_bar(parts_html, right):

@@ -19,7 +19,9 @@ sign_in_fix.apply()   # before anyone presses Sign in
 
 
 def _sign_out():
-    """Forget everything typed or chosen in this browser before signing out, so nothing carries over to the next person."""
+    """Forget everything typed or chosen in this browser, then sign out, so nothing carries over to the next person.
+    Called from the script, not as a button's on_click: Streamlit ignores the rerun st.logout() asks for in a callback,
+    which left the page signed in."""
     for key in list(st.session_state):
         del st.session_state[key]
     st.logout()
@@ -47,14 +49,20 @@ if state != "in":
     if state == "sign in":
         st.button("Sign in with Google", key="console_sign_in", on_click=st.login, type="primary")
     else:
-        st.button("Sign out", key="console_sign_out", on_click=_sign_out)
+        if st.button("Sign out", key="console_sign_out"):
+            _sign_out()
     st.stop()
 
 # The console tree: sections (shown as folders) and their pages, each page with its own icon.
 SECTIONS = {"Overview": [st.Page("console/summary.py", title="Summary", icon=":material/dashboard:", default=True),
                          st.Page("console/design.py", title="System design", icon=":material/account_tree:",
                                  url_path="design")],
-            "Monitoring": [st.Page("console/jobs.py", title="Jobs", icon=":material/schedule:")],
+            "Monitoring": [st.Page("console/sources.py", title="Sources", icon=":material/public:", url_path="sources"),
+                           st.Page("console/jobs.py", title="Jobs", icon=":material/schedule:"),
+                           st.Page("console/pipeline.py", title="Live pipeline", icon=":material/conveyor_belt:",
+                                   url_path="pipeline"),
+                           st.Page("console/alerts.py", title="Alerts", icon=":material/notifications_active:",
+                                   url_path="alerts")],
             "Work": [st.Page("console/work.py", title="Issues and pull requests", icon=":material/list_alt:",
                              url_path="work"),
                      st.Page("console/approvals.py", title="Approvals", icon=":material/task_alt:")]}
@@ -75,15 +83,19 @@ with st.container(key="console_bar"):
                f'<b>{escape(page.title)}</b></span>')
     if refresh.button("Refresh", key="console_refresh", icon=":material/refresh:", help="Read everything again from GitHub"):
         common.github.clear()
+        st.session_state[common.REFRESH_PENDING] = True
     st.session_state["console_scheme_pick"] = scheme
     pick.segmented_control("Colours", list(console.SCHEMES), format_func=console.SCHEMES.get, key="console_scheme_pick",
                            on_change=_pick_scheme, label_visibility="collapsed", help="Light, dark, or as this computer is set")
     person.html(f'<span class="c-who">Signed in as <b>{escape(who)}</b></span>')
-    out.button("Sign out", key="console_sign_out", on_click=_sign_out)
+    if out.button("Sign out", key="console_sign_out"):
+        _sign_out()
 
 page.run()
 
 seen = common.read()
+if st.session_state.pop(common.REFRESH_PENDING, False):
+    st.toast(f"Read again from GitHub at {seen['read_at']:%H:%M} UTC")
 rows = jobs.job_rows(seen["workflows"], seen["runs"], seen["log"], common.workflow_texts(), common.now())
 failing = sum(r["result"][0] == "bad" for r in rows)
 off = sum(r["state"] == "Turned off" for r in rows)

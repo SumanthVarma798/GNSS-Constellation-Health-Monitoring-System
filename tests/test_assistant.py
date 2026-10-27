@@ -6,7 +6,7 @@ import requests
 import streamlit
 
 from evidence import assistant
-from evidence.assistant_settings import ISSUE_CHARACTERS, MODEL
+from evidence.assistant_settings import DOCUMENTS, ISSUE_CHARACTERS, MODEL, SOURCE_FILES
 from test_console import run, signed_in
 from test_dashboard_shell import segmented_controls_rerun  # noqa: F401  (AppTest 1.45's segmented controls)
 from ui.components.system_design import PARTS
@@ -17,8 +17,9 @@ ISSUES = [{"number": 19, "title": "Operator status", "body": "word " * 500}]
 def test_the_material_holds_the_documents_the_page_the_code_and_the_issues_each_under_its_label():
     text = assistant.material(ISSUES, PARTS)
 
-    for label in ("[docs/system-design.md]", "[docs/evidence-model.md]", f"[{assistant.PAGE_LABEL}]",
-                  "[evidence/assistant.py]", "[console/design.py]", "[issue #19] Operator status"):
+    for label in (*[f"[{path}]" for path in DOCUMENTS], *[f"[{path}]" for path in SOURCE_FILES],
+                  f"[{assistant.PAGE_LABEL}]", "[evidence/assistant.py]", "[console/design.py]",
+                  "[issue #19] Operator status"):
         assert label in text, label
     issue_line = next(line for line in text.splitlines() if line.startswith("[issue #19]"))
     assert len(issue_line) < ISSUE_CHARACTERS + 40 and issue_line.endswith("…")
@@ -104,8 +105,8 @@ def test_a_source_the_material_does_not_have_is_named():
 def test_the_design_page_shows_the_question_the_answer_and_any_unknown_source(monkeypatch):
     streamlit.cache_data.clear()
     signed_in(monkeypatch, "member@example.com")
-    monkeypatch.setattr(assistant, "available", lambda: True)
-    monkeypatch.setattr(assistant, "answer", lambda question, history, text: iter(["Built ", "[docs/made-up.md]."]))
+    monkeypatch.setattr(assistant, "available", lambda *_: True)
+    monkeypatch.setattr(assistant, "answer", lambda question, history, text, *_: iter(["Built ", "[docs/made-up.md]."]))
     at = run(monkeypatch, page="console/design.py")
 
     at.chat_input[0].set_value("What is built?").run()
@@ -115,10 +116,46 @@ def test_the_design_page_shows_the_question_the_answer_and_any_unknown_source(mo
     assert "docs/made-up.md" in at.warning[0].value
 
 
+def test_the_chat_survives_leaving_the_design_page_and_coming_back(monkeypatch):
+    streamlit.cache_data.clear()
+    signed_in(monkeypatch, "member@example.com")
+    monkeypatch.setattr(assistant, "available", lambda *_: True)
+    monkeypatch.setattr(assistant, "answer", lambda question, history, text, *_: iter(["Built [docs/system-design.md]."]))
+    at = run(monkeypatch, page="console/design.py")
+
+    at.chat_input[0].set_value("What is built?").run()
+    assert [m.name for m in at.chat_message] == ["user", "assistant"]
+
+    at.switch_page("console/jobs.py").run()
+    at.switch_page("console/design.py").run()
+
+    assert [m.name for m in at.chat_message] == ["user", "assistant"]
+    assert at.chat_message[0].markdown[0].value == "What is built?"
+    assert at.chat_message[1].markdown[0].value == "Built [docs/system-design.md]."
+
+
+def test_start_over_empties_the_chat(monkeypatch):
+    streamlit.cache_data.clear()
+    signed_in(monkeypatch, "member@example.com")
+    monkeypatch.setattr(assistant, "available", lambda *_: True)
+    monkeypatch.setattr(assistant, "answer", lambda question, history, text, *_: iter(["Built [docs/system-design.md]."]))
+    at = run(monkeypatch, page="console/design.py")
+
+    at.chat_input[0].set_value("What is built?").run()
+    assert [m.name for m in at.chat_message] == ["user", "assistant"]
+    at.run()
+    assert [b for b in at.button if b.key == "design_chat_start_over"]
+
+    at.button(key="design_chat_start_over").click().run()
+
+    assert not at.chat_message
+    assert not [b for b in at.button if b.key == "design_chat_start_over"]
+
+
 def test_where_no_model_runs_the_page_says_questions_are_off_and_offers_no_box(monkeypatch):
     streamlit.cache_data.clear()
     signed_in(monkeypatch, "member@example.com")
-    monkeypatch.setattr(assistant, "available", lambda: False)
+    monkeypatch.setattr(assistant, "available", lambda *_: False)
 
     at = run(monkeypatch, page="console/design.py")
 

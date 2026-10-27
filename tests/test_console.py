@@ -11,12 +11,12 @@ import streamlit
 from streamlit.testing.v1 import AppTest
 
 from console import common
-from evidence import decisions, jobs
-from evidence.decision_settings import AFTER_CHANGES, APPROVE, KINDS, LABEL_PREFIX
+from evidence import alerts, decisions, jobs, pipeline as live_pipeline
+from evidence.decision_settings import AFTER_CHANGES, APPROVE, KINDS, LABEL_PREFIX, REJECT
 from test_dashboard_shell import segmented_controls_rerun  # noqa: F401  (AppTest 1.45's segmented controls)
-from test_decisions import NOW, pr
-from test_jobs import LOG, RUNS, WORKFLOWS
-from ui import admin
+from test_decisions import FINDINGS_STAND_IN, NOW, finding_comment, findings_body, pr
+from test_jobs import LOG, RUNS, WORKFLOWS, run as workflow_run
+from ui import admin, console as ui_console
 
 ROOT = Path(__file__).resolve().parent.parent
 SECRETS = {"auth": {field: "set" for field in common.SIGN_IN_FIELDS},
@@ -26,14 +26,17 @@ SECRETS = {"auth": {field: "set" for field in common.SIGN_IN_FIELDS},
 class GitHub:
     """Stands in for console.common.github: the figures above, and any pull requests a test gives it."""
 
-    def __init__(self, prs=(), fail=None, issues=()):
+    def __init__(self, prs=(), fail=None, issues=(), comments=None):
         self.prs, self.fail, self.asked, self.issues = list(prs), fail, 0, list(issues)
+        self.comments = comments or {}
 
     def __call__(self, token):
         self.asked += 1
         if self.fail:
             raise self.fail
-        return {"workflows": WORKFLOWS, "runs": RUNS, "log": jobs.run_log(LOG), "prs": self.prs, "issues": self.issues,
+        return {"workflows": WORKFLOWS, "runs": RUNS, "log": jobs.run_log(LOG), "prs": self.prs, "decision_prs": self.prs,
+                "comments": self.comments,
+                "issues": self.issues, "archive_commits": {}, "archive_versions": [],
                 "problems": [], "read_at": NOW}
 
     def clear(self):
@@ -138,6 +141,61 @@ def test_the_jobs_page_lists_every_job_with_its_schedule_in_words(monkeypatch):
         assert words in page, words
 
 
+def test_the_admin_console_lists_the_alerts_page(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+
+    at = run(monkeypatch, page="console/alerts.py")
+
+    page = text(at)
+    assert "Alerts" in page and "Healthchecks.io checks" in page
+
+
+def test_alerts_page_handles_a_malformed_healthchecks_answer(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    monkeypatch.setattr(alerts, "read_checks", lambda key: {"oops": 1})
+
+    page = text(run(monkeypatch, page="console/alerts.py", secrets={**SECRETS, "alerts": {"key": "s3cr3t-key"}}))
+
+    assert "Healthchecks.io did not answer" in page
+    assert "Checks are not available right now." in page
+
+
+def test_alerts_page_with_a_key_lists_checks_and_missing_slugs_without_showing_the_key(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    checks = [
+        {"slug": "archive-documents", "name": "Archive documents", "unique_key": "u-docs", "status": "up",
+         "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
+        {"slug": "archive-catalogues", "name": "Archive catalogues", "unique_key": "u-catalogues", "status": "up",
+         "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
+        {"slug": "archive-orbital", "name": "Archive orbital", "unique_key": "u-orbital", "status": "up",
+         "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
+        {"slug": "archive-social", "name": "Archive social", "unique_key": "u-social", "status": "up",
+         "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
+        {"slug": "registry-update", "name": "Registry update", "unique_key": "u-registry", "status": "up",
+         "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
+        {"slug": "update-tle-data", "name": "Update TLE data", "unique_key": "u-tle", "status": "up",
+         "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
+        {"slug": "orbit-ages", "name": "Orbit ages", "unique_key": "u-ages", "status": "up",
+         "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
+        {"slug": "orbit-fresh", "name": "Orbit fresh", "unique_key": "u-fresh", "status": "up",
+         "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
+        {"slug": "rinex-check", "name": "RINEX check", "unique_key": "u-rinex", "status": "up",
+         "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
+        {"slug": "extra-watch", "name": "Extra watch", "unique_key": "u-extra", "status": "down",
+         "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
+    ]
+    flips = {"u-extra": [{"up": 0}], "u-docs": [{"up": 1}]}
+    monkeypatch.setattr(alerts, "read_checks", lambda key: checks)
+    monkeypatch.setattr(alerts, "read_flips", lambda key, unique_key, seconds: flips.get(unique_key, []))
+
+    page = text(run(monkeypatch, page="console/alerts.py", secrets={**SECRETS, "alerts": {"key": "s3cr3t-key"}}))
+
+    assert "Healthchecks.io checks" in page and "Down, last 14 days" in page
+    assert "No check on Healthchecks.io for: archive-news." in page
+    assert "extra-watch" in page
+    assert "s3cr3t-key" not in page
+
+
 def test_when_github_cannot_be_read_the_page_says_why_without_the_token(monkeypatch):
     signed_in(monkeypatch, "member@example.com")
 
@@ -169,12 +227,17 @@ def test_the_ask_about_section_styles_follow_the_console_palette():
     assert '[data-testid="stHeading"], [data-testid="stCaptionContainer"], [data-testid="stSpinner"] { color: var(--ink); }' in css
     assert '[data-testid="stCaptionContainer"] { color: var(--muted); }' in css
     assert '[data-testid="stChatInputTextArea"] { background: var(--input-bg) !important; color: var(--ink) !important;' in css
+    assert '.c-sect > .in.flush { padding: 0; display: flow-root; }' in css
+    assert '[data-testid="stButtonGroup"] [data-baseweb="button-group"] { display: flex; flex-wrap: wrap;' in css
+    assert '.c-subhead { margin: 8px 0 4px; font-size: 12px; font-weight: 800; color: var(--ink); }' in css
 
 
 # ---- approvals ----
 
 REGISTRY_PR = pr(5, ["decision: registry update"], title="Registry update from the IGS satellite metadata file",
                  body="This is a proposed update.\n\n## What changed\n- G01: slot was blank, now A1.")
+FINDINGS_PR = pr(8, ["decision: registry update"], title="Weekly registry findings",
+                 body=findings_body(FINDINGS_STAND_IN))
 
 
 def test_approvals_list_each_waiting_item_with_its_evidence(monkeypatch):
@@ -185,6 +248,80 @@ def test_approvals_list_each_waiting_item_with_its_evidence(monkeypatch):
     page = text(at)
     assert "Registry update from the IGS satellite metadata file" in page and "Some code change" not in page
     assert "<li>G01: slot was blank, now A1.</li>" in page and "pull request 5" in page
+
+
+def test_approvals_show_findings_by_category_before_old_style_items(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    findings = [{**FINDINGS_STAND_IN[0], "statement": "We saw <script>alert(1)</script> in one source."},
+                FINDINGS_STAND_IN[1]]
+    findings_pr = {**FINDINGS_PR, "body": findings_body(findings)}
+    at = run(monkeypatch, GitHub([findings_pr, REGISTRY_PR], comments={8: []}), page="console/approvals.py")
+
+    page = text(at)
+    assert "New satellite" in page and "Signal ID change" in page
+    assert "Pull request 5: Registry update from the IGS satellite metadata file" in page
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in page and "<script>alert(1)</script>" not in page
+
+
+def test_a_finding_stays_open_once_a_decision_on_it_is_under_way(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    at = run(monkeypatch, GitHub([FINDINGS_PR], comments={8: []}), page="console/approvals.py")
+    assert not any(e.proto.expanded for e in at.expander)
+
+    at.radio(key=f"finding_choice_8_{FINDINGS_STAND_IN[0]['id']}").set_value(APPROVE).run()
+
+    opened = [e.label for e in at.expander if e.proto.expanded]
+    assert opened == [f"{FINDINGS_STAND_IN[0]['id']}: sources, what we measured, decision"]
+
+
+def test_approvals_show_a_finding_result_notice_once_at_the_top_of_the_findings_area(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+
+    def after_read(at):
+        at.session_state["admin_finding_result"] = ((8, "R809"), "ok", "Approved one finding.")
+
+    at = run(monkeypatch, GitHub([FINDINGS_PR], comments={8: [{"body": finding_comment(APPROVE, "R809", "sha8")}]}),
+             page="console/approvals.py", then=after_read)
+
+    assert "Approved one finding." in text(at)
+    assert "admin_finding_result" not in at.session_state
+
+
+def test_approvals_show_a_finish_notice_and_merge_button_when_all_findings_are_approved(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    comments = {8: [{"body": finding_comment(APPROVE, "R809", "sha8")},
+                    {"body": finding_comment(APPROVE, "R723", "sha8")}]}
+
+    at = run(monkeypatch, GitHub([FINDINGS_PR], comments=comments), page="console/approvals.py")
+
+    page = text(at)
+    assert "Pull request 8: every finding is approved, but it is not merged yet." in page
+    assert [b.label for b in at.button if b.key == "finish_8"] == ["Merge pull request 8"]
+
+
+def test_the_finish_button_calls_finish_and_shows_its_result_notice(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    comments = {8: [{"body": finding_comment(REJECT, "R809", "sha8")},
+                    {"body": finding_comment(REJECT, "R723", "sha8")}]}
+    called = []
+    monkeypatch.setattr(decisions, "finish", lambda *args: called.append(args) or ("ok", "Closed from Findings."))
+    at = run(monkeypatch, GitHub([FINDINGS_PR], comments=comments), page="console/approvals.py")
+
+    at.button(key="finish_8").click().run()
+
+    token, item, who, _ = called[0]
+    assert (token, item["number"], who) == ("t0ken", 8, "A Member")
+    assert "Closed from Findings." in text(at)
+
+
+def test_finding_statement_is_listed_once_and_expander_label_uses_the_finding_id(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+
+    at = run(monkeypatch, GitHub([FINDINGS_PR], comments={8: []}), page="console/approvals.py")
+    page = text(at)
+
+    assert page.count(FINDINGS_STAND_IN[0]["statement"]) == 1
+    assert "R809: sources, what we measured, decision" in [expander.label for expander in at.expander]
 
 
 def test_the_reason_box_appears_only_once_a_choice_is_made(monkeypatch):
@@ -207,9 +344,8 @@ def test_recording_a_decision_passes_who_decided_and_says_what_happened(monkeypa
     at.text_area(key="reason_5").set_value("Checked against the IGS file")
     at.button(key="record_5").click().run()
 
-    token, item, choice, reason, changes, who, email, accounts, _ = decided[0]
-    assert (token, item["number"], choice, reason, who, email) == (
-        "t0ken", 5, APPROVE, "Checked against the IGS file", "A Member", "member@example.com")
+    token, item, choice, reason, changes, who, _ = decided[0]
+    assert (token, item["number"], choice, reason, who) == ("t0ken", 5, APPROVE, "Checked against the IGS file", "A Member")
     assert "Approved and merged." in text(at)
 
 
@@ -298,6 +434,8 @@ def test_runs_are_read_page_by_page_and_the_tests_on_main_on_their_own(monkeypat
 
 def test_a_workflow_missing_on_github_is_named_and_the_rest_still_shows(monkeypatch):
     def ask(method, path, token, repository=None, **request):
+        if path == "/commits":
+            return []
         if "update-tle-data" in path:
             raise requests.HTTPError("404", response=SimpleNamespace(status_code=404))
         return {"workflow_runs": [], "workflows": []}
@@ -305,10 +443,28 @@ def test_a_workflow_missing_on_github_is_named_and_the_rest_still_shows(monkeypa
     monkeypatch.setattr(common.github_api, "ask", ask)
     monkeypatch.setattr(common.github_api, "file_text", lambda *args: "job,started,ended,result,changed\n")
     monkeypatch.setattr(decisions, "fetch_open", lambda token: [])
+    monkeypatch.setattr(decisions, "fetch_recent_closed", lambda token: [])
 
     seen = common.github.__wrapped__("t") if hasattr(common.github, "__wrapped__") else common.github("t")
 
     assert any("update-tle-data.yml" in problem for problem in seen["problems"])
+
+
+def test_github_reads_comments_only_for_open_decision_pull_requests_with_findings_blocks(monkeypatch):
+    called = []
+
+    monkeypatch.setattr(decisions, "fetch_open", lambda token: [FINDINGS_PR, REGISTRY_PR, pr(9, ["enhancement"])])
+    monkeypatch.setattr(decisions, "fetch_recent_closed", lambda token: [])
+    monkeypatch.setattr(decisions, "fetch_comments", lambda token, number: called.append(number) or [{"id": number}])
+    monkeypatch.setattr(common.github_api, "ask", lambda *args, **kwargs: {"workflows": [], "workflow_runs": []})
+    monkeypatch.setattr(common.github_api, "file_text", lambda *args: "job,started,ended,result,changed\n")
+    monkeypatch.setattr(common.work, "fetch_open_issues", lambda token: [])
+    monkeypatch.setattr(common, "_archive_commits", lambda token: {})
+
+    seen = common.github.__wrapped__("t") if hasattr(common.github, "__wrapped__") else common.github("t")
+
+    assert called == [8]
+    assert seen["comments"] == {8: [{"id": 8}]}
 
 
 def test_the_work_page_lists_open_pull_requests_and_issues_and_finds_by_title(monkeypatch):
@@ -349,12 +505,95 @@ def test_the_hero_says_in_words_whether_any_of_it_is_failing(monkeypatch):
     signed_in(monkeypatch, "member@example.com")
 
     assert "things need a look, 1 of them failing" in text(run(monkeypatch))
+
+
+def test_refresh_reads_github_again_and_shows_when_it_was_read(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    github = GitHub()
+    at = run(monkeypatch, github)
+    asked = github.asked
+    assert not at.toast
+
+    at.button(key="console_refresh").click().run()
+
+    assert github.asked > asked
+    assert at.toast and "Read again from GitHub at" in at.toast[0].value
+
+
 def test_the_system_design_page_opens_with_its_picture(monkeypatch):
     signed_in(monkeypatch, "member@example.com")
 
     at = run(monkeypatch, page="console/design.py")
 
     assert "How the system works" in text(at) and at.get("iframe")
+
+
+def test_the_live_pipeline_page_opens_with_its_sections_and_links(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+
+    at = run(monkeypatch, page="console/pipeline.py")
+    page = text(at)
+    links = [link.label for link in at.get("page_link")]
+
+    assert "Live pipeline" in page
+    assert "Running now" in page and "Next up" in page and "Proof of work" in page
+    assert "Collect official documents" in page and "Collect news" in page
+    assert "Open proof" not in page
+    assert at.get("iframe")
+    assert links == ["Jobs", "Approvals"]
+
+
+def test_the_live_pipeline_component_defaults_to_what_runs_next(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    stage_rows = live_pipeline.stages(WORKFLOWS, RUNS, jobs.run_log(LOG), [], common.workflow_texts(), NOW)
+    upcoming = live_pipeline.what_next(stage_rows, NOW, hours=24)
+    expected = upcoming[0]["key"] if upcoming else stage_rows[0]["key"]
+
+    at = run(monkeypatch, page="console/pipeline.py")
+    frame = at.get("iframe")[0].proto.srcdoc
+
+    assert '"default_key"' in frame and expected in frame
+
+
+def test_the_live_pipeline_component_defaults_to_the_stage_running_now(monkeypatch):
+    class RunningGitHub(GitHub):
+        def __call__(self, token):
+            seen = super().__call__(token)
+            seen["runs"] = [workflow_run("registry-update.yml", "2026-10-20T14:30:00Z", status="in_progress"),
+                            *seen["runs"]]
+            return seen
+
+    signed_in(monkeypatch, "member@example.com")
+    at = run(monkeypatch, github=RunningGitHub(), page="console/pipeline.py")
+    frame = at.get("iframe")[0].proto.srcdoc
+
+    assert '"default_key"' in frame and "registry_update" in frame
+
+
+def test_the_live_pipeline_uses_clear_fallback_words_for_proof_links(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    page = text(run(monkeypatch, page="console/pipeline.py"))
+
+    assert "GitHub run" in page and ">run</a>" not in page
+
+
+def test_the_pipeline_diagram_numbers_the_chain_without_dangling_right_arrows():
+    stage_rows = live_pipeline.stages(WORKFLOWS, RUNS, jobs.run_log(LOG), [], common.workflow_texts(), NOW)
+    picture = ui_console.pipeline_diagram(stage_rows)
+    chain_names = ["Archive", "Registry update", "Pull request waiting for a decision",
+                   "Decided on the Approvals page", "Merged to main", "Dashboard"]
+
+    assert picture.count("c-pipe-arrow") == 1
+    assert picture.count('class="order"') == len(chain_names)
+
+
+def test_the_pipeline_diagram_does_not_hide_stage_words_from_screen_readers():
+    stage_rows = live_pipeline.stages(WORKFLOWS, RUNS, jobs.run_log(LOG), [], common.workflow_texts(), NOW)
+    picture = ui_console.pipeline_diagram(stage_rows)
+
+    assert 'role="img"' not in picture
+    assert "Archive: documents" in picture
+    assert "Registry update" in picture
 
 
 def test_back_and_forward_follow_the_pages_visited_and_the_browser_own_buttons():
@@ -396,3 +635,32 @@ def test_back_is_not_offered_to_a_page_that_no_longer_exists(monkeypatch):
     at.run()
 
     assert not at.exception and not [b for b in at.button if b.key == "console_back"]
+
+
+def test_sign_out_forgets_the_session_and_signs_out(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    out = []
+    monkeypatch.setattr(streamlit, "logout", lambda: out.append(True))
+    at = run(monkeypatch)
+    at.session_state["design_chat"] = [{"role": "user", "content": "kept?"}]
+
+    at.button(key="console_sign_out").click().run()
+
+    assert out == [True] and "design_chat" not in at.session_state
+
+
+def test_a_secrets_file_that_cannot_be_read_is_named_with_its_line(monkeypatch):
+    import toml
+    from streamlit.errors import StreamlitSecretNotFoundError
+
+    class Broken:
+        def get(self, *_):
+            try:
+                toml.loads('a = "1"\na = "2"\n')
+            except toml.TomlDecodeError as reason:
+                raise StreamlitSecretNotFoundError("Error parsing secrets file") from reason
+
+    monkeypatch.setattr(streamlit, "secrets", Broken())
+    said = common.missing()[0]
+
+    assert said.startswith("a readable secrets file (Duplicate keys!") and "line 2" in said and '"2"' not in said
