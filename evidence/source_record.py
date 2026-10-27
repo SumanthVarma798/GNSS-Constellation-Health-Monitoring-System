@@ -6,10 +6,11 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import NamedTuple
 
+from evidence import decisions
 from evidence.news_settings import (CHECK_GIVE_UP_DAYS, CORROBORATING_GRADES, CORROBORATION_DAYS, CORROBORATION_WEIGHT,
                                     DISAGREEMENT_MIN_CLAIMS, DISAGREEMENT_STEPS, GRADE_BARS, GRADE_DROP_MARGIN,
-                                    GRADE_E_MIN_CLAIMS, LAUNCH_DAYS_AFTER, LAUNCH_DAYS_BEFORE, RECORD_WINDOW_DAYS,
-                                    SHORTLIST_FOR_A)
+                                    GRADE_E_MIN_CLAIMS, LAUNCH_DAYS_AFTER, LAUNCH_DAYS_BEFORE, RECORD_GRADED_BY,
+                                    RECORD_WINDOW_DAYS, REJECTED_WAIT_CLAIMS, SHORTLIST_FOR_A)
 from evidence.registry_tables import read_table
 from evidence.settings import REGISTRY_SATELLITES_FILE, SOURCE_RECORD_FILE
 
@@ -234,16 +235,127 @@ def findings(record, grades, today):
         proposed = record_grade(rows, current, today)
         signal = _target_grade(stats.claims, stats.score)
         if current == "B" and _shortlisted_for_a(rows, stats, today):
-            found.append(_finding_shortlist_a(source_id, current, stats))
-        if current == "A" and _below_b_bar(stats):
-            found.append(_finding_drop_from_a(source_id, current, stats))
+            found.append({**_finding_shortlist_a(source_id, current, stats), "target_grade": "A"})
+        dropping_a = current == "A" and _below_b_bar(stats)
+        if dropping_a:
+            found.append({**_finding_drop_from_a(source_id, current, stats), "target_grade": "B"})
         if set_by_person:
-            if stats.claims >= DISAGREEMENT_MIN_CLAIMS and _grade_distance(current, signal) >= DISAGREEMENT_STEPS:
-                found.append(_finding_disagreement(source_id, current, signal, stats, rows, today))
+            if not dropping_a and stats.claims >= DISAGREEMENT_MIN_CLAIMS and _grade_distance(current, signal) >= DISAGREEMENT_STEPS:
+                found.append({**_finding_disagreement(source_id, current, signal, stats, rows, today), "target_grade": signal})
             continue
         if proposed != current and proposed != "A":
-            found.append(_finding_move(source_id, current, proposed, stats, rows, today))
+            found.append({**_finding_move(source_id, current, proposed, stats, rows, today), "target_grade": proposed})
     return found
+
+
+def grade_table(rows):
+    """{source id: (grade, set by person)} from source-grade rows."""
+    table = {}
+    for row in rows:
+        source_id = row.get("source_id", "")
+        if source_id:
+            table[source_id] = (row.get("reliability", ""), row.get("graded_by", "") != RECORD_GRADED_BY)
+    return table
+
+
+def grade_changes(found, today, names):
+    """Rows source_grades.csv would hold if these findings were approved."""
+    rows = []
+    for finding in found:
+        source_id = _finding_source_id(finding)
+        target = _target_grade_for_finding(finding)
+        if not source_id or target not in GRADE_ORDER:
+            continue
+        _note_target_grade(finding, target)
+        rows.append({
+            "source_id": source_id,
+            "name": names.get(source_id) or source_id,
+            "reliability": target,
+            "graded_by": RECORD_GRADED_BY,
+            "graded_on": today.isoformat(),
+            "reason": finding.get("statement", ""),
+        })
+    return rows
+
+
+def apply_changes(grade_rows, changes):
+    """source_grades rows with each changed source replaced; new sources sorted at the end."""
+    changed = {row.get("source_id", ""): row for row in changes if row.get("source_id", "")}
+    if not changed:
+        return list(grade_rows)
+    rows, replaced = [], set()
+    for row in grade_rows:
+        source_id = row.get("source_id", "")
+        if source_id in changed:
+            rows.append(changed[source_id])
+            replaced.add(source_id)
+        else:
+            rows.append(row)
+    new_rows = [changed[source_id] for source_id in sorted(changed) if source_id not in replaced]
+    return rows + new_rows
+
+
+def still_rejected(found, rejected_rows, record):
+    """Findings left after holding back recently rejected ones until more claims are checked."""
+    claims_now = defaultdict(int)
+    for row in record:
+        source_id = row.get("source_id", "")
+        if source_id:
+            claims_now[source_id] += 1
+    by_finding = {}
+    for row in rejected_rows:
+        finding_id = row.get("finding_id", "")
+        source_id = row.get("source_id", "")
+        if not finding_id or not source_id:
+            continue
+        by_finding[finding_id] = row
+    kept = []
+    for finding in found:
+        rejected = by_finding.get(finding.get("id", ""))
+        source_id = _finding_source_id(finding)
+        if not rejected or not source_id:
+            kept.append(finding)
+            continue
+        try:
+            needed = int(rejected.get("claims_at_rejection", "") or "0") + REJECTED_WAIT_CLAIMS
+        except ValueError:
+            needed = REJECTED_WAIT_CLAIMS
+        if claims_now.get(source_id, 0) >= needed:
+            kept.append(finding)
+    return kept
+
+
+def propose(items, record, grade_rows, rejected_rows, launches, today, names):
+    """(new rows, findings, source-grade rows) from this week's archived items and record."""
+    grades = grade_table(grade_rows)
+    grade_of = lambda source_id: grades.get(source_id, ("", False))[0]
+    rows = new_rows(items, record, launches, grade_of, today)
+    found = findings(record + rows, grades, today)
+    found = still_rejected(found, rejected_rows, record + rows)
+    return rows, found, apply_changes(grade_rows, grade_changes(found, today, names))
+
+
+def report(new_rows, found):
+    """The source-record pull-request body."""
+    by_result = defaultdict(int)
+    for row in new_rows:
+        by_result[row.get("result", "")] += 1
+    moves = sorted({_finding_source_id(finding) for finding in found if finding.get("id", "").startswith("source-grade-move-")})
+    moves_words = ", ".join(source for source in moves if source) if moves else "none"
+    lines = [
+        "# Source grades from the record of checked claims",
+        "",
+        "Source-grade findings this week are listed below for Approvals.",
+        "",
+        "## Summary",
+        f"- Claims checked this week: {len(new_rows)}",
+        (f"- By result: held {by_result['held']}, corroborated {by_result['corroborated']}, "
+         f"failed {by_result['failed']}, could not check {by_result['could not check']}"),
+        f"- Sources with a proposed move: {moves_words}",
+        "",
+        decisions.findings_block(found),
+    ]
+    return "\n".join(lines) + "\n"
 
 
 def _window_rows(rows, today):
@@ -372,6 +484,32 @@ def _grade_index(grade):
 
 def _grade_distance(one, two):
     return abs(_grade_index(one) - _grade_index(two))
+
+
+def _finding_source_id(finding):
+    sources = finding.get("sources", [])
+    if not sources or not isinstance(sources[0], dict):
+        return ""
+    return sources[0].get("source", "")
+
+
+def _target_grade_for_finding(finding):
+    if isinstance(finding.get("target_grade"), str) and finding["target_grade"] in GRADE_ORDER:
+        return finding["target_grade"]
+    return ""
+
+
+def _note_target_grade(finding, target):
+    sources = finding.get("sources", [])
+    if not sources or not isinstance(sources[0], dict):
+        return
+    words = f"Target grade {target} if approved."
+    note = sources[0].get("grade_note", "")
+    if words not in note:
+        sources[0]["grade_note"] = words if not note else f"{note} {words}"
+    detail = finding.get("detail", "")
+    if isinstance(detail, str) and f"Target grade {target}." not in detail:
+        finding["detail"] = f"{detail} Target grade {target}.".strip()
 
 
 def _id_part(source_id):

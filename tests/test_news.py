@@ -13,7 +13,7 @@ import time_machine
 
 from evidence import archive, news
 from evidence.archive import FetchFailed, pacer, record
-from evidence.news import (category_of, collected_items, items_from, labelling_sample, latest_news, parse_feed,
+from evidence.news import (category_of, claim_items, collected_items, items_from, labelling_sample, latest_news, parse_feed,
                            summary_from, when)
 from evidence.settings import BACKOFF_FIRST, BACKOFF_LONGEST, DEFAULT_MIN_GAP, MIN_GAP_BETWEEN_DOWNLOADS
 
@@ -353,6 +353,20 @@ def test_category_of_takes_the_first_matching_category():
 
 def test_category_of_checks_the_headline_across_all_categories_before_the_summary():
     assert category_of("NavIC policy plan", "Launch date announced") == "programme and policy"
+
+
+def test_claim_items_keep_old_items_and_every_named_constellation_without_dashboard_caps(monkeypatch):
+    monkeypatch.setattr(news, "NEWS_ITEMS_PER_SYSTEM", 0)
+    item = {"source_id": "alpha.example", "address": "https://alpha.example/old-story",
+            "title": "BeiDou and GPS launch update", "summary": "", "outlet": "Alpha",
+            "published_at": "2024-01-01T00:00:00Z", "fetched_at": "2026-10-20T12:00:00Z",
+            "via": "https://alpha.example/feed", "social": False}
+
+    claims = claim_items([item])
+
+    assert claims == [{"source_id": "alpha.example", "address": "https://alpha.example/old-story",
+                       "published_at": "2024-01-01T00:00:00Z", "title": "BeiDou and GPS launch update",
+                       "category": "launch", "constellations": ["GPS", "BeiDou-3"]}]
 
 
 def test_latest_news_keeps_items_for_constellations_that_still_have_room(monkeypatch):
