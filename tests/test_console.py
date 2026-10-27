@@ -36,7 +36,7 @@ class GitHub:
             raise self.fail
         return {"workflows": WORKFLOWS, "runs": RUNS, "log": jobs.run_log(LOG), "prs": self.prs, "decision_prs": self.prs,
                 "comments": self.comments,
-                "issues": self.issues, "archive_commits": {},
+                "issues": self.issues, "archive_commits": {}, "archive_versions": [],
                 "problems": [], "read_at": NOW}
 
     def clear(self):

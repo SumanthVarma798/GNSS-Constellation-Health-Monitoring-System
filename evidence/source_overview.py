@@ -2,7 +2,9 @@
 candidates did not answer when they were checked. Read from evidence/source_grades.csv and source_candidates.csv."""
 import csv
 from collections import Counter
+from datetime import datetime, timezone
 
+from evidence.sources import ARCHIVED_SOURCES
 from evidence.settings import CANDIDATE_WORKED, SOURCE_CANDIDATES_FILE, SOURCE_GRADES_FILE
 
 NOT_CHECKED = "not fetched"   # a candidate held back by rule: never fetched, so not "not answering"
@@ -60,3 +62,75 @@ def source_rows(grades_file=SOURCE_GRADES_FILE, candidates_file=SOURCE_CANDIDATE
         r["group"] = ("not answering" if r["answer"][0] == "warn" else "held" if r["held"] else "graded" if r["confirmed"]
                       else "awaiting a grade" if r["grade"] else "no grade")
     return rows
+
+
+def archived_address_groups():
+    """Each archived address and the archive group that reads it."""
+    return {address: group for group, addresses in ARCHIVED_SOURCES.items() for address in addresses}
+
+
+def _moment(text):
+    """A time from the archive's CSV fields, or None when it cannot be read."""
+    if not text:
+        return None
+    if isinstance(text, datetime):
+        return text if text.tzinfo else text.replace(tzinfo=timezone.utc)
+    try:
+        return datetime.fromisoformat(str(text).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+
+
+def _group_last_read(log_rows):
+    """The latest run moment for each archive group, counting runs of the whole archive too."""
+    latest = {}
+    for line in log_rows or []:
+        job = line.get("job", "")
+        if job == "archive all":
+            when = _moment(line.get("ended") or line.get("started"))
+            if when:
+                for group in ARCHIVED_SOURCES:
+                    latest[group] = max(latest.get(group, when), when)
+            continue
+        if not job.startswith("archive "):
+            continue
+        group = job[len("archive "):]
+        if group not in ARCHIVED_SOURCES:
+            continue
+        when = _moment(line.get("ended") or line.get("started"))
+        if when:
+            latest[group] = max(latest.get(group, when), when)
+    return latest
+
+
+def archive_read_times(version_rows, log_rows):
+    """Per archived address, when its group last ran (last_read) and when a version was last kept (last_changed)."""
+    groups = archived_address_groups()
+    group_ran = _group_last_read(log_rows)
+    changed = {}
+    for row in version_rows or []:
+        address = row.get("address", "")
+        when = _moment(row.get("fetched_at"))
+        if address and when:
+            changed[address] = max(changed.get(address, when), when)
+    out = {}
+    for address, group in groups.items():
+        out[address] = {"last_read": group_ran.get(group), "last_changed": changed.get(address)}
+    return out
+
+
+def ago_words(moment, now):
+    """'3 h ago' style words from two UTC times."""
+    if not moment:
+        return "not known"
+    seconds = max(0, int((now - moment).total_seconds()))
+    if seconds < 60:
+        return "just now"
+    minutes = seconds // 60
+    if minutes < 60:
+        return f"{minutes} min ago"
+    hours = seconds // 3600
+    if hours < 48:
+        return f"{hours} h ago"
+    days = seconds // 86400
+    return f"{days} d ago"
