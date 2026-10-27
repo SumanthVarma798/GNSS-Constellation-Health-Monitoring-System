@@ -1,6 +1,55 @@
 {
- "generated_at": "2026-10-27T15:36:03Z",
+ "generated_at": "2026-10-27T18:24:35Z",
  "items": [
+  {
+   "address": "https://x.com/Arianespace/status/2115141523515793781",
+   "category": "signal and service",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-27T18:24:35Z",
+   "grade": "B",
+   "grade_standing": "provisional",
+   "outlet": "Arianespace (@Arianespace)",
+   "published_at": "2026-10-27T18:00:11Z",
+   "source_id": "x.com/Arianespace",
+   "summary": "From smartphones to transportation and critical infrastructure, Europe's global satellite navigation system has supported services used by billions of people worldwide for almost a decade. Galileo delivers highly accurate positioning, navigation and timing services to governments, institutions and…",
+   "title": "From smartphones to transportation and critical infrastructure, Europe's global satellite navigation system has…",
+   "via": "https://x.com/Arianespace"
+  },
+  {
+   "address": "https://x.com/Arianespace/status/2115141476795519054",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-27T18:24:35Z",
+   "grade": "B",
+   "grade_standing": "provisional",
+   "outlet": "Arianespace (@Arianespace)",
+   "published_at": "2026-10-27T18:00:00Z",
+   "source_id": "x.com/Arianespace",
+   "summary": "",
+   "title": "You've probably used Galileo today. Without even knowing it. 🌍 https://t.co/dvbd14KKiY",
+   "via": "https://x.com/Arianespace"
+  },
+  {
+   "address": "https://x.com/Stellarixorine/status/2115133437430628493",
+   "category": "other",
+   "constellations": [
+    "GPS",
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-27T18:24:26Z",
+   "grade": "D",
+   "grade_standing": "provisional",
+   "outlet": "Stellarix (@Stellarixorine)",
+   "published_at": "2026-10-27T17:28:03Z",
+   "source_id": "x.com/Stellarixorine",
+   "summary": "ONE DAY, ONE SPACE AGENCY — Day 4 / 70+ 🚀✨ 🇪🇺 @esa — European Space Agency The United Stars of Europe 🌟 --- 📅 FORMED: May 30, 1975 — by merging ELDO (1962) + ESRO (1964) 🤝 📍 HEADQUARTERS: Paris, France 🗼 👥 MEMBERS: 22 Member States 🚀 SPACEPORT: Guiana Space Centre, Kourou, French Guiana 🌴 —…",
+   "title": "ONE DAY, ONE SPACE AGENCY — Day 4 / 70+ 🚀✨ 🇪🇺 @esa — European Space Agency The United Stars of Europe 🌟 --- 📅 FORMED:…",
+   "via": "https://x.com/Stellarixorine"
+  },
   {
    "address": "https://news.google.com/rss/articles/CBMivAFBVV95cUxOdmVRbjZxOWs0WVBpd1N5dS15RDVzOTI0cklMallhWU1mR0drZ00ydFpnZlJiNmlOMGxuOWJBanFUb3RaRlJBYVNLdExUM3R2RUtzRGNJZHlmNlp2UWs0ZHVVLVZwWFBqSVJ4Wk56bzhZWFRtbWM4bFZpY2NEVTRYSGFkeXNGb05Jc19YOVlyN2ZGeVRBQ3hubl9hRzJPbTBxMmtWN2JLd2RXTU1uQmRYQzhXbVRENVBwSnMwLQ?oc=5",
    "category": "programme and policy",
@@ -64,6 +113,22 @@
    "summary": "",
    "title": "NVS-03 and NavIC Navigation System",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://x.com/esa/status/2115032746716487737",
+   "category": "signal and service",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-27T18:24:31Z",
+   "grade": "B",
+   "grade_standing": "provisional",
+   "outlet": "European Space Agency (@esa)",
+   "published_at": "2026-10-27T10:47:56Z",
+   "source_id": "x.com/esa",
+   "summary": "New Galileo Second Generation satellites are set to join the fleet, bringing the total to 16. These additional satellites will support the long-term continuity and resilience of Europe’s satellite navigation services. 🔗https://t.co/8qxcdz97qI https://t.co/hKDIA4iqzj",
+   "title": "New Galileo Second Generation satellites are set to join the fleet, bringing the total to 16. These additional…",
+   "via": "https://x.com/esa"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMirwFBVV95cUxOcEpnQllWRzVvWk1DMWVkRnB5dHBLcm5aU29iRktLMEc5dVh5RXJ6T0pYQW1oNEFUR29CMEdBbjFrdXpXVS1aZG9sMHV4c2VGM1hfZ1ptRlRoRUg5VW9KbU04LUkxYS0yWWFVaUdQaFFTLVZrcUZCS3p6V0oyVlhJWE9TTG1SS21iM09GLUFnRGNmU1pSNU9nT2MweDdyR2xkYnNtakpIYjhJN19tZlB3?oc=5",
@@ -306,6 +371,23 @@
    "summary": "",
    "title": "ISRO GSLV-F18 Launch: How NVS-03 Satellite Could Restore India's Independent Navigation",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://x.com/Stellarixorine/status/2114563178806034587",
+   "category": "other",
+   "constellations": [
+    "GPS",
+    "BeiDou-3"
+   ],
+   "fetched_at": "2026-10-27T18:24:26Z",
+   "grade": "D",
+   "grade_standing": "provisional",
+   "outlet": "Stellarix (@Stellarixorine)",
+   "published_at": "2026-10-26T03:42:03Z",
+   "source_id": "x.com/Stellarixorine",
+   "summary": "ONE DAY, ONE SPACE AGENCY — Day 3 / 70+ 🚀✨ 🇨🇳 CNSA — China National Space Administration The Dragon That Rose To The Moon and Mars 🐉🌙 🥰---🥰 📅 FORMED: April 22, 1993 📍 HEADQUARTERS: Beijing, China 🏛️ 👨‍🔬 FATHER OF CHINESE ROCKETRY: Qian Xuesen 😊---😊 🌌 ORIGIN STORY: From Silence To Superpower China's…",
+   "title": "ONE DAY, ONE SPACE AGENCY — Day 3 / 70+ 🚀✨ 🇨🇳 CNSA — China National Space Administration The Dragon That Rose To The…",
+   "via": "https://x.com/Stellarixorine"
   },
   {
    "address": "https://rntfnd.org/2026/10/25/367000-ship-study-22-gps-spoofing-hot-spots-georgia-tech/",
@@ -6350,22 +6432,6 @@
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE13OXRaUHkzOU9qWFNzMFhQcmlDWVR5Nks0Tl91dVdtOVBzZkV4ZWFkTXlZWkhVNUp0TDJqY29NRWhrUkFrVzNpWTRqUDktcC1ZTXNxSjNMVDJVWXpT?oc=5",
-   "category": "signal and service",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:40:40Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "EurekAlert! Science News Releases",
-   "published_at": "2025-12-16T08:00:00Z",
-   "source_id": "eurekalert.org",
-   "summary": "",
-   "title": "LEO satellites show promise to boost navigation accuracy where GPS struggles",
-   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMieEFVX3lxTE5DZHVLbklQdDI5RjBGQUI4MF9lU3pIV1cyX0NBSmZjZjhnODNBVEhGNWxvbm1zenlWejVKSGRNM0FlQ0toanlwSmlENzF6SFlXVm8zNnA3emRSY0pUTVFkWlNHWUNTWVNJMFJjNmhLSGVpTkFGRmNHOA?oc=5",
    "category": "launch",
    "constellations": [
@@ -6460,22 +6526,6 @@
    "summary": "",
    "title": "Galileo to take its first flight on Ariane 6 on 17 December",
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMivAFBVV95cUxNNnUtbERBelc0amJhU28yZnpPaG15bWlVdUVIeFQtbEJiOUhHWnN3NmpsOWhtSFhSNjZpNE0xSjdZY2JUUDBkOHBiRnVqN1NHRmdaU25JNGhlOVZoM2lJRXdiZUxjRkpEMDk4ZVd1Q0FJOWRCUzduWGQ4MkpObDVId21GdjViQW1GSWk0ZzU4dnBKTmJ3XzNrR3FRcms5NVRfNVhUZG9uY1lJZDZnVlJBQ2FoZlNQUTd6Y2JSctIBwgFBVV95cUxPR1dSWEkxQVBVdTV0eVJub3NMVTV2X3pnZkJlWVA2RTMzX3IyaWJ5MVdxYjktR0Y3c2MwVDhNRTVYZGZnV1VMQXdoZ2h5bzV0cEUwSE5sazNUcWZWdmtZSEw2YS1KTHI4U2pWdmxub19xVnMzZllTUlNWWDZ5OVZBclJla2FGelZlT0JNVkFfRnJsTTFsTWlxc21ra3dkdnZWZ2V0YktJc0VZM3J0eDhPMExYbWhGZG5uYVBoZjRjdFZHdw?oc=5",
-   "category": "signal and service",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:40:50Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Business Standard",
-   "published_at": "2025-11-20T08:00:00Z",
-   "source_id": "business-standard.com",
-   "summary": "",
-   "title": "GPS-spoofing is now a global threat, so what are nations doing to fight it?",
-   "via": "https://news.google.com/rss/search?q=GLONASS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMijwFBVV95cUxOQm5WTGdaTE1PalFIRjFuYkVpM2FxMUJMTkhtMzIwYmtPSnplNUtKeVlvZXM3R2ZqWlZic25uY29oSjliVElGM3YtSDBRelR0bUdacGNITEtmZWozbzJOMTdkaTk1REN4OEdFWllsazBYVzZRLXgyZUhLXzVLV0NuT3ZPWk5sMUxOMG9maXVzZw?oc=5",
@@ -8324,6 +8374,33 @@
    "name": "www1.ru",
    "note": "",
    "reason": ""
+  },
+  "x.com/Arianespace": {
+   "grade": "B",
+   "grade_standing": "provisional",
+   "graded_by": "",
+   "kind": "X account",
+   "name": "Arianespace (@Arianespace)",
+   "note": "",
+   "reason": "Launch provider for Galileo; reports its own launches"
+  },
+  "x.com/Stellarixorine": {
+   "grade": "D",
+   "grade_standing": "provisional",
+   "graded_by": "",
+   "kind": "X account",
+   "name": "Stellarix (@Stellarixorine)",
+   "note": "",
+   "reason": "3 of 3 checked launch posts held in 24 months (x-discovery, 27 Oct)"
+  },
+  "x.com/esa": {
+   "grade": "B",
+   "grade_standing": "provisional",
+   "graded_by": "",
+   "kind": "X account",
+   "name": "European Space Agency (@esa)",
+   "note": "",
+   "reason": "As esa.int: the European Space Agency, Galileo's design authority"
   },
   "yacht.de": {
    "grade": "",
