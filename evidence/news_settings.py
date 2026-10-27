@@ -11,8 +11,12 @@ NEWS_URL = ("https://raw.githubusercontent.com/SumanthVarma798/GNSS-Constellatio
 
 # The newest items kept per constellation.
 NEWS_ITEMS_PER_SYSTEM = 150
+# Items published longer ago than this stay in the archive but are left out of the latest-news file.
+NEWS_MAX_AGE_DAYS = 365
 # The summary is cut at this many characters.
 SUMMARY_CHARACTERS = 300
+# These feed kinds may match systems from feed text when the headline names none.
+NEWS_TEXT_MATCH_KINDS = ("Substack feed", "newsletter feed")
 
 # News collection runs on this cadence.
 NEWS_CYCLE_HOURS = 3

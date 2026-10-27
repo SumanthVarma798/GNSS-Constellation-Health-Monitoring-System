@@ -9,14 +9,15 @@ outside entities, and its expat (2.4.1 or later) refuses runaway entity expansio
 """
 import html
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from urllib.parse import urlsplit
 from xml.etree import ElementTree
 
 from evidence.archive import object_path, read_runs, read_versions
 from evidence.confidence import read_source_grades
-from evidence.news_settings import NEWS_CATEGORIES, NEWS_ITEMS_PER_SYSTEM, SUMMARY_CHARACTERS
+from evidence.news_settings import (NEWS_CATEGORIES, NEWS_ITEMS_PER_SYSTEM, NEWS_MAX_AGE_DAYS,
+                                    NEWS_TEXT_MATCH_KINDS, SUMMARY_CHARACTERS)
 from evidence.settings import (CANDIDATE_FEED_TYPE, CANDIDATE_SOCIAL_KIND, FEED_REPORT_COLUMNS, LABELLING_SHEET_SIZE,
                                NOT_AN_ARTICLE_HOSTS, SOCIAL_PLATFORM_HOSTS, SYSTEM_WORDS)
 from evidence.sources import ARCHIVED_SOURCES, PROVISIONAL_GROUPS, candidate_rows, working_candidates
@@ -136,7 +137,7 @@ def items_from(candidate, body, fetched_at):
             records.append({"source_id": source_id, "address": address, "title": " ".join(item["title"].split()),
                             "summary": "" if social else item["summary"], "outlet": outlet,
                             "published_at": item["published_at"], "fetched_at": fetched_at,
-                            "via": candidate["address"], "social": social})
+                            "via": candidate["address"], "social": social, "kind": candidate["kind"]})
     return records
 
 
@@ -214,6 +215,28 @@ def _dashboard_systems(title):
     return [DASHBOARD_SYSTEMS.get(system, system) for system in named]
 
 
+def _moment(text):
+    stamp = when(text)
+    return datetime.fromisoformat(stamp.replace("Z", "+00:00")) if stamp else None
+
+
+def _too_old(item, newest_fetched):
+    if newest_fetched is None:
+        return False
+    published = _moment(item.get("published_at", ""))
+    if published is None:
+        return False
+    return published < newest_fetched - timedelta(days=NEWS_MAX_AGE_DAYS)
+
+
+def _item_systems(item):
+    named = _dashboard_systems(item.get("title", ""))
+    if named or item.get("kind", "") not in NEWS_TEXT_MATCH_KINDS:
+        return named
+    # Feed text may hold markup: match on its words only.
+    return _dashboard_systems(re.sub(r"<[^>]+>", " ", html.unescape(item.get("summary", ""))))
+
+
 def _grade_tables():
     confirmed = {row["source_id"]: row for row in read_source_grades()}
     provisional = {}
@@ -241,7 +264,11 @@ def latest_news(items):
     confirmed, provisional = _grade_tables()
     counts = {DASHBOARD_SYSTEMS.get(system, system): 0 for system in SYSTEM_WORDS}
     picked, used_sources = [], set()
-    newest_first = sorted(items, key=lambda item: item["published_at"] or item["fetched_at"], reverse=True)
+    seen = [_moment(item.get("fetched_at", "")) for item in items]
+    newest_fetched = max((moment for moment in seen if moment), default=None)
+    # Old items go before the duplicate check, so an old copy never takes a recent one's place.
+    recent = [item for item in items if not _too_old(item, newest_fetched)]
+    newest_first = sorted(recent, key=lambda item: item["published_at"] or item["fetched_at"], reverse=True)
     deduped, seen_titles = [], {}
     for item in newest_first:
         key = _title_key(item.get("title", ""))
@@ -257,7 +284,7 @@ def latest_news(items):
         if not (address.startswith("http://") or address.startswith("https://")):
             continue
         constellations, open_slots = [], []
-        for system in _dashboard_systems(item.get("title", "")):
+        for system in _item_systems(item):
             if system not in constellations:
                 constellations.append(system)
             if counts[system] < NEWS_ITEMS_PER_SYSTEM:
