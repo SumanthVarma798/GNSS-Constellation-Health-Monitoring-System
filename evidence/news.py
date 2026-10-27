@@ -238,6 +238,26 @@ def _item_systems(item):
     return _dashboard_systems(re.sub(r"<[^>]+>", " ", html.unescape(item.get("summary", ""))))
 
 
+def claim_items(items):
+    """Archived items in the latest-news shape source-record checking reads."""
+    rows = []
+    for item in items:
+        constellations = []
+        for system in _item_systems(item):
+            if system and system not in constellations:
+                constellations.append(system)
+        summary = summary_from(item.get("summary", ""), item.get("title", ""), item.get("outlet", ""))
+        rows.append({
+            "source_id": item.get("source_id", ""),
+            "address": item.get("address", ""),
+            "published_at": item.get("published_at", ""),
+            "title": item.get("title", ""),
+            "category": category_of(item.get("title", ""), summary),
+            "constellations": constellations,
+        })
+    return rows
+
+
 def _grade_tables():
     confirmed = {row["source_id"]: row for row in read_source_grades()}
     provisional = {}

@@ -116,6 +116,9 @@ SOURCE_GRADES_FILE = Path(__file__).resolve().parent / "source_grades.csv"
 SOURCE_GRADE_COLUMNS = ["source_id", "name", "reliability", "graded_by", "graded_on", "reason"]
 # Checked claims per source, appended as checks complete.
 SOURCE_RECORD_FILE = Path(__file__).resolve().parent / "source_record.csv"
+# Rejected source-grade findings: source, finding id, claim count then, and decision day.
+SOURCE_RECORD_REJECTED_FILE = Path(__file__).resolve().parent / "source_record_rejected.csv"
+SOURCE_RECORD_REJECTED_COLUMNS = ["source_id", "finding_id", "claims_at_rejection", "decided_on"]
 
 # Candidate sources for the news pipeline (issue 13), one row per feed or page. Each address was fetched once;
 # where it failed, up to two other addresses were tried, and the row records the last one.
