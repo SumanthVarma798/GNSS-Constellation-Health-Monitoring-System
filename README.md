@@ -3,6 +3,18 @@
 > repository has no licence file, so this copy must stay private and must not be
 > redistributed. Nothing here has been agreed with the team.
 >
+> **Where things live.** The project's own domain is `opengnss.org`; how it is held and renewed is in
+> [docs/infrastructure.md](docs/infrastructure.md).
+>
+> | What | Address | Hosted on |
+> |---|---|---|
+> | Dashboard (`dashboard.py`) | <https://dashboard.opengnss.org> | Render, free plan, from `main` ([render.yaml](render.yaml)); sleeps after 15 idle minutes and takes about a minute to wake |
+> | Administration console (`admin.py`) | <https://gnss-master-console.streamlit.app/> | Streamlit Community Cloud, free, from `main` |
+> | Substack newsletters as feeds | `https://feeds.opengnss.org/substack/<publication>/feed` | Cloudflare Worker ([cloudflare/newsletters](cloudflare/newsletters)) |
+> | Newsletter subscription address | `newsletters@feeds.opengnss.org` | Cloudflare Email Routing |
+> | News for the dashboard | `latest_news.json` on the `news-data` branch | this repository |
+> | The team's earlier app (`app.py`) | <https://gnss-health-monitor.streamlit.app/> | the team's Streamlit account; not this dashboard |
+>
 > - **Administration console, for the team: <https://gnss-master-console.streamlit.app/>**
 >   What runs, what is waiting for a decision, the open work, and the system design in one picture.
 >   Sign in with a Google account on the console's list; ask Sumanth to be added. It is hosted free on
@@ -25,7 +37,7 @@
 
 A comprehensive real-time monitoring and analysis system for multiple Global Navigation Satellite System (GNSS) constellations including **NavIC (IRNSS)**, **QZSS (Michibiki)**, and **BeiDou-3**. This application provides satellite health assessment, orbital drift analysis, maneuver detection, longitude slot deviation tracking, and Dilution of Precision (DOP) calculations through an interactive Streamlit web interface.
 
-### 🚀 **Live Demo**: [https://gnss-constellation-health-monitoring-system.streamlit.app/](https://gnss-health-monitor.streamlit.app/)
+### 🚀 **Live Demo**: [https://dashboard.opengnss.org](https://dashboard.opengnss.org)
 
 ## 📑 Table of Contents
 
@@ -53,7 +65,7 @@ A comprehensive real-time monitoring and analysis system for multiple Global Nav
 
 ## ⚡ Quick Start
 
-**Try it online:** [Live Demo](https://gnss-constellation-health-monitoring-system.streamlit.app/)
+**Try it online:** [Live Demo](https://dashboard.opengnss.org)
 
 **Or run locally:**
 
