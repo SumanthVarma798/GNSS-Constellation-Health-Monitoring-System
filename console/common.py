@@ -1,5 +1,7 @@
 """What every console page shares: its settings, one cached reading of GitHub, plain words for GitHub's errors, and
 the page's layout (its header band, its body, and the Actions pane on the right)."""
+import csv
+import io
 from datetime import datetime, timedelta, timezone
 
 import requests
@@ -9,6 +11,7 @@ from evidence import decisions, github_api, jobs, pipeline, work
 from evidence.console_settings import (ARCHIVE_REPOSITORY, JOBS, RELIABILITY_DAYS, RUN_LOGS, RUNS_READ, TESTS_WORKFLOW,
                                        WORKFLOWS_DIR)
 from evidence.decision_settings import READ_EVERY_SECONDS, SECRETS_SECTION
+from evidence.settings import ARCHIVE_VERSIONS_FILE
 from ui import console
 
 # What Google sign-in (st.login) needs in [auth]; one left empty means it is not set up.
@@ -64,6 +67,12 @@ def github(token):
     except requests.RequestException:
         archive_commits = {}
         problems.append("The archive's commits could not be read, so the Live pipeline cannot link each run's commit.")
+    try:
+        versions = list(csv.DictReader(io.StringIO(github_api.file_text(token, ARCHIVE_REPOSITORY, ARCHIVE_VERSIONS_FILE))))
+    except requests.RequestException:
+        versions = None
+        problems.append("The archive's versions.csv could not be read from the archive repository: the token may not "
+                        "have access to it. Last read times on Sources cannot be shown.")
     open_prs = decisions.fetch_open(token)
     comments = {}
     for pr in open_prs:
@@ -74,7 +83,7 @@ def github(token):
             "log": log, "prs": open_prs,
             "decision_prs": open_prs + decisions.fetch_recent_closed(token),
             "comments": comments,
-            "issues": work.fetch_open_issues(token), "archive_commits": archive_commits,
+            "issues": work.fetch_open_issues(token), "archive_commits": archive_commits, "archive_versions": versions,
             "problems": problems, "read_at": datetime.now(timezone.utc)}
 
 

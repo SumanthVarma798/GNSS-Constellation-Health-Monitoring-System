@@ -1,7 +1,9 @@
 """The sources at a glance (evidence/source_overview.py)."""
 import pytest
 
-from evidence.source_overview import overview, source_rows
+from datetime import datetime, timezone
+
+from evidence.source_overview import ago_words, archive_read_times, overview, source_rows
 
 
 def test_the_real_tables_add_up():
@@ -76,3 +78,34 @@ def test_a_short_line_reads_as_empty_fields_and_not_fetched_is_held_only_when_he
 
     assert rows["Short"]["address"] == "" and rows["Short"]["group"] == "not answering"
     assert rows["Odd"]["answer"] == ("idle", "not fetched") and rows["Held centre"]["answer"][1] == "not fetched: held by rule"
+
+
+NOW = datetime(2026, 10, 20, 15, 0, tzinfo=timezone.utc)
+
+
+def test_archive_read_times_take_the_newest_group_run_and_all_runs():
+    from evidence.sources import ARCHIVED_SOURCES, CELESTRAK_GNSS_URL
+
+    news_addr = ARCHIVED_SOURCES["news"][0]
+    log = [{"job": "archive news", "started": "2026-10-19T10:00:00Z", "ended": "2026-10-19T10:05:00Z"},
+           {"job": "archive news", "started": "2026-10-20T12:00:00Z", "ended": "2026-10-20T12:10:00Z"},
+           {"job": "archive all", "started": "2026-10-18T08:00:00Z", "ended": "2026-10-18T09:00:00Z"}]
+    versions = [{"address": news_addr, "fetched_at": "2026-10-19T06:00:00Z"}]
+    times = archive_read_times(versions, log)
+
+    assert times[news_addr]["last_read"].isoformat() == "2026-10-20T12:10:00+00:00"
+    assert times[CELESTRAK_GNSS_URL]["last_read"].isoformat() == "2026-10-18T09:00:00+00:00"
+    assert times[news_addr]["last_changed"].isoformat() == "2026-10-19T06:00:00+00:00"
+
+
+def test_archive_read_times_leave_an_unknown_address_out():
+    times = archive_read_times([{"address": "https://not-archived.example/", "fetched_at": "2026-10-20T12:00:00Z"}], [])
+
+    assert "https://not-archived.example/" not in times
+
+
+def test_ago_words_read_in_plain_english():
+    from datetime import timedelta
+
+    assert ago_words(NOW, NOW + timedelta(hours=3)) == "3 h ago"
+    assert ago_words(None, NOW) == "not known"
