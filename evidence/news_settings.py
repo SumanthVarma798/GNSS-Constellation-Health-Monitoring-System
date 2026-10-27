@@ -101,3 +101,15 @@ NEWS_CATEGORIES = OrderedDict([
 # Category rules: checked in order on the headline first; if none match there, checked in order on the summary.
 CATEGORY_RULE_WORDS = ('Categories are checked in order: first the headline is checked against every category; only when '
                        'none matches, the feed text is checked in the same order; no match is "other".')
+
+# Accounts read directly, beside the keyword search: journalists, trackers and operators known to post GNSS news.
+# A handle that does not exist simply returns nothing. Russian and Chinese state accounts are left out on purpose:
+# independent journalists who cover them are read instead.
+X_SEED_ACCOUNTS = ("planet4589", "AJ_FI", "jeff_foust", "SciGuySpace", "NASASpaceflight", "Marco_Langbroek",
+                   "StephenClark1", "SpaceflightNow", "RussianSpaceWeb", "Cosmic_Penguin", "QZSS", "GPSWorld",
+                   "InsideGNSS", "EU_Space", "esa", "isro", "SpaceForceDoD", "SpaceOpsCommand", "Jatan_Mehta",
+                   "OrbitalIndex", "Septentrio", "rntfnd", "SpaceIntel101", "ShuttleAlmanac")
+# Pages read per seed account (20 posts a page).
+X_SEED_PAGES = 5
+# What a seed account's post must name to be read.
+X_SEED_WORDS = "(GPS OR BeiDou OR Galileo OR GLONASS OR NavIC OR IRNSS OR QZSS OR Michibiki)"

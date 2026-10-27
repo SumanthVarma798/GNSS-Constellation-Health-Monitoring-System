@@ -12,7 +12,8 @@ from urllib import error, parse, request
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from evidence import source_record, x_discovery
-from evidence.news_settings import (X_DISCOVERY_MONTHS, X_DISCOVERY_PAGES, X_DISCOVERY_QUERIES)
+from evidence.news_settings import (X_DISCOVERY_MONTHS, X_DISCOVERY_PAGES, X_DISCOVERY_QUERIES, X_SEED_ACCOUNTS, X_SEED_PAGES,
+                                    X_SEED_WORDS)
 
 API_URL = "https://api.twitterapi.io/twitter/tweet/advanced_search"
 ACCOUNT_COLUMNS = [
@@ -62,10 +63,12 @@ def main():
 def collect_tweets(api_key, since_time):
     """Rows from all configured queries, with tweet IDs de-duplicated."""
     seen, rows, pages_used = set(), [], 0
-    for query in X_DISCOVERY_QUERIES:
+    searches = [(query, X_DISCOVERY_PAGES) for query in X_DISCOVERY_QUERIES]
+    searches += [(f"from:{user} {X_SEED_WORDS}", X_SEED_PAGES) for user in X_SEED_ACCOUNTS]
+    for query, pages in searches:
         cursor = ""
         words = f"{query} since_time:{since_time} -filter:retweets"
-        for _page in range(X_DISCOVERY_PAGES):
+        for _page in range(pages):
             payload = read_page(api_key, words, cursor)
             pages_used += 1
             for tweet in payload.get("tweets", []):
