@@ -67,6 +67,7 @@ def test_missing_slugs_are_reported_in_checks_order():
         "registry-update",
         "orbit-ages",
         "orbit-fresh",
+        "rinex-check",
     ]
 
 
