@@ -27,7 +27,18 @@ Administrator re-invites the person; if none is left, Cloudflare support recover
 |---|---|
 | `feeds.opengnss.org` (web) | The newsletters Worker: `https://feeds.opengnss.org/substack/<publication>/feed` |
 | `feeds.opengnss.org` (mail) | Cloudflare Email Routing. Only `newsletters@feeds.opengnss.org` is accepted; all other addresses bounce |
+| `dashboard.opengnss.org` | The dashboard (`dashboard.py`) on Render: a DNS-only CNAME to its `onrender.com` address |
 | `opengnss.org` | Unused for now; kept free for the project's site and the team's own mail |
+
+## The dashboard on Render
+
+Streamlit Community Cloud cannot use our own domain, so the dashboard runs on Render's free plan from
+[render.yaml](../render.yaml). It redeploys on every commit to `main`, except commits that only touch docs, tests,
+the console or the Worker. It sleeps after 15 minutes with no visitors and takes about a minute to wake, so open it
+a minute before a demo. Free workspaces get 750 instance hours a month, which covers one service running all month.
+
+To recreate it: in Render, **New → Blueprint**, pick this repository, apply. The CNAME must stay DNS-only (grey
+cloud) so Render can issue its certificate.
 
 ## The newsletters Worker
 
@@ -50,4 +61,5 @@ Cloudflare sign-in (`npx wrangler login`) with access to the OpenGNSS account. S
 | GitHub (private mirror) | `SumanthVarma798/GNSS-Constellation-Health-Monitoring-System` and its `-archive` | repository secrets |
 | twitterapi.io (X posts) | key named `TWITTERAPI_IO_KEY` | repository secret, given only to the archive job's `x` and `all` runs |
 | Healthchecks.io | ping key `HEALTHCHECKS_PING_KEY` | repository secret |
-| Streamlit Community Cloud | the dashboard and the admin console | the app's own secrets |
+| Render | the dashboard, service `opengnss-dashboard` | none needed yet |
+| Streamlit Community Cloud | the admin console | the app's own secrets |

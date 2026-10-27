@@ -1,0 +1,27 @@
+# The public dashboard (dashboard.py) at https://dashboard.opengnss.org, on Render's free plan.
+# Render reads this file when someone creates a Blueprint from this repository; see docs/infrastructure.md.
+# Free plan: sleeps after 15 minutes with no visitors and takes about a minute to wake.
+services:
+  - type: web
+    name: opengnss-dashboard
+    runtime: python
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run dashboard.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+    healthCheckPath: /_stcore/health
+    autoDeployTrigger: commit
+    buildFilter:
+      # ponytail: skips only paths the dashboard never reads; switch to a daily deploy hook if free build minutes run short
+      ignoredPaths:
+        - "docs/**"
+        - "tests/**"
+        - "console/**"
+        - "admin.py"
+        - "cloudflare/**"
+        - "**/*.md"
+    domains:
+      - dashboard.opengnss.org
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
