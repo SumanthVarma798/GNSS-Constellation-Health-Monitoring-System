@@ -23,6 +23,33 @@ NEWS_CYCLE_HOURS = 3
 # News older than this is shown as late.
 NEWS_LATE_HOURS = 7
 
+# Bars a source record must meet for B, C or D: (checked claims at least, score at least).
+GRADE_BARS = OrderedDict([("B", (10, 0.90)), ("C", (5, 0.75)), ("D", (3, 0.50))])
+# With this many checked claims, a source at least reaches E.
+GRADE_E_MIN_CLAIMS = 3
+# A grade drops only once score falls this far below that grade's score bar.
+GRADE_DROP_MARGIN = 0.05
+# Source-record scoring looks back this many days.
+RECORD_WINDOW_DAYS = 365
+# A launch claim may be this many days before the launch date and still hold.
+LAUNCH_DAYS_BEFORE = 3
+# A launch claim may be this many days after the launch date and still hold.
+LAUNCH_DAYS_AFTER = 1
+# If no check succeeded after this many days, the result becomes "could not check".
+CHECK_GIVE_UP_DAYS = 30
+# Corroboration counts only within this many days after the claim.
+CORROBORATION_DAYS = 30
+# A corroborated claim contributes this share of a held claim's weight.
+CORROBORATION_WEIGHT = 0.5
+# Only these grades may corroborate another source's claim.
+CORROBORATING_GRADES = ("A", "B")
+# A source on B is shortlisted for A at this bar: (claims, score, no-failed days).
+SHORTLIST_FOR_A = (20, 0.95, 90)
+# A disagreement finding needs at least this many steps between grades.
+DISAGREEMENT_STEPS = 2
+# A disagreement finding needs at least this many checked claims.
+DISAGREEMENT_MIN_CLAIMS = 5
+
 # Rules for category names by words in the headline, then the summary (first match wins).
 NEWS_CATEGORIES = OrderedDict([
     ("launch", ("launch", "launched", "launches", "launching", "lift-off", "liftoff", "lifts off", "into orbit",

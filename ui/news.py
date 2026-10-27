@@ -8,7 +8,8 @@ import requests
 import streamlit as st
 
 from evidence.news import host_id
-from evidence.news_settings import CATEGORY_RULE_WORDS, NEWS_CATEGORIES, NEWS_CYCLE_HOURS, NEWS_LATE_HOURS, NEWS_URL
+from evidence.news_settings import (CATEGORY_RULE_WORDS, GRADE_BARS, GRADE_E_MIN_CLAIMS, NEWS_CATEGORIES, NEWS_CYCLE_HOURS,
+                                    NEWS_LATE_HOURS, NEWS_URL, RECORD_WINDOW_DAYS)
 from evidence.settings import RELIABILITY_GRADES
 from ui import surfaces, tooltip
 
@@ -57,6 +58,12 @@ CSS = """
 .news-source > summary { list-style: none; cursor: pointer; padding: 8px 10px; font-weight: 600; color: var(--muted); }
 .news-source > summary::-webkit-details-marker { display: none; }
 .news-source-body { padding: 0 10px 10px; display: grid; gap: 4px; font-size: 13px; }
+.news-grade-legend { margin: 10px 0 0; border: 1px solid var(--edge); border-radius: var(--r); background: var(--platform);
+  box-shadow: var(--raised-sm); padding: 8px 10px; }
+.news-grade-legend > summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+.news-grade-legend > summary::-webkit-details-marker { margin-right: 6px; }
+.news-grade-legend table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+.news-grade-legend th, .news-grade-legend td { border-top: 1px solid var(--edge); padding: 6px 4px; text-align: left; vertical-align: top; }
 """
 
 
@@ -182,7 +189,8 @@ def item_html(item, source, is_new=False, zone=timezone.utc):
     name, source_id = source.get("name") or item.get("source_id", ""), item.get("source_id", "")
     lines = [("Name", name if name == source_id else f"{name} ({source_id})"), ("What it is", source.get("kind", "")),
              ("Grade", grade_words(source, meaning=True)), ("Why this grade", source.get("reason", "")),
-             ("Graded by", source.get("graded_by", "")), ("Note", source.get("note", "")),
+             ("Record", source.get("record_line", "")), ("Graded by", source.get("graded_by", "")),
+             ("Note", source.get("note", "")),
              ("Found through", host_id(item.get("via", "")))]
     source_lines = [f"<span><b>{label}:</b> {escape(value)}</span>" for label, value in lines if value]
     address = _safe_link(item.get("address", ""))
@@ -206,7 +214,31 @@ def grade_words(row, meaning=False):
     if not grade:
         return "Not graded yet"
     said = f", {RELIABILITY_GRADES[grade]}" if meaning and grade in RELIABILITY_GRADES else ""
-    return f"Grade {grade}{said} · {row.get('grade_standing', '')}"
+    from_record = " · from the record" if row.get("grade_from") == "record" else ""
+    return f"Grade {grade}{said} · {row.get('grade_standing', '')}{from_record}"
+
+
+def grade_legend_html():
+    """The grade legend for the rules section."""
+    reached = {
+        "A": "never by the record; a person decides, after a shortlist finding",
+        "B": f"at least {GRADE_BARS['B'][0]} checked claims and score at least {GRADE_BARS['B'][1]:.2f}",
+        "C": f"at least {GRADE_BARS['C'][0]} checked claims and score at least {GRADE_BARS['C'][1]:.2f}",
+        "D": f"at least {GRADE_BARS['D'][0]} checked claims and score at least {GRADE_BARS['D'][1]:.2f}",
+        "E": f"at least {GRADE_E_MIN_CLAIMS} checked claims, but below the D bar",
+        "F": f"the start; fewer than {GRADE_E_MIN_CLAIMS} checked claims",
+    }
+    rows = "".join(
+        f"<tr><th>{grade}</th><td>{escape(RELIABILITY_GRADES.get(grade, ''))}</td><td>{escape(reached[grade])}</td></tr>"
+        for grade in ("A", "B", "C", "D", "E", "F")
+    )
+    return (
+        '<details class="news-grade-legend"><summary>How grades work</summary>'
+        "<table><thead><tr><th>Grade</th><th>Meaning</th><th>Reached by the record when</th></tr></thead>"
+        f"<tbody>{rows}</tbody></table>"
+        f"<p>Score = (held + 1) ÷ (held + failed + 2) over the last {RECORD_WINDOW_DAYS} days, "
+        "so a few lucky claims are not enough.</p></details>"
+    )
 
 
 def category_body_html(items, sources, zone=timezone.utc):
@@ -227,6 +259,7 @@ def sorting_rules_html():
         "<p>An item appears under every constellation its headline names.</p>"
         "<p>Grade standing: confirmed means the source is in the team's source table; provisional means a grade is "
         "proposed and waiting for the team's review; not graded means no grade is recorded yet.</p>"
+        f"{grade_legend_html()}"
     )
 
 

@@ -16,6 +16,7 @@ from xml.etree import ElementTree
 
 from evidence.archive import object_path, read_runs, read_versions
 from evidence.confidence import read_source_grades
+from evidence import source_record
 from evidence.news_settings import (NEWS_CATEGORIES, NEWS_ITEMS_PER_SYSTEM, NEWS_MAX_AGE_DAYS,
                                     NEWS_TEXT_MATCH_KINDS, SUMMARY_CHARACTERS)
 from evidence.settings import (CANDIDATE_FEED_TYPE, CANDIDATE_SOCIAL_KIND, FEED_REPORT_COLUMNS, LABELLING_SHEET_SIZE,
@@ -245,14 +246,17 @@ def _grade_tables():
     return confirmed, provisional
 
 
-def _source_grade(source_id, confirmed, provisional):
+def _source_grade(source_id, confirmed, provisional, record_rows, today):
     if source_id in confirmed:
         row = confirmed[source_id]
-        return row["reliability"], "confirmed", row["reason"], row["graded_by"]
+        return row["reliability"], "confirmed", row["reason"], row["graded_by"], ""
     row = provisional.get(source_id, {})
     if row.get("proposed_grade"):
-        return row["proposed_grade"], "provisional", row.get("grade_reason", ""), ""
-    return "", "not graded", "", ""
+        return row["proposed_grade"], "provisional", row.get("grade_reason", ""), "", ""
+    if record_rows:
+        grade = source_record.record_grade(record_rows, "", today)
+        return grade, "provisional", "From the checked-claims record, waiting for approval.", "", "record"
+    return "", "not graded", "", "", ""
 
 
 def _title_key(title):
@@ -262,10 +266,16 @@ def _title_key(title):
 def latest_news(items):
     """A latest-news dict for the dashboard file, capped per constellation."""
     confirmed, provisional = _grade_tables()
+    record = source_record.read_record()
+    by_source = {}
+    for row in record:
+        if row.get("source_id"):
+            by_source.setdefault(row["source_id"], []).append(row)
     counts = {DASHBOARD_SYSTEMS.get(system, system): 0 for system in SYSTEM_WORDS}
     picked, used_sources = [], set()
-    seen = [_moment(item.get("fetched_at", "")) for item in items]
-    newest_fetched = max((moment for moment in seen if moment), default=None)
+    fetched = [_moment(item.get("fetched_at", "")) for item in items]
+    newest_fetched = max((moment for moment in fetched if moment), default=None)
+    today = newest_fetched.date() if newest_fetched else datetime(1970, 1, 1, tzinfo=timezone.utc).date()
     # Old items go before the duplicate check, so an old copy never takes a recent one's place.
     recent = [item for item in items if not _too_old(item, newest_fetched)]
     newest_first = sorted(recent, key=lambda item: item["published_at"] or item["fetched_at"], reverse=True)
@@ -292,9 +302,10 @@ def latest_news(items):
         if not open_slots:
             continue
         source_id = item.get("source_id", "")
-        grade, standing, _, _ = _source_grade(source_id, confirmed, provisional)
+        record_rows = by_source.get(source_id, [])
+        grade, standing, _, _, grade_from = _source_grade(source_id, confirmed, provisional, record_rows, today)
         summary = summary_from(item.get("summary", ""), item.get("title", ""), item.get("outlet", ""))
-        picked.append({
+        row = {
             "constellations": open_slots,
             "category": category_of(item.get("title", ""), summary),
             "title": item.get("title", ""),
@@ -307,16 +318,20 @@ def latest_news(items):
             "via": item.get("via", ""),
             "grade": grade,
             "grade_standing": standing,
-        })
+        }
+        if grade_from:
+            row["grade_from"] = grade_from
+        picked.append(row)
         for system in open_slots:
             counts[system] += 1
         used_sources.add(source_id)
     sources = {}
     for source_id in sorted(used_sources):
-        grade, standing, reason, graded_by = _source_grade(source_id, confirmed, provisional)
+        record_rows = by_source.get(source_id, [])
+        grade, standing, reason, graded_by, grade_from = _source_grade(source_id, confirmed, provisional, record_rows, today)
         confirmed_row = confirmed.get(source_id, {})
         provisional_row = provisional.get(source_id, {})
-        sources[source_id] = {
+        row = {
             "name": confirmed_row.get("name") or provisional_row.get("name") or source_id,
             "kind": provisional_row.get("kind", ""),
             "grade": grade,
@@ -325,6 +340,12 @@ def latest_news(items):
             "graded_by": graded_by if standing == "confirmed" else "",
             "note": provisional_row.get("note", ""),
         }
+        if record_rows and grade_from == "record":
+            current = confirmed_row.get("reliability") or provisional_row.get("proposed_grade", "")
+            row["record_line"] = source_record.record_line(record_rows, current, today)
+        if grade_from:
+            row["grade_from"] = grade_from
+        sources[source_id] = row
     seen = [item["fetched_at"] for item in items if item.get("fetched_at")]
     return {
         # The archive last saw news at this fetch time. It stays unchanged when nothing else changed.

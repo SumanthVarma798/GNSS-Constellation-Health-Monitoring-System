@@ -3,7 +3,7 @@
 Every feed here is a saved sample in tests/samples/news; no test touches the network.
 """
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -396,6 +396,63 @@ def test_latest_news_keeps_items_for_constellations_that_still_have_room(monkeyp
     assert latest["sources"]["alpha.example"]["graded_by"] == "Team"
     assert latest["sources"]["beta.example"]["note"] == "watching"
     assert latest["sources"]["beta.example"]["kind"] == "press feed"
+
+
+def test_source_grade_lookup_order_is_confirmed_then_candidate_then_record_then_not_graded():
+    today = date(2026, 10, 20)
+    confirmed = {"alpha.example": {"reliability": "B", "reason": "confirmed", "graded_by": "Team"}}
+    provisional = {"beta.example": {"proposed_grade": "C", "grade_reason": "candidate"}}
+    record_rows = [{"source_id": "gamma.example", "address": "https://gamma.example/one", "published_at": "2026-10-20",
+                    "claim": "status", "constellation": "GPS", "satellite": "", "checked_on": "2026-10-20",
+                    "result": "held", "weight": "", "weight_reason": "", "evidence": "", "evidence_link": ""},
+                   {"source_id": "gamma.example", "address": "https://gamma.example/two", "published_at": "2026-10-19",
+                    "claim": "status", "constellation": "GPS", "satellite": "", "checked_on": "2026-10-20",
+                    "result": "held", "weight": "", "weight_reason": "", "evidence": "", "evidence_link": ""},
+                   {"source_id": "gamma.example", "address": "https://gamma.example/three", "published_at": "2026-10-18",
+                    "claim": "status", "constellation": "GPS", "satellite": "", "checked_on": "2026-10-20",
+                    "result": "held", "weight": "", "weight_reason": "", "evidence": "", "evidence_link": ""}]
+
+    assert news._source_grade("alpha.example", confirmed, provisional, record_rows, today) == (
+        "B", "confirmed", "confirmed", "Team", "")
+    assert news._source_grade("beta.example", confirmed, provisional, record_rows, today) == (
+        "C", "provisional", "candidate", "", "")
+    assert news._source_grade("gamma.example", confirmed, provisional, record_rows, today) == (
+        "D", "provisional", "From the checked-claims record, waiting for approval.", "", "record")
+    assert news._source_grade("none.example", confirmed, provisional, [], today) == ("", "not graded", "", "", "")
+
+
+def test_latest_news_uses_record_grade_when_no_other_grade_and_adds_record_line(monkeypatch):
+    monkeypatch.setattr(news, "read_source_grades", lambda: [])
+    monkeypatch.setattr(news, "candidate_rows", lambda: [])
+    monkeypatch.setattr(news.source_record, "read_record", lambda: [
+        {"source_id": "record.example", "address": "https://record.example/one", "published_at": "2026-10-20",
+         "claim": "status", "constellation": "GPS", "satellite": "", "checked_on": "2026-10-20", "result": "held",
+         "weight": "", "weight_reason": "", "evidence": "", "evidence_link": ""},
+        {"source_id": "record.example", "address": "https://record.example/two", "published_at": "2026-10-19",
+         "claim": "status", "constellation": "GPS", "satellite": "", "checked_on": "2026-10-20", "result": "held",
+         "weight": "", "weight_reason": "", "evidence": "", "evidence_link": ""},
+        {"source_id": "record.example", "address": "https://record.example/three", "published_at": "2026-10-18",
+         "claim": "status", "constellation": "GPS", "satellite": "", "checked_on": "2026-10-20", "result": "held",
+         "weight": "", "weight_reason": "", "evidence": "", "evidence_link": ""},
+    ])
+    items = [{
+        "source_id": "record.example",
+        "address": "https://record.example/story",
+        "title": "GPS service note",
+        "summary": "A service update",
+        "outlet": "Record source",
+        "published_at": "2026-10-20T10:00:00Z",
+        "fetched_at": "2026-10-20T10:10:00Z",
+        "via": "https://record.example/feed",
+        "social": False,
+    }]
+
+    latest = news.latest_news(items)
+
+    assert latest["items"][0]["grade"] == "D"   # three held claims: D, never E on the way up
+    assert latest["items"][0]["grade_standing"] == "provisional"
+    assert latest["items"][0]["grade_from"] == "record"
+    assert latest["sources"]["record.example"]["record_line"] == "D · 3 of 3 checked claims held · from the record, waiting for approval"
 
 
 def test_latest_news_deduplicates_titles_and_prefers_non_social(monkeypatch):
