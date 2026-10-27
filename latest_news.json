@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-27T18:24:35Z",
+ "generated_at": "2026-10-27T20:16:59Z",
  "items": [
   {
    "address": "https://x.com/Arianespace/status/2115141523515793781",
@@ -49,6 +49,22 @@
    "summary": "ONE DAY, ONE SPACE AGENCY — Day 4 / 70+ 🚀✨ 🇪🇺 @esa — European Space Agency The United Stars of Europe 🌟 --- 📅 FORMED: May 30, 1975 — by merging ELDO (1962) + ESRO (1964) 🤝 📍 HEADQUARTERS: Paris, France 🗼 👥 MEMBERS: 22 Member States 🚀 SPACEPORT: Guiana Space Centre, Kourou, French Guiana 🌴 —…",
    "title": "ONE DAY, ONE SPACE AGENCY — Day 4 / 70+ 🚀✨ 🇪🇺 @esa — European Space Agency The United Stars of Europe 🌟 --- 📅 FORMED:…",
    "via": "https://x.com/Stellarixorine"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMivAFBVV95cUxQTkVZa3hDdFB5Z2RkWVB2ZjJZOVRHbU0yWHRCWWY4TlotZ3ZSY3oybzBXbEoyY2xzVVN4R2xTQlc3bXlFcmN2RmkxenA5cnQ0RGhCNTYyR0FmWTRHMHVJS2VGMjU4YzYzQ2otX2NlMHk1YVFjaEdhRlJza0J6eXRZNlZXb25EZ3lWMUZlOVRPSDFCeVhWVjJPY3NYQ2ZBdTZoMzBIbEw4anlQSkJNdmhoZnd1R3U1NE1wblVPdg?oc=5",
+   "category": "signal and service",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-27T20:16:59Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Defence Industry Europe",
+   "published_at": "2026-10-27T16:55:52Z",
+   "source_id": "defence-industry.eu",
+   "summary": "",
+   "title": "Airbus receives order for two more Galileo satellites with stronger anti-jamming protection",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMivAFBVV95cUxOdmVRbjZxOWs0WVBpd1N5dS15RDVzOTI0cklMallhWU1mR0drZ00ydFpnZlJiNmlOMGxuOWJBanFUb3RaRlJBYVNLdExUM3R2RUtzRGNJZHlmNlp2UWs0ZHVVLVZwWFBqSVJ4Wk56bzhZWFRtbWM4bFZpY2NEVTRYSGFkeXNGb05Jc19YOVlyN2ZGeVRBQ3hubl9hRzJPbTBxMmtWN2JLd2RXTU1uQmRYQzhXbVRENVBwSnMwLQ?oc=5",
@@ -210,6 +226,22 @@
    "source_id": "moneycontrol.com",
    "summary": "",
    "title": "3 days to ISRO's NVS-03 launch, but can this satellite revive India's GPS alternative? Know what will...",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMijAFBVV95cUxOSVY4dHdYcDFGV19FR2ExUmRTQWUxMFo1UWZ6ZEp2b21lRFRBQTBRa0NFSkhZdWczT01UbzFNYnZmSkM0MjV5YTQ2blJ6dEUwWHg5MG14cXVTM3AxR3dzZ0lkMGdNQ3RrREtXNFBYZk45eldxNFM3R0NfcjlsaGxiWkhQamZTY2lIVXhVONIBkgFBVV95cUxPY0lpYmtDYm5sRmFWMWpmZF80NlhPNUQ3N21zYWE0TW5EYWRyYkFxN2NQR0EtRkZYbGFOOVhPcVZHZHdBNFY2SlU4TW55YTUta0ZfNlo3U1dyZlFiYmh5OEltRmgxeUF0TXhzUURHVUhGR1VqeEdUTnJ5dzgtZ1RuOUE5OHRFUmdUR2NZVTJ1aTBxQQ?oc=5",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-27T20:16:17Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "ThePrint",
+   "published_at": "2026-10-27T03:11:30Z",
+   "source_id": "theprint.in",
+   "summary": "",
+   "title": "From Ukraine’s Starlink dependency to India’s NavIC challenge—lessons in space sovereignty",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -6950,6 +6982,15 @@
    "graded_by": "",
    "kind": "",
    "name": "defence-industry-space.ec.europa.eu",
+   "note": "",
+   "reason": ""
+  },
+  "defence-industry.eu": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "defence-industry.eu",
    "note": "",
    "reason": ""
   },
