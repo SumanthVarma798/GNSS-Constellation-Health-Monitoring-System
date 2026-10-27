@@ -1,6 +1,135 @@
 {
- "generated_at": "2026-10-27T09:23:53Z",
+ "generated_at": "2026-10-27T15:36:03Z",
  "items": [
+  {
+   "address": "https://news.google.com/rss/articles/CBMivAFBVV95cUxOdmVRbjZxOWs0WVBpd1N5dS15RDVzOTI0cklMallhWU1mR0drZ00ydFpnZlJiNmlOMGxuOWJBanFUb3RaRlJBYVNLdExUM3R2RUtzRGNJZHlmNlp2UWs0ZHVVLVZwWFBqSVJ4Wk56bzhZWFRtbWM4bFZpY2NEVTRYSGFkeXNGb05Jc19YOVlyN2ZGeVRBQ3hubl9hRzJPbTBxMmtWN2JLd2RXTU1uQmRYQzhXbVRENVBwSnMwLQ?oc=5",
+   "category": "programme and policy",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-27T15:35:42Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Tech Review Africa",
+   "published_at": "2026-10-27T15:05:42Z",
+   "source_id": "techreviewafrica.com",
+   "summary": "",
+   "title": "Europe extends contracts for four additional Galileo Second Generation satellites",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiwAFBVV95cUxQWlhpbGNjdUFwWi1LUEl2RDZha2M2ZWFFeTBCN01wQTljWEhoaGJqNkEtMWhUVGU2N1ctUm5KUlZpNjRWUHczckVxRmdCWVFrV2JCVGYyRExxWkRCWVBTdlUzOWs3S1Zsc1JFVWtjUXpLVnRnV04xSVZldWFEcU5zcTJfWnBtSE9LZ09LdkdJWmZNdmJ5WGdlaWVVSUVVc2dfeklldHZUdFJ1QzVOUjZpMGV6T0dMYllMSm0tbGs1VEk?oc=5",
+   "category": "other",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-10-27T15:35:42Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Diari ARA",
+   "published_at": "2026-10-27T14:41:15Z",
+   "source_id": "en.ara.cat",
+   "summary": "",
+   "title": "Indra leads from Barcelona the deployment of the new stations of the European GPS",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMihwFBVV95cUxPc1lCLW03TmU0NFo3d1Ytc3BWRzNraF9YZklwZFNVT2wwdGtSLXdHemlJN3lEWHQ4V0dCWlpMeUxzS09GTThXcm1BMzV3WHd2ZVkybXVXT1djeWk2V1JqYUN0QlowakdKVjJiOFFLUm1lZGdPSjNXdHdNRVhNTlhSajJ1Nl9USkU?oc=5",
+   "category": "programme and policy",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-27T15:35:42Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Defensehere",
+   "published_at": "2026-10-27T14:29:02Z",
+   "source_id": "defensehere.com",
+   "summary": "",
+   "title": "Airbus secures contract for two more Galileo G2 navigation satellites",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMimwFBVV95cUxNUEd0a2xIRTBJRGI2Ym03Q2pMQ2pfeUJWcTNhM2lwS2I2dnMxVzNkSU8teXRhekxsM1NUcGlhbnN6RDVacGZYQkt1MzRDcHc4VHdQaWRLUVgtMUtlWVVmQzNERndsR1JEUGJxcHFTS1NFblBEeEJiLU0tZHhON3VtczNtYVAzX1I3U3FMZ2RzVDl0dlJ1WFowVzlFOA?oc=5",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-27T15:35:00Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Drishti IAS",
+   "published_at": "2026-10-27T12:59:12Z",
+   "source_id": "drishtiias.com",
+   "summary": "",
+   "title": "NVS-03 and NavIC Navigation System",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMirwFBVV95cUxOcEpnQllWRzVvWk1DMWVkRnB5dHBLcm5aU29iRktLMEc5dVh5RXJ6T0pYQW1oNEFUR29CMEdBbjFrdXpXVS1aZG9sMHV4c2VGM1hfZ1ptRlRoRUg5VW9KbU04LUkxYS0yWWFVaUdQaFFTLVZrcUZCS3p6V0oyVlhJWE9TTG1SS21iM09GLUFnRGNmU1pSNU9nT2MweDdyR2xkYnNtakpIYjhJN19tZlB3?oc=5",
+   "category": "programme and policy",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-27T15:35:42Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "StreetInsider",
+   "published_at": "2026-10-27T10:40:52Z",
+   "source_id": "streetinsider.com",
+   "summary": "",
+   "title": "Airbus wins contract to build two more Galileo satellites",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMivAFBVV95cUxNVHB4SThwZVplUHFzQWRFN3JGN1ZLNWtzMndJb19ENlBjeHhRTUVKTkVpSlhfOERpRkJyYTJGcXNJQmJsajhQb0VPYW9RUG91U1pIdjBVNGFFVFVMWWJBek4tNXNaSjZKVlpIUHJxbzZzd3FVcXNqUzNYU01mT0NieUM2ck4xYjlnWGFsdE8zVG11c3V6Y2Y4ZHFKTjBfS1NJT3ZRZFVOMHZMNnVoQzBnUXNPbzhMTGVFWEJvNw?oc=5",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-27T15:35:42Z",
+   "grade": "B",
+   "grade_standing": "provisional",
+   "outlet": "European Space Agency",
+   "published_at": "2026-10-27T10:20:37Z",
+   "source_id": "esa.int",
+   "summary": "",
+   "title": "ESA procures four new Galileo Second Generation satellites",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxNdFBKenpHX1hMWENWUzNVMW9nZHdBWnJWRVlfelJZVGxMbE9lb1N4WEdhS2h1SUV5QmY2V2xlaHpTTk9HbjNYaGlZRThKajNpeWxDcWZOUlZOcDF1Q0pvWHRSbzZzcHBNYkhVV29VTjZCazEtSnRVUXVFX3hRN3I1LUJfLTM1ZlZIWWV3NmdBenpWcjVqbTNYeHkwckRkYm1sYUVqUGEwSWFWUGtnclFyVjZCOFlpbnN1Mnpz?oc=5",
+   "category": "programme and policy",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-27T15:35:42Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Airbus",
+   "published_at": "2026-10-27T10:00:00Z",
+   "source_id": "airbus.com",
+   "summary": "",
+   "title": "Contract for two additional Galileo satellites",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMivwFBVV95cUxOSzJ1UUczaV9uQTRiZzA4UnhJbWstNXg4amo3WFk5dFhzZzhEbVlUb2xVdEMwaE5VdE52bkwySzZkYWozVjItc2FxMVRYazN3a3kwVU1QY2gzWDVKcFRUU085amJxTVB6SDZ6LWRIZjJKZEtENFFmeUVmUGxxVG9xakd5WmZGdnp0bkp4Z1hiU0FnRFdMSDlqNENhelROUmhjY2NXTU5ITmhYOTNsSlhhYUQ3R1lGaTFNVzlDanlTb9IBxAFBVV95cUxPczI4amUwMzJjT1VWcXNpYThYd2U5TS1QOFVYZjRUYWhjSGZiOVV4UVhISGVlNXV1aHc3RGpYRTFLOUo0end4cWFFeWtfOEt4eWJqOUdsUGY3QklaVXZiUXh5OHcwdG5nU3Q3N1FlcFEwMkFuS0plMDNlSHhwRWh1UC1yMFBLTzFVRldieE93TFY4dzhLUUZQVXphYXVoXzRNXzctbVdMVmYtYXpFWnlFQ3U2ckViS0NmOHFQaEZzRU1kN241?oc=5",
+   "category": "launch",
+   "constellations": [
+    "GPS",
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-27T15:35:00Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "India Today",
+   "published_at": "2026-10-27T09:42:15Z",
+   "source_id": "indiatoday.in",
+   "summary": "",
+   "title": "Isro to launch NVS-03 soon: Why it's a major boost for India's own GPS",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
   {
    "address": "https://news.google.com/rss/articles/CBMiiwJBVV95cUxQN2ZXWWI0Y0E3M1dNbXhyVm1LOHlMYnNJNzVQOGY0T2huNkxaUlJROFR0TWgwVUFhNGQwMDVDaFN6bk1SeVd2QUNOZ3NRQ0JkQVpaSHdtMDlwOTFWRFY0emFVVGFwOVdldDljNGNYVEltOFZ1ZVd3SkJHYmRIUTh3b29iRGc4MkcxQkdPcVJyV0k1eFNvLUsyWkRsaTVrWkNvc3c1aHpXckJ5cDBud2FNRmJ4S01BWElTcUd4RTYxeXNSLVZsYnFxTGZ5cld3d21hRjVvdFB3MU0zTVVhTTB1U2dkZkN0YndvNjJVUmI5WUhPcFBseTFUeEZhZS0wVThmMnhOZkRlVjFBVVXSAZACQVVfeXFMT0cyQTBFRDJRNnFtRkEwSlpQamJIVEVLOUZ4b1lNbHVmM1gwcm1hR3lUQlFrX3JsX1o3aWQ5REQ1bjRZZG1KQ21rOVltS09kU3ZiMEl2WVpqM3REaUZYM0FXV1UyYjFtNE5GejRmV1hwWmJxVV9iRFVFRkZtZDNtYk5zU2k5aVI1dVVodlhXR2k0TW8zdGh0N3ptdWtLMG9aYnFnMHNEMjA0XzVnOEZ3Ums5WmhtdkpKRk5yT1M5WjQ4dVloWmlpRDZIRDdYNEloU3VmZkFkN3pVZFhnYTM5RzFEdWZkN0ZXXzdRYk9fekYzSDk4QkdYc2ZLSVF0c2VaYU9wLWhRZ0dRRi14aHpCSks?oc=5",
    "category": "launch",
@@ -5387,6 +5516,22 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMiggFBVV95cUxOS2piN1ZJVndzNWJPOGlKMlY5X1lyUjdPd0lZdkY3a2JsTVJNY1NLSWU3bEpuV3ZYcUNRdXJtYXd1WnlGZVRKLVQwVHc5VFRleFRVZUEtSTFhcy1KOEF0bWh3Y1VqZVBzWDVOMGlWRkpFR011R19kVUtham9LLV9MMFhB?oc=5",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-27T15:35:42Z",
+   "grade": "C",
+   "grade_standing": "provisional",
+   "outlet": "GPS World",
+   "published_at": "2026-02-10T08:00:00Z",
+   "source_id": "gpsworld.com",
+   "summary": "",
+   "title": "Three ways R&D has shaped Galileo Second Generation",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMia0FVX3lxTE5ldW14dHpjV1luZ25LcDRPUWptSDdOaUJJNGFXUFFHU1JGdGV1VW9vZmdjQlhRbEZjZmNfLXJ6bnlnTjVBc2dSOTVDSjhBOC1pc0JRZWNmX1RGTkE0ZU9TS3d5NnFvTEZ3dkZJ?oc=5",
    "category": "other",
    "constellations": [
@@ -5450,22 +5595,6 @@
    "summary": "",
    "title": "Iran Abandons US GPS for China’s BeiDou, Redrawing the Strategic Map of Middle East Electronic Warfare",
    "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxOem5SN08yQjhyVjhxcmFRSnk3MV9yY2c0N05valJoeUw5amZUX3M1TlVsc25heXRnMTlHRGVINUdhSzU0cER1WlpVVHJ6WTRvYnB4dWthazdZUEdkNWcxdUxDbUFiSU5ibmgydnlfcDF3OTlNVzBpbE9MQWg2TWh4Y0I5Q2U2akNCM01Ya2RGNTdUMldWWHJsVTBTRkIxeDN5aTJMVC1MZWw?oc=5",
-   "category": "other",
-   "constellations": [
-    "Galileo"
-   ],
-   "fetched_at": "2026-10-19T22:40:40Z",
-   "grade": "B",
-   "grade_standing": "provisional",
-   "outlet": "European Space Agency",
-   "published_at": "2026-02-05T08:00:00Z",
-   "source_id": "esa.int",
-   "summary": "",
-   "title": "Three ways R&D has shaped Galileo Second Generation",
-   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMijAFBVV95cUxNN3pkUmNadUxvSllOcmN3WEdPWTY3UDNZZzZ2N2xlUUtGYlBqbm83c2FGaVoybzBWSzRDOFR6b0E4LXgweUtmZ2dIYkVCMHlLUWFab0pyVDJXcXczOExYMkdsZDBmWm5EdWE0bHR3NXFrR2dzbV94cXp6dnNMVUl0QzJaVmYzc2RlSVl6cA?oc=5",
@@ -6029,6 +6158,22 @@
    "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxQVmI3YURmNmVsMWt4bE50VmNPdzN1WjlWV1Q3bkFsdTBfaWtKbEw5MFR3RHZSbWNIWlJ6c2NhcG9qTE9CQVcxUFFfSllyRzA1aHF0QV9Kc2dvUkRidHBsLWhBUE9KTzlqbnFDNFhvam8xLXk2OXBmMnB0elJqaU9UY0s5Y0UyaUNIemJ4cUJ5MnRhWENzMGxGcWxZYUY0YmNxZzV6dHNCUkx5czJScFVGVFFsRUp5MjBydFZVLXBQSVo3Y0RzUWdXTw?oc=5",
+   "category": "launch",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-27T15:35:42Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "EU Reporter",
+   "published_at": "2025-12-19T08:00:00Z",
+   "source_id": "eureporter.co",
+   "summary": "",
+   "title": "Launch of two satellites boosts reliability of Galileo navigation services",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMihgFBVV95cUxQSXNBd2F1c0Z4TUNDLS05YjB2cDhwcEtXMHRzR0hTWmVOQ1JOY3JJQkl1c3hrbmdITlFGUHVXTXg4X1pFYXJJTnk3ZGFXTmw3SXZHUWZrUnJHMFRZekQ4T3BYUFl2TXNYNGFwUzQ3QTlDM29oNWhfQ3ZaUkxhUjRkME5GZTdfUQ?oc=5",
    "category": "launch",
    "constellations": [
@@ -6379,22 +6524,6 @@
    "summary": "",
    "title": "China and Arab states promote BeiDou via Space Silk Road",
    "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMiVEFVX3lxTE5PZ0FWSjdqVkRVajUtVXh1X0lZcTN0elpudWZXSERjWUlBbEFvdmdEcVNsdXFXLS15THRlNnE2NUtwV1FKNGhEQy1UcWtNOXF4MzZSVQ?oc=5",
-   "category": "launch",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:40:08Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "DongA Science",
-   "published_at": "2025-11-01T04:24:42Z",
-   "source_id": "dongascience.com",
-   "summary": "",
-   "title": "Japan Accelerates Independent GPS with 4th Consecutive H3 Rocket Success",
-   "via": "https://news.google.com/rss/search?q=QZSS+OR+Michibiki+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   }
  ],
  "rules": {
@@ -6521,6 +6650,15 @@
    "name": "Air & Space Forces Magazine",
    "note": "Published by an association that advocates for the US Air and Space Forces",
    "reason": "Specialist defence press; covers GPS and the Space Force"
+  },
+  "airbus.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "airbus.com",
+   "note": "",
+   "reason": ""
   },
   "airmedandrescue.com": {
    "grade": "",
@@ -6792,6 +6930,15 @@
    "note": "",
    "reason": ""
   },
+  "defensehere.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "defensehere.com",
+   "note": "",
+   "reason": ""
+  },
   "defensemirror.com": {
    "grade": "",
    "grade_standing": "not graded",
@@ -6816,15 +6963,6 @@
    "graded_by": "",
    "kind": "",
    "name": "digitimes.com",
-   "note": "",
-   "reason": ""
-  },
-  "dongascience.com": {
-   "grade": "",
-   "grade_standing": "not graded",
-   "graded_by": "",
-   "kind": "",
-   "name": "dongascience.com",
    "note": "",
    "reason": ""
   },
@@ -6897,6 +7035,15 @@
    "graded_by": "",
    "kind": "",
    "name": "embedded.com",
+   "note": "",
+   "reason": ""
+  },
+  "en.ara.cat": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "en.ara.cat",
    "note": "",
    "reason": ""
   },
@@ -6987,6 +7134,15 @@
    "graded_by": "",
    "kind": "",
    "name": "eurekalert.org",
+   "note": "",
+   "reason": ""
+  },
+  "eureporter.co": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "eureporter.co",
    "note": "",
    "reason": ""
   },
@@ -7899,6 +8055,15 @@
    "note": "",
    "reason": ""
   },
+  "streetinsider.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "streetinsider.com",
+   "note": "",
+   "reason": ""
+  },
   "swarajyamag.com": {
    "grade": "",
    "grade_standing": "not graded",
@@ -7941,6 +8106,15 @@
    "graded_by": "",
    "kind": "",
    "name": "techiexpert.com",
+   "note": "",
+   "reason": ""
+  },
+  "techreviewafrica.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "techreviewafrica.com",
    "note": "",
    "reason": ""
   },
