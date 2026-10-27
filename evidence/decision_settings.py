@@ -33,6 +33,7 @@ FINDING_CATEGORIES = [
     "Satellite change",   # other satellite metadata changed (slot, launch date, name, etc.)
     "News",               # a news finding that may become a visible note
     "Status change",      # a source or signal status changed
+    "Source grade",       # a source's grade the record proposes to move
     "Error",              # a bad line, parse issue or data error to fix
     "Rule change",        # a proposal to change how the weekly job decides
 ]

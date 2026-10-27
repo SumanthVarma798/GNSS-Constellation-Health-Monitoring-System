@@ -114,6 +114,8 @@ REGISTRY_COLUMN_PLAIN_NAMES = {
 # The source table: one row per source, graded by a person. Changed only through review.
 SOURCE_GRADES_FILE = Path(__file__).resolve().parent / "source_grades.csv"
 SOURCE_GRADE_COLUMNS = ["source_id", "name", "reliability", "graded_by", "graded_on", "reason"]
+# Checked claims per source, appended as checks complete.
+SOURCE_RECORD_FILE = Path(__file__).resolve().parent / "source_record.csv"
 
 # Candidate sources for the news pipeline (issue 13), one row per feed or page. Each address was fetched once;
 # where it failed, up to two other addresses were tried, and the row records the last one.

@@ -74,6 +74,18 @@ def test_item_html_escapes_text_and_only_draws_http_links():
     assert "javascript:alert(1)" not in html and "Read the article" not in html
 
 
+def test_item_html_shows_the_record_row_when_present():
+    html = news_ui.item_html(
+        _item(),
+        {"name": "Source", "kind": "feed", "grade": "D", "grade_standing": "provisional", "grade_from": "record",
+         "record_line": "D · 4 of 5 checked claims held · from the record, waiting for approval",
+         "reason": "", "graded_by": "", "note": ""},
+    )
+
+    assert "<b>Record:</b> D · 4 of 5 checked claims held · from the record, waiting for approval" in html
+    assert "· provisional · from the record" in html
+
+
 def test_item_html_uses_distinct_tooltip_ids_per_item_key():
     one = news_ui.item_html(_item(address="https://example.com/one"),
                             {"name": "Source", "kind": "feed", "grade": "C", "grade_standing": "confirmed",
@@ -139,3 +151,12 @@ def test_seen_note_takes_only_seen_time_and_as_of_line_returns_markup_only():
 
     assert "last visit" in note
     assert isinstance(as_of, str) and "News as of" in as_of
+
+
+def test_sorting_rules_html_includes_a_closed_grade_legend_for_a_to_f():
+    html = news_ui.sorting_rules_html()
+
+    assert '<details class="news-grade-legend"><summary>How grades work</summary>' in html
+    for grade in ("A", "B", "C", "D", "E", "F"):
+        assert f"<th>{grade}</th>" in html
+    assert "Score = (held + 1) ÷ (held + failed + 2) over the last 365 days" in html
