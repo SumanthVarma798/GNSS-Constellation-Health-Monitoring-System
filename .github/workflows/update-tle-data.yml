@@ -1,6 +1,6 @@
 # Weekly update: CelesTrak orbit records always, Space-Track history only with a login
-# for new days, one login per run, paced requests; pushes to main only after tests pass;
-# reports each run to Healthchecks.io.
+# for new days, one login per run, paced requests; re-records the golden scores with new
+# data; pushes to main only after tests pass; reports each run to Healthchecks.io.
 
 name: Update TLE Data
 
@@ -86,6 +86,17 @@ jobs:
             git diff --staged --stat
           fi
 
+      # The golden scores guard code changes against fixed data. This job changes only the
+      # data, so it re-records them in the same commit: scores move with the data, never with code.
+      # The frozen clock stays as recorded; other dashboard tests read it.
+      - name: Re-record the golden scores for the new data
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          GOLDEN_FROZEN_UTC="$(python -c "import json; print(json.load(open('tests/golden/health_scores.json'))['frozen_utc'])")" \
+            RECORD_GOLDEN=1 python -m pytest -q tests/test_golden_scores.py
+          git add tests/golden/health_scores.json
+          git diff --staged --stat
+
       - name: Run tests
         if: steps.check_changes.outputs.changes == 'true'
         run: python -m pytest -q
@@ -99,7 +110,7 @@ jobs:
       - name: Commit and push changes
         if: steps.check_changes.outputs.changes == 'true'
         run: |
-          git commit -m "🛰️ Auto-update TLE and GP history data [$(date -u +'%Y-%m-%d %H:%M UTC')]"
+          git commit -m "🛰️ Auto-update TLE and GP history data, golden scores re-recorded [$(date -u +'%Y-%m-%d %H:%M UTC')]"
           git push || { git pull --rebase && git push; }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -39,7 +39,8 @@ def test_c217_carries_the_out_of_date_orbit_feed_name(records):
     c217 = next(r for r in records if r["svn"] == "C217")
     feed = [i for i in c217["identifiers"] if i["scheme"] == SCHEME_ORBIT_FEED]
     assert len(feed) == 1 and feed[0]["status"] == MAP_WARN
-    assert (feed[0]["issuer"], feed[0]["checked"]) == ("CelesTrak", "2026-10-04")
+    fetched = json.loads((DATA_DIR / "beidou3_tles.json").read_text(encoding="utf-8"))["timestamp"][:10]
+    assert (feed[0]["issuer"], feed[0]["checked"]) == ("CelesTrak", fetched)
     assert len(c217["periods"]) >= 2
 
 

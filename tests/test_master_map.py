@@ -8,7 +8,7 @@ import pytest
 from evidence.master_map import (agreement, display_name, holders_of, identifiers, orbit_feed_checked, orbit_feed_names,
                                  signal_ids_of, summary)
 from evidence.registry_tables import read_table
-from evidence.settings import (MAP_ACCENT, MAP_IDLE, MAP_OK, MAP_WARN, NOT_RECORDED, REGISTRY_CATALOGUE_FILE,
+from evidence.settings import (MAP_ACCENT, MAP_IDLE, MAP_OK, MAP_WARN, NOT_RECORDED, ORBIT_FEED_FILES, REGISTRY_CATALOGUE_FILE,
                                REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_SATELLITES_FILE,
                                REGISTRY_SIGNAL_IDS_FILE)
 
@@ -373,7 +373,9 @@ def real():
 
 def test_real_orbit_feed_days_are_the_bundled_files_fetch_days(real):
     assert set(real["checked"]) == set(real["feeds"])
-    assert set(real["checked"].values()) == {"2026-10-04"}
+    # The weekly orbit job rewrites the bundled files, so the expected days come from the files themselves.
+    fetched = {json.loads(path.read_text(encoding="utf-8"))["timestamp"][:10] for path in DATA_DIR.glob(ORBIT_FEED_FILES)}
+    assert set(real["checked"].values()) == fetched
 
 
 def test_real_summary(real):
