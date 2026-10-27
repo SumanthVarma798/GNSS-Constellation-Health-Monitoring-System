@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-26T20:47:35Z",
+ "generated_at": "2026-10-27T00:53:46Z",
  "items": [
   {
    "address": "https://rntfnd.org/2026/10/26/highway-thieves-are-spoofing-gps-to-steal-millions-in-data-center-bound-cargo-ars-technica/",
@@ -63,6 +63,22 @@
    "source_id": "indiatoday.in",
    "summary": "",
    "title": "Isro in final prep to launch NVS-03 satellite aboard GSLV-F18: Here's when",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiekFVX3lxTE16dHZtYjBGVlZEUWRfWXBoUFlSYzQ3QloxVERDTy14bk1QVjRSTFNuQlVpb193aE1mSy1MTkd0Sk95cG1ORUlfWnhoVjZJcU1HVGhJSEFHMWdVclBUWkZPV1FDMGVsbnpXODZFUVVRcE9LZElGSzRiRXp3?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-27T00:52:43Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Indian Masterminds",
+   "published_at": "2026-10-26T07:09:34Z",
+   "source_id": "indianmasterminds.com",
+   "summary": "",
+   "title": "ISRO GSLV-F18 Launch: How NVS-03 Satellite Could Restore India's Independent Navigation",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -6092,6 +6108,22 @@
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMieEFVX3lxTE5DZHVLbklQdDI5RjBGQUI4MF9lU3pIV1cyX0NBSmZjZjhnODNBVEhGNWxvbm1zenlWejVKSGRNM0FlQ0toanlwSmlENzF6SFlXVm8zNnA3emRSY0pUTVFkWlNHWUNTWVNJMFJjNmhLSGVpTkFGRmNHOA?oc=5",
+   "category": "launch",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-27T00:53:25Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Centre national d'études spatiales (CNES)",
+   "published_at": "2025-12-15T08:00:00Z",
+   "source_id": "cnes.fr",
+   "summary": "",
+   "title": "Mission VA266: Ariane 6 all set for new Galileo launch",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMiowJBVV95cUxQMWdubmVFaEpGelRNNWVfd1A4Q0NwWUxOSFQ4Z0tKRmw5QUdRdHB0VEkwbXU4eXVvdHFTa2REUl9qUGhZaWdRaGtSQTZJVWlPR3dVV2ZoWUN6bHh3a1I1QXBuY2xvcEVyLWN0N1gxM3VQMWR1MF9NclZJYTRJVmZXUlNXLVJoQ3BIVzV2ZUdOVVk4U3BtTUNRbDZYR01BOVZVV1Bhd2ZBNkp0UUtSX3NkbmhvdHF6eDZiTC1kd0ZaUE9VYndHbDNCdzZMQVpjZ25FUGg0bGpwMGR2dEZVTWlQem9GUTVEMkFGOWY2YzIwZnJWVFo0Vkt5VDYwQzBvSlpmWmhlWGhoc0hTcVRhb0VUcDgwM05oU0tyVExpdGZwWTFPTzg?oc=5",
    "category": "other",
    "constellations": [
@@ -7517,6 +7549,22 @@
    "via": "https://news.google.com/rss/search?q=site%3Apib.gov.in+ISRO+OR+NavIC+OR+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMi9AFBVV95cUxOaDQ3V2pjcW1LQVdia2JQWEVuQTlGZ2JGcGZIMlhNckhYbWg5ZnBhTDNOc1gzdVNuSVU5RjZ1MEZWRlgxRjBzeDFINjNjSGI3RHVnbHpIOUt2dmg5N29nb0RCOFVoQ2EzREpEYUJCYXpvdktUS0VBZmc4SXlMelJFLXJFV2VsY2Jvc1JlNWdqeEZkRWlla3VRZ285bVJwZlJ4YzRsRFl6OGZhbG1rX2lKbFdsTFdraFowNXpGTEZpZm1rSlFnYnBIaHR2S2F6Y2hGbzk4bFhyWEtQOHYtMTFIZ3pzU1RESEo1ZEhPUGo4LW42VUVG0gH6AUFVX3lxTE9xS05xLS1ROWhOQlc3VnJhZ21GVmEzWVV4MnEwSlRlaHNfMGJ4VkN1MlBHd3hmUUJobFdPVzBSWHA3aG9UQWtjNHFxcWtKb1Q0TTF3b05uRnhZVWVMZUxicUdIM3VOdFVSelJfaG9Od2F0WUdJUHJXX1pVNmI0cGNHNHNCaEhZeUdERXNDOGtBLWFyVHBrY2VEZ0VnMm5SeGhEWjN6ZGJBVnZLeElXQlNaa2NRby1qeEtMZUxMN0h6Wnl5ZzBiS2w5bkdJUGNPOGc1dF8yelFtZUhOMEtQcnZ4WEJDcmQ3VTkxZEhBbUc5RTB2bTh5anVwZ3c?oc=5",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-27T00:52:43Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "The Times of India",
+   "published_at": "2023-09-27T07:00:00Z",
+   "source_id": "timesofindia.indiatimes.com",
+   "summary": "",
+   "title": "Isro working to expand navigation system NaVIC coverage to 3,000 km from 1,500 km beyond India",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMilgFBVV95cUxOeUZjejNabXNvYzF1YUtia3NURzY5ek55V1pZdnNyYXJKVGEtZzJXSjFYWVFod09XSUd4RTR5bWdRQmd4LU5zeS1BbFhRNGxNWlFBa1docWVndW1QaEY1Z3JqZnF3ODllcWdoaTVHWklMNDhrc3dYeFZFSWlLcjN0akp3NnZpa3hROHlYZmp0RGt2c0pEY1E?oc=5",
    "category": "other",
    "constellations": [
@@ -7850,6 +7898,22 @@
    "source_id": "space.com",
    "summary": "",
    "title": "Russia launches final GLONASS-M navigation satellite into orbit",
+   "via": "https://news.google.com/rss/search?q=GLONASS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMib0FVX3lxTE1TRTJpdTJhUTY4RjJMS2ZrdEYwU042Y005Y3V5N2drMmpsS21TZ2tnckZVZGNIekU1UF9vd1loNjdScmh6bVh4STR2a2JqX2tEcVlScmlMeXlWb0RDb0dCWmV5U0UwZlh5Ykx5Y21xZw?oc=5",
+   "category": "launch",
+   "constellations": [
+    "GLONASS"
+   ],
+   "fetched_at": "2026-10-27T00:53:35Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Everyday Astronaut",
+   "published_at": "2022-11-28T08:00:00Z",
+   "source_id": "everydayastronaut.com",
+   "summary": "",
+   "title": "Glonass-M No. 61 (Kosmos 2564) | Soyuz 2.1b/Fregat-M",
    "via": "https://news.google.com/rss/search?q=GLONASS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -9440,6 +9504,22 @@
    "via": "https://news.google.com/rss/search?q=GLONASS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMisAFBVV95cUxQX2tSWVVsSlBrbjNyalNkOXd2TEhLN1kxN2RQUUlJdWFlZ2VNZFBVbzl5SWt0eGx6a2xhQktYSFBPRWQ0REtzX29fb3otaFlxMjdGQTZDSkRyUGRDTUpYcXQ3VzBtRzk0QlBoWFgzWnZEUTNuMEE4UkJKRVk0NTJWWXg2WVlHdFpYa1Q0YnBpMFRnQ0lRSGI1aHhHUElEcXBIVXJlX0FSd3Z4MjlSMmxkRdIBsAFBVV95cUxQX2tSWVVsSlBrbjNyalNkOXd2TEhLN1kxN2RQUUlJdWFlZ2VNZFBVbzl5SWt0eGx6a2xhQktYSFBPRWQ0REtzX29fb3otaFlxMjdGQTZDSkRyUGRDTUpYcXQ3VzBtRzk0QlBoWFgzWnZEUTNuMEE4UkJKRVk0NTJWWXg2WVlHdFpYa1Q0YnBpMFRnQ0lRSGI1aHhHUElEcXBIVXJlX0FSd3Z4MjlSMmxkRQ?oc=5",
+   "category": "satellite status and outages",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-27T00:52:43Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "The Economic Times",
+   "published_at": "2017-09-03T07:00:00Z",
+   "source_id": "m.economictimes.com",
+   "summary": "",
+   "title": "ISRO's IRNSS-1H mission failed: As it happened",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMib0FVX3lxTE10dEdXMm45dS01ZXVXLWVWNldTMkJXYWJRSGFxUTMxbGw5RGo4NmFXV1R1MHlFSy1Tc3lxcUxrZXpVUVJycVR4Y0EycDFMU21kTEhaOWVRU2dqWmZDTGRvTEFEQ0ZBSWFBV2tyZnc0cw?oc=5",
    "category": "launch",
    "constellations": [
@@ -10392,22 +10472,6 @@
    "via": "https://news.google.com/rss/search?q=site%3Agpsworld.com&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMif0FVX3lxTFBZeV85emM0T1BtN1BlbFR4dWJESXBwUTZsb1RxQUVuSW1yZGFoSXdvLUtkamNfb2Z5X1B3ZlN6SUItZGQ0alFreVAyWWpqVWNJRjdTM25hLU9Pd01FVWZmS2xmc2xMb2p3UzJpNHVwbEpqV2JKSml2NGg2MzJEbTQ?oc=5",
-   "category": "other",
-   "constellations": [
-    "Galileo"
-   ],
-   "fetched_at": "2026-10-20T21:56:42Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Phys.org",
-   "published_at": "2012-10-25T07:00:00Z",
-   "source_id": "phys.org",
-   "summary": "",
-   "title": "Helicopter flight over 'Galileo valley' guides future satellite navigation systems",
-   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxPelJ6NnpfU3ktbEViaXhrNTZwWDhVbHZ0R0h6ajFITlFRcFBsbkRXOU44Z2k4REp3ZnhsdlRSUE1IaVFBbUxRSWo3VlNYX19lTGg5UlJPT0U2ajhtWUp6ODVFWU15dl80NFJtVWlZdlJXOUJxSll1R1RVUzFWb0I4cDgzZ1ZyLUFzNUVzazZ2dXJ0RlB5MmpCQlNKeVlTY3F1N0JRcFltcWc?oc=5",
    "category": "programme and policy",
    "constellations": [
@@ -11198,6 +11262,15 @@
    "graded_by": "",
    "kind": "",
    "name": "cnbctv18.com",
+   "note": "",
+   "reason": ""
+  },
+  "cnes.fr": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "cnes.fr",
    "note": "",
    "reason": ""
   },
