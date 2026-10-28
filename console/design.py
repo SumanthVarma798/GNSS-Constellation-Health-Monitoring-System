@@ -41,7 +41,7 @@ with body:
 @st.fragment
 def live_figures_from_github():
     seen = common.read()
-    html(facts_strip_html(tokens, font, live_facts(seen)), height=FACTS_HEIGHT, scrolling=False)
+    html(facts_strip_html(tokens, font, live_facts(seen)), height=FACTS_HEIGHT, scrolling=True)   # on a phone the figures wrap into rows
     st.caption(f"Live figures, read from GitHub at {seen['read_at']:%H:%M} UTC.")
 
 
