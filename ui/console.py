@@ -5,6 +5,7 @@ Light is "Classic bold" (Windows 2000 and Server 2003 classic: navy bands, grey 
 (decided 20 Oct 2026, issue 17). Text passed in is escaped; only parameters whose names end in _html are markup.
 """
 import base64
+import functools
 from html import escape
 from pathlib import Path
 
@@ -76,22 +77,27 @@ ICONS = {
 }
 
 
-# The loading strip's tiles (x, y, width, height, colour index), one 240 by 120 repeat of a bento grid with 4px gaps;
-# it scrolls sideways by one repeat, so the loop has no seam (ui/console.css, [data-testid="stSpinner"]).
-BENTO_TILES = [(4, 4, 72, 52, 0), (80, 4, 52, 24, 1), (80, 32, 52, 24, 2), (136, 4, 100, 52, 3), (4, 60, 40, 56, 2),
-               (48, 60, 88, 26, 1), (48, 90, 88, 26, 0), (140, 60, 48, 56, 1), (192, 60, 44, 56, 2)]
+_SIGNIN_JPEG = Path(__file__).with_name("assets") / "signin-gps-satellite.jpg"
 
 
-def bento(colours, edge):
-    """The loading strip's repeating picture as a CSS url(): the tiles filled with `colours`, outlined in `edge`."""
-    rects = "".join(f"<rect x='{x}' y='{y}' width='{w}' height='{h}' fill='{colours[c]}' stroke='{edge}' stroke-width='2'/>"
-                    for x, y, w, h, c in BENTO_TILES)
-    svg = f"<svg xmlns='http://www.w3.org/2000/svg' width='240' height='120'>{rects}</svg>"
-    return 'url("data:image/svg+xml,' + svg.replace("#", "%23").replace("<", "%3C").replace(">", "%3E") + '")'
+@functools.lru_cache(maxsize=1)
+def _signin_photo_data_uri():
+    """The sign-in satellite photo as a data URI (read once; Streamlit static serving is off)."""
+    encoded = base64.b64encode(_SIGNIN_JPEG.read_bytes()).decode()
+    return f"data:image/jpeg;base64,{encoded}"
 
 
-LIGHT["bento"] = bento(["#0a246a", "#3a6ea5", "#d4d0c8", "#f2c80f"], "#000")       # navy, blue, button grey, yellow
-DARK["bento"] = bento(["#1f6feb", "#58a6ff", "#30363d", "#d29922"], "#c9d1d9")    # bright blue, sky, panel grey, amber
+def signin_card(words):
+    """Centred sign-in card: framed NASA GPS photo, caption, and message (`words` already escaped)."""
+    photo = _signin_photo_data_uri()
+    caption = "Artist's conception of a GPS Block II-F satellite. NASA, public domain."
+    return (
+        f'<div class="c-signin">'
+        f'<div class="c-signin-photo"><div class="bar">GPS Block II-F</div>'
+        f'<img src="{photo}" alt="" width="440" height="352"></div>'
+        f'<p class="c-signin-cap">{escape(caption)}</p>'
+        f'<div class="in"><p class="c-signin-words">{words}</p></div></div>'
+    )
 
 
 def _block(tokens):
