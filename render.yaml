@@ -40,12 +40,9 @@ services:
     healthCheckPath: /_stcore/health
     autoDeployTrigger: commit
     buildFilter:
-      ignoredPaths:
-        - "docs/**"
+      ignoredPaths:   # the assistant reads docs/ and the code itself, so only tests and the Worker are skipped
         - "tests/**"
         - "cloudflare/**"
-        - "dashboard.py"
-        - "**/*.md"
     domains:
       - console.opengnss.org
     envVars:

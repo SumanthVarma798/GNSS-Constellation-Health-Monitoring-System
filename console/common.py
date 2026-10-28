@@ -17,8 +17,8 @@ from ui import console
 # What Google sign-in (st.login) needs in [auth]; one left empty means it is not set up.
 SIGN_IN_FIELDS = ("redirect_uri", "cookie_secret", "client_id", "client_secret", "server_metadata_url")
 NOT_SET_UP = ("This copy of the console is not set up. It needs Google sign-in, the list of people who may sign in, and "
-              "a GitHub token, in its secrets: .streamlit/secrets.toml on a computer, or Settings > Secrets on Streamlit "
-              "Community Cloud (see .streamlit/secrets.example.toml).")
+              "a GitHub token, in its secrets: .streamlit/secrets.toml on a computer, or the secret file secrets.toml in "
+              "Render (see .streamlit/secrets.example.toml).")
 NEEDED_ADMIN = ("allowed", "github_token")
 REFRESH_PENDING = "console_refresh_pending"   # set when Refresh is pressed; cleared after the toast for the new reading
 

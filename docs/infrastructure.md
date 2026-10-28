@@ -35,7 +35,8 @@ Administrator re-invites the person; if none is left, Cloudflare support recover
 
 Streamlit Community Cloud cannot use our own domain, so both apps run on Render's free plan from
 [render.yaml](../render.yaml): `opengnss-dashboard` and `opengnss-console`. Each redeploys on every commit to `main`,
-except commits that only touch files it never reads (docs, tests, the Worker, the other app). Each sleeps after 15
+except commits that only touch files it never reads (the dashboard skips docs, tests, the console and the Worker;
+the console, whose assistant reads the docs and the code, skips only tests and the Worker). Each sleeps after 15
 minutes with no visitors and takes about a minute to wake, so open them a minute before a demo. Free workspaces get
 750 instance hours a month; sleeping services use none, so two mostly idle services fit.
 
