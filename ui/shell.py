@@ -6,9 +6,9 @@ The choices live in st.session_state: `scope` (one constellation), `compare` (on
 `params` (only the detection thresholds moved off their defaults). Pages read them.
 
 The bar: the product name, then the filters as their own group (constellations, Compare, time range), then the
-data's state (the UTC clock, when the next update is, the data chip, refresh and the gear). Three arrangements in
-ui/theme.css: one row from 1400px, the filters as a strip of their own under the rest from 640px, and on a phone
-the constellations as a menu.
+data's state (the UTC clock, when the next update is, the data chip, refresh and the gear). Two arrangements in
+ui/theme.css: from 640px the filters as a strip of their own under the rest, and on a phone the constellations as
+a menu.
 """
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
