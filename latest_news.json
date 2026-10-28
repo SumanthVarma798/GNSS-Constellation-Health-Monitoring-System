@@ -1,6 +1,86 @@
 {
- "generated_at": "2026-10-28T06:22:52Z",
+ "generated_at": "2026-10-28T13:36:51Z",
  "items": [
+  {
+   "address": "https://news.google.com/rss/articles/CBMizAFBVV95cUxPRzdlUTVsTFpya0x5aEtOazNPRTYyN1RPY3N0bTlIbXVadjRaVWp1dXVHdDNEZi1seU14bVNBWU4tVG1hTGc0Vm51NFV1SC1DaWlxRTB3WEcyX3l5dVJ6N0VCamlWNTgwLWlqV2V0YzdjdzR4Wk1kZkNTd3dMQndZWTNPa1FKVmtxemhsNWxoQ3VnWGVZSDFDTWJmYWhTR3pGLXNlREJzZXFFQjI5LXd2UFBkdThTb0w0aFFoZTlQSGhFQnVSMEN3NGlGUE_SAdwBQVVfeXFMT0I2UWYwZ2Y4Y1NWb29wTVAyaUtPelFxaXJ4NnBsenJwSjJSalN1bnRhVWpaVzlUc291X0ZCcW1ONU9aNzduUGk2bG10YnpJLXV0ZkJQekppWU44WThKZjFBMWNENDBsUmVsb3FqQk5QdVU5TVltUlBEb0tnMFVEdHBpSkZ1T0hHSTQzRVZlTG16LWJHeUdKSkhKLVh0NlF0UmJLclBMRlo3RGo5VENXSFZxWWhIbzBYa2RfWlc1WUVFN0FqcUhGX2RiNWRyc18yUHBZNFhkc2Q3UmRiag?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-28T13:35:47Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Swarajya",
+   "published_at": "2026-10-28T11:20:06Z",
+   "source_id": "swarajyamag.com",
+   "summary": "",
+   "title": "ISRO’s GSLV-F18 To Carry NVS-03, Next-Gen NavIC Satellite With Homegrown Atomic Clock, On 30 October",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxPSklRSUpTblVMLWJ5ZGhGdDNaMnRwMk5mdktpTTJzM0xnekJfNDU2aktHSmhETDMtUE9takxBUVFTLTVMS28wTHBpR2FfMzRrTFZWTEc5aWt6aGZpd042cnJkckhQWlJtTDFXcWNTdzlOS3Y2M0l5Vk13U1NQMlBGSndKRVpmTjIz?oc=5",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-28T13:36:30Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Nordic Defence Sector",
+   "published_at": "2026-10-28T09:33:58Z",
+   "source_id": "nordicdefencesector.com",
+   "summary": "",
+   "title": "ESA orders four new Galileo satellites",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMimAFBVV95cUxQam5nUkE1V1V6OHdua3FOOENiVUl1c25Tb19ONklMNWxSU25pMkticFAyT21BcU9UQjdKWjU2R05taU8xT1dOVzRiMHFOSlBrOVRobHI5eU9EZ0ZzRm91MUxsNEJwcFpKaUcxVmtNajFNT1pqMzR6eGMtZENiVWNEc1pIMUhLX2RPUVBJd2lEVUx6ZzM1bGNzVg?oc=5",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-28T13:36:30Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Telecompaper",
+   "published_at": "2026-10-28T08:02:19Z",
+   "source_id": "telecompaper.com",
+   "summary": "",
+   "title": "ESA orders four more Galileo second-gen satellites",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://www.esa.int/Applications/Satellite_navigation/New_contracts_to_modernise_Galileo_ground_segment_for_next_generation",
+   "category": "programme and policy",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-28T13:35:04Z",
+   "grade": "B",
+   "grade_standing": "provisional",
+   "outlet": "European Space Agency: navigation",
+   "published_at": "2026-10-28T07:09:00Z",
+   "source_id": "esa.int",
+   "summary": "On 27 October 2026, Indra Space celebrated the signature of two contracts with the European Space Agency, European Commission and EU Agency for the Space Programme to develop new ground stations for the second generation of Galileo, Europe’s satellite navigation system.",
+   "title": "New contracts to modernise Galileo ground segment for next generation",
+   "via": "https://www.esa.int/rssfeed/Our_Activities/Navigation"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMifEFVX3lxTE9TdUtpMnoxd1pSMGZZV1Ezb3BzbVJYSTJ3dzJ3Y21DSWVlOFltUnZpeXBFMGhXaDZVS3c4SUFZMzlZZDFPVm1jQV9WMUhJcDAzSy0yWFhnMDhGTzlCUDRuX0QycExPS1VMblc2WDJYX3Y5OHhjWjhwT0c1UHE?oc=5",
+   "category": "programme and policy",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-28T13:36:30Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Aviation Business Middle East",
+   "published_at": "2026-10-28T04:15:00Z",
+   "source_id": "aviationbusinessme.com",
+   "summary": "",
+   "title": "Airbus Wins Contract For Two More Galileo Satellites",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
   {
    "address": "https://news.google.com/rss/articles/CBMijwFBVV95cUxNS3ZPbEtmcXZEUHZjMGxvM3ZRMzJad2dMQVd6aWtJdjduY1lzZ3FubGVRaHdLMUtGMjdZWk50YUpjLXd5YnV2RXNEX2pKaHFGN0RGQ3pBWUd6XzUtYS1oTDZDaThQS0xpUnM4QS1DSWpRMXdscWZGMlRuRW5CTldydmMwNmJGajdnTEp6aTJodw?oc=5",
    "category": "other",
@@ -161,6 +241,22 @@
    "summary": "",
    "title": "NVS-03 and NavIC Navigation System",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://thefederal.com/category/science/nvs03-to-fly-with-pyro-valves-open-as-isro-seeks-to-avert-repeat-failure-260902",
+   "category": "satellite status and outages",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-28T07:22:35Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "thefederal.com",
+   "published_at": "2026-10-27T11:43:06Z",
+   "source_id": "thefederal.com",
+   "summary": "",
+   "title": "NVS-03 to fly with pyro valves open as ISRO seeks to avert repeat failure",
+   "via": "https://www.reddit.com/r/ISRO/.rss"
   },
   {
    "address": "https://x.com/esa/status/2115032746716487737",
@@ -5951,6 +6047,22 @@
    "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMizgFBVV95cUxONmNQNmlwbEU5VVdTRXJQVVFZOWgyTlVMaEZMbjR3YW5vSl9tY3JLbHdVYWVrTnBZUTRGNllEQVJHZkhBZUtQVXlyXzlOWE9mN3JOcEhGYWo1UXNzVDJEMDgxTjF5WDJnQnFveU5uMVdHZVpXN0tFWThqeFZLc25UVVBva2cyWmFGNW1HbmxHN0dQNWRUSm01TllYaHNrR0RVTm5PMmdmU1JGQmlnSXdXaFlqQzh3a1hLc2d2b0tmQVhGOUc1YUpiUUpqN1p1UQ?oc=5",
+   "category": "other",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-10-28T13:36:19Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Lockheed Martin",
+   "published_at": "2026-01-28T08:00:00Z",
+   "source_id": "news.lockheedmartin.com",
+   "summary": "",
+   "title": "Lockheed Martin's newest GPS satellite reaches orbit, strengthening warfighter connectivity",
+   "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMinwFBVV95cUxQMkwzTndvZlRVcHZMYXU2UjBGSVA1V3lfZDA2QlBOMXEtVi1VVDJZVVNTZ3NfcXRyVjFkTHlON05YMHRrRFRKaE5tOERZbWNTeEFPendvSmNRWXdDc0t4ME1oQWxCWGxMbUdoVG1McjJOMDdFcFFZUEtON05lZ0FxNUdLa3JhZTZLZUJFVVl6Qm5LQkZWc0hIaVR2NzFPSlE?oc=5",
    "category": "launch",
    "constellations": [
@@ -5964,22 +6076,6 @@
    "source_id": "space.com",
    "summary": "",
    "title": "SpaceX launches advanced GPS satellite for US Space Force (video, photos)",
-   "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxOOHNBWDY4TUF6OTVLYVNUa1Azd2lkM3AxRTg2RVp1QlJwbjRNei1HdnJkcmItYk16dUUwb01weE1Od3ZaMXJudkFaM00ydW45Tld6cUx6N3VybjVseHNUMGNrYmFJTXdseWRXZlU3V2tuLXB1blBkM2xXRjFYYUVHZXF2SVJ5a1JEV2RuU0dMTGN2RFo4RjRIYXRtejNHaEJybGQtbkZ5cXNHNmtFVGNHQ2VBeTd0WDAy?oc=5",
-   "category": "other",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Investing News Network",
-   "published_at": "2026-01-27T08:00:00Z",
-   "source_id": "investingnews.com",
-   "summary": "",
-   "title": "Lockheed Martin's newest GPS satellite reaches orbit, strengthening warfighter connectivity",
    "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -6819,6 +6915,15 @@
    "note": "",
    "reason": ""
   },
+  "aviationbusinessme.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "aviationbusinessme.com",
+   "note": "",
+   "reason": ""
+  },
   "aviationweek.com": {
    "grade": "",
    "grade_standing": "not graded",
@@ -7539,15 +7644,6 @@
    "note": "",
    "reason": ""
   },
-  "investingnews.com": {
-   "grade": "",
-   "grade_standing": "not graded",
-   "graded_by": "",
-   "kind": "",
-   "name": "investingnews.com",
-   "note": "",
-   "reason": ""
-  },
   "iot-now.com": {
    "grade": "",
    "grade_standing": "not graded",
@@ -7905,6 +8001,15 @@
    "graded_by": "",
    "kind": "",
    "name": "newswise.com",
+   "note": "",
+   "reason": ""
+  },
+  "nordicdefencesector.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "nordicdefencesector.com",
    "note": "",
    "reason": ""
   },
@@ -8274,6 +8379,15 @@
    "graded_by": "",
    "kind": "",
    "name": "telecom.economictimes.indiatimes.com",
+   "note": "",
+   "reason": ""
+  },
+  "telecompaper.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "telecompaper.com",
    "note": "",
    "reason": ""
   },
