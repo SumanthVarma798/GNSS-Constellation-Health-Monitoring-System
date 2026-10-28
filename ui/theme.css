@@ -164,26 +164,20 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .stApp:has(.st-key-topbar) [data-testid="stMainBlockContainer"] { padding-top: 22px; }
 .st-key-topbar { background: var(--platform); border: 1px solid var(--edge); border-radius: 18px; box-shadow: var(--raised); padding: 10px 16px; margin-bottom: 22px; }
 /* The bar's three groups: the product name, the filters (constellations, Compare, time range) and the data's state
-   (clock, next update, data chip, refresh, gear). Three arrangements: from 1400px one row, the filters set apart by a
-   rule; from 640px the name and the data's state above, the filters as their own strip under them; under 640px the name
-   with refresh and the gear, then the clock and the data chip, then the filters with the constellations as a menu. */
+   (clock, next update, data chip, refresh, gear). Two arrangements: from 640px the name and the data's state on one
+   row, the filters as their own strip under them; under 640px the name with refresh and the gear, then the clock and
+   the data chip, then the filters with the constellations as a menu. */
 .st-key-topbar [data-testid="stHorizontalBlock"] { flex-wrap: wrap; gap: 10px 16px; align-items: center; }
 .st-key-topbar [data-testid="stColumn"] { flex: 0 1 auto !important; width: auto !important; min-width: 0; }
-/* the filters give way first: the constellations narrow and scroll rather than push the bar onto another row */
-.st-key-topbar [data-testid="stColumn"]:nth-child(2) { flex: 1 1 0 !important; max-width: max-content; }
-.st-key-topbar [data-testid="stColumn"]:last-child { margin-left: auto; }
+.st-key-topbar [data-testid="stColumn"]:first-child { order: 1; }
+.st-key-topbar [data-testid="stColumn"]:last-child { order: 2; margin-left: auto; }
+.st-key-topbar [data-testid="stColumn"]:nth-child(2) { order: 3; flex-basis: 100% !important; }
 .st-key-topbar [data-testid="stColumn"]:nth-child(2):not(:has(.st-key-filters)) { display: none; }   /* Master map, Library */
-.st-key-filters { flex-direction: row; align-items: center; gap: 10px; flex-wrap: nowrap; padding-left: 16px; border-left: 1px solid var(--edge); }
+.st-key-filters { flex-direction: row; align-items: center; gap: 10px; flex-wrap: nowrap; padding-top: 10px; border-top: 1px solid var(--edge); }
 .st-key-filters > div { width: auto !important; flex: none; min-width: 0; }
 .st-key-filters > div:first-child { flex: 0 1 auto; }
 .st-key-filters > div:has(.st-key-scope_menu) { display: none; }   /* the phone's menu */
-@media (max-width: 1399.98px) {
-  .st-key-topbar [data-testid="stColumn"]:first-child { order: 1; }
-  .st-key-topbar [data-testid="stColumn"]:last-child { order: 2; }
-  .st-key-topbar [data-testid="stColumn"]:nth-child(2) { order: 3; flex-basis: 100% !important; max-width: none; }
-  .st-key-filters { padding: 10px 0 0; border-left: 0; border-top: 1px solid var(--edge); }
-  .st-key-filters > div:has(.st-key-range) { margin-left: auto; }
-}
+.st-key-filters > div:has(.st-key-range) { margin-left: auto; }
 @media (max-width: 639.98px) {   /* the data group opens up so its buttons can sit by the name and the rest below */
   .st-key-topbar :is([data-testid="stColumn"], [data-testid="stVerticalBlockBorderWrapper"], [data-testid="stVerticalBlock"]):has(.st-key-refresh),
   .st-key-refresh { display: contents; }
