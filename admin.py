@@ -37,7 +37,7 @@ st.html(console.theme_css(scheme))
 config = common.settings()
 if missing := common.missing():
     words = f"{common.NOT_SET_UP} Missing or empty: {', '.join(missing)}."
-    st.html(console.title_bar("Not set up") + f'<div class="c-signin"><div class="in">{escape(words)}</div></div>')
+    st.html(console.title_bar("Not set up") + f'<div class="c-signin c-signin-plain"><div class="in">{escape(words)}</div></div>')
     st.stop()
 
 email = st.user.get("email")
@@ -45,11 +45,12 @@ state = decisions.access(st.user.is_logged_in, email, config["allowed"])
 if state != "in":
     words = ("Sign in with the Google account on the team's list." if state == "sign in" else
              f"You are signed in as {email}, which is not on the list of people who may use the console. Ask for it to be added.")
-    st.html(console.title_bar("Sign in") + f'<div class="c-signin"><div class="in">{escape(words)}</div></div>')
-    if state == "sign in":
-        st.button("Sign in with Google", key="console_sign_in", on_click=st.login, type="primary")
-    else:
-        if st.button("Sign out", key="console_sign_out"):
+    st.html(console.title_bar("Sign in"))
+    with st.container(key="console_signin"):
+        st.html(console.signin_card(escape(words)))
+        if state == "sign in":
+            st.button("Sign in with Google", key="console_sign_in", on_click=st.login, type="primary")
+        elif st.button("Sign out", key="console_sign_out"):
             _sign_out()
     st.stop()
 

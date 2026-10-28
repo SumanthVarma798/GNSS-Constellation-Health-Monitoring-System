@@ -266,9 +266,21 @@ dl.c-kv dt { color: var(--muted); } dl.c-kv dd { margin: 0; color: var(--ink); }
 .c-statusbar span { padding: 3px 10px; border-right: 1px solid var(--chrome-edge); display: inline-flex; gap: 5px; align-items: center; color: inherit; }
 .c-statusbar span:last-child { margin-left: auto; border-right: 0; }
 
-/* ---- sign-in box ---- */
-.c-signin { max-width: 460px; margin: 40px auto 18px; border: 2px solid var(--outline); background: var(--pane); box-shadow: var(--hard); }
-.c-signin .in { padding: 14px 16px; color: var(--ink); }
+/* ---- sign-in: centred card with a framed photo and the Google button under the words ---- */
+.st-key-console_signin { width: 100%; max-width: 440px; margin: max(24px, 8vh) auto 24px; gap: 0 !important;
+  border: 2px solid var(--outline); background: var(--pane); box-shadow: var(--hard); }   /* the keyed container is the card */
+.st-key-console_signin :is([data-testid="stElementContainer"], [data-testid="stHtml"]) { width: 100% !important; }
+.st-key-console_signin [data-testid="stButton"] { display: flex; justify-content: center; padding: 0 16px 16px; border-top: 2px solid var(--outline); }
+.c-signin { width: 100%; max-width: 440px; border: 2px solid var(--outline); background: var(--pane); box-shadow: var(--hard); }
+.c-signin-plain { max-width: 460px; margin: 40px auto 18px; }
+.st-key-console_signin .c-signin { max-width: none; border: 0; box-shadow: none; background: transparent; }
+.c-signin-photo { border-bottom: 2px solid var(--outline); box-shadow: var(--hard); margin: 0; }
+.c-signin-photo .bar { padding: 4px 8px; background: var(--th-bg); color: var(--th-ink); font-weight: 800; font-size: 12px;
+  border-bottom: 2px solid var(--outline); box-shadow: var(--th-bevel); }
+.c-signin-photo img { display: block; width: 100%; height: auto; vertical-align: top; }
+.c-signin-cap { margin: 0; padding: 8px 16px 0; font-size: 11px; line-height: 1.35; color: var(--muted); text-align: center; }
+.c-signin .in { padding: 12px 16px 14px; color: var(--ink); text-align: center; }
+.c-signin-words { margin: 0; }
 
 @media (max-width: 900px) {
   .st-key-console_page > [data-testid="stHorizontalBlock"] { gap: 12px; flex-wrap: wrap; }
@@ -292,7 +304,7 @@ dl.c-kv dt { color: var(--muted); } dl.c-kv dd { margin: 0; color: var(--ink); }
 
 @media (max-width: 600px) {
   .c-sect, .c-tile, .c-hero, .c-lv-wrap, .c-rel, .st-key-console_actions, .c-notice,
-  [data-testid="stExpander"] details, [data-testid="stChatMessage"], .c-signin { box-shadow: var(--hard-sm); }
+  [data-testid="stExpander"] details, [data-testid="stChatMessage"], .c-signin-plain { box-shadow: var(--hard-sm); }
   .c-lv-wrap { box-shadow: var(--hard-sm), var(--well-bevel); }
   .stApp button[data-testid^="stBaseButton"],
   [data-testid="stButtonGroup"] button { box-shadow: var(--btn-bevel), var(--hard-sm); }
@@ -304,19 +316,22 @@ dl.c-kv dt { color: var(--muted); } dl.c-kv dd { margin: 0; color: var(--ink); }
   .c-pipe-stage.running { animation: none; }
 }
 
-/* ---- loading: Streamlit's spinner (a spinning circle, square here) becomes a bento strip scrolling without end ---- */
-[data-testid="stSpinner"] > div { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 12px 0; }
-[data-testid="stSpinner"] > div > i { display: block; width: min(100%, 720px) !important; height: 120px !important;
-  border: 2px solid var(--outline) !important; border-radius: 0 !important; box-shadow: var(--hard);
-  background-color: var(--pane) !important; background-image: var(--bento) !important; background-repeat: repeat-x !important;
-  background-size: 240px 120px !important; background-position: 0 0;   /* not !important: the animation moves it */
-  animation: bento-scroll 3s linear infinite !important; }
-[data-testid="stSpinner"] p { font-weight: 700; color: var(--ink); }
-[data-testid="stChatMessage"] [data-testid="stSpinner"] > div > i { width: min(100%, 360px) !important; height: 60px !important;
-  background-size: 120px 60px !important; animation-name: bento-scroll-small !important; box-shadow: var(--hard-sm); }
-@keyframes bento-scroll { from { background-position: 0 0; } to { background-position: -240px 0; } }
-@keyframes bento-scroll-small { from { background-position: 0 0; } to { background-position: -120px 0; } }
-@media (prefers-reduced-motion: reduce) { [data-testid="stSpinner"] > div > i { animation: none !important; } }
-@media (max-width: 600px) { [data-testid="stSpinner"] > div > i { height: 80px !important; background-size: 160px 80px !important;
-  animation-name: bento-scroll-phone !important; box-shadow: var(--hard-sm); } }
-@keyframes bento-scroll-phone { from { background-position: 0 0; } to { background-position: -160px 0; } }
+/* ---- loading: a small orbit (square dot on a 1px ring), text muted under it ---- */
+[data-testid="stSpinner"] > div { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 0; width: 100%; }
+[data-testid="stSpinner"] > div > i { display: block !important; position: relative; flex: none; width: 32px !important; height: 32px !important;
+  margin: 0 auto; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important;
+  font-size: 0 !important; line-height: 0 !important; animation: none !important; overflow: visible !important; }
+[data-testid="stSpinner"] > div > i::before { content: ""; position: absolute; inset: 3px; border: 1px solid var(--outline);
+  border-radius: 50% !important; box-sizing: border-box; }
+[data-testid="stSpinner"] > div > i::after { content: ""; position: absolute; top: 0; left: 50%; width: 6px; height: 6px; margin-left: -3px;
+  background: var(--ink); border: 1px solid var(--outline); box-sizing: border-box;
+  transform-origin: 50% 19px; animation: console-orbit 1.4s linear infinite; }
+[data-testid="stSpinner"] p { margin: 0; font-weight: 400; font-size: 12px; color: var(--muted); text-align: center; }
+[data-testid="stChatMessage"] [data-testid="stSpinner"] > div > i { width: 24px !important; height: 24px !important; }
+[data-testid="stChatMessage"] [data-testid="stSpinner"] > div > i::before { inset: 2px; }
+[data-testid="stChatMessage"] [data-testid="stSpinner"] > div > i::after { width: 5px; height: 5px; margin-left: -2.5px; transform-origin: 50% 14px;
+  animation-duration: 1.2s; }
+@keyframes console-orbit { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  [data-testid="stSpinner"] > div > i::after { animation: none; top: 0; left: 50%; transform: translateX(-50%); }
+}
