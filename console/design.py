@@ -15,7 +15,8 @@ from ui import console
 from ui.components.hosting import hosting_html
 from ui.components.system_design import PARTS, facts_strip_html, system_design_html
 
-HEIGHT = 960   # the picture, the steps and the longest card on a wide screen; a phone scrolls inside the frame
+# Each frame's height until its page fits the frame to itself (fitFrame in the page); none scrolls inside.
+HEIGHT = 960
 HOST_HEIGHT = 620
 FACTS_HEIGHT = 88
 CHAT = "design_chat"   # session_state: the conversation with the assistant, [{role, content}]
@@ -35,20 +36,20 @@ def live_facts(seen):
 
 
 with body:
-    html(system_design_html(tokens, font), height=HEIGHT, scrolling=True)
+    html(system_design_html(tokens, font), height=HEIGHT)   # the frame then fits itself to the picture
 
 
 @st.fragment
 def live_figures_from_github():
     seen = common.read()
-    html(facts_strip_html(tokens, font, live_facts(seen)), height=FACTS_HEIGHT, scrolling=True)   # on a phone the figures wrap into rows
+    html(facts_strip_html(tokens, font, live_facts(seen)), height=FACTS_HEIGHT)   # fits itself; on a phone the figures wrap into rows
     st.caption(f"Live figures, read from GitHub at {seen['read_at']:%H:%M} UTC.")
 
 
 with body:   # both pictures first: neither needs GitHub, so neither waits for it
     st.subheader("How it is hosted")
     st.caption("Where each public name points, and what redeploys when main changes. Click any box for details.")
-    html(hosting_html(tokens, font), height=HOST_HEIGHT, scrolling=True)
+    html(hosting_html(tokens, font), height=HOST_HEIGHT)
     live_figures_from_github()
 
 

@@ -104,6 +104,16 @@ $$("#nodes g").forEach((g) => { g.setAttribute("tabindex", "0"); g.setAttribute(
   g.addEventListener("click", () => show(g.dataset.n));
   g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); show(g.dataset.n); } }); });
 show("dns");
+// The frame takes the page's own height, so the console scrolls as one page and nothing scrolls inside the frame.
+// Streamlit 1.45 ignores "streamlit:setFrameHeight" from these frames, but they share the page's origin (as live_pipeline).
+function fitFrame() {
+  if (!window.frameElement) return;
+  const parts = [...document.body.children].filter((e) => e.tagName !== "SCRIPT");
+  const bottom = Math.max(0, ...parts.map((e) => e.getBoundingClientRect().bottom + window.scrollY));
+  window.frameElement.style.height = Math.ceil(bottom) + 12 + "px";   // room for the hard shadow
+}
+if ("ResizeObserver" in window) { const fitter = new ResizeObserver(fitFrame); [document.body, ...document.body.children].forEach((e) => fitter.observe(e)); }
+fitFrame();
 </script>
 </body>
 </html>

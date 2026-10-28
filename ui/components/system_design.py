@@ -165,4 +165,14 @@ html, body {{ margin: 0; background: var(--pane); color: var(--ink); font: 13px/
 const FACTS = {facts_json};
 function el(tag, text) {{ const e = document.createElement(tag); if (text !== undefined) e.textContent = text; return e; }}
 for (const f of FACTS) {{ const d = el("div"); d.append(el("b", f.figure), el("span", f.words)); document.getElementById("facts").append(d); }}
+// The frame takes the page's own height, so the console scrolls as one page and nothing scrolls inside the frame.
+// Streamlit 1.45 ignores "streamlit:setFrameHeight" from these frames, but they share the page's origin (as live_pipeline).
+function fitFrame() {{
+  if (!window.frameElement) return;
+  const parts = [...document.body.children].filter((e) => e.tagName !== "SCRIPT");
+  const bottom = Math.max(0, ...parts.map((e) => e.getBoundingClientRect().bottom + window.scrollY));
+  window.frameElement.style.height = Math.ceil(bottom) + 12 + "px";   // room for the hard shadow
+}}
+if ("ResizeObserver" in window) {{ const fitter = new ResizeObserver(fitFrame); [document.body, ...document.body.children].forEach((e) => fitter.observe(e)); }}
+fitFrame();
 </script></body></html>""".replace("__TOKENS__", tokens_css, 1).replace("__FONT__", font, 1)
