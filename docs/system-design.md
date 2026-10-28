@@ -66,7 +66,7 @@ Solid arrows carry data today. Dotted arrows are not wired yet.
 | Registry | Plain-text tables saying which satellite is which, and what a second source (the catalogue) says about its owner and status. The master map page shows it: every identifier of a spacecraft resolved to one master ID, and who held each signal ID when. |
 | Query store | A small database rebuilt from the archive and the registry on every run |
 | Bar and labels | Decides whether an item is confirmed, probable or unconfirmed (section 6) |
-| Hosting | The project's domain, `opengnss.org`, is held in its own Cloudflare account. The dashboard runs on Render's free plan at `dashboard.opengnss.org`; the console on Streamlit Community Cloud; Substack newsletters arrive by email and a Cloudflare Worker serves them as feeds at `feeds.opengnss.org`; scheduled jobs run on GitHub Actions. Accounts, renewal and how to recreate each part: [infrastructure.md](infrastructure.md) |
+| Hosting | The project's domain, `opengnss.org`, is held in its own Cloudflare account. The dashboard and the console run on Render's free plan at `dashboard.opengnss.org` and `console.opengnss.org`; Substack newsletters arrive by email and a Cloudflare Worker serves them as feeds at `feeds.opengnss.org`; scheduled jobs run on GitHub Actions. Accounts, renewal and how to recreate each part: [infrastructure.md](infrastructure.md) |
 | Orbit health dashboard | Public at `dashboard.opengnss.org`. It reads which satellites to track, and their catalogue numbers, from the registry, and shows a notice for any tracked satellite it has to leave out. It draws each satellite against its own slot: flat, in 3D, and as a bar of score parts. Which are in service is still typed by hand. |
 
 ## 3. How far along
@@ -109,7 +109,7 @@ pie showData title Estimated hours, all guesses
 | 8, 9 | Phone database trend; NavIC signal status | 18 | Open |
 | 19, 20 | Service column; announced versus observed | 25 | Open |
 | 21, 22 | Per-satellite history; scoreboard | 40 | Open |
-| 17 | Administration console | 15 | Built in steps (pull requests 102 to 109): Google sign-in, Summary, Jobs, Approvals, open work, and System design with a local-model assistant. Shared copy at <https://gnss-master-console.streamlit.app/> |
+| 17 | Administration console | 15 | Built in steps (pull requests 102 to 109): Google sign-in, Summary, Jobs, Approvals, open work, and System design with a local-model assistant. Shared copy at <https://console.opengnss.org> |
 | 23 | Team call, Sat 17 Oct 2026: run-through, handout, fallback pictures | 5 | Open |
 
 ## 4. How one item travels
@@ -247,7 +247,7 @@ Produced from the code. A test fails if this table and the code disagree.
 | - | The dashboard's look | Neumorphic, after CRED's Synth: dark, one accent, pictures before text. Every colour is named once in `ui/palette.py`; pages compose reusable parts and carry no styling of their own. A status is always said in words as well as colour. |
 | - | A satellite and its slot | Each satellite is judged against its own slot, never the nearest one, so one that drifts onto another's slot still shows as drifted. |
 | - | How the work is run | One lead session talks to Sumanth, tracks progress, briefs helper sessions, reviews their work and is the only one that pushes. Sumanth approves every pull request. |
-| - | Where the console runs | Streamlit Community Cloud, free, from `main` of this private repository, behind the console's own Google sign-in and list; the app itself is set public on Streamlit so the team signs in once. Its settings and token live in the app's secrets there, never in the repository. The assistant's questions work only where Ollama runs, so they are off on the shared copy. Decided 21 Oct 2026 at Sumanth's request (issue 17). |
+| - | Where the console runs | Render's free plan at `console.opengnss.org`, from `main` through `render.yaml`, behind the console's own Google sign-in and list, beside the dashboard so both live on one host under the project's domain. Its settings and token live in Render as a secret file, never in the repository. First on Streamlit Community Cloud (decided 21 Oct 2026, issue 17); moved 28 Oct 2026 at Sumanth's request. |
 | - | Where the dashboard runs | Render's free plan at `dashboard.opengnss.org`, from `main` through `render.yaml`, because Streamlit Community Cloud cannot use the project's own domain. It sleeps after 15 minutes unvisited and takes about a minute to wake. Decided 27 Oct 2026 at Sumanth's request. |
 | - | The project's domain | `opengnss.org`, registered 27 Oct 2026 for one year in a Cloudflare account of the project's own, not anyone's personal one, so it can be handed on. Substack is read by email through it because Substack refuses GitHub's servers. Decided 27 Oct 2026 at Sumanth's request (issue 152). |
 | - | Who decides an item | One approval, from anyone on the console's list, including the person who raised it (decided 22 Oct 2026; the earlier rule that the raiser could not decide is gone). Two or more approvals, with an optional standing second approver such as a senior, are planned (issue 120). |

@@ -1,6 +1,7 @@
-# The public dashboard (dashboard.py) at https://dashboard.opengnss.org, on Render's free plan.
+# The dashboard (dashboard.py) at https://dashboard.opengnss.org and the administration console (admin.py) at
+# https://console.opengnss.org, both on Render's free plan.
 # Render reads this file when someone creates a Blueprint from this repository; see docs/infrastructure.md.
-# Free plan: sleeps after 15 minutes with no visitors and takes about a minute to wake.
+# Free plan: each sleeps after 15 minutes with no visitors and takes about a minute to wake.
 services:
   - type: web
     name: opengnss-dashboard
@@ -22,6 +23,31 @@ services:
         - "**/*.md"
     domains:
       - dashboard.opengnss.org
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+  - type: web
+    name: opengnss-console
+    runtime: python
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    # The console's settings live in Render as a secret file named secrets.toml, never in the repository; Streamlit
+    # reads them from .streamlit/secrets.toml. Without the file the console starts but cannot sign anyone in.
+    startCommand: >-
+      if [ -f /etc/secrets/secrets.toml ]; then cp /etc/secrets/secrets.toml .streamlit/secrets.toml; fi &&
+      streamlit run admin.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+    healthCheckPath: /_stcore/health
+    autoDeployTrigger: commit
+    buildFilter:
+      ignoredPaths:
+        - "docs/**"
+        - "tests/**"
+        - "cloudflare/**"
+        - "dashboard.py"
+        - "**/*.md"
+    domains:
+      - console.opengnss.org
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9

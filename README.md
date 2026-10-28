@@ -9,16 +9,16 @@
 > | What | Address | Hosted on |
 > |---|---|---|
 > | Dashboard (`dashboard.py`) | <https://dashboard.opengnss.org> | Render, free plan, from `main` ([render.yaml](render.yaml)); sleeps after 15 idle minutes and takes about a minute to wake |
-> | Administration console (`admin.py`) | <https://gnss-master-console.streamlit.app/> | Streamlit Community Cloud, free, from `main` |
+> | Administration console (`admin.py`) | <https://console.opengnss.org> | Render, free plan, from `main` ([render.yaml](render.yaml)); the same sleep, and Google sign-in |
 > | Substack newsletters as feeds | `https://feeds.opengnss.org/substack/<publication>/feed` | Cloudflare Worker ([cloudflare/newsletters](cloudflare/newsletters)) |
 > | Newsletter subscription address | `newsletters@feeds.opengnss.org` | Cloudflare Email Routing |
 > | News for the dashboard | `latest_news.json` on the `news-data` branch | this repository |
 > | The team's earlier app (`app.py`) | <https://gnss-health-monitor.streamlit.app/> | the team's Streamlit account; not this dashboard |
 >
-> - **Administration console, for the team: <https://gnss-master-console.streamlit.app/>**
+> - **Administration console, for the team: <https://console.opengnss.org>**
 >   What runs, what is waiting for a decision, the open work, and the system design in one picture.
 >   Sign in with a Google account on the console's list; ask Sumanth to be added. It is hosted free on
->   Streamlit Community Cloud from this repository's `main`. Questions to the assistant work only where
+>   Render from this repository's `main`. Questions to the assistant work only where
 >   Ollama runs (`streamlit run admin.py` on your own computer); they are off on the shared copy.
 > - **Remotes:** `origin` is this mirror. `upstream` is the team's repository and is
 >   fetch-only: its push address is set to `DISABLED`. After a fresh clone, run
