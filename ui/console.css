@@ -57,6 +57,12 @@ a:hover { text-decoration: underline; }
 .st-key-console_bar [data-testid="stHorizontalBlock"] { align-items: center; gap: 8px; flex-wrap: wrap; }
 .st-key-console_bar [data-testid="stColumn"] { width: auto !important; flex: 0 1 auto !important; min-width: 0; }
 .st-key-console_bar [data-testid="stColumn"]:has(.c-crumb) { flex: 1 1 260px !important; }   /* the address takes the room left */
+.st-key-sources_filters { background: var(--chrome); color: var(--chrome-ink); border: 2px solid var(--outline); padding: 6px 10px;
+  margin-bottom: 18px; box-shadow: var(--th-bevel); }
+.st-key-sources_filters [data-testid="stVerticalBlock"] { gap: 6px; }
+.st-key-sources_filters [data-testid="stHorizontalBlock"] { align-items: center; gap: 8px; flex-wrap: wrap; }
+.st-key-sources_filters [data-testid="stColumn"] { min-width: 0; }
+.st-key-sources_filters [data-testid="stButtonGroup"] [data-baseweb="button-group"] { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; }
 .c-crumb { display: block; padding: 3px 8px; border: 1px solid var(--input-edge); background: var(--input-bg); color: var(--ink);
   box-shadow: var(--well-bevel); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .c-who { white-space: nowrap; color: var(--chrome-ink); }
@@ -204,7 +210,9 @@ a:hover { text-decoration: underline; }
 .c-lv { width: 100%; border-collapse: collapse; font-size: 12px; }
 .c-lv th { text-align: left; font-weight: 800; color: var(--th-ink); padding: 4px 8px; background: var(--th-bg); box-shadow: var(--th-bevel);
   border-right: 1px solid var(--edge); border-bottom: 1px solid var(--edge); white-space: nowrap; }
-.c-lv td { padding: 4px 8px; border-bottom: 1px solid var(--edge-soft); vertical-align: top; color: var(--ink); overflow-wrap: normal; }   /* whole words; the frame scrolls sideways */
+.c-lv td { padding: 4px 8px; border-bottom: 1px solid var(--edge-soft); vertical-align: middle; color: var(--ink); overflow-wrap: normal; }   /* whole words; the frame scrolls sideways */
+.c-lv td:has(.c-clip) { max-width: 22em; }
+.c-clip { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
 .c-lv tbody tr:nth-child(even) td { background: var(--row-alt); }
 .c-lv tbody tr:hover td { background: var(--hover); }
 .c-lv td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }

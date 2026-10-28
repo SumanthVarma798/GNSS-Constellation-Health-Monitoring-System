@@ -44,12 +44,14 @@ body, actions = common.layout("sources", "Sources", "Everything the system reads
 
 
 def grade_html(row):
-    """The grade as a swatch in the blue ramp beside the letter in ink, and 'proposed' until a person confirms it."""
+    """The grade letter as a small swatch badge, with confirmed or proposed beside it in muted text."""
     if not row["grade"]:
         return '<span class="muted">none</span>'
     meaning = RELIABILITY_GRADES.get(row["grade"], "")
-    swatch = f'<span class="c-label" title="{escape(meaning, quote=True)}"><b style="background:var(--{RAMP.get(row["grade"], "g-none")})"></b>'
-    return swatch + f'{escape(row["grade"])}</span>' + ("" if row["confirmed"] else '<span class="muted">proposed</span>')
+    swatch = (f'<span class="c-label" title="{escape(meaning, quote=True)}">'
+              f'<b style="background:var(--{RAMP.get(row["grade"], "g-none")})"></b>{escape(row["grade"])}</span>')
+    standing = " confirmed" if row["confirmed"] else " proposed"
+    return swatch + f'<span class="muted">{standing}</span>'
 
 
 def name_html(row):
@@ -59,18 +61,25 @@ def name_html(row):
     return f"<b>{escape(row['name'])}</b>{link}"
 
 
+def reason_html(row):
+    text = row["reason"] or "–"
+    return f'<span class="c-clip" title="{escape(text, quote=True)}">{escape(text)}</span>'
+
+
 def last_read_html(row):
-    """When the archive last read this address, and when its content last changed."""
+    """When the archive last read this address, as relative words, or a dash when unknown."""
     address = row["address"]
-    if not address or address not in archived:
-        return '<span class="muted">not read here</span>'
-    if not archive_ok:
-        return '<span class="muted">not known</span>'
-    times = read_times.get(address, {})
-    read_line = ago_words(times.get("last_read"), now)
-    changed = times.get("last_changed")
-    sub = (f'<br><span class="muted">changed {ago_words(changed, now)}</span>' if changed else "")
-    return escape(read_line) + sub
+    if not archive_ok or not address or address not in archived:
+        return '<span class="muted">-</span>'
+    read_line = ago_words(read_times.get(address, {}).get("last_read"), now)
+    if read_line == "not known":
+        return '<span class="muted">-</span>'
+    return escape(read_line)
+
+
+def last_check_html(row):
+    date = f'<br><span class="muted">{escape(row["checked_on"])}</span>' if row["checked_on"] else ""
+    return console.status(*row["answer"]) + date
 
 
 def grade_key(row):
@@ -100,38 +109,33 @@ with body:
 
     kinds_present = sorted({r["kind"] or "–" for r in rows})
     kind_n = Counter(r["kind"] or "–" for r in rows)
-    st.html(console.section("Kinds", console.stack([(kind_n[k], "g-none", k) for k in kinds_present], "How many of each kind"),
-                        right=f"{len(kinds_present)} kinds", flush=True))
-
     st.session_state.setdefault("sources_show", "all")
     if st.session_state.get("sources_kind_options") != kinds_present:   # a kind came or went: show every kind again
         st.session_state["sources_kind_options"] = kinds_present
-        st.session_state["sources_kinds"] = kinds_present
-    st.session_state.setdefault("sources_grades", list(GRADE_FILTER))
-    filter_row = st.columns([1.1, 1.4, 1.4, 2])
-    with filter_row[0]:
+        st.session_state["sources_kinds"] = []
+    grade_n = Counter(grade_key(r) for r in rows)
+    with st.container(key="sources_filters"):
         shown_as = st.segmented_control("Show", list(SHOW), format_func=lambda k: f"{SHOW[k]} ({len(rows) if k == 'all' else counts[k]})",
                                         key="sources_show", label_visibility="collapsed") or "all"
-    with filter_row[1]:
-        picked_kinds = st.multiselect("Kind", kinds_present, format_func=lambda k: f"{k} ({kind_n[k]})",
-                                      key="sources_kinds", label_visibility="collapsed", placeholder="Kind")
-    with filter_row[2]:
-        grade_n = Counter(grade_key(r) for r in rows)
-        picked_grades = st.multiselect("Grade", list(GRADE_FILTER), format_func=lambda g: f"{g} ({grade_n[g]})",
-                                       key="sources_grades", label_visibility="collapsed", placeholder="Grade")
-    with filter_row[3]:
-        find = st.text_input("Find a source by its name or address", key="sources_find",
-                             placeholder="for example: ISRO, galileo, reddit", label_visibility="collapsed")
+        filter_row = st.columns([1.2, 1.2, 2.6])
+        with filter_row[0]:
+            picked_kinds = st.multiselect("Kind", kinds_present, format_func=lambda k: f"{k} ({kind_n[k]})",
+                                          key="sources_kinds", label_visibility="collapsed", placeholder="All kinds")
+        with filter_row[1]:
+            picked_grades = st.multiselect("Grade", list(GRADE_FILTER), format_func=lambda g: f"{g} ({grade_n[g]})",
+                                           key="sources_grades", label_visibility="collapsed", placeholder="All grades")
+        with filter_row[2]:
+            find = st.text_input("Find a source by its name or address", key="sources_find",
+                                 placeholder="for example: ISRO, galileo, reddit", label_visibility="collapsed")
     shown = [r for r in rows if (shown_as == "all" or r["group"] == shown_as)
-             and (r["kind"] or "–") in picked_kinds and grade_key(r) in picked_grades
+             and (not picked_kinds or (r["kind"] or "–") in picked_kinds)
+             and (not picked_grades or grade_key(r) in picked_grades)
              and find.lower() in (r["name"] + " " + r["address"]).lower()]
+    narrowed = bool(find or picked_kinds or picked_grades)
     st.html(console.section(SHOW[shown_as], console.list_view(
-        ["Source", "Kind", "Grade", "Why this grade", "Last check", "Last read"],
-        [[name_html(r), escape(r["kind"] or "–"), grade_html(r), escape(r["reason"] or "–"),
-          console.status(*r["answer"]) + (f'<br><span class="muted">{escape(r["checked_on"])}</span>' if r["checked_on"] else ""),
-          last_read_html(r)]
-         for r in shown]) if shown else console.notice("No source matches." if find or picked_kinds != kinds_present
-                                                     or picked_grades != list(GRADE_FILTER) else "None in this group.", "info"),
+        ["Source", "Kind", "Grade", "Why this grade", "Last read", "Last check"],
+        [[name_html(r), escape(r["kind"] or "–"), grade_html(r), reason_html(r), last_read_html(r), last_check_html(r)]
+         for r in shown]) if shown else console.notice("No source matches." if narrowed else "None in this group.", "info"),
         right=f"{len(shown)} of {len(rows)}", flush=bool(shown)))
 
     if may_change:
