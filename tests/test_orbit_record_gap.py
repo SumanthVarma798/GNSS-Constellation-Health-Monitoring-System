@@ -88,18 +88,23 @@ def test_rows_for_day_fills_every_field_the_report_json_and_dashboard_read(monke
     monkeypatch.setattr(orbit_record_gap, "navigation_text", lambda day, file=None: "text")
     monkeypatch.setattr(orbit_record_gap, "leap_seconds", lambda text: 18)
     monkeypatch.setattr(orbit_record_gap, "read_navigation", lambda text: {"I02": ["record"]})
+    monkeypatch.setattr(orbit_record_gap, "read_status", lambda text: {
+        "I02": {"health": 0, "accuracy_m": 3.1, "iod": 3, "newest": datetime(2026, 10, 24, 12, 0)}})
+    monkeypatch.setattr(orbit_record_gap, "time_corrections", lambda text: {"GPUT": -1.86e-9})
     monkeypatch.setattr(orbit_record_gap, "tracked", lambda day: [("I002", "IRNSS-1B", 39635, "I02"),
                                                                   ("I003", "IRNSS-1C", 40269, "I03")])
     monkeypatch.setattr(orbit_record_gap, "orbit_records", lambda norads, now: {39635: ["record"]})
     monkeypatch.setattr(orbit_record_gap, "compare", lambda broadcast, records, signal_id, leap, day:
                         ([sample(2.0, used), sample(4.0, used)], used))
 
-    rows, leap, checked = orbit_record_gap.rows_for_day(date(2026, 10, 24), now=datetime(2026, 10, 26, 6, tzinfo=timezone.utc))
+    rows, leap, checked, corrections = orbit_record_gap.rows_for_day(date(2026, 10, 24), now=datetime(2026, 10, 26, 6, tzinfo=timezone.utc))
 
     assert leap == 18 and checked == "2026-10-26T06:00:00Z"
     measured, missing = rows
     assert measured["record_epoch"] == "2026-10-24T22:00:00Z" and measured["typical_km"] == 3.0
     assert measured["largest_km"] == 4.0 and measured["mostly"] == "ahead on its path" and measured["age_days"] == 0.0
+    assert measured["health"] == 0 and measured["accuracy_m"] == 3.1
+    assert measured["broadcast_newest"] == "2026-10-24T12:00:00"
     assert missing["note"] == "not in the day's broadcast file" and missing["typical_km"] is None
     assert orbit_record_gap.json_payload(date(2026, 10, 24), checked, rows)["satellites"][0]["typical_km"] == 3.0
 

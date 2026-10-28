@@ -67,7 +67,7 @@ Solid arrows carry data today. Dotted arrows are not wired yet.
 | Query store | A small database rebuilt from the archive and the registry on every run |
 | Bar and labels | Decides whether an item is confirmed, probable or unconfirmed (section 6) |
 | Hosting | The project's domain, `opengnss.org`, is held in its own Cloudflare account. The dashboard and the console run on Render's free plan at `dashboard.opengnss.org` and `console.opengnss.org`; Substack newsletters arrive by email and a Cloudflare Worker serves them as feeds at `feeds.opengnss.org`; scheduled jobs run on GitHub Actions. Accounts, renewal and how to recreate each part: [infrastructure.md](infrastructure.md) |
-| Orbit health dashboard | Public at `dashboard.opengnss.org`. It reads which satellites to track, and their catalogue numbers, from the registry, and shows a notice for any tracked satellite it has to leave out. It draws each satellite against its own slot: flat, in 3D, and as a bar of score parts. Which are in service is still typed by hand. CelesTrak refuses the hosted server, so when a live fetch fails it reads the archive job's newest copy of CelesTrak's GNSS group (`latest_gnss.json` on the `orbit-data` branch) and says "CelesTrak via the archive job". |
+| Orbit health dashboard | Public at `dashboard.opengnss.org`. It reads which satellites to track, and their catalogue numbers, from the registry, and shows a notice for any tracked satellite it has to leave out. It draws each satellite against its own slot: flat, in 3D, and as a bar of score parts. It also shows each satellite's broadcast health and accuracy from the daily IGS file (not yet in the score). Which are in service is still typed by hand. CelesTrak refuses the hosted server, so when a live fetch fails it reads the archive job's newest copy of CelesTrak's GNSS group (`latest_gnss.json` on the `orbit-data` branch) and says "CelesTrak via the archive job". |
 
 ## 3. How far along
 
@@ -289,6 +289,7 @@ These are for the team to settle together. The next team call is Thu 29 Oct 2026
 | Backend | Which database does the team's planned backend use? | - |
 | Orbits | Is 2 days the right freshness target? For some satellites, mostly Galileo, neither CelesTrak nor Space-Track has anything newer for 3 to 8 days. | O1's "every satellite under 2 days" |
 | Orbits | May a daily copy of CelesTrak's GNSS group be kept on a public branch (`orbit-data`) for the dashboard, which CelesTrak refuses? | - |
+| Orbits | What does a QZSS broadcast health code of 1 or 16 mean? Every QZSS satellite sent one on 27 Oct 2026, so the dashboard shows "flags set", not "unhealthy". | Broadcast health for QZSS |
 
 ## 11. Keeping this page true
 

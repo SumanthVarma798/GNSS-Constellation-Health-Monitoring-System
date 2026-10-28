@@ -149,3 +149,63 @@ def test_a_gap_that_is_not_a_number_is_left_out_not_a_crash():
     assert orbit_age._gap_by_satellite({"day": "2026-10-24", "satellites": [{"satellite": "IRNSS-1B", "typical_km": "9"},
                                                                             {"satellite": "QZS-2", "typical_km": 3.2}]}) \
         == {"QZS-2": (3.2, "24 Oct")}
+
+
+BROADCAST_GAP = {
+    **GAP,
+    "satellites": [
+        {**GAP["satellites"][0], "health": 0, "accuracy_m": 2.0},
+        {"satellite": "IRNSS-1C", "signal_id": "I03", "record_epoch": None, "typical_km": None, "largest_km": None,
+         "mostly": "", "note": "", "health": 130, "accuracy_m": 3.12},
+        {"satellite": "IRNSS-1D", "signal_id": "I04", "record_epoch": None, "typical_km": None, "largest_km": None,
+         "mostly": "", "note": "not in the day's broadcast file", "health": None, "accuracy_m": None},
+    ],
+    "leap_seconds": 18,
+    "time_corrections": {"GPUT": -1.86, "GAGP": -0.32, "IRUT": 5.0},
+}
+BROADCAST_ROWS = [
+    {"satellite": "IRNSS-1B", "epoch": datetime(2026, 10, 25, 9, 12, tzinfo=timezone.utc),
+     "source": "CelesTrak", "age_days": 1.4, "status": "ok"},
+    {"satellite": "IRNSS-1C", "epoch": None, "source": "", "age_days": None, "status": "idle"},
+    {"satellite": "IRNSS-1D", "epoch": None, "source": "", "age_days": None, "status": "idle"},
+]
+
+
+def test_broadcast_health_accuracy_and_system_times_show_and_unhealthy_satellites_are_named():
+    _, body, _ = orbit_age.section_markup(BROADCAST_ROWS, gap=BROADCAST_GAP)
+
+    assert "Broadcast health" in body and "Signal accuracy" in body
+    assert "healthy</b>" in body and "unhealthy (code 130)" in body and "not in the day" in body
+    assert "2.0 m" in body and "3.1 m" in body
+    assert "System times from the broadcast file: GPS−UTC -1.86 ns · Galileo−GPS -0.32 ns · 18 leap seconds" in body
+    assert orbit_age._unhealthy_notice(BROADCAST_GAP, BROADCAST_ROWS) == (
+        "Broadcasting unhealthy: IRNSS-1C (I03). From the IGS broadcast file of 25 Oct; "
+        "work in progress, not yet part of the score.")
+    assert orbit_age._missing_notice(BROADCAST_GAP, BROADCAST_ROWS) == "Not in the day's broadcast file: IRNSS-1D (I04)."
+    assert "Broadcast health: unhealthy (code 130) · accuracy 3.1 m" in orbit_age.tag(
+        BROADCAST_ROWS[1], status=orbit_age._status_by_satellite(BROADCAST_GAP)["IRNSS-1C"])
+
+
+def test_an_old_payload_without_broadcast_fields_still_renders_without_notices_or_system_times():
+    _, body, _ = orbit_age.section_markup(BROADCAST_ROWS, gap=GAP)
+
+    assert "System times" not in body and "unhealthy" not in body
+    assert orbit_age._unhealthy_notice(GAP, BROADCAST_ROWS) is None and orbit_age._missing_notice(GAP, BROADCAST_ROWS) is None
+
+
+def test_official_status_links_only_where_there_is_one():
+    from ui import official_status
+
+    assert 'href="https://www.gsc-europa.eu/system-service-status/constellation-information"' in official_status.line("Galileo")
+    assert 'target="_blank"' in official_status.line("NavIC")
+    assert official_status.line("GLONASS") == "" and official_status.line("BeiDou-3") == ""
+
+
+def test_a_qzss_code_is_flags_set_not_unhealthy():
+    qzss = {"satellite": "QZS-3", "signal_id": "J07", "health": 1, "accuracy_m": 2.0, "note": ""}
+    gap = {**GAP, "satellites": [qzss]}
+    rows = [{"satellite": "QZS-3", "epoch": None, "source": "", "age_days": None, "status": "idle"}]
+
+    _, body, _ = orbit_age.section_markup(rows, gap=gap)
+    assert "flags set (code 1)" in body and "unhealthy" not in body
+    assert orbit_age._unhealthy_notice(gap, rows) is None

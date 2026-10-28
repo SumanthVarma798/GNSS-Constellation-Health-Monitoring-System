@@ -4,7 +4,7 @@ GPS positions from IGS's rapid precise orbits for the same day (IGS0OPSRAP_20262
 import math
 from datetime import date, datetime, timedelta, timezone
 
-from analysis.broadcast_orbit import nearest, position, read_navigation, system_time
+from analysis.broadcast_orbit import nearest, position, read_navigation, read_status, system_time, time_corrections
 from scripts.orbit_record_gap import compare
 
 FILE = """\
@@ -79,3 +79,62 @@ def test_the_gap_report_finds_a_fresh_record_within_kilometres_and_skips_uncover
     gaps = sorted(sample[0] for sample in samples)
     assert gaps[len(gaps) // 2] < 15                           # orbit records are good to kilometres, not hundreds
     assert all(abs(sample[4] - 140) < 0.5 for sample in samples)
+
+
+# Real lines from the IGS merged navigation file for 27 Oct 2026 (BRDC00IGS_R_20263000000_01D_MN.rnx, from BKG):
+# Galileo E14's two newest records (I/NAV health 16, F/NAV health 130), a NavIC record and a GLONASS record.
+STATUS_FILE = """\
+     3.04           N: GNSS NAV DATA    M: MIXED            RINEX VERSION / TYPE
+GPUT -1.8626451492D-09-1.776356839D-15 319488 2442          TIME SYSTEM CORR
+GLUT  1.4901161194D-08 0.000000000D+00      0    0          TIME SYSTEM CORR
+GAUT -9.3132257462D-10 0.000000000D+00  86400 2442          TIME SYSTEM CORR
+GAGP -3.2014213502D-10 1.332267630D-15 172800 2442          TIME SYSTEM CORR
+BDUT  0.0000000000D+00 0.000000000D+00 172385 1086          TIME SYSTEM CORR
+QZUT -5.5879354477D-09 0.000000000D+00  94208 2425          TIME SYSTEM CORR
+    18    18  1929     7                                    LEAP SECONDS
+                                                            END OF HEADER
+E14 2026 10 27 23 50 00 5.544801242650E-03 2.169997515011E-10 1.734723475977E-18
+     5.000000000000E+01 9.487500000000E+01 7.472811272585E-09-1.220613275442E-01
+     6.064772605896E-06 1.691226053517E-01 2.402812242508E-06 5.289303060532E+03
+     2.586000000000E+05 2.162531018257E-06-2.204091879491E+00 1.676380634308E-06
+     8.509516775987E-01 2.410000000000E+02-3.053975471822E+00-1.043614899321E-08
+    -4.832344143673E-10 2.580000000000E+02 2.442000000000E+03 0.000000000000E+00
+     3.119999885559E+00 1.600000000000E+01-3.492459654808E-09 0.000000000000E+00
+     2.593000000000E+05 0.000000000000E+00 0.000000000000E+00 0.000000000000E+00
+E14 2026 10 27 23 50 00 5.544801242650E-03 2.169997515011E-10 1.734723475977E-18
+     5.000000000000E+01 9.487500000000E+01 7.472811272585E-09-1.220613275442E-01
+     6.064772605896E-06 1.691226053517E-01 2.402812242508E-06 5.289303060532E+03
+     2.586000000000E+05 2.162531018257E-06-2.204091879491E+00 1.676380634308E-06
+     8.509516775987E-01 2.410000000000E+02-3.053975471822E+00-1.043614899321E-08
+    -4.832344143673E-10 5.170000000000E+02 2.442000000000E+03 0.000000000000E+00
+     3.119999885559E+00 1.300000000000E+02-3.492459654808E-09-4.656612873077E-09
+     2.592640000000E+05 0.000000000000E+00 0.000000000000E+00 0.000000000000E+00
+I02 2026 10 26 23 50 24 6.867754273117E-04 3.160494088661E-11 0.000000000000E+00
+     1.600000000000E+02 1.018875000000E+03 2.124374202998E-09 4.210770079818E-01
+     3.309547901154E-05 1.832351204939E-03 2.070516347885E-05 6.493416126251E+03
+     1.722240000000E+05-4.470348358154E-08-2.709267708835E+00-1.154839992523E-07
+     5.090959216829E-01-5.433125000000E+02-3.041313330679E+00-2.071514858337E-09
+    -3.421571093598E-10 0.000000000000E+00 2.442000000000E+03
+     2.000000000000E+00 0.000000000000E+00-1.862645149231E-09
+     1.724640000000E+05
+R01 2026 10 26 23 45 00 1.909909769893E-04 9.094947017729E-13 1.710000000000E+05
+    -1.474142529297E+04 1.248785972595E+00-4.656612873077E-09 0.000000000000E+00
+    -1.703874072266E+04 1.074707984924E+00 9.313225746155E-10 1.000000000000E+00
+    -1.196846630859E+04-3.068425178528E+00-0.000000000000E+00 0.000000000000E+00
+"""
+
+
+def test_read_status_takes_each_satellites_newest_health_and_accuracy_glonass_included():
+    status = read_status(STATUS_FILE)
+
+    assert status["E14"] == {"health": 130, "accuracy_m": 3.119999885559, "iod": 50,
+                             "newest": datetime(2026, 10, 27, 23, 50)}   # tied newest: the worse health wins
+    assert status["I02"]["health"] == 0 and status["I02"]["accuracy_m"] == 2.0
+    assert status["R01"] == {"health": 0, "accuracy_m": None, "iod": None, "newest": datetime(2026, 10, 26, 23, 45)}
+
+
+def test_time_corrections_read_the_header_offsets_in_seconds():
+    corrections = time_corrections(STATUS_FILE)
+
+    assert set(corrections) == {"GPUT", "GLUT", "GAUT", "GAGP", "BDUT", "QZUT"}
+    assert math.isclose(corrections["GPUT"], -1.8626451492e-09) and math.isclose(corrections["GLUT"], 1.4901161194e-08)
