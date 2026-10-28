@@ -282,7 +282,7 @@ function buildSystems() {
   }
 }
 function resize() {
-  const b = stage.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  const b = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;   // the same box pointer positions use
   canvas.width = Math.round(b.width * dpr); canvas.height = Math.round(b.height * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0); box = { w: b.width, h: b.height }; paint();
 }

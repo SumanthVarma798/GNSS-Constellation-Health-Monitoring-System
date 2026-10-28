@@ -11,10 +11,12 @@ from ui import data, geometry_data as gd, geometry_settings as gs
 
 
 @st.cache_data(show_spinner=False)
-def load(hour_key, window_days, params):
+def load(hour_key, fetched_key, window_days, params):
     """One entry per constellation that has orbit data, plus any notices for the others.
 
-    hour_key is only the cache key: the same UTC hour gets the same payload without recomputing the tracks.
+    hour_key and fetched_key are only the cache key: the same UTC hour gets the same payload without recomputing the
+    tracks, and a new orbit fetch (fetched_key, CelesTrak's last fetch) recomputes it, so a load made before any
+    orbit data arrived is not kept for the hour.
     """
     gap = data.orbit_gap()
     now = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
