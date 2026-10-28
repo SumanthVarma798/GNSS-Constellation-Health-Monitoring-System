@@ -91,14 +91,14 @@ pie showData title Estimated hours, all guesses
 | 39 | Parts out of step: keep working, and say so visibly | 6 | Parts 1 and 2 built (about 4 hours): notices for every satellite left out, set aside or partly scored. Part 3, dates and a staleness check, is open. |
 | 42 | Decide where scheduled jobs run and where raw copies are kept | not sized | Decided 12 Oct 2026: stay on GitHub while its timer works. |
 | 44 | Scheduled jobs in one container image, run by Kubernetes CronJob locally | 8 | Parked: not needed while GitHub's timer works |
-| 79 | Production-grade running: retries, run log, alerts, late-source notices | 10 | Built: retries within each source's limits, a run log in the archive, the dashboard says since when CelesTrak has been failing, and Healthchecks.io emails when a scheduled run fails or does not arrive (once Sumanth has made the account and the key). |
+| 79 | Production-grade running: retries, run log, alerts, late-source notices | 10 | Built: retries within each source's limits, a run log in the archive, the dashboard says since when CelesTrak has been failing, and Healthchecks.io emails when a scheduled run fails or does not arrive (the alert email was confirmed to reach a person in the failure drills, 26 Oct 2026, issue 130). |
 | 45 | Archive writes through one interface: a folder today, an object store later | 5 | Parked until the archive's size starts to matter |
 | 47 | Demo for the team call, Sat 17 Oct 2026 | tracker | Items 48 to 51, and 23 |
 | 48 | Demo A. The look: one theme and reusable parts | 6 | Built |
 | 49 | Demo B. Master map page: many identifiers to one master ID | 8 | Built |
 | 50 | Demo C. Orbit pictures: slot belt, 3D view, score parts | 9 | Built |
 | 51 | Demo D. Menu, How it works page, new look on the existing tabs | 6 | Open; needs 48, 49 and 50 |
-| 10 | Notices ledger: GPS advisories | 10 | Open, after the call |
+| 10 | Notices ledger: GPS advisories | 10 | Open. The GPS notices (NANU) are archived through CelesTrak's copy (pull request 172); the ledger itself is not built |
 | 13 | News, official pages, linked social posts | 14 | Candidates in `evidence/source_candidates.csv`, waiting on the team's grades. The 45 whose check worked are archived on a schedule, provisional, deciding nothing; feed items are read into news records (`evidence/news.py`) |
 | 14 | Owner and status per satellite, from a second source | 3 | Built; joining the weekly proposal is a follow-up |
 | 15 | Claim extraction | 20 | Waiting on a model and a spending ceiling |
@@ -109,8 +109,9 @@ pie showData title Estimated hours, all guesses
 | 8, 9 | Phone database trend; NavIC signal status | 18 | Open |
 | 19, 20 | Service column; announced versus observed | 25 | Open |
 | 21, 22 | Per-satellite history; scoreboard | 40 | Open |
-| 17 | Administration console | 15 | Built in steps (pull requests 102 to 109): Google sign-in, Summary, Jobs, Approvals, open work, and System design with a local-model assistant. Shared copy at <https://console.opengnss.org> |
+| 17 | Administration console | 15 | Built in steps (pull requests 102 to 173): Google sign-in, Summary, Jobs, Approvals (decided finding by finding), Alerts, Sources, open work, and System design with a local-model assistant. Shared copy at <https://console.opengnss.org> |
 | 23 | Team call, Sat 17 Oct 2026: run-through, handout, fallback pictures | 5 | Open |
+| Milestones 1–6 | Demo outcomes for the team call on Thu 29 Oct 2026 (O1–O6) | not sized | O1 orbits stay fresh (pull requests 133, 134, 140–142; the dashboard falls back to the archive job's CelesTrak copy when CelesTrak refuses it, 174), O2 news per constellation (144), O3 new satellites reach approval (135, 143, 145) and O6 approvals as findings (136, 148) are built. O4 alerts is built (131, 132, 138, 139), with 4 of 6 failure drills done (issue 130). O5, the demo pack: readiness check and script, 28 Oct |
 
 ## 4. How one item travels
 
@@ -270,7 +271,7 @@ Produced from the code. A test fails if this table and the code disagree.
 
 ## 10. Open questions
 
-These are for the team to settle together. The next team call is Sat 17 Oct 2026.
+These are for the team to settle together. The next team call is Thu 29 Oct 2026.
 
 | Topic | Question | Holds up |
 |---|---|---|
@@ -286,6 +287,8 @@ These are for the team to settle together. The next team call is Sat 17 Oct 2026
 | Extraction | Which language model, and what monthly spending ceiling? | Issue 15 |
 | Repository | Will the team add a licence to its repository? | - |
 | Backend | Which database does the team's planned backend use? | - |
+| Orbits | Is 2 days the right freshness target? For some satellites, mostly Galileo, neither CelesTrak nor Space-Track has anything newer for 3 to 8 days. | O1's "every satellite under 2 days" |
+| Orbits | May a daily copy of CelesTrak's GNSS group be kept on a public branch (`orbit-data`) for the dashboard, which CelesTrak refuses? | - |
 
 ## 11. Keeping this page true
 
