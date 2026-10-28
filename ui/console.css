@@ -24,7 +24,11 @@ a:hover { text-decoration: underline; }
 [data-testid="stSidebar"] { background: var(--tree-bg); border-right: 2px solid var(--chrome-edge); }
 [data-testid="stSidebar"][aria-expanded="true"] { min-width: 230px; max-width: 280px; }   /* closed, it must give its room back */
 [data-testid="stSidebar"] * { color: var(--tree-ink); }
-[data-testid="stSidebarHeader"] { padding: 4px 8px; height: auto; min-height: 0; }
+[data-testid="stSidebarHeader"] { padding: 4px 8px; height: auto; min-height: 40px; }
+/* the colour picker sits in the tree's header, left of the close button, as three icon buttons */
+[data-testid="stSidebarUserContent"] [data-testid="stVerticalBlock"]:has(.st-key-console_scheme) { position: static; }   /* so it is placed against the tree, not the block under it */
+.st-key-console_scheme { position: absolute; top: 4px; left: 8px; z-index: 2; width: auto !important; }
+.st-key-console_scheme [data-testid="stButtonGroup"] button { min-height: 28px; padding: 2px 8px; }
 [data-testid="stSidebarNav"]::before { content: "Console tree"; display: block; padding: 6px 12px; font-weight: 700; color: var(--head-ink);
   background: var(--head-bg); border-bottom: 1px solid var(--chrome-edge); }
 [data-testid="stSidebarNavItems"] { padding: 6px 0; }

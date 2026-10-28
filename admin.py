@@ -72,10 +72,15 @@ where = {p.url_path: (section, p) for section, pages in SECTIONS.items() for p i
 trail = common.follow(st.session_state.setdefault("console_trail", {"back": [], "forward": [], "at": None}), page.url_path)
 who = st.user.get("name") or email
 st.html(console.title_bar(page.title) + console.current_page_css(page.url_path))
+with st.sidebar, st.container(key="console_scheme"):   # placed in the tree's header, left of its close button
+    st.session_state["console_scheme_pick"] = scheme
+    st.segmented_control("Colours", list(console.SCHEMES), format_func=console.SCHEME_ICONS.get, key="console_scheme_pick",
+                         on_change=_pick_scheme, label_visibility="collapsed",
+                         help="Colours: as this computer is set, light, or dark")
 with st.container(key="console_bar"):
     # each shown only when there is a page that way, and that page still exists (one may be removed mid-session)
     steps = [way for way in ("back", "forward") if trail[way] and trail[way][-1] in where]
-    *step_cols, crumb, refresh, pick, person, out = st.columns(len(steps) + 5, vertical_alignment="center")
+    *step_cols, crumb, refresh, person, out = st.columns(len(steps) + 4, vertical_alignment="center")
     for col, way in zip(step_cols, steps):
         to = where[trail[way][-1]][1]
         if col.button(way.title(), key=f"console_{way}", icon=f":material/arrow_{way}:", help=f"{way.title()} to {to.title}"):
@@ -85,9 +90,6 @@ with st.container(key="console_bar"):
     if refresh.button("Refresh", key="console_refresh", icon=":material/refresh:", help="Read everything again from GitHub"):
         common.github.clear()
         st.session_state[common.REFRESH_PENDING] = True
-    st.session_state["console_scheme_pick"] = scheme
-    pick.segmented_control("Colours", list(console.SCHEMES), format_func=console.SCHEMES.get, key="console_scheme_pick",
-                           on_change=_pick_scheme, label_visibility="collapsed", help="Light, dark, or as this computer is set")
     person.html(f'<span class="c-who">Signed in as <b>{escape(who)}</b></span>')
     if out.button("Sign out", key="console_sign_out"):
         _sign_out()
