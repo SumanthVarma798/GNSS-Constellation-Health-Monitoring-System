@@ -1,6 +1,38 @@
 {
- "generated_at": "2026-10-28T20:37:22Z",
+ "generated_at": "2026-10-28T22:54:35Z",
  "items": [
+  {
+   "address": "https://x.com/isro/status/2115504423460061675",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-28T22:54:29Z",
+   "grade": "A",
+   "grade_standing": "provisional",
+   "outlet": "ISRO (@isro)",
+   "published_at": "2026-10-28T18:02:13Z",
+   "source_id": "x.com/isro",
+   "summary": "GSLV-F18, India’s Geosynchronous Satellite Launch Vehicle mission, will carry the NVS-03 navigation satellite. Launch: 30th October 2026, 23:51 hours IST Watch live: 30th October 2026, 23:20 hours IST onwards https://t.co/Mbllc4lcM2 Mission details: https://t.co/6YvrbYjFJI #GSLVF18 #NVS03 #ISRO…",
+   "title": "GSLV-F18, India’s Geosynchronous Satellite Launch Vehicle mission, will carry the NVS-03 navigation satellite. Launch:…",
+   "via": "https://x.com/isro"
+  },
+  {
+   "address": "https://x.com/Arianespace/status/2115503855194534267",
+   "category": "launch",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-28T22:54:35Z",
+   "grade": "B",
+   "grade_standing": "provisional",
+   "outlet": "Arianespace (@Arianespace)",
+   "published_at": "2026-10-28T17:59:57Z",
+   "source_id": "x.com/Arianespace",
+   "summary": "⏱ 3 hours and 55 minutes. That was the duration of Ariane 6’s longest mission to date, the launch of Galileo satellites 33 and 34 in December 2025. A mission stretching nearly four hours is not just a number. It reflects the precision required to deliver two navigation satellites into their exact…",
+   "title": "⏱ 3 hours and 55 minutes. That was the duration of Ariane 6’s longest mission to date, the launch of Galileo satellites…",
+   "via": "https://x.com/Arianespace"
+  },
   {
    "address": "https://news.google.com/rss/articles/CBMi8wFBVV95cUxNeDhqcHN2LXJuMWYwQ1VnMFJpRUpSOG1ZNDlMUVNJWDZQelpXandsb0lNTnc5bHBON0wxeU1OcHFBQVdFdGZRS2VOckcwMFZBZ1FwYUNRLWhUUDZPMXlQeXhwOU9tRjJfV3V4dzFDVUdzQmZSSEZuNnlCMWdwU2tBaVp5cHBXWjl4Zi1FRV9jN2o2RF9JRjVNSFkzNnBpUG5lZnJTY09jZWI2UmN1d1N2UVZVVFRpMXpnNmJBZWRsMjZCZlJ5RkRsXzdsZC1BOVFsN2dZeW42OXJmQ0NLRjIxVWFoQnZxT25qQWdOSGpOeXUyT03SAfgBQVVfeXFMUDhXNjBsUV9YWFBvdDRfNm51RUU2Ty1meDUzeTVnYUFac2JwV0k4TG1Sa0ZXeExKWmh0X0FWTXFiY0tVSzNHSUZ3YTV1cmk5Q1cxeC0za2h3Tm9ZU0ZZTDVSci1EQ0x0Q2NnenV2VS1NUWF2RnJnd2RoVUlTX1ZEVGVlMC03YlpHMUd3OWY4eTl5eVdMR1BxM3dVOU9QdWRiY3QtQi13YmpnaDVab0doY2dpOG5UNVpWTzBRdjV2cFowSEFiNHRYTElTX0ZGNFJfTWplSHppaWFvT28xN1dWTHg4ajVQWnhZRVBxSWZDQTlXNkFVbVBBR24?oc=5",
    "category": "launch",
