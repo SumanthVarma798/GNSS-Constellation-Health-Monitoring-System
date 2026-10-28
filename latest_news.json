@@ -1,6 +1,70 @@
 {
- "generated_at": "2026-10-28T13:37:47Z",
+ "generated_at": "2026-10-28T20:37:22Z",
  "items": [
+  {
+   "address": "https://news.google.com/rss/articles/CBMi8wFBVV95cUxNeDhqcHN2LXJuMWYwQ1VnMFJpRUpSOG1ZNDlMUVNJWDZQelpXandsb0lNTnc5bHBON0wxeU1OcHFBQVdFdGZRS2VOckcwMFZBZ1FwYUNRLWhUUDZPMXlQeXhwOU9tRjJfV3V4dzFDVUdzQmZSSEZuNnlCMWdwU2tBaVp5cHBXWjl4Zi1FRV9jN2o2RF9JRjVNSFkzNnBpUG5lZnJTY09jZWI2UmN1d1N2UVZVVFRpMXpnNmJBZWRsMjZCZlJ5RkRsXzdsZC1BOVFsN2dZeW42OXJmQ0NLRjIxVWFoQnZxT25qQWdOSGpOeXUyT03SAfgBQVVfeXFMUDhXNjBsUV9YWFBvdDRfNm51RUU2Ty1meDUzeTVnYUFac2JwV0k4TG1Sa0ZXeExKWmh0X0FWTXFiY0tVSzNHSUZ3YTV1cmk5Q1cxeC0za2h3Tm9ZU0ZZTDVSci1EQ0x0Q2NnenV2VS1NUWF2RnJnd2RoVUlTX1ZEVGVlMC03YlpHMUd3OWY4eTl5eVdMR1BxM3dVOU9QdWRiY3QtQi13YmpnaDVab0doY2dpOG5UNVpWTzBRdjV2cFowSEFiNHRYTElTX0ZGNFJfTWplSHppaWFvT28xN1dWTHg4ajVQWnhZRVBxSWZDQTlXNkFVbVBBR24?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-28T20:36:19Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "The Economic Times",
+   "published_at": "2026-10-28T17:12:00Z",
+   "source_id": "m.economictimes.com",
+   "summary": "",
+   "title": "ISRO to launch NVS-03 navigation satellite on October 30, 2026, enhancing NavIC services across India",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMitAFBVV95cUxPOFJpZGVtYm43RTZWanJsNXluVF8zSDhIMzE4bnI0VHpzNXBHQVhiMUxET1RKQjU5QVlDY1Y0Szg1OHE0UTBwcXJ1RHZMRnM0YUN4Sl81ZEUtT2s3ZlBUT1R0T3YwV3hMNjdNclJ3YzBDbkVGcDVWWTUySDZIT1VDWmsxNFlVRGhNWlAzNTlINVYzNVI4NHllNHhuWU5VWm9ublQtd01ONHJyclBBWU1LV1EyQk0?oc=5",
+   "category": "programme and policy",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-28T20:37:01Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Computer Weekly",
+   "published_at": "2026-10-28T16:20:38Z",
+   "source_id": "computerweekly.com",
+   "summary": "",
+   "title": "Airbus takes off with contract for two additional Galileo satellites",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMi9AFBVV95cUxNZXMyNk84b2NvWW5vSGdPNVNqU3BFRnIxQ19SNS00NmtEQ0FHczlUQlVKVHhpOWJkNFZDS213Y19pamVhU2NVd0dlMFVpa1FCbktjQU9MZE1CMm1pMVRVWjFITWFmblpaLWNWQ2YtZk55MnRHNUhMQ2tTLVU1eWFpZHA1c3RHeDBOTXhybnB2X3RqNG9VZEpMWjhEVmtQZTNObFVYSTA2Qkc1U0JZYld1S3JxRmFIMFhEVGpVUFdTTWtKRUFienJ4YWxtWlU5QlJGOU5RLUZfbmVmRHBQVV9KODVlV2hnRWhfZmlJdlVQbUQzS2dz0gH6AUFVX3lxTFAwcDZhZmRGNlJNTU54WHhCU2JicWJnN2JENm1MY2ZvNkVwbFBBV3R6cC1yQjQ0Z2ZLZlVaeFpzX0pzZWU5NzN0ZGlDMzFpQWhuZkNQSGViOThsMGxuYUE5bnJOMkJaTm1fUEhFc1RQSlBuZFR4aDJTMXUyeEFmMGt0dm82SHdNaGQ1ZUxCMFhTaHBjbGFoVndvVWNCeUlmTWJOTjdkbVkwRXhYVFczWTRTMTRuXzlldTdmNTBoSUswNk1IYUlDcEU5UGFjQ3MxQkIzTjExS2JvbWlqTXBCcENCSGdPck5UdXk0b2M4LThkQVpvblI3MkRwb0E?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-28T20:36:19Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "India TV News",
+   "published_at": "2026-10-28T15:21:26Z",
+   "source_id": "indiatvnews.com",
+   "summary": "",
+   "title": "ISRO to launch NVS-03 navigation satellite on October 30 from Sriharikota",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiwAFBVV95cUxPdWVhd1JzUEZla1B2eS0wZnZWZ2Y3N1hHNFh4a01QelN4Z1JKOGdnUnlWNGcyUERLbUZUN3prZTdmc0NBVDZTVk8xVW1ZV1EtVzFITnIxbmJlQnB2eWZmdU1sQWwweVlVbElvMXpvSTJVV3V4NmJCLU1VdFFfWldIbnRpa0Q0QkZOS3k3SndHX2FmZlFBVWdraENzUmNEV1lwZlR0cEx3b2RYaUc5eEU2Q1g3dm8yV2M5UXBtbGVKcXg?oc=5",
+   "category": "programme and policy",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-28T20:37:01Z",
+   "grade": "B",
+   "grade_standing": "provisional",
+   "outlet": "European Space Agency",
+   "published_at": "2026-10-28T13:21:31Z",
+   "source_id": "esa.int",
+   "summary": "",
+   "title": "New contracts to modernise Galileo ground segment for next generation",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
   {
    "address": "https://news.google.com/rss/articles/CBMizAFBVV95cUxPRzdlUTVsTFpya0x5aEtOazNPRTYyN1RPY3N0bTlIbXVadjRaVWp1dXVHdDNEZi1seU14bVNBWU4tVG1hTGc0Vm51NFV1SC1DaWlxRTB3WEcyX3l5dVJ6N0VCamlWNTgwLWlqV2V0YzdjdzR4Wk1kZkNTd3dMQndZWTNPa1FKVmtxemhsNWxoQ3VnWGVZSDFDTWJmYWhTR3pGLXNlREJzZXFFQjI5LXd2UFBkdThTb0w0aFFoZTlQSGhFQnVSMEN3NGlGUE_SAdwBQVVfeXFMT0I2UWYwZ2Y4Y1NWb29wTVAyaUtPelFxaXJ4NnBsenJwSjJSalN1bnRhVWpaVzlUc291X0ZCcW1ONU9aNzduUGk2bG10YnpJLXV0ZkJQekppWU44WThKZjFBMWNENDBsUmVsb3FqQk5QdVU5TVltUlBEb0tnMFVEdHBpSkZ1T0hHSTQzRVZlTG16LWJHeUdKSkhKLVh0NlF0UmJLclBMRlo3RGo5VENXSFZxWWhIbzBYa2RfWlc1WUVFN0FqcUhGX2RiNWRyc18yUHBZNFhkc2Q3UmRiag?oc=5",
    "category": "launch",
@@ -32,6 +96,22 @@
    "summary": "GSLV-F18/NVS-03 Mission is scheduled for launch on 30th October 2026, at 23:51 hours IST from Satish Dhawan Space Centre (SDSC-SHAR), Sriharikota. NVS-03 is a navigation satellite in the second-generation NavIC series. Watch live: https://t.co/Mbllc4kEWu Mission details: https://t.co/6YvrbYj7Ua…",
    "title": "GSLV-F18/NVS-03 Mission is scheduled for launch on 30th October 2026, at 23:51 hours IST from Satish Dhawan Space…",
    "via": "https://x.com/isro"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMixgFBVV95cUxNTHNXWmI1OHZYbm5qUGJGZGQ3emw0TkxtRHhvbmZBUmxQR3lIdGVhSXJRS25xalFtTmhfemhmTnZhUGF2eW9KQ1F6cjVVcHdSSE5VSHNQSlpnQmwtSWwwRnljV2o1b2taWV9fWWVFcUNCZHFRTFdYN2diUi1pdTVCbXZvLW5ObUNmMTFYWThoVmxIRERzS2lLbUdKb21zTHFMYTE2TmZ5Q1MzdEVVMF9DSE5XUnV1ZW1Pc3VSaWNhcTd6VGpnQnc?oc=5",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-28T20:37:01Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "SpaceWatch.GLOBAL",
+   "published_at": "2026-10-28T10:03:23Z",
+   "source_id": "spacewatch.global",
+   "summary": "",
+   "title": "ESA Orders Four More Galileo Second Generation Satellites to Expand Europe’s Navigation Fleet",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxPSklRSUpTblVMLWJ5ZGhGdDNaMnRwMk5mdktpTTJzM0xnekJfNDU2aktHSmhETDMtUE9takxBUVFTLTVMS28wTHBpR2FfMzRrTFZWTEc5aWt6aGZpd042cnJkckhQWlJtTDFXcWNTdzlOS3Y2M0l5Vk13U1NQMlBGSndKRVpmTjIz?oc=5",
@@ -80,22 +160,6 @@
    "summary": "",
    "title": "ESA orders four more Galileo second-gen satellites",
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://www.esa.int/Applications/Satellite_navigation/New_contracts_to_modernise_Galileo_ground_segment_for_next_generation",
-   "category": "programme and policy",
-   "constellations": [
-    "Galileo"
-   ],
-   "fetched_at": "2026-10-28T13:35:04Z",
-   "grade": "B",
-   "grade_standing": "provisional",
-   "outlet": "European Space Agency: navigation",
-   "published_at": "2026-10-28T07:09:00Z",
-   "source_id": "esa.int",
-   "summary": "On 27 October 2026, Indra Space celebrated the signature of two contracts with the European Space Agency, European Commission and EU Agency for the Space Programme to develop new ground stations for the second generation of Galileo, Europe’s satellite navigation system.",
-   "title": "New contracts to modernise Galileo ground segment for next generation",
-   "via": "https://www.esa.int/rssfeed/Our_Activities/Navigation"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMifEFVX3lxTE9TdUtpMnoxd1pSMGZZV1Ezb3BzbVJYSTJ3dzJ3Y21DSWVlOFltUnZpeXBFMGhXaDZVS3c4SUFZMzlZZDFPVm1jQV9WMUhJcDAzSy0yWFhnMDhGTzlCUDRuX0QycExPS1VMblc2WDJYX3Y5OHhjWjhwT0c1UHE?oc=5",
@@ -307,16 +371,16 @@
    "via": "https://x.com/esa"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMirwFBVV95cUxOcEpnQllWRzVvWk1DMWVkRnB5dHBLcm5aU29iRktLMEc5dVh5RXJ6T0pYQW1oNEFUR29CMEdBbjFrdXpXVS1aZG9sMHV4c2VGM1hfZ1ptRlRoRUg5VW9KbU04LUkxYS0yWWFVaUdQaFFTLVZrcUZCS3p6V0oyVlhJWE9TTG1SS21iM09GLUFnRGNmU1pSNU9nT2MweDdyR2xkYnNtakpIYjhJN19tZlB3?oc=5",
+   "address": "https://news.google.com/rss/articles/CBMisAFBVV95cUxNcUI4TmFsd0NvdjhxSmtTZzkzTUxJcTd5M3dla0NOZVUwMGdjYzBUcWpvQlBZTmp2WXE1MGtHWjFSTllFYTQ5ZlpZbWpnSzZDVGRfZjJLZlYyc1BMWEdZNWZPZjBWNHJIVHVib2Y0VTVhWHhJcHg0TDMzTTQ2MmlzNVBzT3dRQjktLVR5M19QLXQxRHRSUGt5dFlEWGlVUkFENzlsRHlVVjdkeWNNay14MQ?oc=5",
    "category": "programme and policy",
    "constellations": [
     "Galileo"
    ],
-   "fetched_at": "2026-10-27T15:35:42Z",
+   "fetched_at": "2026-10-28T20:37:01Z",
    "grade": "",
    "grade_standing": "not graded",
    "outlet": "StreetInsider",
-   "published_at": "2026-10-27T10:40:52Z",
+   "published_at": "2026-10-27T10:41:15Z",
    "source_id": "streetinsider.com",
    "summary": "",
    "title": "Airbus wins contract to build two more Galileo satellites",
@@ -7109,6 +7173,15 @@
    "note": "",
    "reason": ""
   },
+  "computerweekly.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "computerweekly.com",
+   "note": "",
+   "reason": ""
+  },
   "countercurrents.org": {
    "grade": "",
    "grade_standing": "not graded",
@@ -7628,6 +7701,15 @@
    "graded_by": "",
    "kind": "",
    "name": "indiatoday.in",
+   "note": "",
+   "reason": ""
+  },
+  "indiatvnews.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "indiatvnews.com",
    "note": "",
    "reason": ""
   },
