@@ -69,6 +69,11 @@ def _toc(first):
     return datetime(year, month, day, hour, minute, second)
 
 
+def _known(field):
+    """A field's number, or None when it is blank (RINEX's "not known")."""
+    return _number(field) if field.strip() else None
+
+
 def _records_from_lines(lines):
     """Raw records for every system from the navigation body, including GLONASS."""
     body = lines[next(i for i, line in enumerate(lines) if "END OF HEADER" in line) + 1:]
@@ -81,17 +86,20 @@ def _records_from_lines(lines):
         signal_id = first[:3]
         toc = _toc(first)
         if first[0] == "R":
-            health = int(_number(body[start + 1][61:80]))
+            health = _known(body[start + 1][61:80])
             records.setdefault(signal_id, []).append(
-                {"toc": toc, "health": health, "accuracy": None, "iode": None})
+                {"toc": toc, "health": None if health is None else int(health), "accuracy": None, "iode": None})
             continue
-        values = [_number(first[c:c + 19]) for c in (23, 42, 61)]
+        fields = [first[c:c + 19] for c in (23, 42, 61)]
         for line in body[start + 1:end]:
-            values += [_number(line[c:c + 19]) for c in (4, 23, 42, 61)]
-        record = dict(zip(_NAMES, values), toc=toc, id=signal_id)
+            fields += [line[c:c + 19] for c in (4, 23, 42, 61)]
+        record = {name: _known(field) for name, field in zip(_NAMES, fields)}
+        health, accuracy, iode = record.get("health"), record.get("accuracy"), record.get("iode")
         records.setdefault(signal_id, []).append(
-            {"toc": toc, "health": int(record["health"]), "accuracy": record["accuracy"],
-             "iode": int(record["iode"])})
+            {"toc": toc, "health": None if health is None else int(health),
+             # Galileo sends -1 for "no accuracy prediction available"
+             "accuracy": accuracy if accuracy is not None and accuracy >= 0 else None,
+             "iode": None if iode is None else int(iode)})
     return records
 
 
@@ -107,7 +115,7 @@ def read_status(text):
     for signal_id, records in _records_from_lines(lines).items():
         newest = max(records, key=lambda record: record["toc"])
         tied = [record for record in records if record["toc"] == newest["toc"]]
-        chosen = max(tied, key=lambda record: record["health"])
+        chosen = max(tied, key=lambda record: -1 if record["health"] is None else record["health"])
         out[signal_id] = {"health": chosen["health"], "accuracy_m": chosen["accuracy"],
                           "iod": chosen["iode"], "newest": chosen["toc"]}
     return out

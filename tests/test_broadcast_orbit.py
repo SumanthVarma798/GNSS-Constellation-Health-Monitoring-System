@@ -138,3 +138,12 @@ def test_time_corrections_read_the_header_offsets_in_seconds():
 
     assert set(corrections) == {"GPUT", "GLUT", "GAUT", "GAGP", "BDUT", "QZUT"}
     assert math.isclose(corrections["GPUT"], -1.8626451492e-09) and math.isclose(corrections["GLUT"], 1.4901161194e-08)
+
+
+def test_a_blank_health_or_a_negative_accuracy_is_not_known_not_healthy():
+    blank = STATUS_FILE.replace(
+        "    -1.474142529297E+04 1.248785972595E+00-4.656612873077E-09 0.000000000000E+00",
+        "    -1.474142529297E+04 1.248785972595E+00-4.656612873077E-09                   ")
+    napa = STATUS_FILE.replace("     2.000000000000E+00 0.000000000000E+00", "    -1.000000000000E+00 0.000000000000E+00", 1)
+    assert read_status(blank)["R01"]["health"] is None
+    assert read_status(napa)["I02"]["accuracy_m"] is None
