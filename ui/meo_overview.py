@@ -14,7 +14,7 @@ from analysis.meo_geometry import EXTENDED, part_score, plane_drift
 from config.config import TRACKED_NOT_IN_REGISTRY
 from evidence.registry_tables import new_on_dashboard
 from config.meo_nominal import MEANINGS, NOMINAL, PLANE_MEANINGS
-from ui import orbit_age, orbit_section, palette, reveal, shell, surfaces, tooltip
+from ui import official_status, orbit_age, orbit_section, palette, reveal, shell, surfaces, tooltip
 from ui.data import SATELLITES
 from ui.figures.plane_strip import plane_strip
 
@@ -174,6 +174,9 @@ def page(name, result):
     today = datetime.now(timezone.utc).date()
     surfaces.show(f'<div class="head"><span class="big num">{healthy} of {len(shown)}</span>'
                   '<span class="muted">healthy and in step</span></div>')
+    official = official_status.line(name)
+    if official:
+        surfaces.show(official)
     surfaces.show(surfaces.notice(result["history_note"], "idle"))
     orbit_age.show(name, result)
     _gaps(name, result, today)

@@ -3,7 +3,7 @@ from datetime import datetime
 from html import escape
 
 from data import spacetrack
-from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS
+from evidence.settings import HEALTH_FLAGS_ONLY, ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS, TIME_CORRECTION_WORDS
 from ui import data as dashboard_data
 from ui import measures, reveal, surfaces, tooltip
 
@@ -43,26 +43,140 @@ def _gap_by_satellite(gap):
     return out
 
 
+def _status_by_satellite(gap):
+    """{satellite: the gap row with broadcast status} for every row in the published payload."""
+    if not isinstance(gap, dict):
+        return {}
+    out = {}
+    for row in gap.get("satellites", []):
+        if not isinstance(row, dict):
+            continue
+        satellite = row.get("satellite")
+        if satellite is not None:
+            out[str(satellite)] = row
+    return out
+
+
+def _health(status):
+    """(words, status) for one satellite's broadcast health; "unhealthy" only where a non-zero code means it."""
+    health = (status or {}).get("health")
+    if health is None:
+        missing = (status or {}).get("note") == "not in the day's broadcast file"
+        return ("not in the day's file", "idle") if missing else ("-", "idle")
+    if health == 0:
+        return "healthy", "ok"
+    if (status.get("signal_id") or " ")[0] in HEALTH_FLAGS_ONLY:
+        return f"flags set (code {health})", "warn"
+    return f"unhealthy (code {health})", "bad"
+
+
+def _broadcast_cell(status):
+    """The broadcast health cell for one satellite."""
+    words, colour = _health(status)
+    return measures.cell(words) if words == "-" else measures.cell(words, status=colour)
+
+
+def _accuracy_cell(status):
+    """The signal accuracy cell for one satellite."""
+    if not status:
+        return measures.cell("-")
+    accuracy = status.get("accuracy_m")
+    if isinstance(accuracy, (int, float)) and not isinstance(accuracy, bool):
+        return measures.cell(f"{accuracy:.1f} m")
+    return measures.cell("-")
+
+
+def _broadcast_words(status):
+    """One tooltip line for a satellite's broadcast health and accuracy."""
+    if not status:
+        return ""
+    words, _ = _health(status)
+    line = f"Broadcast health: {'unknown' if words == '-' else words}"
+    accuracy = status.get("accuracy_m")
+    if isinstance(accuracy, (int, float)) and not isinstance(accuracy, bool):
+        line += f" · accuracy {accuracy:.1f} m"
+    return line
+
+
+def _satellite_label(name, status):
+    """'GSAT0202 (E14)' for a satellite name and its published gap row."""
+    signal_id = status.get("signal_id")
+    return f"{name} ({signal_id})" if signal_id else name
+
+
+def _unhealthy_notice(gap, rows):
+    """The warning shown when any satellite of this constellation broadcasts unhealthy, or None."""
+    if not isinstance(gap, dict):
+        return None
+    statuses = _status_by_satellite(gap)
+    names = [_satellite_label(row["satellite"], statuses[row["satellite"]])
+             for row in rows if _health(statuses.get(row["satellite"]))[1] == "bad"]
+    if not names:
+        return None
+    day = _day_words(gap.get("day"))
+    file_words = f" of {day}" if day else ""
+    return (f"Broadcasting unhealthy: {', '.join(names)}. "
+            f"From the IGS broadcast file{file_words}; work in progress, not yet part of the score.")
+
+
+def _missing_notice(gap, rows):
+    """The idle notice shown when any satellite of this constellation is absent from the day's file."""
+    if not isinstance(gap, dict):
+        return None
+    statuses = _status_by_satellite(gap)
+    names = [_satellite_label(row["satellite"], statuses[row["satellite"]])
+             for row in rows if (status := statuses.get(row["satellite"]))
+             and status.get("health") is None and status.get("note") == "not in the day's broadcast file"]
+    if not names:
+        return None
+    return f"Not in the day's broadcast file: {', '.join(names)}."
+
+
+def _system_times_html(gap):
+    """The system-time line under the table, or None when the old payload has no time corrections."""
+    if not isinstance(gap, dict):
+        return None
+    corrections = gap.get("time_corrections")
+    if not isinstance(corrections, dict) or not corrections:
+        return None
+    parts = []
+    for code, words in TIME_CORRECTION_WORDS.items():
+        if code in corrections and isinstance(corrections[code], (int, float)):
+            parts.append(f"{words} {corrections[code]:.2f} ns")
+    if not parts:
+        return None
+    line = "System times from the broadcast file: " + " · ".join(parts)
+    leap = gap.get("leap_seconds")
+    if leap is not None:
+        line += f" · {leap} leap seconds"
+    return line
+
+
 def _gap_cell(gap):
     return measures.cell("–") if gap is None else measures.cell(f"{gap[0]:.1f} km", note=gap[1] or "")
 
 
-def _tag_card(row, gap=None):
+def _tag_card(row, gap=None, status=None):
     """The tooltip card's words for one satellite, with the source, any published gap, and the age limits."""
     if row["epoch"] is None:
-        return "No orbit record"
+        card = "No orbit record"
+        broadcast = _broadcast_words(status)
+        return card + (f" · {broadcast}" if broadcast else "")
     card = f"Orbit record from {_when(row['epoch'])}, {row['source']}"
     if gap is not None:
         card += f" · off by {gap[0]:.1f} km" + (f" on {gap[1]}" if gap[1] else "")
     card += f" · alert at {ORBIT_ALERT_DAYS:g} days, stale at {ORBIT_STALE_DAYS:g}"
+    broadcast = _broadcast_words(status)
+    if broadcast:
+        card += f" · {broadcast}"
     return card
 
 
-def tag(row, gap=None, scope=""):
+def tag(row, gap=None, scope="", status=None):
     """One satellite's orbit-record age as a chip in the tile's tag row, opening its tooltip card. scope (the
     constellation) keeps each card's id unique where tiles of several constellations share a page (Compare)."""
     trigger = surfaces.chip(_tag_words(row), row["status"])
-    return tooltip.tip_html(trigger, escape(_tag_card(row, gap)), key=f"{scope}:{row['satellite']}")
+    return tooltip.tip_html(trigger, escape(_tag_card(row, gap, status)), key=f"{scope}:{row['satellite']}")
 
 
 def section_markup(rows, spacetrack_note="ok", gap=None):
@@ -77,19 +191,26 @@ def section_markup(rows, spacetrack_note="ok", gap=None):
     summary += f" · broadcast check {gap_day}" if gap_day else " · broadcast check not available"
 
     gaps = _gap_by_satellite(gap or {})
+    statuses = _status_by_satellite(gap or {})
     table_rows = []
     for row in rows:
         table_rows.append((row["satellite"], [
             measures.cell(_when(row["epoch"])),
             measures.cell("no record" if row["age_days"] is None else f"{row['age_days']:.1f} days", status=row["status"]),
             measures.cell(row["source"] or "-"),
+            _broadcast_cell(statuses.get(row["satellite"])),
+            _accuracy_cell(statuses.get(row["satellite"])),
             _gap_cell(gaps.get(row["satellite"])),
         ]))
     body = surfaces.table(
         [("Satellite", ""), ("Record from (date and time, UTC)", ""), ("Age", ""), ("Source", ""),
+         ("Broadcast health", ""), ("Signal accuracy", ""),
          ("Off from its broadcast orbit", "Typical gap over the day")],
         table_rows,
     )
+    system_times = _system_times_html(gap)
+    if system_times:
+        body += f'<p class="small">{system_times}</p>'
 
     stale = [f'{row["satellite"]} since {_when(row["epoch"])}' for row in rows if row["status"] == "bad" and row["epoch"]]
     notice = f"Stale orbit records: {', '.join(stale)}." if stale else None
@@ -99,8 +220,11 @@ def section_markup(rows, spacetrack_note="ok", gap=None):
 def tags(constellation, result):
     """{satellite name: orbit-age tag html} for one constellation's tiles."""
     rows = dashboard_data.orbit_ages(constellation, result)
-    gaps = _gap_by_satellite(dashboard_data.orbit_gap() or {})
-    return {row["satellite"]: tag(row, gaps.get(row["satellite"]), constellation) for row in rows}
+    gap = dashboard_data.orbit_gap() or {}
+    gaps = _gap_by_satellite(gap)
+    statuses = _status_by_satellite(gap)
+    return {row["satellite"]: tag(row, gaps.get(row["satellite"]), constellation, statuses.get(row["satellite"]))
+            for row in rows}
 
 
 def show(constellation, result):
@@ -111,4 +235,10 @@ def show(constellation, result):
     summary, body, stale_notice = section_markup(rows, own_note or spacetrack.state.get("note", "ok"), gap)
     if stale_notice:
         surfaces.show(surfaces.notice(stale_notice, "warn"))
+    unhealthy = _unhealthy_notice(gap, rows)
+    if unhealthy:
+        surfaces.show(surfaces.notice(unhealthy, "warn"))
+    missing = _missing_notice(gap, rows)
+    if missing:
+        surfaces.show(surfaces.notice(missing, "idle"))
     reveal.section(f"orbit_age_{constellation}", "Orbit record age and source", summary, body)

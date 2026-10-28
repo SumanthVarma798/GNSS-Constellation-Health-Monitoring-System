@@ -26,7 +26,8 @@ from skyfield.api import EarthSatellite, load
 from skyfield.framelib import itrs
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from analysis.broadcast_orbit import FIT, nearest, position, read_navigation, seconds_from_toe, system_time  # noqa: E402
+from analysis.broadcast_orbit import (FIT, nearest, position, read_navigation, read_status,  # noqa: E402
+                                      seconds_from_toe, system_time, time_corrections)
 from data import celestrak  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -138,19 +139,31 @@ def compare(broadcast, records, signal_id, leap, day):
 
 
 def rows_for_day(day, file=None, now=None):
-    """Rows for each tracked satellite, plus the leap-second value and check time."""
+    """Rows for each tracked satellite, plus the leap-second value, check time and the header's time corrections."""
     now = now or datetime.now(timezone.utc)
     checked = _iso_utc(now)
     text = navigation_text(day, file)
     leap, broadcast = leap_seconds(text), read_navigation(text)
+    statuses = read_status(text)
+    corrections = time_corrections(text)
     satellites = tracked(day)
     records = orbit_records([norad for _, _, norad, _ in satellites], now)
     rows = []
     for svn, name, norad, signal_id in satellites:
         row = {"satellite": name, "signal_id": signal_id, "record_epoch": None, "typical_km": None, "largest_km": None,
-               "mostly": "", "note": "", "age_days": None, "mean_longitude_deg": None}
-        if signal_id not in broadcast:
+               "mostly": "", "note": "", "age_days": None, "mean_longitude_deg": None,
+               "health": None, "accuracy_m": None, "broadcast_newest": None}
+        status = statuses.get(signal_id)
+        if status is not None:
+            row["health"] = status["health"]
+            row["accuracy_m"] = status["accuracy_m"]
+            row["broadcast_newest"] = status["newest"].strftime("%Y-%m-%dT%H:%M:%S")
+        if signal_id not in statuses:
             row["note"] = "not in the day's broadcast file"
+            rows.append(row)
+            continue
+        if signal_id[0] == "R":
+            row["note"] = "orbit not compared: GLONASS broadcasts position, not elements"
             rows.append(row)
             continue
         samples, used = compare(broadcast[signal_id], records.get(norad, []), signal_id, leap, day)
@@ -170,7 +183,7 @@ def rows_for_day(day, file=None, now=None):
         row |= {"record_epoch": _iso_utc(used), "typical_km": statistics.median(gaps), "largest_km": max(gaps), "mostly": mostly,
                 "age_days": age, "mean_longitude_deg": longitude}
         rows.append(row)
-    return rows, leap, checked
+    return rows, leap, checked, corrections
 
 
 def markdown_report(day, leap, rows):
@@ -188,6 +201,9 @@ def markdown_report(day, leap, rows):
             continue
         if row["note"] == "no orbit record":
             lines.append(f"| {satellite} | {signal} | no orbit record | | | | | |")
+            continue
+        if row["note"] == "orbit not compared: GLONASS broadcasts position, not elements":
+            lines.append(f"| {satellite} | {signal} | | | | | {row['note']} | |")
             continue
         when = datetime.fromisoformat(row["record_epoch"].replace("Z", "+00:00"))
         lines.append(f"| {satellite} | {signal} | {when:%d %b %H:%M} | {row['age_days']:.1f} days | "
@@ -218,20 +234,35 @@ def summary(rows):
     return said
 
 
-def json_payload(day, checked, rows):
-    """Public JSON payload with the rows needed by the dashboard."""
+def _row_payload(row):
     keys = ("satellite", "signal_id", "record_epoch", "typical_km", "largest_km", "mostly", "note")
-    return {"day": day.isoformat(), "checked": checked, "satellites": [{key: row[key] for key in keys} for row in rows]}
+    payload = {key: row[key] for key in keys}
+    for key in ("health", "accuracy_m", "broadcast_newest"):
+        if key in row:
+            payload[key] = row[key]
+    return payload
 
 
-def write_json(path, day, checked, rows):
+def json_payload(day, checked, rows, leap=None, time_corrections=None):
+    """Public JSON payload with the rows needed by the dashboard."""
+    payload = {"day": day.isoformat(), "checked": checked,
+               "satellites": [_row_payload(row) for row in rows]}
+    if leap is not None:
+        payload["leap_seconds"] = leap
+    if time_corrections is not None:
+        payload["time_corrections"] = {code: round(seconds * 1e9, 2)
+                                       for code, seconds in time_corrections.items()}
+    return payload
+
+
+def write_json(path, day, checked, rows, leap=None, time_corrections=None):
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps(json_payload(day, checked, rows)), encoding="utf-8")
+    target.write_text(json.dumps(json_payload(day, checked, rows, leap, time_corrections)), encoding="utf-8")
 
 
 def report(day, file=None, now=None):
-    rows, leap, _ = rows_for_day(day, file, now)
+    rows, leap, _, _ = rows_for_day(day, file, now)
     return markdown_report(day, leap, rows)
 
 
@@ -245,9 +276,9 @@ if __name__ == "__main__":
     arguments = parser.parse_args()
     day = arguments.day or (arguments.file and (datetime.now(timezone.utc) - timedelta(days=1)).date()) \
         or newest_day(datetime.now(timezone.utc).date())
-    rows, leap, checked_at = rows_for_day(day, arguments.file)
+    rows, leap, checked_at, corrections = rows_for_day(day, arguments.file)
     print(markdown_report(day, leap, rows))
     if arguments.json:
-        write_json(arguments.json, day, checked_at, rows)
+        write_json(arguments.json, day, checked_at, rows, leap, corrections)
     if arguments.summary_out:
         Path(arguments.summary_out).write_text(summary(rows) + "\n", encoding="utf-8")

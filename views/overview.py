@@ -13,7 +13,8 @@ import streamlit as st
 
 from config.config import MEO_SATS, TRACKED_NOT_IN_REGISTRY
 from evidence.registry_tables import new_on_dashboard
-from ui import data, limits, measures, meo_overview, orbit_age, orbit_section, palette, reveal, shell, surfaces, time_range, tooltip
+from ui import (data, limits, measures, meo_overview, official_status, orbit_age, orbit_section,
+                palette, reveal, shell, surfaces, time_range, tooltip)
 from ui.data import SATELLITES
 from ui.figures.constellation_3d import slot_legend
 from ui.figures.slot_rows import as_number, slot_words
@@ -181,6 +182,9 @@ def constellation(name, window_days, params):
     healthy = sum(healthy for _, healthy, _ in tiles.values())
     surfaces.show(f'<div class="head"><span class="big num">{healthy} of {len(tiles)}</span>'
                   '<span class="muted">healthy and in their slot</span></div>')
+    official = official_status.line(name)
+    if official:
+        surfaces.show(official)
     _period(result, window, window_days, today)
     orbit_age.show(name, result)
     _gaps(name, result, today.date())

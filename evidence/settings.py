@@ -65,6 +65,27 @@ ARCHIVE_LIMITS_FILE = "limits.csv"
 ARCHIVE_LIMIT_COLUMNS = ["site", "refusals", "last_answer", "refused_at", "wait_until"]
 ARCHIVE_RUN_COLUMNS = ["job", "started", "ended", "result", "changed"]
 ORBIT_AGE_COLUMNS = ["day", "checked", "constellation", "satellite", "norad", "epoch", "source", "age_days", "status"]
+# Time-system correction codes from a RINEX header, in the order the orbit-age section reads them,
+# with the plain words the dashboard shows. Values are stored as seconds and shown as nanoseconds.
+TIME_CORRECTION_WORDS = {
+    "GPUT": "GPS−UTC",
+    "GAUT": "Galileo−UTC",
+    "GAGP": "Galileo−GPS",
+    "GLUT": "GLONASS−UTC",
+    "BDUT": "BeiDou−UTC",
+    "QZUT": "QZSS−UTC",
+}
+# Systems (signal ID letters) whose broadcast health code also flags signals a satellite may not transmit, so a
+# non-zero code is shown as "flags set", not "unhealthy". QZSS: every satellite sent 1 or 16 on 27 Oct 2026.
+HEALTH_FLAGS_ONLY = {"J"}
+# The constellations whose overview carries an official operator status page. GLONASS and BeiDou
+# are deliberately absent: there is no single stable operator page we can point to today.
+OFFICIAL_STATUS_URLS = {
+    "Galileo": "https://www.gsc-europa.eu/system-service-status/constellation-information",
+    "GPS": "https://www.navcen.uscg.gov/gps-constellation",
+    "QZSS": "https://sys.qzss.go.jp/dod/en/constellation.html",
+    "NavIC": "https://www.isro.gov.in/IRNSS_Programme.html",
+}
 
 # --- The registry tables ---
 

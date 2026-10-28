@@ -416,7 +416,7 @@ STAGES = {
     "rinex_check": {
         "plain_name": "Measure orbit-record broadcast gaps",
         "what_happens": [
-            "Once a day, a program compares each tracked satellite's nearest orbit record with its own broadcast orbit over the day.",
+            "Once a day, a program compares each tracked satellite's nearest orbit record with its own broadcast orbit over the day, and publishes each satellite's broadcast health and accuracy with the system time offsets.",
             "It saves the day's markdown report and derived JSON in the private archive, then records one run-log line.",
             "It publishes only the day's derived JSON to branch orbit-checks for the public dashboard to read.",
         ],
