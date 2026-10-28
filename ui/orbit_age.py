@@ -57,7 +57,7 @@ def _status_by_satellite(gap):
     return out
 
 
-def _health(status):
+def health_words(status):
     """(words, status) for one satellite's broadcast health; "unhealthy" only where a non-zero code means it."""
     health = (status or {}).get("health")
     if health is None:
@@ -72,7 +72,7 @@ def _health(status):
 
 def _broadcast_cell(status):
     """The broadcast health cell for one satellite."""
-    words, colour = _health(status)
+    words, colour = health_words(status)
     return measures.cell(words) if words == "-" else measures.cell(words, status=colour)
 
 
@@ -90,7 +90,7 @@ def _broadcast_words(status):
     """One tooltip line for a satellite's broadcast health and accuracy."""
     if not status:
         return ""
-    words, _ = _health(status)
+    words, _ = health_words(status)
     line = f"Broadcast health: {'unknown' if words == '-' else words}"
     accuracy = status.get("accuracy_m")
     if isinstance(accuracy, (int, float)) and not isinstance(accuracy, bool):
@@ -110,7 +110,7 @@ def _unhealthy_notice(gap, rows):
         return None
     statuses = _status_by_satellite(gap)
     names = [_satellite_label(row["satellite"], statuses[row["satellite"]])
-             for row in rows if _health(statuses.get(row["satellite"]))[1] == "bad"]
+             for row in rows if health_words(statuses.get(row["satellite"]))[1] == "bad"]
     if not names:
         return None
     day = _day_words(gap.get("day"))

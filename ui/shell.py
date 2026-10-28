@@ -21,7 +21,7 @@ from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS
 from ui import changes, data, surfaces, time_range
 
 # Pages with their own filters: the bar shows no constellation, window or thresholds there.
-OWN_FILTERS = {"Master map", "Library"}
+OWN_FILTERS = {"Master map", "World map", "Library"}
 # Pages that use only the constellation choice in the bar.
 SCOPE_ONLY = {"News"}
 
@@ -32,6 +32,7 @@ PAGES = [
     ("Geometry", "views/geometry.py"),
     ("News", "views/news.py"),
     ("Master map", "views/master_map.py"),
+    ("World map", "views/world_map.py"),
     ("Library", "views/library.py"),
     # ("How it works", "views/how_it_works.py"),
 ]
