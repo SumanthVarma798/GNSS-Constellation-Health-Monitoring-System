@@ -1,6 +1,38 @@
 {
- "generated_at": "2026-10-27T20:16:59Z",
+ "generated_at": "2026-10-28T00:47:55Z",
  "items": [
+  {
+   "address": "https://news.google.com/rss/articles/CBMijwFBVV95cUxNS3ZPbEtmcXZEUHZjMGxvM3ZRMzJad2dMQVd6aWtJdjduY1lzZ3FubGVRaHdLMUtGMjdZWk50YUpjLXd5YnV2RXNEX2pKaHFGN0RGQ3pBWUd6XzUtYS1oTDZDaThQS0xpUnM4QS1DSWpRMXdscWZGMlRuRW5CTldydmMwNmJGajdnTEp6aTJodw?oc=5",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-28T00:47:34Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "space & defense",
+   "published_at": "2026-10-28T00:30:04Z",
+   "source_id": "spaceanddefense.io",
+   "summary": "",
+   "title": "ESA procures four new Galileo Second Generation satellites",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMivgFBVV95cUxPS0NVSlk4MXdnS3pNYnQyUzJqSVVoMGkxR0RWMS1qZURDUGc1a2x2MkF4THEzVEVUOXZzNjlqSmI4QU0yMzR2bVdsdHdkM2RuTlo1VEU2LVd3dXZMU1FscXhLdTc0Y2drOEdoMW82RFdCMEotbTFsc2taSF92bWZxOVQtSGh4OGNpZzlTQVpMMnRaUXlVd0Y0WEc3MDRfcjhwX2t6MFI0T213NFJfdVY4QmNQQUhjRVJOcDVfZXl3?oc=5",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-28T00:47:34Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Via Satellite",
+   "published_at": "2026-10-27T19:44:20Z",
+   "source_id": "satellitetoday.com",
+   "summary": "",
+   "title": "Airbus and Thales Contracted for 2 Galileo Satellites Each",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
   {
    "address": "https://x.com/Arianespace/status/2115141523515793781",
    "category": "signal and service",
@@ -160,22 +192,6 @@
    "source_id": "streetinsider.com",
    "summary": "",
    "title": "Airbus wins contract to build two more Galileo satellites",
-   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMivAFBVV95cUxNVHB4SThwZVplUHFzQWRFN3JGN1ZLNWtzMndJb19ENlBjeHhRTUVKTkVpSlhfOERpRkJyYTJGcXNJQmJsajhQb0VPYW9RUG91U1pIdjBVNGFFVFVMWWJBek4tNXNaSjZKVlpIUHJxbzZzd3FVcXNqUzNYU01mT0NieUM2ck4xYjlnWGFsdE8zVG11c3V6Y2Y4ZHFKTjBfS1NJT3ZRZFVOMHZMNnVoQzBnUXNPbzhMTGVFWEJvNw?oc=5",
-   "category": "other",
-   "constellations": [
-    "Galileo"
-   ],
-   "fetched_at": "2026-10-27T15:35:42Z",
-   "grade": "B",
-   "grade_standing": "provisional",
-   "outlet": "European Space Agency",
-   "published_at": "2026-10-27T10:20:37Z",
-   "source_id": "esa.int",
-   "summary": "",
-   "title": "ESA procures four new Galileo Second Generation satellites",
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -1349,6 +1365,22 @@
    "summary": "",
    "title": "Why claims that China’s BeiDou satellite was refuelled in orbit could change space race",
    "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMilwFBVV95cUxQQ0dpWXY3OURBR1hkWlpEeDFEVl9UcGF3anZ3bmU2R1JXbWIxaEQ4aHBubFA2RXJ0OFJpZDFncE1nYUZpRGROZmVuQTluNUV6QU5sclZpeWZQVGRGYnJRQ3J5OHpGUXNzaGpLaWxORWVURk1jRVNQTU1NQi1rRElIVnMtWW9wRlBGWmhoVTN4RVlHQmFlYjVz?oc=5",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-28T00:47:34Z",
+   "grade": "B",
+   "grade_standing": "provisional",
+   "outlet": "European Space Agency",
+   "published_at": "2026-09-25T11:02:23Z",
+   "source_id": "esa.int",
+   "summary": "",
+   "title": "Galileo satellite navigation constellation",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://www.esa.int/Applications/Satellite_navigation/Galileo/ESA_and_the_EU_partner_with_Museo_Galileo_on_new_exhibition",
@@ -8046,6 +8078,15 @@
    "name": "Space.com",
    "note": "Large feed (1.1 MB per read)",
    "reason": "Popular space news; often rewrites agency releases and wire copy"
+  },
+  "spaceanddefense.io": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "spaceanddefense.io",
+   "note": "",
+   "reason": ""
   },
   "spacecoastdaily.com": {
    "grade": "",
