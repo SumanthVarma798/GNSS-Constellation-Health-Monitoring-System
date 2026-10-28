@@ -12,23 +12,44 @@ from evidence.console_settings import JOBS, TESTS_WORKFLOW
 from evidence.decision_settings import REPOSITORY
 from evidence.source_overview import overview
 from ui import console
-from ui.components.system_design import PARTS, system_design_html
+from ui.components.hosting import hosting_html
+from ui.components.system_design import PARTS, facts_strip_html, system_design_html
 
-HEIGHT = 1000   # the picture, the steps and the longest card on a wide screen; a phone scrolls inside the frame
+HEIGHT = 960   # the picture, the steps and the longest card on a wide screen; a phone scrolls inside the frame
+HOST_HEIGHT = 620
+FACTS_HEIGHT = 88
 CHAT = "design_chat"   # session_state: the conversation with the assistant, [{role, content}]
-
-seen = common.read()
-sources = overview()
-facts = [(f"{sources['graded'] + sources['candidates']}", f"sources known; {sources['graded']} graded"),
-         (str(sum(1 for w, *_ in JOBS if w != TESTS_WORKFLOW)), "scheduled jobs, all on GitHub Actions"),
-         ("0", "servers of our own"),
-         (str(len(seen["prs"])), "pull requests open"), (str(len(seen["issues"])), "issues open")]
 
 body, actions = common.layout("design", "System design", "How the system works, from the sources it reads to the change a "
                                                          "person approves. Click any part for what it does and the details behind it.")
+tokens = console.token_css(st.session_state.get("console_scheme", "auto"))
+font = console.FONT
+
+
+def live_facts(seen):
+    sources = overview()
+    return [(f"{sources['graded'] + sources['candidates']}", f"sources known; {sources['graded']} graded"),
+            (str(sum(1 for w, *_ in JOBS if w != TESTS_WORKFLOW)), "scheduled jobs, all on GitHub Actions"),
+            ("0", "servers of our own"),
+            (str(len(seen["prs"])), "pull requests open"), (str(len(seen["issues"])), "issues open")]
+
+
 with body:
-    html(system_design_html(console.token_css(st.session_state.get("console_scheme", "auto")), console.FONT, facts),
-         height=HEIGHT, scrolling=True)
+    html(system_design_html(tokens, font), height=HEIGHT, scrolling=True)
+
+
+@st.fragment
+def live_figures_from_github():
+    seen = common.read()
+    html(facts_strip_html(tokens, font, live_facts(seen)), height=FACTS_HEIGHT, scrolling=False)
+    st.caption(f"Live figures, read from GitHub at {seen['read_at']:%H:%M} UTC.")
+
+
+with body:   # both pictures first: neither needs GitHub, so neither waits for it
+    st.subheader("How it is hosted")
+    st.caption("Where each public name points, and what redeploys when main changes. Click any box for details.")
+    html(hosting_html(tokens, font), height=HOST_HEIGHT, scrolling=True)
+    live_figures_from_github()
 
 
 def where_the_model_is():
@@ -71,6 +92,7 @@ def ask_the_project():
         if not question:
             return
         st.chat_message("user").markdown(question)
+        seen = common.read()
         text = assistant.material(seen["issues"], PARTS)
         with st.chat_message("assistant"):
             try:

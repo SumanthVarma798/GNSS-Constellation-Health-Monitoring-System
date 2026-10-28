@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How it is hosted</title>
+<style>
+__TOKENS__
+*, *::before, *::after { box-sizing: border-box; border-radius: 0 !important; }
+html, body { margin: 0; background: var(--pane); color: var(--ink); font: 13px/1.45 __FONT__; }
+html, body { overflow-x: hidden; }
+:focus-visible { outline: 2px solid var(--c-info); outline-offset: 2px; }
+.diagram { border: 2px solid var(--outline); box-shadow: var(--hard); padding: 10px; overflow-x: auto; margin-bottom: 18px; }
+#hostmap { display: block; width: 100%; min-width: 760px; height: auto; font: 12px __FONT__; }
+#hostmap #edges path { fill: none; stroke: var(--axis); stroke-width: 1.5; marker-end: url(#arr); }
+#hostmap #edges path.data { stroke-dasharray: 4 3; }
+#hostmap #nodes g { cursor: pointer; }
+#hostmap #nodes rect { fill: var(--pane); stroke: var(--c-ok); stroke-width: 2; }
+#hostmap #nodes g.key rect { stroke: var(--c-c); stroke-width: 3; }
+#hostmap #nodes text { fill: var(--ink); font-weight: 700; }
+#hostmap #nodes text.s { font-weight: 400; fill: var(--muted); font-size: 11px; }
+#hostmap #nodes g:hover rect { fill: var(--hover); stroke: var(--select-edge); stroke-width: 3; }
+#hostmap #nodes g.sel rect { fill: var(--select); }
+#hostmap #nodes g.sel text { fill: var(--select-ink); }
+#hostmap #nodes g:focus-visible rect { stroke: var(--c-info); stroke-width: 4; }
+#hostmap #nodes g:focus { outline: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--muted); font-size: 11px; margin-top: 8px; }
+.legend b { display: inline-block; width: 14px; height: 10px; margin-right: 5px; vertical-align: -1px; border: 2px solid; background: var(--pane); }
+.card { margin-top: 18px; border: 2px solid var(--outline); border-top: 5px solid var(--c-ok); box-shadow: var(--hard); }
+.card.key { border-top-color: var(--c-c); }
+.card h3 { margin: 0; padding: 7px 12px; font-size: 14px; font-weight: 800; background: var(--head-bg); color: var(--head-ink); box-shadow: var(--th-bevel); }
+.card .st { padding: 6px 12px 0; font-weight: 700; }
+.card .st.built { color: var(--ok); } .card .st.key { color: var(--warn); }
+.card h4 { margin: 10px 12px 2px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.card p, .card ul { margin: 0 12px; } .card ul { padding-left: 1.4em; } .card li { margin: 2px 0; }
+.cols2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0 12px; }
+.where { margin: 10px 12px 12px; padding: 6px 8px; background: var(--pane-alt); border: 2px solid var(--outline); box-shadow: var(--well-bevel); }
+.where code { font: 12px var(--mono); }
+@media (max-width: 600px) {
+  .diagram, .card { box-shadow: var(--hard-sm); }
+  .card { margin-top: 14px; }
+}
+</style>
+</head>
+<body>
+<div class="diagram">
+<svg id="hostmap" viewBox="0 0 1000 420" role="group" aria-labelledby="hostmap-t">
+<title id="hostmap-t">Hosting: DNS, Render apps, newsletters Worker, GitHub deploys and scheduled jobs</title>
+<defs>
+<marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--axis)"/></marker>
+</defs>
+<g id="edges">
+<path data-e="brw-dns" d="M142 62H168"/>
+<path data-e="dns-dhost" d="M318 44H348"/>
+<path data-e="dns-chost" d="M318 96H348"/>
+<path data-e="dhost-rdash" d="M478 44H528"/>
+<path data-e="chost-rcon" d="M478 96H528"/>
+<path data-e="sub-mail" d="M142 152H168"/>
+<path data-e="mail-wrk" d="M318 152H348"/>
+<path data-e="wrk-feed" d="M508 152H528"/>
+<path data-e="repo-rdash" d="M148 304V36H528"/>
+<path data-e="repo-rcon" d="M88 304V96H528"/>
+<path data-e="jobs-arc" d="M338 304H388"/>
+<path data-e="jobs-news" d="M338 304H618"/>
+<path data-e="feed-jobs" class="data" d="M635 178V248H255V304"/>
+<path data-e="news-rdash" class="data" d="M725 304V44H688"/>
+</g>
+<g id="nodes">
+<g data-n="brw" class="built"><title>A visitor's browser</title><rect x="8" y="38" width="134" height="48"/><text x="18" y="58">A visitor's browser</text><text x="18" y="74" class="s">HTTPS</text></g>
+<g data-n="dns" class="built"><title>Cloudflare DNS</title><rect x="168" y="32" width="150" height="56"/><text x="178" y="52">Cloudflare DNS</text><text x="178" y="68" class="s">opengnss.org · DNS only</text><text x="178" y="82" class="s">no proxy for apps</text></g>
+<g data-n="dhost" class="built"><title>dashboard.opengnss.org</title><rect x="348" y="24" width="130" height="40"/><text x="358" y="42">dashboard.</text><text x="358" y="56" class="s">opengnss.org</text></g>
+<g data-n="chost" class="built"><title>console.opengnss.org</title><rect x="348" y="76" width="130" height="40"/><text x="358" y="94">console.</text><text x="358" y="108" class="s">opengnss.org</text></g>
+<g data-n="rdash" class="built"><title>Render dashboard</title><rect x="528" y="24" width="168" height="40"/><text x="538" y="42">Render: dashboard</text><text x="538" y="56" class="s">opengnss-dashboard · free</text></g>
+<g data-n="rcon" class="built key"><title>Render console</title><rect x="528" y="76" width="168" height="40"/><text x="538" y="94">Render: console</text><text x="538" y="108" class="s">admin.py · secrets.toml</text></g>
+<g data-n="sub" class="built"><title>Substack email</title><rect x="8" y="128" width="134" height="48"/><text x="18" y="148">Substack newsletter</text><text x="18" y="164" class="s">email, not HTTP</text></g>
+<g data-n="mail" class="built"><title>Email routing</title><rect x="168" y="124" width="150" height="56"/><text x="178" y="144">Email Routing</text><text x="178" y="160" class="s">newsletters@feeds…</text><text x="178" y="174" class="s">only this address</text></g>
+<g data-n="wrk" class="built"><title>Newsletters Worker</title><rect x="348" y="124" width="160" height="56"/><text x="358" y="144">Newsletters Worker</text><text x="358" y="160" class="s">DKIM · raw mail in KV</text><text x="358" y="174" class="s">public feeds out</text></g>
+<g data-n="feed" class="built"><title>Substack feeds</title><rect x="528" y="124" width="210" height="56"/><text x="538" y="144">feeds.opengnss.org</text><text x="538" y="160" class="s">/substack/…/feed</text><text x="538" y="174" class="s">archive job reads it</text></g>
+<g data-n="repo" class="built"><title>GitHub main</title><rect x="8" y="280" width="140" height="48"/><text x="18" y="300">GitHub: main</text><text x="18" y="316" class="s">push redeploys Render</text></g>
+<g data-n="jobs" class="built"><title>GitHub Actions</title><rect x="168" y="276" width="170" height="48"/><text x="178" y="296">GitHub Actions</text><text x="178" y="312" class="s">archive · registry · news…</text></g>
+<g data-n="arc" class="built"><title>Archive repository</title><rect x="388" y="276" width="175" height="48"/><text x="398" y="296">GitHub: -archive repo</text><text x="398" y="312" class="s">copies and run logs</text></g>
+<g data-n="news" class="built"><title>news-data branch</title><rect x="618" y="276" width="210" height="48"/><text x="628" y="296">news-data branch</text><text x="628" y="312" class="s">latest_news.json</text></g>
+</g>
+</svg>
+</div>
+<div class="legend"><span><b style="border-color:var(--c-ok)"></b>built and running</span><span><b style="border-color:var(--c-c)"></b>where a person decides</span><span>Dashed arrows: data the apps or jobs read, not DNS. Click a box, or press Tab and Return.</span></div>
+<div class="card" id="card" aria-live="polite"></div>
+<script>
+const DATA = __DATA__;
+const $ = (s) => document.querySelector(s), $$ = (s) => [...document.querySelectorAll(s)];
+function el(tag, text, cls) { const e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (cls) e.className = cls; return e; }
+const STATES = { built: "Built and running", planned: "Planned", key: "Where a person decides" };
+function list(items) { const u = el("ul"); for (const t of items) u.append(el("li", t)); return u; }
+function show(key) {
+  const p = DATA.parts[key]; if (!p) return;
+  $$("#nodes g").forEach((g) => g.classList.toggle("sel", g.dataset.n === key));
+  const c = $("#card"); c.className = "card " + p.kind; c.replaceChildren();
+  const tech = el("div"), risk = el("div"), cols = el("div", undefined, "cols2");
+  tech.append(el("h4", "Key technical details"), list(p.tech)); risk.append(el("h4", "Limits and risks"), list(p.limits)); cols.append(tech, risk);
+  const where = el("div", undefined, "where"); where.append(el("span", "Where it lives: "), el("code", p.where));
+  c.append(el("h3", p.name), el("div", STATES[p.kind], "st " + p.kind), el("h4", "In simple terms"), el("p", p.simple), cols, where);
+}
+$$("#nodes g").forEach((g) => { g.setAttribute("tabindex", "0"); g.setAttribute("role", "button");
+  g.addEventListener("click", () => show(g.dataset.n));
+  g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); show(g.dataset.n); } }); });
+show("dns");
+</script>
+</body>
+</html>

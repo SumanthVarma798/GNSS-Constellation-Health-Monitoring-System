@@ -137,15 +137,32 @@ STEPS = [
 ]
 
 
-def payload(facts):
-    """What the page shows: the parts, the steps, and a few live figures as (figure, words) pairs."""
+def payload():
+    """What the picture shows: the parts and the follow-one-item steps (no live figures; those sit outside the iframe)."""
     return {"parts": {key: {"name": p[0], "kind": p[1], "simple": p[2], "tech": p[3], "limits": p[4], "where": p[5]}
                       for key, p in PARTS.items()},
-            "steps": [{"words": words, "nodes": nodes, "edges": edges} for words, nodes, edges in STEPS],
-            "facts": [{"figure": figure, "words": words} for figure, words in facts]}
+            "steps": [{"words": words, "nodes": nodes, "edges": edges} for words, nodes, edges in STEPS]}
 
 
-def system_design_html(tokens_css, font, facts):
+def system_design_html(tokens_css, font):
     """The finished page: the console's colours first, the data last so it is never searched for placeholders."""
     page = PAGE_FILE.read_text(encoding="utf-8").replace("__TOKENS__", tokens_css).replace("__FONT__", font)
-    return page.replace("const DATA = __DATA__;", f"const DATA = {embed(payload(facts))};", 1)
+    return page.replace("const DATA = __DATA__;", f"const DATA = {embed(payload())};", 1)
+
+
+def facts_strip_html(tokens_css, font, facts):
+    """Live figures read from GitHub, shown under the picture so the diagram never waits on the network."""
+    facts_json = embed([{"figure": figure, "words": words} for figure, words in facts])
+    return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><style>
+__TOKENS__
+*, *::before, *::after {{ box-sizing: border-box; }}
+html, body {{ margin: 0; background: var(--pane); color: var(--ink); font: 13px/1.45 __FONT__; }}
+.facts {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); border: 2px solid var(--outline); box-shadow: var(--hard); }}
+.facts div {{ padding: 8px 12px; border-right: 1px solid var(--edge); border-top: 4px solid var(--c-info); min-width: 0; }}
+.facts b {{ display: block; font-size: 22px; font-weight: 800; line-height: 1.2; }}
+.facts span {{ color: var(--muted); }}
+</style></head><body><div class="facts" id="facts"></div><script>
+const FACTS = {facts_json};
+function el(tag, text) {{ const e = document.createElement(tag); if (text !== undefined) e.textContent = text; return e; }}
+for (const f of FACTS) {{ const d = el("div"); d.append(el("b", f.figure), el("span", f.words)); document.getElementById("facts").append(d); }}
+</script></body></html>""".replace("__TOKENS__", tokens_css, 1).replace("__FONT__", font, 1)
