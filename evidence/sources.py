@@ -4,6 +4,7 @@ Kept in one place so that a moved address is fixed once. Reliability grades
 for each source belong in the source table, not here.
 """
 import csv
+from datetime import datetime, timezone
 
 from evidence.settings import CANDIDATE_SOCIAL_KIND, CANDIDATE_WORKED, CANDIDATE_X_KIND, SOURCE_CANDIDATES_FILE
 
@@ -31,10 +32,15 @@ CELESTRAK_GNSS_URL = "https://celestrak.org/NORAD/elements/gp.php?GROUP=gnss&FOR
 GALMON_SATELLITES_URL = "https://galmon.eu/svs.json"
 
 
+def dated(address, now=None):
+    """The address with {year} as this UTC year: for pages kept one per year, such as CelesTrak's NANU index."""
+    return address.replace("{year}", str((now or datetime.now(timezone.utc)).year))
+
+
 def candidate_rows():
-    """Every candidate row, in file order."""
+    """Every candidate row, in file order, its address dated."""
     with open(SOURCE_CANDIDATES_FILE, newline="", encoding="utf-8") as handle:
-        return list(csv.DictReader(handle))
+        return [{**row, "address": dated(row["address"])} for row in csv.DictReader(handle)]
 
 
 def working_candidates():

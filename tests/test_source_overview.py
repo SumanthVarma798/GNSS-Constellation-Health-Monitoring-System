@@ -109,3 +109,12 @@ def test_ago_words_read_in_plain_english():
 
     assert ago_words(NOW, NOW + timedelta(hours=3)) == "3 h ago"
     assert ago_words(None, NOW) == "not known"
+
+
+def test_a_dated_address_follows_the_year():
+    from datetime import datetime, timezone
+
+    from evidence.sources import dated
+    assert dated("https://celestrak.org/GPS/NANU/{year}/", datetime(2027, 1, 1, tzinfo=timezone.utc)) == \
+        "https://celestrak.org/GPS/NANU/2027/"
+    assert dated("https://example.org/feed") == "https://example.org/feed"

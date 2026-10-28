@@ -4,7 +4,7 @@ import csv
 from collections import Counter
 from datetime import datetime, timezone
 
-from evidence.sources import ARCHIVED_SOURCES
+from evidence.sources import ARCHIVED_SOURCES, dated
 from evidence.settings import CANDIDATE_WORKED, SOURCE_CANDIDATES_FILE, SOURCE_GRADES_FILE
 
 NOT_CHECKED = "not fetched"   # a candidate held back by rule: never fetched, so not "not answering"
@@ -50,7 +50,7 @@ def source_rows(grades_file=SOURCE_GRADES_FILE, candidates_file=SOURCE_CANDIDATE
     rows = []
     for c in _rows(candidates_file):
         confirmed = graded.get(c["source_id"])
-        rows.append({"source": c["source_id"], "name": c["name"], "kind": c["kind"], "address": c["address"],
+        rows.append({"source": c["source_id"], "name": c["name"], "kind": c["kind"], "address": dated(c["address"]),
                      "grade": confirmed["reliability"] if confirmed else c["proposed_grade"], "confirmed": bool(confirmed),
                      "reason": confirmed["reason"] if confirmed else c["grade_reason"], "checked_on": c["checked_on"],
                      "answer": _answer(c["check_status"], c["standing"] == HELD), "held": c["standing"] == HELD})
