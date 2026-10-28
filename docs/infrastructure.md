@@ -27,18 +27,26 @@ Administrator re-invites the person; if none is left, Cloudflare support recover
 |---|---|
 | `feeds.opengnss.org` (web) | The newsletters Worker: `https://feeds.opengnss.org/substack/<publication>/feed` |
 | `feeds.opengnss.org` (mail) | Cloudflare Email Routing. Only `newsletters@feeds.opengnss.org` is accepted; all other addresses bounce |
-| `dashboard.opengnss.org` | The dashboard (`dashboard.py`) on Render: a DNS-only CNAME to its `onrender.com` address |
+| `dashboard.opengnss.org` | The dashboard (`dashboard.py`) on Render: a DNS-only CNAME to `opengnss-dashboard.onrender.com` |
+| `console.opengnss.org` | The administration console (`admin.py`) on Render: a DNS-only CNAME to `opengnss-console.onrender.com` |
 | `opengnss.org` | Unused for now; kept free for the project's site and the team's own mail |
 
-## The dashboard on Render
+## The dashboard and the console on Render
 
-Streamlit Community Cloud cannot use our own domain, so the dashboard runs on Render's free plan from
-[render.yaml](../render.yaml). It redeploys on every commit to `main`, except commits that only touch docs, tests,
-the console or the Worker. It sleeps after 15 minutes with no visitors and takes about a minute to wake, so open it
-a minute before a demo. Free workspaces get 750 instance hours a month, which covers one service running all month.
+Streamlit Community Cloud cannot use our own domain, so both apps run on Render's free plan from
+[render.yaml](../render.yaml): `opengnss-dashboard` and `opengnss-console`. Each redeploys on every commit to `main`,
+except commits that only touch files it never reads (the dashboard skips docs, tests, the console and the Worker;
+the console, whose assistant reads the docs and the code, skips only tests and the Worker). Each sleeps after 15
+minutes with no visitors and takes about a minute to wake, so open them a minute before a demo. Free workspaces get
+750 instance hours a month; sleeping services use none, so two mostly idle services fit.
 
-To recreate it: in Render, **New → Blueprint**, pick this repository, apply. The CNAME must stay DNS-only (grey
-cloud) so Render can issue its certificate.
+The console's settings are a secret file in Render (**opengnss-console → Environment → Secret Files**, named
+`secrets.toml`, laid out as `.streamlit/secrets.example.toml`); the start command copies it to where Streamlit reads
+it. Its `[auth] redirect_uri` is `https://console.opengnss.org/oauth2callback`, and the Google OAuth client lists that
+address as an authorised redirect URI.
+
+To recreate them: in Render, **New → Blueprint**, pick this repository, apply, then add the console's secret file.
+Each CNAME must stay DNS-only (grey cloud) so Render can issue its certificate.
 
 ## The newsletters Worker
 
@@ -62,4 +70,4 @@ Cloudflare sign-in (`npx wrangler login`) with access to the OpenGNSS account. S
 | twitterapi.io (X posts) | key named `TWITTERAPI_IO_KEY` | repository secret, given only to the archive job's `x` and `all` runs |
 | Healthchecks.io | ping key `HEALTHCHECKS_PING_KEY` | repository secret |
 | Render | the dashboard, service `opengnss-dashboard` | none needed yet |
-| Streamlit Community Cloud | the admin console | the app's own secrets |
+| Render | the console, service `opengnss-console` | its secret file `secrets.toml` (sign-in, GitHub token, Space-Track, Healthchecks.io); see `.streamlit/secrets.example.toml` |

@@ -127,7 +127,7 @@ with body:
             console.notice(
                 "No Healthchecks.io key is set, so the checks cannot be read. To add one: on healthchecks.io open the project, "
                 "then Settings, API Access, and create a read-only API key. Put it in the console's secrets as [alerts] key = "
-                "\"...\": on Streamlit Community Cloud in the app's Settings, Secrets; on a computer in .streamlit/secrets.toml. "
+                "\"...\": on Render in the console's secret file secrets.toml; on a computer in .streamlit/secrets.toml. "
                 "Healthchecks.io still emails on failures without it.",
                 "info",
             )
