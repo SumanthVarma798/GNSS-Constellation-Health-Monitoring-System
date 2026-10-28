@@ -10,10 +10,6 @@ __TOKENS__
 html, body { margin: 0; background: var(--pane); color: var(--ink); font: 13px/1.45 __FONT__; }
 html, body { overflow-x: hidden; }
 :focus-visible { outline: 2px solid var(--c-info); outline-offset: 2px; }
-.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); border: 2px solid var(--outline); box-shadow: var(--hard); margin-bottom: 18px; }
-.facts div { padding: 8px 12px; border-right: 1px solid var(--edge); border-top: 4px solid var(--c-info); min-width: 0; }
-.facts b { display: block; font-size: 22px; font-weight: 800; line-height: 1.2; }
-.facts span { color: var(--muted); }
 .diagram { border: 2px solid var(--outline); box-shadow: var(--hard); padding: 10px; overflow-x: auto; margin-bottom: 18px; }
 #sysmap { display: block; width: 100%; min-width: 760px; height: auto; font: 12px __FONT__; }
 #sysmap .cols text { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-anchor: middle; fill: var(--muted); }
@@ -56,7 +52,7 @@ html, body { overflow-x: hidden; }
 .where { margin: 10px 12px 12px; padding: 6px 8px; background: var(--pane-alt); border: 2px solid var(--outline); box-shadow: var(--well-bevel); }
 .where code { font: 12px var(--mono); }
 @media (max-width: 600px) {
-  .facts, .diagram, .card, .seg { box-shadow: var(--hard-sm); }
+  .diagram, .card, .seg { box-shadow: var(--hard-sm); }
   .card { margin-top: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -65,7 +61,6 @@ html, body { overflow-x: hidden; }
 </style>
 </head>
 <body>
-<div class="facts" id="facts"></div>
 <div class="diagram">
 <svg id="sysmap" viewBox="0 0 1000 470" role="group" aria-labelledby="sysmap-t">
 <title id="sysmap-t">The system: sources, archive, registry and evidence, pull requests, dashboard and console</title>
@@ -124,7 +119,6 @@ const $ = (s) => document.querySelector(s), $$ = (s) => [...document.querySelect
 function el(tag, text, cls) { const e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (cls) e.className = cls; return e; }
 const STATES = { built: "Built and running", planned: "Planned", key: "Where a person decides" };
 let stepIndex = -1;   // no step chosen yet; the arrows step from there, and wrap at both ends
-for (const f of DATA.facts) { const d = el("div"); d.append(el("b", f.figure), el("span", f.words)); $("#facts").append(d); }
 function list(items) { const u = el("ul"); for (const t of items) u.append(el("li", t)); return u; }
 function show(key) {
   const p = DATA.parts[key]; if (!p) return;
