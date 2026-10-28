@@ -337,13 +337,13 @@ dl.c-kv dt { color: var(--muted); } dl.c-kv dd { margin: 0; color: var(--ink); }
   border-radius: 50% !important; box-sizing: border-box; }
 [data-testid="stSpinner"] > div > i::after { content: ""; position: absolute; top: 0; left: 50%; width: 6px; height: 6px; margin-left: -3px;
   background: var(--ink); border: 1px solid var(--outline); box-sizing: border-box;
-  transform-origin: 50% 19px; animation: console-orbit 1.4s linear infinite; }
+  transform-origin: 50% 16px; animation: console-orbit 1.4s linear infinite; }
 [data-testid="stSpinner"] p { margin: 0; font-weight: 400; font-size: 12px; color: var(--muted); text-align: center; }
 [data-testid="stChatMessage"] [data-testid="stSpinner"] > div > i { width: 24px !important; height: 24px !important; }
 [data-testid="stChatMessage"] [data-testid="stSpinner"] > div > i::before { inset: 2px; }
-[data-testid="stChatMessage"] [data-testid="stSpinner"] > div > i::after { width: 5px; height: 5px; margin-left: -2.5px; transform-origin: 50% 14px;
+[data-testid="stChatMessage"] [data-testid="stSpinner"] > div > i::after { width: 5px; height: 5px; margin-left: -2.5px; transform-origin: 50% 12px;
   animation-duration: 1.2s; }
 @keyframes console-orbit { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) {
-  [data-testid="stSpinner"] > div > i::after { animation: none; top: 0; left: 50%; transform: translateX(-50%); }
+  [data-testid="stSpinner"] > div > i::after { animation: none; transform: none; }
 }
