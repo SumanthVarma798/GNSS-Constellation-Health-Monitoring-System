@@ -13,8 +13,8 @@ def test_every_source_is_listed_with_its_grade_and_whether_it_answered(monkeypat
 
     page = text(run(monkeypatch, GitHub([GRADE_PR]), page="console/sources.py"))
 
-    for words in ("ISRO press releases", "International GNSS Service (IGS)", "proposed", "answered", "refused (403)",
-                  "1 decision waiting", "Last read", "Kinds"):
+    for words in ("ISRO press releases", "International GNSS Service (IGS)", " proposed", "answered", "refused (403)",
+                  "1 decision waiting", "Last read", "Last check"):
         assert words in page, words
     assert "var(--g-a)" in page and "var(--c-ok)" not in page.split("Grades")[1].split("</div>")[0]   # grades in the ramp
 
