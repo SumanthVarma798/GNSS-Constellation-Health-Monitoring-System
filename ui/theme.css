@@ -8,8 +8,8 @@
 html, body, .stApp, [data-testid="stApp"] { background: var(--platform); color: var(--ink); }
 [data-testid="stHeader"] { background: var(--platform); }
 [data-testid="stMain"], [data-testid="stMain"] p, [data-testid="stMain"] li, [data-testid="stMarkdownContainer"] { color: var(--ink); }
-/* 1560px wide at most, centred: the top bar fits on one row from 1400px, and a table or a row of four tiles still reads
-   as one block on a 2560px screen. Running text is held to a readable length on its own (see p below). */
+/* 1560px wide at most, centred: a table or a row of four tiles still reads as one block on a
+   2560px screen. Running text is held to a readable length on its own (see p below). */
 [data-testid="stMain"] .block-container, [data-testid="stMainBlockContainer"] { max-width: 1560px; padding: 32px 20px 90px; }
 [data-testid="stMain"] p { max-width: 90ch; }
 h1, h2, h3, h4, h5, h6, [data-testid="stHeading"] { color: var(--ink); letter-spacing: -.01em; }
