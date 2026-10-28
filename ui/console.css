@@ -49,8 +49,12 @@ a:hover { text-decoration: underline; }
 [data-testid="stSidebarCollapseButton"] { display: flex !important; visibility: visible !important; opacity: 1 !important; }
 [data-testid="stSidebarCollapseButton"] button, [data-testid="stExpandSidebarButton"], [data-testid="stSidebarCollapsedControl"] button {
   border: 1px solid var(--btn-edge); background: var(--btn-bg); box-shadow: var(--btn-bevel); }
-[data-testid="stSidebarCollapsedControl"] { top: 5px; left: 8px; z-index: 1000101; }   /* at the title bar's left end */
-.stApp:has([data-testid="stSidebar"][aria-expanded="false"]) .c-title { padding-left: 68px; }
+/* closed, the tree leaves a thin strip down the left edge with its open button: always in view, covering nothing */
+[data-testid="stSidebarCollapsedControl"] { top: 0; left: 0; bottom: 0; z-index: 1000101; }
+[data-testid="stSidebarCollapsedControl"] button { position: fixed; top: 0; left: 0; width: 28px; height: 100vh; padding: 0;
+  border: 0; border-right: 2px solid var(--chrome-edge); border-radius: 0; background: var(--tree-bg); box-shadow: none; }
+[data-testid="stSidebarCollapsedControl"] button:hover { background: var(--hover); }
+.stApp:has([data-testid="stSidebar"][aria-expanded="false"]) [data-testid="stMain"] { padding-left: 28px; }
 .stApp:has([data-testid="stSidebar"][aria-expanded="true"]) [data-testid="stSidebarCollapsedControl"] { display: none; }
 
 /* ---- the window's top: title bar, then the toolbar of real controls ---- */
@@ -88,8 +92,12 @@ a:hover { text-decoration: underline; }
 [data-testid="stButtonGroup"] button[data-testid$="Active"] * { color: var(--select-ink); }
 [data-testid="stButtonGroup"] [data-baseweb="button-group"] { display: flex; flex-wrap: wrap; max-width: 100%; gap: 6px; }
 [data-testid="stButtonGroup"] button :is([data-testid="stMarkdownContainer"], p) { white-space: normal; }
-:is([data-testid="stTextArea"], [data-testid="stTextInput"], [data-testid="stSelectbox"]) [data-baseweb] { background: var(--input-bg); border-color: var(--input-edge); box-shadow: var(--well-bevel); }
-:is([data-testid="stTextArea"], [data-testid="stTextInput"]) :is(textarea, input) { background: var(--input-bg); color: var(--ink); font: inherit; }
+:is([data-testid="stTextArea"], [data-testid="stTextInput"], [data-testid="stSelectbox"], [data-testid="stMultiSelect"]) [data-baseweb] { background: var(--input-bg); border-color: var(--input-edge); box-shadow: var(--well-bevel); }
+:is([data-testid="stTextArea"], [data-testid="stTextInput"], [data-testid="stMultiSelect"]) :is(textarea, input) { background: var(--input-bg); color: var(--ink); font: inherit; }
+:is([data-testid="stSelectbox"], [data-testid="stMultiSelect"]) [data-baseweb="select"] > div { background: var(--input-bg); }   /* the control box Streamlit paints with its own dark theme */
+:is([data-testid="stSelectbox"], [data-testid="stMultiSelect"]) [data-baseweb="select"] :is(div, svg) { color: var(--ink); }
+:is([data-testid="stSelectbox"], [data-testid="stMultiSelect"]) svg[data-baseweb="icon"] { background: transparent; }
+:is(textarea, input)::placeholder, [data-testid="stMultiSelect"] [data-baseweb="select"] [aria-hidden="true"] { color: var(--muted) !important; opacity: 1; }
 [data-testid="stWidgetLabel"] * { color: var(--muted); font-size: 12px; }
 [data-testid="stRadio"] label * { color: var(--ink); }
 [data-testid="stRadio"] [data-baseweb="radio"] { cursor: pointer; border: 1px solid transparent; }
