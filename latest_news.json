@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-28T13:36:51Z",
+ "generated_at": "2026-10-28T13:37:47Z",
  "items": [
   {
    "address": "https://news.google.com/rss/articles/CBMizAFBVV95cUxPRzdlUTVsTFpya0x5aEtOazNPRTYyN1RPY3N0bTlIbXVadjRaVWp1dXVHdDNEZi1seU14bVNBWU4tVG1hTGc0Vm51NFV1SC1DaWlxRTB3WEcyX3l5dVJ6N0VCamlWNTgwLWlqV2V0YzdjdzR4Wk1kZkNTd3dMQndZWTNPa1FKVmtxemhsNWxoQ3VnWGVZSDFDTWJmYWhTR3pGLXNlREJzZXFFQjI5LXd2UFBkdThTb0w0aFFoZTlQSGhFQnVSMEN3NGlGUE_SAdwBQVVfeXFMT0I2UWYwZ2Y4Y1NWb29wTVAyaUtPelFxaXJ4NnBsenJwSjJSalN1bnRhVWpaVzlUc291X0ZCcW1ONU9aNzduUGk2bG10YnpJLXV0ZkJQekppWU44WThKZjFBMWNENDBsUmVsb3FqQk5QdVU5TVltUlBEb0tnMFVEdHBpSkZ1T0hHSTQzRVZlTG16LWJHeUdKSkhKLVh0NlF0UmJLclBMRlo3RGo5VENXSFZxWWhIbzBYa2RfWlc1WUVFN0FqcUhGX2RiNWRyc18yUHBZNFhkc2Q3UmRiag?oc=5",
@@ -18,6 +18,22 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://x.com/isro/status/2115388445023441046",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-28T13:37:43Z",
+   "grade": "A",
+   "grade_standing": "provisional",
+   "outlet": "ISRO (@isro)",
+   "published_at": "2026-10-28T10:21:21Z",
+   "source_id": "x.com/isro",
+   "summary": "GSLV-F18/NVS-03 Mission is scheduled for launch on 30th October 2026, at 23:51 hours IST from Satish Dhawan Space Centre (SDSC-SHAR), Sriharikota. NVS-03 is a navigation satellite in the second-generation NavIC series. Watch live: https://t.co/Mbllc4kEWu Mission details: https://t.co/6YvrbYj7Ua…",
+   "title": "GSLV-F18/NVS-03 Mission is scheduled for launch on 30th October 2026, at 23:51 hours IST from Satish Dhawan Space…",
+   "via": "https://x.com/isro"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxPSklRSUpTblVMLWJ5ZGhGdDNaMnRwMk5mdktpTTJzM0xnekJfNDU2aktHSmhETDMtUE9takxBUVFTLTVMS28wTHBpR2FfMzRrTFZWTEc5aWt6aGZpd042cnJkckhQWlJtTDFXcWNTdzlOS3Y2M0l5Vk13U1NQMlBGSndKRVpmTjIz?oc=5",
    "category": "other",
    "constellations": [
@@ -32,6 +48,22 @@
    "summary": "",
    "title": "ESA orders four new Galileo satellites",
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://x.com/Arianespace/status/2115361728024207465",
+   "category": "launch",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-28T13:37:47Z",
+   "grade": "B",
+   "grade_standing": "provisional",
+   "outlet": "Arianespace (@Arianespace)",
+   "published_at": "2026-10-28T08:35:12Z",
+   "source_id": "x.com/Arianespace",
+   "summary": "@ramshackle78 Thank you for your interest! The next Galileo launch is coming soon, and we’ll share more as soon as we can. ☺️",
+   "title": "@ramshackle78 Thank you for your interest! The next Galileo launch is coming soon, and we’ll share more as soon as we…",
+   "via": "https://x.com/Arianespace"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMimAFBVV95cUxQam5nUkE1V1V6OHdua3FOOENiVUl1c25Tb19ONklMNWxSU25pMkticFAyT21BcU9UQjdKWjU2R05taU8xT1dOVzRiMHFOSlBrOVRobHI5eU9EZ0ZzRm91MUxsNEJwcFpKaUcxVmtNajFNT1pqMzR6eGMtZENiVWNEc1pIMUhLX2RPUVBJd2lEVUx6ZzM1bGNzVg?oc=5",
@@ -8597,6 +8629,15 @@
    "name": "European Space Agency (@esa)",
    "note": "",
    "reason": "As esa.int: the European Space Agency, Galileo's design authority"
+  },
+  "x.com/isro": {
+   "grade": "A",
+   "grade_standing": "provisional",
+   "graded_by": "",
+   "kind": "X account",
+   "name": "ISRO (@isro)",
+   "note": "",
+   "reason": "The operator of NavIC, as isro.gov.in"
   },
   "yacht.de": {
    "grade": "",
