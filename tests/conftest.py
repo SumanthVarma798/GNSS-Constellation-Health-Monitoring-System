@@ -1,5 +1,5 @@
 """Shared by every test: no test reads or writes the real per-user CelesTrak or Space-Track copy, and none asks
-GitHub for the published orbit-record check."""
+GitHub for the published orbit-record check or the archive job's orbit copy."""
 import os
 from pathlib import Path
 
@@ -8,6 +8,7 @@ from pathlib import Path
 os.environ["BUNDLED_DATA_DIR"] = str((Path(__file__).resolve().parent / "fixtures" / "bundled_data").resolve())
 
 import pytest
+import requests
 
 from data import celestrak, spacetrack
 from ui import data
@@ -20,3 +21,8 @@ def private_celestrak_copy(monkeypatch, tmp_path):
     monkeypatch.setattr(spacetrack, "state", {"rows": {}, "tried": None, "fetched": None, "refused_until": None,
                                               "note": "ok"})
     monkeypatch.setattr(data, "orbit_gap", lambda: {})
+    monkeypatch.setattr(celestrak, "fetch_copy", _no_copy)
+
+
+def _no_copy(norads):
+    raise requests.ConnectionError("no orbit copy in tests")

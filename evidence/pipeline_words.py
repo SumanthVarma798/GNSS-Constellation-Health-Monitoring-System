@@ -141,13 +141,15 @@ STAGES = {
             "Once a day, a program downloads GNSS orbit records from CelesTrak.",
             "It saves a new copy only when the data changed, then logs the run.",
             "For this source, the two-hour site gap means one try per run.",
+            "A second step publishes the newest copy for the public dashboard, which CelesTrak refuses.",
         ],
         "why_it_matters": "These records are kept for archive history and later checks.",
         "technical": {
             "workflow_file": ".github/workflows/archive.yml",
             "workflow_job": "archive",
             "schedule_group": "orbital",
-            "commands": ["python scripts/archive_sources.py --archive archive --group orbital"],
+            "commands": ["python scripts/archive_sources.py --archive archive --group orbital",
+                         "python scripts/latest_orbits.py --archive archive --out orbit-data/latest_gnss.json"],
             "inputs": [
                 "Group 'orbital' in evidence/sources.py",
                 "Source limits from evidence/settings.py",
@@ -155,6 +157,7 @@ STAGES = {
             "outputs": [
                 "Archive objects and versions in the private archive repository",
                 "Run log line in archive/runs/archive.csv",
+                "latest_gnss.json on branch orbit-data in the project repository",
             ],
             "repositories": [
                 "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System",
@@ -168,12 +171,13 @@ STAGES = {
             "paths": [
                 ".github/workflows/archive.yml",
                 "scripts/archive_sources.py",
+                "scripts/latest_orbits.py",
                 "evidence/settings.py",
                 "evidence/sources.py",
             ],
             "limits": [
                 "CelesTrak is rate-limited in settings to one request every 2 hours.",
-                "If CelesTrak is down, the dashboard keeps its own held rows and bundled data files, not this private archive.",
+                "If CelesTrak refuses the dashboard, it reads latest_gnss.json from branch orbit-data; if that fails too, its own held rows and bundled data files.",
             ],
         },
     },

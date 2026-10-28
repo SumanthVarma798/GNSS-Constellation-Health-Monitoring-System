@@ -7,13 +7,15 @@ The rows are held in memory only and merged onto the bundled history when it is 
 tracked data/*.json files are never rewritten. CelesTrak asks that unchanged data is not
 fetched more than every 2 hours (MIN_GAP_BETWEEN_DOWNLOADS in evidence/settings.py, shared with the archive job),
 so a fetch happens at most that often unless the last one failed.
+When CelesTrak refuses this server, the archive job's copy of the GNSS group (latest_gnss.json on branch orbit-data,
+written from GitHub, which CelesTrak still answers) stands in; the state still says CelesTrak is failing.
 The last state is also saved to a file outside the repository, so a restarted dashboard reads it instead of
 downloading again: restarts in a row once got this machine blocked (17 Oct 2026, issue 76).
 """
 import json
 import math
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock
 
@@ -25,6 +27,9 @@ from evidence.archive import min_gap
 
 URL = "https://celestrak.org/NORAD/elements/gp.php"
 CATALOGUE_URL = "https://celestrak.org/satcat/records.php"
+# The archive job's newest copy of the GNSS group (scripts/latest_orbits.py), read when CelesTrak refuses.
+COPY_URL = ("https://raw.githubusercontent.com/SumanthVarma798/"
+            "GNSS-Constellation-Health-Monitoring-System/orbit-data/latest_gnss.json")
 TIMEOUT = 8          # seconds per request
 EVERY = min_gap(URL)
 # One saved copy per user, shared by every checkout and worktree on the machine, outside the repository.
@@ -34,9 +39,11 @@ MU = 398600.4418     # km^3/s^2: Space-Track's SEMIMAJOR_AXIS comes from the mea
 # rows: {norad: [history row, ...]}; listed: the NORAD IDs in the GNSS group at the last fetch that
 # worked, None before one has; tried: when the last fetch was tried; fetched: the last one that
 # brought rows; ok: whether the last try worked; failing_since: the first try of the failures in a row, None while
-# working. One copy per server, shared by every viewer.
+# working; copy_at: when the archive job took the copy in use while CelesTrak fails, None otherwise.
+# One copy per server, shared by every viewer.
 # ponytail: rows grow by one per satellite per fetch while the server runs; trim them if it stays up for months.
-state = {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True, "failing_since": None}
+state = {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True, "failing_since": None,
+         "copy_at": None}
 _lock = Lock()
 
 
@@ -78,6 +85,21 @@ def fetch(norad_ids):
     return {int(row["NORAD_CAT_ID"]): as_history_row(row) for row in rows}, listed
 
 
+def fetch_copy(norad_ids):
+    """fetch()'s result from the archive job's copy of the GNSS group, plus when the job took it (aware UTC).
+
+    Only satellites in the group: no request per satellite. Raises as fetch() does.
+    """
+    reply = requests.get(COPY_URL, timeout=TIMEOUT)
+    reply.raise_for_status()
+    copy = reply.json()
+    taken = datetime.fromisoformat(copy["fetched_at"].replace("Z", "+00:00"))
+    wanted, group = set(norad_ids), copy["rows"]
+    listed = {int(row["NORAD_CAT_ID"]) for row in group}
+    found = {int(row["NORAD_CAT_ID"]): as_history_row(row) for row in group if int(row["NORAD_CAT_ID"]) in wanted}
+    return found, listed, taken if taken.tzinfo else taken.replace(tzinfo=timezone.utc)
+
+
 def catalogue_entry(norad):
     """The first SATCAT row for one catalogue number, or None when SATCAT lists nothing."""
     rows = _get(url=CATALOGUE_URL, empty_text="No SATCAT records found", CATNR=norad)
@@ -91,7 +113,8 @@ def _save():
             "listed": None if state["listed"] is None else sorted(state["listed"]), "ok": state["ok"],
             "tried": state["tried"] and state["tried"].isoformat(),
             "fetched": state["fetched"] and state["fetched"].isoformat(),
-            "failing_since": state["failing_since"] and state["failing_since"].isoformat()}
+            "failing_since": state["failing_since"] and state["failing_since"].isoformat(),
+            "copy_at": state["copy_at"] and state["copy_at"].isoformat()}
     spare = SAVED.with_suffix(".tmp")
     spare.write_text(json.dumps(held))
     os.replace(spare, SAVED)
@@ -105,7 +128,8 @@ def _load():
                      listed=None if held["listed"] is None else set(held["listed"]), ok=held["ok"],
                      tried=held["tried"] and datetime.fromisoformat(held["tried"]),
                      fetched=held["fetched"] and datetime.fromisoformat(held["fetched"]),
-                     failing_since=held.get("failing_since") and datetime.fromisoformat(held["failing_since"]))
+                     failing_since=held.get("failing_since") and datetime.fromisoformat(held["failing_since"]),
+                     copy_at=held.get("copy_at") and datetime.fromisoformat(held["copy_at"]))
     except (OSError, ValueError, KeyError, TypeError, AttributeError):
         return
 
@@ -113,7 +137,8 @@ def _load():
 def refresh(norad_ids, now, clicked=False):
     """Fetch when the last try is EVERY old, or on a click after a failed try; otherwise keep what is held.
 
-    Returns a copy of `state`. A failure keeps the rows and the listing already held and sets ok to False.
+    Returns a copy of `state`. A failure keeps the rows and the listing already held and sets ok to False; the
+    archive job's copy then fills in what it can, and its time becomes `fetched` and `copy_at`.
     Every try, failed or not, is saved, so a restart keeps to the same 2 hours.
     """
     with _lock:
@@ -127,18 +152,31 @@ def refresh(norad_ids, now, clicked=False):
             except (requests.RequestException, ValueError, KeyError):
                 state["ok"] = False
                 state["failing_since"] = state["failing_since"] or now
+                try:
+                    found, listed, taken = fetch_copy(norad_ids)
+                except (requests.RequestException, ValueError, KeyError, TypeError, AttributeError):
+                    pass   # no copy either: keep what is held, as before
+                else:
+                    _merge(found)
+                    state["listed"], state["copy_at"] = listed, taken
+                    state["fetched"] = max(filter(None, [state["fetched"], taken])) if found else state["fetched"]
             else:
-                for norad, row in found.items():
-                    held = state["rows"].setdefault(norad, [])
-                    if row["EPOCH"] not in {r["EPOCH"] for r in held}:
-                        held.append(row)
-                state["ok"], state["listed"], state["failing_since"] = True, listed, None
+                _merge(found)
+                state["ok"], state["listed"], state["failing_since"], state["copy_at"] = True, listed, None, None
                 state["fetched"] = now if found else state["fetched"]
             try:
                 _save()
             except OSError:
                 pass   # an unwritable disk costs only the saved copy, never the dashboard
         return {**state, "rows": {norad: list(rows) for norad, rows in state["rows"].items()}}
+
+
+def _merge(found):
+    """Add each new element set to the rows held; one already held (same EPOCH) is not added twice."""
+    for norad, row in found.items():
+        held = state["rows"].setdefault(norad, [])
+        if row["EPOCH"] not in {r["EPOCH"] for r in held}:
+            held.append(row)
 
 
 def due(now):
