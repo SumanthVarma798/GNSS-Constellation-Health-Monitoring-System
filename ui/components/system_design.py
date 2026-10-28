@@ -48,7 +48,7 @@ PARTS = {
                ["Grade E at most"], "evidence/settings.py (SOCIAL_PLATFORM_HOSTS)"),
     "job": ("Archive job", "built",
             "The collector. On a timer it visits every source politely, keeps a copy of anything new, and writes one line per run saying how it went.",
-            ["GitHub Actions, five schedules: documents, catalogues, orbits, news, social",
+            ["GitHub Actions, six schedules: documents, catalogues, orbits, news, social, X",
              "Up to 3 tries per download, 60 s apart; a site that refuses is left for 1 hour, doubling up to 7 days",
              "Copies over 50 MB are not kept"],
             ["GitHub starts scheduled runs late, sometimes by hours, and sometimes skips them"],
