@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>World map</title>
+<style>
+__ROOT__
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--platform); color: var(--ink); font: 13.5px/1.4 __FONT__; padding: 12px;
+  display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.seg { display: inline-flex; border: 1px solid var(--edge); border-radius: 999px; box-shadow: var(--raised-sm); overflow: hidden; }
+.seg button { border: 0; background: var(--platform); color: var(--muted); padding: 7px 14px; cursor: pointer; font-weight: 600; }
+.seg button + button { border-left: 1px solid var(--edge); }
+.seg button:hover { color: var(--accent); }
+.seg button[aria-pressed="true"] { background: var(--well); box-shadow: var(--pressed); color: var(--accent); }
+.home { border: 1px solid var(--edge); border-radius: 999px; background: var(--platform); box-shadow: var(--raised-sm);
+  color: var(--muted); padding: 7px 16px; cursor: pointer; font-weight: 600; }
+.home:hover { color: var(--accent); }
+.systems { display: flex; flex-wrap: wrap; gap: 6px; }
+.system { border: 1px solid var(--edge); border-radius: 999px; background: var(--platform); box-shadow: var(--raised-sm);
+  color: var(--muted); padding: 6px 12px; cursor: pointer; }
+.system[aria-pressed="true"] { color: var(--ink); box-shadow: var(--pressed); background: var(--well); }
+.system .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; }
+
+.stage { position: relative; width: 100%; border-radius: var(--r); background: var(--well); border: 1px solid var(--edge);
+  box-shadow: var(--pressed); overflow: hidden; }
+.stage.flat { aspect-ratio: 2 / 1; }
+.stage.globe { aspect-ratio: 1 / 1; max-width: 760px; margin: 0 auto; }
+#map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab;
+  user-select: none; -webkit-user-select: none; }
+#map.over { cursor: pointer; }
+#map.drag { cursor: grabbing; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-size: 12px; }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.legend .swatch { flex: none; width: 10px; height: 10px; border-radius: 50%; }
+.foot { color: var(--muted); font-size: 12px; line-height: 1.45; }
+
+__TIP__
+.tip { position: absolute; min-width: 190px; max-width: min(340px, calc(100% - 20px)); }
+.tip .n { font-weight: 600; overflow-wrap: anywhere; }
+.tip .k { color: var(--muted); }
+.tip dl { margin: 8px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; }
+.tip dt { color: var(--muted); }
+.tip dd { margin: 0; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="seg" id="viewseg" role="group" aria-label="Map view">
+    <button type="button" data-view="flat" aria-pressed="true">Flat</button>
+    <button type="button" data-view="globe" aria-pressed="false">Globe</button>
+  </div>
+  <button type="button" class="home" id="home">Home</button>
+  <div class="seg" id="colourseg" role="group" aria-label="Colour by">
+    <button type="button" data-colour="health" aria-pressed="true">Broadcast health</button>
+    <button type="button" data-colour="system" aria-pressed="false">System</button>
+  </div>
+  <button type="button" class="home" id="tracks" aria-pressed="false">All tracks</button>
+  <button type="button" class="home" id="labels" aria-pressed="false">Names</button>
+  <div class="systems" id="systems" role="group" aria-label="Show and hide systems"></div>
+</div>
+<div class="stage flat" id="stage">
+  <canvas id="map" role="img" aria-label="World map of tracked satellites"></canvas>
+  <div class="tt-card tip" id="tip" role="tooltip"></div>
+</div>
+<div class="legend" id="legend"></div>
+<div class="foot" id="foot"></div>
+<script>
+const DATA = __DATA__;
+const LAND = __LAND__;
+const $ = id => document.getElementById(id);
+const css = getComputedStyle(document.documentElement), C = name => css.getPropertyValue("--" + name).trim();
+const RAD = Math.PI / 180, DEG = 180 / Math.PI;
+const stage = $("stage"), canvas = $("map"), ctx = canvas.getContext("2d"), tip = $("tip"), legend = $("legend");
+const STATUS_COLOURS = { ok: C("ok"), warn: C("warn"), bad: C("bad"), idle: C("idle") };
+const systemColours = new Map(DATA.system_key.map(s => [s.name, s.colour]));
+const systemOf = name => DATA.systems.find(s => s.name === name);
+const visible = new Set(DATA.systems.map(s => s.name));
+let viewMode = "flat", colourBy = "health";
+// With every track and name drawn, over a hundred satellites hide the map: by default only the hovered one's show.
+let allTracks = false, allLabels = false;
+let home = { lat: DATA.home.lat, lon: DATA.home.lon }, view = { ...home };
+let box = { w: 0, h: 0 }, hovered = null, drag = null, placed = [];
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const normLon = lon => ((lon + 540) % 360) - 180;
+
+/* ---------- projections ---------- */
+function projectFlat(lat, lon) {
+  return { x: (lon + 180) / 360 * box.w, y: (90 - lat) / 180 * box.h, visible: true };
+}
+function projectGlobe(lat, lon) {
+  const r = Math.min(box.w, box.h) / 2 - 24;
+  const sinLat = Math.sin(lat * RAD), cosLat = Math.cos(lat * RAD);
+  const sinLat0 = Math.sin(view.lat * RAD), cosLat0 = Math.cos(view.lat * RAD);
+  const dLon = (lon - view.lon) * RAD;
+  const z = sinLat0 * sinLat + cosLat0 * cosLat * Math.cos(dLon);
+  const x = r * cosLat * Math.sin(dLon);
+  const y = r * (cosLat0 * sinLat - sinLat0 * cosLat * Math.cos(dLon));
+  return { x: box.w / 2 + x, y: box.h / 2 - y, visible: z >= -0.05 };   // canvas y grows downward
+}
+const project = (lat, lon) => viewMode === "flat" ? projectFlat(lat, lon) : projectGlobe(lat, lon);
+
+/* ---------- drawing ---------- */
+function strokeLand() {
+  ctx.lineWidth = 0.6;
+  ctx.strokeStyle = C("track");
+  if (viewMode === "flat") {
+    ctx.fillStyle = C("fill"); ctx.globalAlpha = 0.45;
+    for (const ring of LAND) {
+      ctx.beginPath();
+      for (let i = 0; i < ring.length; i += 2) {
+        const p = projectFlat(ring[i + 1], ring[i]);
+        if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+      }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    return;
+  }
+  const r = Math.min(box.w, box.h) / 2 - 24;
+  ctx.beginPath(); ctx.arc(box.w / 2, box.h / 2, r, 0, Math.PI * 2);
+  ctx.fillStyle = C("fill"); ctx.globalAlpha = 0.12; ctx.fill(); ctx.globalAlpha = 1; ctx.stroke();
+  ctx.fillStyle = C("fill");
+  for (const ring of LAND) {
+    const points = [];
+    for (let i = 0; i < ring.length; i += 2) points.push(projectGlobe(ring[i + 1], ring[i]));
+    if (points.every(p => p.visible)) {   // wholly on the near side: filled, as on the flat map
+      ctx.beginPath(); points.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+      ctx.closePath(); ctx.globalAlpha = 0.45; ctx.fill(); ctx.globalAlpha = 1; ctx.stroke();
+      continue;
+    }
+    ctx.beginPath(); let open = false;
+    for (const p of points) {
+      if (!p.visible) { open = false; continue; }
+      if (open) ctx.lineTo(p.x, p.y); else { ctx.moveTo(p.x, p.y); open = true; }
+    }
+    ctx.stroke();
+  }
+}
+function drawArea() {
+  const a = DATA.area;
+  ctx.setLineDash([5, 4]); ctx.lineWidth = 1; ctx.strokeStyle = C("muted"); ctx.fillStyle = C("muted");
+  ctx.font = "11px " + getComputedStyle(document.body).fontFamily; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  if (viewMode === "flat") {
+    const sw = projectFlat(a.south, a.west), ne = projectFlat(a.north, a.east);
+    ctx.strokeRect(sw.x, ne.y, ne.x - sw.x, sw.y - ne.y);
+    ctx.fillText(a.label, sw.x + 8, sw.y + 16);
+    return;
+  }
+  const corners = [[a.south, a.west], [a.north, a.west], [a.north, a.east], [a.south, a.east], [a.south, a.west]];
+  ctx.beginPath(); let open = false;
+  for (const [lat, lon] of corners) {
+    const p = projectGlobe(lat, lon);
+    if (!p.visible) { open = false; continue; }
+    if (open) ctx.lineTo(p.x, p.y); else { ctx.moveTo(p.x, p.y); open = true; }
+  }
+  ctx.stroke();
+  const labelAt = projectGlobe(-15, 80);
+  if (labelAt.visible) ctx.fillText(a.label, labelAt.x + 8, labelAt.y + 4);
+}
+function colourOf(sat) {
+  if (colourBy === "system") return systemColours.get(sat.system) || C("fill");
+  return STATUS_COLOURS[sat.health_status] || C("idle");
+}
+function drawTrack(sat) {
+  ctx.lineWidth = 0.9; ctx.strokeStyle = colourOf(sat); ctx.globalAlpha = 0.62;
+  for (const seg of sat.track_segments) {
+    ctx.beginPath(); let open = false;
+    for (let i = 0; i < seg.lon.length; i++) {
+      const p = project(seg.lat[i], seg.lon[i]);
+      if (!p.visible) { open = false; continue; }
+      if (open) ctx.lineTo(p.x, p.y); else { ctx.moveTo(p.x, p.y); open = true; }
+    }
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+function drawMarks() {
+  placed = [];
+  ctx.font = "600 11px " + getComputedStyle(document.body).fontFamily;
+  for (const sys of DATA.systems) {
+    if (!visible.has(sys.name)) continue;
+    for (const sat of sys.satellites) {
+      if (sat.lat == null || sat.lon == null) continue;
+      const p = project(sat.lat, sat.lon);
+      if (!p.visible) continue;
+      const big = hovered === sat;
+      ctx.beginPath(); ctx.arc(p.x, p.y, big ? 7 : 5, 0, Math.PI * 2);
+      ctx.fillStyle = colourOf(sat); ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = C("platform"); ctx.stroke();
+      if (allLabels || big) {
+        ctx.fillStyle = C("ink"); ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+        ctx.fillText(sat.label, p.x + 7, p.y - 7);
+      }
+      placed.push({ sat, x: p.x, y: p.y });
+    }
+  }
+}
+function paint() {
+  ctx.clearRect(0, 0, box.w, box.h);
+  ctx.fillStyle = C("well"); ctx.fillRect(0, 0, box.w, box.h);
+  strokeLand();
+  drawArea();
+  if (allTracks) {
+    for (const sys of DATA.systems) if (visible.has(sys.name)) for (const sat of sys.satellites) drawTrack(sat);
+  } else if (hovered && visible.has(hovered.system)) drawTrack(hovered);
+  drawMarks();
+  updateTip();
+  ctx.setLineDash([]);
+}
+
+/* ---------- the hover card ---------- */
+function updateTip() {
+  if (!hovered) { tip.classList.remove("on"); return; }
+  const sat = hovered;
+  const dl = el("dl");
+  const row = (k, v) => { dl.append(el("dt", null, k), el("dd", null, v)); };
+  row("System", sat.system);
+  if (sat.signal_id) row("Signal ID", sat.signal_id);
+  row("Broadcast health", sat.health_words);
+  row("Signal accuracy", sat.accuracy_words);
+  row("Orbit record age", sat.age_words);
+  row("Latitude", sat.position_words.split(",")[0]);
+  row("Longitude", sat.position_words.split(",")[1] || "-");
+  row("Height", sat.height == null ? "-" : `${Number(sat.height).toLocaleString(undefined, { maximumFractionDigits: 0 })} km`);
+  tip.replaceChildren(el("div", "n", sat.name), el("div", "k", `${sat.system} · ${sat.health_words}`), dl);
+  tip.classList.add("on");
+  const stageBox = stage.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight;
+  tip.style.left = clamp(stageBox.width - tw - 10, 10, stageBox.width - 10) + "px";
+  tip.style.top = clamp(stageBox.height - th - 10, 10, stageBox.height - 10) + "px";
+}
+function hitTest(x, y) {
+  let best = null, far = 18 * 18;
+  for (const p of placed) { const d = (p.x - x) ** 2 + (p.y - y) ** 2; if (d < far) { far = d; best = p.sat; } }
+  return best;
+}
+const local = e => { const b = canvas.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+
+/* ---------- interaction ---------- */
+function setView(mode) {
+  viewMode = mode;
+  stage.classList.toggle("flat", mode === "flat");
+  stage.classList.toggle("globe", mode === "globe");
+  $$("#viewseg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.view === mode)));
+  canvas.setAttribute("aria-label", mode === "flat" ? "Flat world map of tracked satellites"
+                                                    : "Globe of tracked satellites, drag to rotate");
+  resize();
+}
+function setColour(mode) {
+  colourBy = mode;
+  $$("#colourseg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.colour === mode)));
+  buildLegend();
+  paint();
+}
+function buildLegend() {
+  const key = colourBy === "health" ? DATA.health_key : DATA.system_key;
+  legend.replaceChildren(...key.map(item => {
+    const s = el("span"); const sw = el("span", "swatch"); sw.style.background = item.colour;
+    s.append(sw, el("span", null, item.words || item.name)); return s;
+  }));
+}
+function buildSystems() {
+  const host = $("systems");
+  for (const sys of DATA.systems) {
+    const b = el("button", "system"); b.type = "button";
+    const dot = el("span", "dot"); dot.style.background = sys.colour;
+    b.append(dot, document.createTextNode(`${sys.name} (${sys.satellites.length})`));
+    b.setAttribute("aria-pressed", "true");
+    b.addEventListener("click", () => {
+      if (visible.has(sys.name)) visible.delete(sys.name); else visible.add(sys.name);
+      b.setAttribute("aria-pressed", String(visible.has(sys.name)));
+      paint();
+    });
+    host.append(b);
+  }
+}
+function resize() {
+  const b = stage.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(b.width * dpr); canvas.height = Math.round(b.height * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); box = { w: b.width, h: b.height }; paint();
+}
+const $$ = s => [...document.querySelectorAll(s)];
+$$("#viewseg button").forEach(b => b.addEventListener("click", () => setView(b.dataset.view)));
+$$("#colourseg button").forEach(b => b.addEventListener("click", () => setColour(b.dataset.colour)));
+$("home").addEventListener("click", () => { view = { ...home }; paint(); });
+canvas.addEventListener("pointerdown", e => {
+  canvas.setPointerCapture(e.pointerId);
+  if (viewMode === "globe") drag = { x: e.clientX, y: e.clientY };
+  hovered = hitTest(...local(e)); paint();
+});
+canvas.addEventListener("pointermove", e => {
+  const [x, y] = local(e);
+  if (drag) {
+    const r = Math.min(box.w, box.h) / 2 - 24;
+    view.lon = normLon(view.lon - (e.clientX - drag.x) / r * DEG);
+    view.lat = clamp(view.lat + (e.clientY - drag.y) / r * DEG, -89, 89);
+    drag = { x: e.clientX, y: e.clientY }; paint();
+  } else {
+    hovered = hitTest(x, y); canvas.classList.toggle("over", !!hovered); paint();
+  }
+});
+canvas.addEventListener("pointerup", () => { drag = null; canvas.classList.remove("drag"); });
+canvas.addEventListener("pointerleave", e => { if (e.pointerType !== "touch" && !drag) { hovered = null; tip.classList.remove("on"); paint(); } });
+
+/* ---------- the frame takes the page's own height, so nothing scrolls inside it ---------- */
+function fitFrame() {
+  if (!window.frameElement) return;
+  const parts = [...document.body.children].filter(e => e.tagName !== "SCRIPT");
+  const bottom = Math.max(0, ...parts.map(e => e.getBoundingClientRect().bottom + window.scrollY));
+  window.frameElement.style.height = Math.ceil(bottom) + 12 + "px";
+}
+function toggle(id, flip) {
+  const button = $(id);
+  button.addEventListener("click", () => { button.setAttribute("aria-pressed", String(flip())); paint(); });
+}
+function ready() {
+  toggle("tracks", () => (allTracks = !allTracks));
+  toggle("labels", () => (allLabels = !allLabels));
+  buildSystems();
+  buildLegend();
+  $("foot").textContent = `Positions from each satellite's newest orbit record, as of ${DATA.as_of} UTC; `
+    + `broadcast health from the IGS file of ${DATA.day}. Work in progress.`;
+  resize();
+  if ("ResizeObserver" in window) {
+    const fitter = new ResizeObserver(() => { resize(); fitFrame(); });
+    [stage, document.body, ...document.body.children].forEach(e => fitter.observe(e));
+  }
+  fitFrame();
+}
+ready();
+</script>
+</body>
+</html>
