@@ -13,6 +13,7 @@
 > | Substack newsletters as feeds | `https://feeds.opengnss.org/substack/<publication>/feed` | Cloudflare Worker ([cloudflare/newsletters](cloudflare/newsletters)) |
 > | Newsletter subscription address | `newsletters@feeds.opengnss.org` | Cloudflare Email Routing |
 > | News for the dashboard | `latest_news.json` on the `news-data` branch | this repository |
+> | Orbits for the dashboard, when CelesTrak refuses it | `latest_gnss.json` on the `orbit-data` branch | this repository |
 > | The team's earlier app (`app.py`) | <https://gnss-health-monitor.streamlit.app/> | the team's Streamlit account; not this dashboard |
 >
 > - **Administration console, for the team: <https://console.opengnss.org>**

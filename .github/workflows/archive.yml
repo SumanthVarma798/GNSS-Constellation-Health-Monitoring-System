@@ -5,7 +5,8 @@
 # again (see DOWNLOAD_TRIES in evidence/settings.py), never sooner than the source's minimum gap.
 # Each run then tells Healthchecks.io how it went, with its log line: one check per group, named
 # archive-<group>. Healthchecks.io emails when a run fails, or when none arrives within its grace time.
-# A second job publishes latest_news.json on this repo's news-data branch for the dashboard.
+# A second job publishes latest_news.json on this repo's news-data branch for the dashboard, and a third
+# publishes latest_gnss.json, the newest CelesTrak GNSS copy, on branch orbit-data (CelesTrak refuses the dashboard).
 #
 # CADENCE IS SET HERE. Each group of sources (see evidence/sources.py) has one
 # schedule line below. To change how often a group is fetched, change its line
@@ -170,3 +171,49 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit --quiet -m "Latest news for the dashboard"
           git push --quiet
+
+  publish-orbits:
+    # CelesTrak refuses the hosted dashboard but answers GitHub, so the dashboard reads this copy from orbit-data when
+    # its own fetch fails (data/celestrak.py, COPY_URL). Never touches main; an unchanged copy makes no commit.
+    if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System' && always() && (needs.archive.outputs.group == 'orbital' || needs.archive.outputs.group == 'all')
+    needs: archive
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out the archive
+        uses: actions/checkout@v4
+        with:
+          repository: SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive
+          ssh-key: ${{ secrets.ARCHIVE_DEPLOY_KEY }}
+          path: archive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'  # matches runtime.txt
+      - name: Install the one library the archive needs
+        run: pip install "$(grep '^requests==' requirements.txt)"
+      - name: Write latest_gnss.json on orbit-data, made on the first run
+        run: |
+          if git ls-remote --exit-code --heads origin orbit-data >/dev/null 2>&1; then
+            git fetch --quiet origin orbit-data
+            git worktree add "$RUNNER_TEMP/orbit-data" --detach FETCH_HEAD
+            cd "$RUNNER_TEMP/orbit-data"
+            git switch --quiet -C orbit-data
+          else
+            git worktree add "$RUNNER_TEMP/orbit-data" --detach
+            cd "$RUNNER_TEMP/orbit-data"
+            git checkout --quiet --orphan orbit-data
+            git rm -rf --quiet . >/dev/null 2>&1 || true
+          fi
+          python "$GITHUB_WORKSPACE/scripts/latest_orbits.py" --archive "$GITHUB_WORKSPACE/archive" --out latest_gnss.json
+          git add latest_gnss.json
+          if git diff --cached --quiet; then
+            echo "No orbit copy change."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --quiet -m "Latest CelesTrak GNSS copy for the dashboard"
+          git push --quiet --set-upstream origin orbit-data

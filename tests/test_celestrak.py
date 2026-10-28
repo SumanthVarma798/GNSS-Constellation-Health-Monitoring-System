@@ -16,6 +16,7 @@ IRNSS_1B = {"OBJECT_NAME": "IRNSS-1B", "OBJECT_ID": "2014-017A", "EPOCH": "2026-
             "EPHEMERIS_TYPE": 0, "CLASSIFICATION_TYPE": "U", "NORAD_CAT_ID": 39635, "ELEMENT_SET_NO": 999,
             "REV_AT_EPOCH": 4592, "BSTAR": 0, "MEAN_MOTION_DOT": 7.6e-07, "MEAN_MOTION_DDOT": 0}
 NOW = datetime(2026, 10, 15, 10, 42, tzinfo=timezone.utc)
+FETCH_COPY = celestrak.fetch_copy   # the real one: conftest swaps in one that fails, so no test reads GitHub
 
 
 class Reply:
@@ -42,7 +43,8 @@ class ReplyText:
 
 
 def empty_state():
-    return {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True, "failing_since": None}
+    return {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True, "failing_since": None,
+            "copy_at": None}
 
 
 @pytest.fixture(autouse=True)
@@ -194,3 +196,49 @@ def test_failing_since_is_the_first_failure_in_a_row_and_survives_a_restart(monk
 def test_catalogue_entry_returns_none_when_celestrak_lists_nothing(monkeypatch):
     monkeypatch.setattr(requests, "get", lambda *args, **kwargs: ReplyText("No SATCAT records found"))
     assert celestrak.catalogue_entry(100744) is None
+
+
+def refused(norads):
+    raise requests.HTTPError(403)
+
+
+def test_when_celestrak_refuses_the_archive_jobs_copy_fills_in_and_says_when_it_was_taken(monkeypatch):
+    taken = NOW - timedelta(hours=3)
+    copy = {"fetched_at": taken.strftime("%Y-%m-%dT%H:%M:%SZ"), "rows": [IRNSS_1B, {**IRNSS_1B, "NORAD_CAT_ID": 1}]}
+    asked = []
+
+    def get(url, timeout, **kwargs):
+        asked.append(url)
+        return Reply(copy)
+
+    monkeypatch.setattr(celestrak, "fetch", refused)
+    monkeypatch.setattr(celestrak, "fetch_copy", FETCH_COPY)
+    monkeypatch.setattr(requests, "get", get)
+    after = celestrak.refresh([39635], NOW)
+
+    assert asked == [celestrak.COPY_URL]
+    assert set(after["rows"]) == {39635} and after["listed"] == {39635, 1}   # only wanted rows; the whole listing
+    assert after["copy_at"] == taken and after["fetched"] == taken           # the data's own age, not now
+    assert not after["ok"] and after["failing_since"] == NOW                 # CelesTrak itself is still failing
+    monkeypatch.setattr(celestrak, "state", empty_state())                  # the dashboard restarts
+    assert celestrak.refresh([39635], NOW + timedelta(minutes=5))["copy_at"] == taken
+
+
+def test_with_no_copy_either_a_refusal_keeps_what_is_held(monkeypatch):
+    monkeypatch.setattr(celestrak, "fetch", refused)
+    after = celestrak.refresh([39635], NOW)   # conftest's copy fails too
+    assert after["rows"] == {} and after["copy_at"] is None and not after["ok"]
+
+
+def test_a_copy_that_is_not_one_is_ignored(monkeypatch):
+    monkeypatch.setattr(celestrak, "fetch", refused)
+    monkeypatch.setattr(celestrak, "fetch_copy", FETCH_COPY)
+    monkeypatch.setattr(requests, "get", lambda url, timeout, **kwargs: Reply(["not", "a", "copy"]))
+    assert celestrak.refresh([39635], NOW)["copy_at"] is None
+
+
+def test_celestrak_answering_again_clears_the_copy(monkeypatch):
+    celestrak.state.update(ok=False, failing_since=NOW, copy_at=NOW, tried=NOW)
+    monkeypatch.setattr(celestrak, "fetch", lambda norads: ({39635: celestrak.as_history_row(IRNSS_1B)}, {39635}))
+    after = celestrak.refresh([39635], NOW + timedelta(hours=2))
+    assert after["ok"] and after["copy_at"] is None and after["failing_since"] is None

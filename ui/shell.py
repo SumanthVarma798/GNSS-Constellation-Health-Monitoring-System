@@ -132,7 +132,8 @@ def viewer_zone():
 
 def _data_chip(names, window_days, params, live, now):
     """The time of the newest orbit data behind the page (the oldest constellation's), and since when CelesTrak has
-    been failing, if it is. Every saved copy stays in use meanwhile (issue 39: parts out of step say so)."""
+    been failing, if it is. Every saved copy stays in use meanwhile (issue 39: parts out of step say so); while the
+    archive job's copy stands in for CelesTrak, the second chip says so instead, and the age chip keeps its colour."""
     try:
         taken = min(data.load(c, window_days, params)["data_time"] for c in names)
     except ValueError:
@@ -142,6 +143,8 @@ def _data_chip(names, window_days, params, live, now):
     text, status = age_words(taken, now, viewer_zone())
     if live["ok"]:
         return surfaces.chip(text, status)
+    if live.get("copy_at"):
+        return surfaces.chip(text, status) + surfaces.chip("CelesTrak via the archive job", "idle")
     # A copy saved before failing_since was kept has none: its last try stands in.
     return surfaces.chip(text, status) + surfaces.chip(
         failing_words(live["failing_since"] or live["tried"], now, viewer_zone()), "warn")
@@ -174,7 +177,8 @@ def _ring(live, now):
     name = f"ring{now:%H%M%S%f}"
     return (f"<style>@keyframes {name} {{ from {{ --left: {share}; }} to {{ --left: 0%; }} }}"
             f".st-key-refresh_button button::before {{ --left: {share}; animation: {name} {left:.0f}s linear forwards; }}"
-            + ("" if live["ok"] else ".st-key-refresh_button button::before { --ring: var(--warn); }") + "</style>")
+            + ("" if live["ok"] or live.get("copy_at") else ".st-key-refresh_button button::before { --ring: var(--warn); }")
+            + "</style>")
 
 
 @st.fragment(run_every=CLOCK_TICK_SECONDS)

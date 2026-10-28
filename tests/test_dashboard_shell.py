@@ -35,7 +35,7 @@ def segmented_controls_rerun(monkeypatch):
 def celestrak_answers_with_nothing_new(monkeypatch):
     """No network in tests: CelesTrak 'answers' with no rows unless a test says otherwise."""
     monkeypatch.setattr(celestrak, "state", {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True,
-                                             "failing_since": None})
+                                             "failing_since": None, "copy_at": None})
     monkeypatch.setattr(celestrak, "fetch", lambda norads: ({}, set()))
     monkeypatch.setattr(spacetrack, "state", {"rows": {}, "tried": None, "fetched": None,
                                               "refused_until": None, "note": "ok"})
@@ -335,6 +335,18 @@ def test_a_failed_refresh_keeps_the_archive_and_says_so(monkeypatch):
     assert 'class="chip warn">Orbit data 4 Oct, 2 days old' in chips
     assert 'class="chip warn">CelesTrak failing since 12:00' in chips   # the frozen clock's time, in UTC
     assert len(tiles(at)) == 8
+
+
+def test_while_the_archive_jobs_copy_stands_in_the_chip_says_so_not_failing(monkeypatch):
+    def down(norads):
+        raise requests.HTTPError(403)
+    monkeypatch.setattr(celestrak, "fetch", down)
+    monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: ({}, set(), FROZEN - timedelta(hours=1)))
+    chips = " ".join(htmls(run(lambda at: at.button(key="refresh_button").click())))
+
+    assert 'class="chip idle">CelesTrak via the archive job' in chips
+    assert "CelesTrak failing" not in chips
+    assert 'class="chip warn">Orbit data 4 Oct, 2 days old' in chips   # the age chip keeps its colour
 
 
 def test_a_source_failing_since_yesterday_says_since_when(monkeypatch):
