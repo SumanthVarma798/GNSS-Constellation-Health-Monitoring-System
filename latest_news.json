@@ -1,6 +1,102 @@
 {
- "generated_at": "2026-10-29T13:46:34Z",
+ "generated_at": "2026-10-29T18:42:07Z",
  "items": [
+  {
+   "address": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxQa0djNERsNHBPYjA1TDA1ZnBBcnFFMHoxZ2FUcnR6bzgzUW1mYnFrbkU1bC1WZmp3TjhfTVFhdUVmMk82dk5qOEVQaEltWUprWDlKM3ZXRS0tMmlzb1NhQTJZeFhUNEczZ3hZUi0wQU8wRDhDcGY0ZFhWbXk3T0RGTkFfbW1sQWdjUjVMbER1d1hwajlvSjVxWUtrOC15WmdZd2VaY2lHUFZGYW1TYnM4bzhqSGZmSGNpQ2diN3FpMzdySTB0bjVSM1htU3N1YXgx0gHWAUFVX3lxTE1zU1VUd2VadmtMRVByUnNQTVpWYVNJT3dDajBVVC1lY3ExWHFoT1ltZFZHa2RPR1htNTJ0NWxNTGVwSzk0MVoxOGptVmVLYnllZEE4c3Y1MGJaZWxxc2FUOWREQmJCN1RTaU0tdHEwbzFkUUxCMmc2Sm5sanc4RGJWcTAxTXkwSlNUVGhDRlBhbjJmVks5RUFmMmg2VTVCelE2a0lzXzVUT1gtRGJGU3dDeXlLYnp1ZEh0eXYwRWxiZXpNVjRQY0ZDcG1naEM2NXNrM2tUVVE?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T18:41:04Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Business Standard",
+   "published_at": "2026-10-29T17:04:02Z",
+   "source_id": "business-standard.com",
+   "summary": "",
+   "title": "India's NavIC navigation system awaits boost with ISRO's NVS-03 launch",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE9Gb1ZtV0NNd1hMaEFMUzRrb1k3R2ZQUlFURG5TVC1aNm40Wm5BUHkwSjVMQUw2bU9xYWNMV3lqVWdTNUFCYW9vSERnOW85WEFXR3NJTEVB?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T18:41:04Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Techgenyz",
+   "published_at": "2026-10-29T16:42:14Z",
+   "source_id": "techgenyz.com",
+   "summary": "",
+   "title": "ISRO GSLV-F18 to Launch NVS-03 Navigation Satellite on October 30",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiV0FVX3lxTFBDNkFYM2JwMG8xYURPRFpqQkNyVDNwYjZPdVpjb3ROVG5pc28xM3cyRlhFeDBTTHhxM2l0aFBwTGxkLW1PcV9YaUprMUtvOVJMUVVmNVltaw?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T18:41:04Z",
+   "grade": "A",
+   "grade_standing": "provisional",
+   "outlet": "ISRO",
+   "published_at": "2026-10-29T14:49:40Z",
+   "source_id": "isro.gov.in",
+   "summary": "",
+   "title": "GSLV-F18/NVS-03 MISSION",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMioAFBVV95cUxPUEJDRVltU0JCWnU3MVI3enh4N1RPdUh4Y012U1h3OUlZT1hDMXd3djZZcVBrZWNBM0NEX2ktZDNMY0NFNEJfcmhTaXBnYm9XUURRMzZqNUFrcDNVMW1oY1JNWGFsZHNYeVBVMWVaVEtKX0hYNVBVMVkwYzh3YU9yR1BGTmRzZFNVTXBIa01PTEJRZnJkQm1yZGhacnJDdnZP?oc=5",
+   "category": "programme and policy",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-29T18:41:46Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "London Daily News",
+   "published_at": "2026-10-29T13:56:18Z",
+   "source_id": "londondaily.news",
+   "summary": "",
+   "title": "Galileo ground-station contracts set out next phase of system upgrade",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMi0wFBVV95cUxOMHR5YVM1MExTWW1ZYzdfZWxKWFFBa3M5OUpCa1JXTFd4ZDNmdVAwTF9HRkl5OHI3VnpPSld5WmtjSTFLS2JsWkZmZkJ5SGhEanhXV2lhTnlDNzBiMkx1ZFNld3NsWE5oV09VSXIxdlNmYmlzX1phaGxISHVGSXZBNkRBejl0VTBraFZRc1U4aHZ6b2hDZDRWNi1TRGtFdUN4SWhlNC1SMzdSX0VVZjhHeXlBWTlFRGRzNkRJaXRQcFJ1dks1M1Y3QXFGLVZ3b3BfV3Vz0gHYAUFVX3lxTFBaX2VBUXJiYVhvWVlVWXUzMWFkTmJoMnJGMDBnblNxNWxwS3VabTBWdTY1WW1kdUFUb05yeTZ2ZTliV0ZmeC1SSFdwcUZjVW1NaHdHcVN5em15aUR1MUIwY19GQ2dLdDk0Zm1oM1duVElrOVZvZlB5STBnVUplckxSN0xkTUFMSzJhcFE0aGRfR0xxWEwtQmVLZ3RwQVNSS0E0WDV0aURlTDFHTTJza081Y2RIS1g1ZkNjNG1qU0llWnRzTHl6RzdGUGFKRVVEWkc0SlBwZ2ZuRg?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T18:41:04Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "CNBC TV18",
+   "published_at": "2026-10-29T13:11:03Z",
+   "source_id": "cnbctv18.com",
+   "summary": "",
+   "title": "ISRO to launch NVS-03 navigation satellite on October 30: When and where to watch live",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxNQS16RkJfdk5RUXdQTmhZV3J0ejV5MWo4STVLbExpQW5kSDJ6ZzQ4U3ctQWJ6TDhsUHNBQm9MeDNpU0FEWHk3eFh6eFp2bXdQUDl0OFYwMHNJZGNVTDVzUkdjWTRmcGVOQUc3ckM0MlF6MlI2R1RUbVpXNVBrOExtRkZSMDBNeTI0a3lBcEFVT3lBaHZEakJSVy1uSWI4c0EtZ3pVRWtlbkpOUnlnMmF4NUlOR0psMkFmeU1TZE1QMHplcVZQZndBQ3VRR3R1UUp50gHQAUFVX3lxTE1BLXpGQl92TlFRd1BOaFlXcnR6NXkxajhJNUtsTGlBbmRIMnpnNDhTdy1BYnpMOGxQc0FCb0x4M2lTQURYeTd4WHp4WnZtd1BQOXQ4VjAwc0lkY1VMNXNSR2NZNGZwZU5BRzdyQzQyUXoyUjZHVFRtWlc1UGs4TG1GRlIwME15MjRreUFwQVVPeUFodkRqQlJXLW5JYjhzQS1nelVFa2VuSk5SeWcyYXg1SU5HSmwyQWZ5TVNkTVAwemVxVlBmd0FDdVFHdHVRSnk?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T18:41:04Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "India Today",
+   "published_at": "2026-10-29T11:16:12Z",
+   "source_id": "indiatoday.in",
+   "summary": "",
+   "title": "Isro chief offers prayers at Tirupati ahead of critical GSLV-F18 NVS-03 launch",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
   {
    "address": "https://x.com/isro/status/2115757885506642087",
    "category": "launch",
@@ -16,6 +112,214 @@
    "summary": "Meet NVS-03 - the third satellite of the second-generation NVS series, intended to augment the NavIC constellation and support continuity of navigation services. Launch: 30th October 2026, 23:51 hours IST Watch live: 30th October 2026, 23:20 hours IST onwards https://t.co/Mbllc4lcM2 Mission details…",
    "title": "Meet NVS-03 - the third satellite of the second-generation NVS series, intended to augment the NavIC constellation and…",
    "via": "https://x.com/isro"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxOeFJtMFctMnFXTlhfWWZqaDBCMXFLenJfd1l5blRpcmJVRGJ0UUs4bV9DM1RwSENDS0V5a0R6YmJPdG4tVEJkQTZTWUs5NTFNMm0wMTNHa1lRVl9qRlhVTGxsMFBRbGoydzJidG1KUElUZkhQbHYtUEhFaWFpZlg0MGZIbWtVRmxtWWlJZXU4WDJ1M2x6c0p0cjIwcWtaYXd4QTVLYkRhbTRMNFk3QWhqSUlTUHNvWE56ZHBCUkphalNYbG5uVFJZUA?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T18:41:04Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Utkarsh Classes",
+   "published_at": "2026-10-29T10:29:50Z",
+   "source_id": "utkarsh.com",
+   "summary": "",
+   "title": "ISRO to Launch GSLV-F18/NVS-03 Mission on 30 October 2026: What It Means for India?",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMimgFBVV95cUxQaWt2N3Bxb3A1bklFVXZDQW5SbUhwbkFtdmdhcS1GWktSMmFwd3NiUHRkcEdZTGZSVzAzVmctWko3TW5ydk95S1A4UTQ0Y3J1allVbmRsWUtvTGMwS2Z3TlY0X3lnREplMzRiUGxfVUI5VGs0NFJDQkx4dEJnYXJTQjhNd2g4R0JTcC1VMmxqN2t1b2ZoMWU2ZDN3?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T18:41:04Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Pragativadi",
+   "published_at": "2026-10-29T10:05:40Z",
+   "source_id": "pragativadi.com",
+   "summary": "",
+   "title": "ISRO to Launch NVS-03 Navigation Satellite Onboard GSLV-F18 on Oct 30",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMi9wFBVV95cUxPUC0tTFlfQnVLNkxvVHNGRVdvcmgxVWFyNkNEekIxM0NHc2hKelFoR1JWd3lsT3NvdVd4ZkFwVFZNUjR3R2ppY19XMXZ1VGNyUVFhRVU2TDFtQzgtWU1KUXFoZUV4SWp6amtmZFFRUXRmeWVQc2NnTkNHMjZOcHlfUTFadVNWOGM4ZDU0M3FzU3pIVWhlRnduM0xXT2tMa2huQ1QyVVM2N2l2ZjNKYmJFcmdXcHJQS091NkVTcDMydzdabjlEaWluQmx0dFEtMElPSjd5OU5VdXducGdPdGt6QTJBVjRKYm5wRzJta1BycjMyV2dDaEdz0gH8AUFVX3lxTFBpV09tQ2ZjejlVbkd3dGppLUdYeHVBMTFHUEkyTF9Cc3lydzRTZXJZb2cyLWE0WXBpeFJ2anB1MmFFMzBwRE9tWTJvUGphRHF1T3BidUpIeXBsUUdVd3E2LXlnc1hFSGZVX0JIekJWZzFuYTlqUzVfTnZvVUMtR19tYXAwZVJnRUlpVlN3VEJ1ZTUtaVhDOG96QWt4MF9weUctVGRkOE84MFJ0Wjhsa0Y2dEdZWGVFUGNSbUl0VkpraERrQjRlaWNhR0ZwREtkNFNubFhLSUlUaTJmdXR2T3hKS191R3NjbmZpblpSSVJZQndYUWtlX0UtSlo2SA?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T18:41:04Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "The Economic Times",
+   "published_at": "2026-10-29T09:25:52Z",
+   "source_id": "m.economictimes.com",
+   "summary": "",
+   "title": "ISRO to launch NVS-03 navigation satellite on October 30: Why the mission is crucial for NavIC",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiUkFVX3lxTE5RSWJnV2paNW9kOVozQVVYSkw5SFNaRDc4R3FuMldtT1RfeE5IWFFQUlVUXzZabS1pdC1YRmxsY1c2VFltQTV2MkxVa09raEtjb0E?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T18:41:04Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Instagram",
+   "published_at": "2026-10-29T09:21:27Z",
+   "source_id": "instagram.com",
+   "summary": "",
+   "title": "The Indian Space Research Organisation (ISRO) is set to launch its NVS-03 navigation satellite aboard the GSLV-F18 rocket from the Second Launch Pad at Satish Dhawan Space Centre (SDSC-SHAR), in Sriharikota on Friday, October 30, at 11:51 p.m., as p",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMioAFBVV95cUxQZFlReDZBSFNKZVJMSVYwM2R3RWVFYTdyTWhiX09RRGhKX3NWX1dyc0lUZWN3QVZXelRVZGI4NVBQTHUzbjEzR0hrZDZIODFrLUR0T2swd0hfME1hWm41VTZfUElULUhYVklLbkJfTWdZZWtSZEZDTTJnTVVUM2Z2T3FuUUpLMlQ1RmlaWkhSOFA2OURvTUItakRNZ1NHZ0FF?oc=5",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-29T18:41:46Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Il Sole 24 ORE",
+   "published_at": "2026-10-29T08:39:48Z",
+   "source_id": "en.ilsole24ore.com",
+   "summary": "",
+   "title": "Four new second-generation satellites for the Galileo fleet",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMi7AFBVV95cUxNc3FiQ2NnZGlnbTVqZThnZnhfWHBjN0NwTGdPc1NwcW14Tm5WTHFNeVp6Yzc4TEVWZzhsUlpMT3NvNnQ3dTc4Y0pkQUNYMGVralB2anV5Rmk2MDUzcDgyNWpJd0VVcmtfbE9OSEI1clBydTNNRTBkanBERmhheHpNWmZsRDJaZHhpRzJXQ3FRbjRCX3BvbHllVkM3ZFpEYThLeHljTVVHeFRVa2p1SWVDaXZlODNzWmN6YkE0Y3RIV044OEhERERJa1FwNEw4cEtWUm5UQVRsZDk3N3QzdWNlcVZmNjM3cnNnQldKMtIB7AFBVV95cUxNc3FiQ2NnZGlnbTVqZThnZnhfWHBjN0NwTGdPc1NwcW14Tm5WTHFNeVp6Yzc4TEVWZzhsUlpMT3NvNnQ3dTc4Y0pkQUNYMGVralB2anV5Rmk2MDUzcDgyNWpJd0VVcmtfbE9OSEI1clBydTNNRTBkanBERmhheHpNWmZsRDJaZHhpRzJXQ3FRbjRCX3BvbHllVkM3ZFpEYThLeHljTVVHeFRVa2p1SWVDaXZlODNzWmN6YkE0Y3RIV044OEhERERJa1FwNEw4cEtWUm5UQVRsZDk3N3QzdWNlcVZmNjM3cnNnQldKMg?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T18:41:04Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Moneycontrol.com",
+   "published_at": "2026-10-29T07:59:10Z",
+   "source_id": "moneycontrol.com",
+   "summary": "",
+   "title": "ISRO set to launch NVS-03 satellite on October 30. Check the launch time, place and live stream",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMipwFBVV95cUxPd3FsU2ZfalBYUWhWS2JGMTNwYWVLOVJYcXZHRXdTbWxKZTdrdVJYTWxacnFnM0hoYko0Zm4tcWxETzRteGpwS1BGNDFrVlJJYi1OWjFMNlZMLUhQU3BzbVl4OURqR3Nmd0NIb1hIOUlfcmk2d3JGZThJaHA0RjV1MGJ1T3lzTXpEc1N4NVIxSUdRV1ZGUXdmSGZfVjdwX25FVV82NFp5dw?oc=5",
+   "category": "programme and policy",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-29T18:41:46Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Telecompaper",
+   "published_at": "2026-10-29T07:37:37Z",
+   "source_id": "telecompaper.com",
+   "summary": "",
+   "title": "Indra wins ESA contracts to build new Galileo ground stations",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMid0FVX3lxTE9sWVZPaTBWcURjdWc5d285QUJ0ZFJBRmNpT3cxZ2NUN05ZYnYyTk1GLWJjaERyNnp6UHZaTlZqd3F3bzlrVVBpQTBUbkh3bGtHdVoxU0VRUG95am1kNVc0endSaGlOdTFYNHZmbjVQUnlTR194aDc4?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T18:41:04Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Vajiram & Ravi",
+   "published_at": "2026-10-29T07:25:46Z",
+   "source_id": "vajiramandravi.com",
+   "summary": "",
+   "title": "ISRO NVS-03 Mission 2026, Launch Date, Features and Significance",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMi9gFBVV95cUxNbUlwNDhkMUZUNWYyYzdrc190S2tnWE04OVhNY0tnQ2plZDZadmZENzI1R0lyQjlOcER0UkVpcTJJenRNWGFDMFhWcktCTTV2R2x0SzY0TG9wclk2TGp4QVdGZnZsMVJJVU9VTkxtX1VkejFNT2RhMUNmOXBmb1NKcXRTVkp0aVNUaUlTWVEzM0xrS0tSM1hNeGdxTnVBNHNxQ2ZPdEFQZzBwY2hrUXJfeDl1ejZ6TmpuVDBHTE1oT0JfSXJyVUZweVVOMUtfM0hyUU42aUx4cnEyVjN5T1VocGROdVBZRUJTa09KVkMzaG84Tnczb1HSAfsBQVVfeXFMTTM0TEJRNzlERldNdUhMVTRjNC1SRERqZWNXN3AzVnlLb3RCU19EYXBrbXZQU3pONndMUDE3cHd4bW9Eek1EM0NLTl8xZlJNTDFsR19WekpDVHFxR3dlS1lnb3g1cmQ5Q0M0WVhHbHdOSU9vOU9ORVVPNm1EYU9wQjdOYWhjWWxmNk9qRXFBWkF6MldmNElMbXAwQXI3dmpKNTdlaFNUVnRieENZNFFRVmQzakowZmdIT1JmOEw2Skl1NndRRHRqU0lrSWR6eEFDSFp4RHBlUW53NEZyLUtpNlZSMEszUG1KWlo2Z0FWVS03UzJoTXJrbmlHbzA?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T18:41:04Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Livemint",
+   "published_at": "2026-10-29T06:22:11Z",
+   "source_id": "livemint.com",
+   "summary": "",
+   "title": "Are you ready for ISRO's upcoming launch? What is GSLV/NVS-03 mission to take off on October 30, Friday | Explained",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxOdDl6X0RicFZuY1J4Wk9URDhQZlhHOEhWMWRqV2YzTkgyY2x1X1RjcDlzd3Q0Q1BDa0pLdkNwekpNMDd1TVZPZE9RR3NQemo2M3pxdzNuWVJwZ0sxdF9CR05MZmlOSV9FemNJN3k2YThubVJCc1dYY3dNa2ZtVU1KT05SVjM4YzJGeFZSOXY2SmFQb20zX2RaRk5GVWtfc0k5MUZsMDB2cDM2V1M2U2VSTnUxZnhvZ0V50gG-AUFVX3lxTE5HNndscnFXRlZmcU9LbDU1M2xMOUFJZU1hVEJteXA3a2c1Z3JFZmFfaTd2RWVxX2E2azJvRXFtelZ5S3lMTUVhcVNLRkpDbjdkZkwwREl1cUVQdmxVdjUyRTYyZW1hNThtXzdqZ2lBdm5SSHZpbl9ONzFLSVJ4c0lTbFhqbTVPMi13OUV1R2hHWEpqSTNDLVRjN3dwMFZiV3V4Y2ROLUtiRXVQNUJvMzRMYndzVWo2NWVjNUVqd2c?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T18:41:04Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Business Standard",
+   "published_at": "2026-10-29T06:11:25Z",
+   "source_id": "business-standard.com",
+   "summary": "",
+   "title": "Isro to launch NVS-03: What it means for India's NavIC navigation system",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMilAFBVV95cUxOZFFrVjFKdHdUVDkycGFxbFZnS1diSXdyOVU1dmZKRU1wOE1NYUdaUGJjUHBjcmE2WGhZVUhoeFZMMW95TEJkX3RCWnF1TWRLVjVjOEhYY0ZyXzhLTnBObkUxRl9FVUNaSC12d2tqczMxMDFGSnVHQUpGV1pMQkRpX0V5aHRwc1RMZGNzcFd2TW9ldVV3?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T18:41:04Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "www.nationpathindia.com",
+   "published_at": "2026-10-29T04:52:19Z",
+   "source_id": "nationpathindia.com",
+   "summary": "",
+   "title": "ISRO Schedules NVS-03 Navigation Satellite Launch for October 30, Aims to Strengthen NavIC Services",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiygFBVV95cUxNcXB6V0VDMzJvWFZJTWNvY0FJcGZJS2JBVWQwM3c3ZDhEVndieURBQ0hWQmxzZ0tFdjJaR09XZDZVWllQdGNGQVl5bkdUeXIydmY0NzNxZTJSazhsS2hIdjdwdmNTUGg5NnNBNWhwR1NsNVpidmpWbjA4akVlWWRvZzlsTmdLNmhGNHdjNU0yQ1Vwb2RSdDFsMDVpLVM5WWU5YzIwQ0wtYmd5Z3dfNGpRRHE3SHFoVW9PNjlESEcwX1U4bHdjcXkyaWFn0gHPAUFVX3lxTE54ZUJSYXltMnlZNnRIR3lkTlZLcFRpZTJ1RHFLUlE2SHBuVGhndDFrNkVHeWpnbTM4bnNpMk56U2lQYmVmZjVjbkd6MjY3V3RtVzZkcTQ4cUFEOGdyZWJLaEZTcWRUMWNLUlFlMk9XZ3dPSzNhZG5BSkh3MmtsWnlEc2lpMTVESzVWdmRzZVlyZ0kxcGE0SEZoN05pUDZzeFFqUHBYNklrQzZMTnJsa3NjemlWVVN2RjRwekt5TkViN0Q4blE2dS1QU1VMN3RSUQ?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T18:41:04Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "The Times of India",
+   "published_at": "2026-10-29T01:50:00Z",
+   "source_id": "timesofindia.indiatimes.com",
+   "summary": "",
+   "title": "Isro to launch NVS-03 on Oct 30, but NavIC has a long way to go",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMipAFBVV95cUxPSE9GRGFkZWFSNnJ0c2l5TjYySnZucG1QRkh4NGQ2ODcyUE9WMFVLRGF0cnB6X3ZxM0hQX214OXp0c3VHdUg2eGQzSXV5QlZEa25pelFCdmQzamhzeF95MHZyX3RUMEpHMTk0TWJsUktjSkR0UDdkdmhpODdYYW9IemxhV3RDZlp1MV9pRkJGWkxwN1V6Y05iNG1ZMDRVNUphY3NsWNIBqwFBVV95cUxOY0hLb2YtTzlwUFdRSnFfMW9aaTdCazZDVDlITUJsNUQ5UUp5TWVlakhxWllqZmx5eGJJdzFFNlNBdnNWVzNITjloX3FwUVRFS3FZLUlmWTZPTmVCNzZlOXNwN19GdXVPSVBGSGx1M1pPaWhHM2pyelJ0WXJ5X1hKS0VrdVg0SjVrZVFPX0NmN1Rfdl9qUk85c2l5d0hOWk1ZMVJYcjBhVUZ6elU?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T18:41:04Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "The Indian Express",
+   "published_at": "2026-10-28T19:27:07Z",
+   "source_id": "indianexpress.com",
+   "summary": "",
+   "title": "ISRO to launch navigation satellite NVS-03 on Friday",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://x.com/isro/status/2115504423460061675",
@@ -112,6 +416,22 @@
    "summary": "",
    "title": "New contracts to modernise Galileo ground segment for next generation",
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxOLXgzSEJwYUFSX3oyRldNNlExYV9YUXVJbXlvbnJLc2p3TThCSGl5aW54eC11Y1E2NDh3c1pZTWNKMXl3RlV1QS15MXRxOUdrOEdyN0N0NGhVajZCMktfdzhxd0RWS1BaM0FWNFJpQV9JTHVEOEJuVk9vR2FGd1dWTHpxUlpYYmhwSklpRGxpUWZWWVdrYTRyUGI1MVdCRVJVZUp5YXcxZFJnNFpZNktCd0s5NG5fNWhwQnlF0gG7AUFVX3lxTE4teDNIQnBhQVJfejJGV002UTFhX1hRdUlteW9ucktzandNOEJIaXlpbnh4LXVjUTY0OHdzWllNY0oxeXdGVXVBLXkxdHE5R2s4R3I3Q3Q0aFVqNkIyS193OHF3RFZLUFozQVY0UmlBX0lMdUQ4Qm5WT29HYUZ3V1ZMenFSWlhiaHBKSWlEbGlRZlZZV2thNHJQYjUxV0JFUlVlSnlhdzFkUmc0Wlk2S0J3Szk0bl81aHBCeUU?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T18:41:04Z",
+   "grade": "D",
+   "grade_standing": "provisional",
+   "outlet": "The Hindu",
+   "published_at": "2026-10-28T12:59:45Z",
+   "source_id": "thehindu.com",
+   "summary": "",
+   "title": "ISRO to launch NVS-03 satellite on October 30",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMizAFBVV95cUxPRzdlUTVsTFpya0x5aEtOazNPRTYyN1RPY3N0bTlIbXVadjRaVWp1dXVHdDNEZi1seU14bVNBWU4tVG1hTGc0Vm51NFV1SC1DaWlxRTB3WEcyX3l5dVJ6N0VCamlWNTgwLWlqV2V0YzdjdzR4Wk1kZkNTd3dMQndZWTNPa1FKVmtxemhsNWxoQ3VnWGVZSDFDTWJmYWhTR3pGLXNlREJzZXFFQjI5LXd2UFBkdThTb0w0aFFoZTlQSGhFQnVSMEN3NGlGUE_SAdwBQVVfeXFMT0I2UWYwZ2Y4Y1NWb29wTVAyaUtPelFxaXJ4NnBsenJwSjJSalN1bnRhVWpaVzlUc291X0ZCcW1ONU9aNzduUGk2bG10YnpJLXV0ZkJQekppWU44WThKZjFBMWNENDBsUmVsb3FqQk5QdVU5TVltUlBEb0tnMFVEdHBpSkZ1T0hHSTQzRVZlTG16LWJHeUdKSkhKLVh0NlF0UmJLclBMRlo3RGo5VENXSFZxWWhIbzBYa2RfWlc1WUVFN0FqcUhGX2RiNWRyc18yUHBZNFhkc2Q3UmRiag?oc=5",
@@ -6031,6 +6351,22 @@
    "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMi5gFBVV95cUxPZHFKbHNVZXNtRFJSVGNuWGJZTEJvUkpKQkMza09nVW16aHRFY19QSHNPN05nZDdUVUZXa2UyektQTXhqOXRFODRnVHFxS0ZjcFZhUGZNa1I4bGZuYjFsOEZOeFY3enpGRmllRzhtWkpsbVVCdVNhV0F2TEhwOGIwa0VMTUJfVnh1QjVqRm44Yy11R1A1eHFWYUxaRDV4b1NXOXMzWTZ2ZzZBVEZfb3M3TXRsY0lVbzVFMUJDcG5CUnktT0RUQ3dtVkF5TTJ1UUFQN3I2aVFkVXdTRlhaMm53U3BhWkdVUQ?oc=5",
+   "category": "launch",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-10-29T18:41:36Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Vandenberg Space Force Base (.mil)",
+   "published_at": "2026-01-29T08:00:00Z",
+   "source_id": "vandenberg.spaceforce.mil",
+   "summary": "",
+   "title": "USSF field commands successfully launch GPS III Space Vehicle 09 into orbit",
+   "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMi5gFBVV95cUxORWpDYmVmLXlmT1I3Rkd2TlVtY0dzRDdULWViOUd6cm8zdHBPb3IzTmRvanc4LUxMZ3gyMWktREhaUldpNXpvTHY5MWlFUFdiQ2F4NXlsenlDNGtyMl9ua19rcC11c2dvZkJUdlNoVnZVTVcxX2cxV3BKdjBVZFQ4M1pQcWJKS245LXcyeWtaZzRqQmlqN3d3YkpVTVVDYzBqa3dqLUFoNnFkWDhPb210WmlYTEUwZW1NeVRSZEtRcE52eWJFeElKSV9fQS14TVY4dmcyNnpWZVhiYk4ySjFLeUQ1UVNlUQ?oc=5",
    "category": "launch",
    "constellations": [
@@ -6701,22 +7037,6 @@
    "source_id": "aerotime.aero",
    "summary": "",
    "title": "Ariane 6 successfully launches two Galileo satellites from Kourou",
-   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxQRW53N2ZqVnZkejdkNU15Nm1QOTZMbXk5TXoyb1pJX09EQ2VxaDhuZ1Q5a3N5MjhaeTI1eU9tTGR6RkFnXzV3Z1l2dFNEUGNoTEFEM2JkQ0tHc2R1N3I0dVJyZDdGaW5GSjFjR3ZyWWN3NnNYbWhibFdYa095cU5aZUMtNG1QQzdLOVg4Z1hyRXdTdm03M2V1dDVYd21rWjcyUGt5aHB2d1c?oc=5",
-   "category": "signal and service",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:40:40Z",
-   "grade": "C",
-   "grade_standing": "provisional",
-   "outlet": "GPS World",
-   "published_at": "2025-12-17T08:00:00Z",
-   "source_id": "gpsworld.com",
-   "summary": "",
-   "title": "LEO satellites show promise in boosting navigation accuracy where GPS struggles",
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -7453,6 +7773,15 @@
    "note": "",
    "reason": ""
   },
+  "en.ilsole24ore.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "en.ilsole24ore.com",
+   "note": "",
+   "reason": ""
+  },
   "en.people.cn": {
    "grade": "",
    "grade_standing": "not graded",
@@ -7804,6 +8133,15 @@
    "note": "",
    "reason": ""
   },
+  "instagram.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "instagram.com",
+   "note": "",
+   "reason": ""
+  },
   "intellinews.com": {
    "grade": "",
    "grade_standing": "not graded",
@@ -8065,6 +8403,15 @@
    "note": "",
    "reason": ""
   },
+  "nationpathindia.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "nationpathindia.com",
+   "note": "",
+   "reason": ""
+  },
   "nationthailand.com": {
    "grade": "",
    "grade_standing": "not graded",
@@ -8262,6 +8609,15 @@
    "name": "Press Information Bureau, Government of India",
    "note": "Answered #84's check, then refused the archive job's request (403) later on 19 Oct; read through Google News instead (row below)",
    "reason": "The Government of India's own release channel; carries Department of Space statements"
+  },
+  "pragativadi.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "pragativadi.com",
+   "note": "",
+   "reason": ""
   },
   "qazinform.com": {
    "grade": "",
@@ -8521,6 +8877,15 @@
    "graded_by": "",
    "kind": "",
    "name": "techbriefs.com",
+   "note": "",
+   "reason": ""
+  },
+  "techgenyz.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "techgenyz.com",
    "note": "",
    "reason": ""
   },
