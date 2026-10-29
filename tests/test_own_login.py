@@ -37,8 +37,9 @@ def segmented_controls_rerun(monkeypatch):
 def no_network(monkeypatch):
     """The dashboard's sources answer without network unless a test replaces their fetch."""
     monkeypatch.setattr(celestrak, "state", {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True,
-                                             "failing_since": None})
+                                             "failing_since": None, "copy_at": None})
     monkeypatch.setattr(celestrak, "fetch", lambda norads: ({}, set()))
+    monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: ({}, set(), None))
     monkeypatch.setattr(spacetrack, "state", {"rows": {}, "tried": None, "fetched": None,
                                               "refused_until": None, "note": "ok"})
     monkeypatch.setattr(spacetrack, "refresh",

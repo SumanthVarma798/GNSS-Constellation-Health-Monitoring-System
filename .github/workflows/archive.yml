@@ -173,8 +173,9 @@ jobs:
           git push --quiet
 
   publish-orbits:
-    # CelesTrak refuses the hosted dashboard but answers GitHub, so the dashboard reads this copy from orbit-data when
-    # its own fetch fails (data/celestrak.py, COPY_URL). Never touches main; an unchanged copy makes no commit.
+    # CelesTrak refuses the hosted dashboard but answers GitHub, so the dashboard reads only this copy from orbit-data
+    # and never contacts CelesTrak itself (data/celestrak.py, COPY_URL). Never touches main; an unchanged copy makes
+    # no commit.
     if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System' && always() && (needs.archive.outputs.group == 'orbital' || needs.archive.outputs.group == 'all')
     needs: archive
     runs-on: ubuntu-latest

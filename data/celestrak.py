@@ -7,8 +7,9 @@ The rows are held in memory only and merged onto the bundled history when it is 
 tracked data/*.json files are never rewritten. CelesTrak asks that unchanged data is not
 fetched more than every 2 hours (MIN_GAP_BETWEEN_DOWNLOADS in evidence/settings.py, shared with the archive job),
 so a fetch happens at most that often unless the last one failed.
-When CelesTrak refuses this server, the archive job's copy of the GNSS group (latest_gnss.json on branch orbit-data,
-written from GitHub, which CelesTrak still answers) stands in; the state still says CelesTrak is failing.
+The dashboard never contacts celestrak.org: it reads only the archive job's copy of the GNSS group
+(latest_gnss.json on branch orbit-data, written from GitHub, which CelesTrak still answers).
+The scripts that run on GitHub still fetch directly.
 The last state is also saved to a file outside the repository, so a restarted dashboard reads it instead of
 downloading again: restarts in a row once got this machine blocked (17 Oct 2026, issue 76).
 """
@@ -134,11 +135,13 @@ def _load():
         return
 
 
-def refresh(norad_ids, now, clicked=False):
+def refresh(norad_ids, now, clicked=False, direct=True):
     """Fetch when the last try is EVERY old, or on a click after a failed try; otherwise keep what is held.
 
-    Returns a copy of `state`. A failure keeps the rows and the listing already held and sets ok to False; the
-    archive job's copy then fills in what it can, and its time becomes `fetched` and `copy_at`.
+    With `direct` (the default, for the scripts that run on GitHub) the request goes to CelesTrak; a failure keeps
+    the rows and the listing already held and sets ok to False; the archive job's copy then fills in what it can.
+    With `direct=False` (the dashboard) no request goes to CelesTrak at all: only the archive job's copy is read.
+    Returns a copy of `state`.
     Every try, failed or not, is saved, so a restart keeps to the same 2 hours.
     """
     with _lock:
@@ -147,23 +150,34 @@ def refresh(norad_ids, now, clicked=False):
         tried = state["tried"]
         if tried is None or now - tried >= EVERY or (clicked and not state["ok"]):
             state["tried"] = now
-            try:
-                found, listed = fetch(norad_ids)
-            except (requests.RequestException, ValueError, KeyError):
-                state["ok"] = False
-                state["failing_since"] = state["failing_since"] or now
+            if direct:
+                try:
+                    found, listed = fetch(norad_ids)
+                except (requests.RequestException, ValueError, KeyError):
+                    state["ok"] = False
+                    state["failing_since"] = state["failing_since"] or now
+                    try:
+                        found, listed, taken = fetch_copy(norad_ids)
+                    except (requests.RequestException, ValueError, KeyError, TypeError, AttributeError):
+                        pass   # no copy either: keep what is held, as before
+                    else:
+                        _merge(found)
+                        state["listed"], state["copy_at"] = listed, taken
+                        state["fetched"] = max(filter(None, [state["fetched"], taken])) if found else state["fetched"]
+                else:
+                    _merge(found)
+                    state["ok"], state["listed"], state["failing_since"], state["copy_at"] = True, listed, None, None
+                    state["fetched"] = now if found else state["fetched"]
+            else:
                 try:
                     found, listed, taken = fetch_copy(norad_ids)
                 except (requests.RequestException, ValueError, KeyError, TypeError, AttributeError):
-                    pass   # no copy either: keep what is held, as before
+                    state["ok"], state["copy_at"] = False, None   # no copy in use: the header says it is failing
+                    state["failing_since"] = state["failing_since"] or now
                 else:
                     _merge(found)
-                    state["listed"], state["copy_at"] = listed, taken
-                    state["fetched"] = max(filter(None, [state["fetched"], taken])) if found else state["fetched"]
-            else:
-                _merge(found)
-                state["ok"], state["listed"], state["failing_since"], state["copy_at"] = True, listed, None, None
-                state["fetched"] = now if found else state["fetched"]
+                    state["ok"], state["listed"], state["failing_since"], state["copy_at"] = True, listed, None, taken
+                    state["fetched"] = max(filter(None, [state["fetched"], taken]), default=None)   # a cached older copy never turns the clock back
             try:
                 _save()
             except OSError:

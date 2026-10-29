@@ -141,13 +141,14 @@ def _stale_or_missing_tracked(now, celestrak_rows, own_rows=None):
 
 
 def refresh(clicked=False):
-    """Pull the newest element sets from CelesTrak when one is due (see data.celestrak.refresh). Returns its state.
+    """Pull the newest element sets from the archive job's CelesTrak copy when one is due. Returns its state.
 
-    Asks for the tracked satellites and every other satellite of their generations."""
+    The dashboard never contacts CelesTrak itself (see data.celestrak.refresh, direct=False). Asks for the tracked
+    satellites and every other satellite of their generations."""
     now = datetime.now(timezone.utc)
     wanted = {n for norads in TRACKED.values() for n in norads}
     wanted |= {int(row["catalogue_no"]) for rows in GENERATION.values() for row in rows if row["catalogue_no"]}
-    live = celestrak.refresh(sorted(wanted), now, clicked)
+    live = celestrak.refresh(sorted(wanted), now, clicked, direct=False)
     stale = _stale_or_missing_tracked(now, live["rows"])
     # Always called: with none stale it asks nothing, but reads the saved copy after a restart.
     spacetrack.refresh(stale, now, _server_login())

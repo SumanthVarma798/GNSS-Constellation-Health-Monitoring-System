@@ -3,8 +3,8 @@
     python scripts/latest_orbits.py --archive FOLDER --out orbit-data/latest_gnss.json
 
 CelesTrak refuses the hosted dashboard but still answers GitHub, so the archive job publishes its copy on branch
-orbit-data and the dashboard reads it when its own fetch fails (data/celestrak.py, COPY_URL). Writes nothing and
-exits non-zero when the archive holds no usable copy.
+orbit-data, and the dashboard reads only this copy, never CelesTrak itself (data/celestrak.py, COPY_URL). Writes
+nothing and exits non-zero when the archive holds no usable copy.
 """
 import argparse
 import json

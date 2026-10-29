@@ -93,14 +93,14 @@ def age_words(data_time, now, tz=timezone.utc):
     return f"Orbit data {taken.day} {taken:%b}{age}", status
 
 
-def failing_words(since, now, tz=timezone.utc):
+def failing_words(since, now, tz=timezone.utc, what="CelesTrak"):
     """'CelesTrak failing since 14:02' when the failures began today, 'CelesTrak failing since 18 Oct 14:02' before.
 
-    Days and times are counted in `tz`, the viewer's time zone.
+    `what` names the failing source. Days and times are counted in `tz`, the viewer's time zone.
     """
     since = since.astimezone(tz)
     when = f"{since:%H:%M}" if since.date() == now.astimezone(tz).date() else f"{since.day} {since:%b %H:%M}"
-    return f"CelesTrak failing since {when}"
+    return f"{what} failing since {when}"
 
 
 def offered():
@@ -132,9 +132,9 @@ def viewer_zone():
 
 
 def _data_chip(names, window_days, params, live, now):
-    """The time of the newest orbit data behind the page (the oldest constellation's), and since when CelesTrak has
-    been failing, if it is. Every saved copy stays in use meanwhile (issue 39: parts out of step say so); while the
-    archive job's copy stands in for CelesTrak, the second chip says so instead, and the age chip keeps its colour."""
+    """The time of the newest orbit data behind the page (the oldest constellation's), and since when its live source
+    has been failing, if it is. Every saved copy stays in use meanwhile (issue 39: parts out of step say so); while
+    the archive job's copy is in use, the second chip says so, and the age chip keeps its colour."""
     try:
         taken = min(data.load(c, window_days, params)["data_time"] for c in names)
     except ValueError:
@@ -142,13 +142,15 @@ def _data_chip(names, window_days, params, live, now):
     if live["fetched"]:
         taken = max(taken, live["fetched"].isoformat())
     text, status = age_words(taken, now, viewer_zone())
-    if live["ok"]:
-        return surfaces.chip(text, status)
+    # A copy in use means the last read worked: a failed read clears copy_at (a state saved by older code may still
+    # say ok False beside it, and is not failing).
     if live.get("copy_at"):
         return surfaces.chip(text, status) + surfaces.chip("CelesTrak via the archive job", "idle")
+    if live["ok"]:
+        return surfaces.chip(text, status)
     # A copy saved before failing_since was kept has none: its last try stands in.
     return surfaces.chip(text, status) + surfaces.chip(
-        failing_words(live["failing_since"] or live["tried"], now, viewer_zone()), "warn")
+        failing_words(live["failing_since"] or live["tried"], now, viewer_zone(), what="Archive copy"), "warn")
 
 
 def next_words(left):
