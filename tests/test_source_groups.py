@@ -70,10 +70,20 @@ def test_no_tracker_site_is_ever_archived():
 
 
 def hours_between_runs(cron):
-    """How far apart a schedule line's runs are, for the two forms the job uses."""
+    """The shortest gap between a schedule line's runs, for the three forms the job uses: */n, a list, one hour."""
     minute, hour, *rest = cron.split()
     assert minute.isdigit() and rest == ["*", "*", "*"], f"teach this test the schedule '{cron}'"
-    return int(hour[2:]) if hour.startswith("*/") else 24
+    if hour.startswith("*/"):
+        return int(hour[2:])
+    hours = sorted(int(h) for h in hour.split(","))
+    return min(b - a for a, b in zip(hours, hours[1:] + [hours[0] + 24]))   # across midnight too
+
+
+def test_the_shortest_gap_counts_a_list_and_midnight():
+    assert hours_between_runs("15 1,8,14,20 * * *") == 5
+    assert hours_between_runs("15 1,2 * * *") == 1
+    assert hours_between_runs("15 0,23 * * *") == 1
+    assert hours_between_runs("50 */3 * * *") == 3 and hours_between_runs("30 0 * * *") == 24
 
 
 def test_each_group_runs_no_more_often_than_its_slowest_site_allows():
