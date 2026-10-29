@@ -1,6 +1,22 @@
 {
- "generated_at": "2026-10-29T18:42:07Z",
+ "generated_at": "2026-10-29T23:01:32Z",
  "items": [
+  {
+   "address": "https://www.space.com/space-exploration/on-this-day-in-space-october-29-2026",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-29T23:00:08Z",
+   "grade": "D",
+   "grade_standing": "provisional",
+   "outlet": "Space.com",
+   "published_at": "2026-10-29T21:28:58Z",
+   "source_id": "space.com",
+   "summary": "On Oct. 29, 1991, the Galileo spacecraft flew by the asteroid Gaspra on its way to Jupiter. Here's why it mattered.",
+   "title": "On this day in space! Oct. 29, 1991: NASA's Galileo spacecraft flies by asteroid Gaspra and snaps amazing photos while flying at 18,000 mph",
+   "via": "https://www.space.com/feeds/all"
+  },
   {
    "address": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxQa0djNERsNHBPYjA1TDA1ZnBBcnFFMHoxZ2FUcnR6bzgzUW1mYnFrbkU1bC1WZmp3TjhfTVFhdUVmMk82dk5qOEVQaEltWUprWDlKM3ZXRS0tMmlzb1NhQTJZeFhUNEczZ3hZUi0wQU8wRDhDcGY0ZFhWbXk3T0RGTkFfbW1sQWdjUjVMbER1d1hwajlvSjVxWUtrOC15WmdZd2VaY2lHUFZGYW1TYnM4bzhqSGZmSGNpQ2diN3FpMzdySTB0bjVSM1htU3N1YXgx0gHWAUFVX3lxTE1zU1VUd2VadmtMRVByUnNQTVpWYVNJT3dDajBVVC1lY3ExWHFoT1ltZFZHa2RPR1htNTJ0NWxNTGVwSzk0MVoxOGptVmVLYnllZEE4c3Y1MGJaZWxxc2FUOWREQmJCN1RTaU0tdHEwbzFkUUxCMmc2Sm5sanc4RGJWcTAxTXkwSlNUVGhDRlBhbjJmVks5RUFmMmg2VTVCelE2a0lzXzVUT1gtRGJGU3dDeXlLYnp1ZEh0eXYwRWxiZXpNVjRQY0ZDcG1naEM2NXNrM2tUVVE?oc=5",
    "category": "launch",
@@ -47,6 +63,22 @@
    "source_id": "isro.gov.in",
    "summary": "",
    "title": "GSLV-F18/NVS-03 MISSION",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMi4AFBVV95cUxNNnNuUS1kREgwMzNTVXRmZGxwTGxOR203bzE2WkJjTjU5NlFrcGRFbEdnMC02bFdwVmppb2JwZ3owcWVyZFA4ZWJIQkNabHlXM21zZkZtdW5Ya0R1MGtZRVQxeEtEZGY2M0ZWY0NYWU04Yk5TUXZaT1lFcXh6amduN2VaYk1jVU9KZm1yY1JJR1J2cjVkcC1GTFdhanlhblk2WmppOGtGR3BhY3pnNFU5dGd2TDNDVGloV3Jib1hGM2JGbFlrejlGVjIyYm9oZHRhMFNEOGo1X3k5LWhYLVJRYQ?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T23:00:40Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "The CSR Journal",
+   "published_at": "2026-10-29T14:08:22Z",
+   "source_id": "thecsrjournal.in",
+   "summary": "",
+   "title": "NVS-03 Satellite Launch Scheduled for October 30",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
