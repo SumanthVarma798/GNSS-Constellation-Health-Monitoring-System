@@ -172,7 +172,7 @@ def refresh(norad_ids, now, clicked=False, direct=True):
                 try:
                     found, listed, taken = fetch_copy(norad_ids)
                 except (requests.RequestException, ValueError, KeyError, TypeError, AttributeError):
-                    state["ok"] = False
+                    state["ok"], state["copy_at"] = False, None   # no copy in use: the header says it is failing
                     state["failing_since"] = state["failing_since"] or now
                 else:
                     _merge(found)

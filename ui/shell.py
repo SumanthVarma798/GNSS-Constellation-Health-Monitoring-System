@@ -142,12 +142,10 @@ def _data_chip(names, window_days, params, live, now):
     if live["fetched"]:
         taken = max(taken, live["fetched"].isoformat())
     text, status = age_words(taken, now, viewer_zone())
+    # A copy in use means the last read worked: a failed read clears copy_at (a state saved by older code may still
+    # say ok False beside it, and is not failing).
     if live.get("copy_at"):
-        chips = surfaces.chip(text, status) + surfaces.chip("CelesTrak via the archive job", "idle")
-        if not live["ok"]:
-            chips += surfaces.chip(
-                failing_words(live["failing_since"] or live["tried"], now, viewer_zone(), what="Archive copy"), "warn")
-        return chips
+        return surfaces.chip(text, status) + surfaces.chip("CelesTrak via the archive job", "idle")
     if live["ok"]:
         return surfaces.chip(text, status)
     # A copy saved before failing_since was kept has none: its last try stands in.
@@ -182,7 +180,7 @@ def _ring(live, now):
     name = f"ring{now:%H%M%S%f}"
     return (f"<style>@keyframes {name} {{ from {{ --left: {share}; }} to {{ --left: 0%; }} }}"
             f".st-key-refresh_button button::before {{ --left: {share}; animation: {name} {left:.0f}s linear forwards; }}"
-            + ("" if live["ok"] else ".st-key-refresh_button button::before { --ring: var(--warn); }")
+            + ("" if live["ok"] or live.get("copy_at") else ".st-key-refresh_button button::before { --ring: var(--warn); }")
             + "</style>")
 
 

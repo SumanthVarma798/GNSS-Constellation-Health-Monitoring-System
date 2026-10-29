@@ -276,3 +276,17 @@ def test_a_failing_copy_read_sets_failing_since_without_calling_celestrak(monkey
     assert calls == []
     assert not after["ok"] and after["failing_since"] == NOW
     assert after["rows"] == {} and after["copy_at"] is None
+
+
+def test_a_failing_copy_read_after_a_good_one_stops_naming_the_copy(monkeypatch):
+    monkeypatch.setattr(celestrak, "fetch_copy",
+                        lambda norads: ({39635: celestrak.as_history_row(IRNSS_1B)}, {39635}, NOW - timedelta(hours=1)))
+    celestrak.refresh([39635], NOW, direct=False)
+
+    def down(norads):
+        raise requests.ConnectionError("no route")
+    monkeypatch.setattr(celestrak, "fetch_copy", down)
+    after = celestrak.refresh([39635], NOW + timedelta(hours=2), direct=False)
+
+    assert not after["ok"] and after["copy_at"] is None and after["failing_since"] == NOW + timedelta(hours=2)
+    assert set(after["rows"]) == {39635}   # what was held stays in use
