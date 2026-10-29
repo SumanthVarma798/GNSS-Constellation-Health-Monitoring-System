@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-29T01:17:54Z",
+ "generated_at": "2026-10-29T10:29:49Z",
  "items": [
   {
    "address": "https://x.com/isro/status/2115504423460061675",
@@ -112,6 +112,22 @@
    "summary": "",
    "title": "ISRO’s GSLV-F18 To Carry NVS-03, Next-Gen NavIC Satellite With Homegrown Atomic Clock, On 30 October",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://www.isro.gov.in/ISRO_EN/Mission_GSLVF18.html",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T07:39:24Z",
+   "grade": "A",
+   "grade_standing": "provisional",
+   "outlet": "isro.gov.in",
+   "published_at": "2026-10-28T10:39:45Z",
+   "source_id": "isro.gov.in",
+   "summary": "",
+   "title": "GSLV-F18 / NVS-03 Mission Updates and Discussion",
+   "via": "https://www.reddit.com/r/ISRO/.rss"
   },
   {
    "address": "https://x.com/isro/status/2115388445023441046",
@@ -7798,6 +7814,15 @@
    "name": "iot-now.com",
    "note": "",
    "reason": ""
+  },
+  "isro.gov.in": {
+   "grade": "A",
+   "grade_standing": "provisional",
+   "graded_by": "",
+   "kind": "official page",
+   "name": "ISRO press releases",
+   "note": "No feed; read by snapshot and compare (decision 5)",
+   "reason": "The operator of NavIC"
   },
   "ithinkdiff.com": {
    "grade": "",
