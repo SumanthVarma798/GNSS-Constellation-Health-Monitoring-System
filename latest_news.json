@@ -1,6 +1,22 @@
 {
- "generated_at": "2026-10-29T10:29:49Z",
+ "generated_at": "2026-10-29T13:46:34Z",
  "items": [
+  {
+   "address": "https://x.com/isro/status/2115757885506642087",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T13:46:34Z",
+   "grade": "A",
+   "grade_standing": "provisional",
+   "outlet": "ISRO (@isro)",
+   "published_at": "2026-10-29T10:49:23Z",
+   "source_id": "x.com/isro",
+   "summary": "Meet NVS-03 - the third satellite of the second-generation NVS series, intended to augment the NavIC constellation and support continuity of navigation services. Launch: 30th October 2026, 23:51 hours IST Watch live: 30th October 2026, 23:20 hours IST onwards https://t.co/Mbllc4lcM2 Mission details…",
+   "title": "Meet NVS-03 - the third satellite of the second-generation NVS series, intended to augment the NavIC constellation and…",
+   "via": "https://x.com/isro"
+  },
   {
    "address": "https://x.com/isro/status/2115504423460061675",
    "category": "launch",
