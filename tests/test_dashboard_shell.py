@@ -33,10 +33,11 @@ def segmented_controls_rerun(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def celestrak_answers_with_nothing_new(monkeypatch):
-    """No network in tests: CelesTrak 'answers' with no rows unless a test says otherwise."""
+    """No network in tests: the archive job's copy has no rows or copy time unless a test says otherwise."""
     monkeypatch.setattr(celestrak, "state", {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True,
                                              "failing_since": None, "copy_at": None})
     monkeypatch.setattr(celestrak, "fetch", lambda norads: ({}, set()))
+    monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: ({}, set(), None))
     monkeypatch.setattr(spacetrack, "state", {"rows": {}, "tried": None, "fetched": None,
                                               "refused_until": None, "note": "ok"})
     monkeypatch.setattr(spacetrack, "refresh",
@@ -246,7 +247,8 @@ def test_the_data_chip_turns_warn_then_bad_at_the_orbit_age_limits():
 
 
 def test_rows_from_celestrak_make_the_chip_say_today_and_its_time(monkeypatch):
-    monkeypatch.setattr(celestrak, "fetch", lambda norads: ({39635: celestrak.as_history_row(IRNSS_1B)}, {39635}))
+    monkeypatch.setattr(celestrak, "fetch_copy",
+                        lambda norads: ({39635: celestrak.as_history_row(IRNSS_1B)}, {39635}, FROZEN))
     at = run()
     chips = " ".join(htmls(at))
 
@@ -325,38 +327,45 @@ def test_the_pages_across_all_systems_are_set_apart_without_words():
     assert not any("Across all systems" in body for body in htmls(run()))
 
 
-def test_a_failed_refresh_keeps_the_archive_and_says_so(monkeypatch):
+def test_a_failed_copy_read_keeps_the_archive_and_says_so(monkeypatch):
     def down(norads):
         raise requests.ConnectionError("no route")
-    monkeypatch.setattr(celestrak, "fetch", down)
+    monkeypatch.setattr(celestrak, "fetch_copy", down)
     at = run(lambda at: at.button(key="refresh_button").click())
     chips = " ".join(htmls(at))
 
     assert 'class="chip warn">Orbit data 4 Oct, 2 days old' in chips
-    assert 'class="chip warn">CelesTrak failing since 12:00' in chips   # the frozen clock's time, in UTC
+    assert 'class="chip warn">Archive copy failing since 12:00' in chips   # the frozen clock's time, in UTC
     assert len(tiles(at)) == 8
 
 
 def test_while_the_archive_jobs_copy_stands_in_the_chip_says_so_not_failing(monkeypatch):
-    def down(norads):
-        raise requests.HTTPError(403)
-    monkeypatch.setattr(celestrak, "fetch", down)
     monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: ({}, set(), FROZEN - timedelta(hours=1)))
     chips = " ".join(htmls(run(lambda at: at.button(key="refresh_button").click())))
 
     assert 'class="chip idle">CelesTrak via the archive job' in chips
     assert "CelesTrak failing" not in chips
-    assert 'class="chip warn">Orbit data 4 Oct, 2 days old' in chips   # the age chip keeps its colour
+    assert 'class="chip ok">Orbit data 6 Oct 11:00' in chips   # the copy's own age, not the bundled history's
 
 
-def test_a_source_failing_since_yesterday_says_since_when(monkeypatch):
+def test_when_the_copy_read_fails_the_chip_says_the_archive_copy_is_failing(monkeypatch):
+    celestrak.state.update(tried=FROZEN, ok=False, failing_since=FROZEN,
+                           copy_at=FROZEN - timedelta(hours=1), fetched=FROZEN - timedelta(hours=1))
+    chips = " ".join(htmls(run()))
+
+    assert 'class="chip idle">CelesTrak via the archive job' in chips
+    assert 'class="chip warn">Archive copy failing since 12:00' in chips
+    assert "CelesTrak failing" not in chips
+
+
+def test_a_failing_copy_read_since_yesterday_says_since_when(monkeypatch):
     def down(norads):
         raise requests.HTTPError(403)
-    monkeypatch.setattr(celestrak, "fetch", down)
+    monkeypatch.setattr(celestrak, "fetch_copy", down)
     celestrak.state.update(tried=FROZEN, ok=False, failing_since=FROZEN)
     chips = " ".join(htmls(run(now=FROZEN + timedelta(days=1))))   # due again: tried, and refused again
 
-    assert 'class="chip warn">CelesTrak failing since 6 Oct 12:00' in chips
+    assert 'class="chip warn">Archive copy failing since 6 Oct 12:00' in chips
     assert 'class="chip bad">Orbit data 4 Oct, 3 days old' in chips   # the saved copies stay in use
 
 
@@ -376,6 +385,7 @@ def test_failing_words():
 
     assert failing_words(now.replace(hour=8, minute=2), now) == "CelesTrak failing since 08:02"
     assert failing_words(now.replace(day=18, hour=23), now) == "CelesTrak failing since 18 Oct 23:00"
+    assert failing_words(now.replace(hour=8, minute=2), now, what="Archive copy") == "Archive copy failing since 08:02"
 
 
 def _on(page):

@@ -126,7 +126,7 @@ def test_the_dashboard_asks_for_every_satellite_of_its_generations_and_no_other(
     asked = []
     monkeypatch.setattr(
         celestrak, "refresh",
-        lambda norads, now, clicked: (asked.extend(norads),
+        lambda norads, now, clicked, direct=False: (asked.extend(norads),
                                       {"rows": {}, "listed": set(), "tried": now, "fetched": None, "ok": True,
                                        "failing_since": None})[1],
     )
@@ -242,3 +242,37 @@ def test_celestrak_answering_again_clears_the_copy(monkeypatch):
     monkeypatch.setattr(celestrak, "fetch", lambda norads: ({39635: celestrak.as_history_row(IRNSS_1B)}, {39635}))
     after = celestrak.refresh([39635], NOW + timedelta(hours=2))
     assert after["ok"] and after["copy_at"] is None and after["failing_since"] is None
+
+
+def test_refresh_from_the_copy_only_never_asks_celestrak(monkeypatch):
+    taken = NOW - timedelta(hours=3)
+    calls = []
+
+    def fetch(norads):
+        calls.append(norads)
+        raise AssertionError("the dashboard must not call CelesTrak")
+
+    monkeypatch.setattr(celestrak, "fetch", fetch)
+    monkeypatch.setattr(celestrak, "fetch_copy",
+                        lambda norads: ({39635: celestrak.as_history_row(IRNSS_1B)}, {39635, 1}, taken))
+    after = celestrak.refresh([39635], NOW, direct=False)
+
+    assert calls == []
+    assert set(after["rows"]) == {39635} and after["listed"] == {39635, 1}
+    assert after["copy_at"] == taken and after["fetched"] == taken
+    assert after["ok"] and after["failing_since"] is None
+
+
+def test_a_failing_copy_read_sets_failing_since_without_calling_celestrak(monkeypatch):
+    calls = []
+
+    def fetch(norads):
+        calls.append(norads)
+        raise AssertionError("the dashboard must not call CelesTrak")
+
+    monkeypatch.setattr(celestrak, "fetch", fetch)
+    after = celestrak.refresh([39635], NOW, direct=False)   # conftest's copy fails too
+
+    assert calls == []
+    assert not after["ok"] and after["failing_since"] == NOW
+    assert after["rows"] == {} and after["copy_at"] is None

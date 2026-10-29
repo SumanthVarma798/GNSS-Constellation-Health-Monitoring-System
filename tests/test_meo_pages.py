@@ -2,15 +2,17 @@
 import pytest
 
 from data import celestrak
-from test_dashboard_shell import htmls, run, segmented_controls_rerun, tiles  # noqa: F401 (a fixture)
+from test_dashboard_shell import FROZEN, htmls, run, segmented_controls_rerun, tiles  # noqa: F401 (a fixture)
 from test_meo_data import GSAT0101, GSAT0102
 
 
 @pytest.fixture(autouse=True)
 def celestrak_answers_with_two_galileo_satellites(monkeypatch):
-    rows = {row["NORAD_CAT_ID"]: celestrak.as_history_row(row) for row in (GSAT0101, GSAT0102)}
-    monkeypatch.setattr(celestrak, "state", {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True})
-    monkeypatch.setattr(celestrak, "fetch", lambda norads: (rows, set(rows)))
+    found = {row["NORAD_CAT_ID"]: celestrak.as_history_row(row) for row in (GSAT0101, GSAT0102)}
+    held = {norad: [row] for norad, row in found.items()}
+    monkeypatch.setattr(celestrak, "state", {"rows": held, "listed": set(found), "tried": FROZEN, "fetched": FROZEN,
+                                             "ok": True, "failing_since": None, "copy_at": FROZEN})
+    monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: (found, set(found), FROZEN))
 
 
 def scope(name, page="Overview"):
@@ -63,7 +65,10 @@ def gps_row(norad, name, mean_anomaly):
 def test_gps_opens_on_its_planes_without_tiles_and_the_switch_shows_the_tiles(monkeypatch):
     rows = {row["NORAD_CAT_ID"]: celestrak.as_history_row(row)
             for row in (gps_row(62339, "NAVSTAR 83", 258.0), gps_row(39741, "NAVSTAR 70", 167.4))}   # D2A, D4
-    monkeypatch.setattr(celestrak, "fetch", lambda norads: (rows, set(rows)))
+    monkeypatch.setattr(celestrak, "state", {"rows": {norad: [row] for norad, row in rows.items()},
+                                             "listed": set(rows), "tried": FROZEN, "fetched": FROZEN,
+                                             "ok": True, "failing_since": None, "copy_at": FROZEN})
+    monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: (rows, set(rows), FROZEN))
 
     at = run(scope("GPS"))
     bodies = htmls(at)
@@ -104,7 +109,7 @@ def test_the_dashboard_asks_for_the_meo_satellites_it_tracks_and_not_the_retired
     asked = []
     monkeypatch.setattr(
         celestrak, "refresh",
-        lambda norads, now, clicked: (asked.extend(norads),
+        lambda norads, now, clicked, direct=False: (asked.extend(norads),
                                       {"rows": {}, "listed": set(), "tried": now, "fetched": None, "ok": True,
                                        "failing_since": None})[1],
     )
