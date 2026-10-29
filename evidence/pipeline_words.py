@@ -138,7 +138,7 @@ STAGES = {
     "archive_orbital": {
         "plain_name": "Collect orbit data",
         "what_happens": [
-            "Once a day, a program downloads GNSS orbit records from CelesTrak.",
+            "Four times a day, a program downloads GNSS orbit records from CelesTrak.",
             "It saves a new copy only when the data changed, then logs the run.",
             "For this source, the two-hour site gap means one try per run.",
             "A second step publishes the newest copy for the public dashboard, which CelesTrak refuses.",

@@ -201,7 +201,7 @@ Produced from the code. A test fails if this table and the code disagree.
 |---|---|---|
 | Documents are fetched | `30 0 * * *` (documents: once a day, 00:30 UTC = 06:00 India time) | `.github/workflows/archive.yml` |
 | Catalogues are fetched | `45 0 * * *` (catalogues: once a day, 00:45 UTC = 06:15 India time, after the catalogue's own daily rebuild) | `.github/workflows/archive.yml` |
-| Orbit records are fetched | `15 1 * * *` (orbital: once a day, 01:15 UTC = 06:45 India time; CelesTrak allows one download per 2 hours) | `.github/workflows/archive.yml` |
+| Orbit records are fetched | `15 1,8,14,20 * * *` (orbital: four times a day from 01:15 UTC = 06:45 India time; CelesTrak allows one download per 2 hours) | `.github/workflows/archive.yml` |
 | News feeds and pages are fetched | `50 */3 * * *` (news: every 3 hours from 00:50 UTC = 06:20 India time; first, to measure how often feeds change (issue 13)) | `.github/workflows/archive.yml` |
 | Social media feeds are fetched | `40 1 * * *` (social: once a day, 01:40 UTC = 07:10 India time; Reddit refuses requests in quick succession) | `.github/workflows/archive.yml` |
 | The registry is rebuilt | `0 1 * * 0` (Sundays 01:00 UTC = 06:30 India time: half an hour after that day's documents fetch (see archive.yml), so the registry builds from a fresh copy) | `.github/workflows/registry-update.yml` |

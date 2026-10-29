@@ -29,7 +29,7 @@ PARTS = {
     "cel": ("CelesTrak orbit records", "built",
             "Where every satellite is: published orbit records (two-line elements) for the GNSS group. The dashboard's orbit maths starts here.",
             ["The dashboard asks at most once every 2 hours, CelesTrak's own limit",
-             "Archived once a day at 01:15 UTC, so every day's records are kept", "Graded B"],
+             "Archived four times a day from 01:15 UTC, so every day's records are kept", "Graded B"],
             ["If CelesTrak fails, the dashboard keeps its last copy and says since when it has been failing"],
             "data/celestrak.py · evidence/settings.py"),
     "news": ("News and official feeds", "built",

@@ -48,9 +48,9 @@ def test_every_schedule_line_is_assigned_to_a_group():
         assert ARCHIVED_SOURCES[group], f"'{group}' has a schedule but no sources: its runs would do nothing"
 
 
-def test_orbits_are_kept_once_a_day():
-    # CelesTrak asks that unchanged data is not fetched more than every 2 hours; once a day is well inside.
-    assert re.search(r"- cron: '15 1 \* \* \*'\s+# orbital: once a day", JOB)
+def test_orbits_are_kept_four_times_a_day():
+    # CelesTrak asks that unchanged data is not fetched more than every 2 hours; every 5 to 7 hours is well inside.
+    assert re.search(r"- cron: '15 1,8,14,20 \* \* \*'\s+# orbital: four times a day", JOB)
 
 
 def test_the_job_can_be_started_by_hand_for_any_group():

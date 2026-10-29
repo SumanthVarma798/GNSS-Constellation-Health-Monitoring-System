@@ -131,7 +131,7 @@ def test_what_next_lists_the_soonest_stage_runs_in_the_next_day():
     stages = pipeline.stages(WORKFLOWS, RUNS, jobs.run_log(LOG), [], workflow_texts(), NOW)
     upcoming = pipeline.what_next(stages, NOW, hours=24)
 
-    assert [item["name"] for item in upcoming][:2] == ["Archive: news", "Archive: documents"]
+    assert [item["name"] for item in upcoming][:2] == ["Archive: news", "Archive: orbit records"]   # orbital runs at 20:15 too
     assert all((item["at"] - NOW) <= timedelta(hours=24) for item in upcoming)
 
 
