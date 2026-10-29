@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-29T23:01:32Z",
+ "generated_at": "2026-10-29T23:02:31Z",
  "items": [
   {
    "address": "https://www.space.com/space-exploration/on-this-day-in-space-october-29-2026",
@@ -48,6 +48,23 @@
    "summary": "",
    "title": "ISRO GSLV-F18 to Launch NVS-03 Navigation Satellite on October 30",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://x.com/Stellarixorine/status/2115826737095520525",
+   "category": "programme and policy",
+   "constellations": [
+    "GPS",
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-29T23:02:31Z",
+   "grade": "D",
+   "grade_standing": "provisional",
+   "outlet": "Stellarix (@Stellarixorine)",
+   "published_at": "2026-10-29T15:22:58Z",
+   "source_id": "x.com/Stellarixorine",
+   "summary": "ONE DAY, ONE SPACE AGENCY — Day 6 / 70+ 🚀✨ 🇮🇳 ISRO — Indian Space Research Organisation The Frugal Genius of Space 🧠💰 --- 📅 FORMED: August 15, 1969 — India's Independence Day 🇮🇳 📍 HEADQUARTERS: Bengaluru, Karnataka 🏛️ 👨‍🔬 FOUNDER: Dr. Vikram Sarabhai — Father of Indian Space Program 🙏 🌱 ROOTS…",
+   "title": "ONE DAY, ONE SPACE AGENCY — Day 6 / 70+ 🚀✨ 🇮🇳 ISRO — Indian Space Research Organisation The Frugal Genius of Space 🧠💰…",
+   "via": "https://x.com/Stellarixorine"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMiV0FVX3lxTFBDNkFYM2JwMG8xYURPRFpqQkNyVDNwYjZPdVpjb3ROVG5pc28xM3cyRlhFeDBTTHhxM2l0aFBwTGxkLW1PcV9YaUprMUtvOVJMUVVmNVltaw?oc=5",
@@ -6914,7 +6931,6 @@
    "address": "https://news.google.com/rss/articles/CBMiwAFBVV95cUxNVGNGT1VjTG54R3VBNmlWRDBBa3RFdl8wMGdPY2hOLUE0M0hEc3B2dVhPM0dXb2tORmoyMzJFTWhEMjM0MmlvaTJRODBza25WMllMU1lBQVB3R1pNYmdoQXhyMnR3Y292UEZJVUZRbGMwYmttSXpwd25idXJSYkJPVmdVUzNqbVB2RTB4aXpUbVRsZlQ2aFJaLTZZTjFEWllobF81Z1VYRWJmdW1aWVlGYVFxX1NmdmotblM0VDh6RjHSAcABQVVfeXFMUHBnWXlUWGNlZktKTDBTSWcyUU4waTg5aUhhM01tRndJM2kwY0tJZldWSmxzM0c3SDFrcndMaTFIaUl1TDU5YmozRi1tSGVDeXR6STRPQ05FQ0FpNUF5czl1QXpSREdGYmJZN0o1T3Vyb0pheU5sa016WFZYeU5hamU0TzlsRXpqOVFpLVZYTUQ3aVNuNmd0SjFicDVZb0VBanA1Q1FSRkZZa2syUVMzRUhqUnA3V2ZaLTVjNTg1alI5?oc=5",
    "category": "signal and service",
    "constellations": [
-    "GPS",
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
