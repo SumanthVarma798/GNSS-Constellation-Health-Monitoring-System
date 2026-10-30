@@ -153,3 +153,10 @@ def test_orbit_record_check_job_is_listed():
 
     assert row == ("rinex-check.yml", "", "Orbit record check",
                    "Measures each orbit record against the satellite's broadcast orbit", "rinex check")
+
+
+def test_what_changed_counts_only_the_addresses_and_keeps_a_thinning_note():
+    assert jobs.changed_words("https://a.org/x https://b.org/y") == "2 copies"
+    assert jobs.changed_words("https://a.org/x thinned 3 old copies") == "1 copy, thinned 3 old copies"
+    assert jobs.changed_words("thinned 3 old copies") == "thinned 3 old copies"
+    assert jobs.changed_words("nothing") == "nothing"

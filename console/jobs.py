@@ -49,7 +49,7 @@ with body:
         [[escape(console.when(line["started"])), escape(line["job"]),
           escape(f"{(jobs.parse_time(line['ended']) - line['started']).total_seconds():.0f} s"),
           console.status(*jobs.log_result(line)),
-          escape(f"{len(line['changed'].split())} copies" if line["changed"].startswith("http") else line["changed"])]
+          escape(jobs.changed_words(line["changed"]))]
          for line in newest], numeric=("Took",)) if newest else console.notice("No run log lines yet.", "info"),
         right="from the archive, newest first", flush=bool(newest)))
 

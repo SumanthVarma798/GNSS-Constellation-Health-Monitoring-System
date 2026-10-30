@@ -62,7 +62,7 @@ Solid arrows carry data today. Dotted arrows are not wired yet.
 |---|---|
 | Archive job | Fetches each source, trying a failed download again within the source's limits, and keeps a raw copy only when it has changed |
 | Registry job | Rebuilds the table of satellites from the archived copy, and proposes any change to a person |
-| Archive | A private repository of raw copies, each named by its hash and never overwritten, and the run log: one line per run of each scheduled job (job, start, end, result, what changed) |
+| Archive | A private repository of raw copies, each named by its hash and never overwritten, and the run log: one line per run of each scheduled job (job, start, end, result, what changed). In the documents, catalogues and orbital groups, copies over 5 MB leave the checkout after 14 days unless they are the newest copy of an address (today only the GCAT tables); they stay in the archive's git history. News, social and X copies are all kept, because the news reader re-reads every one. |
 | Registry | Plain-text tables saying which satellite is which, and what a second source (the catalogue) says about its owner and status. The master map page shows it: every identifier of a spacecraft resolved to one master ID, and who held each signal ID when. |
 | Query store | A small database rebuilt from the archive and the registry on every run |
 | Bar and labels | Decides whether an item is confirmed, probable or unconfirmed (section 6) |
