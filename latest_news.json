@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-30T20:11:37Z",
+ "generated_at": "2026-10-30T22:41:39Z",
  "items": [
   {
    "address": "https://news.google.com/rss/articles/CBMimwFBVV95cUxOQXBKVDUwOGc5THc5ZmZWS2dlSG92S0gzckgzS2xJMzNJbE5IN3Z1NXFUaEtHb243dWhZTnV1V2lXcE9HRFFWcmo0c29BOGRJcTVGQjlneU92a01vVm5rODRVeVU3NWRtLXBQZWxSQlNnLXJZX2Nxem1EMkIwSnV4WGJTdDVZY1RfZW9EY3NGQ0xEWFhpWDFvQVF6UQ?oc=5",
@@ -178,6 +178,22 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://x.com/isro/status/2116242156646220265",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-30T22:41:35Z",
+   "grade": "A",
+   "grade_standing": "provisional",
+   "outlet": "ISRO (@isro)",
+   "published_at": "2026-10-30T18:53:42Z",
+   "source_id": "x.com/isro",
+   "summary": "Mission Success! GSLV-F18 has successfully placed NVS-03 in the intended orbit. Congratulations! Watch live: https://t.co/6X42ANRnTC Mission details: https://t.co/wtZ6TmjUhc #GSLVF18 #NVS03 #ISRO #NavIC",
+   "title": "Mission Success! GSLV-F18 has successfully placed NVS-03 in the intended orbit. Congratulations! Watch live:…",
+   "via": "https://x.com/isro"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMi3gFBVV95cUxOVW1fWEFaemJvRE56X0FQd2loNEJHQXYxQjlEdGpoaHhXMFk0TDJKZkN2THpMTjJqYncyQWRPZWZBOHNiWE9KX3lJdVRXMnVKTVF2TDFlWTdrQjVtQmxfemk4azloZHFyV0ZwT0szV3ppdWx0MnFTeDJvSzl1S2dERHQ4NUxrYUlBZGhCQkpoME5kbkZob2pZVEVkdnBfQk5Ta0JKMFFSYmQ2QUxybTEtLTZXYTkzN1JlaXBkNzJlaVJNTzVJNTBueWhpZ21SZU9uc1hsdHc4ZkxyVFhNY3fSAeMBQVVfeXFMTlVRdkZJNTJTWEVVMXBUOUpSQXJnZkVSNUtINHJUM2JzVUJCUHNPMkJmTjVGdmJYU29SakFncE1xRV95U3lVZGl6TVZ0dXI4bjU5RTFTREFveDNyTmdGNTdKR3JRTDFheWVWODI0aTVnREp6aVVXN0VHZGhWcVZxeVJueXFTMzJTMFZHWU1jUmRLS0IwS3QtaUJlS2tEVE9taExvTmhubE5vZHZMSm0ycnAxVWRzWmhCbFE1c0VuMWN6UHNFeW9aU3NzQm45WlBwQ0I3S3hDOS1zZlJoWGRkLUtNWDQ?oc=5",
    "category": "launch",
    "constellations": [
@@ -306,6 +322,22 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://x.com/isro/status/2116233984367886641",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-30T22:41:35Z",
+   "grade": "A",
+   "grade_standing": "provisional",
+   "outlet": "ISRO (@isro)",
+   "published_at": "2026-10-30T18:21:14Z",
+   "source_id": "x.com/isro",
+   "summary": "LIFT-OFF! GSLV-F18 carrying NVS-03 lifts off from Satish Dhawan Space Centre, SHAR, Sriharikota. Watch live: https://t.co/6X42ANRnTC Mission details: https://t.co/wtZ6TmjUhc #GSLVF18 #NVS03 #ISRO #NavIC",
+   "title": "LIFT-OFF! GSLV-F18 carrying NVS-03 lifts off from Satish Dhawan Space Centre, SHAR, Sriharikota. Watch live:…",
+   "via": "https://x.com/isro"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMizgFBVV95cUxPWXNHV3c0Q2xfUmpBTEo1ZHRpcDBBNnplVXBxTl8zQmdfdEJLYV9hNVNuZlBodE5WRnVPTW9acVc1MFBOcGE2OWZCalBjUENQR2NLbWlTX2hJNGFQZHl0RkhvQWc5ZmdLQ0d1dVNxc0trQldQZk1FaTJBN1VXcnNzVFRPV2xVWjk3dTdubVRQZDFQaG5hZDBrbjZlN2M5bk91bUhLXzg3NUUwdUpRRGNYRklhRHN1dzkwUHJoeGY0cW5QcG9CcHNMWFBQNjBKQdIBzgFBVV95cUxPWXNHV3c0Q2xfUmpBTEo1ZHRpcDBBNnplVXBxTl8zQmdfdEJLYV9hNVNuZlBodE5WRnVPTW9acVc1MFBOcGE2OWZCalBjUENQR2NLbWlTX2hJNGFQZHl0RkhvQWc5ZmdLQ0d1dVNxc0trQldQZk1FaTJBN1VXcnNzVFRPV2xVWjk3dTdubVRQZDFQaG5hZDBrbjZlN2M5bk91bUhLXzg3NUUwdUpRRGNYRklhRHN1dzkwUHJoeGY0cW5QcG9CcHNMWFBQNjBKQQ?oc=5",
    "category": "launch",
    "constellations": [
@@ -336,6 +368,38 @@
    "summary": "",
    "title": "LIVE: ISRO launches NavIC satellite NVS-03 aboard GSLV-F18 from Sriharikota",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://x.com/Arianespace/status/2116228604744847393",
+   "category": "launch",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-10-30T22:41:39Z",
+   "grade": "B",
+   "grade_standing": "provisional",
+   "outlet": "Arianespace (@Arianespace)",
+   "published_at": "2026-10-30T17:59:51Z",
+   "source_id": "x.com/Arianespace",
+   "summary": "Same constellation. Two generations of Ariane. 🚀 Then: Ariane 5 launched four Galileo satellites at once in 2016. Now: Ariane 6 continues the journey, helping build Europe's navigation constellation. Two generations of launchers. One mission: bringing Galileo satellites into orbit. 🛰️…",
+   "title": "Same constellation. Two generations of Ariane. 🚀 Then: Ariane 5 launched four Galileo satellites at once in 2016. Now:…",
+   "via": "https://x.com/Arianespace"
+  },
+  {
+   "address": "https://x.com/isro/status/2116226535351054463",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-30T22:41:35Z",
+   "grade": "A",
+   "grade_standing": "provisional",
+   "outlet": "ISRO (@isro)",
+   "published_at": "2026-10-30T17:51:38Z",
+   "source_id": "x.com/isro",
+   "summary": "T–30 minutes to the scheduled lift-off of GSLV-F18/NVS-03 Mission. Watch live: https://t.co/6X42ANRnTC Mission details: https://t.co/wtZ6TmjUhc #GSLVF18 #NVS03 #ISRO #NavIC https://t.co/asisgYtFlU",
+   "title": "T–30 minutes to the scheduled lift-off of GSLV-F18/NVS-03 Mission. Watch live: https://t.co/6X42ANRnTC Mission details:…",
+   "via": "https://x.com/isro"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMi-wFBVV95cUxOZEc3ZVpIWldYbHBYcUtXUXVQOHhzZk01elhuekViQkJLT0RtQmNFLVFrRXh5WHc4YW0wNW5mU2oxRDdOMnE3cmVucjdNT2YyQnJTVFRuVWNLVEpZbWRMbERBTFlTZE1KVkFya3BmMmVYSHNkUnB2QUFEeDNaV1BidE05ZXZDMG9UN3IxUkprbmJub1F6eHVxY01xSUprNnd0V2xnREFFcWdyTlNDUFVWTzlTNmdrRHZ2bGVOX0lIdC01OUlzTDRFTmVZdHJ6cWpMN1hvS0RoUHRuU3dqZDQ5UTB3cG9Yd21DbnUyZ2ZkSFgxMDZld2ZjblJXZ9IBgAJBVV95cUxPaHdSUGIyMlNjTzdTYko5ZU1GR0lBVTdkLVUtS1k4Tk1UdWR5dEdXYlpGLUtxRDZpOWtGai1Kb0ZxWWZMamR1SlRtX2wzVE5HMXJxNHRzMXIzX1FMalNJdWVxNzlhQmNaMzVLb04tZV9JQWpKQmF2TjVBNElsc3NxZ0d5MmVvWVBzWVRSc3FnSl9CbWk3SzdSaUhTWldlZGo0Nmgxb1JrSTI0S09RMmN0TUliWndZUGRRUENnOEgwblVZZlRpYWJ2WlVoRjRrdjlQNG5XSVl4TU1HdDk2dGlQel8wVTV2MWxpc1Fxdy1COV9VcDFUSjY4Y1o4cnBMRVh4?oc=5",
@@ -4779,22 +4843,6 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMi8AFBVV95cUxOMXFRUktTY0lKZDJxVF9ZV3JmRXROZ3NFWDloMGluVGhoSGtHRnJKUV9SZ25HMzl2ZnZuOHRqTW5UbU9MUVNfc01vX2NUbVMyQ21xNGhEVWlqYTlDd3BkeWV6TjBlTm1JSnNjeEZITkVvVy1CSjBfNGRSaXVteC1WMDg3V0NYVXZfc1gzanhVNmpuaDdLeDJvSmQ0NVBZUThiLUVITnR5d2dQN0pPV1VJWk9YaWpDUXdvVGF0ZldQaXBWLXhqYzFBU1p5UWF6RERseXF5VHZHZTNtQTU0OXJpcWFvY0xMb2t4ck4tZnBTM1LSAfYBQVVfeXFMTVZnbnF6MkhPbWpxLVYyekVTOGg2WG1LUTJoTGY2XzZOX25QdXdCMlFmekpha2pfMGVOVzVnZnBkQ2V1clJfNnhfdGtUZXd1OVRsNHJ5VHlMQ3RFX2ZOd0dkZ0VmMm53bDBDYjR1TGgyRS1KYnctLVh0dU50S1FnVXFNeG1CXzNHd2Ewc3JVUFBrWTR1clBNaUphWUliQmNFRFE2dkZuY3QtQV9KRWw3Z2xLanJ2NjJ4a3F2YVRqVm1OZ3dqWDhjMkFrU002U0VWUTNnbGNHbU14UDJHWHlrX1FyOHdYSXh3Wmp2eUd0TnZMVU1sWjRn?oc=5",
-   "category": "other",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "India Today",
-   "published_at": "2026-06-29T07:00:00Z",
-   "source_id": "indiatoday.in",
-   "summary": "",
-   "title": "Gagan guides jets, NavIC guards India. Here's why the country needs both",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMigwFBVV95cUxOQy16MW1QN1A1NldvSFpVWmJ4M0JSNHJTS2VRUC0xUjhEcjNqSV9RekRSRGRuWjNoZUZmbThkaWI5MGJuMkdYcTlLWXBLVWdjdWpwb1dyRWZaTFh6UVdNQzlkV1BzVTdkMWxwQWp4M2N1OE1mM2FsdEpTNkhDb3lVSDJEcw?oc=5",
    "category": "other",
    "constellations": [
@@ -4908,22 +4956,6 @@
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMi6gFBVV95cUxOb3o5ZW5hYkNKZWFqYXVrcXRxZFNZaDR2dTJuMzNTNWNKNXBaVWRGbFdFTFlWcTg5RTl4UzFWU19ZTGdrR1hSTUVocnZrb0VzeS1qMmZGRVBfekZGd0lfNGxhQ3lWdGhCX1kxd0c0YmVPVUtOQkxQOGcyVkc4T05POW01MGhPejNySW10dEtjVVVCaHF6enlxeXUza01NRXFUMHNvdkQzUkI2VXVIVXJDWVJHYlMzZWxsMnV1d0dfQzI3TWhlRE51aDdzcXZhdk9GTGVsd3BnTjJ6UkVwLWlHbTE0RndqazBnaHfSAe8BQVVfeXFMUDRVU2NzZ0JQcnhzZmFxY2VyVjdCbUdJYWRXVDc3ZmZhaGttZk1zeHd6eUM5UGprM1gtUGh6Tl9XblVVVUl2VnBJM2p0djNybkt5cWJjZHNYWk9zZXpOT0w3c01PYldhZkoyUGJOS0FRVlhwUDduUjRjTWtHcmRNYjdVSTlSWE9UNUpTV0UyNjFCVFJRTTRzOG1UQy1HM2dFSml2c0hndkZ3clhRZnp1ZTJtQ1NlVGQtWHVkOFI4dnpCQlpiWDg5QU9NMWdXQUdiNXZYdXR3OUV3NXRkaEMzLUx0d2tfNTkzdWt5Nm82ZTg?oc=5",
-   "category": "other",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "India Today",
-   "published_at": "2026-06-20T07:00:00Z",
-   "source_id": "indiatoday.in",
-   "summary": "",
-   "title": "Isro's NavIC isn't alone. Indian startups are building eyes and ears in space",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMie0FVX3lxTE1PUU50SHNjY0xmUktPZU1HNmFiNHVXWjFlaDl6bFV2T2dJRm9rOTE2SXQzcGxpQ1ZBbmdXZm1aVEIyTWpCdGI3UTgzbFRqeUhQSDNqTXFnaXVNdUJLZTdXeTJMRnlnRGpOX1hKSGR2cGc3a2tEejZPc0VCYw?oc=5",
    "category": "launch",
    "constellations": [
@@ -4938,22 +4970,6 @@
    "summary": "",
    "title": "Beijing launches BeiDou satellite SMS for emergency communications",
    "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxQNGpQX1NSQi11TExDX0w1UkVuVWhSZVNYSktQdVhuTXA4UEdLUWtibEI5YTdXLXFlUWI0dE1LRjJVVEp1bllVNmVpNkFybE1JVlZ1ZmIxYlR4RURIZXl0a2JfVk02Rlhyc0dobkpqVnNJemJXUWswMU5BY1hWcTM0OEtWQThvN3BCODk0cjJOcFZnR1FFaDAwT1g2S2oxU245cFhhU2xESDRXeDZOaFpscGNpbTNlNWVacmxVRnNkZUpLWUdHMmJ0c0FSSm9RMmNW0gHWAUFVX3lxTFBnVTJ0bnZ3cmI0NjRDU3p3OVdQNENWT2pZNjJ5SlZTYnVTTjdMQm9MOUNJUnNEMXBOd28yb0RoemVfUWh6bHExdHBJU3ZlQU93cGZiN0dCb3B6QzkxUzd3dnVtVDlCZzMybXpKbGtJRjAtblpGRURCS0VfSjNnOGVpaDl5U2htVVZ1Nmx3VENSRGFuMWZaMjBjQm9QNXNhZUNoMGVzek8zaHpyMFVVTEJBSWNTRU4wLTU1dnFxRDZHRXhfM3VmV3pzSkg4NkxCVVVzeXZPaXc?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "India Today",
-   "published_at": "2026-06-16T07:00:00Z",
-   "source_id": "indiatoday.in",
-   "summary": "",
-   "title": "Pakistan launches 6 India-watching satellites: Isro has a NavIC recovery plan",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMilAFBVV95cUxOX1NPQXhNWUVOSExWeGVET2xKSHdNc3VTZURtVFBDVkpmelZ2Y3pPbTl0XzNTeUYyZG5VMTJtSG05ejNCQ1BUeFNveXU3WmFSTnp1RUhrRWFLYmhDbGJacWsyNGZzay13S2VXZGo5aVozWGN4V1pDZ2tuV2QwVS1UZzRWM2FMSjFqcXR4bnAwcEJVcUtP?oc=5",
