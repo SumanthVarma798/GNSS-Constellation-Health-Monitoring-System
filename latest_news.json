@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-30T06:32:28Z",
+ "generated_at": "2026-10-30T06:33:25Z",
  "items": [
   {
    "address": "https://news.google.com/rss/articles/CBMiU0FVX3lxTFBLVDZOUnJmeW5sd2lQSVRRQkMzeThBb1piVFB1dF9oY3RRX1JyRmNqUUpHemVoWjJFMFp1aUd1eDhlRi1xaE03Z2lFQlI5ckFGUXdN?oc=5",
@@ -177,6 +177,38 @@
    "summary": "",
    "title": "GSLV-F18 set to launch on Friday night 11.51 for give rebirth to the indigenous navigation system NavIC",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://x.com/SpaceIntel101/status/2115996303456956604",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-30T06:33:21Z",
+   "grade": "C",
+   "grade_standing": "provisional",
+   "outlet": "Space Intelligence (@SpaceIntel101)",
+   "published_at": "2026-10-30T02:36:46Z",
+   "source_id": "x.com/SpaceIntel101",
+   "summary": "Orbital Launch No. 249 of 2026 🇮🇳🚀🛰️ NVS-03 | ISRO | October 30 | 1821 UTC @ISRO to launch NVS-03 (IRNSS-1L) navigation🛰️ on its GSLV-Mk2🚀 to GTO (Geo Transfer Orbit) from Satish Dhawan SLP. NVS-03 is the 3rd in the 2nd-generation navigation satellite (NVS) series and the 12th satellite in the…",
+   "title": "Orbital Launch No. 249 of 2026 🇮🇳🚀🛰️ NVS-03 | ISRO | October 30 | 1821 UTC @ISRO to launch NVS-03 (IRNSS-1L)…",
+   "via": "https://x.com/SpaceIntel101"
+  },
+  {
+   "address": "https://x.com/isro/status/2115961436484817011",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-30T06:33:25Z",
+   "grade": "A",
+   "grade_standing": "provisional",
+   "outlet": "ISRO (@isro)",
+   "published_at": "2026-10-30T00:18:13Z",
+   "source_id": "x.com/isro",
+   "summary": "Launch Day! The GSLV-F18/NVS-03 Mission is scheduled for launch today, 30 October 2026, at 23:51 hrs IST from Satish Dhawan Space Centre (SDSC SHAR), Sriharikota. Watch live: 30th October 2026, 23:20 hours IST onwards https://t.co/Mbllc4lcM2 Mission details: https://t.co/6YvrbYjFJI #GSLVF18 #NVS03…",
+   "title": "Launch Day! The GSLV-F18/NVS-03 Mission is scheduled for launch today, 30 October 2026, at 23:51 hrs IST from Satish…",
+   "via": "https://x.com/isro"
   },
   {
    "address": "https://www.space.com/space-exploration/on-this-day-in-space-october-29-2026",
@@ -6042,38 +6074,6 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxNU2JzeG0tc28zMmMtUUh3LVFsNVZlWk1SZS1tRjlTUkYtR1lvVzNPaHFoOUtNOElHcm4zOWZ3YWxkcDdYVXNJaFdIckZEdlhLZTdvMXdzdDNMWmNRVnNRYXptNHV3bXRjbWpRSWRDODZHeU5EVEFJV1dBWkVFTmM3c2IzOFFTczJaVF93bXVpaGNkLTlhZGRncFdYQ2IzcjhXYk0tQWhGMnRQR3fSAbIBQVVfeXFMT3ktM2ZKNkxCYkwxUWoyaGd5c3lNVzBoRlRTeFVPUFgyajJjZXVTQkxwX3ZqRGtGRWZwN2NKbEJuVFVYOF82TnZMWm1SeXRTNVJ1MmluaVd6WWdob2tVeE5SbnNNRERNZFZjZnkyV3E1NG1KSVdiOVFlSVpzLTEwVjF1YWVwSW9KN3o3UlVDY2NzNmdZRFN6bFFnYlllTXpmLWVfdXcxUEFyLWFGRDJsUUgzUQ?oc=5",
-   "category": "satellite status and outages",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "The Indian Express",
-   "published_at": "2026-03-15T07:00:00Z",
-   "source_id": "indianexpress.com",
-   "summary": "",
-   "title": "India’s navigation satellite system suffers major setback: 1 of 4 operational IRNSS satellites fails",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxOWEtES2hGc2RPVG1qbGZVWlJ5RkpRQ3hxZDNfel9fbGpCNlVRWnFUcHhaY3d4NC1LUFNMWkdUalJOQ2ZaQzBmMUlsYk9WU015bEVUMFYxVkE1LVVOdi1tVFNXLS1YN2M2T3FmTTZrallDYm5fRnJqSGZGU1pwU1VnYVJ4MDZBRndjMW9fYW9CYVNxeF9XOG1hdWxaOVktcFE2emVYaWxobm5veDQ?oc=5",
-   "category": "other",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Countercurrents",
-   "published_at": "2026-03-15T07:00:00Z",
-   "source_id": "countercurrents.org",
-   "summary": "",
-   "title": "NavIC’s Strategic Role Requires Timely Satellite Upgrades and Expansion",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMi0wFBVV95cUxORFZBQWZvY1ktcXdicWtZU1YxQ2JjTVpYOVdVMEZfSzd2YU96QXBWV1BwTlJJY2kzbU5yRXBFN29LcHYtYTBodFhFOFVhVHJTOGhZaDBJUnRxUEJWOGotZGZEVzFYWWdqVjNlV3pZNDd2ZFdOWmVHSE9sSjZFXzZjQTdzYzNDNGNsTDFjenlJQ0hsdmRGcVdwblNXN3dhM0VuTGdsUXdJcnRkS2FkbnBoclRYSlU2QURxRDdNeHRwSmtqejVSVWlUR1ZkYjFSZHQ0d1dN?oc=5",
    "category": "satellite status and outages",
    "constellations": [
@@ -7684,15 +7684,6 @@
    "graded_by": "",
    "kind": "",
    "name": "computerweekly.com",
-   "note": "",
-   "reason": ""
-  },
-  "countercurrents.org": {
-   "grade": "",
-   "grade_standing": "not graded",
-   "graded_by": "",
-   "kind": "",
-   "name": "countercurrents.org",
    "note": "",
    "reason": ""
   },
@@ -9351,6 +9342,15 @@
    "name": "Arianespace (@Arianespace)",
    "note": "",
    "reason": "Launch provider for Galileo; reports its own launches"
+  },
+  "x.com/SpaceIntel101": {
+   "grade": "C",
+   "grade_standing": "provisional",
+   "graded_by": "",
+   "kind": "X account",
+   "name": "Space Intelligence (@SpaceIntel101)",
+   "note": "Quiet in the last 90 days",
+   "reason": "8 of 8 checked launch posts held in 24 months (x-discovery, 27 Oct)"
   },
   "x.com/Stellarixorine": {
    "grade": "D",
