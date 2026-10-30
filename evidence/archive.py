@@ -2,7 +2,10 @@
 
 Layout of an archive folder:
 
-    objects/<first two characters of the hash>/<hash>   one raw copy, never overwritten
+    objects/<first two characters of the hash>/<hash>   one raw copy; big old copies leave the working
+                                                         tree and stay in the archive's git history
+                                                         (recover with `git log --all -- objects/ab/<hash>`
+                                                         then `git show`)
     versions.csv                                        one row per change, oldest first
     runs/<job file>.csv                                 one row per run of a scheduled job, oldest first
 
@@ -26,7 +29,7 @@ import requests
 
 from evidence.settings import (ARCHIVE_LIMIT_COLUMNS, ARCHIVE_LIMITS_FILE, ARCHIVE_OBJECTS_DIR, ARCHIVE_RUN_COLUMNS,
                                ARCHIVE_RUNS_DIR, ARCHIVE_VERSION_COLUMNS, ARCHIVE_VERSIONS_FILE, BACKOFF_FIRST,
-                               BACKOFF_LONGEST, DEFAULT_MIN_GAP, DOWNLOAD_TRIES, GONE_STATUSES, MAX_COPY_BYTES,
+                               ARCHIVE_THIN_AFTER_DAYS, ARCHIVE_THIN_FROM_BYTES, BACKOFF_LONGEST, DEFAULT_MIN_GAP, DOWNLOAD_TRIES, GONE_STATUSES, MAX_COPY_BYTES,
                                MIN_GAP_BETWEEN_DOWNLOADS, NEVER_FETCH, REFUSAL_STATUSES, REQUEST_TIMEOUT_SECONDS,
                                RETRY_STATUSES, USER_AGENT, WAIT_BETWEEN_TRIES_SECONDS)
 
@@ -159,6 +162,39 @@ def read_versions(archive):
 def latest_version(archive, address):
     """The newest row for an address, or None if it was never kept. It may be a "gone" row."""
     return next((row for row in reversed(read_versions(archive)) if row["address"] == address), None)
+
+
+def thin(archive, addresses, now):
+    """Remove old big copies of `addresses` from the working tree, keeping versions.csv whole.
+
+    A copy may be removed when it has a hash, is at least ARCHIVE_THIN_FROM_BYTES, was fetched
+    more than ARCHIVE_THIN_AFTER_DAYS before `now`, and is not the newest hash of any address (a later
+    "gone" row does not count as newer: the last real copy stays).
+    Missing files are skipped. Returns the rows whose object files were removed.
+    """
+    rows = read_versions(archive)
+    newest = {}
+    for row in reversed(rows):
+        if row["sha256"]:
+            newest.setdefault(row["address"], row["sha256"])
+    protected = set(newest.values())
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    thinned = []
+    for row in rows:
+        if row["address"] not in addresses or not row["sha256"] or row["sha256"] in protected:
+            continue
+        if int(row["bytes"]) < ARCHIVE_THIN_FROM_BYTES:
+            continue
+        fetched_at = datetime.fromisoformat(row["fetched_at"].replace("Z", "+00:00"))
+        if fetched_at + timedelta(days=ARCHIVE_THIN_AFTER_DAYS) >= now:
+            continue
+        path = object_path(archive, row["sha256"])
+        if not path.exists():
+            continue
+        path.unlink()
+        thinned.append(row)
+    return thinned
 
 
 def record(archive, address, fetched_at, status, body=b"", content_type=""):

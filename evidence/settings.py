@@ -52,6 +52,11 @@ NEVER_FETCH = ("vimpel", "spacemapper")  # matched anywhere in a host name
 
 MAX_COPY_BYTES = 50 * 1024 * 1024  # GitHub refuses files over 100 MB; stop well short of that
 GONE_STATUSES = (404, 410)         # the page no longer exists: a change worth recording
+ARCHIVE_THIN_FROM_BYTES = 5 * 1024 * 1024  # copies this size or larger may leave the checkout; today only the GCAT tables
+ARCHIVE_THIN_AFTER_DAYS = 14              # an old copy this many days after it was fetched may be thinned
+# Only groups whose readers need just the newest copy are thinned: evidence/news.py re-reads every copy of
+# every news, social and X feed, so those groups keep all of theirs.
+ARCHIVE_THIN_GROUPS = ("documents", "catalogues", "orbital")
 
 ARCHIVE_OBJECTS_DIR = "objects"          # folder of raw copies, inside an archive folder
 ARCHIVE_VERSIONS_FILE = "versions.csv"   # one row per change, inside an archive folder
