@@ -17,6 +17,8 @@ import streamlit as st
 
 from config.config import DEFAULT_PARAMS
 from data import celestrak
+from evidence import jobs
+from evidence.console_settings import WORKFLOWS_DIR
 from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS
 from ui import changes, data, surfaces, time_range
 
@@ -93,14 +95,33 @@ def age_words(data_time, now, tz=timezone.utc):
     return f"Orbit data {taken.day} {taken:%b}{age}", status
 
 
+def _day_time(moment, now, tz):
+    """'14:02' for a moment today in `tz`, '18 Oct 14:02' for another day."""
+    moment = moment.astimezone(tz)
+    return f"{moment:%H:%M}" if moment.date() == now.astimezone(tz).date() else f"{moment.day} {moment:%b %H:%M}"
+
+
 def failing_words(since, now, tz=timezone.utc, what="CelesTrak"):
     """'CelesTrak failing since 14:02' when the failures began today, 'CelesTrak failing since 18 Oct 14:02' before.
 
     `what` names the failing source. Days and times are counted in `tz`, the viewer's time zone.
     """
-    since = since.astimezone(tz)
-    when = f"{since:%H:%M}" if since.date() == now.astimezone(tz).date() else f"{since.day} {since:%b %H:%M}"
-    return f"{what} failing since {when}"
+    return f"{what} failing since {_day_time(since, now, tz)}"
+
+
+def copy_words(copy_at, now, tz=timezone.utc):
+    """'CelesTrak via the archive job · copy 05:06 · next about 08:15' for a copy in use.
+
+    The copy's time and the archive job's next orbital run are shown in `tz`, with the day in front when not today.
+    No next time is shown when the workflow file cannot be read or has no orbital schedule.
+    """
+    words = f"CelesTrak via the archive job · copy {_day_time(copy_at, now, tz)}"
+    try:
+        crons = jobs.schedules((WORKFLOWS_DIR / "archive.yml").read_text(encoding="utf-8")).get("orbital", [])
+        next_at = jobs.next_run(crons, now) if crons else None
+    except (OSError, ValueError, TypeError, IndexError):
+        next_at = None
+    return words + (f" · next about {_day_time(next_at, now, tz)}" if next_at else "")
 
 
 def offered():
@@ -145,7 +166,7 @@ def _data_chip(names, window_days, params, live, now):
     # A copy in use means the last read worked: a failed read clears copy_at (a state saved by older code may still
     # say ok False beside it, and is not failing).
     if live.get("copy_at"):
-        return surfaces.chip(text, status) + surfaces.chip("CelesTrak via the archive job", "idle")
+        return surfaces.chip(text, status) + surfaces.chip(copy_words(live["copy_at"], now, viewer_zone()), "idle")
     if live["ok"]:
         return surfaces.chip(text, status)
     # A copy saved before failing_since was kept has none: its last try stands in.
@@ -201,7 +222,7 @@ def _refresh(names, window_days, gear_scope):
     with st.container(key="refresh"):
         clock, chip = st.container(key="clock"), st.empty()
         clicked = st.button("Refresh orbit data", key="refresh_button", icon=":material/refresh:",
-                            help="Pull the newest orbit data")
+                            help="Re-read the archive job's newest copy of the orbit data")
         if gear_scope:
             with st.popover("", icon=":material/settings:", help="Detection thresholds"):
                 st.session_state["params"] = _thresholds(gear_scope)
