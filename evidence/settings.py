@@ -75,9 +75,10 @@ TIME_CORRECTION_WORDS = {
     "BDUT": "BeiDou−UTC",
     "QZUT": "QZSS−UTC",
 }
-# Systems (signal ID letters) whose broadcast health code also flags signals a satellite may not transmit, so a
-# non-zero code is shown as "flags set", not "unhealthy". QZSS: every satellite sent 1 or 16 on 27 Oct 2026.
-HEALTH_FLAGS_ONLY = {"J"}
+# QZSS broadcast health, IS-QZSS-PNT-005 section 4.1.2.3(4), Tables 4.1.2-5-1 and 4.1.2-5-2: six bits, one per
+# signal, and a set bit means that signal must not be used. L1C/A and L1C/B are never sent at once, so one of the
+# two is set on purpose when the other signal is sent.
+QZSS_HEALTH_BITS = {32: "L1", 16: "L1C/A", 8: "L2C", 4: "L5", 2: "L1C", 1: "L1C/B"}
 # The constellations whose overview carries an official operator status page. GLONASS and BeiDou
 # are deliberately absent: there is no single stable operator page we can point to today.
 OFFICIAL_STATUS_URLS = {

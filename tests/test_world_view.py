@@ -23,8 +23,9 @@ def test_each_satellite_carries_its_broadcast_health_as_the_orbit_age_section_wo
     sats = {s["name"]: s for system in page["systems"] for s in system["satellites"]}
 
     assert (sats["GSAT0202"]["health_words"], sats["GSAT0202"]["health_status"]) == ("unhealthy (code 130)", "bad")
-    assert (sats["QZS-3"]["health_words"], sats["QZS-3"]["health_status"]) == ("flags set (code 1)", "warn")
+    assert (sats["QZS-3"]["health_words"], sats["QZS-3"]["health_status"]) == ("healthy (sends L1C/A)", "ok")
     assert sats["IRNSS-1C"]["health_status"] == "idle" and sats["GSAT0202"]["accuracy_words"] == "3.1 m"
+    assert any(key["words"] == "some signals off" and key["status"] == "warn" for key in page["health_key"])
     assert page["area"]["west"] == 30.0 and page["area"]["east"] == 130.0 and "NavIC" in page["area"]["label"]
     assert page["as_of"] == "14:00" and page["day"] == "27 Oct"
 

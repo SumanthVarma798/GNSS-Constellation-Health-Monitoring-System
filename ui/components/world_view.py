@@ -169,7 +169,7 @@ def payload(systems, gap=None, now=None):
         "health_key": [
             {"words": "healthy", "status": "ok", "colour": world_settings.HEALTH_COLOURS["ok"]},
             {"words": "unhealthy", "status": "bad", "colour": world_settings.HEALTH_COLOURS["bad"]},
-            {"words": "flags set", "status": "warn", "colour": world_settings.HEALTH_COLOURS["warn"]},
+            {"words": "some signals off", "status": "warn", "colour": world_settings.HEALTH_COLOURS["warn"]},
             {"words": "not in the day's file or unknown", "status": "idle", "colour": world_settings.HEALTH_COLOURS["idle"]},
         ],
         "system_key": [{"name": system, "colour": world_settings.SYSTEM_COLOURS.get(system, palette.FILL)}

@@ -201,11 +201,31 @@ def test_official_status_links_only_where_there_is_one():
     assert official_status.line("GLONASS") == "" and official_status.line("BeiDou-3") == ""
 
 
-def test_a_qzss_code_is_flags_set_not_unhealthy():
-    qzss = {"satellite": "QZS-3", "signal_id": "J07", "health": 1, "accuracy_m": 2.0, "note": ""}
+def test_qzss_broadcast_health_is_read_bit_by_bit_per_signal():
+    for code, words, colour in [
+        (1, "healthy (sends L1C/A)", "ok"),
+        (16, "healthy (sends L1C/B)", "ok"),
+        (5, "L5 off (code 5)", "warn"),
+        (17, "L1C/A, L1C/B off (code 17)", "warn"),
+        (55, "unhealthy (code 55): only L2C usable", "bad"),
+        (63, "unhealthy (code 63): no signal usable", "bad"),
+        (33, "unhealthy (code 33): only L2C, L5, L1C usable", "bad"),   # L1 off: neither L1C/A nor L1C/B usable
+        (62, "unhealthy (code 62): no signal usable", "bad"),
+    ]:
+        status = {"satellite": "QZS-3", "signal_id": "J07", "health": code, "accuracy_m": 2.0, "note": ""}
+        assert orbit_age.health_words(status) == (words, colour)
+
+    galileo = {"satellite": "GSAT0202", "signal_id": "E14", "health": 130, "accuracy_m": 3.12, "note": ""}
+    assert orbit_age.health_words(galileo) == ("unhealthy (code 130)", "bad")
+
+
+def test_a_qzss_satellite_with_no_usable_signal_is_in_the_unhealthy_notice():
+    qzss = {"satellite": "QZS-3", "signal_id": "J07", "health": 55, "accuracy_m": 2.0, "note": ""}
     gap = {**GAP, "satellites": [qzss]}
     rows = [{"satellite": "QZS-3", "epoch": None, "source": "", "age_days": None, "status": "idle"}]
 
     _, body, _ = orbit_age.section_markup(rows, gap=gap)
-    assert "flags set (code 1)" in body and "unhealthy" not in body
-    assert orbit_age._unhealthy_notice(gap, rows) is None
+    assert "unhealthy (code 55): only L2C usable" in body
+    assert orbit_age._unhealthy_notice(gap, rows) == (
+        "Broadcasting unhealthy: QZS-3 (J07). From the IGS broadcast file of 25 Oct; "
+        "work in progress, not yet part of the score.")

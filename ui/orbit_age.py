@@ -3,7 +3,7 @@ from datetime import datetime
 from html import escape
 
 from data import spacetrack
-from evidence.settings import HEALTH_FLAGS_ONLY, ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS, TIME_CORRECTION_WORDS
+from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS, QZSS_HEALTH_BITS, TIME_CORRECTION_WORDS
 from ui import data as dashboard_data
 from ui import measures, reveal, surfaces, tooltip
 
@@ -57,6 +57,31 @@ def _status_by_satellite(gap):
     return out
 
 
+def _qzss_health_words(health):
+    """QZSS's six health bits, one signal each; a set bit means that signal must not be used."""
+    if health & 32:
+        # The L1 signal being sent is unusable and the other one of the pair is not sent, so neither counts.
+        usable = [QZSS_HEALTH_BITS[bit] for bit in (8, 4, 2) if not health & bit]
+        if not usable:
+            return f"unhealthy (code {health}): no signal usable", "bad"
+        return f"unhealthy (code {health}): only {', '.join(usable)} usable", "bad"
+
+    sends_a, sends_b = health & 16, health & 1
+    if bool(sends_a) != bool(sends_b) and health & ~(16 | 1) == 0:
+        return f"healthy (sends {'L1C/B' if sends_a else 'L1C/A'})", "ok"
+
+    off = []
+    for bit in (16, 8, 4, 2, 1):
+        if health & bit:
+            # A single L1C/A or L1C/B bit just says which of the pair is being sent, not a fault.
+            if bit == 16 and sends_a and not sends_b:
+                continue
+            if bit == 1 and sends_b and not sends_a:
+                continue
+            off.append(QZSS_HEALTH_BITS[bit])
+    return f"{', '.join(off)} off (code {health})", "warn"
+
+
 def health_words(status):
     """(words, status) for one satellite's broadcast health; "unhealthy" only where a non-zero code means it."""
     health = (status or {}).get("health")
@@ -65,8 +90,9 @@ def health_words(status):
         return ("not in the day's file", "idle") if missing else ("-", "idle")
     if health == 0:
         return "healthy", "ok"
-    if (status.get("signal_id") or " ")[0] in HEALTH_FLAGS_ONLY:
-        return f"flags set (code {health})", "warn"
+    signal_id = (status or {}).get("signal_id") or ""
+    if signal_id[:1] == "J" and isinstance(health, int) and not isinstance(health, bool):
+        return _qzss_health_words(health)
     return f"unhealthy (code {health})", "bad"
 
 
