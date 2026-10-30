@@ -263,6 +263,49 @@ def test_refresh_from_the_copy_only_never_asks_celestrak(monkeypatch):
     assert after["ok"] and after["failing_since"] is None
 
 
+def test_from_the_copy_a_click_always_reads_again_even_within_every(monkeypatch):
+    taken = NOW - timedelta(hours=3)
+    calls = []
+
+    monkeypatch.setattr(celestrak, "fetch_copy",
+                        lambda norads: (calls.append(norads),
+                                        ({39635: celestrak.as_history_row(IRNSS_1B)}, {39635}, taken))[1])
+    celestrak.refresh([39635], NOW, clicked=True, direct=False)
+    after = celestrak.refresh([39635], NOW + timedelta(minutes=1), clicked=True, direct=False)
+
+    assert len(calls) == 2
+    assert after["tried"] == NOW + timedelta(minutes=1) and after["copy_at"] == taken
+
+
+def test_from_the_copy_without_a_click_a_second_read_waits_every(monkeypatch):
+    taken = NOW - timedelta(hours=3)
+    calls = []
+
+    monkeypatch.setattr(celestrak, "fetch_copy",
+                        lambda norads: (calls.append(norads),
+                                        ({39635: celestrak.as_history_row(IRNSS_1B)}, {39635}, taken))[1])
+    celestrak.refresh([39635], NOW, direct=False)
+    celestrak.refresh([39635], NOW + timedelta(minutes=119), direct=False)
+    assert len(calls) == 1
+
+    celestrak.refresh([39635], NOW + timedelta(hours=2), direct=False)
+    assert len(calls) == 2
+
+
+def test_direct_reads_keep_the_click_retry_only_after_a_failure(monkeypatch):
+    calls = []
+
+    def fetch(norads):
+        calls.append(norads)
+        return {39635: celestrak.as_history_row(IRNSS_1B)}, {39635}
+
+    monkeypatch.setattr(celestrak, "fetch", fetch)
+    celestrak.refresh([39635], NOW, direct=True)
+    celestrak.refresh([39635], NOW + timedelta(minutes=1), clicked=True, direct=True)
+
+    assert len(calls) == 1
+
+
 def test_a_failing_copy_read_sets_failing_since_without_calling_celestrak(monkeypatch):
     calls = []
 
@@ -290,3 +333,17 @@ def test_a_failing_copy_read_after_a_good_one_stops_naming_the_copy(monkeypatch)
 
     assert not after["ok"] and after["copy_at"] is None and after["failing_since"] == NOW + timedelta(hours=2)
     assert set(after["rows"]) == {39635}   # what was held stays in use
+
+
+def test_a_clicks_failed_extra_read_keeps_the_good_copy_every_visitor_shares(monkeypatch):
+    taken = NOW - timedelta(hours=1)
+    monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: ({39635: celestrak.as_history_row(IRNSS_1B)}, {39635}, taken))
+    celestrak.refresh([39635], NOW, direct=False)
+
+    def down(norads):
+        raise requests.ConnectionError("no route")
+    monkeypatch.setattr(celestrak, "fetch_copy", down)
+    after = celestrak.refresh([39635], NOW + timedelta(minutes=5), clicked=True, direct=False)
+
+    assert after["ok"] and after["copy_at"] == taken and after["failing_since"] is None
+    assert after["tried"] == NOW   # the next automatic read stays two hours after the last good one

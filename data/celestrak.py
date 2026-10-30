@@ -136,11 +136,13 @@ def _load():
 
 
 def refresh(norad_ids, now, clicked=False, direct=True):
-    """Fetch when the last try is EVERY old, or on a click after a failed try; otherwise keep what is held.
+    """Fetch when the last try is EVERY old, or on a click: always with `direct=False`, only after a failed try with
+    `direct=True`; otherwise keep what is held.
 
     With `direct` (the default, for the scripts that run on GitHub) the request goes to CelesTrak; a failure keeps
     the rows and the listing already held and sets ok to False; the archive job's copy then fills in what it can.
-    With `direct=False` (the dashboard) no request goes to CelesTrak at all: only the archive job's copy is read.
+    With `direct=False` (the dashboard) no request goes to CelesTrak at all: only the archive job's copy is read, and
+    a click always reads that copy (the copy is on GitHub, so CelesTrak's 2-hour rule does not apply).
     Returns a copy of `state`.
     Every try, failed or not, is saved, so a restart keeps to the same 2 hours.
     """
@@ -148,7 +150,8 @@ def refresh(norad_ids, now, clicked=False, direct=True):
         if state["tried"] is None:
             _load()
         tried = state["tried"]
-        if tried is None or now - tried >= EVERY or (clicked and not state["ok"]):
+        due = tried is None or now - tried >= EVERY
+        if due or (clicked and (not direct or not state["ok"])):
             state["tried"] = now
             if direct:
                 try:
@@ -172,8 +175,13 @@ def refresh(norad_ids, now, clicked=False, direct=True):
                 try:
                     found, listed, taken = fetch_copy(norad_ids)
                 except (requests.RequestException, ValueError, KeyError, TypeError, AttributeError):
-                    state["ok"], state["copy_at"] = False, None   # no copy in use: the header says it is failing
-                    state["failing_since"] = state["failing_since"] or now
+                    if not due and state["ok"]:
+                        # A click's extra read failed, but the copy held is still good, and shared by every
+                        # visitor: keep it, and keep the next automatic read on time.
+                        state["tried"] = tried
+                    else:
+                        state["ok"], state["copy_at"] = False, None   # no copy in use: the header says it is failing
+                        state["failing_since"] = state["failing_since"] or now
                 else:
                     _merge(found)
                     state["ok"], state["listed"], state["failing_since"], state["copy_at"] = True, listed, None, taken

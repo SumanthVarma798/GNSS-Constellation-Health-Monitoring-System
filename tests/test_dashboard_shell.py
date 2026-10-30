@@ -15,7 +15,8 @@ from data import celestrak, spacetrack
 from test_celestrak import IRNSS_1B
 from test_golden_scores import GOLDEN
 from ui import time_range
-from ui.shell import age_words, clock_words, failing_words, next_words
+import ui.shell as shell
+from ui.shell import age_words, clock_words, copy_words, failing_words, next_words
 
 ROOT = Path(__file__).resolve().parent.parent
 FROZEN = datetime.fromisoformat(GOLDEN["frozen_utc"])
@@ -348,6 +349,13 @@ def test_while_the_archive_jobs_copy_stands_in_the_chip_says_so_not_failing(monk
     assert 'class="chip ok">Orbit data 6 Oct 11:00' in chips   # the copy's own age, not the bundled history's
 
 
+def test_the_copy_chip_says_which_copy_and_when_the_next_orbital_run_is_due(monkeypatch):
+    monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: ({}, set(), FROZEN - timedelta(hours=1)))
+    chips = " ".join(htmls(run(lambda at: at.button(key="refresh_button").click())))
+
+    assert 'class="chip idle">CelesTrak via the archive job · copy 11:00 · next about 14:15' in chips
+
+
 def test_when_the_copy_read_fails_the_chip_says_the_archive_copy_is_failing(monkeypatch):
     celestrak.state.update(tried=FROZEN, ok=False, failing_since=FROZEN, fetched=FROZEN - timedelta(hours=1))
     chips = " ".join(htmls(run()))
@@ -393,6 +401,21 @@ def test_failing_words():
     assert failing_words(now.replace(hour=8, minute=2), now) == "CelesTrak failing since 08:02"
     assert failing_words(now.replace(day=18, hour=23), now) == "CelesTrak failing since 18 Oct 23:00"
     assert failing_words(now.replace(hour=8, minute=2), now, what="Archive copy") == "Archive copy failing since 08:02"
+
+
+def test_copy_words_say_the_copy_time_and_the_next_orbital_run():
+    now = FROZEN.replace(hour=9, minute=0)
+
+    assert copy_words(now.replace(hour=5, minute=6), now) == \
+        "CelesTrak via the archive job · copy 05:06 · next about 14:15"
+    assert copy_words(now.replace(hour=5, minute=6), FROZEN.replace(hour=21, minute=0)) == \
+        "CelesTrak via the archive job · copy 05:06 · next about 7 Oct 01:15"
+
+
+def test_copy_words_leaves_out_the_next_time_without_a_readable_schedule(monkeypatch, tmp_path):
+    monkeypatch.setattr(shell, "WORKFLOWS_DIR", tmp_path)
+
+    assert copy_words(FROZEN - timedelta(hours=1), FROZEN) == "CelesTrak via the archive job · copy 11:00"
 
 
 def _on(page):
