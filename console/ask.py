@@ -46,15 +46,17 @@ def off_because(provider, url, key):
 def note(provider, url):
     runs_on = ("DeepSeek's hosted service, so each question goes to DeepSeek with that material" if provider == DEEPSEEK
                else "this computer" if url == OLLAMA_URL else "a team member's computer, reached through a private tunnel")
-    return (f"Answers come only from the project's own documents, the code's own descriptions, its source lists and its "
-            f"open issues, each fact with its source in [brackets]. The model ({assistant.model_name(provider)}) runs on "
+    return (f"Answers come only from the project's own material: its documents, settings, scheduled jobs, tracked "
+            f"satellites, code descriptions, source lists, merged pull requests and open issues, each fact with its "
+            f"source in [brackets]. The model ({assistant.model_name(provider)}) runs on "
             f"{runs_on}. It can still be wrong, so check the source it names.")
 
 
 def ask(question, chat, url, key, provider):
     """Show the question and the answer as it is written; keep both in the conversation once it is whole."""
     st.chat_message("user").markdown(question)
-    text = assistant.material(common.read()["issues"], PARTS)
+    seen = common.read()
+    text = assistant.material(seen["issues"], PARTS, seen["decision_prs"])
     with st.chat_message("assistant"):
         try:
             with st.spinner("Reading the project's material…"):

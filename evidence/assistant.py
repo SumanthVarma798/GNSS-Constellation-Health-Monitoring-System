@@ -13,9 +13,10 @@ import time
 
 import requests
 
-from evidence.assistant_settings import (ANSWER_SECONDS, CODE_FOLDERS, CONTEXT_TOKENS, DEEPSEEK, DEEPSEEK_MODEL,
-                                         DOCUMENTS, HISTORY_TURNS, ISSUE_CHARACTERS, MODEL, OLLAMA, OLLAMA_URL, ROOT,
-                                         RULES, SOURCE_FILES)
+from evidence.assistant_settings import (ANSWER_SECONDS, ANSWER_TOKENS, CODE_FOLDERS, CONTEXT_TOKENS, DEEPSEEK,
+                                         DEEPSEEK_MODEL, DOCUMENTS, HISTORY_TOKENS, HISTORY_TURNS, ISSUE_CHARACTERS,
+                                         MODEL, OLLAMA, OLLAMA_URL, REMINDER, ROOT, RULES, SOURCE_FILES, SYSTEMS, TRACKED,
+                                         WORKFLOWS)
 
 PAGE_LABEL = "System design page"
 
@@ -43,19 +44,59 @@ def available(url=OLLAMA_URL, key="", provider=OLLAMA):
         return False
 
 
-def material(issues, parts):
+def material(issues, parts, pulls=()):
     """Everything the assistant may answer from, each piece under its [label]. `issues` are GitHub's open issues,
-    `parts` the System design page's words (ui/components/system_design.PARTS)."""
+    `parts` the System design page's words (ui/components/system_design.PARTS), `pulls` GitHub's latest closed pull
+    requests (only the merged ones are used). What changes from day to day comes last."""
     pieces = [f"=== [{path}] ===\n{(ROOT / path).read_text(encoding='utf-8')}" for path in DOCUMENTS]
+    pieces.extend(f"=== [{path.relative_to(ROOT).as_posix()}] ===\n{_job_lines(path)}"
+                  for path in sorted((ROOT / WORKFLOWS).glob("*.yml")))
+    pieces.append(f"=== [{TRACKED}] ===\n{_tracked()}")
     pieces.extend(f"=== [{path}] ===\n{_source_lines(path)}" for path in SOURCE_FILES)
     pieces.append(f"=== [{PAGE_LABEL}] ===\n" + "\n".join(
         f"{name} ({kind}): {simple} Details: {'; '.join(tech)}. Limits: {'; '.join(limits)}. Lives in: {where}."
         for name, kind, simple, tech, limits, where in parts.values()))
-    pieces.append("=== Code: the description at the top of each file ===\n" + "\n".join(
-        f"[{path}] {doc}" for path, doc in _descriptions()))
-    pieces.append("=== Open issues: planned work, not built ===\n" + "\n".join(
-        f"[issue #{i['number']}] {i['title']}: {_short(i.get('body') or '')}" for i in issues))
+    pieces.append("=== The description at the top of each code file; cite the file named at the start of its line ===\n"
+                  + "\n".join(f"[{path}] {doc}" for path, doc in _descriptions()))
+    merged = sorted((p for p in pulls if p.get("merged_at")), key=lambda p: p["merged_at"], reverse=True)
+    pieces.append("=== Merged pull requests, newest first: changes that are built; cite each by its PR number ===\n"
+                  + "\n".join(f"[PR #{p['number']}] {p['title']} (merged {p['merged_at'][:10]})" for p in merged))
+    pieces.append("=== Open issues: planned work, not built; cite each by its issue number ===\n"
+                  + "\n".join(f"[issue #{i['number']}] {i['title']}: {_short(i.get('body') or '')}" for i in issues))
     return "\n\n".join(pieces)
+
+
+def tokens(text):
+    """About how many tokens `text` is: 3 characters a token, on the high side for English and code."""
+    return len(text) // 3 + 1   # ponytail: a rough count; use the model's own tokenizer if a budget must be exact
+
+
+def _job_lines(path):
+    """A job file's opening comment, its name, and each schedule line with the comment just above it: what the job
+    does, when, and what it reports to."""
+    lines = path.read_text(encoding="utf-8").splitlines()
+    kept = set(range(next((n for n, line in enumerate(lines) if not line.startswith("#")), len(lines))))
+    for n, line in enumerate(lines):
+        if line.startswith("name:") or "cron:" in line:
+            kept.add(n)
+            above = n - 1
+            while above >= 0 and lines[above].strip().startswith("#"):
+                kept.add(above)
+                above -= 1
+    return "\n".join(lines[n].strip().lstrip("# ").rstrip() for n in sorted(kept))
+
+
+def _tracked():
+    """How many satellites the dashboard tracks, in all and per system, each listed by its id and dashboard name."""
+    with (ROOT / TRACKED).open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    with (ROOT / SYSTEMS).open(newline="", encoding="utf-8") as handle:
+        names = {row["svn_letter"]: row["constellation"] for row in csv.DictReader(handle)}
+    systems = {}
+    for row in rows:
+        systems.setdefault(names.get(row["svn"][0], row["svn"][0]), []).append(f"{row['svn']} {row['dashboard_name']}")
+    return f"{len(rows)} satellites tracked in all. Per system (satellite id, then its name on the dashboard):\n" + "\n".join(
+        f"{system}: {len(listed)} satellites: {'; '.join(listed)}" for system, listed in systems.items())
 
 
 def _source_lines(path):
@@ -91,9 +132,12 @@ def _short(text):
 
 def answer(question, history, material_text, url=OLLAMA_URL, key="", provider=OLLAMA):
     """The answer, piece by piece as the model writes it. `history` is the earlier [{role, content}] turns."""
-    messages = ([{"role": "system", "content": f"{RULES}\n\nMATERIAL:\n{material_text}"}]
-                + history[-2 * HISTORY_TURNS:] + [{"role": "user", "content": question}])
+    system = f"{RULES}\n\nMATERIAL:\n{material_text}"
     hosted = provider == DEEPSEEK
+    room = HISTORY_TOKENS if hosted else min(  # Ollama shares one context among all of it
+        HISTORY_TOKENS, CONTEXT_TOKENS - tokens(system) - tokens(REMINDER) - tokens(question) - ANSWER_TOKENS)
+    messages = ([{"role": "system", "content": system}] + recent(history, room)
+                + [{"role": "system", "content": REMINDER}, {"role": "user", "content": question}])
     if hosted:   # OpenAI-style chat completions, streamed as server-sent events
         address = f"{url}/chat/completions"
         body = {"model": DEEPSEEK_MODEL, "messages": messages, "stream": True, "thinking": {"type": "disabled"},
@@ -101,7 +145,7 @@ def answer(question, history, material_text, url=OLLAMA_URL, key="", provider=OL
     else:
         address = f"{url}/api/chat"
         body = {"model": MODEL, "messages": messages, "stream": True, "think": False,
-                "options": {"num_ctx": CONTEXT_TOKENS, "temperature": 0}}
+                "options": {"num_ctx": CONTEXT_TOKENS, "num_predict": ANSWER_TOKENS, "temperature": 0}}
     deadline = time.monotonic() + ANSWER_SECONDS
     try:
         reply = requests.post(address, stream=True, timeout=ANSWER_SECONDS, headers=_headers(key), json=body)
@@ -140,6 +184,19 @@ def answer(question, history, material_text, url=OLLAMA_URL, key="", provider=OL
             raise Unavailable("The model's reply was not in the expected shape. Try again.") from error
         if hosted:   # DeepSeek ends a whole answer with [DONE]; Ollama's stream simply ends
             raise Unavailable("The answer stopped part way, so it may be incomplete. Try again.")
+
+
+def recent(history, room=HISTORY_TOKENS):
+    """The newest question-and-answer pairs of `history` that fit in `room` tokens, at most HISTORY_TURNS of them, each
+    pair whole and in order. Older ones are left out, never cut in the middle."""
+    kept = []
+    for at in range(len(history) - 2, -1, -2):
+        pair = history[at:at + 2]
+        cost = sum(tokens(turn["content"]) for turn in pair)
+        if len(kept) // 2 >= HISTORY_TURNS or cost > room:
+            break
+        kept[:0], room = pair, room - cost
+    return kept
 
 
 def _refused(status, hosted):
