@@ -24,6 +24,8 @@ OWN_NOTE = "_spacetrack_note"
 # The public copy the daily RINEX job publishes to the orbit-checks branch.
 ORBIT_GAP_URL = ("https://raw.githubusercontent.com/SumanthVarma798/"
                  "GNSS-Constellation-Health-Monitoring-System/orbit-checks/orbit_gap.json")
+FITTED_URL = ("https://raw.githubusercontent.com/SumanthVarma798/"
+              "GNSS-Constellation-Health-Monitoring-System/orbit-checks/fitted_orbits.json")
 # Every registry satellite of the generation each constellation shows, tracked or not (the 3D view's "All").
 # A MEO system's is the satellites it tracks: CelesTrak's GNSS group holds them, and asking for each
 # retired one by itself would mean dozens of requests every refresh.
@@ -39,6 +41,28 @@ def orbit_gap():
     except (requests.RequestException, ValueError):
         return {}
     return payload if isinstance(payload, dict) else {}
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def fitted_orbits():
+    """The published fitted-orbit JSON, or {} when it cannot be read."""
+    try:
+        payload = requests.get(FITTED_URL, timeout=8).json()
+    except (requests.RequestException, ValueError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def fitted_by_norad():
+    """{norad: (row, fit_km)} for every published fitted record that carries a row."""
+    out = {}
+    payload = fitted_orbits()
+    for row in (payload.get("satellites") if isinstance(payload, dict) else None) or []:
+        # a published file is outside data: skip any entry not in the expected shape rather than break the page
+        if not isinstance(row, dict) or not isinstance(row.get("row"), dict) or not str(row.get("norad", "")).isdigit():
+            continue
+        out[int(row["norad"])] = (row["row"], row.get("fit_km"))
+    return out
 
 
 @st.cache_data(show_spinner=False)
@@ -104,6 +128,17 @@ def _status(age_days):
     if age_days >= ORBIT_ALERT_DAYS:
         return "warn"
     return "ok"
+
+
+def _fitted_rule(fitted_at, other_ats, now):
+    """Whether a fitted record may stand in: it must beat every other record, and the newest other
+    must already be at least ORBIT_ALERT_DAYS old (or there must be no other record)."""
+    if fitted_at is None:
+        return False
+    if not other_ats:
+        return True
+    newest = max(other_ats)
+    return fitted_at > newest and (now - newest).total_seconds() / 86400 >= ORBIT_ALERT_DAYS
 
 
 def _merge_rows(*groups):
@@ -194,20 +229,38 @@ def load(constellation, window_days, params=None):
     """
     now = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
     held_celestrak, held_spacetrack, held_own = celestrak.state["rows"], spacetrack.state["rows"], _own_rows()
+    bundled = _bundled_newest()
+    fitted = fitted_by_norad()
     fresh = {}
     for norad in TRACKED.get(constellation, []):
         rows = _merge_rows(held_celestrak.get(norad, []), held_spacetrack.get(norad, []), held_own.get(norad, []))
+        other_ats = []
+        bundled_at = _epoch(bundled.get(norad)) if norad in bundled else None
+        if bundled_at is not None:
+            other_ats.append(bundled_at)
+        for group in (held_celestrak.get(norad, []), held_spacetrack.get(norad, []), held_own.get(norad, [])):
+            _, at = _newest(group)
+            if at is not None:
+                other_ats.append(at)
+        if norad in fitted:
+            fitted_row, _ = fitted[norad]
+            fitted_at = _epoch(fitted_row.get("EPOCH"))
+            if _fitted_rule(fitted_at, other_ats, datetime.now(timezone.utc)):   # the same clock orbit_ages() uses
+                rows = _merge_rows(rows, [fitted_row])
         if rows:
             fresh[norad] = rows
     return _assess(constellation, window_days, params or {}, now, fresh)
 
 
-def orbit_age_rows(tracked, history_rows_by_satellite, celestrak_rows, spacetrack_rows, now, own_rows=None):
+def orbit_age_rows(tracked, history_rows_by_satellite, celestrak_rows, spacetrack_rows, now, own_rows=None,
+                   fitted_rows=None):
     """Orbit ages from plain rows, oldest first. tracked: [(satellite name, norad), ...]."""
     out = []
     own_rows = _own_rows() if own_rows is None else own_rows
+    fitted_rows = fitted_rows or {}
     for satellite, norad in tracked:
-        newest = []
+        candidates = []
+        other_ats = []
         for source, rows in (("Space-Track history", history_rows_by_satellite.get(satellite, [])),
                              ("CelesTrak", celestrak_rows.get(norad, [])),
                              ("Space-Track", spacetrack_rows.get(norad, [])),
@@ -215,15 +268,26 @@ def orbit_age_rows(tracked, history_rows_by_satellite, celestrak_rows, spacetrac
             row, at = _newest(rows)
             if row is not None and at is not None:
                 # On ties, keep explicit live sources ahead of bundled history.
-                newest.append((at, 2 if source == "CelesTrak" else
-                               1 if source in ("Space-Track", "Space-Track (your login)") else 0, source))
-        if newest:
-            at, _, source = max(newest, key=lambda item: (item[0], item[1]))
+                candidates.append({"at": at,
+                                   "priority": 2 if source == "CelesTrak" else
+                                   1 if source in ("Space-Track", "Space-Track (your login)") else 0,
+                                   "source": source, "fit_km": None})
+                other_ats.append(at)
+        if norad in fitted_rows:
+            fitted_row, fit_km = fitted_rows[norad]
+            fitted_at = _epoch(fitted_row.get("EPOCH"))
+            if _fitted_rule(fitted_at, other_ats, now):
+                candidates.append({"at": fitted_at, "priority": 3, "source": "fitted to broadcast",
+                                   "fit_km": fit_km})
+        if candidates:
+            chosen = max(candidates, key=lambda item: (item["at"], item["priority"]))
+            at, source, fit_km = chosen["at"], chosen["source"], chosen["fit_km"]
             age_days = (now - at).total_seconds() / 86400
             out.append({"satellite": satellite, "epoch": at, "source": source, "age_days": age_days,
-                        "status": _status(age_days)})
+                        "status": _status(age_days), "fit_km": fit_km})
         else:
-            out.append({"satellite": satellite, "epoch": None, "source": "", "age_days": None, "status": "idle"})
+            out.append({"satellite": satellite, "epoch": None, "source": "", "age_days": None, "status": "idle",
+                        "fit_km": None})
     return sorted(out, key=lambda row: (row["age_days"] is None, -(row["age_days"] or 0), row["satellite"]))
 
 
@@ -239,7 +303,16 @@ def own_note():
 def orbit_ages(constellation, result):
     """Orbit age rows for one constellation from its assessed result and the held live rows."""
     tracked = [(satellite, int(norad)) for satellite, norad in SATELLITES[constellation].items() if norad is not None]
-    # Only each satellite's newest row: the history is tens of thousands of rows, read on every run.
-    newest = result["history"].groupby("satellite")["EPOCH"].max() if len(result["history"]) else {}
-    history = {str(satellite): [{"EPOCH": epoch}] for satellite, epoch in dict(newest).items()}
-    return orbit_age_rows(tracked, history, celestrak.state["rows"], spacetrack.state["rows"], datetime.now(timezone.utc))
+    fitted = fitted_by_norad()
+    fitted_at = {name: _epoch(fitted[norad][0].get("EPOCH")) for name, norad in tracked if norad in fitted}
+    # Only each satellite's newest row: the history is tens of thousands of rows, read on every run. load() put any
+    # fitted record in the history too: leave it out here, so it is named as fitted and not as history.
+    history = {}
+    for satellite, epochs in (result["history"].groupby("satellite")["EPOCH"] if len(result["history"]) else []):
+        top = epochs.nlargest(2).tolist()
+        if top and fitted_at.get(str(satellite)) is not None and _epoch(top[0]) == fitted_at[str(satellite)]:
+            top = top[1:]
+        if top:
+            history[str(satellite)] = [{"EPOCH": top[0]}]
+    return orbit_age_rows(tracked, history, celestrak.state["rows"], spacetrack.state["rows"],
+                          datetime.now(timezone.utc), fitted_rows=fitted)

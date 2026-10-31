@@ -31,6 +31,8 @@ SETTING_SENTENCES = {
     "NEVER_FETCH": "Host-name fragments the archive fetcher refuses before any request, including redirects to them.",
     "ORBIT_ALERT_DAYS": "Age in days from which an orbit record is marked as alert.",
     "ORBIT_STALE_DAYS": "Age in days from which an orbit record is marked as stale.",
+    "ORBIT_FIT_MIN_SAMPLES": "Fewest broadcast positions needed before a fitted orbit record is attempted.",
+    "ORBIT_FIT_MAX_KM": "Largest allowed fit error before a fitted orbit record is treated as a burn and left out.",
     "ORBIT_AGE_COLUMNS": "Exact column order used when writing the per-satellite orbit-age table.",
     "REFUSAL_STATUSES": "HTTP statuses treated as refusals that trigger persistent back-off.",
     "REGISTRY_CONSTELLATIONS_FILE": "Registry file name that maps system letters to constellation names.",
@@ -414,19 +416,20 @@ STAGES = {
         },
     },
     "rinex_check": {
-        "plain_name": "Measure orbit-record broadcast gaps",
+        "plain_name": "Measure orbit-record broadcast gaps and fit fresh records",
         "what_happens": [
-            "Once a day, a program compares each tracked satellite's nearest orbit record with its own broadcast orbit over the day, and publishes each satellite's broadcast health and accuracy with the system time offsets.",
-            "It saves the day's markdown report and derived JSON in the private archive, then records one run-log line.",
-            "It publishes only the day's derived JSON to branch orbit-checks for the public dashboard to read.",
+            "Once a day, a program compares each tracked satellite's nearest orbit record with its own broadcast orbit over the day, and fits a fresh orbit record to those broadcast positions where regular records are stale.",
+            "It also checks yesterday's fitted record against today's broadcast positions, so a bad fit would be caught the next day.",
+            "It saves the day's markdown report, gap JSON and fitted records in the private archive, then records one run-log line.",
+            "It publishes the day's derived JSON and fitted records to branch orbit-checks for the public dashboard to read.",
         ],
-        "why_it_matters": "This checks daily whether orbit records still match broadcast orbits within expected kilometre gaps.",
+        "why_it_matters": "This checks daily whether orbit records still match broadcast orbits within expected kilometre gaps, and leaves behind a fresh fitted record when they do.",
         "technical": {
             "workflow_file": ".github/workflows/rinex-check.yml",
             "workflow_job": "run",
             "schedule_group": "",
             "commands": [
-                "python scripts/orbit_record_gap.py --json \"$RUNNER_TEMP/gap.json\" --summary-out \"$RUNNER_TEMP/gap-summary.txt\" > \"$RUNNER_TEMP/gap.md\"",
+                "python scripts/orbit_record_gap.py --json \"$RUNNER_TEMP/gap.json\" --fitted \"$RUNNER_TEMP/fitted.json\" --previous-fitted-dir archive/orbits/fitted --summary-out \"$RUNNER_TEMP/gap-summary.txt\" > \"$RUNNER_TEMP/gap.md\"",
                 "python scripts/log_run.py --archive . --log rinex-check --job \"rinex check\" --started \"$STARTED\" --result \"$RESULT\" --changed \"$CHANGED\"",
             ],
             "inputs": [
@@ -436,8 +439,10 @@ STAGES = {
             ],
             "outputs": [
                 "archive/orbits/broadcast-gap/<day>.md and <day>.json in the private archive repository",
+                "archive/orbits/fitted/<day>.json in the private archive repository",
                 "Run log line in archive/runs/rinex-check.csv",
                 "orbit_gap.json on branch orbit-checks in the project repository",
+                "fitted_orbits.json on branch orbit-checks in the project repository",
             ],
             "repositories": [
                 "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System",
@@ -450,6 +455,7 @@ STAGES = {
             "paths": [
                 ".github/workflows/rinex-check.yml",
                 "scripts/orbit_record_gap.py",
+                "analysis/orbit_fit.py",
                 "scripts/log_run.py",
                 "evidence/console_settings.py",
             ],

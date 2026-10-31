@@ -1,7 +1,9 @@
-# Measures once a day how far each tracked satellite's orbit record is from its own broadcast orbit.
-# It writes the day report and run log to the private archive, pings Healthchecks.io (rinex-check),
-# and publishes only the derived JSON (no orbit records) to branch orbit-checks as orbit_gap.json, which the
-# public dashboard reads; it never touches main. The report to Healthchecks.io comes last, so it covers the publish.
+# Measures once a day how far each tracked satellite's orbit record is from its own broadcast orbit, and
+# fits a fresh SGP4 record to those broadcast positions when regular records are stale. It writes the day
+# report, gap JSON, fitted records and run log to the private archive, pings Healthchecks.io (rinex-check),
+# and publishes the derived orbit_gap.json plus fitted_orbits.json to branch orbit-checks, which the public
+# dashboard reads; it never touches main. The fitted records are this project's own fit to the IGS
+# broadcast file, not CelesTrak or Space-Track data. Healthchecks.io comes last, so it covers the publish.
 
 name: RINEX check
 
@@ -45,7 +47,7 @@ jobs:
       - name: Measure orbit-record broadcast gaps
         id: gap
         run: |
-          python scripts/orbit_record_gap.py --json "$RUNNER_TEMP/gap.json" --summary-out "$RUNNER_TEMP/gap-summary.txt" > "$RUNNER_TEMP/gap.md"
+          python scripts/orbit_record_gap.py --json "$RUNNER_TEMP/gap.json" --fitted "$RUNNER_TEMP/fitted.json" --previous-fitted-dir archive/orbits/fitted --summary-out "$RUNNER_TEMP/gap-summary.txt" > "$RUNNER_TEMP/gap.md"
           echo "day=$(jq -r '.day' "$RUNNER_TEMP/gap.json")" >> "$GITHUB_OUTPUT"
 
       - name: Copy reports to the archive and add one run-log line
@@ -61,6 +63,10 @@ jobs:
             mkdir -p orbits/broadcast-gap
             cp "$RUNNER_TEMP/gap.md" "orbits/broadcast-gap/$DAY.md"
             cp "$RUNNER_TEMP/gap.json" "orbits/broadcast-gap/$DAY.json"
+            if [ -f "$RUNNER_TEMP/fitted.json" ]; then
+              mkdir -p orbits/fitted
+              cp "$RUNNER_TEMP/fitted.json" "orbits/fitted/$DAY.json"
+            fi
             CHANGED=$(tr -d '\n' < "$RUNNER_TEMP/gap-summary.txt")
           else
             DAY=$(date -u +%Y-%m-%d)
@@ -82,6 +88,9 @@ jobs:
           [ -f runs/rinex-check.csv ] && git add runs/rinex-check.csv
           if [ -f "orbits/broadcast-gap/$DAY.md" ] && [ -f "orbits/broadcast-gap/$DAY.json" ]; then
             git add "orbits/broadcast-gap/$DAY.md" "orbits/broadcast-gap/$DAY.json"
+          fi
+          if [ -f "orbits/fitted/$DAY.json" ]; then
+            git add "orbits/fitted/$DAY.json"
           fi
           if git diff --cached --quiet; then
             echo "No archive changes to commit."
@@ -110,9 +119,10 @@ jobs:
             git rm -rf . >/dev/null 2>&1 || true
           fi
           cp "$RUNNER_TEMP/gap.json" orbit_gap.json
+          cp "$RUNNER_TEMP/fitted.json" fitted_orbits.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add orbit_gap.json
+          git add orbit_gap.json fitted_orbits.json
           if git diff --cached --quiet; then
             echo "No orbit-checks changes to commit."
             cd "$GITHUB_WORKSPACE"

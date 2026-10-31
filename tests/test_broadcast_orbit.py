@@ -4,7 +4,7 @@ GPS positions from IGS's rapid precise orbits for the same day (IGS0OPSRAP_20262
 import math
 from datetime import date, datetime, timedelta, timezone
 
-from analysis.broadcast_orbit import nearest, position, read_navigation, read_status, system_time, time_corrections
+from analysis.broadcast_orbit import nearest, position, read_glonass, read_navigation, read_status, system_time, time_corrections
 from scripts.orbit_record_gap import compare
 
 FILE = """\
@@ -42,6 +42,13 @@ def test_the_file_is_read_by_signal_id_and_glonass_is_skipped():
     assert set(records) == {"G05", "C01"}
     g05 = records["G05"][0]
     assert g05["toc"] == datetime(2026, 10, 17, 12) and g05["toe"] == 561600 and g05["sqrt_a"] == 5153.57943726
+
+
+def test_read_glonass_reads_the_utc_epoch_and_xyz_positions():
+    positions = read_glonass(STATUS_FILE)
+
+    assert positions == {"R01": {datetime(2026, 10, 26, 23, 45, tzinfo=timezone.utc):
+                                 (-14741.42529297, -17038.74072266, -11968.46630859)}}
 
 
 def test_gps_lands_within_5_m_of_the_precise_orbit():

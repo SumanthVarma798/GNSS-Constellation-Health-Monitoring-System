@@ -12,6 +12,8 @@ REQUEST_TIMEOUT_SECONDS = 60  # how long to wait for any outside server
 USER_AGENT = "gnss-evidence-archive/0.1 (scheduled research fetch)"  # how we name ourselves to them
 ORBIT_ALERT_DAYS = 2  # an orbit record this many days old raises an alert (the team's limit is 3; a day of buffer)
 ORBIT_STALE_DAYS = 3  # this old, the dashboard shows it as stale (the team's limit)
+ORBIT_FIT_MIN_SAMPLES = 12  # fewer broadcast positions than this is not enough to fit an orbit record
+ORBIT_FIT_MAX_KM = 5  # a fit this far off its broadcast positions is a burn, so the satellite is left out
 
 # Each site's minimum gap between two of our requests to it. Every fetcher reads it here: the archive job and
 # the dashboard. A site is a host name and every host under it ("reddit.com" covers www.reddit.com).

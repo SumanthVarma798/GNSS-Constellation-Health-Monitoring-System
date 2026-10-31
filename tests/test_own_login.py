@@ -229,6 +229,31 @@ def test_own_rows_reach_orbit_ages_as_your_login():
     assert own["source"] == "Space-Track (your login)"
 
 
+def test_a_fitted_record_load_put_in_the_history_is_named_fitted_not_history(monkeypatch):
+    # load() merges a stand-in fitted record into the history; orbit_ages must still name it as fitted.
+    now = datetime.now(timezone.utc)
+    fitted_at = (now - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%S.%f")
+    older = pd.Timestamp((now - timedelta(days=5)).replace(tzinfo=None))
+    monkeypatch.setattr(dashboard_data, "fitted_orbits",
+                        lambda: {"satellites": [{"norad": 39635, "fit_km": 0.8, "row": {"EPOCH": fitted_at}}]})
+    result = {"history": pd.DataFrame({"satellite": ["IRNSS-1B", "IRNSS-1B"],
+                                       "EPOCH": [older, pd.Timestamp(fitted_at)]})}
+
+    rows = dashboard_data.orbit_ages("NavIC", result)
+
+    fitted = next(row for row in rows if row["satellite"] == "IRNSS-1B")
+    assert fitted["source"] == "fitted to broadcast" and fitted["fit_km"] == 0.8
+
+
+def test_a_malformed_fitted_file_is_skipped_entry_by_entry_not_a_crash(monkeypatch):
+    good = {"norad": 39635, "fit_km": 0.8, "row": {"EPOCH": "2026-10-29T23:45:00.000000"}}
+    for payload in ({"satellites": None}, [], "text",
+                    {"satellites": [{"norad": "abc", "row": {}}, {"norad": 1, "row": "not an object"}, None, good]}):
+        monkeypatch.setattr(dashboard_data, "fitted_orbits", lambda payload=payload: payload)
+        assert dashboard_data.fitted_by_norad() == ({39635: (good["row"], 0.8)} if isinstance(payload, dict)
+                                                   and payload["satellites"] else {})
+
+
 def test_own_note_says_your_login_while_in_use_and_refused_after_a_refusal():
     st.session_state[LOGIN_KEY] = ("member@example.com", "secret")
     assert dashboard_data.own_note() == "your login"
