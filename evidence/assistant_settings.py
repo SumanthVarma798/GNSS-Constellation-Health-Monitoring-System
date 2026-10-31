@@ -1,8 +1,11 @@
-"""Settings for the System design page's assistant (console/design.py, issue 17): which model answers, and what it may
+"""Settings for the console's assistant on its Ask page (console/ask.py, issue 17): which model answers, and what it may
 answer from.
 
-It runs on a local Ollama (https://ollama.com) on the same computer as the console, so no key and nothing leaves the
-machine. Letting the rest of the team use it means pointing OLLAMA_URL at a shared or hosted model; nothing else changes.
+The shared console asks DeepSeek's hosted model, so it answers at any time; the console's secrets choose it:
+  [assistant]
+  provider = "deepseek"
+  key = "<a DeepSeek API key>"
+Without a provider it asks an Ollama (https://ollama.com): the one on the same computer, or one reached through a gate.
 """
 from pathlib import Path
 
@@ -16,14 +19,21 @@ OLLAMA_URL = "http://127.0.0.1:11434"   # on a computer that runs Ollama; the sh
 #   [assistant]
 #   url = "https://<the Mac's name>.ts.net"     key = "<the same value as OLLAMA_GATE_KEY in the Mac's .env>"
 SECRETS_SECTION = "assistant"
+OLLAMA, DEEPSEEK = "ollama", "deepseek"   # the two values of [assistant] provider; no provider means OLLAMA
+DEEPSEEK_URL = "https://api.deepseek.com"   # DeepSeek's OpenAI-style API (api-docs.deepseek.com); [assistant] url overrides it
+DEEPSEEK_MODEL = "deepseek-flash"   # DeepSeek-V4.1-Flash, with its thinking off; the old name deepseek-chat ended 24 Jul 2026
 GATE_PORT = 11435                 # the gate listens here on the Mac, for the tunnel only (127.0.0.1)
 GATE_KEY_NAME = "OLLAMA_GATE_KEY"   # in the Mac's git-ignored .env
 GATE_MAX_BODY = 1_000_000         # bytes in one question with its material and conversation; the material is ~55,000
 GATE_MAX_CONNECTIONS = 8          # open connections at once; more are closed at once, so slow clients cannot pile up
 GATE_IDLE_SECONDS = 30            # a connection silent this long is dropped (reading the request or the answer)
-MODEL = "qwen3:8b"            # about 5 GB; `ollama pull qwen3:8b` once
-CONTEXT_TOKENS = 20480        # the material is about 13,500 tokens; the rest is the conversation and the answer
-ANSWER_SECONDS = 180          # the longest a whole answer may take; a first answer reads all the material (about 50 s)
+MODEL = "qwen3:8b"            # Ollama's model: about 5 GB; `ollama pull qwen3:8b` once
+CONTEXT_TOKENS = 20480        # Ollama's: the material is about 13,500 tokens; the rest is the conversation and the answer
+ANSWER_SECONDS = 180          # the longest a whole answer may take, either model; Ollama's first reads it all (about 50 s)
+# The Ask page's example questions, one button each; each is answered by the material.
+EXAMPLES = ("Where does the orbit data come from, and how often?", "Why are some orbit records more than 2 days old?",
+            "What happens when a job fails at night?", "How long do we keep archive copies?",
+            "Which news sources are graded, and by whom?")
 HISTORY_TURNS = 6             # earlier questions and answers sent along, so "and that one?" makes sense
 
 # What it may answer from: these documents whole, the first paragraph of each module's description, the System design
