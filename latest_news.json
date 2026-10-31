@@ -1,6 +1,22 @@
 {
- "generated_at": "2026-10-31T01:07:38Z",
+ "generated_at": "2026-10-31T06:23:14Z",
  "items": [
+  {
+   "address": "https://x.com/isro/status/2116354957180019079",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-31T06:23:14Z",
+   "grade": "A",
+   "grade_standing": "provisional",
+   "outlet": "ISRO (@isro)",
+   "published_at": "2026-10-31T02:21:56Z",
+   "source_id": "x.com/isro",
+   "summary": "GSLV-F18/NVS-03 Mission: Watch highlights of the journey from lift-off to spacecraft separation. Mission details: https://t.co/wtZ6TmjUhc #GSLVF18 #NVS03 #ISRO #NavIC https://t.co/wstykeeMK9",
+   "title": "GSLV-F18/NVS-03 Mission: Watch highlights of the journey from lift-off to spacecraft separation. Mission details:…",
+   "via": "https://x.com/isro"
+  },
   {
    "address": "https://news.google.com/rss/articles/CBMickFVX3lxTE1xQmI5STJfUjVJcjZHN3pBNHBKUnNLbEtWTGZiY3pXMVJ5RldKcjRtMlRIWG82V0FmSWVxTGFZNE5LQWZ3VHU5YkYxTk92LXY2Uk5WWVZvWHBmTU03M3dJYzZWRU1JeGluRUt3Z0Y2MEJ0dw?oc=5",
    "category": "other",
@@ -4606,8 +4622,7 @@
    "address": "https://news.google.com/rss/articles/CBMi3gFBVV95cUxPN25ma2llbEVDS0VVY2Q2b0VzSmloQmt6eGRQanprdWh4V0NHSXcydkMwUXVjQVZQSm42S0RUQS0tQndvMC16bWZuM0V0dlpYVjJJMWQyeEhLZjJBYUhpS2dUVnBuUHNYWVZ4S3VoWW0xdTljdWVtUk1PNXctY1k4dEFjX3B0czVyVUoxMlFqeTdoR2kzQnRpdTFMWVJzXzJmXzFwdjFOUXp3T3I0N0hjVmR4TW9jSnRPcXo3RTJhLTk1VXZfem9CNFVHTE52X1I3MTNiOEhhX09SblFoSnfSAeMBQVVfeXFMTjRab2FBeDRfR3dKUHdFR04tSlM5OHlVMDlLRkoxbGNRWWN2NXd5VU9hTlZQRi1wTUx3eFI3YTdWT09DTFNEaFRGWGg3V2NqWm1pbkZWRWlxM2ZqRUw3V2U3OWpOOEZiV3BtdmRPTjNHYkRSaE9aaE04c1dXYTdiaDBMVWdYSGRoOGdDcmtBVXNtWjNKdElzbFdjYzQ5RlhITHVKcHBVek9sLVRaRFkxS1oteDJlUVpRZFdnQWg5dkotRC15cTFUZ2RQTUt0TlFySmtFSDlfNjc2ODZZYjVMUUFKUEE?oc=5",
    "category": "programme and policy",
    "constellations": [
-    "GPS",
-    "NavIC"
+    "GPS"
    ],
    "fetched_at": "2026-10-19T22:39:58Z",
    "grade": "",
