@@ -57,7 +57,8 @@ if state != "in":
 # The console tree: sections (shown as folders) and their pages, each page with its own icon.
 SECTIONS = {"Overview": [st.Page("console/summary.py", title="Summary", icon=":material/dashboard:", default=True),
                          st.Page("console/design.py", title="System design", icon=":material/account_tree:",
-                                 url_path="design")],
+                                 url_path="design"),
+                         st.Page("console/ask.py", title="Ask", icon=":material/forum:", url_path="ask")],
             "Monitoring": [st.Page("console/sources.py", title="Sources", icon=":material/public:", url_path="sources"),
                            st.Page("console/jobs.py", title="Jobs", icon=":material/schedule:"),
                            st.Page("console/pipeline.py", title="Live pipeline", icon=":material/conveyor_belt:",
