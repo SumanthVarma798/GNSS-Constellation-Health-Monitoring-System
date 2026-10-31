@@ -1,6 +1,22 @@
 {
- "generated_at": "2026-10-31T10:00:36Z",
+ "generated_at": "2026-10-31T13:08:28Z",
  "items": [
+  {
+   "address": "https://x.com/planet4589/status/2116478735134155251",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-10-31T13:08:28Z",
+   "grade": "D",
+   "grade_standing": "provisional",
+   "outlet": "Jonathan McDowell (@planet4589)",
+   "published_at": "2026-10-31T10:33:47Z",
+   "source_id": "x.com/planet4589",
+   "summary": "",
+   "title": "LAUNCH at 1821 UTC Oct 30 of Indian's IRNSS-1L navigation sat on a GSLV Mk II from Satish Dhawan.",
+   "via": "https://x.com/planet4589"
+  },
   {
    "address": "https://news.google.com/rss/articles/CBMisAFBVV95cUxOWXN4azMxNWZ5blRZaUNCSXJMOWpkNzdYYmJ4ZWppczlMdVZpRjVZNFM1bzY2bGpsOGQ1WWJURTBHVUpRTFNwNElEdE1tZW1jbHJKZTBPWTRrQmpJeVhLV0V3RE9YTjNrdklxS09OV0tHWGg1eW4yT2xhUHM4RHBHNWNybHFqTFFTQl9BMkdqeW9sR1JObGVmVmx0RGhINjN3T3dvQUM0WHJoY19zbFpiWtIBtgFBVV95cUxPMnh4RHBjcnlabml1MExXSlpnTTFtRkljNk5Jb3B0V291WnVhX2lhNDZxbFNEcXFMdTZDVXQyOVo0SER3SG9rZzVORjgxaFAzZFo5Qk9DSkdWekJQQThHOW1ZLWxUT2tpd0JxRXRHVVkxMEdPanlwR00tN3BaTlU0bHFzdlVDdDZVbEJsLVFoanVDeEY3a1ROeWM3Ym14eG8xZUxGcERPdUpNLTBBeGJvcFBCdENrZw?oc=5",
    "category": "other",
@@ -2957,22 +2973,6 @@
    "source_id": "newskarnataka.com",
    "summary": "",
    "title": "ISRO NVS-03 launch: Date, time and NavIC mission",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMi_gFBVV95cUxQclNHQ1ZIakRKbzdGdHJiVWN4WURJUWUwdUtiaGpTMVU0R1lwaGZ4Rko4ejZMYU0tclZqOU1PRU9Ucjc1Ri1OZkpYNWRXaDEwRzZ1TkhOVGpHcjFDSFAwYkR3T2dMRU1xb2hFMVoxVW1EQTVWcnlLRVd4ZUstUkxNa0tGaVFxdWs5NWFrd2I3Y3JDVGtVNnNhNlByT2R4Q3N2U05CUnpiTVJpYlVfUmpzTjFOdlR0S3ZVUGlzRjhDNkFKZkx4WkdCeGxwaGh4ZTdPWVgwaE4tcWZHdkRCQjdzM1hOQW42dkk4amdmNktjS0lRanRHNjN4Tmo5OWJCQQ?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-26T13:37:10Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "The CSR Journal",
-   "published_at": "2026-10-26T12:53:48Z",
-   "source_id": "thecsrjournal.in",
-   "summary": "",
-   "title": "NVS-03 Satellite Launch Set for October 30, 2026",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -9785,6 +9785,15 @@
    "name": "ISRO (@isro)",
    "note": "",
    "reason": "The operator of NavIC, as isro.gov.in"
+  },
+  "x.com/planet4589": {
+   "grade": "D",
+   "grade_standing": "provisional",
+   "graded_by": "",
+   "kind": "X account",
+   "name": "Jonathan McDowell (@planet4589)",
+   "note": "",
+   "reason": "3 of 3 checked launch posts held; Jonathan McDowell, author of GCAT (planet4589.org, C)"
   },
   "yacht.de": {
    "grade": "",
