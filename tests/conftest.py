@@ -21,6 +21,7 @@ def private_celestrak_copy(monkeypatch, tmp_path):
     monkeypatch.setattr(spacetrack, "state", {"rows": {}, "tried": None, "fetched": None, "refused_until": None,
                                               "note": "ok"})
     monkeypatch.setattr(data, "orbit_gap", lambda: {})
+    monkeypatch.setattr(data, "fitted_orbits", lambda: {})
     monkeypatch.setattr(celestrak, "fetch_copy", _no_copy)
 
 

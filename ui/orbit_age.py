@@ -182,15 +182,25 @@ def _gap_cell(gap):
     return measures.cell("–") if gap is None else measures.cell(f"{gap[0]:.1f} km", note=gap[1] or "")
 
 
+def _fit_cell(fit_km):
+    return measures.cell(f"{fit_km:.1f} km", note="fit")
+
+
 def _tag_card(row, gap=None, status=None):
     """The tooltip card's words for one satellite, with the source, any published gap, and the age limits."""
     if row["epoch"] is None:
         card = "No orbit record"
         broadcast = _broadcast_words(status)
         return card + (f" · {broadcast}" if broadcast else "")
-    card = f"Orbit record from {_when(row['epoch'])}, {row['source']}"
-    if gap is not None:
-        card += f" · off by {gap[0]:.1f} km" + (f" on {gap[1]}" if gap[1] else "")
+    if row.get("source") == "fitted to broadcast":
+        card = f"Orbit record from {_when(row['epoch'])}, fitted to the broadcast orbit"
+        fit_km = row.get("fit_km")
+        if isinstance(fit_km, (int, float)) and not isinstance(fit_km, bool):
+            card += f" (within {fit_km:.1f} km)"
+    else:
+        card = f"Orbit record from {_when(row['epoch'])}, {row['source']}"
+        if gap is not None:
+            card += f" · off by {gap[0]:.1f} km" + (f" on {gap[1]}" if gap[1] else "")
     card += f" · alert at {ORBIT_ALERT_DAYS:g} days, stale at {ORBIT_STALE_DAYS:g}"
     broadcast = _broadcast_words(status)
     if broadcast:
@@ -201,8 +211,9 @@ def _tag_card(row, gap=None, status=None):
 def tag(row, gap=None, scope="", status=None):
     """One satellite's orbit-record age as a chip in the tile's tag row, opening its tooltip card. scope (the
     constellation) keeps each card's id unique where tiles of several constellations share a page (Compare)."""
+    shown_gap = None if row.get("source") == "fitted to broadcast" else gap
     trigger = surfaces.chip(_tag_words(row), row["status"])
-    return tooltip.tip_html(trigger, escape(_tag_card(row, gap, status)), key=f"{scope}:{row['satellite']}")
+    return tooltip.tip_html(trigger, escape(_tag_card(row, shown_gap, status)), key=f"{scope}:{row['satellite']}")
 
 
 def section_markup(rows, spacetrack_note="ok", gap=None):
@@ -226,7 +237,9 @@ def section_markup(rows, spacetrack_note="ok", gap=None):
             measures.cell(row["source"] or "-"),
             _broadcast_cell(statuses.get(row["satellite"])),
             _accuracy_cell(statuses.get(row["satellite"])),
-            _gap_cell(gaps.get(row["satellite"])),
+            (_fit_cell(row["fit_km"]) if row.get("source") == "fitted to broadcast"
+             and isinstance(row.get("fit_km"), (int, float)) and not isinstance(row.get("fit_km"), bool)
+             else _gap_cell(gaps.get(row["satellite"]))),
         ]))
     body = surfaces.table(
         [("Satellite", ""), ("Record from (date and time, UTC)", ""), ("Age", ""), ("Source", ""),
@@ -249,7 +262,8 @@ def tags(constellation, result):
     gap = dashboard_data.orbit_gap() or {}
     gaps = _gap_by_satellite(gap)
     statuses = _status_by_satellite(gap)
-    return {row["satellite"]: tag(row, gaps.get(row["satellite"]), constellation, statuses.get(row["satellite"]))
+    return {row["satellite"]: tag(row, None if row.get("source") == "fitted to broadcast" else gaps.get(row["satellite"]),
+                                  constellation, statuses.get(row["satellite"]))
             for row in rows}
 
 

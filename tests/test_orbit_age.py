@@ -151,6 +151,39 @@ def test_a_gap_that_is_not_a_number_is_left_out_not_a_crash():
         == {"QZS-2": (3.2, "24 Oct")}
 
 
+def test_a_fitted_record_stands_in_only_when_every_other_record_is_old_enough():
+    fitted = {1: ({"EPOCH": epoch(0.5)}, 0.1)}
+    rows = orbit_age_rows([("A", 1)], {}, {1: [{"EPOCH": epoch(3.0)}]}, {}, NOW, fitted_rows=fitted)
+    assert rows[0]["source"] == "fitted to broadcast" and rows[0]["fit_km"] == 0.1
+
+    rows = orbit_age_rows([("A", 1)], {}, {1: [{"EPOCH": epoch(1.5)}]}, {}, NOW, fitted_rows=fitted)
+    assert rows[0]["source"] == "CelesTrak" and rows[0]["fit_km"] is None
+
+
+def test_a_fitted_record_that_is_older_than_the_newest_other_record_is_not_used():
+    rows = orbit_age_rows([("A", 1)], {}, {1: [{"EPOCH": epoch(3.0)}]}, {}, NOW,
+                          fitted_rows={1: ({"EPOCH": epoch(4.0)}, 0.1)})
+    assert rows[0]["source"] == "CelesTrak"
+
+
+def test_a_fitted_record_is_used_when_there_is_no_other_record():
+    rows = orbit_age_rows([("A", 1)], {}, {}, {}, NOW, fitted_rows={1: ({"EPOCH": epoch(0.5)}, 0.2)})
+    assert rows[0]["source"] == "fitted to broadcast" and rows[0]["fit_km"] == 0.2
+
+
+def test_a_fitted_row_card_and_table_say_fit_and_leave_out_the_published_gap():
+    row = {"satellite": "IRNSS-1B", "epoch": datetime(2026, 10, 24, 23, 45, tzinfo=timezone.utc),
+           "source": "fitted to broadcast", "age_days": 1.2, "status": "ok", "fit_km": 0.12}
+
+    html = orbit_age.tag(row, orbit_age._gap_by_satellite(GAP)["IRNSS-1B"])
+    _, body, _ = orbit_age.section_markup([row], gap=GAP)
+
+    assert "Orbit record from 24 Oct 23:45 UTC, fitted to the broadcast orbit (within 0.1 km)" in html
+    assert "off by" not in html
+    assert '<span class="nt">fit</span>' in body
+    assert "3.2 km" not in body
+
+
 BROADCAST_GAP = {
     **GAP,
     "satellites": [

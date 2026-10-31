@@ -4,12 +4,13 @@ Every navigation satellite broadcasts its own orbit as a set of numbers (its eph
 good to metres, so receivers can work out position. GPS, Galileo, BeiDou, QZSS and NavIC
 use one formula (IS-GPS-200, table 20-IV) with their own constants; BeiDou's geostationary
 satellites add one rotation (BeiDou ICD, section 5.2.4.12). GLONASS broadcasts a position and
-velocity instead; its positions are not handled here, only its health and record time are read.
+velocity instead; its positions at the record times are read here, but there is still no
+integrator between them.
 
 Nothing here downloads or reads the clock. Positions are Earth-fixed, in km.
 """
 import math
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 # System letter -> (gravitational constant m^3/s^2, Earth's rotation rad/s, from each system's interface document.
 SYSTEMS = {
@@ -51,6 +52,28 @@ def read_navigation(text):
         record = dict(zip(_NAMES, values), toc=datetime(year, month, day, hour, minute, second), id=first[:3])
         records.setdefault(first[:3], []).append(record)
     return records
+
+
+def read_glonass(text):
+    """{signal ID: {utc (aware datetime): (x, y, z) km}} from a RINEX 3 navigation file's text.
+
+    A GLONASS record's first line carries the epoch in UTC; the next three lines carry its
+    X, Y and Z position in km in columns 4:23. Several records can share an epoch: one is kept.
+    """
+    lines = text.splitlines()
+    body = lines[next(i for i, line in enumerate(lines) if "END OF HEADER" in line) + 1:]
+    starts = [i for i, line in enumerate(body) if line[:1].strip()]
+    positions = {}
+    for start, end in zip(starts, [*starts[1:], len(body)]):
+        first = body[start]
+        if first[:1] != "R":
+            continue
+        signal_id = first[:3]
+        year, month, day, hour, minute, second = (int(x) for x in first[4:23].split())
+        utc = datetime(year, month, day, hour, minute, second, tzinfo=timezone.utc)
+        xyz = [body[start + 1 + line][4:23] for line in range(3)]
+        positions.setdefault(signal_id, {})[utc] = tuple(_number(field) for field in xyz)
+    return positions
 
 
 _NAMES = ["af0", "af1", "af2",
