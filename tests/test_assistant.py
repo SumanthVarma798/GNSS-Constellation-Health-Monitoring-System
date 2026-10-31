@@ -6,13 +6,18 @@ import pytest
 import requests
 
 from evidence import assistant
-from evidence.assistant_settings import (DEEPSEEK, DEEPSEEK_MODEL, DEEPSEEK_URL, DOCUMENTS, EXAMPLES, ISSUE_CHARACTERS,
-                                         MODEL, OLLAMA, OLLAMA_URL, SOURCE_FILES)
+from assistant_eval import QUESTIONS, missing_facts
+from evidence.assistant_settings import (ANSWER_TOKENS, CONTEXT_TOKENS, DEEPSEEK, DEEPSEEK_MODEL, DEEPSEEK_URL, DOCUMENTS, EXAMPLES,
+                                         HISTORY_TOKENS, HISTORY_TURNS, ISSUE_CHARACTERS, MODEL, OLLAMA, OLLAMA_URL,
+                                         REMINDER, SOURCE_FILES, TRACKED)
 from test_console import SECRETS, fresh_reading, run, signed_in  # noqa: F401  (each test reads afresh)
 from test_dashboard_shell import segmented_controls_rerun  # noqa: F401  (AppTest 1.45's segmented controls)
 from ui.components.system_design import PARTS
 
 ISSUES = [{"number": 19, "title": "Operator status", "body": "word " * 500}]
+PULLS = [{"number": 181, "title": "Archive retention", "merged_at": "2026-10-30T09:00:00Z"},
+         {"number": 184, "title": "Ask page", "merged_at": "2026-10-31T06:00:00Z"},
+         {"number": 177, "title": "Closed without merging", "merged_at": None}]
 ON_DEEPSEEK = {**SECRETS, "assistant": {"provider": "deepseek", "key": "not-a-real-key"}}
 
 
@@ -25,14 +30,95 @@ def sse(*pieces):
 
 
 def test_the_material_holds_the_documents_the_page_the_code_and_the_issues_each_under_its_label():
-    text = assistant.material(ISSUES, PARTS)
+    text = assistant.material(ISSUES, PARTS, PULLS)
 
     for label in (*[f"[{path}]" for path in DOCUMENTS], *[f"[{path}]" for path in SOURCE_FILES],
+                  "[docs/infrastructure.md]", "[evidence/settings.py]", f"[{TRACKED}]",
                   f"[{assistant.PAGE_LABEL}]", "[evidence/assistant.py]", "[console/design.py]",
                   "[issue #19] Operator status"):
         assert label in text, label
     issue_line = next(line for line in text.splitlines() if line.startswith("[issue #19]"))
     assert len(issue_line) < ISSUE_CHARACTERS + 40 and issue_line.endswith("…")
+
+
+def test_the_material_holds_each_job_with_its_schedule_and_the_comment_that_explains_it():
+    text = assistant.material([], PARTS)
+
+    job = text[text.index("=== [.github/workflows/rinex-check.yml] ==="):]
+    job = job[:job.index("\n\n===")]
+    assert "pings Healthchecks.io (rinex-check)" in job and "name: RINEX check" in job
+    assert "06:00 UTC = 11:30 India time" in job and "- cron: '0 6 * * *'" in job
+    assert "runs-on" not in job and "steps:" not in job   # the job's steps stay out
+    assert "[.github/workflows/archive.yml]" in text and "- cron: '15 1,8,14,20 * * *'" in text
+
+
+def test_the_material_counts_the_tracked_satellites_and_lists_merged_pull_requests_newest_first_after_the_documents():
+    text = assistant.material(ISSUES, PARTS, PULLS)
+    with (assistant.ROOT / TRACKED).open() as handle:
+        tracked = sum(1 for _ in handle) - 1
+
+    assert f"{tracked} satellites tracked" in text
+    assert text.index("[PR #184] Ask page (merged 2026-10-31)") < text.index("[PR #181] Archive retention")
+    assert "[PR #177]" not in text   # closed without merging is not a change
+    assert text.index("[docs/system-design.md]") < text.index("[PR #184]") < text.index("[issue #19]")   # what changes, last
+
+
+@pytest.mark.parametrize("item", [q for q in QUESTIONS if not q.get("github") and not q.get("refuse")],
+                         ids=lambda q: q["question"][:50])
+def test_the_material_holds_the_facts_each_eval_question_needs(item):
+    text = assistant.material([], PARTS).lower()
+
+    for spellings in item["facts"]:
+        assert any(s.lower() in text for s in spellings), spellings
+
+
+def test_the_eval_matches_whole_words_and_wants_a_refusal_first():
+    qzss = next(q for q in QUESTIONS if q["question"].startswith("How is QZSS"))
+    refuse = next(q for q in QUESTIONS if q.get("refuse"))
+
+    assert missing_facts("Each orbit is read [x].", qzss) == ["bit", "IS-QZSS-PNT-005"]   # "bit" is not in "orbit"
+    assert missing_facts("Bit by bit, per IS-QZSS-PNT-005.", qzss) == []
+    assert missing_facts("That isn't in the project's material.", refuse) == []
+    assert missing_facts("It is 2 million. That isn't in the project's material, though.", refuse)
+
+
+def conversation(turns, answer="It is built [docs/system-design.md]."):
+    """`turns` questions, each with its answer, oldest first, as the Ask page keeps them."""
+    return [turn for n in range(turns)
+            for turn in ({"role": "user", "content": f"Question {n}?"}, {"role": "assistant", "content": f"{answer} {n}"})]
+
+
+def assert_framed(messages, history, question):
+    """The rules and material first, then the newest whole turns, then the reminder and the question, last."""
+    first, *middle, reminder, last = messages
+    assert first["role"] == "system" and "Answer ONLY from the MATERIAL" in first["content"]
+    assert first["content"].endswith("MATERIAL TEXT")
+    assert reminder == {"role": "system", "content": REMINDER} and last == {"role": "user", "content": question}
+    assert middle == (history[-len(middle):] if middle else []) and (not middle or middle[0]["role"] == "user")
+    return middle
+
+
+def test_a_long_chat_keeps_the_newest_whole_turns_that_fit_in_the_token_room():
+    long_answer = "x" * (3 * HISTORY_TOKENS // 3)   # about a third of the room each
+    history = conversation(5, long_answer)
+
+    kept = assistant.recent(history)
+
+    assert kept == history[-4:]   # two whole turns fit; a third would not
+    assert assistant.recent(conversation(30)) == conversation(30)[-2 * HISTORY_TURNS:]
+    assert assistant.recent(conversation(2, "x" * 3 * HISTORY_TOKENS)) == []   # never cut in the middle
+
+
+def test_on_ollama_a_full_context_leaves_no_room_for_the_chat_but_the_rules_and_question_always_go(monkeypatch):
+    sent = {}
+    monkeypatch.setattr(assistant.requests, "post", lambda url, json, **_: sent.update(json) or Reply([]))
+    material_text = "MATERIAL TEXT".rjust(3 * CONTEXT_TOKENS)   # fills Ollama's whole context
+
+    list(assistant.answer("And that one?", conversation(30), material_text))
+
+    first, reminder, last = sent["messages"]
+    assert first["content"].endswith("MATERIAL TEXT") and reminder["content"] == REMINDER
+    assert last["content"] == "And that one?" and sent["options"]["num_predict"] == ANSWER_TOKENS
 
 
 class Reply:
@@ -57,7 +143,7 @@ class Reply:
         return [line if isinstance(line, bytes) else json.dumps(line).encode() for line in self.lines]
 
 
-def test_it_sends_the_rules_and_material_first_then_recent_turns_then_the_question(monkeypatch):
+def test_a_30_turn_chat_sends_the_rules_and_material_first_then_recent_turns_the_reminder_and_the_question(monkeypatch):
     sent = {}
 
     def post(url, json, **_):
@@ -65,15 +151,12 @@ def test_it_sends_the_rules_and_material_first_then_recent_turns_then_the_questi
         return Reply([{"message": {"content": "It is "}}, {"message": {"content": "CelesTrak [docs/system-design.md]."}}])
 
     monkeypatch.setattr(assistant.requests, "post", post)
-    history = [{"role": "user", "content": f"q{n}"} for n in range(30)]
+    history = conversation(30)
 
     said = "".join(assistant.answer("Where do orbits come from?", history, "MATERIAL TEXT"))
 
     assert said == "It is CelesTrak [docs/system-design.md]."
-    first, *middle, last = sent["messages"]
-    assert first["role"] == "system" and "Answer ONLY from the MATERIAL" in first["content"]
-    assert first["content"].endswith("MATERIAL TEXT") and last["content"] == "Where do orbits come from?"
-    assert len(middle) < len(history) and middle[-1] == history[-1]
+    assert len(assert_framed(sent["messages"], history, "Where do orbits come from?")) == 2 * HISTORY_TURNS
     assert sent["model"] == MODEL and sent["think"] is False and sent["options"]["temperature"] == 0
 
 
@@ -104,7 +187,7 @@ def test_deepseek_is_asked_the_same_way_with_its_own_address_model_and_key(monke
         return Reply(sse("It is ", "CelesTrak [docs/system-design.md]."))
 
     monkeypatch.setattr(assistant.requests, "post", post)
-    history = [{"role": "user", "content": f"q{n}"} for n in range(30)]
+    history = conversation(30)
 
     said = "".join(assistant.answer("Where do orbits come from?", history, "MATERIAL TEXT", DEEPSEEK_URL, "k", DEEPSEEK))
 
@@ -112,10 +195,7 @@ def test_deepseek_is_asked_the_same_way_with_its_own_address_model_and_key(monke
     assert sent["url"] == "https://api.deepseek.com/chat/completions" and sent["headers"] == {"Authorization": "Bearer k"}
     assert sent["model"] == DEEPSEEK_MODEL and sent["stream"] is True and sent["thinking"] == {"type": "disabled"}
     assert sent["temperature"] == 0 and "options" not in sent and "think" not in sent
-    first, *middle, last = sent["messages"]
-    assert first["role"] == "system" and "Answer ONLY from the MATERIAL" in first["content"]
-    assert first["content"].endswith("MATERIAL TEXT") and last["content"] == "Where do orbits come from?"
-    assert len(middle) < len(history) and middle[-1] == history[-1]
+    assert len(assert_framed(sent["messages"], history, "Where do orbits come from?")) == 2 * HISTORY_TURNS
 
 
 def test_deepseek_stream_skips_keep_alives_and_empty_pieces_and_ends_at_done(monkeypatch):
