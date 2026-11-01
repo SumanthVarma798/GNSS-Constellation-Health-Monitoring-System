@@ -1,6 +1,22 @@
 {
- "generated_at": "2026-11-01T22:29:19Z",
+ "generated_at": "2026-11-01T22:30:25Z",
  "items": [
+  {
+   "address": "https://x.com/Septentrio/status/2116979893401489543",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-01T22:30:25Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Septentrio (@Septentrio)",
+   "published_at": "2026-11-01T19:45:12Z",
+   "source_id": "x.com/Septentrio",
+   "summary": "",
+   "title": "#gnssNews India to launch NVS-03 satellite to bolster #NAVIC https://t.co/UlyKAJzP6Z",
+   "via": "https://x.com/Septentrio"
+  },
   {
    "address": "https://x.com/Stellarixorine/status/2116943850891841988",
    "category": "programme and policy",
@@ -2667,22 +2683,6 @@
    "source_id": "thenewsmill.com",
    "summary": "",
    "title": "ISRO to launch NVS-03 with third atomic clock to enhance NavIC",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMiigFBVV95cUxNeEpCUWNKQ1U3WHVibzB6ejZ3NlM0SW52Si1Vb1lPOVhueEVPemtxbzMwN1lyOWgtWHE0NVVTY2hyZTZVQVRBeHJrU2FTV192UGkyVXFNV0JWbnUtSVFadGdHbmd3TEN4cE1hVjZFcEhGazJXWGp3cFlnRDdzTUFpV2pLN0xfNmIxd0E?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T13:39:30Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Hindusthan Samachar English",
-   "published_at": "2026-10-30T04:23:30Z",
-   "source_id": "english.hindusthansamachar.in",
-   "summary": "",
-   "title": "ISRO to Launch GSLV-F18 Mission Carrying NavIC Satellite NVS-03 Tonight",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -8283,15 +8283,6 @@
    "note": "",
    "reason": ""
   },
-  "english.hindusthansamachar.in": {
-   "grade": "",
-   "grade_standing": "not graded",
-   "graded_by": "",
-   "kind": "",
-   "name": "english.hindusthansamachar.in",
-   "note": "",
-   "reason": ""
-  },
   "english.mathrubhumi.com": {
    "grade": "",
    "grade_standing": "not graded",
@@ -9830,6 +9821,15 @@
    "name": "Arianespace (@Arianespace)",
    "note": "",
    "reason": "Launch provider for Galileo; reports its own launches"
+  },
+  "x.com/Septentrio": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "X account",
+   "name": "Septentrio (@Septentrio)",
+   "note": "GNSS receiver maker",
+   "reason": ""
   },
   "x.com/Stellarixorine": {
    "grade": "D",
