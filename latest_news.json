@@ -1,6 +1,22 @@
 {
- "generated_at": "2026-11-02T19:51:49Z",
+ "generated_at": "2026-11-02T21:58:05Z",
  "items": [
+  {
+   "address": "https://x.com/Arianespace/status/2117329663068410335",
+   "category": "signal and service",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-02T21:58:05Z",
+   "grade": "B",
+   "grade_standing": "provisional",
+   "outlet": "Arianespace (@Arianespace)",
+   "published_at": "2026-11-02T18:55:04Z",
+   "source_id": "x.com/Arianespace",
+   "summary": "In Europe, Galileo provides an independent global satellite navigation system, delivering positioning and timing services used by citizens, businesses and public services around the world. Arianespace has supported the deployment of the Galileo constellation since its first satellites were launched…",
+   "title": "In Europe, Galileo provides an independent global satellite navigation system, delivering positioning and timing…",
+   "via": "https://x.com/Arianespace"
+  },
   {
    "address": "https://www.gsc-europa.eu/notice-advisory-to-galileo-users-nagu-2026047",
    "category": "satellite status and outages",
