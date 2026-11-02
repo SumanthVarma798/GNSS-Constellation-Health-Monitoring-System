@@ -74,7 +74,7 @@ its grace time (8 hours). The run logs and copies live in the private archive re
 | Orbit records for the dashboard | Branch `orbit-data`, `latest_gnss.json` | A new commit after each orbital run (01:15, 08:15, 14:15, 20:15 UTC); the dashboard's chip says which copy it read and when the next is due |
 | News for the dashboard | Branch `news-data`, `latest_news.json` | A new commit after each news or X run |
 | Orbit ages | Archive `runs/orbit-ages.csv`; checks `orbit-ages` (the run) and `orbit-fresh` (every satellite's record under 2 days) | Both up after 03:30 UTC each day |
-| RINEX check and fitted records | Archive `runs/rinex-check.csv`; branch `orbit-checks`, `orbit_gap.json` and `fitted_orbits.json`; check `rinex-check` | A new commit after 06:00 UTC each day |
+| RINEX check and fitted records | Archive `runs/rinex-check.csv`; branch `orbit-checks`, `orbit_gap.json` and `fitted_orbits.json`; check `rinex-check` | A new commit each day, by about 12:45 UTC (scheduled 06:00 UTC; GitHub starts it about 6 hours late, 11:35–12:40 UTC) |
 | Registry and source record | Archive `runs/registry-update.csv`; checks `registry-update` and `source-record`; Console › Approvals | Each Sunday's run ends well; a change arrives as a pull request to decide |
 | Dashboard and console | `dashboard.opengnss.org`, `console.opengnss.org` | Each opens (after about a minute if it was asleep) |
 
