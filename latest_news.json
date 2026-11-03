@@ -1,6 +1,54 @@
 {
- "generated_at": "2026-11-03T07:18:55Z",
+ "generated_at": "2026-11-03T11:26:00Z",
  "items": [
+  {
+   "address": "https://www.gsc-europa.eu/news/galileo-performance-reports-for-q3-2026-are-now-available",
+   "category": "signal and service",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-03T11:24:18Z",
+   "grade": "A",
+   "grade_standing": "provisional",
+   "outlet": "European GNSS Service Centre: news",
+   "published_at": "2026-11-03T07:47:55Z",
+   "source_id": "gsc-europa.eu",
+   "summary": "Galileo Performance Reports for Q3 2026 are now available! garcigu 03 November 2026 Tue, 11/03/2026 - 07:47 The Galileo Open Service (OS), the High Accuracy Service (HAS), the Open Service Navigation Message Authentication (OSNMA) and the Search and Rescue (SAR) Service Performance Reports for Q3…",
+   "title": "Galileo Performance Reports for Q3 2026 are now available!",
+   "via": "https://www.gsc-europa.eu/rss.xml"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiigFBVV95cUxPV1RRSjZ4YURZTWRCRnRvSkNFb2VWM0R4THpDeVZTdlJsam80MmNoVlZ1VXhhYWViZGU4TGJEOEZyZGNjNXQ2SDZnZ0hfcGZjMlhHd1FaZkRDRy1tMUJtb1VNQk9sWWFpU3VNY0NWazBORFFaMzBaaWhzMlhHU29NaXJLUnVsQ2xWcnfSAYwBQVVfeXFMT1J1c1pYbC1iU1RvYjVJaEZ2X3FLaW4xOUw4TnBNWFdyUEFVRnczT0c2dmt3dHhkMXI4UFlDUWRSVG5ITm1wQXU5U25SZ010NnlTQlZUbUNGdnFBcW5ZZl9yT2pXYWhHeWgxWVNaZmhIckFUTURGNkNhbWRrN1didDMzQTRTUDBZMThpekg?oc=5",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-03T11:24:57Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Rediff",
+   "published_at": "2026-11-03T07:27:15Z",
+   "source_id": "rediff.com",
+   "summary": "",
+   "title": "ISRO's NavIC Gets New Lease Of Life",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMif0FVX3lxTE1TQ2Y4V1hQcHRyOTIxbHdnMnE0SGN3NmJ6Wi1Bell5VXJiRVktaENXYkhBeDN6dThabTM2ZHBHQnVIbFFNMjhRd3FMQkdFbUJPM0twZlAyUGxQeVA0MWNUdDNyWXdCQ19GZTN1MkRRTlBsbU5LeGUzMnBrZnJnaFE?oc=5",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-03T11:24:57Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "HinduPost",
+   "published_at": "2026-11-03T07:00:00Z",
+   "source_id": "hindupost.in",
+   "summary": "",
+   "title": "NavIC Revival: Bharat’s Home-Built Atomic Clocks Take Flight",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
   {
    "address": "https://x.com/Stellarixorine/status/2117480789881537006",
    "category": "launch",
@@ -2668,27 +2716,10 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMi8AFBVV95cUxPal9GeGVBMlI4dTYzbGZZR25iTGRuQWoxTVRBTU96WGpLcExpUmZvNjYwcGZyOVdhT1BwWmJIS095TzEwOS1qY2E0THR5NzRfWUstMGRCLUZUdlRoV3RFeHhHMkpYT0JQZ09telJkVGJLRmJvQWsxeXBrVDFlNEMxN0pWcVZUOWJ4d1ZGaFRQSXFkVWpmZ05PNHFMblhBNkRuNGdjd2tQVEkzSVE0ZkwyR3NaWVNzemUzRHJ3Y3NjOE4tLUFkUHB6US11VHJYb1kwWDBfaTNGbV9KQk9FbjVlRGJNX3JmNXNBdnc0VEhEcUrSAfYBQVVfeXFMT2pqZ2xVaXVXQ1pUUng2eWc4QXRUVEMzYnFBYkJTS0ExQW5xNFpidEY4dlpWX0xZV3hSOGd2ZjFla0ptdS04MkJmMm5jT2dlQkd3VnBCR1ViU0ExTEZhMWxIVnBLTjMyOU9YelEtdzhCN2ZybTc1NFZjbVNpU1UyNGYzLWs2MGxEV2NlbUVCWXd0YUp5T3NqMkZCTk5wbDRKRm85MU5zM0E3VGhNTzc3c3JKVjdKbDVHeUFpOXd5ajRZaFhRRDM4Q2pqaG5wZEs4b203dTNnSnFZbXlVeWtWVVFhOWNKeFl2SXJJQ0tLVDJkQ2VTSGh3?oc=5",
-   "category": "other",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T13:39:30Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "The Times of India",
-   "published_at": "2026-10-30T07:32:00Z",
-   "source_id": "timesofindia.indiatimes.com",
-   "summary": "",
-   "title": "'One Nation, One Time': Isro's NVS-03 satellite to carry atomic clock into space; what it means",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMixwFBVV95cUxNNnRIZ2lHUndCY3NzS0xxSXZ3eEVwV2YzLVJKLTNpbTNHUEVaS1ZYREx5b0tnTE90aVVFWXUzQzB2NDdiaS1Ecml4eWJqTjNTRjBKekk1Ymd3Y1hraFJNVEZrUGd4MEgyS0w1anVhQ3RvbnNkSVFaVE0tVHVLb1VxQ3loOWU5NEVLMFBkdVp2a2l6bDNsQkZYYmM1cFROODZfOVk5T2NmNVVhaTdUVTlZQXpsb3htWU5JekFMbjZfV2IxTThrRWFB0gHUAUFVX3lxTFBSckZySjRySnFPWUNYbl9ZQ2swNVBwUVZaaUc2OGZDcmpBMmVpMENEY3J0YVloNzQxX2pMd0UyZFhKdGd4eldPYk1ZbUJIQ2dENDJSVTMtV2RvbDUxWEFCQnlYTi05dW1JcUpJZjRCZzFpVHU1MmZOX3JMbUdMZjQ4VzVHeW8ydDRnVkoxa2RXdzhOSFJHdUo0cG5DSVo3VlR5RHIzQmM5dm1aQ1FBTFN1MXFGbXhrOG40eDFUSmI4NTVqRUwwZFBsdkJHOUdpWjVIaHd6?oc=5",
    "category": "launch",
    "constellations": [
-    "GPS",
-    "NavIC"
+    "GPS"
    ],
    "fetched_at": "2026-10-30T13:39:30Z",
    "grade": "",
@@ -8681,6 +8712,15 @@
    "graded_by": "",
    "kind": "",
    "name": "heraldgoa.in",
+   "note": "",
+   "reason": ""
+  },
+  "hindupost.in": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "hindupost.in",
    "note": "",
    "reason": ""
   },
