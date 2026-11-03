@@ -58,7 +58,9 @@ else:
                                  only_new, seen_at, now)
     new_count = sum(1 for item in filtered if item["_new"])
     new_words = tooltip.tip_html(f'<span class="num">{new_count}</span> new', escape(news.seen_note(seen_at)))
-    surfaces.show(f'<p class="news-topline"><span class="num">{len(filtered)}</span> news items for {escape(scope)} · '
+    told_all = len(news.news_stories.stories(filtered))
+    surfaces.show(f'<p class="news-topline"><span class="num">{len(filtered)}</span> news items in '
+                  f'<span class="num">{told_all}</span> {"story" if told_all == 1 else "stories"} for {escape(scope)} · '
                   f'{new_words}</p>')
     surfaces.show(news.category_tiles_html(filtered))
 
@@ -68,8 +70,9 @@ else:
         if not rows:
             continue
         new_rows = sum(1 for item in rows if item["_new"])
+        told = len(news.news_stories.stories(rows))
         reveal.section(f"news_{scope}_{category}", category,
-                       f"{reveal.count(len(rows), 'item')} · {new_rows} new",
+                       f"{told} {'story' if told == 1 else 'stories'} from {reveal.count(len(rows), 'item')} · {new_rows} new",
                        news.category_body_html(rows, data.get("sources", {}), zone), open=not opened)
         opened = True
     reveal.section("news_rules", "How items are sorted", "categories, word rules, and grade standing",
