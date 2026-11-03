@@ -1,5 +1,6 @@
 """The 3D orbit view: true orbit planes from the bundled elements, plain numbers for the page, and a page safe to embed."""
 import json
+from datetime import datetime
 import math
 
 import numpy as np
@@ -158,3 +159,19 @@ def test_names_stay_out_of_the_markup_and_nothing_is_fetched():
 def test_the_land_file_is_small_and_names_its_source():
     land = json.loads(LAND_FILE.read_text())
     assert "Natural Earth" in land["source"] and LAND_FILE.stat().st_size < 60_000
+
+
+def test_an_igso_slot_is_its_daily_figure_eight_centred_on_the_slot():
+    from ui.figures.orbits_3d import orbit_scene, slot_path
+    igso = {"epoch": datetime(2026, 11, 1), "n_rev_day": 1.0027, "e": 0.002, "i": 29.0, "raan": 80.0, "argp": 180.0,
+            "m": 0.0}
+    path = slot_path(igso, 55.0, turn_deg=0.0)
+    lat = np.degrees(np.arctan2(path[2], np.hypot(path[0], path[1])))
+    lon = np.degrees(np.arctan2(path[1], path[0]))
+    assert 28.5 < lat.max() < 29.5 and -29.5 < lat.min() < -28.5      # up and down by its tilt
+    assert abs(np.mean(lon) - 55.0) < 0.5 and 6 < np.ptp(lon) < 9       # about ±3.7° wide at 29° tilt, on 55°E
+
+    geo = {**igso, "i": 2.0}
+    rows = [{"name": "I", "slot_lon": 55.0, "state": "in slot"}, {"name": "G", "slot_lon": 83.0, "state": "in slot"}]
+    scene = orbit_scene(rows, {"I": igso, "G": geo})
+    assert scene["satellites"][0]["slot_path"] is not None and scene["satellites"][1]["slot_path"] is None
