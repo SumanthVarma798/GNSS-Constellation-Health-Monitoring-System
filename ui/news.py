@@ -1,5 +1,6 @@
 """News-page helpers: loading latest news, filtering items, and building markup."""
 import json
+import re
 from datetime import datetime, timedelta, timezone
 from html import escape
 from pathlib import Path
@@ -7,11 +8,13 @@ from pathlib import Path
 import requests
 import streamlit as st
 
+from evidence import news_stories
 from evidence.news import host_id
 from evidence.news_settings import (CATEGORY_RULE_WORDS, GRADE_BARS, GRADE_E_MIN_CLAIMS, NEWS_CATEGORIES, NEWS_CYCLE_HOURS,
-                                    NEWS_LATE_HOURS, NEWS_URL, RECORD_WINDOW_DAYS)
+                                    NEWS_LATE_HOURS, NEWS_URL, RECORD_WINDOW_DAYS, STORY_DAYS, STORY_SHARE,
+                                    STORY_SHARED_WORDS)
 from evidence.settings import RELIABILITY_GRADES
-from ui import surfaces, tooltip
+from ui import reveal, surfaces, tooltip
 
 DATE_FILTERS = ["7 days", "30 days", "90 days", "1 year", "all"]
 SHOW_FILTERS = ["all", "new only"]
@@ -58,6 +61,11 @@ CSS = """
 .news-source > summary { list-style: none; cursor: pointer; padding: 8px 10px; font-weight: 600; color: var(--muted); }
 .news-source > summary::-webkit-details-marker { display: none; }
 .news-source-body { padding: 0 10px 10px; display: grid; gap: 4px; font-size: 13px; }
+.news-story-sources { display: grid; gap: 6px; margin-top: 8px; }
+.news-story-sources > b { font-size: 13px; color: var(--muted); }
+.news-said, .news-took { margin: 0 0 8px; padding: 8px 10px; border-left: 3px solid var(--edge); font-size: 14px; }
+.news-said mark { background: none; color: var(--accent); font-weight: 600; }
+.news-took ul { margin: 4px 0 0; padding-left: 18px; }
 .news-grade-legend { margin: 10px 0 0; border: 1px solid var(--edge); border-radius: var(--r); background: var(--platform);
   box-shadow: var(--raised-sm); padding: 8px 10px; }
 .news-grade-legend > summary { cursor: pointer; font-weight: 600; color: var(--ink); }
@@ -179,9 +187,23 @@ def category_tiles_html(items):
     return f'<div class="news-cat-tiles">{"".join(tiles)}</div>' if tiles else ""
 
 
-def item_html(item, source, is_new=False, zone=timezone.utc):
-    """One item with details and source details, escaped."""
-    summary = escape(item.get("summary") or "The feed gives no summary beyond the headline.")
+def marked_html(text, words, rule_word=""):
+    """text, escaped, with each word of the story (and the category word) marked."""
+    parts, last = [], 0
+    rule = (rule_word or "").casefold()
+    for found in re.finditer(r"[A-Za-z0-9][A-Za-z0-9\-]*", text or ""):
+        token = found.group(0)
+        parts.append(escape(text[last:found.start()]))
+        hit = news_stories._stem(token.casefold()) in words or token.casefold() == rule
+        parts.append(f"<mark>{escape(token)}</mark>" if hit else escape(token))
+        last = found.end()
+    parts.append(escape((text or "")[last:]))
+    return "".join(parts)
+
+
+def item_html(item, source, is_new=False, zone=timezone.utc, words=frozenset()):
+    """One source's report within a story: outlet and date; opened, what it said (story words marked), what the
+    dashboard took from it, its grade and the source's details. Escaped."""
     published = date_label(item, zone)
     chip = tooltip.tip_html(surfaces.chip(grade_words(item), GRADE_TONES.get(item.get("grade_standing"), "idle")),
                             escape(RELIABILITY_GRADES.get(item.get("grade", ""), "No grade yet in the team's source table.")),
@@ -197,14 +219,47 @@ def item_html(item, source, is_new=False, zone=timezone.utc):
     if address:
         source_lines.append(
             f'<a href="{escape(address, quote=True)}" target="_blank" rel="noopener noreferrer">Read the article</a>')
+    rule = news_stories.rule_word(item)
+    said = f"<b>{marked_html(item.get('title', ''), words, rule)}</b>"
+    if item.get("summary"):
+        said += f"<br>{marked_html(item['summary'], words, rule)}"
+    took = "".join(f"<li>{escape(line)}</li>" for line in news_stories.taken_from(item, name))
     new_words = '<span class="news-new">new</span>' if is_new else ""
     return (
         f'<details class="news-item{" new" if is_new else ""}"><summary><span class="news-mark"><i aria-hidden="true"></i></span>'
-        f'<span><span class="news-head">{escape(item.get("title", ""))}</span>'
-        f'<span class="news-meta">{escape(item.get("outlet", ""))} · {escape(published)}</span></span>{new_words}</summary>'
-        f'<div class="news-body"><p>{summary}</p><p>{chip}</p>'
+        f'<span><span class="news-head">{escape(item.get("outlet", "") or name)}</span>'
+        f'<span class="news-meta">{escape(published)} · {escape(grade_words(item))}</span></span>{new_words}</summary>'
+        f'<div class="news-body"><p class="news-said">What it said: {said}</p>'
+        f'<div class="news-took">What the dashboard took from it:<ul>{took}</ul></div><p>{chip}</p>'
         f'<details class="news-source"><summary>Source</summary><div class="news-source-body">'
         f'{"".join(source_lines)}</div></details></div></details>'
+    )
+
+
+def story_html(story, sources, zone=timezone.utc):
+    """One story: its headline and summary; opened, every source that reported it, best grade first."""
+    items = story["items"]
+    fresh = sum(1 for item in items if item.get("_new"))
+    outlets = list(dict.fromkeys(item.get("outlet") or item.get("source_id", "") for item in items))
+    named = ", ".join(outlets[:3]) + (f" and {len(outlets) - 3} more" if len(outlets) > 3 else "")
+    newest = max(items, key=news_stories._when)
+    meta = f"{reveal.count(len(items), 'source')} · {named} · latest {date_label(newest, zone)}"
+    if story["summary"]:
+        summary = escape(story["summary"])
+    else:
+        oldest = min(items, key=news_stories._when)
+        span = (date_label(oldest, zone) if date_label(oldest, zone) == date_label(newest, zone)
+                else f"{date_label(oldest, zone)} to {date_label(newest, zone)}")
+        summary = f"No feed gave a summary beyond the headline. Reported {span}."
+    rows = "".join(item_html(item, sources.get(item.get("source_id", ""), {}), is_new=item.get("_new", False),
+                             zone=zone, words=story["words"]) for item in items)
+    new_words = f'<span class="news-new">{fresh} new</span>' if fresh else ""
+    return (
+        f'<details class="news-item{" new" if fresh else ""}"><summary><span class="news-mark"><i aria-hidden="true"></i></span>'
+        f'<span><span class="news-head">{escape(story["headline"])}</span>'
+        f'<span class="news-meta">{escape(meta)}</span></span>{new_words}</summary>'
+        f'<div class="news-body"><p>{summary}</p><div class="news-story-sources"><b>Who reported it</b>{rows}</div>'
+        f'</div></details>'
     )
 
 
@@ -241,9 +296,9 @@ def grade_legend_html():
     )
 
 
-def category_body_html(items, sources, zone=timezone.utc):
-    """Markup for one category's list."""
-    rows = [item_html(item, sources.get(item.get("source_id", ""), {}), is_new=item["_new"], zone=zone) for item in items]
+def category_body_html(items, sources, zone=timezone.utc, stories=None):
+    """Markup for one category's list: its stories (or its items, grouped here), the newest story first."""
+    rows = [story_html(story, sources, zone) for story in (news_stories.stories(items) if stories is None else stories)]
     return f'<div class="news-list">{"".join(rows)}</div>'
 
 
@@ -257,6 +312,11 @@ def sorting_rules_html():
         f"<p>{escape(CATEGORY_RULE_WORDS)}</p><ul>{rules}</ul>"
         "<p>These are plain word rules on the headline and feed text; a model may sort them later.</p>"
         "<p>An item appears under every constellation its headline names.</p>"
+        "<p>Items in one category that tell the same story are shown once: their headlines name the same mission or "
+        f"satellite (NVS-03, GSLV-F18), or share at least {STORY_SHARED_WORDS} uncommon words making up "
+        f"{STORY_SHARE:.0%} of the shorter headline, and each came out within {STORY_DAYS} days of another in it. "
+        "Stories are rebuilt on every visit, so a source that reports later joins its story. Open a story for who "
+        "reported it, and a source for what it said and what the dashboard took from it.</p>"
         "<p>Grade standing: confirmed means the source is in the team's source table; provisional means a grade is "
         "proposed and waiting for the team's review; not graded means no grade is recorded yet.</p>"
         f"{grade_legend_html()}"

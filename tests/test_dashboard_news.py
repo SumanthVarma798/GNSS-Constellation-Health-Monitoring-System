@@ -160,3 +160,15 @@ def test_sorting_rules_html_includes_a_closed_grade_legend_for_a_to_f():
     for grade in ("A", "B", "C", "D", "E", "F"):
         assert f"<th>{grade}</th>" in html
     assert "Score = (held + 1) ÷ (held + failed + 2) over the last 365 days" in html
+
+
+def test_one_story_lists_each_source_with_what_it_said_and_what_was_taken():
+    rows = [_item(source_id="a.com", outlet="A News", title="Japan launches QZS-7 satellite", _new=False),
+            _item(source_id="b.com", outlet="B Times", title="QZS-7 lifts off on H3", grade="B",
+                  address="https://b.com/x", summary="", _new=True)]
+    html = news_ui.category_body_html(rows, {"a.com": {"name": "A"}, "b.com": {"name": "B"}})
+
+    assert html.count('class="news-item') == 3               # the story and its two sources
+    assert "2 sources · B Times, A News" in html and "1 new" in html
+    assert "<mark>QZS-7</mark>" in html                        # the word the reports share
+    assert "What the dashboard took from it" in html and "launch claim for QZSS" in html

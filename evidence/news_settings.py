@@ -75,6 +75,26 @@ NEWS_CATEGORIES = OrderedDict([
     ("other", ()),
 ])
 
+# Stories on the News page: items that say the same thing are shown once, with every source that said it
+# (evidence/news_stories.py). Two headlines tell one story when they share a mission or satellite ID (NVS-03,
+# GSLV-F18, SV10), or share at least STORY_SHARED_WORDS words that are not common in that constellation's news,
+# making up at least STORY_SHARE of the shorter headline. Items in a story share a category, and each is
+# published within STORY_DAYS of one already in it.
+STORY_DAYS = 10
+STORY_SHARE = 0.5
+STORY_SHARED_WORDS = 2
+# A word in more than this share of the shown items (and in more than 3) says nothing about which story it is.
+STORY_COMMON_SHARE = 0.15
+# Headlines sharing at least this share of all their words are the same story, even when those words are common.
+STORY_NEAR_SAME = 0.8
+# A story's own words, marked on the page: in at least this share of its reports (and in at least 2).
+STORY_TOLD_SHARE = 0.25
+# A headline longer than this (a social post, a whole first paragraph) heads a story only when every report's is.
+STORY_HEADLINE_CHARACTERS = 120
+STORY_STOP_WORDS = frozenset(
+    "a an the and or of to in on for with by from at as is are be its it this that new into over after says say "
+    "will has have how why what who more than up out about via amid".split())
+
 # Category rules: checked in order on the headline first; if none match there, checked in order on the summary.
 CATEGORY_RULE_WORDS = ('Categories are checked in order: first the headline is checked against every category; only when '
                        'none matches, the feed text is checked in the same order; no match is "other".')
