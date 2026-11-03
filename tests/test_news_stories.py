@@ -49,3 +49,9 @@ def test_taken_from_says_the_rule_word_and_the_claim():
 def test_word_endings_and_ids():
     assert news_stories.words("Launches satellites") == news_stories.words("launched satellite")
     assert "nvs-03" in news_stories.words("ISRO's NVS-03") and "l5" not in news_stories.words("the L5 signal")
+
+
+def test_many_identical_headlines_are_one_story_though_their_words_are_common():
+    shown = [item("Galileo contract awarded", category="programme and policy", source=f"s{n}.com") for n in range(25)]
+    shown.append(item("Galileo signal anomaly", category="signal and service"))
+    assert sorted(len(story["items"]) for story in news_stories.stories(shown)) == [1, 25]

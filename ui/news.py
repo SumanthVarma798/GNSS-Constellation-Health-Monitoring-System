@@ -296,9 +296,9 @@ def grade_legend_html():
     )
 
 
-def category_body_html(items, sources, zone=timezone.utc):
-    """Markup for one category's list: its items as stories, the newest story first."""
-    rows = [story_html(story, sources, zone) for story in news_stories.stories(items)]
+def category_body_html(items, sources, zone=timezone.utc, stories=None):
+    """Markup for one category's list: its stories (or its items, grouped here), the newest story first."""
+    rows = [story_html(story, sources, zone) for story in (news_stories.stories(items) if stories is None else stories)]
     return f'<div class="news-list">{"".join(rows)}</div>'
 
 

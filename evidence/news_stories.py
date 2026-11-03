@@ -8,7 +8,7 @@ from collections import Counter
 from datetime import datetime, timedelta, timezone
 
 from evidence.news_settings import (CORROBORATION_DAYS, NEWS_CATEGORIES, STORY_COMMON_SHARE, STORY_DAYS,
-                                    STORY_HEADLINE_CHARACTERS, STORY_SHARE, STORY_SHARED_WORDS, STORY_STOP_WORDS,
+                                    STORY_HEADLINE_CHARACTERS, STORY_NEAR_SAME, STORY_SHARE, STORY_SHARED_WORDS, STORY_STOP_WORDS,
                                     STORY_TOLD_SHARE)
 from evidence.source_record import CLAIM_CATEGORIES
 
@@ -48,6 +48,8 @@ def same_story(a, b, common):
         return True
     if ids_a and ids_b:   # both name an ID, and not the same one: two notices, two satellites
         return False
+    if len(a & b) >= STORY_NEAR_SAME * len(a | b):   # the same headline, however common its words
+        return True
     shared = (a - common) & (b - common)
     shorter = min(len(a - common), len(b - common)) or 1
     return len(shared) >= STORY_SHARED_WORDS and len(shared) / shorter >= STORY_SHARE
