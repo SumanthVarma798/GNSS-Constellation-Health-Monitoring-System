@@ -55,3 +55,8 @@ def test_many_identical_headlines_are_one_story_though_their_words_are_common():
     shown = [item("Galileo contract awarded", category="programme and policy", source=f"s{n}.com") for n in range(25)]
     shown.append(item("Galileo signal anomaly", category="signal and service"))
     assert sorted(len(story["items"]) for story in news_stories.stories(shown)) == [1, 25]
+
+
+def test_a_time_without_a_zone_is_read_as_utc():
+    shown = [item("ISRO launches NVS-03"), {**item("NVS-03 lifts off"), "published_at": "2026-11-01T09:00:00"}]
+    assert len(news_stories.stories(shown)) == 1

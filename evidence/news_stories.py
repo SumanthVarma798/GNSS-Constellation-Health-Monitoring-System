@@ -58,9 +58,10 @@ def same_story(a, b, common):
 def _when(item):
     for key in ("published_at", "fetched_at"):
         try:
-            return datetime.fromisoformat((item.get(key) or "").replace("Z", "+00:00"))
+            moment = datetime.fromisoformat((item.get(key) or "").replace("Z", "+00:00"))
         except ValueError:
             continue
+        return moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)   # a time without a zone is UTC
     return datetime.min.replace(tzinfo=timezone.utc)
 
 
