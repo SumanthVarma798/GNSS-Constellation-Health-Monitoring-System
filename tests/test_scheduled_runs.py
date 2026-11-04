@@ -188,8 +188,16 @@ def test_rinex_check_workflow_logs_archives_and_reports_to_healthchecks():
 
     assert "name: RINEX check" in workflow
     assert "- cron: '0 6 * * *'" in workflow
-    assert "python scripts/orbit_record_gap.py --json" in workflow
+    assert "python scripts/orbit_record_gap.py " in workflow
     assert "scripts/log_run.py --archive . --log rinex-check --job \"rinex check\"" in workflow
     assert "https://hc-ping.com/$KEY/rinex-check/$OUTCOME" in workflow
     assert "git checkout --orphan orbit-checks" in workflow
     assert "Orbit record check for $DAY" in workflow
+
+
+def test_rinex_check_can_check_a_past_day_again_without_publishing_it():
+    workflow = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "rinex-check.yml").read_text()
+
+    assert "DAY_INPUT: ${{ inputs.day }}" in workflow
+    assert 'orbit_record_gap.py ${DAY_INPUT:+--day "$DAY_INPUT"} --json' in workflow
+    assert "if: success() && !inputs.day" in workflow

@@ -12,6 +12,11 @@ on:
     # 06:00 UTC = 11:30 India time. By then, BKG's copy of yesterday's IGS file is usually complete (best guess).
     - cron: '0 6 * * *'
   workflow_dispatch:
+    inputs:
+      day:
+        description: A past UTC day to check again, as YYYY-MM-DD (for a day a failed run missed). Empty = the newest day.
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -46,8 +51,10 @@ jobs:
 
       - name: Measure orbit-record broadcast gaps
         id: gap
+        env:
+          DAY_INPUT: ${{ inputs.day }}  # empty on scheduled runs
         run: |
-          python scripts/orbit_record_gap.py --json "$RUNNER_TEMP/gap.json" --fitted "$RUNNER_TEMP/fitted.json" --previous-fitted-dir archive/orbits/fitted --summary-out "$RUNNER_TEMP/gap-summary.txt" > "$RUNNER_TEMP/gap.md"
+          python scripts/orbit_record_gap.py ${DAY_INPUT:+--day "$DAY_INPUT"} --json "$RUNNER_TEMP/gap.json" --fitted "$RUNNER_TEMP/fitted.json" --previous-fitted-dir archive/orbits/fitted --summary-out "$RUNNER_TEMP/gap-summary.txt" > "$RUNNER_TEMP/gap.md"
           echo "day=$(jq -r '.day' "$RUNNER_TEMP/gap.json")" >> "$GITHUB_OUTPUT"
 
       - name: Copy reports to the archive and add one run-log line
@@ -101,7 +108,8 @@ jobs:
           git push --quiet || { git pull --rebase --quiet && git push --quiet; }
 
       - name: Publish today's derived gap JSON to orbit-checks
-        if: success()
+        # A re-run of a past day goes to the archive only, so it never replaces the newer files the dashboard reads.
+        if: success() && !inputs.day
         env:
           DAY: ${{ steps.archive_line.outputs.day }}
         run: |
