@@ -29,13 +29,15 @@ PARTS = {
     "cel": ("CelesTrak orbit records", "built",
             "Where every satellite is: published orbit records (two-line elements) for the GNSS group. The dashboard's orbit maths starts here.",
             ["The dashboard asks at most once every 2 hours, CelesTrak's own limit",
-             "Archived once a day at 01:15 UTC, so every day's records are kept", "Graded B"],
+             "Archived four times a day from 01:15 UTC, so every day's records are kept", "Graded B"],
             ["If CelesTrak fails, the dashboard keeps its last copy and says since when it has been failing"],
             "data/celestrak.py · evidence/settings.py"),
     "news": ("News and official feeds", "built",
              "Operator pages, advisories, specialist press and newsletters: what people say about the satellites.",
              ["57 candidate sources, each with a proposed grade waiting for approval",
               "44 read every 3 hours; a copy is kept only when the page changed",
+              "X accounts are read through twitterapi.io every 6 hours",
+              "Substack newsletters arrive by email and are read as feeds from feeds.opengnss.org (Substack refuses GitHub's servers)",
               "Read for evidence only: nothing they say changes anything yet"],
              ["Some fail in every run (6 of 44 on 20 Oct); the Jobs page shows which",
               "Two tracker sites are never fetched, by a rule in the settings"],
@@ -46,7 +48,7 @@ PARTS = {
                ["Grade E at most"], "evidence/settings.py (SOCIAL_PLATFORM_HOSTS)"),
     "job": ("Archive job", "built",
             "The collector. On a timer it visits every source politely, keeps a copy of anything new, and writes one line per run saying how it went.",
-            ["GitHub Actions, five schedules: documents, catalogues, orbits, news, social",
+            ["GitHub Actions, six schedules: documents, catalogues, orbits, news, social, X",
              "Up to 3 tries per download, 60 s apart; a site that refuses is left for 1 hour, doubling up to 7 days",
              "Copies over 50 MB are not kept"],
             ["GitHub starts scheduled runs late, sometimes by hours, and sometimes skips them"],
@@ -99,16 +101,27 @@ PARTS = {
     "dash": ("Dashboard", "built",
              "The team's view of the satellites: where each one is, whether it is where it should be, and how good positioning is from any place.",
              ["Streamlit, with the orbit maths in SGP4 and Skyfield", "Reads its tracked satellites from the registry and its orbits from CelesTrak",
-              "Runs on this computer (localhost:48974); the team's hosted copy is separate"],
-             ["The weekly job that refreshes its bundled orbit data is turned off on GitHub"], "dashboard.py · views/ · ui/"),
+              "Public at dashboard.opengnss.org: Render's free plan, rebuilt from main on each commit (render.yaml)"],
+             ["Sleeps after 15 minutes unvisited; the first visit after that takes about a minute",
+              "The weekly job that refreshes its bundled orbit data is turned off on GitHub"], "dashboard.py · views/ · ui/"),
     "admin": ("Administration console", "key",
               "This console: what the system is doing, all in one place, and the place a person approves changes.",
               ["Google sign-in with an allow-list; one GitHub token, kept in the console's secrets",
                "Reads GitHub's record of jobs, issues and pull requests, and the archive's run logs",
                "Every change it makes goes out as a pull request"],
-              ["Shared copy on Streamlit Community Cloud's free tier (gnss-master-console.streamlit.app); it sleeps after a while unvisited and wakes on a click",
+              ["Shared copy at console.opengnss.org on Render's free plan; it sleeps after 15 minutes unvisited and takes about a minute to wake",
                "The assistant answers only where Ollama runs, so not on the shared copy"],
               "admin.py · console/ · evidence/decisions.py"),
+    "host": ("Hosting and the domain", "built",
+             "Where each part runs, and the project's own name on the internet, opengnss.org, so addresses outlive any one person's account.",
+             ["opengnss.org is held in the project's own Cloudflare account, which answers for every name under it",
+              "dashboard.opengnss.org and console.opengnss.org: both apps on Render's free plan, rebuilt from main (render.yaml)",
+              "feeds.opengnss.org: a Cloudflare Worker keeps only mail Substack signed and turns it into feeds",
+              "Scheduled jobs run on GitHub Actions; code, tables and approvals live on GitHub"],
+             ["Free plans sleep: the dashboard and the console each take about a minute to wake",
+              "The domain does not renew by itself: renew it before 27 Oct 2027",
+              "One Cloudflare admin so far; a second is still to be invited"],
+             "render.yaml · cloudflare/newsletters/ · docs/infrastructure.md"),
 }
 
 # Following one item: (what happens, the parts it lights, the arrows it lights).
@@ -124,15 +137,42 @@ STEPS = [
 ]
 
 
-def payload(facts):
-    """What the page shows: the parts, the steps, and a few live figures as (figure, words) pairs."""
+def payload():
+    """What the picture shows: the parts and the follow-one-item steps (no live figures; those sit outside the iframe)."""
     return {"parts": {key: {"name": p[0], "kind": p[1], "simple": p[2], "tech": p[3], "limits": p[4], "where": p[5]}
                       for key, p in PARTS.items()},
-            "steps": [{"words": words, "nodes": nodes, "edges": edges} for words, nodes, edges in STEPS],
-            "facts": [{"figure": figure, "words": words} for figure, words in facts]}
+            "steps": [{"words": words, "nodes": nodes, "edges": edges} for words, nodes, edges in STEPS]}
 
 
-def system_design_html(tokens_css, font, facts):
+def system_design_html(tokens_css, font):
     """The finished page: the console's colours first, the data last so it is never searched for placeholders."""
     page = PAGE_FILE.read_text(encoding="utf-8").replace("__TOKENS__", tokens_css).replace("__FONT__", font)
-    return page.replace("const DATA = __DATA__;", f"const DATA = {embed(payload(facts))};", 1)
+    return page.replace("const DATA = __DATA__;", f"const DATA = {embed(payload())};", 1)
+
+
+def facts_strip_html(tokens_css, font, facts):
+    """Live figures read from GitHub, shown under the picture so the diagram never waits on the network."""
+    facts_json = embed([{"figure": figure, "words": words} for figure, words in facts])
+    return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><style>
+__TOKENS__
+*, *::before, *::after {{ box-sizing: border-box; }}
+html, body {{ margin: 0; background: var(--pane); color: var(--ink); font: 13px/1.45 __FONT__; }}
+.facts {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); border: 2px solid var(--outline); box-shadow: var(--hard); }}
+.facts div {{ padding: 8px 12px; border-right: 1px solid var(--edge); border-top: 4px solid var(--c-info); min-width: 0; }}
+.facts b {{ display: block; font-size: 22px; font-weight: 800; line-height: 1.2; }}
+.facts span {{ color: var(--muted); }}
+</style></head><body><div class="facts" id="facts"></div><script>
+const FACTS = {facts_json};
+function el(tag, text) {{ const e = document.createElement(tag); if (text !== undefined) e.textContent = text; return e; }}
+for (const f of FACTS) {{ const d = el("div"); d.append(el("b", f.figure), el("span", f.words)); document.getElementById("facts").append(d); }}
+// The frame takes the page's own height, so the console scrolls as one page and nothing scrolls inside the frame.
+// Streamlit 1.45 ignores "streamlit:setFrameHeight" from these frames, but they share the page's origin (as live_pipeline).
+function fitFrame() {{
+  if (!window.frameElement) return;
+  const parts = [...document.body.children].filter((e) => e.tagName !== "SCRIPT");
+  const bottom = Math.max(0, ...parts.map((e) => e.getBoundingClientRect().bottom + window.scrollY));
+  window.frameElement.style.height = Math.ceil(bottom) + 12 + "px";   // room for the hard shadow
+}}
+if ("ResizeObserver" in window) {{ const fitter = new ResizeObserver(fitFrame); [document.body, ...document.body.children].forEach((e) => fitter.observe(e)); }}
+fitFrame();
+</script></body></html>""".replace("__TOKENS__", tokens_css, 1).replace("__FONT__", font, 1)

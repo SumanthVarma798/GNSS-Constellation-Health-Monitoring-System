@@ -48,9 +48,9 @@ def test_every_schedule_line_is_assigned_to_a_group():
         assert ARCHIVED_SOURCES[group], f"'{group}' has a schedule but no sources: its runs would do nothing"
 
 
-def test_orbits_are_kept_once_a_day():
-    # CelesTrak asks that unchanged data is not fetched more than every 2 hours; once a day is well inside.
-    assert re.search(r"- cron: '15 1 \* \* \*'\s+# orbital: once a day", JOB)
+def test_orbits_are_kept_four_times_a_day():
+    # CelesTrak asks that unchanged data is not fetched more than every 2 hours; every 5 to 7 hours is well inside.
+    assert re.search(r"- cron: '15 1,8,14,20 \* \* \*'\s+# orbital: four times a day", JOB)
 
 
 def test_the_job_can_be_started_by_hand_for_any_group():
@@ -58,9 +58,9 @@ def test_the_job_can_be_started_by_hand_for_any_group():
     assert options == ["all", *ARCHIVED_SOURCES]
 
 
-def test_news_and_social_are_the_candidates_whose_check_worked():
+def test_news_social_and_x_are_the_candidates_whose_check_worked():
     worked = {row["address"] for row in working_candidates()}
-    assert set(archived_addresses("news")) | set(archived_addresses("social")) == worked
+    assert set(archived_addresses("news")) | set(archived_addresses("social")) | set(archived_addresses("x")) == worked
     assert not any(address.startswith("https://pib.gov.in/") for address in worked)   # refused (403): via Google News
     assert not any("ssc.spaceforce.mil" in address for address in worked)   # answered with an empty body
 
@@ -70,10 +70,20 @@ def test_no_tracker_site_is_ever_archived():
 
 
 def hours_between_runs(cron):
-    """How far apart a schedule line's runs are, for the two forms the job uses."""
+    """The shortest gap between a schedule line's runs, for the three forms the job uses: */n, a list, one hour."""
     minute, hour, *rest = cron.split()
     assert minute.isdigit() and rest == ["*", "*", "*"], f"teach this test the schedule '{cron}'"
-    return int(hour[2:]) if hour.startswith("*/") else 24
+    if hour.startswith("*/"):
+        return int(hour[2:])
+    hours = sorted(int(h) for h in hour.split(","))
+    return min(b - a for a, b in zip(hours, hours[1:] + [hours[0] + 24]))   # across midnight too
+
+
+def test_the_shortest_gap_counts_a_list_and_midnight():
+    assert hours_between_runs("15 1,8,14,20 * * *") == 5
+    assert hours_between_runs("15 1,2 * * *") == 1
+    assert hours_between_runs("15 0,23 * * *") == 1
+    assert hours_between_runs("50 */3 * * *") == 3 and hours_between_runs("30 0 * * *") == 24
 
 
 def test_each_group_runs_no_more_often_than_its_slowest_site_allows():

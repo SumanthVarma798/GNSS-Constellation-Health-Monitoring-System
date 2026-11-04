@@ -91,6 +91,16 @@ def log_result(line):
     return ("ok", "Succeeded") if line["result"] in _OK_RESULTS else ("bad", line["result"].replace("failure", "failed"))
 
 
+def changed_words(changed):
+    """A run log line's "what changed" for the console: "3 copies" for the addresses, then any other words."""
+    words = changed.split()
+    addresses = [word for word in words if word.startswith("http")]
+    if not addresses:
+        return changed
+    rest = " ".join(word for word in words if not word.startswith("http"))
+    return f"{len(addresses)} {'copy' if len(addresses) == 1 else 'copies'}" + (f", {rest}" if rest else "")
+
+
 def _on_main(run):
     return run["head_branch"] == "main" and run["event"] == "push"
 

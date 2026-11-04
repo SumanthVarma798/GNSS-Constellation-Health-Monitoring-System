@@ -19,7 +19,9 @@ sign_in_fix.apply()   # before anyone presses Sign in
 
 
 def _sign_out():
-    """Forget everything typed or chosen in this browser before signing out, so nothing carries over to the next person."""
+    """Forget everything typed or chosen in this browser, then sign out, so nothing carries over to the next person.
+    Called from the script, not as a button's on_click: Streamlit ignores the rerun st.logout() asks for in a callback,
+    which left the page signed in."""
     for key in list(st.session_state):
         del st.session_state[key]
     st.logout()
@@ -35,7 +37,7 @@ st.html(console.theme_css(scheme))
 config = common.settings()
 if missing := common.missing():
     words = f"{common.NOT_SET_UP} Missing or empty: {', '.join(missing)}."
-    st.html(console.title_bar("Not set up") + f'<div class="c-signin"><div class="in">{escape(words)}</div></div>')
+    st.html(console.title_bar("Not set up") + f'<div class="c-signin c-signin-plain"><div class="in">{escape(words)}</div></div>')
     st.stop()
 
 email = st.user.get("email")
@@ -43,18 +45,26 @@ state = decisions.access(st.user.is_logged_in, email, config["allowed"])
 if state != "in":
     words = ("Sign in with the Google account on the team's list." if state == "sign in" else
              f"You are signed in as {email}, which is not on the list of people who may use the console. Ask for it to be added.")
-    st.html(console.title_bar("Sign in") + f'<div class="c-signin"><div class="in">{escape(words)}</div></div>')
-    if state == "sign in":
-        st.button("Sign in with Google", key="console_sign_in", on_click=st.login, type="primary")
-    else:
-        st.button("Sign out", key="console_sign_out", on_click=_sign_out)
+    st.html(console.title_bar("Sign in"))
+    with st.container(key="console_signin"):
+        st.html(console.signin_card(escape(words)))
+        if state == "sign in":
+            st.button("Sign in with Google", key="console_sign_in", on_click=st.login, type="primary")
+        elif st.button("Sign out", key="console_sign_out"):
+            _sign_out()
     st.stop()
 
 # The console tree: sections (shown as folders) and their pages, each page with its own icon.
 SECTIONS = {"Overview": [st.Page("console/summary.py", title="Summary", icon=":material/dashboard:", default=True),
                          st.Page("console/design.py", title="System design", icon=":material/account_tree:",
-                                 url_path="design")],
-            "Monitoring": [st.Page("console/jobs.py", title="Jobs", icon=":material/schedule:")],
+                                 url_path="design"),
+                         st.Page("console/ask.py", title="Ask", icon=":material/forum:", url_path="ask")],
+            "Monitoring": [st.Page("console/sources.py", title="Sources", icon=":material/public:", url_path="sources"),
+                           st.Page("console/jobs.py", title="Jobs", icon=":material/schedule:"),
+                           st.Page("console/pipeline.py", title="Live pipeline", icon=":material/conveyor_belt:",
+                                   url_path="pipeline"),
+                           st.Page("console/alerts.py", title="Alerts", icon=":material/notifications_active:",
+                                   url_path="alerts")],
             "Work": [st.Page("console/work.py", title="Issues and pull requests", icon=":material/list_alt:",
                              url_path="work"),
                      st.Page("console/approvals.py", title="Approvals", icon=":material/task_alt:")]}
@@ -63,10 +73,15 @@ where = {p.url_path: (section, p) for section, pages in SECTIONS.items() for p i
 trail = common.follow(st.session_state.setdefault("console_trail", {"back": [], "forward": [], "at": None}), page.url_path)
 who = st.user.get("name") or email
 st.html(console.title_bar(page.title) + console.current_page_css(page.url_path))
+with st.sidebar, st.container(key="console_scheme"):   # placed in the tree's header, left of its close button
+    st.session_state["console_scheme_pick"] = scheme
+    st.segmented_control("Colours", list(console.SCHEMES), format_func=console.SCHEME_ICONS.get, key="console_scheme_pick",
+                         on_change=_pick_scheme, label_visibility="collapsed",
+                         help="Colours: as this computer is set, light, or dark")
 with st.container(key="console_bar"):
     # each shown only when there is a page that way, and that page still exists (one may be removed mid-session)
     steps = [way for way in ("back", "forward") if trail[way] and trail[way][-1] in where]
-    *step_cols, crumb, refresh, pick, person, out = st.columns(len(steps) + 5, vertical_alignment="center")
+    *step_cols, crumb, refresh, person, out = st.columns(len(steps) + 4, vertical_alignment="center")
     for col, way in zip(step_cols, steps):
         to = where[trail[way][-1]][1]
         if col.button(way.title(), key=f"console_{way}", icon=f":material/arrow_{way}:", help=f"{way.title()} to {to.title}"):
@@ -75,15 +90,16 @@ with st.container(key="console_bar"):
                f'<b>{escape(page.title)}</b></span>')
     if refresh.button("Refresh", key="console_refresh", icon=":material/refresh:", help="Read everything again from GitHub"):
         common.github.clear()
-    st.session_state["console_scheme_pick"] = scheme
-    pick.segmented_control("Colours", list(console.SCHEMES), format_func=console.SCHEMES.get, key="console_scheme_pick",
-                           on_change=_pick_scheme, label_visibility="collapsed", help="Light, dark, or as this computer is set")
+        st.session_state[common.REFRESH_PENDING] = True
     person.html(f'<span class="c-who">Signed in as <b>{escape(who)}</b></span>')
-    out.button("Sign out", key="console_sign_out", on_click=_sign_out)
+    if out.button("Sign out", key="console_sign_out"):
+        _sign_out()
 
 page.run()
 
 seen = common.read()
+if st.session_state.pop(common.REFRESH_PENDING, False):
+    st.toast(f"Read again from GitHub at {seen['read_at']:%H:%M} UTC")
 rows = jobs.job_rows(seen["workflows"], seen["runs"], seen["log"], common.workflow_texts(), common.now())
 failing = sum(r["result"][0] == "bad" for r in rows)
 off = sum(r["state"] == "Turned off" for r in rows)

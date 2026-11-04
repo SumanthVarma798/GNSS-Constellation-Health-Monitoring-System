@@ -4,12 +4,13 @@ Every navigation satellite broadcasts its own orbit as a set of numbers (its eph
 good to metres, so receivers can work out position. GPS, Galileo, BeiDou, QZSS and NavIC
 use one formula (IS-GPS-200, table 20-IV) with their own constants; BeiDou's geostationary
 satellites add one rotation (BeiDou ICD, section 5.2.4.12). GLONASS broadcasts a position and
-velocity instead and is not handled: the dashboard tracks no GLONASS satellite.
+velocity instead; its positions at the record times are read here, but there is still no
+integrator between them.
 
 Nothing here downloads or reads the clock. Positions are Earth-fixed, in km.
 """
 import math
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 # System letter -> (gravitational constant m^3/s^2, Earth's rotation rad/s, from each system's interface document.
 SYSTEMS = {
@@ -53,6 +54,28 @@ def read_navigation(text):
     return records
 
 
+def read_glonass(text):
+    """{signal ID: {utc (aware datetime): (x, y, z) km}} from a RINEX 3 navigation file's text.
+
+    A GLONASS record's first line carries the epoch in UTC; the next three lines carry its
+    X, Y and Z position in km in columns 4:23. Several records can share an epoch: one is kept.
+    """
+    lines = text.splitlines()
+    body = lines[next(i for i, line in enumerate(lines) if "END OF HEADER" in line) + 1:]
+    starts = [i for i, line in enumerate(body) if line[:1].strip()]
+    positions = {}
+    for start, end in zip(starts, [*starts[1:], len(body)]):
+        first = body[start]
+        if first[:1] != "R":
+            continue
+        signal_id = first[:3]
+        year, month, day, hour, minute, second = (int(x) for x in first[4:23].split())
+        utc = datetime(year, month, day, hour, minute, second, tzinfo=timezone.utc)
+        xyz = [body[start + 1 + line][4:23] for line in range(3)]
+        positions.setdefault(signal_id, {})[utc] = tuple(_number(field) for field in xyz)
+    return positions
+
+
 _NAMES = ["af0", "af1", "af2",
           "iode", "crs", "delta_n", "m0",
           "cuc", "e", "cus", "sqrt_a",
@@ -61,6 +84,73 @@ _NAMES = ["af0", "af1", "af2",
           "idot", "codes", "week", "l2p",
           "accuracy", "health", "tgd", "iodc",
           "sent", "fit"]
+
+
+def _toc(first):
+    """The satellite's own time (a naive datetime) from a record's first line."""
+    year, month, day, hour, minute, second = (int(x) for x in first[4:23].split())
+    return datetime(year, month, day, hour, minute, second)
+
+
+def _known(field):
+    """A field's number, or None when it is blank (RINEX's "not known")."""
+    return _number(field) if field.strip() else None
+
+
+def _records_from_lines(lines):
+    """Raw records for every system from the navigation body, including GLONASS."""
+    body = lines[next(i for i, line in enumerate(lines) if "END OF HEADER" in line) + 1:]
+    starts = [i for i, line in enumerate(body) if line[:1].strip()]
+    records = {}
+    for start, end in zip(starts, [*starts[1:], len(body)]):
+        first = body[start]
+        if first[0] not in "GECJIR":
+            continue
+        signal_id = first[:3]
+        toc = _toc(first)
+        if first[0] == "R":
+            health = _known(body[start + 1][61:80])
+            records.setdefault(signal_id, []).append(
+                {"toc": toc, "health": None if health is None else int(health), "accuracy": None, "iode": None})
+            continue
+        fields = [first[c:c + 19] for c in (23, 42, 61)]
+        for line in body[start + 1:end]:
+            fields += [line[c:c + 19] for c in (4, 23, 42, 61)]
+        record = {name: _known(field) for name, field in zip(_NAMES, fields)}
+        health, accuracy, iode = record.get("health"), record.get("accuracy"), record.get("iode")
+        records.setdefault(signal_id, []).append(
+            {"toc": toc, "health": None if health is None else int(health),
+             # Galileo sends -1 for "no accuracy prediction available"
+             "accuracy": accuracy if accuracy is not None and accuracy >= 0 else None,
+             "iode": None if iode is None else int(iode)})
+    return records
+
+
+def read_status(text):
+    """{signal ID: {"health", "accuracy_m", "iod", "newest"}} from a RINEX 3 navigation file's text.
+
+    G, E, C, J and I use the fields read_navigation already reads; GLONASS records carry only a health
+    value. Newest means the record with the latest toc (the satellite's own time); where several records
+    share that toc, the largest health wins.
+    """
+    lines = text.splitlines()
+    out = {}
+    for signal_id, records in _records_from_lines(lines).items():
+        newest = max(records, key=lambda record: record["toc"])
+        tied = [record for record in records if record["toc"] == newest["toc"]]
+        chosen = max(tied, key=lambda record: -1 if record["health"] is None else record["health"])
+        out[signal_id] = {"health": chosen["health"], "accuracy_m": chosen["accuracy"],
+                          "iod": chosen["iode"], "newest": chosen["toc"]}
+    return out
+
+
+def time_corrections(text):
+    """{code: a0 in seconds} from the header's TIME SYSTEM CORR lines."""
+    out = {}
+    for line in text.splitlines():
+        if "TIME SYSTEM CORR" in line:
+            out[line[:4].strip()] = _number(line[5:22])
+    return out
 
 
 def system_time(utc, signal_id, leap_seconds):

@@ -6,9 +6,9 @@ The choices live in st.session_state: `scope` (one constellation), `compare` (on
 `params` (only the detection thresholds moved off their defaults). Pages read them.
 
 The bar: the product name, then the filters as their own group (constellations, Compare, time range), then the
-data's state (the UTC clock, when the next update is, the data chip, refresh and the gear). Three arrangements in
-ui/theme.css: one row from 1400px, the filters as a strip of their own under the rest from 640px, and on a phone
-the constellations as a menu.
+data's state (the UTC clock, when the next update is, the data chip, refresh and the gear). Two arrangements in
+ui/theme.css: from 640px the filters as a strip of their own under the rest, and on a phone the constellations as
+a menu.
 """
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
@@ -17,22 +17,28 @@ import streamlit as st
 
 from config.config import DEFAULT_PARAMS
 from data import celestrak
+from evidence import jobs
+from evidence.console_settings import WORKFLOWS_DIR
+from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS
 from ui import changes, data, surfaces, time_range
 
 # Pages with their own filters: the bar shows no constellation, window or thresholds there.
-OWN_FILTERS = {"Master map", "Library"}
+OWN_FILTERS = {"Master map", "World map", "Library"}
+# Pages that use only the constellation choice in the bar.
+SCOPE_ONLY = {"News"}
 
 # The pages, in one place. Add a page by adding a line: (title, file).
 PAGES = [
     ("Overview", "views/overview.py"),
     ("Station-keeping", "views/station_keeping.py"),
     ("Geometry", "views/geometry.py"),
+    ("News", "views/news.py"),
     ("Master map", "views/master_map.py"),
+    ("World map", "views/world_map.py"),
     ("Library", "views/library.py"),
     # ("How it works", "views/how_it_works.py"),
 ]
 CONSTELLATIONS = tuple(data.SATELLITES)
-STALE_DAYS = 7
 # The clock and "next update" are redrawn this often, alone: never a page redraw, at most this far behind.
 CLOCK_TICK_SECONDS = 15
 
@@ -75,7 +81,7 @@ def segment(key, options, labels=None, label="Choose"):
 def age_words(data_time, now, tz=timezone.utc):
     """('Orbit data 15 Oct 10:42', 'ok') for data from today, ('Orbit data 4 Oct, 10 days old', 'warn') for older.
 
-    Days and times are counted in `tz`, the viewer's time zone. Warn after STALE_DAYS days.
+    Days and times are counted in `tz`, the viewer's time zone.
     """
     try:
         taken = datetime.fromisoformat(data_time)
@@ -84,17 +90,38 @@ def age_words(data_time, now, tz=timezone.utc):
     taken = (taken if taken.tzinfo else taken.replace(tzinfo=timezone.utc)).astimezone(tz)
     days = (now.astimezone(tz).date() - taken.date()).days
     age = f" {taken:%H:%M}" if days <= 0 else ", 1 day old" if days == 1 else f", {days} days old"
-    return f"Orbit data {taken.day} {taken:%b}{age}", "warn" if days > STALE_DAYS else "ok"
+    elapsed = (now - taken).total_seconds() / 86400   # coloured by time passed, as the orbit-age strip is
+    status = "bad" if elapsed >= ORBIT_STALE_DAYS else "warn" if elapsed >= ORBIT_ALERT_DAYS else "ok"
+    return f"Orbit data {taken.day} {taken:%b}{age}", status
 
 
-def failing_words(since, now, tz=timezone.utc):
+def _day_time(moment, now, tz):
+    """'14:02' for a moment today in `tz`, '18 Oct 14:02' for another day."""
+    moment = moment.astimezone(tz)
+    return f"{moment:%H:%M}" if moment.date() == now.astimezone(tz).date() else f"{moment.day} {moment:%b %H:%M}"
+
+
+def failing_words(since, now, tz=timezone.utc, what="CelesTrak"):
     """'CelesTrak failing since 14:02' when the failures began today, 'CelesTrak failing since 18 Oct 14:02' before.
 
-    Days and times are counted in `tz`, the viewer's time zone.
+    `what` names the failing source. Days and times are counted in `tz`, the viewer's time zone.
     """
-    since = since.astimezone(tz)
-    when = f"{since:%H:%M}" if since.date() == now.astimezone(tz).date() else f"{since.day} {since:%b %H:%M}"
-    return f"CelesTrak failing since {when}"
+    return f"{what} failing since {_day_time(since, now, tz)}"
+
+
+def copy_words(copy_at, now, tz=timezone.utc):
+    """'CelesTrak via the archive job · copy 05:06 · next about 08:15' for a copy in use.
+
+    The copy's time and the archive job's next orbital run are shown in `tz`, with the day in front when not today.
+    No next time is shown when the workflow file cannot be read or has no orbital schedule.
+    """
+    words = f"CelesTrak via the archive job · copy {_day_time(copy_at, now, tz)}"
+    try:
+        crons = jobs.schedules((WORKFLOWS_DIR / "archive.yml").read_text(encoding="utf-8")).get("orbital", [])
+        next_at = jobs.next_run(crons, now) if crons else None
+    except (OSError, ValueError, TypeError, IndexError):
+        next_at = None
+    return words + (f" · next about {_day_time(next_at, now, tz)}" if next_at else "")
 
 
 def offered():
@@ -126,8 +153,9 @@ def viewer_zone():
 
 
 def _data_chip(names, window_days, params, live, now):
-    """The time of the newest orbit data behind the page (the oldest constellation's), and since when CelesTrak has
-    been failing, if it is. Every saved copy stays in use meanwhile (issue 39: parts out of step say so)."""
+    """The time of the newest orbit data behind the page (the oldest constellation's), and since when its live source
+    has been failing, if it is. Every saved copy stays in use meanwhile (issue 39: parts out of step say so); while
+    the archive job's copy is in use, the second chip says so, and the age chip keeps its colour."""
     try:
         taken = min(data.load(c, window_days, params)["data_time"] for c in names)
     except ValueError:
@@ -135,11 +163,15 @@ def _data_chip(names, window_days, params, live, now):
     if live["fetched"]:
         taken = max(taken, live["fetched"].isoformat())
     text, status = age_words(taken, now, viewer_zone())
+    # A copy in use means the last read worked: a failed read clears copy_at (a state saved by older code may still
+    # say ok False beside it, and is not failing).
+    if live.get("copy_at"):
+        return surfaces.chip(text, status) + surfaces.chip(copy_words(live["copy_at"], now, viewer_zone()), "idle")
     if live["ok"]:
         return surfaces.chip(text, status)
     # A copy saved before failing_since was kept has none: its last try stands in.
     return surfaces.chip(text, status) + surfaces.chip(
-        failing_words(live["failing_since"] or live["tried"], now, viewer_zone()), "warn")
+        failing_words(live["failing_since"] or live["tried"], now, viewer_zone(), what="Archive copy"), "warn")
 
 
 def next_words(left):
@@ -169,7 +201,8 @@ def _ring(live, now):
     name = f"ring{now:%H%M%S%f}"
     return (f"<style>@keyframes {name} {{ from {{ --left: {share}; }} to {{ --left: 0%; }} }}"
             f".st-key-refresh_button button::before {{ --left: {share}; animation: {name} {left:.0f}s linear forwards; }}"
-            + ("" if live["ok"] else ".st-key-refresh_button button::before { --ring: var(--warn); }") + "</style>")
+            + ("" if live["ok"] or live.get("copy_at") else ".st-key-refresh_button button::before { --ring: var(--warn); }")
+            + "</style>")
 
 
 @st.fragment(run_every=CLOCK_TICK_SECONDS)
@@ -189,14 +222,49 @@ def _refresh(names, window_days, gear_scope):
     with st.container(key="refresh"):
         clock, chip = st.container(key="clock"), st.empty()
         clicked = st.button("Refresh orbit data", key="refresh_button", icon=":material/refresh:",
-                            help="Pull the newest orbit data")
+                            help="Re-read the archive job's newest copy of the orbit data")
         if gear_scope:
             with st.popover("", icon=":material/settings:", help="Detection thresholds"):
                 st.session_state["params"] = _thresholds(gear_scope)
+        _own_login()
         live, now = data.refresh(clicked), datetime.now(timezone.utc)
         chip.html(_data_chip(names, window_days, st.session_state["params"], live, now) + _ring(live, now))
         with clock:   # after the refresh, so it reads the try just made
             _clock()
+
+
+_OWN_NOTE_WORDS = {"busy": "busy, will try again in an hour", "login refused": "login refused"}
+
+
+def _own_login():
+    """The key popover next to the gear: the viewer's own Space-Track login, kept only for this visit."""
+    with st.popover("", icon=":material/key:", help="Your Space-Track login (this session only)"):
+        login = st.session_state.get(data.OWN_LOGIN)
+        if login:
+            st.write("Using your Space-Track login for this visit")
+            note = st.session_state.get(data.OWN_NOTE)
+            if note and note != "ok":
+                st.write(_OWN_NOTE_WORDS.get(note, note))
+            if st.button("Forget my login", key="forget_login"):
+                # The last try's time stays, so a new login still waits out the hour.
+                for key in (data.OWN_LOGIN, data.OWN_ROWS, data.OWN_NOTE):
+                    st.session_state.pop(key, None)
+                st.rerun()
+            return
+        if st.session_state.get(data.OWN_NOTE) == "login refused":
+            st.write("Space-Track refused that login, so it was forgotten. Check it on space-track.org and try again.")
+        st.write("Space-Track fills in satellites CelesTrak has not updated for 2 days. "
+                 "Your login is kept only for this visit, on the server, and never saved.")
+        with st.form("own_login_form", clear_on_submit=True):
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
+            use = st.form_submit_button("Use my login for this visit")
+        if use and not (username and password):
+            st.write("Enter both the username and the password.")
+        elif use:
+            st.session_state[data.OWN_LOGIN] = (username, password)
+            st.session_state[data.OWN_NOTE] = "ok"
+            st.rerun()
 
 
 def _toggle_compare():
@@ -226,9 +294,9 @@ def _menu(plain, multi):
                              label_visibility="collapsed", on_change=_from_menu, args=(plain, f"_{plain}_menu"))
 
 
-def _scope():
+def _scope(force_single=False):
     """Constellation chips: one chosen, or under Compare any number (none means all). Returns the names in view."""
-    if not st.session_state.get("compare"):
+    if force_single or not st.session_state.get("compare"):
         name = segment("scope", list(CONSTELLATIONS), label="Constellation")
         _menu("scope", multi=False)
         return [name]
@@ -254,6 +322,11 @@ def top_bar(current):
         if current.title in OWN_FILTERS:
             names = [st.session_state.get("scope", CONSTELLATIONS[0])]
             gear_scope = None
+        elif current.title in SCOPE_ONLY:
+            with filters:
+                with st.container(key="filters"):
+                    names = _scope(force_single=True)
+            gear_scope = None
         else:
             with filters:
                 filter_box = st.container(key="filters")
@@ -266,7 +339,7 @@ def top_bar(current):
             gear_scope = "Compare" if on else names[0]
         with refresh_box:
             _refresh(names, window_days, gear_scope)
-        if current.title not in OWN_FILTERS:   # after the gear, so the range's bounds read this run's thresholds
+        if current.title not in OWN_FILTERS | SCOPE_ONLY:   # after the gear, so the range's bounds read this run's thresholds
             with filter_box:
                 time_range.control(names, st.session_state["params"])
     _page_tabs(current)

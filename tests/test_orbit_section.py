@@ -12,12 +12,13 @@ import pytest
 import time_machine
 from streamlit.testing.v1 import AppTest
 
+from data.tle_cache import DATA_DIR
 from test_golden_scores import GOLDEN
 from ui import orbit_section
 from ui.orbit_section import designated_longitude, set_aside_positions, set_aside_rows
 
 ROOT = Path(__file__).resolve().parent.parent
-HISTORY = json.loads((ROOT / "data" / "navic_gp_history.json").read_text())["satellites"]
+HISTORY = json.loads((DATA_DIR / "navic_gp_history.json").read_text())["satellites"]
 BOOM = "boom: this picture failed"
 
 

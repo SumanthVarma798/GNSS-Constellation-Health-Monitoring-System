@@ -18,8 +18,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from evidence.archive import (FetchFailed, log_run, note_answer, pacer, read_limits, record, waiting_until,
+from evidence.archive import (FetchFailed, log_run, note_answer, pacer, read_limits, record, thin, waiting_until,
                               write_limits)
+from evidence import x_reader
+from evidence.settings import ARCHIVE_THIN_GROUPS
 from evidence.sources import ARCHIVED_SOURCES, PROVISIONAL_GROUPS, archived_addresses
 
 RUN_LOG = "archive"  # runs/archive.csv in the archive folder
@@ -35,10 +37,11 @@ def main():
     parser.add_argument("--group", choices=sorted(ARCHIVED_SOURCES), help="fetch only this group (default: all)")
     args = parser.parse_args()
 
-    started, changed, failures, graded_failures, waiting = utc_now(), [], 0, 0, 0
+    started, changed, thinned, failures, graded_failures, waiting = utc_now(), [], [], 0, 0, 0
     addresses = archived_addresses(args.group)
     result = "stopped early"  # replaced below unless something unexpected ends the run
     paced_fetch, limits = pacer(), read_limits(args.archive)
+    x_addresses = set(ARCHIVED_SOURCES["x"])   # read through the X reader, not fetched from x.com
     if args.group:
         # A named group is either all graded or all provisional, so one flag covers every address in it.
         provisional_addresses, graded_group = set(), args.group not in PROVISIONAL_GROUPS
@@ -58,7 +61,7 @@ def main():
                 continue
             graded = graded_group if graded_group is not None else address not in provisional_addresses
             try:
-                reply = paced_fetch(address)
+                reply = x_reader.fetch(address) if address in x_addresses else paced_fetch(address)
             except FetchFailed as error:
                 note_answer(limits, address, "no answer", now)
                 failures += 1
@@ -76,12 +79,21 @@ def main():
             print(f"{'changed  ' if row else 'unchanged'}  {address}")
             if row:
                 changed.append(address)
+        now = datetime.datetime.now(datetime.timezone.utc)
+        try:
+            thinned = thin(args.archive, [address for group in ARCHIVE_THIN_GROUPS if args.group in (None, group)
+                                          for address in archived_addresses(group)], now)
+        except Exception as error:  # thinning must not fail a run
+            print(f"WARNING    thinning failed: {error}")
+        for row in thinned:
+            print(f"thinned    {row['sha256']}  {row['address']}")
         result = f"failed: {failures} of {len(addresses)} sources" if failures else "ok"
         result += f"; {waiting} waiting out a refusal" if waiting else ""
     finally:
         write_limits(args.archive, limits)
         log_run(args.archive, RUN_LOG, f"archive {args.group or 'all'}", started, utc_now(), result,
-                " ".join(changed) or "nothing")
+                " ".join(changed + ([f"thinned {len(thinned)} old {'copy' if len(thinned) == 1 else 'copies'}"]
+                                    if thinned else [])) or "nothing")
     attempted = len(addresses) - waiting
     if failures and (graded_failures or (attempted and failures == attempted)):
         sys.exit(f"{failures} of {len(addresses)} sources could not be fetched.")

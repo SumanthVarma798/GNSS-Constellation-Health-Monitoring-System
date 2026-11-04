@@ -17,6 +17,7 @@ from pathlib import Path
 
 import numpy as np
 
+from config.config import GEOSYNC_MEAN_MOTION
 from ui.figures.constellation_3d import BELT_RADIUS
 
 EARTH_KM = 6378.137
@@ -26,6 +27,8 @@ LAND_FILE = Path(__file__).with_name("land.json")
 GRID_DEG = 2                     # how finely land is told from sea
 LAND_STEP = 2                    # a land dot every LAND_STEP grid points: Earth is small on screen
 ORBIT_POINTS = 181
+IGSO_MIN_TILT_DEG = 10           # a geosynchronous orbit tilted this much or more is IGSO (analysis/bundled_run.py)
+EARTH_TURN_RAD_S = math.radians(360.98564736629) / 86400
 
 
 def gmst_deg(when):
@@ -74,6 +77,21 @@ def position_at(el, when):
     return _to_space(el, np.array([ecc]))[:, 0]
 
 
+def slot_path(el, slot_lon, turn_deg):
+    """The figure-eight an IGSO satellite traces over the ground each day, set on its slot, (3, ORBIT_POINTS).
+
+    The shape is the satellite's own orbit (tilt, eccentricity, perigee), so a QZSS one is lopsided as it should
+    be; it is moved east or west so its middle sits on the slot. A satellite in its slot rides this path."""
+    ecc_anomaly = np.linspace(0, 2 * math.pi, ORBIT_POINTS)
+    x, y, z = _to_space(el, ecc_anomaly)
+    seconds = (ecc_anomaly - el["e"] * np.sin(ecc_anomaly)) / (el["n_rev_day"] * 2 * math.pi / 86400)
+    lon = np.unwrap(np.arctan2(y, x) - EARTH_TURN_RAD_S * seconds)      # east of an arbitrary start, turning with Earth
+    weight = 1 - el["e"] * np.cos(ecc_anomaly)                          # equal steps in time, not in angle
+    lon += math.radians(slot_lon + turn_deg) - np.sum(lon * weight) / np.sum(weight)
+    flat = np.hypot(x, y)
+    return np.array([flat * np.cos(lon), flat * np.sin(lon), z])
+
+
 @cache
 def _land_mask():
     """1 where a grid point is on land, else 0, on a GRID_DEG (lat, lon) grid from -90, -180. Even-odd rule over all rings."""
@@ -111,7 +129,8 @@ def orbit_scene(rows, elements):
     {"land": [[x, y, z], ...], "belt": radius of the slots' ring, "turn": degrees Earth is turned by (an Earth-fixed
     longitude L lies at angle L + turn), "earth_km": Earth's radius in km, "satellites": one entry per row, in row
     order, with its "state", its orbit "loop" and position "at" (None without elements), and its slot "slot_at" on
-    the equator (None without one)}. rows come from slot_rows; elements from latest_elements.
+    the equator (None without one), and for an IGSO satellite its slot's daily figure-eight "slot_path" (else None)}.
+    rows come from slot_rows; elements from latest_elements.
     """
     known = [elements[r["name"]] for r in rows if r["name"] in elements]
     when = max(el["epoch"] for el in known) if known else J2000
@@ -122,7 +141,10 @@ def orbit_scene(rows, elements):
         if row["slot_lon"] is not None:
             angle = math.radians(row["slot_lon"] + turn)
             slot = [round(BELT_RADIUS * math.cos(angle), 3), round(BELT_RADIUS * math.sin(angle), 3), 0.0]
-        satellites.append({"state": row["state"], "slot_at": slot,
+        path = None
+        if el is not None and slot is not None and el["i"] >= IGSO_MIN_TILT_DEG and abs(el["n_rev_day"] - GEOSYNC_MEAN_MOTION) < 0.1:
+            path = np.round(slot_path(el, row["slot_lon"], turn), 3).T.tolist()
+        satellites.append({"state": row["state"], "slot_at": slot, "slot_path": path,
                            "loop": None if el is None else np.round(orbit_points(el).T, 3).tolist(),
                            "at": None if el is None else np.round(position_at(el, when), 3).tolist()})
     return {"land": _land_points(turn), "belt": BELT_RADIUS, "turn": round(turn, 3), "earth_km": EARTH_KM,

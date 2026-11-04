@@ -3,10 +3,10 @@ import json
 import math
 import re
 import xml.etree.ElementTree as ET
-from pathlib import Path
 
 import pytest
 
+from data.tle_cache import DATA_DIR
 from ui import palette
 from ui.figures.constellation_3d import BELT_RADIUS, LEFT_RING_EXTRA, constellation_3d, slot_legend
 from ui.figures.score_parts import score_parts
@@ -14,7 +14,7 @@ from ui.figures.slot_belt import slot_belt
 from ui.figures.slot_rows import empty_slots, last_known_position, slot_rows, unknown_slots
 
 NAN = float("nan")
-HISTORY = Path(__file__).resolve().parent.parent / "data" / "navic_gp_history.json"
+HISTORY = DATA_DIR / "navic_gp_history.json"
 
 
 def health(name, slot, actual, deviation, score):

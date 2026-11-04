@@ -52,3 +52,7 @@ htmlcov/
 .env.*
 !.env.example
 data/*.sqlite3*
+
+# Worker tools (cloudflare/*)
+node_modules/
+.wrangler/
