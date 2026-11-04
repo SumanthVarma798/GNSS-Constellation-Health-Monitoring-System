@@ -33,6 +33,7 @@ canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: 
 .ring { border: 1.5px solid var(--muted); }
 .dot.faint { opacity: .5; }
 .dash { flex: none; width: 16px; border-top: 1.5px dashed var(--muted); }
+.dots { flex: none; width: 16px; border-top: 2px dotted var(--muted); }
 .key { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 0 6px; color: var(--muted); font-size: 12px; }
 .key span { display: inline-flex; align-items: center; gap: 7px; }
 
@@ -190,7 +191,8 @@ function draw() {
   screen = [];
   for (const i of shown) {
     const s = SATS[i];
-    screen[i] = { loop: s.loop && s.loop.map(p => project(p, A)), at: s.at && project(s.at, A), slot: s.slot_at && project(s.slot_at, A) };
+    screen[i] = { loop: s.loop && s.loop.map(p => project(p, A)), at: s.at && project(s.at, A), slot: s.slot_at && project(s.slot_at, A),
+                  path: s.slot_path && s.slot_path.map(p => project(p, A)) };
   }
   const order = lit ? shown.filter(i => !lit.has(i)).concat(shown.filter(i => lit.has(i))) : shown;   // the picked on top
   for (const back of [true, false]) {
@@ -203,6 +205,9 @@ function draw() {
       const colour = SATS[i].tracked || on ? C[SATS[i].status] : C.fill, k = (!lit || on ? 1 : DIM) * (faint(i) ? OFF : 1);
       ctx.setLineDash(faint(i) ? [4, 4] : []);
       if (s.loop) line(s.loop, back, colour, on ? (focus ? 3 : 2.5) : 1.25, lit || !SATS[i].tracked ? k : rest * k);
+      if (s.path) {   // an IGSO slot is the figure-eight its satellite should ride each day, not one point
+        ctx.setLineDash([1, 4]); line(s.path, back, colour, on ? 2 : 1.5, lit || !SATS[i].tracked ? k : rest * k);
+      }
       ctx.setLineDash([]);
       ctx.globalAlpha = k * (back ? BACK : 1);
       if (s.slot && (s.slot.z < 0) === back) {
@@ -542,6 +547,7 @@ function buildKey() {
   }
   if (shown.some(faint)) add(el("span", "dash"), "not operational");
   if (shown.some(i => SATS[i].slot_at)) add(el("span", "ring"), "slot");
+  if (shown.some(i => SATS[i].slot_path)) add(el("span", "dots"), "IGSO slot's daily path");
 }
 
 /* ---------- in service, or all of the generation: switched here, no round trip ---------- */

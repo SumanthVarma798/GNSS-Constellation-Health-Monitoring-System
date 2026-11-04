@@ -1,0 +1,151 @@
+# Rebuilds the checked-claims source record once a week from the archived news items.
+# If the record or source grades changed, it proposes the change as a pull request for a person
+# to review on the Approvals page. It never writes to main. Every run adds one line to the archive's run log,
+# runs/source-record.csv, then tells Healthchecks.io how it went (check source-record), which emails when
+# a run fails or none arrives within its grace time.
+
+name: Source record
+
+on:
+  schedule:
+    # Sundays 02:00 UTC = 07:30 India time: one hour after that day's registry update.
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: write        # to push the proposal branch
+  pull-requests: write   # to open the pull request
+  actions: write         # to start the Tests job on the proposal branch
+
+jobs:
+  propose:
+    # Only in the private working copy. Anyone who copies this file elsewhere must opt in.
+    if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Note the start
+        id: start
+        run: echo "at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+      - name: Check out the archive
+        uses: actions/checkout@v4
+        with:
+          repository: SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive
+          ssh-key: ${{ secrets.ARCHIVE_DEPLOY_KEY }}
+          path: archive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'  # matches runtime.txt
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements-dev.txt
+
+      - name: Read the last proposal's decisions
+        id: open_pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The latest proposal, open or closed: its decision comments say which findings were rejected.
+          number=$(gh pr list --head source-record --state all --limit 1 --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            echo "number=$number" >> "$GITHUB_OUTPUT"
+            # One page of 100: a weekly proposal never gathers more decision comments than that.
+            gh api "repos/${{ github.repository }}/issues/$number/comments?per_page=100" > "$RUNNER_TEMP/source-record-comments.json"
+            gh pr view "$number" --json body --jq '.body' > "$RUNNER_TEMP/source-record-body.md"
+            echo "comments=$RUNNER_TEMP/source-record-comments.json" >> "$GITHUB_OUTPUT"
+          fi
+          # Rejections the last proposal carried on its own branch, which is rebuilt from main each week.
+          if git fetch --quiet origin source-record 2>/dev/null \
+             && git show FETCH_HEAD:evidence/source_record_rejected.csv > "$RUNNER_TEMP/rejected-on-branch.csv" 2>/dev/null; then
+            echo "carried=$RUNNER_TEMP/rejected-on-branch.csv" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build the source record and describe what changed
+        id: build
+        run: |
+          extra=()
+          if [ -n "${{ steps.open_pr.outputs.comments }}" ]; then
+            extra+=(--rejected-comments "${{ steps.open_pr.outputs.comments }}" --open-body "$RUNNER_TEMP/source-record-body.md")
+          fi
+          if [ -n "${{ steps.open_pr.outputs.carried }}" ]; then
+            extra+=(--carried-rejected "${{ steps.open_pr.outputs.carried }}")
+          fi
+          python scripts/build_source_record.py --archive archive --report "$RUNNER_TEMP/source-record.md" "${extra[@]}"
+
+      - name: Did anything change?
+        id: tables
+        run: |
+          if git diff --quiet -- evidence/source_record.csv evidence/source_grades.csv evidence/source_record_rejected.csv; then
+            echo "Nothing changed in the checked-claims record. No proposal needed."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run the tests on the new source record
+        id: tests
+        if: steps.tables.outputs.changed == 'true'
+        run: python -m pytest -q
+
+      - name: Open or update the proposal
+        id: propose
+        if: steps.tables.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C source-record
+          git add evidence/source_record.csv evidence/source_grades.csv evidence/source_record_rejected.csv
+          git commit -m "Source grades from the record of checked claims"
+          git push --force origin source-record
+          if [ -n "$(gh pr list --head source-record --state open --json number --jq '.[].number')" ]; then
+            gh pr edit source-record --add-label "decision: source grade" --body-file "$RUNNER_TEMP/source-record.md"
+          else
+            gh pr create --base main --head source-record \
+              --title "Source grades from the record of checked claims" --label "decision: source grade" --body-file "$RUNNER_TEMP/source-record.md"
+          fi
+          # A pull request opened with this job's token starts no other job, so start the Tests job on its branch:
+          # its result shows on the pull request, and the admin page merges only once it has passed.
+          gh workflow run tests.yml --ref source-record
+
+      - name: Add this run's line to the run log
+        if: always()
+        working-directory: archive
+        env:
+          STARTED: ${{ steps.start.outputs.at }}
+          RESULT: ${{ job.status }}
+          CHANGED: >-
+            ${{ job.status != 'success' && (steps.build.outcome == 'failure' && 'failed at: building the source record'
+            || steps.tests.outcome == 'failure' && 'failed at: the tests on the source record'
+            || steps.propose.outcome == 'failure' && 'failed at: opening the proposal'
+            || steps.build.outcome == 'skipped' && 'failed at: checking out or installing'
+            || 'failed at a step not named here: see the run on GitHub')
+            || steps.propose.outcome == 'success' && 'record changed, proposal opened or updated'
+            || steps.tables.outputs.changed == 'true' && 'record changed, no proposal made'
+            || 'nothing' }}
+        run: |
+          python ../scripts/log_run.py --archive . --log source-record --job "source record" \
+            --started "$STARTED" --result "$RESULT" --changed "$CHANGED"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add runs/source-record.csv
+          git commit --quiet -m "Source record run: $RESULT"
+          # The archive job may have saved meanwhile; it never touches this file.
+          git push --quiet || { git pull --rebase --quiet && git push --quiet; }
+
+      - name: Tell Healthchecks.io how the run went
+        if: always()
+        env:
+          KEY: ${{ secrets.HEALTHCHECKS_PING_KEY }}  # set by Sumanth; nothing is sent until it exists
+          OUTCOME: ${{ job.status == 'success' && '0' || '1' }}  # 0 = it worked, 1 = it failed
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "Not reported to Healthchecks.io: no key."
+            exit 0
+          fi
+          KEY=$(printf %s "$KEY" | tr -d '[:space:]')  # a pasted key can carry a newline
+          tail -n 1 archive/runs/source-record.csv 2>/dev/null \
+            | curl -fsS -m 10 --retry 3 --data-binary @- "https://hc-ping.com/$KEY/source-record/$OUTCOME" \
+            || echo "::warning::Healthchecks.io did not take this report. A 404 means the ping key is wrong or there is no check with the slug source-record. It will report the run as late."

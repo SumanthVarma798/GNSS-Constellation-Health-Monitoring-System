@@ -1,18 +1,16 @@
 """The master map: each answer built from small hand-made rows, and the facts it must
 reproduce from the committed tables and the bundled orbit data."""
 import json
-from pathlib import Path
 
 import pytest
 
+from data.tle_cache import DATA_DIR
 from evidence.master_map import (agreement, display_name, holders_of, identifiers, orbit_feed_checked, orbit_feed_names,
                                  signal_ids_of, summary)
 from evidence.registry_tables import read_table
-from evidence.settings import (MAP_ACCENT, MAP_IDLE, MAP_OK, MAP_WARN, NOT_RECORDED, REGISTRY_CATALOGUE_FILE,
+from evidence.settings import (MAP_ACCENT, MAP_IDLE, MAP_OK, MAP_WARN, NOT_RECORDED, ORBIT_FEED_FILES, REGISTRY_CATALOGUE_FILE,
                                REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_SATELLITES_FILE,
                                REGISTRY_SIGNAL_IDS_FILE)
-
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 
 def satellite(svn, **given):
@@ -373,12 +371,29 @@ def real():
 
 def test_real_orbit_feed_days_are_the_bundled_files_fetch_days(real):
     assert set(real["checked"]) == set(real["feeds"])
-    assert set(real["checked"].values()) == {"2026-10-04"}
+    # The weekly orbit job rewrites the bundled files, so the expected days come from the files themselves.
+    fetched = {json.loads(path.read_text(encoding="utf-8"))["timestamp"][:10] for path in DATA_DIR.glob(ORBIT_FEED_FILES)}
+    assert set(real["checked"].values()) == fetched
 
 
 def test_real_summary(real):
-    assert summary(real["satellites"], real["catalogue"], real["signal_ids"]) == {
-        "spacecraft": 294, "systems": 6, "confirmed": 292, "signal_ids": 170, "signal_ids_reused": 90}
+    catalogue = {row["svn"]: row for row in real["catalogue"]}
+    holders = {}
+    for row in real["signal_ids"]:
+        holders.setdefault(row["signal_id"], set()).add(row["svn"])
+    expected = {
+        "spacecraft": len(real["satellites"]),
+        "systems": len({row["constellation"] for row in real["satellites"]}),
+        # "confirmed" in summary means the two sources agree on the launch designator.
+        "confirmed": sum(
+            bool(catalogue.get(row["svn"], {}).get("cospar_id"))
+            and catalogue[row["svn"]]["cospar_id"] == row["cospar_id"]
+            for row in real["satellites"]
+        ),
+        "signal_ids": len(holders),
+        "signal_ids_reused": sum(len(svns) > 1 for svns in holders.values()),
+    }
+    assert summary(real["satellites"], real["catalogue"], real["signal_ids"]) == expected
 
 
 def test_real_signal_ids_of_c217(real):

@@ -5,6 +5,7 @@ Each table is in a section (ui/reveal.py): the count per system open, the rest c
 import streamlit as st
 
 from evidence.library_settings import LIBRARY_COUNTS_FILE, LIBRARY_FIGURES_FILE, LIBRARY_MATCHING_FILE
+from evidence.settings import REGISTRY_SATELLITES_FILE
 from evidence.registry_tables import read_table
 from ui import library, reveal, surfaces
 
@@ -31,3 +32,6 @@ reveal.section("library_money", "Money stated by public sources",
                f"{reveal.count(stated, 'figure')} stated · {len(figures) - stated} not known", library.costs(figures))
 reveal.section("library_notes", "Notes", "what each count means, and where it comes from", library.notes(counts))
 surfaces.show(surfaces.notice(library.matching(matched), "idle"))
+lag = library.registry_lag_note(matched, read_table(REGISTRY_SATELLITES_FILE))
+if lag:
+    surfaces.show(surfaces.notice(lag, "warn"))

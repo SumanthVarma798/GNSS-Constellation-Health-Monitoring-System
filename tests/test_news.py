@@ -3,7 +3,7 @@
 Every feed here is a saved sample in tests/samples/news; no test touches the network.
 """
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -13,7 +13,8 @@ import time_machine
 
 from evidence import archive, news
 from evidence.archive import FetchFailed, pacer, record
-from evidence.news import collected_items, items_from, labelling_sample, parse_feed, when
+from evidence.news import (category_of, claim_items, collected_items, items_from, labelling_sample, latest_news, parse_feed,
+                           summary_from, when)
 from evidence.settings import BACKOFF_FIRST, BACKOFF_LONGEST, DEFAULT_MIN_GAP, MIN_GAP_BETWEEN_DOWNLOADS
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
@@ -39,8 +40,10 @@ def test_a_direct_feed_gives_one_record_per_titled_item_owned_by_its_own_source(
     records = items_from(DIRECT, sample("direct.rss"), FETCHED)
 
     assert records[0] == {"source_id": "press.example", "address": "https://press.example/2026/10/gps-iii-sv09/",
-                          "title": "GPS III SV09 joins the constellation", "published_at": "2026-10-19T10:00:00Z",
-                          "fetched_at": FETCHED, "via": DIRECT["address"]}
+                          "title": "GPS III SV09 joins the constellation",
+                          "summary": "<p>The ninth GPS III satellite was set healthy.</p>", "outlet": "press.example",
+                          "published_at": "2026-10-19T10:00:00Z", "fetched_at": FETCHED, "via": DIRECT["address"],
+                          "social": False, "kind": "press feed"}
     assert records[1]["title"] == "Galileo notice to users issued"   # spaces and line breaks tidied
     assert records[1]["published_at"] == "2026-10-18T08:00:00Z"      # from <dc:date> when there is no <pubDate>
     assert [record["published_at"] for record in records][2] == ""   # an unreadable date is left empty, not guessed
@@ -60,9 +63,13 @@ def test_a_social_post_counts_only_with_a_link_off_the_platform_and_belongs_to_t
     records = items_from(SOCIAL, sample("reddit.atom"), FETCHED)
 
     # The second post links only to Reddit itself and its own image host, so it is not collected.
-    assert records == [{"source_id": "isro.gov.in", "address": "https://www.isro.gov.in/NVS03.html?a=1&b=2",
-                        "title": "NVS-03 launch date announced", "published_at": "2026-10-16T13:16:58Z",
-                        "fetched_at": FETCHED, "via": SOCIAL["address"]}]
+    assert records[0]["source_id"] == "isro.gov.in"
+    assert records[0]["address"] == "https://www.isro.gov.in/NVS03.html?a=1&b=2"
+    assert records[0]["title"] == "NVS-03 launch date announced"
+    assert records[0]["outlet"] == ""
+    assert records[0]["summary"] == ""
+    assert records[0]["social"] is True
+    assert records[0]["fetched_at"] == FETCHED and records[0]["via"] == SOCIAL["address"]
 
 
 @pytest.mark.parametrize("body", [b"<!DOCTYPE html><html><body><p>News</p></body></html>",
@@ -315,3 +322,247 @@ def test_the_report_gives_each_feeds_changes_per_run_and_share_of_items_naming_a
                                        "copies_per_run": "0.33", "items": 3, "items_naming_a_system": 2,
                                        "share_naming_a_system": "0.67"}
     assert rows[SOCIAL["address"]]["runs"] == 1 and rows[SOCIAL["address"]]["share_naming_a_system"] == "1.00"   # "NVS-03" names NavIC
+
+
+# ------------------------------------------------------------------ Latest-news JSON for the dashboard
+
+def test_summary_from_cleans_html_and_drops_a_summary_that_only_repeats_the_title():
+    text = "<p>GPS launch &amp; status</p>"
+    assert summary_from(text, "GPS launch & status", "Example Daily") == ""
+
+    long = "<div>" + ("word " * 90) + "</div>"
+    words = summary_from(long, "", "")
+    assert "<" not in words and len(words) <= 300 and words.endswith("…")
+
+
+@pytest.mark.parametrize("title, summary, expected", [
+    ("Japan launches a new QZSS satellite", "", "launch"),
+    ("GPS outage reported by users", "", "satellite status and outages"),
+    ("Galileo open service accuracy update", "", "signal and service"),
+    ("NavIC contract awarded by the ministry", "", "programme and policy"),
+    ("Unrelated headline", "A plain note with no rule words", "other"),
+])
+def test_category_of_uses_the_settings_rules_in_order(title, summary, expected):
+    assert category_of(title, summary) == expected
+
+
+def test_category_of_takes_the_first_matching_category():
+    # "launch" is checked before "satellite status and outages".
+    assert category_of("Launch failure update", "") == "launch"
+
+
+def test_category_of_checks_the_headline_across_all_categories_before_the_summary():
+    assert category_of("NavIC policy plan", "Launch date announced") == "programme and policy"
+
+
+def test_claim_items_keep_old_items_and_every_named_constellation_without_dashboard_caps(monkeypatch):
+    monkeypatch.setattr(news, "NEWS_ITEMS_PER_SYSTEM", 0)
+    item = {"source_id": "alpha.example", "address": "https://alpha.example/old-story",
+            "title": "BeiDou and GPS launch update", "summary": "", "outlet": "Alpha",
+            "published_at": "2024-01-01T00:00:00Z", "fetched_at": "2026-10-20T12:00:00Z",
+            "via": "https://alpha.example/feed", "social": False}
+
+    claims = claim_items([item])
+
+    assert claims == [{"source_id": "alpha.example", "address": "https://alpha.example/old-story",
+                       "published_at": "2024-01-01T00:00:00Z", "title": "BeiDou and GPS launch update",
+                       "category": "launch", "constellations": ["GPS", "BeiDou-3"]}]
+
+
+def test_latest_news_keeps_items_for_constellations_that_still_have_room(monkeypatch):
+    monkeypatch.setattr(news, "NEWS_ITEMS_PER_SYSTEM", 1)
+    monkeypatch.setattr(news, "read_source_grades", lambda: [{"source_id": "alpha.example", "name": "Alpha",
+                                                              "reliability": "C", "graded_by": "Team",
+                                                              "graded_on": "2026-10-20", "reason": "Specialist source"}])
+    monkeypatch.setattr(news, "candidate_rows", lambda: [
+        {"source_id": "beta.example", "name": "Beta Feed", "kind": "press feed", "address": "https://beta.example/feed",
+         "check_status": "403", "proposed_grade": "D", "grade_reason": "General news", "note": "watching"},
+        {"source_id": "beta.example", "name": "Later duplicate row", "kind": "ignored", "address": "https://beta.example/other",
+         "check_status": "200", "proposed_grade": "A", "grade_reason": "ignored", "note": "ignored"},
+    ])
+    items = [
+        {"source_id": "alpha.example", "address": "https://alpha.example/gps-first", "title": "GPS launch notice",
+         "summary": "first GPS item", "outlet": "Alpha", "published_at": "2026-10-20T10:00:00Z",
+         "fetched_at": "2026-10-20T10:00:00Z", "via": "https://alpha.example/feed", "social": False},
+        {"source_id": "alpha.example", "address": "https://alpha.example/michibiki",
+         "title": "Japan's GPS satellite Michibiki put into orbit", "summary": "A full mission report",
+         "outlet": "Alpha", "published_at": "2026-10-20T09:00:00Z", "fetched_at": "2026-10-20T09:10:00Z",
+         "via": "https://alpha.example/feed", "social": False},
+        {"source_id": "beta.example", "address": "https://beta.example/2", "title": "BeiDou service update",
+         "summary": "Signal quality update", "outlet": "", "published_at": "", "fetched_at": "2026-10-20T12:00:00Z",
+         "via": "https://beta.example/feed", "social": False},
+    ]
+
+    latest = latest_news(items)
+    kept = latest["items"]
+
+    assert latest["generated_at"] == "2026-10-20T12:00:00Z"
+    assert [row["title"] for row in kept] == [
+        "BeiDou service update",
+        "GPS launch notice",
+        "Japan's GPS satellite Michibiki put into orbit",
+    ]
+    assert kept[0]["constellations"] == ["BeiDou-3"] and kept[0]["grade_standing"] == "provisional"
+    assert kept[1]["constellations"] == ["GPS"]
+    assert kept[2]["constellations"] == ["QZSS"] and kept[2]["category"] == "launch"
+    assert kept[2]["grade"] == "C" and kept[2]["grade_standing"] == "confirmed"
+    assert all(row["address"].startswith("http") for row in kept)
+    assert latest["sources"]["alpha.example"]["graded_by"] == "Team"
+    assert latest["sources"]["beta.example"]["note"] == "watching"
+    assert latest["sources"]["beta.example"]["kind"] == "press feed"
+
+
+def test_source_grade_lookup_order_is_confirmed_then_candidate_then_record_then_not_graded():
+    today = date(2026, 10, 20)
+    confirmed = {"alpha.example": {"reliability": "B", "reason": "confirmed", "graded_by": "Team"}}
+    provisional = {"beta.example": {"proposed_grade": "C", "grade_reason": "candidate"}}
+    record_rows = [{"source_id": "gamma.example", "address": "https://gamma.example/one", "published_at": "2026-10-20",
+                    "claim": "status", "constellation": "GPS", "satellite": "", "checked_on": "2026-10-20",
+                    "result": "held", "weight": "", "weight_reason": "", "evidence": "", "evidence_link": ""},
+                   {"source_id": "gamma.example", "address": "https://gamma.example/two", "published_at": "2026-10-19",
+                    "claim": "status", "constellation": "GPS", "satellite": "", "checked_on": "2026-10-20",
+                    "result": "held", "weight": "", "weight_reason": "", "evidence": "", "evidence_link": ""},
+                   {"source_id": "gamma.example", "address": "https://gamma.example/three", "published_at": "2026-10-18",
+                    "claim": "status", "constellation": "GPS", "satellite": "", "checked_on": "2026-10-20",
+                    "result": "held", "weight": "", "weight_reason": "", "evidence": "", "evidence_link": ""}]
+
+    assert news._source_grade("alpha.example", confirmed, provisional, record_rows, today) == (
+        "B", "confirmed", "confirmed", "Team", "")
+    assert news._source_grade("beta.example", confirmed, provisional, record_rows, today) == (
+        "C", "provisional", "candidate", "", "")
+    assert news._source_grade("gamma.example", confirmed, provisional, record_rows, today) == (
+        "D", "provisional", "From the checked-claims record, waiting for approval.", "", "record")
+    assert news._source_grade("none.example", confirmed, provisional, [], today) == ("", "not graded", "", "", "")
+
+
+def test_latest_news_uses_record_grade_when_no_other_grade_and_adds_record_line(monkeypatch):
+    monkeypatch.setattr(news, "read_source_grades", lambda: [])
+    monkeypatch.setattr(news, "candidate_rows", lambda: [])
+    monkeypatch.setattr(news.source_record, "read_record", lambda: [
+        {"source_id": "record.example", "address": "https://record.example/one", "published_at": "2026-10-20",
+         "claim": "status", "constellation": "GPS", "satellite": "", "checked_on": "2026-10-20", "result": "held",
+         "weight": "", "weight_reason": "", "evidence": "", "evidence_link": ""},
+        {"source_id": "record.example", "address": "https://record.example/two", "published_at": "2026-10-19",
+         "claim": "status", "constellation": "GPS", "satellite": "", "checked_on": "2026-10-20", "result": "held",
+         "weight": "", "weight_reason": "", "evidence": "", "evidence_link": ""},
+        {"source_id": "record.example", "address": "https://record.example/three", "published_at": "2026-10-18",
+         "claim": "status", "constellation": "GPS", "satellite": "", "checked_on": "2026-10-20", "result": "held",
+         "weight": "", "weight_reason": "", "evidence": "", "evidence_link": ""},
+    ])
+    items = [{
+        "source_id": "record.example",
+        "address": "https://record.example/story",
+        "title": "GPS service note",
+        "summary": "A service update",
+        "outlet": "Record source",
+        "published_at": "2026-10-20T10:00:00Z",
+        "fetched_at": "2026-10-20T10:10:00Z",
+        "via": "https://record.example/feed",
+        "social": False,
+    }]
+
+    latest = news.latest_news(items)
+
+    assert latest["items"][0]["grade"] == "D"   # three held claims: D, never E on the way up
+    assert latest["items"][0]["grade_standing"] == "provisional"
+    assert latest["items"][0]["grade_from"] == "record"
+    assert latest["sources"]["record.example"]["record_line"] == "D · 3 of 3 checked claims held · from the record, waiting for approval"
+
+
+def test_latest_news_deduplicates_titles_and_prefers_non_social(monkeypatch):
+    monkeypatch.setattr(news, "NEWS_ITEMS_PER_SYSTEM", 4)
+    monkeypatch.setattr(news, "read_source_grades", lambda: [])
+    monkeypatch.setattr(news, "candidate_rows", lambda: [])
+
+    items = [
+        {"source_id": "social.example", "address": "https://social.example/1", "title": "GPS outage   update",
+         "summary": "", "outlet": "", "published_at": "2026-10-20T12:00:00Z", "fetched_at": "2026-10-20T12:00:00Z",
+         "via": "https://reddit.com/post/1", "social": True},
+        {"source_id": "press.example", "address": "https://press.example/1", "title": "gps outage update",
+         "summary": "Details from the operator", "outlet": "Press", "published_at": "2026-10-20T11:59:00Z",
+         "fetched_at": "2026-10-20T11:59:00Z", "via": "https://press.example/feed", "social": False},
+        {"source_id": "other.example", "address": "https://other.example/1", "title": "QZSS service notice",
+         "summary": "fresh", "outlet": "Other", "published_at": "2026-10-20T11:00:00Z",
+         "fetched_at": "2026-10-20T11:00:00Z", "via": "https://other.example/feed", "social": False},
+    ]
+
+    latest = latest_news(items)
+    kept = latest["items"]
+
+    assert [row["title"] for row in kept] == ["gps outage update", "QZSS service notice"]
+    assert kept[0]["source_id"] == "press.example"
+
+
+def test_latest_news_leaves_out_items_older_than_the_max_age_and_keeps_missing_published_dates(monkeypatch):
+    monkeypatch.setattr(news, "NEWS_ITEMS_PER_SYSTEM", 5)
+    monkeypatch.setattr(news, "NEWS_MAX_AGE_DAYS", 365)
+    monkeypatch.setattr(news, "read_source_grades", lambda: [])
+    monkeypatch.setattr(news, "candidate_rows", lambda: [])
+
+    items = [
+        {"source_id": "old.example", "address": "https://old.example/1", "title": "GPS archived notice",
+         "summary": "", "outlet": "", "published_at": "2025-09-01T00:00:00Z",
+         "fetched_at": "2026-10-20T12:00:00Z", "via": "https://old.example/feed", "social": False},
+        {"source_id": "fresh.example", "address": "https://fresh.example/1", "title": "GPS recent notice",
+         "summary": "", "outlet": "", "published_at": "2026-10-10T00:00:00Z",
+         "fetched_at": "2026-10-20T12:00:00Z", "via": "https://fresh.example/feed", "social": False},
+        {"source_id": "nodate.example", "address": "https://nodate.example/1", "title": "GPS date not listed",
+         "summary": "", "outlet": "", "published_at": "",
+         "fetched_at": "2026-10-20T11:00:00Z", "via": "https://nodate.example/feed", "social": False},
+    ]
+
+    latest = latest_news(items)
+    kept_titles = [row["title"] for row in latest["items"]]
+    assert "GPS archived notice" not in kept_titles
+    assert set(kept_titles) == {"GPS recent notice", "GPS date not listed"}
+
+
+def test_latest_news_uses_summary_matching_for_substack_but_not_for_google_news_kind(monkeypatch):
+    monkeypatch.setattr(news, "NEWS_ITEMS_PER_SYSTEM", 5)
+    monkeypatch.setattr(news, "read_source_grades", lambda: [])
+    monkeypatch.setattr(news, "candidate_rows", lambda: [])
+
+    items = [
+        {"source_id": "substack.example", "address": "https://substack.example/1", "title": "Weekly roundup",
+         "summary": "BeiDou service and launch updates this week", "outlet": "Substack",
+         "published_at": "2026-10-20T10:00:00Z", "fetched_at": "2026-10-20T10:05:00Z",
+         "via": "https://substack.example/feed", "social": False, "kind": "Substack feed"},
+        {"source_id": "googlenews.example", "address": "https://googlenews.example/1", "title": "Daily briefing",
+         "summary": "GLONASS signal update covered here", "outlet": "Google News",
+         "published_at": "2026-10-20T09:00:00Z", "fetched_at": "2026-10-20T09:05:00Z",
+         "via": "https://news.google.com/rss/search?q=glonass", "social": False, "kind": "discovery feed"},
+    ]
+
+    latest = latest_news(items)
+    assert [row["title"] for row in latest["items"]] == ["Weekly roundup"]
+    assert latest["items"][0]["constellations"] == ["BeiDou-3"]
+
+
+def test_an_old_copy_never_takes_a_recent_social_items_place(monkeypatch):
+    monkeypatch.setattr(news, "NEWS_ITEMS_PER_SYSTEM", 5)
+    monkeypatch.setattr(news, "read_source_grades", lambda: [])
+    monkeypatch.setattr(news, "candidate_rows", lambda: [])
+
+    items = [
+        {"source_id": "social.example", "address": "https://social.example/1", "title": "GPS outage update",
+         "summary": "", "outlet": "", "published_at": "2026-10-20T12:00:00Z",
+         "fetched_at": "2026-10-20T12:00:00Z", "via": "https://reddit.com/r/gnss/.rss", "social": True},
+        {"source_id": "press.example", "address": "https://press.example/1", "title": "GPS outage update",
+         "summary": "", "outlet": "", "published_at": "2025-09-01T00:00:00Z",
+         "fetched_at": "2025-09-01T00:00:00Z", "via": "https://press.example/feed", "social": False},
+    ]
+
+    assert [row["address"] for row in latest_news(items)["items"]] == ["https://social.example/1"]
+
+
+def test_newsletter_text_is_matched_on_its_words_not_its_markup(monkeypatch):
+    monkeypatch.setattr(news, "NEWS_ITEMS_PER_SYSTEM", 5)
+    monkeypatch.setattr(news, "read_source_grades", lambda: [])
+    monkeypatch.setattr(news, "candidate_rows", lambda: [])
+
+    item = {"source_id": "substack.example", "address": "https://substack.example/2", "title": "Weekly roundup",
+            "summary": '&lt;img alt="GPS"&gt; Rocket news only', "outlet": "Substack",
+            "published_at": "2026-10-20T10:00:00Z", "fetched_at": "2026-10-20T10:05:00Z",
+            "via": "https://substack.example/feed", "social": False, "kind": "Substack feed"}
+
+    assert latest_news([item])["items"] == []

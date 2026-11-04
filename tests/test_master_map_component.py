@@ -4,6 +4,7 @@ import re
 
 import pytest
 
+from evidence.catalogue_check import disagreements
 from evidence.registry_tables import read_table
 from evidence.settings import (COUNTRY_NAMES, COUNTRY_NOT_GIVEN, MAP_WARN, REGISTRY_CATALOGUE_FILE,
                                REGISTRY_SATELLITES_FILE, SCHEME_ORBIT_FEED)
@@ -30,7 +31,7 @@ def records(real):
 
 
 def test_one_record_per_spacecraft(records, real):
-    assert len(records) == len(real["satellites"]) == 294
+    assert len(records) == len(real["satellites"])
     assert [r["svn"] for r in records] == [row["svn"] for row in real["satellites"]]
 
 
@@ -38,7 +39,8 @@ def test_c217_carries_the_out_of_date_orbit_feed_name(records):
     c217 = next(r for r in records if r["svn"] == "C217")
     feed = [i for i in c217["identifiers"] if i["scheme"] == SCHEME_ORBIT_FEED]
     assert len(feed) == 1 and feed[0]["status"] == MAP_WARN
-    assert (feed[0]["issuer"], feed[0]["checked"]) == ("CelesTrak", "2026-10-04")
+    fetched = json.loads((DATA_DIR / "beidou3_tles.json").read_text(encoding="utf-8"))["timestamp"][:10]
+    assert (feed[0]["issuer"], feed[0]["checked"]) == ("CelesTrak", fetched)
     assert len(c217["periods"]) >= 2
 
 
@@ -51,15 +53,21 @@ def test_a_record_carries_what_the_far_hover_card_says(records):
 def test_countries_are_named_in_full(records, real):
     states = {row["svn"]: row["state"] for row in real["catalogue"]}
     for record in records:
-        assert record["country"] == COUNTRY_NAMES.get(states[record["svn"]], COUNTRY_NOT_GIVEN)
+        assert record["country"] == COUNTRY_NAMES.get(states.get(record["svn"], ""), COUNTRY_NOT_GIVEN)
+    # The catalogue can lag the registry; those satellites are shown as "not given".
+    assert {record["country"] for record in records if record["svn"] not in states} <= {COUNTRY_NOT_GIVEN}
     assert {r["country"] for r in records} >= {"India", "China", "United States", "Russia"}
 
 
-def test_a_card_says_why_the_two_sources_disagree_and_is_silent_otherwise(records):
+def test_a_card_says_why_the_two_sources_disagree_and_is_silent_otherwise(records, real):
     said = {r["svn"]: r["disagreement"] for r in records}
     assert said["I004"] and said["I011"]        # the catalogue and the IGS file differ on whether they are in service
     assert said["J008"] == "" and said["C217"] == ""   # one source only is not a disagreement
-    assert sum(bool(text) for text in said.values()) == 30
+    # The cards and the catalogue check agree on which satellites disagree (one card per satellite, however many lines).
+    found = disagreements(real["satellites"], real["catalogue"])
+    named = {line.split()[0] for heading, lines in found.items() if heading != "In the registry, not in the catalogue yet"
+             for line in lines}
+    assert {svn for svn, text in said.items() if text} == named
 
 
 def test_every_constellation_on_the_map_has_a_colour(records):
