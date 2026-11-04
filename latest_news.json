@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-04T20:05:45Z",
+ "generated_at": "2026-11-04T20:08:27Z",
  "items": [
   {
    "address": "https://news.google.com/rss/articles/CBMinAFBVV95cUxOMzJ3aTRjamMyMHpFRjg2YTVsbVd2ZWFYb2RVaUVwUURaTE9peGp1RlVUNEN1X0U1QlVrbUxkQ3VXSVFUNWc5aDdPZzl4RDRXWTVMaTE3RkEyZG1BSHlTOVZ5VHc0UkpvajduVlNMem0zMm1YOXpmblNjZDRZcW5qd0xLS2gzRk1aTnI2SWZzdmtEd2kxcUNiX1ZETTU?oc=5",
@@ -66,6 +66,38 @@
    "via": "https://www.space.com/feeds/all"
   },
   {
+   "address": "https://x.com/ispaceflight_in/status/2117985571905978450",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-04T20:08:27Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "indianspaceflight.in (@iSpaceFlight_in)",
+   "published_at": "2026-11-04T14:21:25Z",
+   "source_id": "x.com/iSpaceFlight_in",
+   "summary": "@reach_sreeni Agreed, a mature navigation constellation must have in-orbit spares. For a 7-satellite regional system like NavIC, two are enough: one for the GEO slots and one for the inclined GSO slots, since a spare can’t easily switch orbit types. Three suits larger global systems.",
+   "title": "@reach_sreeni Agreed, a mature navigation constellation must have in-orbit spares. For a 7-satellite regional system…",
+   "via": "https://x.com/iSpaceFlight_in"
+  },
+  {
+   "address": "https://x.com/ispaceflight_in/status/2117983088135594082",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-04T20:08:27Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "indianspaceflight.in (@iSpaceFlight_in)",
+   "published_at": "2026-11-04T14:11:33Z",
+   "source_id": "x.com/iSpaceFlight_in",
+   "summary": "NVS-03 is now in Geosynchronous Orbit! @isro completed 4 orbit raising manoeuvres with a cumulative LAM burn of 6,164 s. Orbit: 35,765 × 36,196 km Inclination: 29.98° Health: Normal ✅ #NVS03 #NavIC #ISRO #GSLVF18 #IndianSpaceflight https://t.co/ZcOiRIRbwv",
+   "title": "NVS-03 is now in Geosynchronous Orbit! @isro completed 4 orbit raising manoeuvres with a cumulative LAM burn of 6,164…",
+   "via": "https://x.com/iSpaceFlight_in"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxNRHVSeHNrZEF2T0h5V2t3YldjdHI5bWt0a1BOZzhjOGxJVmotME9BNVpSWDBGeTdVUkpKSjFTNHFlWGItNXFsbmJwV0c2bWtIMXVSZlJhOVd2UDBvc0t6MTZPRlpla3AtSVdaZXJLdWI4WF9MMDhxOXlsVy1FQmthWnpoNlNXYjB6dU4xQjNsbzVWeTdGYWphblZJNjFGTFhXbW9FNVNjYi1oellBZzdnQXNpRDNRVnlOcTlLQWxyNnZEVFhhNmg2eU9pZEhFOWFT0gHWAUFVX3lxTE9Dc3IyZlJXRUxoOFFCcXpDMGVMcjRPelRYU3FSRkdIdGlTYUNidUZOOEhVMFcyRU1hUEZQSzdZbm5VU3k4bVRDaEJnRWc0UWJESThndER4UVhUSEV0X0xUeFJ2am5ybUdmWWdOeFQ2SEplYThmWGliQThua0F6X0RjaFFYN3B5dFU4cG5qZU5nc29Idm5lRGdMMUNHMmFHazdGU3N3Vl9kVTFtNmNuMkJneFZMNFlEVUFPdkMzQ0tmT2l3a1M3UHFKVV9SdjRibmRyOU9Cb3c?oc=5",
    "category": "other",
    "constellations": [
@@ -81,6 +113,38 @@
    "summary": "",
    "title": "India's NavIC is back: NVS-03 reaches its destination, desi GPS now operational",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://x.com/ispaceflight_in/status/2117883989105222122",
+   "category": "signal and service",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-04T20:08:27Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "indianspaceflight.in (@iSpaceFlight_in)",
+   "published_at": "2026-11-04T07:37:46Z",
+   "source_id": "x.com/iSpaceFlight_in",
+   "summary": "🚨 NVS-03 has been successfully placed into its intended GSO! ✅️ The third and final orbit raising maneuver of NVS-03 was successfully completed! It has been placed into a 35842.6 × 34594.9 km Geosynchronous Orbit. Now NavIC is back online and is ready to provide PNT service again.",
+   "title": "🚨 NVS-03 has been successfully placed into its intended GSO! ✅️ The third and final orbit raising maneuver of NVS-03…",
+   "via": "https://x.com/iSpaceFlight_in"
+  },
+  {
+   "address": "https://x.com/ispaceflight_in/status/2117845008141484197",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-04T20:08:27Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "indianspaceflight.in (@iSpaceFlight_in)",
+   "published_at": "2026-11-04T05:02:52Z",
+   "source_id": "x.com/iSpaceFlight_in",
+   "summary": "Since March 2026, NavIC has had only 3 working navigation satellites, one short of the 4 needed for a position fix. Once NVS-03 is operational, NavIC's base layer is back to 4, bringing back standalone 3D positioning over India. Since the launch, interest in NavIC has shot up. People want to know…",
+   "title": "Since March 2026, NavIC has had only 3 working navigation satellites, one short of the 4 needed for a position fix.…",
+   "via": "https://x.com/iSpaceFlight_in"
   },
   {
    "address": "https://www.thehindu.com/sci-tech/science/what-is-the-debate-on-navic-vs-gps-explained/article71663982.ece",
@@ -2589,38 +2653,6 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMi7AFBVV95cUxNRjNJVDczSW9xc0J3a2FhSUNsWVc4M0RFeEZDRFdJNVFUX0FoTnplT1ktUnVLbFZicTZiaXBJa01JNk52QTdYYTJvY1Jra1Bxd3h2eWlJYlJlc3BLVzJLNTRRYnVRbVUtSXRTVFZfeUJhelJtcDZJS2FBa2NsTWc2QTlDTjNzcjBPUG43T083RUdET2xGZ1BRcW04VzBPOURYNjViQ0ZWZ3JzRENIOXFxb2I3c0UwVHFkRms2ek5PaGxGZ0NEcFp3VEpocTRqck95TUFrQ09DZG1IYi1sMXZ5bURxalFPb0lFRDNmeA?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T20:10:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "ANI News",
-   "published_at": "2026-10-30T17:21:00Z",
-   "source_id": "aninews.in",
-   "summary": "",
-   "title": "NavIC system to become fully operational with NVS-03 launch: Former DRDO scientist Ravi Gupta",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMi1AFBVV95cUxNTkkwazJFeVV1MW0ySlltQU9UUmltZVdRTW5wVWJHbW81VGQ5U3haUHBncjR5VV9vZ3htQVB2TWp0R2RMdUl5Y0lSNzdDODE1SXpsZ1VfZGlxX1FXQTBUNG5ERkNLQm10VllJc1NKNGRveVJ4LVZnRnNMOHBMQXBvNFdRS2FiaWcwRFZZUm12VngySmdmejFnWDFmeGg0VGN0SVNpZk1yY0VxNmtzaXl3Wmx3VzRCS2NlN2dfREFMblVob1BiX2dMRGVmT2xqX1dkY2lNSQ?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-31T09:59:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "United News of India",
-   "published_at": "2026-10-30T16:05:00Z",
-   "source_id": "uniindia.com",
-   "summary": "",
-   "title": "India's NavIC consellation gets a boost, GSLV-F…",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://insidegnss.com/esa-adds-four-galileo-g2-satellites-funds-norwegian-work-on-jamming-and-spoofing-resilience/",
    "category": "signal and service",
    "constellations": [
@@ -2635,38 +2667,6 @@
    "summary": "The European Space Agency (ESA) made two navigation announcements in the span of two days, ordering four more Galileo Second Generation (G2) satellites... The post ESA Adds Four Galileo G2 Satellites, Funds Norwegian Work on Jamming and Spoofing Resilience appeared first on Inside GNSS - Global…",
    "title": "ESA Adds Four Galileo G2 Satellites, Funds Norwegian Work on Jamming and Spoofing Resilience",
    "via": "https://insidegnss.com/feed/"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMingJBVV95cUxONUNqOVlMeURocVQtZzdNUkl4MzJXNjdYc1ctT3NHV2piRlJSalQ2V1JPbTNuMEl3anNqbl9VVGpSLVRkTEdlNFBPT0VjcGdNMk1SeHM0MXNlSV8zU2VEUC1VZ1ZKbXZ0SURHa1hFMXlQa0dhSVBKcm5CREdoVmUyMnVKeDk2NThlSGl3Qnc4cUQ1Vm0xa2F0MHNRMTNacGMtM0Q1WUhaYmxxWXYzcVRGYmN4eVpnbVZoSWlXZkpfNDN6SFM4ODNCdG5XeW13TlVQSy1zeTQ2cHVYYTQ0ZzRrM19pM1VmNkwwc2swd1lBRXkxQzNHM0l3OUdNRm14N1JEbVlsWi1CWm14QlBaT2gzOFVlNFc0V1BncUM4Znd30gGjAkFVX3lxTE1GT0Uwc3NYRGd0djByNXRVT3lFeWlqMVZjTmN6Q015UndVN3F2YlBxQTdsMHFGN2RPT2ZQbkRpTDlscUticFVKZDNQamR1blZPcDBiOUZNcGtSdklocmNOQ0ZfQVBWSXlhcjBZTTl1MThEUVBUUUotWnQwZ0NZeVNZRGpjWDd5YzhYUjZSb1M0Z0Z1WEpjVkI0TFk1QVNWVXM4X3ZsQlhRQWc5SktWUU9vaGJ1MXpuQjNKcEVSdHpYYTV4MEZZOHNlVHZ4Y25WMDZxa3RSTDRETzFKVE9xRmkxbXFTRU4xbDNNbnRtZFo2bWQ3Zk1DOVJZWTJfRzNPNG11YWRDMU1LeVJpU1VxNWFLWjgxRWVDN1NPRm5vNmlHdUk2QQ?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T20:10:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "The Times of India",
-   "published_at": "2026-10-30T14:41:00Z",
-   "source_id": "timesofindia.indiatimes.com",
-   "summary": "",
-   "title": "GSLV-F18 mission: A successful NVS-03 launch with desi atomic clock is vital for India’s military & strat",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMiygFBVV95cUxNcWZWdHQzYWdVY1pKQnk5S0RGNVRhLXlNZmRwVHhzY1UxQkoyR1pFM3ZZaDIxX1kxaWljRDdocjAxMDYwbGFSanFDb1B5eFg4bnY5TWVxdkozOUpvZkdRSlR1MlQ1N3pZWW9xeUJQUXRabUVOcWV4cGhtYjBNYnN4VlhGTFJ3MUFWWExxc2R3eWtFZDROQWVqQXZCRld0cWVCOVpFdXFLOERSOG1NZ0hJUzU3NEVFSkx2dEllWGo1N0ludUNjTldfcThn0gHPAUFVX3lxTE82MV96aGh0V01NN0JENVZwWU1KVHpJeDFoRXpVTDhnTWJCcHJoUVpxUmxMT3NPeTJNblJtV0E1ei1IVVdYM2xnTEhUd3pnYmIwbFpyaDRJbEIwLWZwcmtZNGZ2eGxFdkpaQWY0WTN0djVBZVVIUVJDcGxDNzBXaTMyX0JCcGVIY016VmRVOE5BX3JDZzJMcnVRVnVzWE5mM2Z5UHFjcEFwQ0xLSWE0dEJMckNtSnl5cVpmMTR0MDhPaFBEZXZlVWwtdkc0QU1qSQ?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-31T17:24:13Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Bhaskar English",
-   "published_at": "2026-10-30T13:03:31Z",
-   "source_id": "bhaskarenglish.in",
-   "summary": "",
-   "title": "ISRO's navigation satellite NVS-03 to be launched today: US did not help during 1999 Kargil War, so India b...",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMihgFBVV95cUxQQXNzU0RteFZOQW0wTGx5Y2FGVHN5Sm5tS2E1emFGODhUcjI0eGs1SndOVHl0WG9fT3VUa09EUDNGaHJVYk9MNUg4YmhjVVZvZDdHQ1RGRVJLc3k5dlVEb1FwbXpITFJmdktBdG5hR19vZlJhdUtaNVM1LXJfeTdKZUhia1U3Zw?oc=5",
@@ -9881,15 +9881,6 @@
    "note": "",
    "reason": ""
   },
-  "uniindia.com": {
-   "grade": "",
-   "grade_standing": "not graded",
-   "graded_by": "",
-   "kind": "",
-   "name": "uniindia.com",
-   "note": "",
-   "reason": ""
-  },
   "urbanacres.in": {
    "grade": "",
    "grade_standing": "not graded",
@@ -9997,6 +9988,15 @@
    "name": "European Space Agency (@esa)",
    "note": "",
    "reason": "As esa.int: the European Space Agency, Galileo's design authority"
+  },
+  "x.com/iSpaceFlight_in": {
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "graded_by": "Sumanth Varma (until the source record settles it)",
+   "kind": "X account",
+   "name": "indianspaceflight.in (@iSpaceFlight_in)",
+   "note": "About 2,950 followers; about 1.7 posts a day",
+   "reason": "As indianspaceflight.in: the site's own account"
   },
   "x.com/isro": {
    "grade": "A",
