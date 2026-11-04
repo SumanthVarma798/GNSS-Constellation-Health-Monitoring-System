@@ -60,7 +60,8 @@ def tiles(result, tags=None):
         html = surfaces.tile(row["name"], row["signal_id"], row["score"], row["status"].split(" ", 1)[-1], words,
                              orbit_section.CHIP_STATUS[state], weakest if weakest and weakest[1] < 100 else None,
                              age_html=tags.get(row["name"], ""))
-        out[row["name"]] = (html, row["score"] >= HEALTHY_FROM and state != palette.SLOT_OFF, health[row["name"]])
+        healthy = row["score"] is not None and row["score"] >= HEALTHY_FROM and state != palette.SLOT_OFF
+        out[row["name"]] = (html, healthy, health[row["name"]])
     return out
 
 
