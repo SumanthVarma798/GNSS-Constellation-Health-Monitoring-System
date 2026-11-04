@@ -1,0 +1,8 @@
+{
+  "name": "opengnss-newsletters",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test", "deploy": "wrangler deploy" },
+  "dependencies": { "postal-mime": "4.1.4" },
+  "devDependencies": { "wrangler": "4.45.0" }
+}

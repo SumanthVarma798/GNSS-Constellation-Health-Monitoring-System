@@ -5,6 +5,7 @@ from registry/library_figures.csv (kept by hand, each with its public source). E
 Ratios are shown plainly, each with its definition in a footnote; nothing here ranks one system above another.
 Each footnote opens from its column heading as a tooltip, and all of them are listed by notes().
 """
+from collections import Counter
 from html import escape
 
 from evidence.library_settings import OTHER_PROGRAMME, SYSTEMS
@@ -220,3 +221,14 @@ def matching(rows):
             f'the registry (built from the IGS file) does not hold. Where both say, the registry and the GCAT programme '
             + (f'disagree for {n["registry_and_programme_disagree"]}.' if n["registry_and_programme_disagree"]
                else 'agree on every satellite.'))
+
+
+def registry_lag_note(matching_rows, registry_rows):
+    """A short note when library_matching.csv was counted against an older registry."""
+    listed = Counter(row["constellation"] for row in registry_rows)
+    lagging = [(row["system"], int(row["registry_satellites"]), listed[row["system"]])
+               for row in matching_rows if int(row["registry_satellites"]) < listed[row["system"]]]
+    if not lagging:
+        return ""
+    return " ".join(f"The library was counted when the registry listed {counted} {system} satellites; it now lists {now}."
+                    for system, counted, now in lagging)

@@ -11,11 +11,12 @@ import time_machine
 from streamlit.testing.v1 import AppTest
 from streamlit.testing.v1.element_tree import ButtonGroup
 
-from data import celestrak
+from data import celestrak, spacetrack
 from test_celestrak import IRNSS_1B
 from test_golden_scores import GOLDEN
 from ui import time_range
-from ui.shell import age_words, clock_words, failing_words, next_words
+import ui.shell as shell
+from ui.shell import age_words, clock_words, copy_words, failing_words, next_words
 
 ROOT = Path(__file__).resolve().parent.parent
 FROZEN = datetime.fromisoformat(GOLDEN["frozen_utc"])
@@ -33,10 +34,16 @@ def segmented_controls_rerun(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def celestrak_answers_with_nothing_new(monkeypatch):
-    """No network in tests: CelesTrak 'answers' with no rows unless a test says otherwise."""
+    """No network in tests: the archive job's copy has no rows or copy time unless a test says otherwise."""
     monkeypatch.setattr(celestrak, "state", {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True,
-                                             "failing_since": None})
+                                             "failing_since": None, "copy_at": None})
     monkeypatch.setattr(celestrak, "fetch", lambda norads: ({}, set()))
+    monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: ({}, set(), None))
+    monkeypatch.setattr(spacetrack, "state", {"rows": {}, "tried": None, "fetched": None,
+                                              "refused_until": None, "note": "ok"})
+    monkeypatch.setattr(spacetrack, "refresh",
+                        lambda norads, now, login: {"rows": {}, "tried": now if login else None, "fetched": None,
+                                                    "refused_until": None, "note": "ok" if login else "no login"})
 
 
 def run(setup=lambda at: None, now=FROZEN):
@@ -77,6 +84,14 @@ def test_navic_is_the_default_and_shows_a_tile_per_satellite_with_its_count():
     assert any(f"{healthy_in_slot('NavIC')} of 8</span>" in body and "healthy and in their slot" in body for body in htmls(at))
 
 
+def test_every_navic_tile_carries_an_orbit_record_age_tag():
+    at = run()
+
+    assert len(tiles(at)) == 8
+    for tile in tiles(at):
+        assert ("orbit " in tile and "days old" in tile) or "no orbit record" in tile
+
+
 def test_a_satellite_set_aside_is_a_tile_that_says_so():
     set_aside = [t for t in tiles(run()) if "IRNSS-1D" in t]
 
@@ -106,9 +121,10 @@ def test_the_overview_groups_satellites_by_orbit_type_each_with_its_table():
 
     assert groups(at) == ["GEO", "IGSO"]
     tables = table_rows(at)
-    assert tables[:2] == [["IRNSS-1C", "IRNSS-1F", "IRNSS-1G", "NVS-01"],
-                                                  ["IRNSS-1B", "IRNSS-1E", "IRNSS-1I"]]   # IRNSS-1D is set aside
-    assert len(tables[2]) == 8   # how each was classed from the window, the set-aside one too
+    assert len(tables[0]) == 8 and "IRNSS-1D" in tables[0]   # orbit record age: every satellite, set-aside too
+    assert tables[1:3] == [["IRNSS-1C", "IRNSS-1F", "IRNSS-1G", "NVS-01"],
+                           ["IRNSS-1B", "IRNSS-1E", "IRNSS-1I"]]   # IRNSS-1D is set aside
+    assert len(tables[3]) == 8   # how each was classed from the window, the set-aside one too
     assert len(tiles(at)) == 8
 
 
@@ -222,17 +238,18 @@ def test_the_window_is_kept_for_pages_to_read():
     assert len(tiles(at)) == 8
 
 
-def test_the_data_chip_is_amber_after_a_week():
+def test_the_data_chip_turns_warn_then_bad_at_the_orbit_age_limits():
     fresh = " ".join(htmls(run()))
     stale = " ".join(htmls(run(now=FROZEN + timedelta(days=8))))
 
-    assert 'class="chip ok">Orbit data 4 Oct, 2 days old' in fresh
-    assert 'class="chip warn">Orbit data 4 Oct, 10 days old' in stale
+    assert 'class="chip warn">Orbit data 4 Oct, 2 days old' in fresh
+    assert 'class="chip bad">Orbit data 4 Oct, 10 days old' in stale
     assert "failing" not in fresh
 
 
 def test_rows_from_celestrak_make_the_chip_say_today_and_its_time(monkeypatch):
-    monkeypatch.setattr(celestrak, "fetch", lambda norads: ({39635: celestrak.as_history_row(IRNSS_1B)}, {39635}))
+    monkeypatch.setattr(celestrak, "fetch_copy",
+                        lambda norads: ({39635: celestrak.as_history_row(IRNSS_1B)}, {39635}, FROZEN))
     at = run()
     chips = " ".join(htmls(at))
 
@@ -311,35 +328,68 @@ def test_the_pages_across_all_systems_are_set_apart_without_words():
     assert not any("Across all systems" in body for body in htmls(run()))
 
 
-def test_a_failed_refresh_keeps_the_archive_and_says_so(monkeypatch):
+def test_a_failed_copy_read_keeps_the_archive_and_says_so(monkeypatch):
     def down(norads):
         raise requests.ConnectionError("no route")
-    monkeypatch.setattr(celestrak, "fetch", down)
+    monkeypatch.setattr(celestrak, "fetch_copy", down)
     at = run(lambda at: at.button(key="refresh_button").click())
     chips = " ".join(htmls(at))
 
-    assert 'class="chip ok">Orbit data 4 Oct, 2 days old' in chips
-    assert 'class="chip warn">CelesTrak failing since 12:00' in chips   # the frozen clock's time, in UTC
+    assert 'class="chip warn">Orbit data 4 Oct, 2 days old' in chips
+    assert 'class="chip warn">Archive copy failing since 12:00' in chips   # the frozen clock's time, in UTC
     assert len(tiles(at)) == 8
 
 
-def test_a_source_failing_since_yesterday_says_since_when(monkeypatch):
+def test_while_the_archive_jobs_copy_stands_in_the_chip_says_so_not_failing(monkeypatch):
+    monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: ({}, set(), FROZEN - timedelta(hours=1)))
+    chips = " ".join(htmls(run(lambda at: at.button(key="refresh_button").click())))
+
+    assert 'class="chip idle">CelesTrak via the archive job' in chips
+    assert "CelesTrak failing" not in chips
+    assert 'class="chip ok">Orbit data 6 Oct 11:00' in chips   # the copy's own age, not the bundled history's
+
+
+def test_the_copy_chip_says_which_copy_and_when_the_next_orbital_run_is_due(monkeypatch):
+    monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: ({}, set(), FROZEN - timedelta(hours=1)))
+    chips = " ".join(htmls(run(lambda at: at.button(key="refresh_button").click())))
+
+    assert 'class="chip idle">CelesTrak via the archive job · copy 11:00 · next about 14:15' in chips
+
+
+def test_when_the_copy_read_fails_the_chip_says_the_archive_copy_is_failing(monkeypatch):
+    celestrak.state.update(tried=FROZEN, ok=False, failing_since=FROZEN, fetched=FROZEN - timedelta(hours=1))
+    chips = " ".join(htmls(run()))
+
+    assert 'class="chip warn">Archive copy failing since 12:00' in chips
+    assert "CelesTrak via the archive job" not in chips and "CelesTrak failing" not in chips
+
+
+def test_a_state_saved_by_the_old_code_with_a_copy_in_use_is_not_shown_as_failing(monkeypatch):
+    celestrak.state.update(tried=FROZEN, ok=False, failing_since=FROZEN - timedelta(hours=5),
+                           copy_at=FROZEN - timedelta(hours=1), fetched=FROZEN - timedelta(hours=1))
+    chips = " ".join(htmls(run()))
+
+    assert 'class="chip idle">CelesTrak via the archive job' in chips
+    assert "failing since" not in chips
+
+
+def test_a_failing_copy_read_since_yesterday_says_since_when(monkeypatch):
     def down(norads):
         raise requests.HTTPError(403)
-    monkeypatch.setattr(celestrak, "fetch", down)
+    monkeypatch.setattr(celestrak, "fetch_copy", down)
     celestrak.state.update(tried=FROZEN, ok=False, failing_since=FROZEN)
     chips = " ".join(htmls(run(now=FROZEN + timedelta(days=1))))   # due again: tried, and refused again
 
-    assert 'class="chip warn">CelesTrak failing since 6 Oct 12:00' in chips
-    assert 'class="chip ok">Orbit data 4 Oct, 3 days old' in chips   # the saved copies stay in use
+    assert 'class="chip warn">Archive copy failing since 6 Oct 12:00' in chips
+    assert 'class="chip bad">Orbit data 4 Oct, 3 days old' in chips   # the saved copies stay in use
 
 
 def test_age_words():
     taken = "2026-10-04T04:19:57.724789+00:00"
     now = datetime.fromisoformat("2026-10-14T10:00:00+00:00")
 
-    assert age_words(taken, now) == ("Orbit data 4 Oct, 10 days old", "warn")
-    assert age_words(taken, now.replace(day=11)) == ("Orbit data 4 Oct, 7 days old", "ok")
+    assert age_words(taken, now) == ("Orbit data 4 Oct, 10 days old", "bad")
+    assert age_words(taken, now.replace(day=11)) == ("Orbit data 4 Oct, 7 days old", "bad")
     assert age_words(taken, now.replace(day=5)) == ("Orbit data 4 Oct, 1 day old", "ok")
     assert age_words(taken, now.replace(day=4)) == ("Orbit data 4 Oct 04:19", "ok")
     assert age_words("Unknown", now)[1] == "idle"
@@ -350,6 +400,22 @@ def test_failing_words():
 
     assert failing_words(now.replace(hour=8, minute=2), now) == "CelesTrak failing since 08:02"
     assert failing_words(now.replace(day=18, hour=23), now) == "CelesTrak failing since 18 Oct 23:00"
+    assert failing_words(now.replace(hour=8, minute=2), now, what="Archive copy") == "Archive copy failing since 08:02"
+
+
+def test_copy_words_say_the_copy_time_and_the_next_orbital_run():
+    now = FROZEN.replace(hour=9, minute=0)
+
+    assert copy_words(now.replace(hour=5, minute=6), now) == \
+        "CelesTrak via the archive job · copy 05:06 · next about 14:15"
+    assert copy_words(now.replace(hour=5, minute=6), FROZEN.replace(hour=21, minute=0)) == \
+        "CelesTrak via the archive job · copy 05:06 · next about 7 Oct 01:15"
+
+
+def test_copy_words_leaves_out_the_next_time_without_a_readable_schedule(monkeypatch, tmp_path):
+    monkeypatch.setattr(shell, "WORKFLOWS_DIR", tmp_path)
+
+    assert copy_words(FROZEN - timedelta(hours=1), FROZEN) == "CelesTrak via the archive job · copy 11:00"
 
 
 def _on(page):

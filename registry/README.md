@@ -86,6 +86,7 @@ The report lists where this table and `satellites.csv` disagree, and picks no wi
 |---|---|
 | `svn` | The satellite. Its catalogue number and constellation are looked up in `satellites.csv`. |
 | `dashboard_name` | The name the dashboard shows. Orbit data, service requirements and recorded scores are all keyed by it, so changing one is a change to the dashboard, not a correction. |
+| `added` | When this satellite was added to the tracked list (`YYYY-MM-DD`, UTC). Left blank for rows that predate this record. |
 
 Row order is the order the dashboard shows them in. `config/config.py` builds its three
 satellite lists from this table. Adding a satellite here is the team's decision.

@@ -16,6 +16,7 @@ IRNSS_1B = {"OBJECT_NAME": "IRNSS-1B", "OBJECT_ID": "2014-017A", "EPOCH": "2026-
             "EPHEMERIS_TYPE": 0, "CLASSIFICATION_TYPE": "U", "NORAD_CAT_ID": 39635, "ELEMENT_SET_NO": 999,
             "REV_AT_EPOCH": 4592, "BSTAR": 0, "MEAN_MOTION_DOT": 7.6e-07, "MEAN_MOTION_DDOT": 0}
 NOW = datetime(2026, 10, 15, 10, 42, tzinfo=timezone.utc)
+FETCH_COPY = celestrak.fetch_copy   # the real one: conftest swaps in one that fails, so no test reads GitHub
 
 
 class Reply:
@@ -30,8 +31,20 @@ class Reply:
         return self.rows
 
 
+class ReplyText:
+    def __init__(self, text):
+        self.status_code, self.text = 200, text
+
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        raise ValueError("not json")
+
+
 def empty_state():
-    return {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True, "failing_since": None}
+    return {"rows": {}, "listed": None, "tried": None, "fetched": None, "ok": True, "failing_since": None,
+            "copy_at": None}
 
 
 @pytest.fixture(autouse=True)
@@ -111,7 +124,13 @@ def test_the_dashboard_asks_for_every_satellite_of_its_generations_and_no_other(
     from ui import data
 
     asked = []
-    monkeypatch.setattr(celestrak, "refresh", lambda norads, now, clicked: asked.extend(norads))
+    monkeypatch.setattr(
+        celestrak, "refresh",
+        lambda norads, now, clicked, direct=False: (asked.extend(norads),
+                                      {"rows": {}, "listed": set(), "tried": now, "fetched": None, "ok": True,
+                                       "failing_since": None})[1],
+    )
+    monkeypatch.setattr(data.spacetrack, "refresh", lambda norads, now, login: None)
     data.refresh()
     # IRNSS-1B tracked; BeiDou-3 M7 (plane A, slot A-4), IRNSS-1A and a BeiDou-3S test satellite are not
     assert {39635, 43107, 39199, 40549} <= set(asked)
@@ -172,3 +191,159 @@ def test_failing_since_is_the_first_failure_in_a_row_and_survives_a_restart(monk
     monkeypatch.setattr(celestrak, "state", empty_state())               # the dashboard restarts
     assert celestrak.refresh([39635], NOW + timedelta(hours=2, minutes=5))["failing_since"] == NOW
     assert celestrak.refresh([39635], NOW + timedelta(hours=4))["failing_since"] is None
+
+
+def test_catalogue_entry_returns_none_when_celestrak_lists_nothing(monkeypatch):
+    monkeypatch.setattr(requests, "get", lambda *args, **kwargs: ReplyText("No SATCAT records found"))
+    assert celestrak.catalogue_entry(100744) is None
+
+
+def refused(norads):
+    raise requests.HTTPError(403)
+
+
+def test_when_celestrak_refuses_the_archive_jobs_copy_fills_in_and_says_when_it_was_taken(monkeypatch):
+    taken = NOW - timedelta(hours=3)
+    copy = {"fetched_at": taken.strftime("%Y-%m-%dT%H:%M:%SZ"), "rows": [IRNSS_1B, {**IRNSS_1B, "NORAD_CAT_ID": 1}]}
+    asked = []
+
+    def get(url, timeout, **kwargs):
+        asked.append(url)
+        return Reply(copy)
+
+    monkeypatch.setattr(celestrak, "fetch", refused)
+    monkeypatch.setattr(celestrak, "fetch_copy", FETCH_COPY)
+    monkeypatch.setattr(requests, "get", get)
+    after = celestrak.refresh([39635], NOW)
+
+    assert asked == [celestrak.COPY_URL]
+    assert set(after["rows"]) == {39635} and after["listed"] == {39635, 1}   # only wanted rows; the whole listing
+    assert after["copy_at"] == taken and after["fetched"] == taken           # the data's own age, not now
+    assert not after["ok"] and after["failing_since"] == NOW                 # CelesTrak itself is still failing
+    monkeypatch.setattr(celestrak, "state", empty_state())                  # the dashboard restarts
+    assert celestrak.refresh([39635], NOW + timedelta(minutes=5))["copy_at"] == taken
+
+
+def test_with_no_copy_either_a_refusal_keeps_what_is_held(monkeypatch):
+    monkeypatch.setattr(celestrak, "fetch", refused)
+    after = celestrak.refresh([39635], NOW)   # conftest's copy fails too
+    assert after["rows"] == {} and after["copy_at"] is None and not after["ok"]
+
+
+def test_a_copy_that_is_not_one_is_ignored(monkeypatch):
+    monkeypatch.setattr(celestrak, "fetch", refused)
+    monkeypatch.setattr(celestrak, "fetch_copy", FETCH_COPY)
+    monkeypatch.setattr(requests, "get", lambda url, timeout, **kwargs: Reply(["not", "a", "copy"]))
+    assert celestrak.refresh([39635], NOW)["copy_at"] is None
+
+
+def test_celestrak_answering_again_clears_the_copy(monkeypatch):
+    celestrak.state.update(ok=False, failing_since=NOW, copy_at=NOW, tried=NOW)
+    monkeypatch.setattr(celestrak, "fetch", lambda norads: ({39635: celestrak.as_history_row(IRNSS_1B)}, {39635}))
+    after = celestrak.refresh([39635], NOW + timedelta(hours=2))
+    assert after["ok"] and after["copy_at"] is None and after["failing_since"] is None
+
+
+def test_refresh_from_the_copy_only_never_asks_celestrak(monkeypatch):
+    taken = NOW - timedelta(hours=3)
+    calls = []
+
+    def fetch(norads):
+        calls.append(norads)
+        raise AssertionError("the dashboard must not call CelesTrak")
+
+    monkeypatch.setattr(celestrak, "fetch", fetch)
+    monkeypatch.setattr(celestrak, "fetch_copy",
+                        lambda norads: ({39635: celestrak.as_history_row(IRNSS_1B)}, {39635, 1}, taken))
+    after = celestrak.refresh([39635], NOW, direct=False)
+
+    assert calls == []
+    assert set(after["rows"]) == {39635} and after["listed"] == {39635, 1}
+    assert after["copy_at"] == taken and after["fetched"] == taken
+    assert after["ok"] and after["failing_since"] is None
+
+
+def test_from_the_copy_a_click_always_reads_again_even_within_every(monkeypatch):
+    taken = NOW - timedelta(hours=3)
+    calls = []
+
+    monkeypatch.setattr(celestrak, "fetch_copy",
+                        lambda norads: (calls.append(norads),
+                                        ({39635: celestrak.as_history_row(IRNSS_1B)}, {39635}, taken))[1])
+    celestrak.refresh([39635], NOW, clicked=True, direct=False)
+    after = celestrak.refresh([39635], NOW + timedelta(minutes=1), clicked=True, direct=False)
+
+    assert len(calls) == 2
+    assert after["tried"] == NOW + timedelta(minutes=1) and after["copy_at"] == taken
+
+
+def test_from_the_copy_without_a_click_a_second_read_waits_every(monkeypatch):
+    taken = NOW - timedelta(hours=3)
+    calls = []
+
+    monkeypatch.setattr(celestrak, "fetch_copy",
+                        lambda norads: (calls.append(norads),
+                                        ({39635: celestrak.as_history_row(IRNSS_1B)}, {39635}, taken))[1])
+    celestrak.refresh([39635], NOW, direct=False)
+    celestrak.refresh([39635], NOW + timedelta(minutes=119), direct=False)
+    assert len(calls) == 1
+
+    celestrak.refresh([39635], NOW + timedelta(hours=2), direct=False)
+    assert len(calls) == 2
+
+
+def test_direct_reads_keep_the_click_retry_only_after_a_failure(monkeypatch):
+    calls = []
+
+    def fetch(norads):
+        calls.append(norads)
+        return {39635: celestrak.as_history_row(IRNSS_1B)}, {39635}
+
+    monkeypatch.setattr(celestrak, "fetch", fetch)
+    celestrak.refresh([39635], NOW, direct=True)
+    celestrak.refresh([39635], NOW + timedelta(minutes=1), clicked=True, direct=True)
+
+    assert len(calls) == 1
+
+
+def test_a_failing_copy_read_sets_failing_since_without_calling_celestrak(monkeypatch):
+    calls = []
+
+    def fetch(norads):
+        calls.append(norads)
+        raise AssertionError("the dashboard must not call CelesTrak")
+
+    monkeypatch.setattr(celestrak, "fetch", fetch)
+    after = celestrak.refresh([39635], NOW, direct=False)   # conftest's copy fails too
+
+    assert calls == []
+    assert not after["ok"] and after["failing_since"] == NOW
+    assert after["rows"] == {} and after["copy_at"] is None
+
+
+def test_a_failing_copy_read_after_a_good_one_stops_naming_the_copy(monkeypatch):
+    monkeypatch.setattr(celestrak, "fetch_copy",
+                        lambda norads: ({39635: celestrak.as_history_row(IRNSS_1B)}, {39635}, NOW - timedelta(hours=1)))
+    celestrak.refresh([39635], NOW, direct=False)
+
+    def down(norads):
+        raise requests.ConnectionError("no route")
+    monkeypatch.setattr(celestrak, "fetch_copy", down)
+    after = celestrak.refresh([39635], NOW + timedelta(hours=2), direct=False)
+
+    assert not after["ok"] and after["copy_at"] is None and after["failing_since"] == NOW + timedelta(hours=2)
+    assert set(after["rows"]) == {39635}   # what was held stays in use
+
+
+def test_a_clicks_failed_extra_read_keeps_the_good_copy_every_visitor_shares(monkeypatch):
+    taken = NOW - timedelta(hours=1)
+    monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: ({39635: celestrak.as_history_row(IRNSS_1B)}, {39635}, taken))
+    celestrak.refresh([39635], NOW, direct=False)
+
+    def down(norads):
+        raise requests.ConnectionError("no route")
+    monkeypatch.setattr(celestrak, "fetch_copy", down)
+    after = celestrak.refresh([39635], NOW + timedelta(minutes=5), clicked=True, direct=False)
+
+    assert after["ok"] and after["copy_at"] == taken and after["failing_since"] is None
+    assert after["tried"] == NOW   # the next automatic read stays two hours after the last good one

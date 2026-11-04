@@ -8,8 +8,9 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Directory containing bundled data files
-DATA_DIR = Path(__file__).parent
+# Directory containing bundled data files. Only the tests set BUNDLED_DATA_DIR (to their frozen copy);
+# the app and every job read this folder.
+DATA_DIR = Path(os.environ.get("BUNDLED_DATA_DIR") or Path(__file__).parent)
 
 
 def get_data_file_path(constellation: str, data_type: str) -> Path:
