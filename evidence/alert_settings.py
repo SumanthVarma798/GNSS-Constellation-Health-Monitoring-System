@@ -12,7 +12,9 @@ CHECKS = [
     ("archive-orbital", "Archive: orbit records"),
     ("archive-news", "Archive: news"),
     ("archive-social", "Archive: social"),
+    ("archive-x", "Archive: X posts"),
     ("registry-update", "Registry update"),
+    ("source-record", "Source record"),
     ("update-tle-data", "Update orbit data"),
     ("orbit-ages", "Orbit ages"),
     ("orbit-fresh", "Orbit ages: every satellite under 2 days"),   # fails when any orbit record passes 2 days (D3)
