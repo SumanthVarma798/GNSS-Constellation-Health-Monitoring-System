@@ -12,6 +12,30 @@ def rolling_median_safe(s, window=3):
     return s.astype(float).rolling(window=window, min_periods=1, center=True).median()
 
 
+def pre_median(s, half):
+    """Each row's median of the values from 2*half rows before it to half rows before it (fewer at the start), NaN in
+    the first `half` rows or when any of those values is missing: as np.median over each row's window gave, but with
+    pandas' own rolling median, not a Python call per row (tests/test_maneuver_medians.py)."""
+    gaps = s.isna().shift(half, fill_value=False).astype(float).rolling(half + 1, min_periods=1).max()
+    out = s.shift(half).rolling(half + 1, min_periods=1).median()
+    out[gaps > 0] = np.nan
+    out.iloc[:half] = np.nan
+    return out
+
+
+def post_median(s, half):
+    """Each row's median of the values from it to half rows after it, NaN when any is missing or past the end and in
+    the first `half` rows; rows before 2*half only count values from row 2*half on, as the per-row version did."""
+    after = s.shift(-half)
+    gaps = after.isna()
+    after.iloc[:half] = np.nan
+    gaps.iloc[:half] = False
+    out = after.rolling(half + 1, min_periods=1).median()
+    out[gaps.astype(float).rolling(half + 1, min_periods=1).max() > 0] = np.nan
+    out.iloc[:half] = np.nan
+    return out
+
+
 def mad_zscore(x, threshold=1e-9):
     """Robust z-score using Median Absolute Deviation (MAD)."""
     x = np.array(x, dtype=float)
@@ -68,28 +92,12 @@ def detect_navik_maneuvers(df, sma_col='SEMIMAJOR_AXIS', inc_col='INCLINATION',
     
     half = persist_window
     
-    df2['pre_sma_med'] = df2[sma_col + '_smooth'].rolling(
-        window=2*half+1, min_periods=1, center=False
-    ).apply(
-        lambda arr: np.median(arr[:-half]) if len(arr) > half else np.nan, raw=True
-    )
-    df2['post_sma_med'] = df2[sma_col + '_smooth'].shift(-half).rolling(
-        window=2*half+1, min_periods=1, center=False
-    ).apply(
-        lambda arr: np.median(arr[half:]) if len(arr) > half else np.nan, raw=True
-    )
+    df2['pre_sma_med'] = pre_median(df2[sma_col + '_smooth'], half)
+    df2['post_sma_med'] = post_median(df2[sma_col + '_smooth'], half)
     df2['sma_med_delta'] = (df2['post_sma_med'] - df2['pre_sma_med']).abs()
-    
-    df2['pre_inc_med'] = df2[inc_col + '_smooth'].rolling(
-        window=2*half+1, min_periods=1, center=False
-    ).apply(
-        lambda arr: np.median(arr[:-half]) if len(arr) > half else np.nan, raw=True
-    )
-    df2['post_inc_med'] = df2[inc_col + '_smooth'].shift(-half).rolling(
-        window=2*half+1, min_periods=1, center=False
-    ).apply(
-        lambda arr: np.median(arr[half:]) if len(arr) > half else np.nan, raw=True
-    )
+
+    df2['pre_inc_med'] = pre_median(df2[inc_col + '_smooth'], half)
+    df2['post_inc_med'] = post_median(df2[inc_col + '_smooth'], half)
     df2['inc_med_delta'] = (df2['post_inc_med'] - df2['pre_inc_med']).abs()
     
     df2['EW_MANEUVER'] = False
