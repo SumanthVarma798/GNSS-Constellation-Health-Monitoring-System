@@ -1,6 +1,70 @@
 {
- "generated_at": "2026-11-04T16:35:42Z",
+ "generated_at": "2026-11-04T20:05:45Z",
  "items": [
+  {
+   "address": "https://news.google.com/rss/articles/CBMinAFBVV95cUxOMzJ3aTRjamMyMHpFRjg2YTVsbVd2ZWFYb2RVaUVwUURaTE9peGp1RlVUNEN1X0U1QlVrbUxkQ3VXSVFUNWc5aDdPZzl4RDRXWTVMaTE3RkEyZG1BSHlTOVZ5VHc0UkpvajduVlNMem0zMm1YOXpmblNjZDRZcW5qd0xLS2gzRk1aTnI2SWZzdmtEd2kxcUNiX1ZETTU?oc=5",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-04T20:05:45Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Urban Acres",
+   "published_at": "2026-11-04T19:32:16Z",
+   "source_id": "urbanacres.in",
+   "summary": "",
+   "title": "NavIC Satellite NVS-03 Reaches Geosynchronous Orbit After ISRO Manoeuvres",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://www.thehindu.com/sci-tech/science/nvs-03-reaches-geosynchronous-orbit-satellite-in-good-health/article71667218.ece",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-04T20:05:15Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "The Hindu: science",
+   "published_at": "2026-11-04T18:03:27Z",
+   "source_id": "thehindu.com",
+   "summary": "‘Four orbit manoeuvres have been successfully completed with a cumulative LAM engine burn of 6164 seconds; with this the satellite has reached Geo Synchronous Orbit at an inclination of 29.980,’ said ISRO",
+   "title": "NVS-03 reaches geosynchronous orbit; satellite in good health",
+   "via": "https://www.thehindu.com/sci-tech/science/feeder/default.rss"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMi4AFBVV95cUxPZVhrb3V1MkJiOHB0Q1BrVjVJWW1qU0J2MHlfdjhTcFJRYk5MS3g2OUdjMXoyVnNMVVA4RDBwZnJDcVNBOUxqaFZwenN2RUVFeW5CdlpDTXJoVUF1OTc4S0tHb1pTSlpzRHBWeDZISDZoUWhHUmxfSV9aTkVTT2k2SjJEU0xSSTVuNTk4YzhKS2xNdFozU3VzWUJZRy1DVU9saTNxMnVKOHBiYmxIM1NUVllzb3Vubi0tVjFzejZ0VVFHODFYNmdMZWJqazllelRYTXVGVXBtVzZSelNIUGVDRtIB5gFBVV95cUxQTTY4SGJybkdKTXhPX2otM1R4LXU0WXlQMk55WndxTDFzeTFfd29yMWtmTHNDelFuNUZoT3k4Q2djRW1YVkZQUHVReVAxVkllcWFDVFZIMHpnRFAxUEYtaEtkNHFoRzRWV3hHYnBTdEVRTnRTZkIxWW9pNklZMi1zUjBFdFA2RU9TZDlRb0RRVVp6amJZRHdHaDRjbVNSclowQTVTYVZueU1RNzh1MzE0WHI3UWNhUWMtWkxOVENvclkzZF91SDVmazJqNTZ1M0U4VEpORlVHU3VOdlFiOHZ1M25UV1VNdw?oc=5",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-04T20:05:45Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Deccan Chronicle",
+   "published_at": "2026-11-04T17:49:40Z",
+   "source_id": "deccanchronicle.com",
+   "summary": "",
+   "title": "ISRO Successfully Places NVS-03 Navigation Satellite In Geosynchronous Orbit",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://www.space.com/space-exploration/launches-spacecraft/nasas-artemis-ii-moon-launch-tore-a-hole-in-earths-upper-atmosphere-so-huge-it-disrupted-gps-signals",
+   "category": "launch",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-11-04T20:05:09Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "Space.com",
+   "published_at": "2026-11-04T17:00:00Z",
+   "source_id": "space.com",
+   "summary": "\"It could have a strong impact not only on self-driving cars but also on drone positioning.\"",
+   "title": "NASA's Artemis II moon launch tore a hole in Earth's upper atmosphere so huge it disrupted GPS signals",
+   "via": "https://www.space.com/feeds/all"
+  },
   {
    "address": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxNRHVSeHNrZEF2T0h5V2t3YldjdHI5bWt0a1BOZzhjOGxJVmotME9BNVpSWDBGeTdVUkpKSjFTNHFlWGItNXFsbmJwV0c2bWtIMXVSZlJhOVd2UDBvc0t6MTZPRlpla3AtSVdaZXJLdWI4WF9MMDhxOXlsVy1FQmthWnpoNlNXYjB6dU4xQjNsbzVWeTdGYWphblZJNjFGTFhXbW9FNVNjYi1oellBZzdnQXNpRDNRVnlOcTlLQWxyNnZEVFhhNmg2eU9pZEhFOWFT0gHWAUFVX3lxTE9Dc3IyZlJXRUxoOFFCcXpDMGVMcjRPelRYU3FSRkdIdGlTYUNidUZOOEhVMFcyRU1hUEZQSzdZbm5VU3k4bVRDaEJnRWc0UWJESThndER4UVhUSEV0X0xUeFJ2am5ybUdmWWdOeFQ2SEplYThmWGliQThua0F6X0RjaFFYN3B5dFU4cG5qZU5nc29Idm5lRGdMMUNHMmFHazdGU3N3Vl9kVTFtNmNuMkJneFZMNFlEVUFPdkMzQ0tmT2l3a1M3UHFKVV9SdjRibmRyOU9Cb3c?oc=5",
    "category": "other",
@@ -2605,27 +2669,10 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMi1wFBVV95cUxONUdKRVF3emZTX3ZCYTZzY1M0c21kR1Bhd3lwVC1zS3htZE9rUXdUWEl1amtRZmFwYTFwX2V6YVhURXNSam05RGZfOGlybmNidnJDS1hvbW1yMjI2R2VHSy1GaDJPQmp4dkQxLXVjZ1JPRXNuN2tPaVFfejlGbHVYaHlZWnk2Sks5ZW1qM19JZnNVVi1uRWpFSzMwQmlLU3BqLXc1UmtCYnVyZXcyc1BJeHdjcnJaNDNneVJXb0treGpsSEtHNWoyZXR0VkwtQk5SZXZhR196b9IB3AFBVV95cUxPaGtMaHhFNDg3dHpwQ09wQVFpQXBfLVNBT21TeFNCUUlQNnkycFQ4U3Q4eWsyaFl0UjhHQ0xLbzg1b21aOXdXUlZKSndGNDNqd1ZGaWg5R2lDNVpXc29hS3hvZDFtR3VrRFJMa3VWQS05XzlaQmNOdFVLWVgzVWY5NldBWXNObmRVWkRPWDJvYUEtZGlNQUFjNjdhQ0R2X2F1eVhMLTB4cy1jX2l4YmRNVlF3M3hyV0gyOU5sZTI0Y1lhN3k2SkNNaC04cjZvbFcxYkljNEhIakdrNjFR?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T13:39:30Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Business Today",
-   "published_at": "2026-10-30T12:59:15Z",
-   "source_id": "businesstoday.in",
-   "summary": "",
-   "title": "ISRO NVS-03 launch today: How India plans to restore its NavIC navigation system",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMihgFBVV95cUxQQXNzU0RteFZOQW0wTGx5Y2FGVHN5Sm5tS2E1emFGODhUcjI0eGs1SndOVHl0WG9fT3VUa09EUDNGaHJVYk9MNUg4YmhjVVZvZDdHQ1RGRVJLc3k5dlVEb1FwbXpITFJmdktBdG5hR19vZlJhdUtaNVM1LXJfeTdKZUhia1U3Zw?oc=5",
    "category": "signal and service",
    "constellations": [
-    "GPS",
-    "NavIC"
+    "GPS"
    ],
    "fetched_at": "2026-10-30T13:39:30Z",
    "grade": "",
@@ -2635,22 +2682,6 @@
    "source_id": "shattered.io",
    "summary": "",
    "title": "NavIC NVS-03 Adds L1 (1575.42 MHz) vs GPS [2026]",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMisAFBVV95cUxOdHBKVDdoUDFCY3VFYy1ia284amJ6VjdRQ2p0b092WWpvRlRKZlBYcTNyZnRIQ1dWNTRfcDdLeXhoeTR6UGMxSzcwNHJLcS1XUG9DOFIzbkhCanhGdXo0d2d1WHdGcUFOd3JoNGxVN2pFQ3lqb0lVU1dWRlhZeGlwRnNHWHg3ZllzRVpIeHVqTEppT1lNWWVxbmo3WjJDSnM4U3VNclR6c1VpYjczM09NSdIBtgFBVV95cUxQeGQ5RUpvckVaNUpjaXRLV0JzZTNDdkdnYVRzMTQ2dENreXZZcE5aWDJ5WTJlNXFDbHROaUFTZ3FjS0RBeFVCRzVVRnlHSERqb2RiSWJlS1ZvZV9OTmxUb3BjbmZHUUVaZXpfRzJpeVdZOTdTUjIzeVFRemdQcGczREsyNzBIQmVqWlBPUWo3bmxkQ3M3SEZ5Y2tUN3Rqd1JJVkxTRFhPY0tkRXVzTW0zazlTNTczQQ?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T13:39:30Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "WION",
-   "published_at": "2026-10-30T11:40:00Z",
-   "source_id": "wionews.com",
-   "summary": "",
-   "title": "ISRO's GSLV-F18/NVS-03 launch crucial for phased revival of NAVIC",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -7284,22 +7315,6 @@
    "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMi5gFBVV95cUxPZHFKbHNVZXNtRFJSVGNuWGJZTEJvUkpKQkMza09nVW16aHRFY19QSHNPN05nZDdUVUZXa2UyektQTXhqOXRFODRnVHFxS0ZjcFZhUGZNa1I4bGZuYjFsOEZOeFY3enpGRmllRzhtWkpsbVVCdVNhV0F2TEhwOGIwa0VMTUJfVnh1QjVqRm44Yy11R1A1eHFWYUxaRDV4b1NXOXMzWTZ2ZzZBVEZfb3M3TXRsY0lVbzVFMUJDcG5CUnktT0RUQ3dtVkF5TTJ1UUFQN3I2aVFkVXdTRlhaMm53U3BhWkdVUQ?oc=5",
-   "category": "launch",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-29T18:41:36Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Vandenberg Space Force Base (.mil)",
-   "published_at": "2026-01-29T08:00:00Z",
-   "source_id": "vandenberg.spaceforce.mil",
-   "summary": "",
-   "title": "USSF field commands successfully launch GPS III Space Vehicle 09 into orbit",
-   "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE9XMU0tbnVqS0I5WFVKYjI1WHdOOHc2VDNRUWNyN25CeEJ3S2NtanNCNjRUT2ktcm5MV24xNmFQaHpWYjJJeWhqenZ2Rl9LOTE0UWNr?oc=5",
    "category": "launch",
    "constellations": [
@@ -8000,15 +8015,6 @@
    "graded_by": "",
    "kind": "",
    "name": "business-standard.com",
-   "note": "",
-   "reason": ""
-  },
-  "businesstoday.in": {
-   "grade": "",
-   "grade_standing": "not graded",
-   "graded_by": "",
-   "kind": "",
-   "name": "businesstoday.in",
    "note": "",
    "reason": ""
   },
