@@ -21,3 +21,6 @@ ssc.spaceforce.mil,US Space Force Space Systems Command: news,A,"the team, decid
 gsc-europa.eu,European GNSS Service Centre: notices (NAGU),A,"the team, decided in the administration console",2026-10-22,Galileo's service centre; its notices are operator advisories
 euspa.europa.eu,EU Agency for the Space Programme (EUSPA): news,A,"the team, decided in the administration console",2026-10-22,Galileo's service provider
 arianespace.com,Arianespace (launches Galileo): press releases,A,"the team, decided in the administration console",2026-10-22,"The launch provider; first-hand for launch outcomes, and only for those"
+esa.int,European Space Agency: navigation,B,"the team, decided in the administration console",2026-10-22,Intergovernmental; designs and procures Galileo for the EU but does not run the service
+unoosa.org,UN International Committee on GNSS (ICG),B,"the team, decided in the administration console",2026-10-22,UN committee papers: an intergovernmental body (issue 12 draft tiers)
+igs.org,International GNSS Service: news,B,"the team, decided in the administration console",2026-10-22,"The same scientific body as files.igs.org, graded B"
