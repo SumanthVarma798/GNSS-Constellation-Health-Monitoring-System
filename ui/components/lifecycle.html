@@ -23,7 +23,7 @@ a { color: var(--accent); overflow-wrap: anywhere; }
 .pill small { font: 11px var(--mono); color: var(--muted); font-weight: 400; }
 .sep { flex: 1 1 0; }
 .picker { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 16px; }
-.picker input { flex: 0 1 220px; min-width: 140px; min-height: 36px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--edge);
+.picker input { min-width: 0; min-height: 36px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--edge);
   background: var(--well); box-shadow: var(--pressed); color: var(--ink); font: inherit; }
 .hint { color: var(--muted); font-size: 12px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
@@ -35,6 +35,13 @@ a { color: var(--accent); overflow-wrap: anywhere; }
 .num { flex: none; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; display: inline-grid; place-items: center;
   font: 600 11px var(--mono); color: var(--ink); background: var(--well); box-shadow: var(--pressed); }
 .chip.more { font-weight: 600; color: var(--accent); }
+.chip.more svg { width: 14px; height: 14px; }
+/* at the most that can be compared, the rest are shown but cannot be picked until one is unpicked */
+.chip.off { color: var(--track); box-shadow: none; background: var(--well); cursor: not-allowed; }
+.chip.off:hover { color: var(--track); }
+.find { position: relative; flex: 0 1 220px; min-width: 140px; display: flex; }
+.find svg { position: absolute; left: 12px; top: 50%; width: 15px; height: 15px; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.find input { flex: 1 1 auto; padding-left: 34px; }
 
 /* ---- the picture: in a scroller, so five satellites keep a readable width on a phone ---- */
 .scroller { overflow-x: auto; overflow-y: hidden; }
@@ -62,6 +69,7 @@ a { color: var(--accent); overflow-wrap: anywhere; }
 .steps button .fill { position: absolute; inset: 0 auto 0 0; background: var(--c); }
 .steps button:hover, .steps button:focus-visible { transform: scaleY(1.7); }
 .now { font-size: 12.5px; color: var(--muted); }
+.now { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
 .now b { color: var(--ink); font-weight: 600; }
 .now .bad { color: var(--bad); }
 .tip { position: absolute; z-index: 20; max-width: 260px; padding: 7px 10px; border-radius: 12px; background: var(--well); border: 1px solid var(--edge);
@@ -128,7 +136,14 @@ a { color: var(--accent); overflow-wrap: anywhere; }
 .rowlabel { font: 11px var(--mono); color: var(--muted); padding: 10px 0 0; }
 .band { margin: 12px 0; }
 .band[hidden] { display: none; }
-.legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; color: var(--muted); font-size: 12px; margin-top: 14px; }
+/* the key: behind a button at the top, open on hover, focus or a tap */
+.keywrap { position: relative; }
+.pill svg { width: 15px; height: 15px; }
+.legend { position: absolute; right: 0; top: calc(100% + 8px); z-index: 25; width: min(560px, calc(100vw - 40px)); padding: 12px 14px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 7px 16px; color: var(--muted); font-size: 12px;
+  border-radius: 16px; background: var(--platform); border: 1px solid var(--edge); box-shadow: var(--raised); }
+.legend[hidden] { display: none; }
+.legend b { grid-column: 1 / -1; color: var(--ink); font-size: 12.5px; }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .legend .swatch { width: 14px; height: 6px; border-radius: 3px; background: var(--c); }
 .legend .pin { position: static; margin: 0 2px; --c: var(--muted); }
@@ -160,9 +175,13 @@ a { color: var(--accent); overflow-wrap: anywhere; }
   <div class="group" id="systems" role="group" aria-label="Navigation system"></div>
   <span class="sep"></span>
   <div class="group" id="scale" role="group" aria-label="Time scale"></div>
+  <div class="keywrap" id="keywrap">
+    <button class="pill" id="keybtn" type="button" aria-expanded="false" aria-controls="legend">Key</button>
+    <div class="legend" id="legend" role="region" aria-label="What the colours and shapes mean" hidden></div>
+  </div>
 </div>
 <div class="picker">
-  <input id="find" type="search" placeholder="Find a satellite" aria-label="Find a satellite">
+  <label class="find" id="findwrap"><input id="find" type="search" placeholder="Find a satellite" aria-label="Find a satellite"></label>
   <span class="hint" id="hint"></span>
   <div class="chips" id="pick" role="group" aria-label="Satellites shown"></div>
 </div>
@@ -172,7 +191,6 @@ a { color: var(--accent); overflow-wrap: anywhere; }
   <div class="tl" id="tl"></div>
   <div class="grid band" id="after"></div>
 </div></div>
-<div class="legend" id="legend"></div>
 <div class="tip" id="tip" role="tooltip" hidden></div>
 <div class="lightbox" id="lightbox" hidden>
   <figure><img alt=""><figcaption></figcaption><button class="close" type="button" aria-label="Close the picture">×</button></figure>
@@ -183,9 +201,9 @@ const $ = (id) => document.getElementById(id);
 const el = (tag, text, cls) => { const e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (cls) e.className = cls; return e; };
 const DAY = 86400000, MAX = DATA.max_compared, CHIPS_SHOWN = 24, PIN = 16;   // PIN: from a card's top to its pin
 const SCALES = {
-  // To scale: every day the same height, so the gaps between burns compare directly.
-  days: { label: "First 40 days, to scale", from: -1, to: 40, y: (d) => (d + 1) * 90,
-          ticks: () => [...Array(41).keys()].filter((d) => d % 5 === 0 || d < 5).map((d) => [d, d ? "day " + d : "launch"]) },
+  // To scale: every day the same height, so gaps between burns compare directly. Its window is built for the
+  // satellites shown (daysScale), from launch to their last step before service ends.
+  days: { label: "Launch to service, to scale" },
   // Whole life: equal height per tenfold step in time from launch, so hours and years both fit.
   life: { label: "Whole life, compressed", y: (d) => (Math.sign(d) * Math.log10(1 + Math.abs(d) * 24) + 4.6) * 210,
           ticks: () => [[-30, "30 days before"], [-1, "1 day before"], [0, "launch"], [1 / 24, "+1 hour"], [1, "+1 day"], [7, "+1 week"],
@@ -226,7 +244,22 @@ function whenText(e, launch) {
 }
 const safeLink = (url) => /^https:\/\//.test(url || "") ? url : "";
 const outLink = (text, url) => { const a = el("a", text); a.href = url; a.target = "_blank"; a.rel = "noopener"; a.addEventListener("click", (ev) => ev.stopPropagation()); return a; };
-const scaleNow = () => scale || (picked.some((n) => byName[n].detailed) ? "days" : "life");
+const scaleNow = () => scale || "life";
+// Launch to service, to scale: from launch to the latest step any satellite shown reached before its service ended
+// (in service, or as far as it got), with a tenth more room; the height per day shrinks as the window grows, so the
+// whole window stays about the same height on the page. Marks every day, 5, 10 or 30 days to suit.
+const SERVICE_ENDS = new Set(["note", "end", "disposal"]);
+function daysScale() {
+  const reach = Math.max(1, ...picked.flatMap((n) => { const s = byName[n];
+    return s.events.filter((e) => e.at && !SERVICE_ENDS.has(e.step)).map((e) => place(e, s)); }));
+  const to = Math.min(365, Math.max(3, Math.ceil(reach * 1.1 + 1)));
+  const px = Math.min(90, Math.max(12, 3200 / (to + 1)));
+  const step = to <= 12 ? 1 : to <= 60 ? 5 : to <= 180 ? 10 : 30;
+  const marks = [...Array(Math.floor(to / step) + 1).keys()].map((i) => i * step);
+  if (step === 5) marks.splice(1, 0, 1, 2, 3, 4);   // the first days, where most of the steps are
+  return { ...SCALES.days, from: -1, to, y: (d) => (d + 1) * px, ticks: () => marks.map((d) => [d, d ? "day " + d : "launch"]) };
+}
+const scaleOf = (key) => key === "days" ? daysScale() : SCALES[key];
 
 // ---- controls ----
 function drawControls() {
@@ -249,27 +282,32 @@ function drawControls() {
   // The first CHIPS_SHOWN until "show all", plus any picked beyond them; never reordered, so a chip stays where it was.
   const shown = allChips || q ? all : all.filter((s, i) => i < CHIPS_SHOWN || picked.includes(s.name));
   const pick = $("pick"); pick.replaceChildren();
+  const full = picked.length >= MAX;
   shown.forEach((s) => {
     const b = el("button", undefined, "chip"); b.type = "button"; const on = picked.includes(s.name);
+    const off = full && !on;
+    if (off) { b.classList.add("off"); b.setAttribute("aria-disabled", "true"); b.title = `Unpick one of the ${MAX} to compare this one`; }
     b.setAttribute("aria-pressed", on);
     if (on) b.append(number(s.name));
     b.append(s.name);
     if (s.svn && s.svn !== s.name) b.title = s.svn + (s.series ? " · " + s.series : "");
     b.addEventListener("click", () => {
+      if (off) return;   // at the bound: unpick one first
       if (on) { if (picked.length > 1) picked = picked.filter((n) => n !== s.name); }
-      else picked = [...picked, s.name].slice(-MAX);   // past the bound, the first picked makes way
+      else picked = [...picked, s.name];
       draw();
     });
     pick.append(b);
   });
   if (!q && all.length > CHIPS_SHOWN) {
-    const more = el("button", allChips ? "Show fewer" : `Show all ${all.length}`, "chip more"); more.type = "button";
+    const more = el("button", undefined, "chip more"); more.type = "button";
+    more.append(allChips ? "Show fewer" : `Show all ${all.length}`, icon(DATA.glyphs[allChips ? "chevron-up" : "chevron-down"]));
     more.setAttribute("aria-expanded", allChips);
     more.addEventListener("click", () => { allChips = !allChips; drawControls(); fitFrame(); $("pick").querySelector(".more").focus(); });
     pick.append(more);
   }
   $("hint").textContent = picked.length === 1 ? `Pick up to ${MAX - 1} more ${system} satellites to compare.`
-    : `Comparing ${picked.length} of up to ${MAX}. Picking another drops the first picked.`;
+    : full ? `Comparing ${MAX}, the most at once. Unpick one to pick another.` : `Comparing ${picked.length} of up to ${MAX}.`;
 }
 $("find").addEventListener("input", (ev) => { query = ev.target.value; drawControls(); fitFrame(); });
 
@@ -313,10 +351,10 @@ function head(s) {
   const failed = s.checklist.find((c) => c.state === "failed");
   const last = [...s.checklist].reverse().find((c) => c.state.startsWith("done"));
   const next = s.checklist.find((c) => c.state === "ahead");
-  if (failed) now.append(el("span", `Stopped at: ${failed.title}`, "bad"));
+  if (failed) { now.append(stepIcon(failed.step, "var(--bad)"), el("span", `Stopped at: ${failed.title}`, "bad")); }
   else {
-    if (s.life_used !== null) now.append(el("b", `${(s.life_used * s.design_life_years).toFixed(1)} of ${s.design_life_years} design years in service`));
-    else if (last) now.append(el("b", last.title + (last.step === "service" && s.service_years !== null && next ? `, ${s.service_years.toFixed(1)} years ago` : "")));
+    if (s.life_used !== null) now.append(stepIcon("service"), el("b", `${(s.life_used * s.design_life_years).toFixed(1)} of ${s.design_life_years} design years in service`));
+    else if (last) now.append(stepIcon(last.step), el("b", last.title + (last.step === "service" && s.service_years !== null && next ? `, ${s.service_years.toFixed(1)} years ago` : "")));
     if (next && !s.checklist.some((c) => c.step === "service" && c.state.startsWith("done"))) now.append(` · next: ${next.title.toLowerCase()}`);
   }
   h.append(now);
@@ -343,7 +381,10 @@ function icon(paths) {
   (paths || []).forEach((d) => { const p = document.createElementNS(ns, "path"); p.setAttribute("d", d); svg.append(p); });
   return svg;
 }
-const stepIcon = (step) => { const i = el("span", undefined, "ico"); i.append(icon(DATA.icons[step] || DATA.icons.note)); return i; };
+const stepIcon = (step, colour) => {
+  const i = el("span", undefined, "ico"); i.style.setProperty("--c", colour || DATA.step_colours[step] || "var(--muted)");
+  i.append(icon(DATA.icons[step] || DATA.icons.note)); return i;
+};
 // A card opens on a click anywhere on it; its title is the button a keyboard or screen reader uses.
 function card(s, e, key, other, otherName) {
   const c = el("div", undefined, "card" + (e.failed ? " failed" : ""));
@@ -352,12 +393,12 @@ function card(s, e, key, other, otherName) {
   if (other !== null && Math.abs(other) >= 0.05) time.append(" · ", el("b", `${since(Math.abs(other)).slice(2)} ${other > 0 ? "later" : "sooner"} than ${otherName}`));
   c.append(time);
   const h = el("div", undefined, "h"), toggle = el("button", e.title); toggle.type = "button";
-  h.append(stepIcon(e.step), toggle, el("span", DATA.evidence_words[e.evidence], "badge " + BADGE[e.evidence])); c.append(h);
+  h.append(stepIcon(e.step, phase(e)), toggle, el("span", DATA.evidence_words[e.evidence], "badge " + BADGE[e.evidence])); c.append(h);
   if (e.picture) {
     // The slot keeps its height whatever the photo does, so nothing below it moves when the photo arrives.
     const pic = el("div", undefined, "pic"); pic.append(icon(DATA.icons[e.step] || DATA.icons.note));
     const img = el("img"); img.loading = "lazy"; img.alt = e.title; img.src = e.picture.src;
-    const zoom = el("button", undefined, "zoom"); zoom.type = "button"; zoom.setAttribute("aria-label", "Show the picture large"); zoom.append(icon(DATA.zoom));
+    const zoom = el("button", undefined, "zoom"); zoom.type = "button"; zoom.setAttribute("aria-label", "Show the picture large"); zoom.append(icon(DATA.glyphs.maximize));
     img.addEventListener("load", () => { img.classList.add("loaded"); if (img.naturalWidth < pic.clientWidth * 0.8) img.classList.add("small"); });
     img.addEventListener("error", () => { img.remove(); zoom.remove(); });   // the step's icon stays
     zoom.addEventListener("click", (ev) => { ev.stopPropagation(); showLarge(e, zoom); });
@@ -412,7 +453,7 @@ function draw() {
   hideTip();
   drawControls();
   const sats = picked.map((n) => byName[n]);
-  const S = SCALES[scaleNow()];
+  const S = scaleOf(scaleNow());
   G = geometry(sats.length); G.S = S;
   const compare = sats.length > 1;
   document.body.classList.toggle("compare", compare);
@@ -542,13 +583,14 @@ function layout() {
 }
 
 function legend() {
-  const l = $("legend"); l.replaceChildren();
+  const l = $("legend"); l.replaceChildren(el("b", "Colour is the phase of life"));
   const item = (mark, words) => { const s = el("span"); s.append(mark, words); l.append(s); };
   [["launch", "getting there"], ["burn", "raising the orbit"], ["gso", "on station"], ["service", "working"], ["end", "before launch, after service"]]
     .forEach(([step, words]) => { const m = el("i", undefined, "swatch"); m.style.setProperty("--c", DATA.step_colours[step]); item(m, words); });
   const failed = el("i", undefined, "swatch"); failed.style.setProperty("--c", "var(--bad)"); item(failed, "failed");
   [["operator", "the operator said so"], ["records", "seen in the orbit records"], ["press", "press report"], ["table", "registry tables (IGS file, GCAT)"]]
-    .forEach(([kind, words]) => item(el("i", undefined, "pin " + kind), words));
+    .forEach(([kind, words], i) => { if (i === 0) l.append(el("b", "The pin's shape is who said so")); item(el("i", undefined, "pin " + kind), words); });
+  l.append(el("b", "The scale"));
   item(el("i", undefined, "line"), "a line across at each mark of the scale");
   item(el("i", undefined, "dash"), "dashed axis: stretched to make room for the cards");
 }
@@ -561,6 +603,17 @@ function fitFrame() {
   window.frameElement.style.height = Math.ceil(bottom) + 12 + "px";
 }
 legend();
+// The key opens while the pointer is over it or it has focus, and a tap toggles it; Escape closes it.
+(() => {
+  const wrap = $("keywrap"), btn = $("keybtn"), panel = $("legend");
+  btn.prepend(icon(DATA.glyphs["info-circle"]));
+  const set = (open) => { panel.hidden = !open; btn.setAttribute("aria-expanded", open); };
+  wrap.addEventListener("mouseenter", () => set(true)); wrap.addEventListener("mouseleave", () => set(false));
+  btn.addEventListener("click", () => set(panel.hidden));
+  wrap.addEventListener("focusout", (ev) => { if (!wrap.contains(ev.relatedTarget)) set(false); });
+  document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") set(false); });
+})();
+$("findwrap").prepend(icon(DATA.glyphs.search));
 draw();
 if ("ResizeObserver" in window) { let w = window.innerWidth; new ResizeObserver(() => { if (window.innerWidth !== w) { w = window.innerWidth; draw(); } else fitFrame(); }).observe(document.body); }
 </script>

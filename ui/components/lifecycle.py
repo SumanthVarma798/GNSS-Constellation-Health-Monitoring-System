@@ -48,7 +48,7 @@ def lifecycle_html(rows, today, registry=None):
     payload = {"satellites": satellites, "texts": texts, "sources": sources, "first": list(FIRST_SHOWN),
                "max_compared": MAX_COMPARED,
                "step_colours": palette.LIFECYCLE_STEP_COLOURS,
-               "icons": {step: TABLER[name] for step, name in LIFECYCLE_STEP_ICONS.items()}, "zoom": TABLER["maximize"],
+               "icons": {step: TABLER[name] for step, name in LIFECYCLE_STEP_ICONS.items()}, "glyphs": {name: TABLER[name] for name in ("maximize", "info-circle", "chevron-down", "chevron-up", "search")},
                "today": today.strftime("%Y-%m-%dT%H:%M:%SZ"),   # whole seconds: every browser reads these
                "when_words": WHEN_WORDS, "evidence_words": EVIDENCE_WORDS}
     return page.replace("const DATA = __DATA__;", f"const DATA = {embed(payload)};", 1)
