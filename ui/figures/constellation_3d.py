@@ -14,7 +14,7 @@ import plotly.graph_objects as go
 
 from ui import palette
 from ui.figures.slot_rows import group_by_position, state_words
-from ui.tooltip import PLOTLY_HOVER
+from ui.tooltip import PLOTLY_HOVER, plotly_card
 
 EARTH_RADIUS = 1.0
 BELT_RADIUS = 6.62   # the geostationary belt, in Earth radii
@@ -84,11 +84,16 @@ def slot_colour(row):
 def _slot_markers(rows):
     placed = [r for r in rows if r["slot_lon"] is not None]
     points = [_point(r["slot_lon"], BELT_RADIUS) for r in placed]
-    hover = [escape(f"Slot {r['slot_lon']:g} degrees east: {_slot_owner_words(r)}") for r in placed]
+    hover = [plotly_card(f"Slot {r['slot_lon']:g} degrees east", ("Now", _slot_owner_words(r))) for r in placed]
     colours = [slot_colour(r) for r in placed]
     return go.Scatter3d(mode="markers", x=[p[0] for p in points], y=[p[1] for p in points], z=[0.0] * len(points),
                         hovertext=hover, hoverinfo="text",
                         marker={"size": 9, "symbol": "circle-open", "color": colours, "line": {"width": 3, "color": colours}})
+
+
+def _satellite_card(row):
+    """The satellite's name, then its state in words (state_words without the name it starts with)."""
+    return plotly_card(row["name"], ("State", state_words(row).removeprefix(f"{row['name']}: ")))
 
 
 def _satellite_markers(rows):
@@ -104,7 +109,7 @@ def _satellite_markers(rows):
         mode="markers+text", x=[p[0] for p in points], y=[p[1] for p in points], z=[0.0] * len(points),
         text=[escape(labels.get(id(r), "")) for r in placed], textposition="top center",
         textfont={"color": [palette.INK if c == palette.OK else c for c in colours], "size": 11},
-        hovertext=[escape(state_words(r)) for r in placed], hoverinfo="text",
+        hovertext=[_satellite_card(r) for r in placed], hoverinfo="text",
         marker={"size": 5, "color": colours})
 
 

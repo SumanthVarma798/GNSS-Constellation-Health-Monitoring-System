@@ -1,5 +1,8 @@
 """The one tooltip (ui/tooltip.py): text is escaped, the trigger takes focus and points at its card, and the canvas
 components carry the same card rules as the pages."""
+import re
+from pathlib import Path
+
 import pytest
 
 from ui import palette, tooltip
@@ -79,3 +82,23 @@ def test_every_glance_icon_the_geometry_page_names_is_on_the_page_as_a_mask():
     # st.html drops inline <svg>, so an icon is a mask, and its variable must be in the root block.
     from ui import geometry_settings, icons
     assert {name for name, _, _ in geometry_settings.SKY_GROUND_KEY if name} <= set(icons.MASKED)
+
+
+def test_a_plotly_hover_is_the_card_title_in_bold_then_muted_labels_and_escaped():
+    card = tooltip.plotly_card("<A>", ("When", "%{x}"), ("Gap", "3 d & more"))
+
+    assert card == (f'<b>&lt;A&gt;</b><br><span style="color:{palette.MUTED}">When</span>  %{{x}}'
+                    f'<br><span style="color:{palette.MUTED}">Gap</span>  3 d &amp; more')
+    assert tooltip.plotly_template("A").endswith("<extra></extra>")
+
+
+def test_every_plotly_figure_builder_uses_the_shared_hover():
+    """Each module in ui/figures that draws with Plotly sets the shared hoverlabel and writes its hover text with
+    tooltip's helpers, never by hand, so every chart's hover card matches the page's tooltip."""
+    modules = [p for p in sorted((Path(tooltip.__file__).parent / "figures").glob("*.py")) if "plotly" in p.read_text()]
+    assert len(modules) >= 3
+    for path in modules:
+        text = path.read_text()
+        assert "hoverlabel=PLOTLY_HOVER" in text, path.name
+        assert re.findall(r"hovertemplate=(?!plotly_)", text) == [], path.name
+        assert re.findall(r"hovertext=(?!_|hover\b|\[_|\[plotly_)", text) == [], path.name

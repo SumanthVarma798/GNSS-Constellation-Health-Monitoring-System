@@ -169,6 +169,13 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .tt-item .ic { width: 16px; height: 16px; margin-top: 1px; color: var(--muted); }
 .tt-item b { color: var(--accent); font-weight: 600; }
 .tt-note { display: block; margin-top: 8px; color: var(--muted); }
+/* ---- Plotly's hover labels take the card's look (colours and type: tooltip.PLOTLY_HOVER). Plotly draws the box as an
+   SVG path with sharp corners and inline colours, so: a thick stroke in the box's own colour, joined round, rounds the
+   corners and pads the text; drop-shadows give the raised shadow and the faint edge. .legend is the "x unified" box. */
+.js-plotly-plot .hoverlayer :is(.hovertext path, .legend rect.bg) { stroke: var(--platform) !important; stroke-width: 12px !important;
+  stroke-linejoin: round; stroke-opacity: 1 !important; }
+.js-plotly-plot .hoverlayer :is(.hovertext, .legend) { filter: drop-shadow(0 0 1px var(--edge)) drop-shadow(-4px -4px 8px var(--lift))
+  drop-shadow(5px 5px 10px var(--sink)); }
 .swatch { margin-top: 4px; }
 .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 999px; box-shadow: var(--raised-sm); border: 1px solid var(--edge); flex: none; }
 
