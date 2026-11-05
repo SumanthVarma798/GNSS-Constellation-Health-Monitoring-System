@@ -53,7 +53,8 @@ def assess_meo(constellation, now, window_days=90, params=None, fresh=None):
     rows = assess(constellation, elements, dashboard_registry_rows(constellation))
 
     health = pd.DataFrame([{"Satellite": row["name"], "Type": f"MEO · plane {row['plane']}",
-                            "Signal ID": row["signal_id"], "Overall Score": None if row["score"] is None else round(row["score"], 1),   # None: no part could be worked out
+                            "Signal ID": row["signal_id"],
+                            "Overall Score": None if row["score"] is None else round(row["score"], 1),
                             "Health Status": row["status"],
                             **{PART_COLUMNS[m]: round(s, 1) for m, s in row["parts"].items()}} for row in rows])
     latest = max(element["EPOCH"] for element in elements.values())

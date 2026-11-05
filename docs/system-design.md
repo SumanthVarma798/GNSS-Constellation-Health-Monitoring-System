@@ -206,7 +206,7 @@ Produced from the code. A test fails if this table and the code disagree.
 | News feeds and pages are fetched | `50 */3 * * *` (news: every 3 hours from 00:50 UTC = 06:20 India time; first, to measure how often feeds change (issue 13)) | `.github/workflows/archive.yml` |
 | Social media feeds are fetched | `40 1 * * *` (social: once a day, 01:40 UTC = 07:10 India time; Reddit refuses requests in quick succession) | `.github/workflows/archive.yml` |
 | The registry is rebuilt | `0 1 * * 0` (Sundays 01:00 UTC = 06:30 India time: half an hour after that day's documents fetch (see archive.yml), so the registry builds from a fresh copy) | `.github/workflows/registry-update.yml` |
-| Sources archived, by group | documents: 1, catalogues: 2, orbital: 1, news: 45, social: 6, x: 16 | `evidence/sources.py` |
+| Sources archived, by group | documents: 1, catalogues: 2, orbital: 1, news: 49, social: 6, x: 17 | `evidence/sources.py` |
 | Grades that clear the bar alone | A | `evidence/settings.py` |
 | Grades lifted by a second source | B | `evidence/settings.py` |
 | Grades lifted by our own data | B | `evidence/settings.py` |
@@ -286,7 +286,7 @@ These are for the team to settle together. The next team call is Thu 29 Oct 2026
 | Sources | Which publications, subreddits and pages are on the first news list? | Issue 13 |
 | Sources | May we read galmon's public feed, and who emails its maintainer? | Issue 7 |
 | Extraction | Which language model, and what monthly spending ceiling? | Issue 15 |
-| Repository | Will the team add a licence to its repository? | - |
+| Repository | Do all four contributors agree to Apache-2.0 for the code and CC BY 4.0 for the project's own data, as this mirror's `LICENSE`, `LICENSE-DATA` and `NOTICE` propose? Each says so on the team repository's pull request. | - |
 | Backend | Which database does the team's planned backend use? | - |
 | Orbits | Is 2 days the right freshness target? For some satellites, mostly Galileo, neither CelesTrak nor Space-Track has anything newer for 3 to 8 days. | O1's "every satellite under 2 days" |
 | Orbits | May a daily copy of CelesTrak's GNSS group be kept on a public branch (`orbit-data`) for the dashboard, which CelesTrak refuses? | - |

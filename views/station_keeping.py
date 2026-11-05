@@ -1,6 +1,6 @@
 """Station-keeping: how often each satellite's orbit is corrected, and whether the rhythm holds.
 
-The burns in the window first, then each satellite's rhythm and the two charts; then the tables, each in a section
+The burns in the window first, then each satellite's rhythm and the burn timeline; then the tables, each in a section
 (ui/reveal.py): burns per satellite, open, and every burn in the window, closed.
 """
 from datetime import datetime, timezone
@@ -10,7 +10,7 @@ import pandas as pd
 import streamlit as st
 
 from ui import data, measures, reveal, shell, surfaces, time_range, tooltip
-from ui.figures.burns import EAST_WEST, burn_cadence, burn_timeline, rhythm
+from ui.figures.burns import EAST_WEST, burn_timeline, rhythm
 
 PATTERN_STATUS = {"regular": "ok", "irregular": "warn", "too few": "idle"}
 CHART = {"use_container_width": True, "config": {"displayModeBar": False}}
@@ -91,24 +91,39 @@ def _counts(results, chosen, window_days, today):
 
 
 # cache_resource, not cache_data: a pickled Plotly figure is checked over again as it is read back, which costs what
-# building it did. The figures are never changed after they are made.
+# building it did. The figure is never changed after it is made.
 @st.cache_resource(show_spinner=False, max_entries=16)
-def _charts(burns, satellites, start, end):
-    """The two burn charts, made once per set of burns: on Render's share of a CPU they take seconds to build."""
-    return burn_cadence(burns, satellites), burn_timeline(burns, satellites, start, end)
+def _timeline(burns, satellites, start, end):
+    """The burn timeline, made once per set of burns: on Render's share of a CPU it takes seconds to build."""
+    return burn_timeline(burns, satellites, start, end)
 
 
-def _events(burns):
-    """Every burn in the window, newest first: which satellite, when, which kind, and how much the orbit changed.
-    The change that kind of burn makes is drawn in the accent colour."""
-    cell, rows = measures.cell, []
-    for b in burns.sort_values("window_end", ascending=False).to_dict("records"):
-        end, east_west = pd.Timestamp(b["window_end"]), b["kind"] == EAST_WEST
-        rows.append((b["satellite"], [cell(f"{end.day} {end:%b %Y %H:%M}"), cell(b["kind"]),
-                                      cell(f"{b['d_sma_km']:+.3f} km", status="accent" if east_west else "idle"),
-                                      cell(f"{b['d_inc_deg']:+.4f}°", status="idle" if east_west else "accent")]))
-    return surfaces.table([("Satellite", ""), ("Found at (UTC)", "End of the window it fell in"), ("Kind", ""),
-                           ("Size change", "Semi-major axis"), ("Tilt change", "Inclination")], rows)
+
+def _events(recent, satellites, rhythm_rows):
+    """Every burn in the window, one group per satellite in the timeline's order. Each group opens with the satellite's
+    name, its burns by kind and its last one, marked late as the timeline marks it; then its burns, newest first: the
+    timeline's mark for the kind, when it was found, and how much the orbit's size and tilt changed. The change that
+    kind of burn makes is set in bold, the other muted."""
+    late = {r["satellite"]: r["late"] for r in rhythm_rows}
+    lines = ['<div class="bl-row bl-hd"><span>Kind</span><span>Found at (UTC)<small>End of the window it fell in</small>'
+             '</span><span>Size change<small>Semi-major axis</small></span><span>Tilt change<small>Inclination</small>'
+             '</span></div>']
+    for name in satellites:
+        own = recent[recent["satellite"] == name].sort_values("window_end", ascending=False)
+        if own.empty:
+            continue
+        ew, last = int((own["kind"] == EAST_WEST).sum()), pd.Timestamp(own["window_end"].iloc[0])
+        lines.append(f'<div class="bl-sat"><b>{escape(name)}</b><span class="muted">{reveal.count(len(own), "burn")}: '
+                     f'{ew} east-west, {len(own) - ew} north-south · last {last.day} {last:%b %Y}</span>'
+                     f'{surfaces.chip("late", "warn") if late.get(name) else ""}</div>')
+        for b in own.to_dict("records"):
+            end, east_west = pd.Timestamp(b["window_end"]), b["kind"] == EAST_WEST
+            lines.append(f'<div class="bl-row"><span class="kd"><i class="mk {"ew" if east_west else "ns"}"></i>'
+                         f'<span>{escape(b["kind"])}</span></span>'
+                         f'<span class="num">{end.day} {end:%b %Y} <span class="t">{end:%H:%M}</span></span>'
+                         f'<span class="num{" on" if east_west else ""}">{b["d_sma_km"]:+.3f} km</span>'
+                         f'<span class="num{"" if east_west else " on"}">{b["d_inc_deg"]:+.4f}°</span></div>')
+    return '<div class="bl">' + "".join(lines) + "</div>"
 
 
 chosen = _chosen()
@@ -118,15 +133,17 @@ if not chosen:
 try:
     results = {name: data.load(name, st.session_state["window_days"], st.session_state["params"]) for name in chosen}
 except ValueError as error:
-    surfaces.show(surfaces.notice(str(error), "warn"))
+    surfaces.show(surfaces.notice(str(error), "warn", inline=True))
     st.stop()
 
+kept = {name: result for name, result in results.items()
+        if "history_note" not in result or not result["burns"].empty}
 for name, result in results.items():   # GPS, GLONASS and Galileo: how much history the burns are looked for in
-    if "history_note" in result:
+    if "history_note" in result:   # in the page when nothing else is left to show, else in the inbox
         surfaces.show(surfaces.notice(
-            f"{name}. {result['history_note']} Burns show here once weeks of it have built up.", "idle"))
-results = {name: result for name, result in results.items()
-           if "history_note" not in result or not result["burns"].empty}
+            f"{name}. {result['history_note']} Burns show here once weeks of it have built up.", "idle",
+            inline=not kept))
+results = kept
 if not results:
     st.stop()
 
@@ -146,10 +163,9 @@ surfaces.show(surfaces.group_head(time_range.words(window_days),
                                   f"{len(recent)} burns: {(recent['kind'] == EAST_WEST).sum()} east-west, "
                                   f"{(recent['kind'] != EAST_WEST).sum()} north-south",
                                   _detection(measures.thresholds(None, st.session_state["params"]))))
-surfaces.show(_rhythm(rhythm(burns, satellites, end)))
-cadence, timeline = _charts(burns, satellites, start, end)
-st.plotly_chart(cadence, **CHART)
-st.plotly_chart(timeline, **CHART)
+rhythm_rows = rhythm(burns, satellites, end)
+surfaces.show(_rhythm(rhythm_rows))
+st.plotly_chart(_timeline(burns, satellites, start, end), **CHART)
 late = sum(any(c["status"] == "warn" for c in cells) for _, cells in counts)
 reveal.section("burns_per_satellite", "Burns per satellite",
                f"{reveal.count(len(counts), 'satellite')} · " + (f"{late} overdue" if late else "none overdue"),
@@ -157,4 +173,4 @@ reveal.section("burns_per_satellite", "Burns per satellite",
 if len(recent):
     newest = pd.Timestamp(recent["window_end"].max())
     reveal.section("every_burn", "Every burn in the window",
-                   f"{reveal.count(len(recent), 'burn')} · newest {newest.day} {newest:%b %Y}", _events(recent))
+                   f"{reveal.count(len(recent), 'burn')} · newest {newest.day} {newest:%b %Y}", _events(recent, satellites, rhythm_rows))

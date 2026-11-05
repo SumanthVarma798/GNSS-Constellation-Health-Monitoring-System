@@ -3,7 +3,7 @@ import pytest
 
 from data import celestrak
 from test_dashboard_shell import FROZEN, htmls, run, segmented_controls_rerun, tiles  # noqa: F401 (a fixture)
-from test_meo_data import GSAT0101, GSAT0102
+from test_meo_data import COSMOS_2620, GSAT0101, GSAT0102
 
 
 @pytest.fixture(autouse=True)
@@ -37,7 +37,7 @@ def test_galileo_shows_its_planes_and_says_what_is_missing():
     assert any("No orbit data: GSAT0210" in body for body in bodies)
 
 
-def test_a_recent_addition_is_shown_in_a_coloured_notice_before_warnings(monkeypatch):
+def test_a_recent_addition_is_listed_in_the_inbox_in_the_accent_colour_before_warnings(monkeypatch):
     from evidence import registry_tables
 
     monkeypatch.setattr(registry_tables, "recently_added", lambda constellation, today: [("GSAT0999", "2026-10-26")])
@@ -45,7 +45,7 @@ def test_a_recent_addition_is_shown_in_a_coloured_notice_before_warnings(monkeyp
     new_at = next(i for i, body in enumerate(bodies) if "New on the dashboard: GSAT0999" in body)
     missing_at = next(i for i, body in enumerate(bodies) if "No orbit data: GSAT0210" in body)
 
-    assert "notice accent" in bodies[new_at]
+    assert "ic accent" in bodies[new_at]
     assert "New on the dashboard: GSAT0999 (added 26 Oct 2026 after an approved registry proposal)." in bodies[new_at]
     assert new_at < missing_at
 
@@ -83,6 +83,22 @@ def test_gps_opens_on_its_planes_without_tiles_and_the_switch_shows_the_tiles(mo
     assert all("orbit " in tile and "days old" in tile for tile in tiles(at))
     assert any("Plane D</span><span class=\"muted\">2 satellites · 2 in step" in body for body in htmls(at))
     assert not any("part-title\">Plane D" in body for body in htmls(at))
+
+
+def test_a_satellite_with_no_plane_in_the_registry_is_shown_with_no_score(monkeypatch):
+    row = celestrak.as_history_row(COSMOS_2620)
+    monkeypatch.setattr(celestrak, "state", {"rows": {100744: [row]}, "listed": {100744}, "tried": FROZEN,
+                                             "fetched": FROZEN, "ok": True, "failing_since": None, "copy_at": FROZEN})
+    monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: ({100744: row}, {100744}, FROZEN))
+
+    at = run(scope("GLONASS"))
+    assert not at.exception
+    assert any('<div class="part-title">No plane in the registry · 1</div>' in body for body in htmls(at))
+    assert any("0 of 1</span>" in body for body in htmls(at))
+
+    at.button_group(key="meo_view").set_value("Satellites").run()
+    tile = next(tile for tile in tiles(at) if "COSMOS 2620" in tile)
+    assert "no score" in tile and "no plane in the registry" in tile and "set aside" not in tile
 
 
 def test_a_plane_card_says_which_way_its_node_drifts():

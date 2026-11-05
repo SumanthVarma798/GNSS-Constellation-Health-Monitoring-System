@@ -61,80 +61,44 @@ def test_conversion_of_nothing_is_an_empty_table():
     assert B.burns_from_detections({"S1": quiet}).empty
 
 
-def bars(fig, kind):
-    return next(t for t in fig.data if t.name == kind)
+def marks(fig, kind):
+    return next(t for t in fig.data if t.name == B.KIND_LABEL[kind])
 
 
-def test_kinds_sit_in_the_right_half_of_each_band():
+def test_each_burn_is_a_mark_on_its_satellites_row_at_the_middle_of_its_window():
     fig = B.burn_timeline(SMALL, SATS, T0, END)
-    for band, sat in enumerate(SATS):
-        centre = -band
-        for kind, side in (("east-west", 1), ("north-south", -1)):
-            t = bars(fig, kind)
-            ys = [y for y, s in zip(t.y, [r for r in _sats_of(kind)]) if s == sat]
-            assert all(side * (y - centre) > 0 for y in ys)
-    assert len(bars(fig, "east-west").y) == 4 and len(bars(fig, "north-south").y) == 2
+    ew, ns = marks(fig, "east-west"), marks(fig, "north-south")
+    assert list(fig.layout.yaxis.ticktext) == SATS
+    assert list(ew.y) == [0, -1, 0, 0] and list(ns.y) == [0, 0]     # in time order: A, B, A, A; A's row is 0
+    assert [pd.Timestamp(x) for x in ns.x] == [T0 + 5 * DAY, T0 + 25 * DAY]
+    assert (ew.marker.symbol, ns.marker.symbol) == ("circle", "diamond-open")
 
 
-def _sats_of(kind):
-    rows = SMALL[SMALL["kind"] == kind].sort_values("window_start")  # the timeline orders by time
-    return rows["satellite"].tolist()
-
-
-def test_bar_spans_the_window_and_never_vanishes():
+def test_hover_card_gives_the_title_then_when_how_much_and_the_gap():
     fig = B.burn_timeline(SMALL, SATS, T0, END)
-    t = bars(fig, "east-west")
-    first = next(i for i, b in enumerate(t.base) if pd.Timestamp(b) == T0 - DAY)
-    assert t.x[first] == 2 * 86400 * 1000   # a two-day window
-    tiny = frame(burn("A", "east-west", 5, half_days=0.001))
-    width_ms = bars(B.burn_timeline(tiny, SATS, T0, END), "east-west").x[0]
-    assert width_ms == pytest.approx((END - T0).total_seconds() * 1000 * B.MIN_WIDTH_SHARE)
+    last = marks(fig, "east-west").hovertext[3]                      # A's east-west burn on day 40
+    assert last.startswith("<b>A · east-west burn</b>")
+    assert last.index("When") < last.index("Change") < last.index("Gap")
+    assert "9 Feb 2026 00:00 – 11 Feb 00:00 UTC (2.0 days)" in last and "orbit height +2.00 km" in last
+    assert "30 d after the one before, usually 20 d" in last
+    assert "first in view" in marks(fig, "east-west").hovertext[0]
+    assert "tilt +0.200°" in marks(fig, "north-south").hovertext[0]
 
 
-def test_range_slider_and_opening_view():
-    fig = B.burn_timeline(SMALL, SATS, T0, END)
-    axis = fig.layout.xaxis
-    assert axis.rangeslider.visible
-    assert pd.Timestamp(axis.rangeslider.range[0]) == T0 and pd.Timestamp(axis.rangeslider.range[1]) == END
-    assert pd.Timestamp(axis.range[1]) == END
-    assert pd.Timestamp(axis.range[0]) == END - settings.BURN_TIMELINE_RECENT_DAYS * DAY
-    short = B.burn_timeline(SMALL, SATS, T0, T0 + 30 * DAY)   # a span shorter than 90 days opens on all of it
-    assert pd.Timestamp(short.layout.xaxis.range[0]) == T0
+def test_row_end_gives_the_days_since_the_last_east_west_burn_in_the_warning_colour_only_when_late():
+    on_time, late = B.burn_timeline(SMALL, SATS, T0, T0 + 50 * DAY), B.burn_timeline(SMALL, SATS, T0, T0 + 70 * DAY)
+    assert [a.text for a in on_time.layout.annotations] == ["10 d", "47 d", "–"]   # nothing else written on it
+    assert {a.font.color for a in on_time.layout.annotations} == {palette.MUTED}
+    first = late.layout.annotations[0]
+    assert first.text == "30 d" and first.font.color == palette.WARN and "Late" in first.hovertext
+    stretch = next(s for s in late.layout.shapes if s.line.width == 3)               # A's, from its last burn
+    assert stretch.line.color == palette.WARN and pd.Timestamp(stretch.x0) == T0 + 40 * DAY
 
 
-def test_halves_are_named_once_and_there_is_no_legend():
-    fig = B.burn_timeline(SMALL, SATS, T0, END)
-    texts = [a.text for a in fig.layout.annotations]
-    assert texts.count("E-W") == 1 and texts.count("N-S") == 1
-    assert not fig.layout.showlegend
-
-
-def test_hover_says_kind_window_and_size_in_words():
-    fig = B.burn_timeline(SMALL, SATS, T0, END)
-    text = " ".join(bars(fig, "east-west").hovertext)
-    assert "east-west burn" in text and "sometime between" in text and "orbit height changed by +2.00 km" in text
-    assert "degrees" in " ".join(bars(fig, "north-south").hovertext)
-
-
-def cadence_points(fig, sat_index, kind):
-    t = [t for t in fig.data if t.name == B.KIND_LABEL[kind] and t.xaxis == f"x{sat_index + 1 if sat_index else ''}"]
-    return t[0]
-
-
-def test_cadence_y_values_are_the_gaps_between_burns_of_the_same_kind():
-    fig = B.burn_cadence(SMALL, SATS)
-    ew, ns = cadence_points(fig, 0, "east-west"), cadence_points(fig, 0, "north-south")
-    assert list(ew.y) == [10, 30]
-    assert list(ns.y) == [20]
-    assert [pd.Timestamp(x) for x in ew.x] == [T0 + 10 * DAY, T0 + 40 * DAY]   # dated at the burn, not the one before
-    assert len(cadence_points(fig, 1, "east-west").y) == 0                    # one burn has no gap
-
-
-def test_cadence_has_one_cell_per_satellite_and_a_median_line():
-    fig = B.burn_cadence(SMALL, SATS)
-    assert [a.text for a in fig.layout.annotations] == SATS
-    medians = sorted(s.y0 for s in fig.layout.shapes)
-    assert medians == [20, 20]     # east-west (10, 30) and north-south (20) both have median 20
+def test_satellite_names_are_escaped_for_plotly():
+    fig = B.burn_timeline(frame(burn("<b>X", "east-west", 3)), ["<b>X"], T0, END)
+    assert list(fig.layout.yaxis.ticktext) == ["&lt;b&gt;X"]
+    assert marks(fig, "east-west").hovertext[0].startswith("<b>&lt;b&gt;X")
 
 
 def regular(n, step):
@@ -173,17 +137,15 @@ def test_summary_of_a_satellite_without_burns():
 
 def test_every_colour_comes_from_the_palette():
     allowed = {v.lower() for v in vars(palette).values() if isinstance(v, str) and re.fullmatch(r"#[0-9a-f]{6}", v)}
-    for fig in (B.burn_timeline(SMALL, SATS, T0, END), B.burn_cadence(SMALL, SATS)):
-        drawn = fig.to_dict()
-        drawn["layout"].pop("template")   # plotly's own default theme, whose colours the figure overrides
-        used = set(re.findall(r"#[0-9a-fA-F]{6}", str(drawn)))
-        assert {c.lower() for c in used} <= allowed
+    drawn = B.burn_timeline(SMALL, SATS, T0, END).to_dict()
+    drawn["layout"].pop("template")   # plotly's own default theme, whose colours the figure overrides
+    used = set(re.findall(r"#[0-9a-fA-F]{6}", str(drawn)))
+    assert {c.lower() for c in used} <= allowed
 
 
 @pytest.mark.parametrize("burns", [pd.DataFrame(), pd.DataFrame(columns=B.COLUMNS)])
 def test_empty_frame_still_draws(burns):
-    assert B.burn_timeline(burns, SATS, T0, END).layout.xaxis.rangeslider.visible
-    assert len(B.burn_cadence(burns, SATS).layout.annotations) == len(SATS)
+    assert len(B.burn_timeline(burns, SATS, T0, END).layout.annotations) == len(SATS)
     assert [r["count"] for r in B.cadence_summary(burns, SATS)] == [0] * 6
 
 
@@ -191,7 +153,7 @@ def test_timeline_accepts_timezone_aware_times():
     aware = SMALL.assign(window_start=SMALL["window_start"].dt.tz_localize("UTC"),
                          window_end=SMALL["window_end"].dt.tz_localize("UTC"))
     fig = B.burn_timeline(aware, SATS, T0.tz_localize("UTC"), END.tz_localize("UTC"))
-    assert len(bars(fig, "east-west").y) == 4
+    assert len(marks(fig, "east-west").y) == 4
 
 
 def test_rhythm_by_hand():

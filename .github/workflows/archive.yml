@@ -85,7 +85,7 @@ jobs:
       - name: Fetch the group and keep what changed
         id: fetch
         continue-on-error: true  # keep what did change, then fail below so the failure is noticed
-        # A source that never answers costs about 5 minutes (3 tries of 60 s, 60 s apart); news has 44 sources.
+        # A source that never answers costs about 5 minutes (3 tries of 60 s, 60 s apart); news has about 50 sources.
         # Stopping here, not at the job's limit, lets the steps below still save what was fetched.
         timeout-minutes: 30
         env:

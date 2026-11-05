@@ -30,12 +30,7 @@ WHOLE_CONSTELLATION = ("Position quality", "Sky and ground")
 # What each section shows, behind a pill above it.
 SECTION_KEYS = {
     "Position quality": gf.dop_key(),
-    "Sky and ground": ('<p>The map: where each satellite passes over the ground, and where it is now; the crosses are '
-                       'the key places. Click anywhere on it, pick a key place or type a latitude and longitude to see '
-                       'the sky above that place.</p>'
-                       '<p>The sky: overhead in the middle, the horizon at the edge; the dotted ring is the elevation '
-                       'mask. Play or drag through the next 24 hours.</p>'
-                       f'<p>Plane spacing: {gs.SPACING_INTRO}</p>'),
+    "Sky and ground": tooltip.glance(gs.SKY_GROUND_LEAD, gs.SKY_GROUND_KEY, gs.SKY_GROUND_NOTE),
     "Orbit trends": gf.trends_key(),
 }
 
@@ -84,7 +79,7 @@ def _position_quality(constellation, satellites, now, mask):
     st.plotly_chart(figure, **CHART)
 
 
-# cache_resource, as Station-keeping's charts: never changed after they are made. A satellite counts by its element set.
+# cache_resource, as Station-keeping's timeline: never changed after they are made. A satellite counts by its element set.
 @st.cache_resource(show_spinner=False, max_entries=16,
                    hash_funcs={EarthSatellite: lambda sat: (sat.name, sat.model.satnum, sat.epoch.tt)})
 def _trend(satellites, lat, lon, end, mask, place):
@@ -148,7 +143,7 @@ def _place_controls(constellation):
                       help=gs.PLACE_HELP, on_change=_typed, args=(constellation,))
     error = st.session_state.get(f"geo_error_{constellation}")
     if error:
-        surfaces.show(surfaces.notice(error, "bad"))
+        surfaces.show(surfaces.notice(error, "bad", inline=True))
 
 
 def _sky_and_ground(constellation, satellites, own, types, now, mask, window):
@@ -193,7 +188,8 @@ def _trends(constellation, result, names, types, now):
 def _spacing(constellation, satellites):
     groups = analyze_raan_spacing(satellites)
     if not groups:
-        surfaces.show(surfaces.notice("No inclined orbits here share a ground track, so there is no spacing to check.", "idle"))
+        surfaces.show(surfaces.notice("No inclined orbits here share a ground track, so there is no spacing to check.",
+                                      "idle", inline=True))
     for i, group in enumerate(groups):
         card, wheel = st.columns([3, 2], vertical_alignment="center")
         with card:
@@ -208,7 +204,7 @@ def constellation(name, picks, section, choice, mask, window, now):
     """One constellation's part of the page. `picks` limits the satellite-by-satellite pictures (None: all)."""
     if name not in gs.PLACES:   # worked out for the regional systems' key places; GPS, GLONASS, Galileo have none yet
         regional = ", ".join(list(gs.PLACES)[:-1]) + " and " + list(gs.PLACES)[-1]
-        surfaces.show(surfaces.notice(f"Geometry covers {regional} only, not yet {name}.", "idle"))
+        surfaces.show(surfaces.notice(f"Geometry covers {regional} only, not yet {name}.", "idle", inline=True))
         return
     result = data.load(name, st.session_state["window_days"], st.session_state["params"])
     every = list(dict.fromkeys(result["history"]["satellite"]))
@@ -257,4 +253,4 @@ try:
             _heading(name)
         constellation(name, picks, section, choice, mask, window, now)
 except ValueError as error:
-    surfaces.show(surfaces.notice(str(error), "warn"))
+    surfaces.show(surfaces.notice(str(error), "warn", inline=True))

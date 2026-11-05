@@ -32,13 +32,13 @@ def test_body_html_is_passed_through():
 @pytest.mark.parametrize("status", surfaces.STATUSES)
 def test_chip_and_notice_keep_their_words(status):
     assert f"words for {status}" in surfaces.chip(f"words for {status}", status)
-    assert f"words for {status}" in surfaces.notice(f"words for {status}", status)
+    assert f"words for {status}" in surfaces.notice(f"words for {status}", status, inline=True)
     assert f'class="chip {status}"' in surfaces.chip("x", status)
 
 
 def test_chip_and_notice_escape_text():
     assert_escaped(surfaces.chip(ATTACK, "ok"))
-    assert_escaped(surfaces.notice(ATTACK, "bad"))
+    assert_escaped(surfaces.notice(ATTACK, "bad", inline=True))
 
 
 def test_unknown_status_is_a_clear_error():

@@ -1,9 +1,11 @@
 """GPS, GLONASS and Galileo: which satellites are tracked, and how their orbits reach the pages. No network."""
 from datetime import datetime, timedelta, timezone
 
+import pandas as pd
 import pytest
 
 from analysis.bundled_run import load_bundled_gp_as_dataframes
+from analysis.meo_geometry import NO_PLANE
 from analysis.meo_run import assess_meo
 from config.config import MEO_SATS
 from data import celestrak
@@ -98,4 +100,19 @@ def test_elements_much_older_than_the_rest_are_named():
 
     assert assess_meo("Galileo", NOW, fresh=fresh(GSAT0101, old))["warnings"] == [
         "Orbit data over 7 days older than the rest: GSAT0102"]
+
+
+# COSMOS 2620 (R809, launched Sep 2026): the registry gives it no plane or slot yet, so no part can be scored.
+# Its round(None) once stopped every page that loads GLONASS, the World map among them.
+COSMOS_2620 = {**GSAT0101, "OBJECT_NAME": "COSMOS 2620", "NORAD_CAT_ID": 100744, "MEAN_MOTION": 2.13102,
+               "INCLINATION": 64.8}
+
+
+def test_a_satellite_the_registry_gives_no_plane_is_kept_with_no_score():
+    result = assess_meo("GLONASS", NOW, fresh=fresh(COSMOS_2620))
+    row = result["rows"][0]
+
+    assert row["score"] is None and row["plane"] == NO_PLANE and row["checks"] == []
+    assert list(result["health"]["Satellite"]) == ["COSMOS 2620"]
+    assert pd.isna(result["health"]["Overall Score"].iloc[0])
 

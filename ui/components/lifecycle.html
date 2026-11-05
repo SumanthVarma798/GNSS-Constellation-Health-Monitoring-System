@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lifecycles</title>
+<style>
+__ROOT__
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body { --mono: __FONT_NUMBERS__; background: var(--platform); color: var(--ink); font: var(--fs-body)/1.4 __FONT__; padding: 2px 20px 16px; overflow-x: hidden; position: relative; }
+button { font: inherit; color: inherit; }
+a { color: var(--accent); overflow-wrap: anywhere; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---- controls: which system, which satellites, which scale ---- */
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 12px; }
+.group { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 999px; border: 1px solid var(--edge);
+  background: var(--platform); color: var(--muted); box-shadow: var(--raised-sm); cursor: pointer; font-weight: 600; min-height: 36px; }
+.pill:hover { color: var(--accent); }
+.pill[aria-pressed="true"] { background: var(--well); box-shadow: var(--pressed); color: var(--accent); }
+.pill small { font: 11px var(--mono); color: var(--muted); font-weight: 400; }
+.sep { flex: 1 1 0; }
+.picker { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 16px; }
+.picker input { min-width: 0; min-height: 36px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--edge);
+  background: var(--well); box-shadow: var(--pressed); color: var(--ink); font: inherit; }
+.hint { color: var(--fc-small); font-size: var(--fs-small); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; border: 1px solid var(--edge);
+  background: var(--platform); color: var(--muted); box-shadow: var(--raised-sm); cursor: pointer; font-size: 12.5px; min-height: 30px; }
+.chip:hover { color: var(--accent); }
+.chip[aria-pressed="true"] { background: var(--well); box-shadow: var(--pressed); color: var(--ink); }
+/* a picked satellite's place in the comparison: a number, as colour already means the phase of life */
+.num { flex: none; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; display: inline-grid; place-items: center;
+  font: 600 11px var(--mono); color: var(--ink); background: var(--well); box-shadow: var(--pressed); }
+.chip.more { font-weight: 600; color: var(--accent); }
+.chip.more svg { width: 14px; height: 14px; }
+/* at the most that can be compared, the rest are shown but cannot be picked until one is unpicked */
+.chip.off { color: var(--track); box-shadow: none; background: var(--well); cursor: not-allowed; }
+.chip.off:hover { color: var(--track); }
+.find { position: relative; flex: 0 1 220px; min-width: 140px; display: flex; }
+.find svg { position: absolute; left: 12px; top: 50%; width: 15px; height: 15px; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.find input { flex: 1 1 auto; padding-left: 34px; }
+
+/* ---- the picture: in a scroller, so five satellites keep a readable width on a phone ---- */
+.scroller { overflow-x: auto; overflow-y: hidden; }
+.inner { position: relative; }
+/* the same columns as the timeline below: an axis column, then one per satellite, its content where its cards are */
+.grid { display: grid; grid-template-columns: var(--grid); gap: 0; }
+.grid > * + * { margin: 0 10px 0 22px; min-width: 0; }
+.grid > :last-child { margin-right: 0; }
+
+/* ---- one head card per satellite: where it is in its life ---- */
+.head { border-radius: var(--r); background: var(--platform); border: 1px solid var(--edge); box-shadow: var(--raised-sm); padding: 12px 14px; min-width: 0; }
+.head h3 { margin: 0; font-size: var(--fs-side); font-weight: var(--fw-side); display: flex; align-items: center; gap: 8px; }
+.head .sub { color: var(--fc-small); font-size: var(--fs-small); margin-top: 2px; }
+/* Colour says one thing on this page: the phase of life (--c, from LIFECYCLE_STEP_COLOURS), in the step bar, on each
+   card's edge and icon, and on each pin. Who said it is the pin's shape; which satellite is the column. */
+.steps { display: flex; gap: 3px; margin: 10px 0 6px; height: 12px; align-items: stretch; }
+.steps button { flex: 1 1 0; min-width: 6px; padding: 0; border: 0; border-radius: 3px; background: var(--well); box-shadow: var(--pressed);
+  position: relative; overflow: hidden; cursor: pointer; transform-origin: 50% 100%; }
+.steps button.service { flex-grow: 4; }
+.steps button.done { background: var(--c); box-shadow: none; }
+.steps button.implied { background: var(--well); box-shadow: inset 0 0 0 2px var(--c); }   /* done, date not published */
+.steps button.ahead { box-shadow: var(--pressed), inset 0 -2px 0 var(--c); }
+.steps button.failed { background: var(--bad); box-shadow: none; }
+.steps button.missed { background: repeating-linear-gradient(135deg, var(--well) 0 3px, var(--track) 3px 5px); box-shadow: none; }
+.steps button .fill { position: absolute; inset: 0 auto 0 0; background: var(--c); }
+.steps button:hover, .steps button:focus-visible { transform: scaleY(1.7); }
+.now { font-size: 12.5px; color: var(--muted); }
+.now { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.now b { color: var(--ink); font-weight: 600; }
+.now .bad { color: var(--bad); }
+.tip { position: absolute; z-index: 20; max-width: 260px; padding: 7px 10px; border-radius: 12px; background: var(--well); border: 1px solid var(--edge);
+  box-shadow: var(--raised-sm); font-size: 12px; pointer-events: none; }
+.tip b { display: block; font-size: 12.5px; }
+.tip span { color: var(--muted); }
+
+/* ---- the timeline: an axis on the left with a line across at each mark, a rail per satellite, its cards beside it.
+   Each pin sits at its card; where cards need more room than the scale gives, the axis stretches there (dashed) ---- */
+.tl { position: relative; margin-top: 14px; }
+.tick { position: absolute; transform: translateY(-50%); font: 11px var(--mono); color: var(--muted); white-space: nowrap; text-align: right; }
+.tick.zero { color: var(--ink); font-weight: 700; }
+.gridline { position: absolute; right: 0; height: 1px; background: var(--lift); }
+.axis, .stretch { position: absolute; width: 0; border-left: 2px solid var(--track); }
+.stretch { border-left: 2px dashed var(--platform); }
+.rail { position: absolute; width: 2px; margin-left: -1px; border-radius: 2px; background: var(--track); }
+.win { position: absolute; width: 4px; margin-left: -2px; border-radius: 2px; background: var(--c); }   /* between two records, or a stated burn */
+.pin { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; z-index: 2; border: 2px solid var(--c); background: var(--c); }
+.pin.records { background: var(--platform); }                                       /* ring: seen in the orbit records */
+.pin.press { width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 1px; transform: rotate(45deg); background: var(--platform); }   /* diamond */
+.pin.table { width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 1px; }   /* square: the registry tables */
+.nowmark { position: absolute; height: 2px; background: var(--ink); z-index: 2; }
+.nowword { position: absolute; transform: translateY(-50%); font: 600 11px var(--mono); color: var(--ink); }
+
+/* ---- an event card: its phase on the left edge and icon; time, title, picture; open it for what happened and the source ---- */
+.card { position: absolute; padding: 8px 10px 8px 12px; border-radius: 14px; background: var(--platform); border: 1px solid var(--edge);
+  border-left: 3px solid var(--c); box-shadow: var(--raised-sm); cursor: pointer; text-align: left; z-index: 1; }
+.card:hover, .card.match { border-color: var(--c); }
+.card.ghost { background: transparent; border-style: dashed; border-color: var(--track); border-left-color: var(--c); box-shadow: none; color: var(--muted); }
+.card.flash { animation: flash 1.4s ease; }
+@keyframes flash { 0%, 60% { box-shadow: 0 0 0 3px var(--c); } }
+.card .t { font: 11px var(--mono); color: var(--muted); }
+.card .t b { color: var(--ink); font-weight: 600; }
+.card .h { display: flex; align-items: center; gap: 7px; font-weight: 600; margin: 3px 0 0; }
+.card.failed .h { color: var(--bad); }
+.ico { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; color: var(--c);
+  background: color-mix(in srgb, var(--c) 16%, var(--well)); }
+.ico svg { width: 14px; height: 14px; }
+.badge { flex: none; padding: 0 7px; border-radius: 999px; font: 600 10.5px __FONT__; color: var(--muted); background: var(--well); box-shadow: var(--pressed); }
+/* The picture slot shows the step's icon until the photo arrives, and keeps it if the photo never does. */
+.pic { position: relative; margin-top: 7px; height: var(--pic, 110px); border-radius: 10px; overflow: hidden; color: var(--c);
+  background: color-mix(in srgb, var(--c) 10%, var(--well)); display: grid; place-items: center; }
+.pic > svg { width: 34px; height: 34px; opacity: .9; }
+.pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; }
+.pic img.loaded { opacity: 1; }
+.pic img.small { object-fit: contain; background: var(--well); }   /* a picture smaller than its slot is shown whole, not stretched */
+.pic .zoom { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--edge); cursor: pointer;
+  background: var(--sink); color: var(--ink); display: grid; place-items: center; padding: 0; z-index: 1; }
+.pic .zoom:hover { color: var(--accent); }
+.pic .zoom svg { width: 16px; height: 16px; }
+.card .credit { display: none; font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+.card .more { display: none; margin-top: 6px; font-size: 12.5px; }
+.card.open :is(.more, .credit) { display: block; }
+.card .h button { all: unset; cursor: pointer; min-width: 0; }
+.card .h button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.card .more p { margin: 0 0 5px; }
+.card .more .src { color: var(--muted); }
+.compare .card { padding: 7px 9px 7px 11px; font-size: 12.5px; }
+.compare .card .h { flex-wrap: wrap; }
+.compare .pic { --pic: 56px; }
+.compare .pic > svg { width: 24px; height: 24px; }
+.flow { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.flow .card { position: static; }
+.rowlabel { font: 11px var(--mono); color: var(--muted); padding: 10px 0 0; }
+.band { margin: 12px 0; }
+.band[hidden] { display: none; }
+/* the key: behind a button at the top, open on hover, focus or a tap */
+.keywrap { position: relative; }
+.pill svg { width: 15px; height: 15px; }
+.legend { position: absolute; right: 0; top: calc(100% + 8px); z-index: 25; width: min(560px, calc(100vw - 40px)); padding: 12px 14px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 7px 16px; color: var(--fc-small); font-size: var(--fs-small);
+  border-radius: 16px; background: var(--platform); border: 1px solid var(--edge); box-shadow: var(--raised); }
+.legend[hidden] { display: none; }
+.legend b { grid-column: 1 / -1; color: var(--ink); font-size: 12.5px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend .swatch { width: 14px; height: 6px; border-radius: 3px; background: var(--c); }
+.legend .pin { position: static; margin: 0 2px; --c: var(--muted); }
+.legend .dash { width: 0; height: 12px; border-left: 2px dashed var(--muted); }
+.legend .line { width: 14px; height: 1px; background: var(--muted); }
+
+/* ---- a picture, large: the page dims behind it; a click outside the picture, or Escape, closes it ---- */
+.lightbox { position: absolute; inset: 0; z-index: 30; background: rgba(10, 12, 15, .82); }
+.lightbox[hidden] { display: none; }
+.lightbox figure { position: absolute; left: 50%; margin: 0; transform: translate(-50%, -50%); max-width: calc(100% - 32px); text-align: center; }
+.lightbox img { display: block; max-width: 100%; border-radius: 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, .6); background: var(--well); }
+.lightbox figcaption { margin-top: 8px; font-size: 12px; color: var(--muted); }
+.lightbox .close { position: absolute; top: -14px; right: -14px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--edge);
+  background: var(--platform); box-shadow: var(--raised-sm); cursor: pointer; font-size: 18px; line-height: 1; }
+@media (max-width: 640px) {
+  body { padding: 2px 16px 14px; }
+  .lightbox .close { top: 6px; right: 6px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .card { transition: border-color 150ms ease; }
+  .pic img { transition: opacity 250ms ease; }
+  .steps button { transition: transform 150ms ease; }
+}
+@media (prefers-reduced-motion: reduce) { .steps button:hover, .steps button:focus-visible { transform: none; outline: 2px solid var(--c); } }
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="group" id="systems" role="group" aria-label="Navigation system"></div>
+  <span class="sep"></span>
+  <div class="group" id="scale" role="group" aria-label="Time scale"></div>
+  <div class="keywrap" id="keywrap">
+    <button class="pill" id="keybtn" type="button" aria-expanded="false" aria-controls="legend">Key</button>
+    <div class="legend" id="legend" role="region" aria-label="What the colours and shapes mean" hidden></div>
+  </div>
+</div>
+<div class="picker">
+  <label class="find" id="findwrap"><input id="find" type="search" placeholder="Find a satellite" aria-label="Find a satellite"></label>
+  <span class="hint" id="hint"></span>
+  <div class="chips" id="pick" role="group" aria-label="Satellites shown"></div>
+</div>
+<div class="scroller"><div class="inner" id="inner">
+  <div class="grid" id="heads"></div>
+  <div class="grid band" id="before"></div>
+  <div class="tl" id="tl"></div>
+  <div class="grid band" id="after"></div>
+</div></div>
+<div class="tip" id="tip" role="tooltip" hidden></div>
+<div class="lightbox" id="lightbox" hidden>
+  <figure><img alt=""><figcaption></figcaption><button class="close" type="button" aria-label="Close the picture">×</button></figure>
+</div>
+<script>
+const DATA = __DATA__;
+const $ = (id) => document.getElementById(id);
+const el = (tag, text, cls) => { const e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (cls) e.className = cls; return e; };
+const DAY = 86400000, MAX = DATA.max_compared, CHIPS_SHOWN = 24, PIN = 16;   // PIN: from a card's top to its pin
+const SCALES = {
+  // To scale: every day the same height, so gaps between burns compare directly. Its window is built for the
+  // satellites shown (daysScale), from launch to their last step before service ends.
+  days: { label: "Launch to service, to scale" },
+  // Whole life: equal height per tenfold step in time from launch, so hours and years both fit.
+  life: { label: "Whole life, compressed", y: (d) => (Math.sign(d) * Math.log10(1 + Math.abs(d) * 24) + 4.6) * 210,
+          ticks: () => [[-30, "30 days before"], [-1, "1 day before"], [0, "launch"], [1 / 24, "+1 hour"], [1, "+1 day"], [7, "+1 week"],
+                        [30, "+1 month"], [365.25, "+1 year"], [5 * 365.25, "+5 years"], [10 * 365.25, "+10 years"], [20 * 365.25, "+20 years"], [30 * 365.25, "+30 years"]] },
+};
+const BADGE = { operator: "operator", "orbit records": "records", press: "press", "IGS file": "table", catalogue: "table" };
+const STATE_CLASS = { "done": "done", "done, date not published": "implied", failed: "failed", "not reached": "missed", ahead: "ahead" };
+const byName = Object.fromEntries(DATA.satellites.map((s) => [s.name, s]));
+const systems = [...new Set(DATA.satellites.map((s) => s.system))];
+let picked = DATA.first.filter((n) => byName[n]);
+let system = byName[picked[0]].system;
+let scale = null;            // null: chosen for the satellites shown; set once the reader picks one
+let query = "", allChips = false;
+const opened = new Set();
+const number = (name) => el("span", String(picked.indexOf(name) + 1), "num");
+
+const days = (iso, launch) => (Date.parse(iso) - Date.parse(launch)) / DAY;
+// A fact known only by its day sits at midday, one known only by its month mid-month: never more than half out.
+// Launch is the zero, so a launch known only by its day moves the zero to its midday too.
+const shift = (e) => e.when === "on" ? 0.5 : e.when === "in" ? 15 : 0;
+const place = (e, s) => e.at ? days(e.at, s.launch) + shift(e) - shift(s.events.find((x) => x.step === "launch")) : null;
+const fmtDay = (iso) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const fmtMonth = (iso) => new Date(iso).toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" });
+const fmtDate = (iso) => new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) + " UTC";
+function since(d) {
+  const a = Math.abs(d), sign = d < 0 ? "T−" : "T+";
+  if (a < 1) { const h = Math.floor(a * 24), m = Math.round((a * 24 - h) * 60); return `${sign}${h} h ${m} m`; }
+  if (a < 60) return `${sign}${a.toFixed(1)} d`;
+  if (a < 730) return `${sign}${Math.round(a / 30.44)} mo`;
+  return `${sign}${(a / 365.25).toFixed(1)} y`;
+}
+function whenText(e, launch) {
+  if (!e.at) return "date not published";
+  const words = DATA.when_words[e.when] || "";
+  if (e.when === "on") return words + fmtDay(e.at);
+  if (e.when === "in") return words + fmtMonth(e.at);
+  return `${words}${fmtDate(e.at)} · ${since(days(e.at, launch))}`;
+}
+const safeLink = (url) => /^https:\/\//.test(url || "") ? url : "";
+const outLink = (text, url) => { const a = el("a", text); a.href = url; a.target = "_blank"; a.rel = "noopener"; a.addEventListener("click", (ev) => ev.stopPropagation()); return a; };
+const scaleNow = () => scale || "life";
+// Launch to service, to scale: from launch to the latest step any satellite shown reached before its service ended
+// (in service, or as far as it got), with a tenth more room; the height per day shrinks as the window grows, so the
+// whole window stays about the same height on the page. Marks every day, 5, 10 or 30 days to suit.
+const SERVICE_ENDS = new Set(["note", "end", "disposal"]);
+function daysScale() {
+  const reach = Math.max(1, ...picked.flatMap((n) => { const s = byName[n];
+    return s.events.filter((e) => e.at && !SERVICE_ENDS.has(e.step)).map((e) => place(e, s)); }));
+  const to = Math.min(365, Math.max(3, Math.ceil(reach * 1.1 + 1)));
+  const px = Math.min(90, Math.max(12, 3200 / (to + 1)));
+  const step = to <= 12 ? 1 : to <= 60 ? 5 : to <= 180 ? 10 : 30;
+  const marks = [...Array(Math.floor(to / step) + 1).keys()].map((i) => i * step);
+  if (step === 5) marks.splice(1, 0, 1, 2, 3, 4);   // the first days, where most of the steps are
+  return { ...SCALES.days, from: -1, to, y: (d) => (d + 1) * px, ticks: () => marks.map((d) => [d, d ? "day " + d : "launch"]) };
+}
+const scaleOf = (key) => key === "days" ? daysScale() : SCALES[key];
+
+// ---- controls ----
+function drawControls() {
+  const sy = $("systems"); sy.replaceChildren();
+  systems.forEach((name) => {
+    const b = el("button", undefined, "pill"); b.type = "button";
+    b.append(name, el("small", String(DATA.satellites.filter((s) => s.system === name).length)));
+    b.setAttribute("aria-pressed", name === system);
+    b.addEventListener("click", () => { if (name === system) return; system = name; query = ""; $("find").value = ""; allChips = false;
+      picked = [DATA.satellites.find((s) => s.system === name).name]; draw(); });
+    sy.append(b);
+  });
+  const sc = $("scale"); sc.replaceChildren();
+  Object.entries(SCALES).forEach(([key, s]) => {
+    const b = el("button", s.label, "pill"); b.type = "button"; b.setAttribute("aria-pressed", key === scaleNow());
+    b.addEventListener("click", () => { scale = key; draw(); }); sc.append(b);
+  });
+  const q = query.trim().toLowerCase();
+  const all = DATA.satellites.filter((s) => s.system === system && (!q || s.name.toLowerCase().includes(q) || (s.svn || "").toLowerCase().includes(q)));
+  // The first CHIPS_SHOWN until "show all", plus any picked beyond them; never reordered, so a chip stays where it was.
+  const shown = allChips || q ? all : all.filter((s, i) => i < CHIPS_SHOWN || picked.includes(s.name));
+  const pick = $("pick"); pick.replaceChildren();
+  const full = picked.length >= MAX;
+  shown.forEach((s) => {
+    const b = el("button", undefined, "chip"); b.type = "button"; const on = picked.includes(s.name);
+    const off = full && !on;
+    if (off) { b.classList.add("off"); b.setAttribute("aria-disabled", "true"); b.title = `Unpick one of the ${MAX} to compare this one`; }
+    b.setAttribute("aria-pressed", on);
+    if (on) b.append(number(s.name));
+    b.append(s.name);
+    if (s.svn && s.svn !== s.name) b.title = s.svn + (s.series ? " · " + s.series : "");
+    b.addEventListener("click", () => {
+      if (off) return;   // at the bound: unpick one first
+      if (on) { if (picked.length > 1) picked = picked.filter((n) => n !== s.name); }
+      else picked = [...picked, s.name];
+      draw();
+    });
+    pick.append(b);
+  });
+  if (!q && all.length > CHIPS_SHOWN) {
+    const more = el("button", undefined, "chip more"); more.type = "button";
+    more.append(allChips ? "Show fewer" : `Show all ${all.length}`, icon(DATA.glyphs[allChips ? "chevron-up" : "chevron-down"]));
+    more.setAttribute("aria-expanded", allChips);
+    more.addEventListener("click", () => { allChips = !allChips; drawControls(); fitFrame(); $("pick").querySelector(".more").focus(); });
+    pick.append(more);
+  }
+  $("hint").textContent = picked.length === 1 ? `Pick up to ${MAX - 1} more ${system} satellites to compare.`
+    : full ? `Comparing ${MAX}, the most at once. Unpick one to pick another.` : `Comparing ${picked.length} of up to ${MAX}.`;
+}
+$("find").addEventListener("input", (ev) => { query = ev.target.value; drawControls(); fitFrame(); });
+
+// ---- the head card and its step bar ----
+const tip = $("tip");
+function showTip(target, title, lines) {
+  tip.replaceChildren(el("b", title), ...lines.map((l) => el("span", l))); tip.querySelectorAll("span").forEach((s) => s.before(document.createElement("br")));
+  tip.hidden = false;
+  const r = target.getBoundingClientRect(), w = tip.offsetWidth;
+  tip.style.left = Math.max(4, Math.min(document.body.clientWidth - w - 4, r.left + r.width / 2 - w / 2 + window.scrollX)) + "px";
+  tip.style.top = (r.top + window.scrollY - tip.offsetHeight - 10) + "px";
+}
+const hideTip = () => { tip.hidden = true; };
+
+function head(s) {
+  const h = el("div", undefined, "head");
+  const t = el("h3"); t.append(number(s.name), s.name);
+  h.append(t, el("div", `${s.system}${s.series ? " · " + s.series : ""}${s.svn ? " · " + s.svn : ""} · launched ${fmtDay(s.launch)}`, "sub"));
+  const bar = el("div", undefined, "steps");
+  bar.setAttribute("role", "group");
+  const done = s.checklist.filter((c) => c.state.startsWith("done")).length;
+  bar.setAttribute("aria-label", `${done} of ${s.checklist.length} steps done`);
+  s.checklist.forEach((c) => {
+    const b = el("button", undefined, STATE_CLASS[c.state] + (c.step === "service" ? " service" : "")); b.type = "button";
+    b.style.setProperty("--c", DATA.step_colours[c.step] || "var(--accent)");
+    const first = s.events.find((e) => e.step === c.step);
+    const lines = [c.state + (first && first.at ? " · " + whenText(first, s.launch) : "")];
+    if (c.step === "service" && s.service_years !== null && c.state === "done") {
+      lines.push(s.life_used !== null ? `${(s.life_used * s.design_life_years).toFixed(1)} of ${s.design_life_years} design years` : `${s.service_years.toFixed(1)} years so far`);
+      if (s.life_used !== null) { b.className = "service"; const f = el("span", undefined, "fill"); f.style.width = (s.life_used * 100).toFixed(1) + "%"; b.append(f); }
+    }
+    b.setAttribute("aria-label", `${c.title}: ${lines.join(". ")}`);
+    const show = () => showTip(b, c.title, [...lines, cardFor(s.name, c.step) ? "Click to go to it" : "Nothing to show on the timeline"]);
+    b.addEventListener("mouseenter", show); b.addEventListener("focus", show);
+    b.addEventListener("mouseleave", hideTip); b.addEventListener("blur", hideTip);
+    b.addEventListener("click", () => goTo(s.name, c.step));
+    bar.append(b);
+  });
+  h.append(bar);
+  const now = el("div", undefined, "now");
+  const failed = s.checklist.find((c) => c.state === "failed");
+  const last = [...s.checklist].reverse().find((c) => c.state.startsWith("done"));
+  const next = s.checklist.find((c) => c.state === "ahead");
+  if (failed) { now.append(stepIcon(failed.step, "var(--bad)"), el("span", `Stopped at: ${failed.title}`, "bad")); }
+  else {
+    if (s.life_used !== null) now.append(stepIcon("service"), el("b", `${(s.life_used * s.design_life_years).toFixed(1)} of ${s.design_life_years} design years in service`));
+    else if (last) now.append(stepIcon(last.step), el("b", last.title + (last.step === "service" && s.service_years !== null && next ? `, ${s.service_years.toFixed(1)} years ago` : "")));
+    if (next && !s.checklist.some((c) => c.step === "service" && c.state.startsWith("done"))) now.append(` · next: ${next.title.toLowerCase()}`);
+  }
+  h.append(now);
+  return h;
+}
+
+// Cards by satellite and step, for the step bar to scroll to.
+let cards = {};
+const cardFor = (name, step) => (cards[name] || {})[step];
+function goTo(name, step) {
+  const c = cardFor(name, step); if (!c) return;
+  c.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+  c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash");
+}
+
+// ---- an event card ----
+// The phase colour of an event: what colour means on this page. Red only for a failure.
+const phase = (e) => e.failed ? "var(--bad)" : DATA.step_colours[e.step] || "var(--muted)";
+// A Tabler icon (ui/icons.py) from its paths.
+function icon(paths) {
+  const ns = "http://www.w3.org/2000/svg", svg = document.createElementNS(ns, "svg");
+  [["viewBox", "0 0 24 24"], ["fill", "none"], ["stroke", "currentColor"], ["stroke-width", "2"], ["stroke-linecap", "round"],
+   ["stroke-linejoin", "round"], ["aria-hidden", "true"]].forEach(([k, v]) => svg.setAttribute(k, v));
+  (paths || []).forEach((d) => { const p = document.createElementNS(ns, "path"); p.setAttribute("d", d); svg.append(p); });
+  return svg;
+}
+const stepIcon = (step, colour) => {
+  const i = el("span", undefined, "ico"); i.style.setProperty("--c", colour || DATA.step_colours[step] || "var(--muted)");
+  i.append(icon(DATA.icons[step] || DATA.icons.note)); return i;
+};
+// A card opens on a click anywhere on it; its title is the button a keyboard or screen reader uses.
+function card(s, e, key, other, otherName) {
+  const c = el("div", undefined, "card" + (e.failed ? " failed" : ""));
+  c.style.setProperty("--c", phase(e));
+  const time = el("div", whenText(e, s.launch), "t");
+  if (other !== null && Math.abs(other) >= 0.05) time.append(" · ", el("b", `${since(Math.abs(other)).slice(2)} ${other > 0 ? "later" : "sooner"} than ${otherName}`));
+  c.append(time);
+  const h = el("div", undefined, "h"), toggle = el("button", e.title); toggle.type = "button";
+  h.append(stepIcon(e.step, phase(e)), toggle, el("span", DATA.evidence_words[e.evidence], "badge " + BADGE[e.evidence])); c.append(h);
+  if (e.picture) {
+    // The slot keeps its height whatever the photo does, so nothing below it moves when the photo arrives.
+    const pic = el("div", undefined, "pic"); pic.append(icon(DATA.icons[e.step] || DATA.icons.note));
+    const img = el("img"); img.loading = "lazy"; img.alt = e.title; img.src = e.picture.src;
+    const zoom = el("button", undefined, "zoom"); zoom.type = "button"; zoom.setAttribute("aria-label", "Show the picture large"); zoom.append(icon(DATA.glyphs.maximize));
+    img.addEventListener("load", () => { img.classList.add("loaded"); if (img.naturalWidth < pic.clientWidth * 0.8) img.classList.add("small"); });
+    img.addEventListener("error", () => { img.remove(); zoom.remove(); });   // the step's icon stays
+    zoom.addEventListener("click", (ev) => { ev.stopPropagation(); showLarge(e, zoom); });
+    pic.append(img, zoom); c.append(pic, el("div", e.picture.credit, "credit"));
+  }
+  const more = el("div", undefined, "more"); more.append(el("p", DATA.texts[e.detail]));
+  const source = DATA.sources[e.source], src = el("p", "Source: ", "src"), link = safeLink(source.link);
+  src.append(link ? outLink(source.name, link) : source.name); more.append(src);
+  if (e.picture) more.append(outLink("Picture and its licence", e.picture.page));
+  c.append(more);
+  const shown = () => { c.classList.toggle("open", opened.has(key)); toggle.setAttribute("aria-expanded", opened.has(key)); };
+  shown();
+  c.addEventListener("click", () => { opened.has(key) ? opened.delete(key) : opened.add(key); shown(); layout(); });
+  return c;
+}
+function ghost(c) {
+  const g = el("div", undefined, "card ghost"); g.style.setProperty("--c", DATA.step_colours[c.step] || "var(--muted)");
+  const h = el("div", undefined, "h"); h.append(stepIcon(c.step), c.title); g.append(el("div", "not yet", "t"), h); return g;
+}
+
+// ---- the large picture ----
+const box = $("lightbox"), boxImg = box.querySelector("img"), boxFig = box.querySelector("figure");
+let returnTo = null;
+function showLarge(e, from) {
+  returnTo = from; boxImg.src = e.picture.large || e.picture.src; boxImg.alt = e.title;
+  box.querySelector("figcaption").textContent = `${e.title} · ${e.picture.credit}`;
+  // The frame is as tall as the page and never scrolls; centre the picture in the part of it the reader can see.
+  let top = 0, height = window.innerHeight;
+  try {
+    const r = window.frameElement.getBoundingClientRect(), view = window.parent.innerHeight;
+    top = Math.max(0, -r.top); height = Math.min(view, r.bottom) - Math.max(0, r.top);
+  } catch (err) { /* not in a frame, or not allowed to look: centre in the window */ }
+  boxFig.style.top = (top + height / 2) + "px"; boxImg.style.maxHeight = Math.max(200, height * 0.82 - 30) + "px";
+  box.hidden = false; box.querySelector(".close").focus({ preventScroll: true });
+}
+function closeLarge() { if (box.hidden) return; box.hidden = true; boxImg.removeAttribute("src"); if (returnTo) returnTo.focus({ preventScroll: true }); }
+box.addEventListener("click", (ev) => { if (ev.target !== boxImg) closeLarge(); });
+document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") closeLarge(); });
+
+// ---- placing it all ----
+// Columns: the axis on the left, then one per satellite (rail at its left edge, cards to its right).
+function geometry(n) {
+  const narrow = window.innerWidth < 640, axis = narrow ? 64 : 92, min = n === 1 ? 0 : narrow ? 170 : 190;
+  const avail = document.body.clientWidth - (narrow ? 32 : 40);
+  const W = Math.max(avail, axis + n * min), col = (W - axis) / n;
+  return { W, axis, col, grid: `${axis}px repeat(${n}, ${col}px)`,
+           rails: [...Array(n).keys()].map((i) => axis + i * col + 8), cards: [...Array(n).keys()].map((i) => [axis + i * col + 22, axis + (i + 1) * col - (i === n - 1 ? 0 : 10)]) };
+}
+
+let placed = [], G = null;   // placed: one row per pin or card [{col, u, card, pin, win, uFrom, now}]
+function draw() {
+  hideTip();
+  drawControls();
+  const sats = picked.map((n) => byName[n]);
+  const S = scaleOf(scaleNow());
+  G = geometry(sats.length); G.S = S;
+  const compare = sats.length > 1;
+  document.body.classList.toggle("compare", compare);
+  $("inner").style.width = G.W + "px";
+  document.body.style.setProperty("--grid", G.grid);
+  $("heads").replaceChildren(el("div"), ...sats.map(head));
+  const inWindow = (d) => d !== null && (S.from === undefined || (d >= S.from && d <= S.to));
+  const bands = { before: [], after: [] };
+  const tl = $("tl"); tl.replaceChildren();
+  placed = []; cards = {};
+  const firstAt = {};   // step#n -> days after launch, for the first picked satellite
+  sats.forEach((s, col) => {
+    const x = G.rails[col];
+    const rail = el("div", undefined, "rail"); rail.style.left = x + "px"; tl.append(rail); G[`rail${col}`] = rail;
+    const b = el("div", undefined, "flow"), a = el("div", undefined, "flow"); const counts = {};
+    cards[s.name] = {};
+    const aheadSteps = new Set(s.checklist.filter((c) => c.state === "ahead").map((c) => c.step));
+    const pending = {};   // an undated event for a step still ahead: shown as that step's "not yet" card, with its source
+    s.events.forEach((e, i) => {
+      const key = `${s.name}|${i}`;
+      if (!e.at && aheadSteps.has(e.step)) { const g = card(s, e, key, null, ""); g.classList.add("ghost"); g.querySelector(".t").replaceChildren("not yet"); pending[e.step] = g; return; }
+      const n = counts[e.step] = (counts[e.step] || 0) + 1;
+      const d = place(e, s);
+      const match = e.step === "note" || e.failed ? null : `${e.step}#${n}`;
+      if (col === 0 && match && d !== null) firstAt[match] = d;
+      const other = col > 0 && match && d !== null && match in firstAt ? d - firstAt[match] : null;
+      const c = card(s, e, key, other, sats[0].name);
+      if (match) c.dataset.match = match;
+      if (!cards[s.name][e.step]) cards[s.name][e.step] = c;
+      if (!inWindow(d)) { (d === null || d < (S.from ?? 0) ? b : a).append(c); return; }
+      const ev = " " + BADGE[e.evidence];
+      const pin = el("div", undefined, "pin" + ev); pin.style.left = x + "px"; pin.style.setProperty("--c", phase(e));
+      pin.setAttribute("aria-hidden", "true");
+      let win = null;
+      if (e.from) { win = el("div", undefined, "win"); win.style.left = x + "px"; win.style.setProperty("--c", phase(e)); tl.append(win); }
+      const [l, r] = G.cards[col]; c.style.left = l + "px"; c.style.width = (r - l) + "px";
+      tl.append(pin, c);
+      placed.push({ col, u: S.y(d), d, card: c, pin, win, uFrom: e.from ? S.y(days(e.from, s.launch)) : null });
+    });
+    const failed = s.checklist.some((c) => c.state === "failed");
+    const nowD = place({ at: DATA.today }, s);
+    const ended = s.checklist.some((c) => c.step === "end" && c.state.startsWith("done"));
+    const ahead = failed ? [] : s.checklist.filter((c) => c.state === "ahead");
+    const ghostFor = (c) => { const g = pending[c.step] || ghost(c); if (!cards[s.name][c.step]) cards[s.name][c.step] = g; return g; };
+    if (!failed && !ended && inWindow(nowD)) {
+      placed.push({ col, u: S.y(nowD), d: nowD, now: true });
+      ahead.forEach((c) => { const g = ghostFor(c); const [l, r] = G.cards[col]; g.style.left = l + "px"; g.style.width = (r - l) + "px"; tl.append(g);
+        placed.push({ col, u: S.y(nowD), d: nowD, card: g }); });
+    } else ahead.forEach((c) => a.append(ghostFor(c)));
+    bands.before.push(b); bands.after.push(a);
+  });
+  ["before", "after"].forEach((k) => {
+    $(k).replaceChildren(el("div", k === "before" ? "not dated, or before the window" : "after the window", "rowlabel"), ...bands[k]);
+    $(k).hidden = bands[k].every((p) => !p.children.length);
+  });
+  // Hovering a card marks the same step on the other satellites.
+  tl.querySelectorAll(".card[data-match]").forEach((c) => {
+    const same = () => tl.querySelectorAll(`.card[data-match="${c.dataset.match}"]`);
+    c.addEventListener("mouseenter", () => same().forEach((o) => o !== c && o.classList.add("match")));
+    c.addEventListener("mouseleave", () => same().forEach((o) => o.classList.remove("match")));
+  });
+  layout();
+}
+
+// Each pin sits at its card. Walking down in time, the axis keeps to the scale until a card needs more room than
+// the scale gives; then it stretches there (drawn dashed), for every satellite at once, so the same height is the
+// same time across them all.
+function layout() {
+  if (!G) return;
+  const tl = $("tl");
+  tl.querySelectorAll(".tick, .gridline, .axis, .stretch, .nowmark, .nowword").forEach((e) => e.remove());
+  const rows = placed.slice().sort((p, q) => p.u - q.u || (p.now ? -1 : q.now ? 1 : 0) || p.col - q.col);
+  const S = G.S, ticks = S.ticks();
+  let lo = S.from !== undefined ? S.y(S.from) : Math.min(S.y(-1 / 24), ...rows.map((r) => r.uFrom ?? r.u));
+  const knots = [[lo, 14]];   // [time on the scale, height on the page]
+  const bottom = {};          // per column: where its next card may start
+  for (let i = 0; i < rows.length;) {
+    const u = rows[i].u, group = [];
+    while (i < rows.length && rows[i].u - u < 0.5) group.push(rows[i++]);
+    const [pu, py] = knots[knots.length - 1];
+    let y = py + Math.max(0, u - pu);
+    group.forEach((r) => { if (r.card || r.now) y = Math.max(y, (bottom[r.col] ?? 0) + PIN); });
+    knots.push([u, y]);
+    group.forEach((r) => {
+      if (r.now) { r.y = y; return; }
+      const top = Math.max(y - PIN, bottom[r.col] ?? 0);   // a second card at the same time goes under the first
+      r.card.style.top = top + "px"; r.y = top + PIN;
+      bottom[r.col] = top + r.card.offsetHeight + 8;
+    });
+  }
+  // From a time on the scale to a height on the page: straight between knots, at scale beyond them.
+  const Y = (u) => {
+    if (u <= knots[0][0]) return knots[0][1] - (knots[0][0] - u);
+    for (let k = 1; k < knots.length; k++) if (u <= knots[k][0]) {
+      const [u0, y0] = knots[k - 1], [u1, y1] = knots[k];
+      return u1 === u0 ? y1 : y0 + (y1 - y0) * (u - u0) / (u1 - u0);
+    }
+    const [ul, yl] = knots[knots.length - 1]; return yl + (u - ul);
+  };
+  const hiU = S.to !== undefined ? S.y(S.to) : knots[knots.length - 1][0] + 30;
+  const end = Math.max(Y(hiU), ...Object.values(bottom)) + 10;
+  rows.forEach((r) => {
+    if (r.now) {
+      const x = G.rails[r.col], m = el("div", undefined, "nowmark"); m.style.left = (x - 8) + "px"; m.style.width = "16px"; m.style.top = (r.y - 1) + "px";
+      const w = el("div", "now", "nowword"); w.style.left = (x - 40) + "px"; w.style.top = r.y + "px"; tl.append(m, w); return;
+    }
+    if (r.pin) r.pin.style.top = r.y + "px";
+    if (r.win) { const y0 = Math.max(0, Y(r.uFrom)); r.win.style.top = y0 + "px"; r.win.style.height = Math.max(4, r.y - y0) + "px"; }
+  });
+  // The axis: solid where it keeps to the scale, dashed where it stretched.
+  const ax = G.axis - 18, axis = el("div", undefined, "axis"); axis.style.left = ax + "px"; axis.style.top = "0px"; axis.style.height = end + "px"; tl.append(axis);
+  for (let k = 1; k < knots.length; k++) {
+    const [u0, y0] = knots[k - 1], [u1, y1] = knots[k];
+    if (y1 - y0 > (u1 - u0) + 2) { const s = el("div", undefined, "stretch"); s.style.left = ax + "px"; s.style.top = (y0 + (u1 - u0) + 2) + "px"; s.style.height = (y1 - y0 - (u1 - u0) - 4) + "px"; tl.append(s); }
+  }
+  let lastTick = -Infinity;
+  ticks.forEach(([d, label]) => {
+    const u = S.y(d); if (u < lo - 1 || u > hiU + 1) return;
+    const y = Y(u); if (y - lastTick < 16) return; lastTick = y;
+    const t = el("div", label, "tick" + (d === 0 ? " zero" : "")); t.style.right = (G.W - ax + 8) + "px"; t.style.top = y + "px";
+    const line = el("div", undefined, "gridline"); line.style.left = (ax + 2) + "px"; line.style.top = y + "px";   // a line across at each mark
+    tl.prepend(line); tl.append(t);
+  });
+  for (let c = 0; c < G.rails.length; c++) { const rail = G[`rail${c}`]; if (rail) { rail.style.top = "0px"; rail.style.height = end + "px"; } }
+  tl.style.height = end + "px";
+  fitFrame();
+}
+
+function legend() {
+  const l = $("legend"); l.replaceChildren(el("b", "Colour is the phase of life"));
+  const item = (mark, words) => { const s = el("span"); s.append(mark, words); l.append(s); };
+  [["launch", "getting there"], ["burn", "raising the orbit"], ["gso", "on station"], ["service", "working"], ["end", "before launch, after service"]]
+    .forEach(([step, words]) => { const m = el("i", undefined, "swatch"); m.style.setProperty("--c", DATA.step_colours[step]); item(m, words); });
+  const failed = el("i", undefined, "swatch"); failed.style.setProperty("--c", "var(--bad)"); item(failed, "failed");
+  [["operator", "the operator said so"], ["records", "seen in the orbit records"], ["press", "press report"], ["table", "registry tables (IGS file, GCAT)"]]
+    .forEach(([kind, words], i) => { if (i === 0) l.append(el("b", "The pin's shape is who said so")); item(el("i", undefined, "pin " + kind), words); });
+  l.append(el("b", "The scale"));
+  item(el("i", undefined, "line"), "a line across at each mark of the scale");
+  item(el("i", undefined, "dash"), "dashed axis: stretched to make room for the cards");
+}
+
+// The frame takes the page's own height, so the dashboard scrolls as one page and nothing scrolls inside the frame.
+function fitFrame() {
+  if (!window.frameElement) return;
+  const parts = [...document.body.children].filter((e) => e.tagName !== "SCRIPT" && !e.hidden && e.id !== "lightbox" && e.id !== "tip");
+  const bottom = Math.max(0, ...parts.map((e) => e.getBoundingClientRect().bottom + window.scrollY));
+  window.frameElement.style.height = Math.ceil(bottom) + 12 + "px";
+}
+legend();
+// The key opens while the pointer is over it or it has focus, and a tap toggles it; Escape closes it.
+(() => {
+  const wrap = $("keywrap"), btn = $("keybtn"), panel = $("legend");
+  btn.prepend(icon(DATA.glyphs["info-circle"]));
+  const set = (open) => { panel.hidden = !open; btn.setAttribute("aria-expanded", open); };
+  wrap.addEventListener("mouseenter", () => set(true)); wrap.addEventListener("mouseleave", () => set(false));
+  btn.addEventListener("click", () => set(panel.hidden));
+  wrap.addEventListener("focusout", (ev) => { if (!wrap.contains(ev.relatedTarget)) set(false); });
+  document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") set(false); });
+})();
+$("findwrap").prepend(icon(DATA.glyphs.search));
+draw();
+if ("ResizeObserver" in window) { let w = window.innerWidth; new ResizeObserver(() => { if (window.innerWidth !== w) { w = window.innerWidth; draw(); } else fitFrame(); }).observe(document.body); }
+</script>
+</body>
+</html>
