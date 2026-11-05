@@ -13,7 +13,8 @@ import build_registry
 from build_registry import build_tables
 from evidence.igs_metadata import sinex_time
 from evidence.registry_tables import read_table, recently_added, tracked_list_in_step
-from evidence.settings import (REGISTRY_SATELLITE_COLUMNS, REGISTRY_SATELLITES_FILE, REGISTRY_SIGNAL_ID_COLUMNS,
+from evidence.settings import (REGISTRY_SATELLITE_COLUMNS, REGISTRY_SATELLITES_FILE, REGISTRY_SIGHTINGS_FILE,
+                               REGISTRY_SIGNAL_ID_COLUMNS,
                                REGISTRY_SIGNAL_IDS_FILE, REGISTRY_DASHBOARD_SATELLITES_FILE,
                                REGISTRY_DASHBOARD_SATELLITE_COLUMNS)
 from test_check_satellite_ids import SAMPLE
@@ -58,7 +59,8 @@ def test_committed_tables_are_sound():
 
 
 # What config/config.py held, typed by hand, before the dashboard read the registry.
-# Order matters: it is the order the dashboard shows them in.
+# Order matters: it is the order the dashboard shows them in. Satellites added since, through an approved
+# proposal, carry an added date and are left out of the comparison.
 DASHBOARD_SATELLITES_BEFORE_THE_SWITCH = {
     "NAVIK_SATS": {"IRNSS-1B": 39635, "IRNSS-1C": 40269, "IRNSS-1D": 40547, "IRNSS-1E": 41241,
                    "IRNSS-1F": 41384, "IRNSS-1G": 41469, "IRNSS-1I": 43286, "NVS-01": 56759},
@@ -74,7 +76,8 @@ def test_dashboard_lists_did_not_change(list_name):
     import config.config
 
     now, before = getattr(config.config, list_name), DASHBOARD_SATELLITES_BEFORE_THE_SWITCH[list_name]
-    assert list(now.items()) == list(before.items())
+    added = {row["dashboard_name"] for row in read_table(REGISTRY_DASHBOARD_SATELLITES_FILE) if row["added"]}
+    assert [item for item in now.items() if item[0] not in added] == list(before.items())
 
 
 def test_a_tracked_satellite_missing_from_the_registry_is_left_out_and_named(monkeypatch):
@@ -243,6 +246,7 @@ def test_main_writes_dashboard_satellite_rows_with_the_added_column(monkeypatch)
                         ([{"svn": "G001", "dashboard_name": "NAVSTAR 1", "added": "2026-08-01"}], [], {}, {}))
     monkeypatch.setattr(build_registry, "write_table",
                         lambda name, columns, rows: writes.append((name, list(columns), [list(row) for row in rows])))
+    monkeypatch.setattr(build_registry.celestrak, "_get", lambda **kwargs: [])
     monkeypatch.setattr(sys, "argv", ["build_registry.py", "--metadata", "sample.snx"])
 
     build_registry.main()
@@ -250,3 +254,52 @@ def test_main_writes_dashboard_satellite_rows_with_the_added_column(monkeypatch)
     dashboard_write = next(write for write in writes if write[0] == REGISTRY_DASHBOARD_SATELLITES_FILE)
     assert dashboard_write[1] == REGISTRY_DASHBOARD_SATELLITE_COLUMNS
     assert dashboard_write[2] == [["G001", "NAVSTAR 1", "2026-08-01"]]
+
+
+NVS_03 = {"NORAD_CAT_ID": 101228, "OBJECT_NAME": "NVS-03 (IRNSS-1L)", "OBJECT_ID": "2026-245A"}
+SIGHTED = {"svn": "I-101228", "constellation": "NavIC", "block": "", "cospar_id": "2026-245A", "catalogue_no": "101228",
+           "signal_id_now": "", "plane": "", "slot": "", "note": "Launched 2026-10-30; NVS-03 (IRNSS-1L)"}
+
+
+def test_celestrak_names_the_igs_file_lacks_become_sightings_until_the_igs_file_lists_them(monkeypatch):
+    monkeypatch.setattr(build_registry, "celestrak_read", lambda catalogue_no: {
+        "checked": True, "catalogue_status": "ok", "catalogue_entry": {"LAUNCH_DATE": "2026-10-30"}})
+    igs = [{"svn": "I010", "catalogue_no": "56759"}]
+    group = [NVS_03, {"NORAD_CAT_ID": 56759, "OBJECT_NAME": "IRNSS-1J (NVS-01)"},
+             {"NORAD_CAT_ID": 99999, "OBJECT_NAME": "GPS BIII-9 (PRN 01)"}]
+
+    rows, reads, listed = build_registry.sightings_update([], igs, group)
+    assert rows == [list(SIGHTED.values())] and set(reads) == {"I-101228"} and listed == {}
+    assert build_registry.sightings_update([SIGHTED], igs, None)[0] == [list(SIGHTED.values())]  # CelesTrak down
+    assert build_registry.sightings_update([SIGHTED], igs + [{"svn": "I012", "catalogue_no": "101228"}], group) == (
+        [], {}, {"I-101228": "I012"})
+
+
+def test_a_sighting_is_tracked_after_its_system_and_moves_to_the_igs_svn_once_listed():
+    tracked = [{"svn": "I010", "dashboard_name": "NVS-01", "added": ""},
+               {"svn": "J003", "dashboard_name": "QZS-2", "added": ""}]
+    rows = build_registry.dashboard_with_sightings(tracked, [SIGHTED], {}, "2026-11-05")
+    assert [(row["svn"], row["dashboard_name"], row["added"]) for row in rows] == [
+        ("I010", "NVS-01", ""), ("I-101228", "NVS-03", "2026-11-05"), ("J003", "QZS-2", "")]
+    moved = build_registry.dashboard_with_sightings(rows, [], {"I-101228": "I012"}, "2026-12-01")
+    assert [row["svn"] for row in moved] == ["I010", "I012", "J003"] and moved[1]["added"] == "2026-11-05"
+
+
+def test_a_new_sighting_is_a_new_satellite_finding_with_celestrak_as_its_source():
+    from evidence.registry_changes import registry_findings
+    read = {"checked": True, "catalogue_status": "ok", "orbit_status": "none",
+            "catalogue_entry": {"OBJECT_NAME": "NVS-03 (IRNSS-1L)", "OBJECT_ID": "2026-245A", "OBJECT_TYPE": "PAY",
+                                "LAUNCH_DATE": "2026-10-30"}}
+    [finding] = registry_findings([], [SIGHTED], [], [], {}, {}, {}, {"I-101228": read}, date(2026, 11, 5))
+    assert finding["category"] == "New satellite" and "launched 30 Oct 2026" in finding["statement"]
+    assert [row["source"] for row in finding["sources"]] == ["CelesTrak satellite catalogue"]
+
+
+def test_committed_sightings_use_stand_in_svns_for_satellites_the_igs_file_lacks():
+    sightings, satellites = read_table(REGISTRY_SIGHTINGS_FILE), read_table(REGISTRY_SATELLITES_FILE)
+    with open(f"registry/{REGISTRY_SIGHTINGS_FILE}", encoding="utf-8") as handle:
+        assert handle.readline().strip().split(",") == REGISTRY_SATELLITE_COLUMNS
+    letters = {name: letter for letter, name in build_registry.constellation_names().items()}
+    for row in sightings:
+        assert row["svn"] == f"{letters[row['constellation']]}-{row['catalogue_no']}", row
+    assert not {row["catalogue_no"] for row in sightings} & {row["catalogue_no"] for row in satellites}

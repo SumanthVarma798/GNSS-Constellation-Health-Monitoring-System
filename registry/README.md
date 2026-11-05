@@ -11,6 +11,7 @@ International GNSS Service (IGS) satellite metadata file by `scripts/build_regis
 |---|---|---|
 | `satellites.csv` | the build script | One row per physical satellite |
 | `signal_ids.csv` | the build script | One row per satellite per signal-ID period |
+| `sightings.csv` | the build script | Satellites CelesTrak lists before the IGS file does |
 | `constellations.csv` | a person | Which system each SVN letter stands for |
 | `catalogue.csv` | its own build script | Owner and status of each satellite, as a second source states them |
 | `dashboard_satellites.csv` | a person | Which satellites the dashboard tracks, and its name for each |
@@ -42,6 +43,16 @@ and column names are written down once, in `evidence/settings.py`.
 
 A signal ID can pass from one satellite to another, so join signal data on the
 signal ID **and** the time, never on the signal ID alone.
+
+## sightings.csv: satellites CelesTrak lists before the IGS file does
+
+The IGS file can take weeks to list a new satellite. Each week the build script also reads
+CelesTrak's GNSS group, and a satellite named as in `SIGHTING_NAMES` (`evidence/settings.py`;
+NavIC only for now) whose catalogue number the IGS file lacks is proposed here, in the
+columns of `satellites.csv`, under a stand-in SVN: the system letter, a dash and the catalogue
+number (`I-101228`). Approving it also adds it to `dashboard_satellites.csv`. Once the IGS file
+lists that catalogue number, the row leaves this table and the dashboard row moves to the
+IGS file's SVN, in the same kind of proposal.
 
 ## constellations.csv: one row per navigation system
 

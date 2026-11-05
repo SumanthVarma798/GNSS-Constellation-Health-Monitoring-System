@@ -101,8 +101,8 @@ CATEGORY_RULE_WORDS = ('Categories are checked in order: first the headline is c
 
 # X accounts (kind "X account" in source_candidates.csv), read through twitterapi.io (key: TWITTERAPI_IO_KEY).
 X_API_URL = "https://api.twitterapi.io/twitter/tweet/advanced_search"
-# Only posts that name a navigation system are read.
-X_POST_WORDS = "(GPS OR BeiDou OR Galileo OR GLONASS OR NavIC OR IRNSS OR QZSS OR Michibiki)"
+# Only posts that name a navigation system (or an NVS satellite: "NVS-03") are read.
+X_POST_WORDS = "(GPS OR BeiDou OR Galileo OR GLONASS OR NavIC OR IRNSS OR NVS OR QZSS OR Michibiki)"
 # Each read covers this many days back, so a missed run loses nothing.
 X_READ_DAYS = 2
 # A post has no headline: its first words, cut here, stand in for one.
