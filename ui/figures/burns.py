@@ -1,13 +1,11 @@
 """Burns: when each satellite's orbit was corrected, and how steadily.
 
-burn_timeline    one band per satellite on a shared time axis. East-west burns sit in
-                 the upper half of a band (solid), north-south in the lower half
-                 (hatched). Each bar spans the detected window, so zooming in shows
-                 how well the time of a burn is known.
-burn_cadence     one small chart per satellite: days since the previous burn of the
-                 same kind, at the date of each burn. A steady operator is a flat
-                 line of points, an irregular one scatters, a gap is a tall point.
-cadence_summary  the same pattern as numbers and one word.
+burn_timeline    one row per satellite on a shared time axis, each burn a small mark
+                 (east-west a dot, north-south an open diamond) whose hover card says
+                 when, how much and how long after the one before; at the row's end
+                 the days since its last east-west burn, in the warning colour once
+                 that has run past the usual window.
+cadence_summary  the rhythm of each satellite and kind as numbers and one word.
 rhythm           one line per satellite: how often it burns east-west, how far it is
                  into the current cycle, and when the next burn is due.
 
@@ -17,31 +15,29 @@ before and at the detected jump, so the burn is somewhere inside), d_sma_km and
 d_inc_deg. burns_from_detections builds it from the detector's output.
 No Streamlit and no clock: the caller passes the time span.
 """
+from html import escape
+
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 from evidence import settings
 from ui import palette
-from ui.tooltip import PLOTLY_HOVER
+from ui.tooltip import PLOTLY_HOVER, plotly_card
 
 EAST_WEST = "east-west"
 NORTH_SOUTH = "north-south"
 KINDS = (EAST_WEST, NORTH_SOUTH)
 COLUMNS = ["satellite", "kind", "window_start", "window_end", "d_sma_km", "d_inc_deg"]
-KIND_COLOUR = {EAST_WEST: palette.ACCENT, NORTH_SOUTH: palette.MUTED}
-KIND_LABEL = {EAST_WEST: "E-W", NORTH_SOUTH: "N-S"}
-KIND_OFFSET = {EAST_WEST: 0.22, NORTH_SOUTH: -0.22}   # E-W above the middle of a band, N-S below
+KIND_LABEL = {EAST_WEST: "East-west", NORTH_SOUTH: "North-south"}
+# The burn list on the page draws the same two shapes (ui/theme.css, .mk.ew and .mk.ns).
+KIND_SYMBOL = {EAST_WEST: "circle", NORTH_SOUTH: "diamond-open"}
 PATTERN_REGULAR, PATTERN_IRREGULAR, PATTERN_TOO_FEW = "regular", "irregular", "too few"
 
-MIN_WIDTH_SHARE = 1 / 800     # a bar is never narrower than this share of the whole span
-BAND_HALF = 0.46              # a band reaches this far either side of its middle, leaving a gap between bands
-BAR_HEIGHT = 0.36            # of a band of height 1
-ROW_PX = 64                   # height of one band
-SLIDER_PX = 110               # axis, range slider and margins under the bands
-CADENCE_COLUMNS = 4
-CELL_PX = 190
+MARK_PX = 9                   # one burn's mark
+ROW_PX = 34                   # height of one satellite's row
+FRAME_PX = 64                 # the key above the rows and the date axis under them
+END_PX = 52                   # room after a row for its days since the last burn
 
 
 def burns_from_detections(detected_by_satellite):
@@ -81,58 +77,86 @@ def _when(ts):
     return f"{ts.day} {ts:%b %Y %H:%M}"
 
 
+def _when_after(first, ts):
+    """ts, leaving out what it shares with first: '04:10', '4 Mar 04:10' or the whole date."""
+    if ts.date() == first.date():
+        return f"{ts:%H:%M}"
+    return f"{ts.day} {ts:%b %H:%M}" if ts.year == first.year else _when(ts)
+
+
 def _width_words(delta):
     hours = delta.total_seconds() / 3600
     return f"{hours:.0f} hours" if hours < 48 else f"{hours / 24:.1f} days"
 
 
-def _hover(row):
-    if row.kind == EAST_WEST:
-        size = f"orbit height changed by {row.d_sma_km:+.2f} km"
-    else:
-        size = f"tilt changed by {row.d_inc_deg:+.3f} degrees"
-    return (f"{row.satellite}: {row.kind} burn<br>sometime between {_when(row.window_start)} "
-            f"and {_when(row.window_end)} UTC<br>(window {_width_words(row.window_end - row.window_start)} wide)<br>{size}")
+def _days(value):
+    return f"{value:.0f} d"
+
+
+def _mark_hover(row):
+    """One burn: when (the window it fell in), how much it changed the orbit, and the gap since the one before."""
+    when = (f"{_when(row.window_start)} – {_when_after(row.window_start, row.window_end)} UTC "
+            f"({_width_words(row.window_end - row.window_start)})")
+    change = f"orbit height {row.d_sma_km:+.2f} km" if row.kind == EAST_WEST else f"tilt {row.d_inc_deg:+.3f}°"
+    gap = "first in view" if pd.isna(row.gap_days) else f"{_days(row.gap_days)} after the one before"
+    if not pd.isna(row.usual_days):
+        gap += f", usually {_days(row.usual_days)}"
+    return plotly_card(f"{row.satellite} · {row.kind} burn", ("When", when), ("Change", change), ("Gap", gap))
+
+
+def _since_hover(r):
+    """The row's end: days since its last east-west burn, the usual interval, and whether that has run out."""
+    if r["since_days"] is None:
+        return plotly_card(r["satellite"], ("Last east-west burn", "none in view"))
+    lines = [("Last east-west burn", f"{_days(r['since_days'])} ago, {_when(r['last'])} UTC")]
+    if r["median_days"] is not None:
+        lines.append(("Usually", f"every {_days(r['median_days'])} ({r['q1_days']:.0f} to {_days(r['q3_days'])})"))
+    if r["late"]:
+        lines.append(("Late", f"past the usual {_days(r['q3_days'])}"))
+    return plotly_card(r["satellite"], *lines)
 
 
 def burn_timeline(burns, satellites, start, end):
-    """One band per satellite; opens on the last BURN_TIMELINE_RECENT_DAYS days of [start, end]."""
+    """One row per satellite on a shared time axis over [start, end]: each burn a small mark (east-west a dot,
+    north-south an open diamond) and, at the row's end, the days since its last east-west burn. The stretch from
+    that burn to the end is drawn as a thicker line, in the warning colour once it has run past the usual window
+    (rhythm's late). Every mark and every end value opens a hover card; nothing else is written on the chart."""
     start, end = _naive_utc(start), _naive_utc(end)
     satellites = list(satellites)
-    b = _clean(burns)
-    min_width = (end - start) * MIN_WIDTH_SHARE
+    b = _with_gaps(_clean(burns))
+    b["usual_days"] = b.groupby(["satellite", "kind"])["gap_days"].transform("median")
+    row_of = {name: -i for i, name in enumerate(satellites)}
     fig = go.Figure()
     for kind in KINDS:
         rows = b[(b["kind"] == kind) & b["satellite"].isin(satellites)]
-        width = [max(w, min_width) for w in rows["window_end"] - rows["window_start"]]
-        fig.add_trace(go.Bar(
-            orientation="h", name=kind, showlegend=False, width=BAR_HEIGHT, hoverinfo="text",
-            y=[-satellites.index(s) + KIND_OFFSET[kind] for s in rows["satellite"]],
-            x=[w.total_seconds() * 1000 for w in width],               # length in milliseconds...
-            base=list(rows["middle"] - pd.to_timedelta(width).values / 2),   # ...from the left edge
-            hovertext=[_hover(r) for r in rows.itertuples()],
-            marker={"color": KIND_COLOUR[kind], "line": {"color": KIND_COLOUR[kind], "width": 1},
-                    **({"pattern": {"shape": "/", "fgcolor": KIND_COLOUR[kind], "bgcolor": palette.PLATFORM, "size": 6}}
-                       if kind == NORTH_SOUTH else {})}))
-    for i, name in enumerate(satellites):
-        fig.add_shape(type="rect", xref="paper", x0=0, x1=1, yref="y", y0=-i - BAND_HALF, y1=-i + BAND_HALF,
-                      fillcolor=palette.WELL, line_width=0, layer="below")
-        fig.add_annotation(xref="paper", x=0, xshift=-40, xanchor="right", yref="y", y=-i, text=name,
-                           showarrow=False, font={"color": palette.INK, "size": 13})
-    if satellites:  # name the two halves once, beside the first band
-        for kind in KINDS:
-            fig.add_annotation(xref="paper", x=0, xshift=-6, xanchor="right", yref="y", y=KIND_OFFSET[kind],
-                               text=KIND_LABEL[kind], showarrow=False, font={"color": palette.MUTED, "size": 11})
-    first = max(start, end - pd.Timedelta(days=settings.BURN_TIMELINE_RECENT_DAYS))
+        fig.add_trace(go.Scatter(
+            x=rows["middle"], y=[row_of[s] for s in rows["satellite"]], mode="markers", name=KIND_LABEL[kind],
+            cliponaxis=False, hoverinfo="text", hovertext=[_mark_hover(r) for r in rows.itertuples()],
+            marker={"symbol": KIND_SYMBOL[kind], "size": MARK_PX, "color": palette.INK,
+                    "line": {"color": palette.INK, "width": 1.5}}))
+    for r in rhythm(burns, satellites, end):
+        y, late = row_of[r["satellite"]], bool(r["late"])
+        fig.add_shape(type="line", x0=start, x1=end, y0=y, y1=y, line={"color": palette.TRACK, "width": 1}, layer="below")
+        if r["last"] is not None:
+            fig.add_shape(type="line", x0=r["last"], x1=end, y0=y, y1=y, layer="below",
+                          line={"color": palette.WARN if late else palette.FILL, "width": 3})
+        fig.add_annotation(xref="paper", x=1, xshift=10, xanchor="left", yref="y", y=y, showarrow=False,
+                           text="–" if r["since_days"] is None else _days(r["since_days"]),
+                           font={"color": palette.WARN if late else palette.MUTED, "family": palette.FONT_NUMBERS,
+                                 "size": 13},
+                           hovertext=_since_hover(r), hoverlabel={k: v for k, v in PLOTLY_HOVER.items() if k != "align"})
+    axis = {"fixedrange": True, "zeroline": False, "automargin": True}
     fig.update_layout(
-        height=ROW_PX * max(len(satellites), 1) + SLIDER_PX, margin={"l": 110, "r": 16, "t": 8, "b": 8},
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", barmode="overlay",
-        font={"color": palette.INK}, showlegend=False,
-        hoverlabel=PLOTLY_HOVER,
-        xaxis={"type": "date", "range": [first, end], "showgrid": False, "linecolor": palette.TRACK,
-               "tickcolor": palette.TRACK, "rangeslider": {"visible": True, "range": [start, end], "thickness": 0.1,
-                                                           "bgcolor": palette.WELL, "bordercolor": palette.TRACK}},
-        yaxis={"range": [-len(satellites) + 0.5, 0.5], "visible": False, "fixedrange": True})
+        height=ROW_PX * max(len(satellites), 1) + FRAME_PX, margin={"l": 8, "r": END_PX, "t": 8, "b": 8},
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font={"color": palette.INK, "family": palette.FONT},
+        dragmode=False, hoverlabel=PLOTLY_HOVER,
+        legend={"orientation": "h", "x": 0, "y": 1, "yanchor": "bottom", "itemwidth": 30, "bgcolor": "rgba(0,0,0,0)",
+                "font": {"color": palette.MUTED, "size": 12}},
+        xaxis={"type": "date", "range": [start, end], "showgrid": False, "linecolor": palette.TRACK,
+               "tickcolor": palette.TRACK, "tickfont": {"color": palette.MUTED}, **axis},
+        yaxis={"range": [-len(satellites) + 0.5, 0.5], "tickvals": list(row_of.values()),
+               "ticktext": [escape(s) for s in satellites], "tickfont": {"color": palette.INK, "size": 13},
+               "showgrid": False, "showline": False, "ticks": "", "ticklabelstandoff": 14, **axis})
     return fig
 
 
@@ -141,43 +165,6 @@ def _with_gaps(b):
     b = b.copy()
     b["gap_days"] = b.groupby(["satellite", "kind"])["middle"].diff().dt.total_seconds() / 86400
     return b
-
-
-def burn_cadence(burns, satellites):
-    """Small multiples: days since the previous burn of the same kind, against the date of each burn."""
-    b = _with_gaps(_clean(burns))
-    satellites = list(satellites)
-    cols = min(CADENCE_COLUMNS, max(len(satellites), 1))
-    rows = -(-max(len(satellites), 1) // cols)
-    fig = make_subplots(rows=rows, cols=cols, shared_xaxes="all", shared_yaxes="all",
-                        subplot_titles=satellites, horizontal_spacing=0.03, vertical_spacing=0.14)
-    for i, name in enumerate(satellites):
-        r, c = i // cols + 1, i % cols + 1
-        for kind, symbol in ((EAST_WEST, "circle"), (NORTH_SOUTH, "diamond")):
-            pts = b[(b["satellite"] == name) & (b["kind"] == kind)].dropna(subset=["gap_days"])
-            fig.add_trace(go.Scatter(
-                x=pts["middle"], y=pts["gap_days"], mode="markers", name=KIND_LABEL[kind],
-                legendgroup=kind, showlegend=False, hoverinfo="text",
-                marker={"symbol": symbol, "size": 8, "color": KIND_COLOUR[kind]},
-                hovertext=[f"{name}: {kind} burn, {_when(m)} UTC<br>{g:.0f} days after the previous one"
-                           for m, g in zip(pts["middle"], pts["gap_days"])]), row=r, col=c)
-            if len(pts):
-                fig.add_hline(y=float(pts["gap_days"].median()), row=r, col=c, opacity=0.4,
-                              line={"color": KIND_COLOUR[kind], "width": 1, "dash": "dot"})
-    for kind, symbol in ((EAST_WEST, "circle"), (NORTH_SOUTH, "diamond")):  # the key, drawn once and never empty
-        fig.add_trace(go.Scatter(x=[None], y=[None], mode="markers", name=KIND_LABEL[kind], legendgroup=kind,
-                                 marker={"symbol": symbol, "size": 8, "color": KIND_COLOUR[kind]}, hoverinfo="skip"))
-    axis = {"linecolor": palette.TRACK, "tickcolor": palette.TRACK, "zeroline": False}
-    fig.update_xaxes(type="date", showgrid=False, **axis)
-    fig.update_yaxes(rangemode="tozero", showgrid=True, gridcolor=palette.WELL, **axis)
-    fig.update_yaxes(title_text="days since previous burn", row=1, col=1)
-    fig.update_annotations(font={"color": palette.INK, "size": 12})
-    fig.update_layout(
-        height=CELL_PX * rows + 70, margin={"l": 60, "r": 16, "t": 50, "b": 30},
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font={"color": palette.INK},
-        legend={"orientation": "h", "x": 0, "y": 1.12, "bgcolor": "rgba(0,0,0,0)"},
-        hoverlabel=PLOTLY_HOVER)
-    return fig
 
 
 def cadence_summary(burns, satellites):

@@ -21,6 +21,7 @@ from evidence import jobs
 from evidence.console_settings import WORKFLOWS_DIR
 from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS
 from ui import changes, data, surfaces, time_range
+from ui.components.clock import clock_frame
 
 # Pages with their own filters: the bar shows no constellation, window or thresholds there.
 OWN_FILTERS = {"Master map", "World map", "Library"}
@@ -53,6 +54,21 @@ THRESHOLDS = [
     ("maneuver_uniformity_threshold", "Manoeuvre uniformity CoV", 0.1, 2.0, 0.1, "%.1f"),
 ]
 QZSS_INCLINATION_TOLERANCE = 4.0   # as app.py: QZSS's IGSO satellites have a wider tolerance
+
+# Under every page: the licences (LICENSE, LICENSE-DATA) and whose data the pages draw on, as NOTICE lists them.
+FOOTER_HTML = (
+    '<div class="footer small">'
+    'Code <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache-2.0</a> · '
+    'Our data <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> · '
+    'Orbits from CelesTrak and Space-Track · Navigation messages from the IGS, via BKG · '
+    'Catalogue from GCAT (J. McDowell, planet4589.org/space/gcat) · Land from Natural Earth'
+    '</div>'
+)
+
+
+def footer():
+    """The licence and credits line, after the page."""
+    st.html(FOOTER_HTML)
 
 
 def pages():
@@ -110,18 +126,19 @@ def failing_words(since, now, tz=timezone.utc, what="CelesTrak"):
 
 
 def copy_words(copy_at, now, tz=timezone.utc):
-    """'CelesTrak via the archive job · copy 05:06 · next about 08:15' for a copy in use.
+    """'Orbits from CelesTrak, fetched 05:06 · next fetch about 08:15' for a copy in use: in words a reader of the
+    dashboard knows (the archive job that fetches them is ours, not theirs).
 
     The copy's time and the archive job's next orbital run are shown in `tz`, with the day in front when not today.
     No next time is shown when the workflow file cannot be read or has no orbital schedule.
     """
-    words = f"CelesTrak via the archive job · copy {_day_time(copy_at, now, tz)}"
+    words = f"Orbits from CelesTrak, fetched {_day_time(copy_at, now, tz)}"
     try:
         crons = jobs.schedules((WORKFLOWS_DIR / "archive.yml").read_text(encoding="utf-8")).get("orbital", [])
         next_at = jobs.next_run(crons, now) if crons else None
     except (OSError, ValueError, TypeError, IndexError):
         next_at = None
-    return words + (f" · next about {_day_time(next_at, now, tz)}" if next_at else "")
+    return words + (f" · next fetch about {_day_time(next_at, now, tz)}" if next_at else "")
 
 
 def offered():
@@ -171,7 +188,7 @@ def _data_chip(names, window_days, params, live, now):
         return surfaces.chip(text, status)
     # A copy saved before failing_since was kept has none: its last try stands in.
     return surfaces.chip(text, status) + surfaces.chip(
-        failing_words(live["failing_since"] or live["tried"], now, viewer_zone(), what="Archive copy"), "warn")
+        failing_words(live["failing_since"] or live["tried"], now, viewer_zone(), what="Orbit fetch"), "warn")
 
 
 def next_words(left):
@@ -181,11 +198,6 @@ def next_words(left):
     hours, minutes = divmod(-(-int(left) // 60), 60)
     parts = ([f"{hours} h"] if hours else []) + ([f"{minutes} m"] if minutes or not hours else [])
     return "Next update in " + " ".join(parts)
-
-
-def clock_words(now):
-    """'14:05 UTC'."""
-    return f"{now.astimezone(timezone.utc):%H:%M} UTC"
 
 
 def _left(tried, now):
@@ -207,13 +219,13 @@ def _ring(live, now):
 
 @st.fragment(run_every=CLOCK_TICK_SECONDS)
 def _clock():
-    """The UTC clock and the wait to the next automatic refresh, redrawn alone every CLOCK_TICK_SECONDS; when the
-    refresh is due the whole page reruns and the top bar fetches."""
+    """The wait to the next automatic refresh, redrawn alone every CLOCK_TICK_SECONDS (the clock above it ticks in the
+    browser: ui/components/clock.py); when the refresh is due the whole page reruns and the top bar fetches."""
     now = datetime.now(timezone.utc)
     if celestrak.state["tried"] and celestrak.due(now):
         st.rerun()
     upcoming = next_words(_left(celestrak.state["tried"], now)) if celestrak.state["tried"] else ""
-    st.html(f'<span class="clock num">{clock_words(now)}</span><span class="next">{upcoming}</span>')
+    st.html(f'<span class="next">{upcoming}</span>')
 
 
 def _refresh(names, window_days, gear_scope):
@@ -222,7 +234,7 @@ def _refresh(names, window_days, gear_scope):
     with st.container(key="refresh"):
         clock, chip = st.container(key="clock"), st.empty()
         clicked = st.button("Refresh orbit data", key="refresh_button", icon=":material/refresh:",
-                            help="Re-read the archive job's newest copy of the orbit data")
+                            help="Load the newest orbit data we have fetched")
         if gear_scope:
             with st.popover("", icon=":material/settings:", help="Detection thresholds"):
                 st.session_state["params"] = _thresholds(gear_scope)
@@ -230,6 +242,7 @@ def _refresh(names, window_days, gear_scope):
         live, now = data.refresh(clicked), datetime.now(timezone.utc)
         chip.html(_data_chip(names, window_days, st.session_state["params"], live, now) + _ring(live, now))
         with clock:   # after the refresh, so it reads the try just made
+            clock_frame()
             _clock()
 
 

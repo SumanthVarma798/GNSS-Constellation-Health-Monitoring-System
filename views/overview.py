@@ -2,18 +2,18 @@
 
 The count first, then the tiles grouped by orbit type and the slot picture; then the details, each in a section
 (ui/reveal.py): per orbit type a table of what each measure is against what it should be, open, then what the checks
-found and how each satellite was classed, closed.
+found (ui/checks.py) and how each satellite was classed, closed. What is missing or left out goes to the notices
+inbox (ui/notices.py), not the page.
 """
 import re
 from datetime import datetime, timezone
-from html import escape
 
 import pandas as pd
 import streamlit as st
 
 from config.config import MEO_SATS, TRACKED_NOT_IN_REGISTRY
 from evidence.registry_tables import new_on_dashboard
-from ui import (data, limits, measures, meo_overview, official_status, orbit_age, orbit_section,
+from ui import (checks, data, limits, measures, meo_overview, official_status, orbit_age, orbit_section,
                 palette, reveal, shell, surfaces, time_range, tooltip)
 from ui.data import SATELLITES
 from ui.figures.constellation_3d import slot_legend
@@ -22,7 +22,6 @@ from ui.orbit_section import CHIP_STATUS, PARTS
 from ui.picker import picker
 HEALTHY_FROM = 80
 STATUS_CHIP = {"Healthy": "ok", "Fair": "warn", "Degraded": "bad", "Critical": "bad"}
-EMOJI = re.compile(r"[\u2100-\u23FF\u2460-\u27BF\U0001F000-\U0001FAFF\uFE0F]\s?")   # the remarks' status signs; the words stay
 CLASS_COLUMNS = [("Satellite", ""), ("Type", "From the mean tilt"), ("Mean inclination", "In the window"),
                  ("Mean height", "In the window"), ("Drift now", "Per day")]
 
@@ -133,21 +132,6 @@ def _measures(key, rows, title="Measured against limits"):
     reveal.section(key, title, summary, surfaces.table([("Satellite", "")] + measures.COLUMNS, rows), open=True)
 
 
-def _findings(health_row):
-    """One satellite's findings, one line each, as the health assessment wrote them, without the status signs."""
-    lines = [EMOJI.sub("", part).strip() for part in str(health_row.get("Remarks", "")).split(" | ")]
-    return [line for line in lines if line]
-
-
-def _remarks(health):
-    """Each satellite's findings, one line each."""
-    items = ""
-    for h in health.to_dict("records"):
-        items += (f"<li><b>{escape(str(h['Satellite']))}</b>"
-                  + "".join(f"<span>{escape(line)}</span>" for line in _findings(h)) + "</li>")
-    return f'<ul class="remarks">{items}</ul>'
-
-
 def _classes_table(classes):
     cell = measures.cell
     rows = [(c["satellite"], [cell(c["type"]),
@@ -199,10 +183,9 @@ def constellation(name, window_days, params):
         scored = [(name, result, tiles[n][2]) for n in names if tiles[n][2] is not None]
         if scored:
             _measures(f"overview_measures_{kind}", _table_rows(scored, params, window), f"Measured against limits: {kind}")
-    found = sum(len(_findings(h)) for h in result["health"].to_dict("records"))
-    reveal.section("overview_checks", "What the checks found",
-                   f"{reveal.count(len(result['health']), 'satellite')} · {reveal.count(found, 'finding')}",
-                   _remarks(result["health"]))
+    grouped = checks.by_outcome(result["health"])
+    reveal.section("overview_checks", "What the checks found", checks.summary(grouped, len(result["health"])),
+                   checks.body(grouped))
     kinds = measures.grouped({c["satellite"]: c["type"] for c in classes})
     reveal.section("overview_classes", "How each satellite was classed",
                    " · ".join(f"{len(n)} {kind}" for kind, n in kinds.items()), _classes_table(classes))
@@ -238,4 +221,4 @@ try:
     else:
         constellation(st.session_state["scope"], st.session_state["window_days"], st.session_state["params"])
 except ValueError as error:
-    surfaces.show(surfaces.notice(str(error), "warn"))
+    surfaces.show(surfaces.notice(str(error), "warn", inline=True))

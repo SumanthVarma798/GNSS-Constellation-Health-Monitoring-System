@@ -12,6 +12,7 @@ from ui.figures.constellation_3d import BELT_RADIUS, LEFT_RING_EXTRA, constellat
 from ui.figures.score_parts import score_parts
 from ui.figures.slot_belt import slot_belt
 from ui.figures.slot_rows import empty_slots, last_known_position, slot_rows, unknown_slots
+from ui.tooltip import plotly_card
 
 NAN = float("nan")
 HISTORY = DATA_DIR / "navic_gp_history.json"
@@ -212,28 +213,32 @@ def test_3d_has_no_legend_and_no_axes(navic):
 def test_3d_colours_satellites_by_state(navic):
     markers = [t for t in traces_by_mode(constellation_3d(navic)) if t.mode == "markers+text"][0]
     by_hover = dict(zip(markers.hovertext, markers.marker.color))
-    nvs = next(v for k, v in by_hover.items() if k.startswith("NVS-01"))
+    nvs = next(v for k, v in by_hover.items() if k.startswith("<b>NVS-01</b>"))
     assert nvs == palette.WARN
-    assert next(v for k, v in by_hover.items() if k.startswith("IRNSS-1D")) == palette.BAD
+    assert next(v for k, v in by_hover.items() if k.startswith("<b>IRNSS-1D</b>")) == palette.BAD
 
 
 def test_3d_hover_says_every_state_in_words(navic):
     figure = constellation_3d(navic)
     hover = " ".join(" ".join(t.hovertext) for t in traces_by_mode(figure) if t.hovertext is not None)
-    assert "NVS-01: off its slot, 2.08 degrees from its own slot" in hover
-    assert "IRNSS-1B: in slot" in hover
-    assert "IRNSS-1D: left its slot, 136.85 degrees from its own slot" in hover
+    assert "<b>NVS-01</b><br>" in hover and "State</span>  off its slot, 2.08 degrees from its own slot" in hover
+    assert "<b>IRNSS-1B</b>" in hover and "State</span>  in slot" in hover
+    assert "State</span>  left its slot, 136.85 degrees from its own slot" in hover
     unknown = constellation_3d(slot_rows(NAVIC_HEALTH[:1]))   # no position, so only its slot is drawn
     slots = next(t for t in traces_by_mode(unknown) if t.marker.symbol == "circle-open")
     assert dict(zip(slots.hovertext, slots.marker.color)) == {
-        "Slot 32.5 degrees east: belongs to IRNSS-1F, whose position is not known": palette.SLOT_COLOURS[palette.SLOT_UNKNOWN]}
+        slot_card(32.5, "belongs to IRNSS-1F, whose position is not known"): palette.SLOT_COLOURS[palette.SLOT_UNKNOWN]}
+
+
+def slot_card(lon, words):
+    return plotly_card(f"Slot {lon:g} degrees east", ("Now", words))
 
 
 def test_3d_slot_of_nvs_01_is_hollow_and_empty(navic):
     slots = next(t for t in traces_by_mode(constellation_3d(navic)) if t.marker.symbol == "circle-open")
     hover = dict(zip(slots.hovertext, slots.marker.color))
-    assert hover["Slot 131.5 degrees east: empty, it belongs to NVS-01 (off its slot)"] == palette.SLOT_EMPTY
-    assert hover["Slot 129.5 degrees east: IRNSS-1G is on it"] == palette.ACCENT
+    assert hover[slot_card(131.5, "empty, it belongs to NVS-01 (off its slot)")] == palette.SLOT_EMPTY
+    assert hover[slot_card(129.5, "IRNSS-1G is on it")] == palette.ACCENT
 
 
 def test_3d_left_satellite_rides_the_wider_ring_with_a_dashed_line_back(navic):
@@ -242,7 +247,7 @@ def test_3d_left_satellite_rides_the_wider_ring_with_a_dashed_line_back(navic):
     dotted = next(t for t in traces_by_mode(figure) if t.line.dash == "dot")
     assert max(dotted.x) == pytest.approx(wide)
     markers = [t for t in traces_by_mode(figure) if t.mode == "markers+text"][0]
-    index = next(i for i, h in enumerate(markers.hovertext) if h.startswith("IRNSS-1D"))
+    index = next(i for i, h in enumerate(markers.hovertext) if h.startswith("<b>IRNSS-1D</b>"))
     assert (markers.x[index] ** 2 + markers.y[index] ** 2) ** 0.5 == pytest.approx(wide)
     dashed = next(t for t in traces_by_mode(figure) if t.line.dash == "dash")
     assert any(v == pytest.approx(BELT_RADIUS * math.cos(math.radians(111.75))) for v in dashed.x if v is not None)

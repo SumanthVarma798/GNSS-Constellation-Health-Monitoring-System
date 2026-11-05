@@ -14,9 +14,9 @@ from plotly.subplots import make_subplots
 
 from analysis.dop_calculations import assess_dop_quality
 from ui import geometry_settings as gs
-from ui import palette, surfaces
+from ui import palette, surfaces, type_scale
 from ui.figures.orbits_3d import LAND_FILE
-from ui.tooltip import PLOTLY_HOVER
+from ui.tooltip import PLOTLY_HOVER, plotly_line, plotly_template
 
 CLEAR = "rgba(0,0,0,0)"
 AXIS = {"linecolor": palette.TRACK, "tickcolor": palette.TRACK, "gridcolor": palette.WELL, "zeroline": False}
@@ -126,15 +126,16 @@ def dop_trend(series, place):
     for key, (colour, dash, width) in DOP_LINES.items():
         fig.add_trace(go.Scatter(x=series["time"], y=series[key], name=key, mode="lines",
                                  line={"color": colour, "dash": dash, "width": width},
-                                 hovertemplate=f"{key} %{{y:.2f}}<extra></extra>"), row=1, col=1)
+                                 hovertemplate=plotly_line(key, "%{y:.2f}") + "<extra></extra>"), row=1, col=1)
     for band, colour in BAND_LINES:
         edge = gs.DOP_BANDS["GDOP"][band][1]
         fig.add_hline(y=edge, row=1, col=1, line={"color": colour, "width": 1, "dash": "dot"}, opacity=0.7,
                       annotation_text=f"{band.lower()} below {edge:g}", annotation_position="top right",
                       annotation_font={"color": colour, "size": 11})
     fig.add_trace(go.Bar(x=series["time"], y=series["seen"], name="In view", marker={"color": palette.FILL},
-                         hovertemplate="%{y} in view<extra></extra>", showlegend=False), row=2, col=1)
-    fig.update_xaxes(type="date", showgrid=False, **{k: v for k, v in AXIS.items() if k != "gridcolor"})
+                         hovertemplate=plotly_line("In view", "%{y}") + "<extra></extra>", showlegend=False), row=2, col=1)
+    fig.update_xaxes(type="date", showgrid=False, hoverformat="<b>%d %b %Y %H:%M UTC</b>",
+                     **{k: v for k, v in AXIS.items() if k != "gridcolor"})
     fig.update_yaxes(rangemode="tozero", showgrid=True, **AXIS)
     fig.update_yaxes(title_text=f"DOP at {place}", row=1, col=1)
     fig.update_yaxes(title_text="in view", row=2, col=1, dtick=2)
@@ -272,8 +273,8 @@ def ground_map(tracks, here, types, places, chosen=None):
                                  line={"color": _colour(orbit), "width": 2}, marker={"size": 16, "opacity": 0},
                                  selected=hidden, unselected=hidden, name=orbit, legendgroup=orbit,
                                  showlegend=orbit not in shown,
-                                 hovertemplate=(f"<b>{escape(name)}</b><br>%{{customdata[0]}}<br>"
-                                                "over %{customdata[1]}<br>height %{customdata[2]:,.0f} km<extra></extra>")))
+                                 hovertemplate=plotly_template(name, ("When", "%{customdata[0]}"), ("Over", "%{customdata[1]}"),
+                                                               ("Height", "%{customdata[2]:,.0f} km"))))
         shown.add(orbit)
     now = [(n, *here[n]) for n in tracks if n in here]
     keep = {"marker": {"opacity": 1}}
@@ -283,11 +284,11 @@ def ground_map(tracks, here, types, places, chosen=None):
         mode="markers+text", textposition="top center", textfont={"color": palette.INK, "size": 11}, showlegend=False,
         marker={"size": 10, "color": [_colour(types.get(n, gs.OTHER_ORBIT)) for n, _, _ in now],
                 "symbol": [_symbol(types.get(n, gs.OTHER_ORBIT)) for n, _, _ in now], "line": {"color": palette.PLATFORM, "width": 1}},
-        selected=keep, unselected=keep, hovertemplate="<b>%{customdata[0]}</b> now<br>over %{customdata[1]}<extra></extra>"))
+        selected=keep, unselected=keep, hovertemplate=plotly_template("%{customdata[0]}", ("Now over", "%{customdata[1]}"))))
     fig.add_trace(go.Scatter(x=[lon for lat, lon in places.values()], y=[lat for lat, lon in places.values()],
                              text=[escape(p) for p in places], mode="markers", name="key places", selected=keep, unselected=keep,
                              marker={"symbol": "x-thin", "size": 10, "color": palette.MUTED, "line": {"color": palette.MUTED, "width": 2}},
-                             hovertemplate="%{text}<br>click to see its sky<extra></extra>"))
+                             hovertemplate=plotly_template("%{text}", ("Click", "to see its sky"))))
     picked = [chosen[1:]] if chosen else []
     lons = [x for t in tracks.values() for x in t["lon"]] + [lon for _, lon in [*places.values(), *picked]]
     lats = [y for t in tracks.values() for y in t["lat"]] + [lat for lat, _ in [*places.values(), *picked]]
@@ -312,15 +313,14 @@ def ground_map(tracks, here, types, places, chosen=None):
 # ---- orbit trends ----
 
 def _band(fig, x0, x1, low, high, yaxis):
-    """What the measure should be, as a shaded band (a dashed line when it is one value). Drawn as a trace, so the
-    axis always takes it in; its words are in the measure's own hover."""
+    """What the measure should be, drawn quietly: a pressed-in band (a dashed line when it is one value). Drawn as a
+    trace, so the axis always takes it in; its words are in the measure's own hover."""
     if low == high:
-        fig.add_trace(go.Scatter(x=[x0, x1], y=[low, low], mode="lines", line={"color": palette.OK, "dash": "dash", "width": 1},
+        fig.add_trace(go.Scatter(x=[x0, x1], y=[low, low], mode="lines", line={"color": palette.TRACK, "dash": "dash", "width": 1},
                                  hoverinfo="skip", showlegend=False, yaxis=yaxis))
         return
     fig.add_trace(go.Scatter(x=[x0, x1, x1, x0, x0], y=[low, low, high, high, low], mode="lines", fill="toself",
-                             fillcolor=palette.OK, line={"width": 0}, opacity=0.16, showlegend=False, hoverinfo="skip",
-                             yaxis=yaxis))
+                             fillcolor=palette.WELL, line={"width": 0}, showlegend=False, hoverinfo="skip", yaxis=yaxis))
 
 
 def _should(band):
@@ -330,46 +330,79 @@ def _should(band):
     return f" (should be {low:g})" if low == high else f" (should be {low:g} to {high:g})"
 
 
+def outside(values, band):
+    """True for each value outside its band. A band of one value has no tolerance set, so nothing is outside it."""
+    if band is None or band[0] == band[1]:
+        return values != values   # all False (NaN aside)
+    return (values < band[0]) | (values > band[1])
+
+
 def satellite_trends(series, name, orbit, bands, start, end):
-    """One satellite's measures (TRENDS), one strip each, over one shared time axis: hovering any strip reads all of
-    them at that time, with a line down through every strip.
+    """One satellite's measures (TRENDS), one strip each over one shared time axis, to be read at a glance: the line
+    in ink, what it should be as a quiet pressed-in band, readings outside the band marked in the bad colour, and the
+    latest reading written at the line's end (in the bad colour, and named under the title, when outside). Each
+    strip's name and unit sit above it. Hovering any strip reads all of them at that time, with a line down through
+    every strip. Fixed side margins keep every satellite's strips on the same time scale, side by side.
 
     series: {history column: table with satellite, EPOCH and that column}. bands: {column: (low, high)}."""
     fig = go.Figure()
-    count, gap = len(gs.TRENDS), 0.07
+    count, gap = len(gs.TRENDS), 0.1
     tall = (1 - gap * (count - 1)) / count
+    small = {"size": type_scale.LEVELS["small"][1], "color": palette.MUTED}
+    now_outside = []
     for i, (column, label, unit, _) in enumerate(gs.TRENDS):
         yaxis = "y" if i == 0 else f"y{i + 1}"
         top = 1 - i * (tall + gap)
         fig.update_layout({f"yaxis{'' if i == 0 else i + 1}": {
-            "domain": [top - tall, top], "title": {"text": f"{label}<br>{unit}", "font": {"size": 12, "color": palette.MUTED},
-                                                   "standoff": 6},
-            "showgrid": True, "nticks": 4, "tickfont": {"size": 12, "color": palette.MUTED},
+            "domain": [max(0, top - tall), top], "showgrid": False, "nticks": 3, "tickfont": small,
             "tickformat": ",.0f" if column == "altitude_km" else None, **AXIS}})
-        if column in bands:
-            _band(fig, start, end, *bands[column], yaxis)
+        fig.add_annotation(text=f"{escape(label)}  <span style='color:{palette.MUTED}'>{escape(unit)}</span>",
+                           xref="paper", yref="paper", x=0, y=top, xanchor="left", yanchor="bottom", showarrow=False,
+                           font={**small, "color": palette.INK})
+        band = bands.get(column)
+        if band is not None:
+            _band(fig, start, end, *band, yaxis)
         table = series.get(column)
         own = table[table["satellite"] == name] if table is not None else None
-        if own is not None and not own.empty:
-            fig.add_trace(go.Scatter(x=own["EPOCH"], y=own[column], name=label, yaxis=yaxis,
-                                     mode="lines+markers" if len(own) < 30 else "lines",
-                                     line={"color": _colour(orbit), "width": 1.8}, marker={"size": 5}, showlegend=False,
-                                     hovertemplate=(f"{label} %{{y:{TREND_FORMAT.get(column, '.3f')}}} {unit}"
-                                                    f"{_should(bands.get(column))}<extra></extra>")))
-    fig.update_xaxes(type="date", range=[start, end], anchor=f"y{count}", showgrid=False, tickfont={"size": 12, "color": palette.MUTED},
-                     hoverformat="%d %b %Y %H:%M UTC", showspikes=True, spikemode="across", spikesnap="cursor",
+        if own is None or own.empty:
+            continue
+        number = TREND_FORMAT.get(column, ".3f")
+        fig.add_trace(go.Scatter(x=own["EPOCH"], y=own[column], name=label, yaxis=yaxis,
+                                 mode="lines+markers" if len(own) < 30 else "lines",
+                                 line={"color": palette.INK, "width": 1.5}, marker={"size": 4}, showlegend=False,
+                                 hovertemplate=plotly_line(label, f"%{{y:{number}}}{_should(band)}") + "<extra></extra>"))
+        off = own[outside(own[column], band)]
+        if not off.empty:
+            fig.add_trace(go.Scatter(x=off["EPOCH"], y=off[column], name=f"{label} outside", yaxis=yaxis, mode="markers",
+                                     marker={"size": 6, "color": palette.BAD}, hoverinfo="skip", showlegend=False))
+        last = own.sort_values("EPOCH").iloc[-1]
+        late_out = bool(outside(last[column], band))
+        if late_out:
+            now_outside.append(label)
+        fig.add_annotation(text=f"{last[column]:{number}}", xref="paper", x=1, xshift=6, xanchor="left", yref=yaxis,
+                           y=last[column], showarrow=False,
+                           font={"family": palette.FONT_NUMBERS, "size": small["size"],
+                                 "color": palette.BAD if late_out else palette.INK})
+    fig.update_xaxes(type="date", range=[start, end], anchor=f"y{count}", showgrid=False, tickfont=small, nticks=4,
+                     hoverformat="<b>%d %b %Y %H:%M UTC</b>", showspikes=True, spikemode="across", spikesnap="cursor",
                      spikecolor=palette.MUTED, spikethickness=1, spikedash="solid",
                      linecolor=palette.TRACK, tickcolor=palette.TRACK)
-    return _layout(fig, TREND_ROW_PX * count + 70, hovermode="x unified", hoversubplots="axis", spikedistance=-1,
-                   margin={"l": 74, "r": 16, "t": 40, "b": 30},
-                   title={"text": f"<b>{escape(name)}</b>  <span style='color:{palette.MUTED}'>{escape(gs.ORBIT_WORDS.get(orbit, orbit))}</span>",
-                          "font": {"size": 14, "color": palette.INK}, "x": 0.01, "y": 0.98})
+    title = f"<b>{escape(name)}</b>  <span style='color:{palette.MUTED}'>{escape(gs.ORBIT_WORDS.get(orbit, orbit))}</span>"
+    extra = 20 if now_outside else 0
+    if now_outside:   # a line of its own between the title and the first strip's name
+        fig.add_annotation(text=f"now outside: {escape(', '.join(now_outside))}", xref="paper", yref="paper", x=0, y=1,
+                           xanchor="left", yanchor="bottom", yshift=extra + 2, showarrow=False, font={**small, "color": palette.BAD})
+    return _layout(fig, TREND_ROW_PX * count + 90 + extra, hovermode="x unified", hoversubplots="axis", spikedistance=-1,
+                   margin={"l": 52, "r": 76, "t": 64 + extra, "b": 30, "autoexpand": False},
+                   title={"text": title, "font": {"size": type_scale.LEVELS["side"][1], "color": palette.INK},
+                          "x": 0, "xref": "paper", "y": 1, "yref": "container", "yanchor": "top", "pad": {"t": 4}})
 
 
 def trends_key():
-    """What each trend column means."""
+    """What each trend column means, and how the picture marks a reading out of bounds."""
     lines = "".join(f'<li><b>{escape(name)}</b> <span>{escape(meaning)}.</span></li>' for _, name, _, meaning in gs.TRENDS)
-    return f'<ul class="geo-key">{lines}</ul><p class="muted">Green band: what it should be, where a target is set.</p>'
+    return (f'<ul class="geo-key">{lines}</ul><p class="muted">Pressed-in band: what it should be, where a target is set. '
+            "A reading outside it is marked red; each line's latest reading is written at its end.</p>")
 
 
 # ---- orbit plane spacing ----
@@ -410,11 +443,11 @@ def spacing_wheel(group):
                                       line={"color": palette.TRACK, "width": 1}, showlegend=False))
     fig.add_trace(go.Scatterpolar(r=[1] * len(even), theta=even, mode="markers", name="even spacing",
                                   marker={"size": 16, "color": CLEAR, "line": {"color": palette.MUTED, "width": 2}},
-                                  hovertemplate="even spacing %{theta:.1f}°<extra></extra>"))
+                                  hovertemplate=plotly_template("Even spacing", ("Node at", "%{theta:.1f}°"))))
     fig.add_trace(go.Scatterpolar(r=[1] * len(sats), theta=[s["raan_deg"] for s in sats], mode="markers+text",
                                   text=[escape(short(s["name"])) for s in sats], textposition="top center", name="node",
                                   textfont={"color": palette.INK, "size": 11}, marker={"size": 10, "color": palette.ACCENT},
-                                  hovertemplate="%{text}<br>node %{theta:.2f}°<extra></extra>"))
+                                  hovertemplate=plotly_template("%{text}", ("Node at", "%{theta:.2f}°"))))
     return _layout(fig, 340, margin={"l": 40, "r": 40, "t": 30, "b": 30},
                    legend={"orientation": "h", "x": 0, "y": -0.05, "bgcolor": CLEAR},
                    polar={"bgcolor": palette.WELL, "radialaxis": {"visible": False, "range": [0, 1.15]},

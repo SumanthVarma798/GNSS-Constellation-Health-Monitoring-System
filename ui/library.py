@@ -3,12 +3,12 @@
 Counts come from registry/library_counts.csv (built from GCAT by scripts/build_library_table.py); cost figures
 from registry/library_figures.csv (kept by hand, each with its public source). Every builder returns an HTML string.
 Ratios are shown plainly, each with its definition in a footnote; nothing here ranks one system above another.
-Each footnote opens from its column heading as a tooltip, and all of them are listed by notes().
+What each count means opens from its column heading as a tooltip (LIBRARY_COLUMN_HELP).
 """
 from collections import Counter
 from html import escape
 
-from evidence.library_settings import OTHER_PROGRAMME, SYSTEMS
+from evidence.library_settings import LIBRARY_COLUMN_HELP, OTHER_PROGRAMME, SYSTEMS
 from evidence.settings import GCAT_CITATION
 from ui import palette, surfaces, tooltip
 
@@ -17,9 +17,9 @@ NOT_KNOWN = "not known"
 
 CSS = """<style>
 .lib { overflow-x: auto; }
-.lib table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 800px; }
-.lib caption { text-align: left; color: var(--muted); font-size: 13px; padding-bottom: 10px; }
-.lib th { color: var(--muted); font-size: 12px; font-weight: 600; text-align: right; padding: 6px 7px; vertical-align: bottom; }
+.lib table { border-collapse: collapse; width: 100%; font-size: var(--fs-body); min-width: 800px; }
+.lib caption { text-align: left; color: var(--fc-small); font-size: var(--fs-small); padding-bottom: 10px; }
+.lib th { color: var(--fc-small); font-size: var(--fs-small); font-weight: 600; text-align: right; padding: 6px 7px; vertical-align: bottom; }
 .lib td { padding: 11px 7px; text-align: right; border-top: 1px solid var(--edge); vertical-align: top; }
 .lib th:first-child, .lib td:first-child { text-align: left; position: sticky; left: 0; z-index: 1; background: var(--platform); }
 .lib td.who { min-width: 150px; }
@@ -31,10 +31,31 @@ CSS = """<style>
 .lib .rate { display: block; font-weight: 700; }
 .lib .bar { display: block; height: 5px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); margin-top: 5px; min-width: 70px; }
 .lib .bar i { display: block; height: 100%; border-radius: 999px; background: var(--accent); opacity: .7; }
-.lib sup { color: var(--accent); font-size: 12px; margin-left: 2px; }
-.lib-notes { font-size: 13px; color: var(--muted); }
-.lib-notes ol { margin: 6px 0 0; padding-left: 20px; } .lib-notes li { margin: 4px 0; }
-.lib-notes a, .lib a { color: var(--accent); overflow-wrap: anywhere; }
+/* by design generation: a bar per generation */
+.gen-caption { color: var(--fc-small); font-size: var(--fs-small); margin: 0 0 8px; }
+.gen-key { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--fs-small); color: var(--fc-small); margin-bottom: 6px; }
+.gen-key span { display: inline-flex; align-items: center; gap: 6px; }
+.gen-key i { width: 14px; height: 8px; border-radius: 3px; }
+.gen-sys { margin: 18px 0 4px; font-size: var(--fs-side); font-weight: var(--fw-side); color: var(--fc-side); letter-spacing: .02em; }
+.gen-row { display: grid; grid-template-columns: minmax(150px, 300px) 1fr auto; align-items: center; gap: 4px 14px; padding: 8px 0;
+  border-top: 1px solid var(--edge); }
+.gen-name b { display: block; font-weight: 600; } .gen-name .small { display: block; }
+.gen-track { height: 22px; display: flex; align-items: center; }
+.gen-bar { display: flex; gap: 2px; height: 12px; min-width: 6px; border-radius: 3px; outline-offset: 3px; cursor: default; }
+.gen-bar i { display: grid; place-items: center; height: 100%; border-radius: 3px; min-width: 3px; overflow: hidden; }
+.gen-bar i b { font-size: var(--fs-small); font-weight: 700; font-style: normal; font-variant-numeric: tabular-nums; color: var(--sink); opacity: 0; }
+/* hovered or focused, the bar grows to hold each part's count; a part too thin for its number widens to fit it */
+.gen-bar:is(:hover, :focus-visible) { height: 22px; }
+.gen-bar:is(:hover, :focus-visible) i { min-width: 1.9em; }
+.gen-bar:is(:hover, :focus-visible) i b { opacity: 1; }
+.gen-bar i[style*="gradient"] b { color: var(--ink); text-shadow: 0 0 3px var(--sink); }
+@media (prefers-reduced-motion: no-preference) { .gen-bar { transition: height 150ms ease; } .gen-bar i b { transition: opacity 150ms ease; } }
+.gen-n { text-align: right; white-space: nowrap; } .gen-n b { font-size: var(--fs-body); margin-right: 4px; }
+@media (max-width: 640px) {
+  .gen-row { grid-template-columns: 1fr auto; }
+  .gen-name { grid-column: 1 / -1; }
+}
+.lib a { color: var(--accent); overflow-wrap: anywhere; }
 </style>"""
 
 
@@ -94,40 +115,28 @@ def _years(value):
     return '<span class="muted">&ndash;</span>' if value is None else f'<span class="num">{value:,.1f}</span>'
 
 
+def _help(key, updated=""):
+    """The card a column heading opens: what the count is, read at a glance (LIBRARY_COLUMN_HELP)."""
+    lead, items, note = LIBRARY_COLUMN_HELP[key]
+    return tooltip.glance(lead, items, note.format(updated=updated))
+
+
 def _heads(updated, *titles):
-    """Column headings: a plain title, or (title, footnote number) for one that opens its footnote as a tooltip."""
-    notes = _notes(updated)
+    """Column headings: a plain title, or (title, help key) for one that opens what it means as a tooltip."""
     return "".join(f"<th scope='col'>{title}</th>" if isinstance(title, str) else
-                   f"<th scope='col'>{tooltip.tip_html(f'{title[0]}<sup>{title[1]}</sup>', notes[title[1] - 1])}</th>"
+                   f"<th scope='col'>{tooltip.tip_html(escape(title[0]), _help(title[1], updated))}</th>"
                    for title in titles)
 
 
-def _notes(updated):
-    """The footnotes, in number order, as markup."""
-    return [
-        f"Launched: spacecraft launched, as GCAT lists them: those that reached orbit (payload catalogue, grouped by programme name, the list of names being in our settings) plus launches that never reached orbit (GCAT's failed-launch catalogue, found by name). GCAT as of {escape(updated)}.",
-        "Failed at launch: the launch never put the spacecraft in orbit (GCAT failed-launch catalogue).",
-        "Failed in orbit: reached orbit, then GCAT's result flag says it failed early in its mission.",
-        "Retired: not failed early, and GCAT gives a date when regular operations ended. That includes a full working life and an early end alike.",
-        "Operating: GCAT marks it as believed still operating. Its author says he updates this patchily, so read it as his latest word, not a live status.",
-        "Launch success rate = (launched &minus; failed at launch) &divide; launched.",
-        "Orbit success rate = (reached orbit &minus; failed in orbit) &divide; reached orbit.",
-        "Satellite-years: for each retired satellite, launch to the end of regular operations; for each operating one, launch to GCAT's update date; added up. A date given only to the month or year is taken at mid-month or mid-year (count of such satellites in the generation table).",
-        "Average service, retired: years in service of retired satellites &divide; number retired. Design life is not in GCAT, so service is not compared with it here.",
-        "Money: only figures a public source states, listed with their source. They cover different things in different years and currencies and cannot be put side by side.",
-    ]
-
-
-def notes(counts):
-    """Every footnote, numbered, and where the counts come from."""
-    rows = system_rows(counts)
-    return ('<div class="lib-notes"><ol>' + "".join(f"<li>{n}</li>" for n in _notes(rows[0]["updated"] if rows else ""))
-            + f"</ol><p>Counts: {escape(GCAT_CITATION)}, files satcat, psatcat and ftocat.</p></div>")
+def _cited(updated):
+    """GCAT's citation, which its licence (CC-BY) asks for wherever its data is shown."""
+    return f"{escape(GCAT_CITATION)}, as of {escape(updated)}." if updated else f"{escape(GCAT_CITATION)}."
 
 
 def scoreboard(counts, figures):
     """The scoreboard: one line per system."""
     rows = system_rows(counts)
+    updated = rows[0]["updated"] if rows else ""
     stated = {}
     for figure in figures:
         if figure["value"] != NOT_KNOWN:
@@ -146,33 +155,63 @@ def scoreboard(counts, figures):
             + f'<td>{_rate(launch_success(row))}</td><td>{_rate(orbit_success(row))}</td>'
             f'<td>{_years(service)}</td><td>{_years(average_retired_years(row))}</td><td>{money}</td></tr>')
     table = (
-        '<table><caption>Navigation satellites per system, counted from GCAT. Counts are not like for like: the systems began in '
-        'different decades and early generations were tests.</caption><thead><tr>'
-        + _heads(rows[0]["updated"] if rows else "", "System, country", ("Launched", 1), ("Failed at launch", 2),
-                 ("Failed in orbit", 3), ("Retired", 4), ("Operating", 5), ("Launch success rate", 6),
-                 ("Orbit success rate", 7), ("Satellite-years in service", 8), ("Average service, retired (years)", 9),
-                 ("Money", 10))
+        '<table><caption>Navigation satellites per system. Counts are not like for like: the systems began in different '
+        f'decades and early generations were tests. Hover a heading for what it counts. {_cited(updated)}</caption><thead><tr>'
+        + _heads(updated, "System, country", ("Launched", "launched"), ("Failed at launch", "failed_at_launch"),
+                 ("Failed in orbit", "failed_in_orbit"), ("Retired", "retired"), ("Operating", "operating"),
+                 ("Launch success rate", "launch_success"), ("Orbit success rate", "orbit_success"),
+                 ("Satellite-years in service", "satellite_years"), ("Average service, retired (years)", "average_retired"),
+                 ("Money", "money"))
         + f"</tr></thead><tbody>{lines}</tbody></table>")
     return f'<div class="lib">{table}</div>'
 
 
+# What became of a generation's satellites, in bar order: the part of each bar, its words, its colour (the same
+# meanings as the lifecycles: working green, after service grey, failure red) and the help its key opens.
+GENERATION_PARTS = (("operating", "operating", "var(--ok)", "operating"), ("retired", "retired", "var(--idle)", "retired"),
+                    ("failed_in_orbit", "failed in orbit", "var(--bad)", "failed_in_orbit"),
+                    ("failed_at_launch", "failed at launch", "repeating-linear-gradient(135deg, var(--bad) 0 3px, var(--well) 3px 6px)",
+                     "failed_at_launch"),
+                    ("status_not_recorded", "status not recorded", "var(--track)", None))
+
+
 def generations(counts):
-    """The same counts by design generation, with the number of satellites whose service dates are approximate."""
-    lines, rows = "", programme_rows(counts)
+    """The same counts by design generation: one bar per generation, as long as the satellites it launched, split by
+    what became of them. A part that is zero is not drawn."""
+    rows = programme_rows(counts)
+    if not rows:
+        return '<div class="lib"><p class="small">No generations counted.</p></div>'
+    updated, longest = rows[0]["gcat_updated"], max(row["launched"] for row in rows) or 1
+    key = (f'<span>bar length: {tooltip.tip_html("launched", _help("launched", updated))}</span>'
+           + "".join(f'<span><i style="background: {colour}"></i>' + (tooltip.tip_html(words, _help(help)) if help else words)
+                     + "</span>" for _, words, colour, help in GENERATION_PARTS))
+    body, system = "", None
     for row in rows:
+        if row["system"] != system:
+            system = row["system"]
+            body += f'<h4 class="gen-sys">{escape(system)}</h4>'
         label = row["programme"] if row["programme"] != OTHER_PROGRAMME else row["programme"] + " (not in the programme list)"
-        lines += (f'<tr><td class="who"><b>{escape(row["system"])}</b><span class="small">{escape(label)}, launched {_span(row["first_launch"], row["last_launch"])}</span></td>'
-                  + _count(row["launched"]) + _count(row["failed_at_launch"], bad=True) + _count(row["failed_in_orbit"], bad=True)
-                  + _count(row["retired"]) + _count(row["operating"])
-                  + f'<td>{_years(average_retired_years(row))}</td><td>{_years(row["years_retired"] + row["years_operating"])}</td>'
-                    f'<td>{_count_plain(row["approximate_dates"])}</td></tr>')
-    table = ('<table><caption>By design generation, as GCAT groups them.</caption><thead><tr>'
-             + _heads(rows[0]["gcat_updated"] if rows else "", "System, generation", ("Launched", 1),
-                      ("Failed at launch", 2), ("Failed in orbit", 3), ("Retired", 4), ("Operating", 5),
-                      ("Average service, retired (years)", 9), ("Satellite-years in service", 8),
-                      ("Dates approximate", 8))
-             + f"</tr></thead><tbody>{lines}</tbody></table>")
-    return f'<div class="lib">{table}</div>'
+        facts = [f"launched {_span(row['first_launch'], row['last_launch'])}"]
+        if (average := average_retired_years(row)) is not None:
+            facts.append(f"{average:,.1f} years average service, retired")
+        if years := row["years_retired"] + row["years_operating"]:
+            facts.append(f"{years:,.1f} satellite-years")
+        if row["approximate_dates"]:
+            facts.append(f"{row['approximate_dates']} with approximate dates")
+        parts = [(row[name], words, colour) for name, words, colour, _ in GENERATION_PARTS if row[name]]
+        said = ", ".join(f"{n} {words}" for n, words, _ in parts)
+        # Each part carries its count, shown when the bar is hovered or focused (the bar grows to hold it).
+        segments = "".join(f'<i style="flex: {n} 1 0; background: {colour}" title="{n} {words}"><b>{n}</b></i>'
+                           for n, words, colour in parts)
+        body += (f'<div class="gen-row"><div class="gen-name"><b>{escape(label)}</b>'
+                 f'<span class="small">{escape(" · ".join(facts))}</span></div>'
+                 f'<div class="gen-track"><div class="gen-bar" tabindex="0" role="img" aria-label="{row["launched"]} launched: {escape(said, quote=True)}" '
+                 f'style="width: {row["launched"] / longest * 100:.1f}%">{segments}</div></div>'
+                 f'<div class="gen-n"><b class="num">{row["launched"]}</b><span class="small">launched</span></div></div>')
+    return (f'<div class="lib gen"><p class="gen-caption">By design generation, as GCAT groups them. Each bar is the '
+            f'satellites a generation launched, as long as their number, split by what became of them; hover a bar for '
+            f'its counts. {_cited(updated)}</p>'
+            f'<div class="gen-key">{key}</div>{body}</div>')
 
 
 def _span(first, last):
@@ -185,10 +224,6 @@ def _number(text):
         return f"{float(text):,.10g}"
     except ValueError:
         return text
-
-
-def _count_plain(value):
-    return f'<span class="num{" zero" if not value else ""}">{value}</span>'
 
 
 def costs(figures):
@@ -205,7 +240,7 @@ def costs(figures):
                   f'<td class="words">{surfaces.chip(figure["status"], "idle")}</td></tr>')
     table = ('<table><caption>Figures a public source states, in the currency and year it states them. Nothing here is converted, '
              'averaged or estimated by us. Awaiting review by the owner.</caption><thead><tr>'
-             + _heads("", "System", ("Figure", 10), "Year", "What it covers", "Source", "Status")
+             + _heads("", "System", ("Figure", "money"), "Year", "What it covers", "Source", "Status")
              + f"</tr></thead><tbody>{lines}</tbody></table>")
     return f'<div class="lib">{table}</div>'
 
