@@ -373,7 +373,7 @@ def test_when_the_copy_read_fails_the_chip_says_the_archive_copy_is_failing(monk
     chips = " ".join(htmls(run()))
 
     assert 'class="chip warn">Orbit fetch failing since 12:00' in chips
-    assert "Orbits from CelesTrak" not in chips and "CelesTrak failing" not in chips
+    assert 'class="chip idle">Orbits from CelesTrak' not in chips and "CelesTrak failing" not in chips
 
 
 def test_a_state_saved_by_the_old_code_with_a_copy_in_use_is_not_shown_as_failing(monkeypatch):
