@@ -438,6 +438,8 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: 12px; }
   grid-template-rows: 1fr; visibility: visible; transition: grid-template-rows 200ms ease, visibility 0s;
 }
 [class*="st-key-rv_"] > [data-testid="stElementContainer"]:has(.rv-body, iframe) > * { min-height: 0; overflow: hidden; }
+/* a component frame sets its own height, which a 0fr row cannot shrink: closed, it takes none */
+[class*="st-key-rv_"]:not(:has([class*="st-key-rvx_"] input:checked)) > [data-testid="stElementContainer"] > iframe { height: 0 !important; }
 .rv-body { padding: 0 20px 16px; }
 /* a table or card inside a section takes the section's card instead of its own */
 .rv-body :is(.tablewrap, .raised) { margin: 0; padding: 0; border: 0; background: transparent; box-shadow: none; }

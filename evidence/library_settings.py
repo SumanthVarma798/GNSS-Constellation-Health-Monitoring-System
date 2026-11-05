@@ -61,11 +61,21 @@ LIFECYCLE_STEPS = {
 NOTE_STEP = "note"
 SERVICE_STEP, END_STEP = "service", "end"
 LIFECYCLE_SERIES = {"NVS-01": "NVS", "NVS-02": "NVS", "NVS-03": "NVS"}   # satellite -> its series
+SERIES_SYSTEM = {"NVS": "NavIC"}   # series -> navigation system, for a satellite only the hand-kept table has
+# Every satellite in the registry also gets these steps, from tables already kept: the IGS file's launch date and
+# signal-ID periods (satellites.csv, signal_ids.csv) and GCAT's end of regular operations (catalogue.csv). A signal
+# ID assigned is the nearest the registry comes to "in service": an assignment is not proof it was broadcasting.
+# Hand-kept rows replace these step by step.
+REGISTRY_STEPS = [("launch", "Launch"), ("service", "Signal ID assigned"), ("end", "Regular operations ended")]
+SYSTEM_ORDER = ("NavIC", "QZSS", "BeiDou", "GPS", "Galileo", "GLONASS")   # the picker's order: regional systems first
 # Design life in years, from the NVS-01 mission brochure ("more than 12 years").
 DESIGN_LIFE_YEARS = {"NVS": 12}
-WHEN_WORDS = {"at": "", "by": "by ", "about": "about ", "on": ""}     # how exact at_utc is; "on": the day only
-EVIDENCE_WORDS = {"operator": "operator", "orbit records": "orbit records", "press": "press report"}
+# How exact at_utc is. "on": the day only (placed at midday); "in": the month only (placed mid-month).
+WHEN_WORDS = {"at": "", "by": "by ", "about": "about ", "on": "", "in": ""}
+EVIDENCE_WORDS = {"operator": "operator", "orbit records": "orbit records", "press": "press report",
+                  "IGS file": "IGS file", "catalogue": "GCAT"}
 FAILED = "failed"
 # Pictures are Wikimedia Commons files, loaded by the reader's browser; the file's own page carries its licence.
 COMMONS_PICTURE = "https://commons.wikimedia.org/wiki/Special:FilePath/{name}?width=480"
+COMMONS_LARGE = "https://commons.wikimedia.org/wiki/Special:FilePath/{name}?width=1600"   # shown when expanded
 COMMONS_PAGE = "https://commons.wikimedia.org/wiki/File:{name}"

@@ -38,6 +38,12 @@ SLOT_EMPTY = BAD       # a slot whose own satellite is not on it
 
 # One quiet colour per navigation system, for the master map's cards. Never text, and
 # never a status: a card that needs a look also carries a marked sign.
+# Each lifecycle step's colour in the Library's step bar: getting there blue, raising the orbit amber, on station
+# violet, working green, after service grey. A step's state is said in words too (its tooltip).
+LIFECYCLE_STEP_COLOURS = {"built": IDLE, "launch": ACCENT, "separation": ACCENT, "burn": WARN, "gso": "#c9a2ff",
+                          "slot": "#c9a2ff", "payload": OK, "service": OK, "end": IDLE, "disposal": IDLE}
+# Satellites compared side by side (the Library's lifecycles), in the order picked. None is red: red says "failed".
+COMPARE_COLOURS = [ACCENT, WARN, OK, "#c9a2ff", "#6fc3cf"]
 CONSTELLATION_COLOURS = {"GPS": "#8f9cf0", "Galileo": "#6fc3cf", "GLONASS": "#d98f7a", "BeiDou": "#d3b56b",
                          "NavIC": "#8fcf8a", "QZSS": "#d58fc6"}
 
