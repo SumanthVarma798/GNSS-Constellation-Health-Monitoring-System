@@ -1,6 +1,38 @@
 {
- "generated_at": "2026-11-05T01:52:06Z",
+ "generated_at": "2026-11-05T11:37:31Z",
  "items": [
+  {
+   "address": "https://rntfnd.org/2026/11/05/putins-electronic-wall-gps-jamming-hits-almost-all-of-natos-eastern-flank-in-one-day-defense-blog/",
+   "category": "signal and service",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-11-05T11:35:51Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "Resilient Navigation and Timing Foundation",
+   "published_at": "2026-11-05T11:11:18Z",
+   "source_id": "rntfnd.org",
+   "summary": "Image: Italmilradar.com powered by AirNav What’s new: Increased, perhaps more comprehensive, jamming in eastern Europe. The visual looks like a new version of the Berlin Wall. But this one extends across Russia’s entire western frontier with Ukraine, Moldova, and parts of Romania on the wrong side…",
+   "title": "(Putin’s electronic wall) GPS jamming hits almost all of NATO’s eastern flank in one day – Defence Blog",
+   "via": "https://rntfnd.org/feed/"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMipwFBVV95cUxNNEp1VGp4NUdUMU54X0NFTkdETlYxcFlOVm9BX1ItWGhGTnY4LVlqTl9zd0hESzM3WWUwOG91VWNqTTUwUVhWeDFiT2EwV21nNGdQc1ZaODlESlAyWVBaenk2Smt1WEZPeEZZTmJWRjV1TWRWVlNpbDhfekRadERrYWZILWEtb1hmdE9lcC1XTXBuMWRkbXdQZFRUU29xQS1MMUNLdWlCa9IBtAFBVV95cUxNRnlxbG9nTWk5aURJMGszZTdPcHNSRklZTHk5SGZ0ZWJPNHRXdXd0ckVva25rS25GZE1pY1psOXNmckNIRnJ5bUZrRXN0TXM5V3VaeEdPbTBCa3NPVkpIWUs2TVJVaDNIY1gwZjFwVHNYWkxsY2ZTd0xiTHhLMkxvc1RQa1dEYTRkeFhyTHBYNUl0cWJYV2NWVzM2ZDZ3VHh6ZXlLRHdhblhwYTViM2trNTZwdmI?oc=5",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-05T11:36:18Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "The New Indian Express",
+   "published_at": "2026-11-05T02:38:52Z",
+   "source_id": "newindianexpress.com",
+   "summary": "",
+   "title": "Karnataka: NVS-03 now in its intended orbit",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
   {
    "address": "https://news.google.com/rss/articles/CBMinAFBVV95cUxOMzJ3aTRjamMyMHpFRjg2YTVsbVd2ZWFYb2RVaUVwUURaTE9peGp1RlVUNEN1X0U1QlVrbUxkQ3VXSVFUNWc5aDdPZzl4RDRXWTVMaTE3RkEyZG1BSHlTOVZ5VHc0UkpvajduVlNMem0zMm1YOXpmblNjZDRZcW5qd0xLS2gzRk1aTnI2SWZzdmtEd2kxcUNiX1ZETTU?oc=5",
    "category": "other",
@@ -64,6 +96,22 @@
    "summary": "\"It could have a strong impact not only on self-driving cars but also on drone positioning.\"",
    "title": "NASA's Artemis II moon launch tore a hole in Earth's upper atmosphere so huge it disrupted GPS signals",
    "via": "https://www.space.com/feeds/all"
+  },
+  {
+   "address": "https://www.isro.gov.in/Final_Orbit_manoeuvring_of_NVS03_spacecraft.html",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-05T08:29:08Z",
+   "grade": "A",
+   "grade_standing": "confirmed",
+   "outlet": "isro.gov.in",
+   "published_at": "2026-11-04T14:50:11Z",
+   "source_id": "isro.gov.in",
+   "summary": "",
+   "title": "NVS-03 : Four orbit manoeuvres have been successfully completed with a cumulative LAM engine burn of 6164 seconds. With this the satellite has reached Geo Synchronous Orbit (35765 km x 36196 km) at an inclination of 29.98°. The satellite health is normal.",
+   "via": "https://www.reddit.com/r/ISRO/.rss"
   },
   {
    "address": "https://x.com/ispaceflight_in/status/2117985571905978450",
@@ -2621,38 +2669,6 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxOcVdpMzZCdUVrQ0RmVFJraFJNTW1vS2gxVFZ0dGtCQ0FJV0FTR0tNTVVOSVc0eEZtcnF5ekt2cDBnaXY0Q19zdjlFTXVJUTN0V01fMGY3NjRHSEFGQWRvLVQxUko0ZFZ5ZVJDcVdCQnB5U0llZFdxeFJTYTFrR25WTnZxTkN1SzByY3VJR1FRdUVxRlFUdEkwQWJuM1ladUpoRGZ4c1NRRGdoZ9IBrwFBVV95cUxPMVFIRmluVTZWNDhZd1oyTW1lNlNvXzQ1UGx4RlZhOXBkdmJyQTM3ampKRzRLY2FTODZDVDJ4a1pnRzRnVlh1Rm9VendrV04wNWZzZjhLdUVaaUQ2Uzc4Rk41U3cwRF80T3lKTXpyT0tWTGpIZ3BlRTdrQm5fRXQyQTRNYmtGQUN1VTZKVTNiTWRQbjYzamgzU2ZsTlhzcU9Ea1pXMWM5RDNKbjNGOU9J?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-11-01T06:53:59Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "India Today",
-   "published_at": "2026-10-30T17:30:00Z",
-   "source_id": "indiatoday.in",
-   "summary": "",
-   "title": "Watch LIVE: Isro successfully launches NVS-03 satellite aboard GSLV-F18",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMinwFBVV95cUxNSHphSzJNbFlHbE15a0o0dnJOSVItcmM2V19pZzVNQW55MGFRZUVYbFp2NnFWTXVzOWYycDI3TUh4emVqVk9scjFxeVlxQmVac0FIa0lUa0xKUV9HSldudzNUT0dfX0FDNk96dFlfaDAxRnV5ZDcxamFPX3NqSTNNV2dOQVFjS3FyalNKdTNURlZSYThKdDdVUWIyYUtKRWM?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T20:10:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "The News Mill",
-   "published_at": "2026-10-30T17:22:11Z",
-   "source_id": "thenewsmill.com",
-   "summary": "",
-   "title": "NavIC to become fully operational with launch of NVS-03 satellite",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://insidegnss.com/esa-adds-four-galileo-g2-satellites-funds-norwegian-work-on-jamming-and-spoofing-resilience/",
    "category": "signal and service",
    "constellations": [
@@ -3536,6 +3552,22 @@
    "via": "https://www.esa.int/rssfeed/Our_Activities/Navigation"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxNelYtLWplbGlXNTAzUmlCRGhMMUdNZ2Z4WkUzRkswR1pGbGZLS0VTaHBhS0l0SnFOMW14dERqSEJOY1I0N01TSEpEU3IxMkIyS3ZHVDNyb0JyVndtbVRGTmt2eE00OXVlTUtmWE1IVzNldU9xOWVBRzEyUlpRQU9FYzc0WnBObXl1MGxlWlgxUnRIMl9TRG0tUmZMTXFOU2lHVl9uNHRkam9uQQ?oc=5",
+   "category": "other",
+   "constellations": [
+    "BeiDou-3"
+   ],
+   "fetched_at": "2026-11-05T11:36:39Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "News Ghana",
+   "published_at": "2026-10-21T07:00:00Z",
+   "source_id": "newsghana.com.gh",
+   "summary": "",
+   "title": "BeiDou Navigation Satellite System drives economic growth and social development",
+   "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxOS3k3S2xDTjdfUm81MFNqSE9NNnp3QU5rSlVMYmtrZmVaR0VaNmwwNGpIcjZocXM3Z0RzNHlDWjdOaVVCV2l2VWVmWEp6VDB6N3BIc2RmMFhUbUdRSG4ydXBaUWU5Z2Y2cHRhUWlXS2JUT3BEczhYcERQVThaNTdtUktIUTJBeEpHZTJj?oc=5",
    "category": "other",
    "constellations": [
@@ -3581,22 +3613,6 @@
    "source_id": "eu.36kr.com",
    "summary": "",
    "title": "BeiDou Inclusive Space-Time Smart Box: Leveraging Original 11-Dimensional Digital Integration System to Usher in a New Satellite Business Ecosystem for All",
-   "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE8zTDZ6dUtBaEJ0d2NvNFR0Q21yMXk0Um9FdGluQ0FDRXNsckQ4VXNXV2ktV0ZuME5TbWRlOGpXOVBZNzMybE1UYlY1RVYtRmU2SUg0Z0xTRklsNWlpa3BibWZVSDY?oc=5",
-   "category": "other",
-   "constellations": [
-    "BeiDou-3"
-   ],
-   "fetched_at": "2026-10-20T12:16:53Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "People's Daily Online",
-   "published_at": "2026-10-20T05:35:00Z",
-   "source_id": "en.people.cn",
-   "summary": "",
-   "title": "BeiDou Navigation Satellite System drives economic growth and social development",
    "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -7299,22 +7315,6 @@
    "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMieEFVX3lxTE44UUhYb3AxT1NMT2xlMUlZVzZleEN6ZzhOdDY5SHNEbTE0aVp1bWZXM1RCWDJWM1VkcXhTWEFvckRrMUh3T005dXI2OGVtaWg1UDhkbGVqQktGYngxNDJKZUdzeVpSQU1xcjZrWWRMUGFnaElzN1JxNw?oc=5",
-   "category": "launch",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "ExecutiveGov",
-   "published_at": "2026-01-29T08:00:00Z",
-   "source_id": "executivegov.com",
-   "summary": "",
-   "title": "Space Force Launches GPS III-9 Satellite to Strengthen Global Positioning Capabilities",
-   "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE9XMU0tbnVqS0I5WFVKYjI1WHdOOHc2VDNRUWNyN25CeEJ3S2NtanNCNjRUT2ktcm5MV24xNmFQaHpWYjJJeWhqenZ2Rl9LOTE0UWNr?oc=5",
    "category": "launch",
    "constellations": [
@@ -9194,6 +9194,15 @@
    "graded_by": "",
    "kind": "",
    "name": "news18.com",
+   "note": "",
+   "reason": ""
+  },
+  "newsghana.com.gh": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "newsghana.com.gh",
    "note": "",
    "reason": ""
   },
