@@ -147,8 +147,9 @@ def dashboard_with_sightings(tracked, new_sightings, listed, today):
     from CelesTrak ("NVS-03 (IRNSS-1L)" is shown as NVS-03).
     """
     held = {row["svn"] for row in tracked}
+    # A stand-in moves to its IGS SVN, unless that SVN is already tracked: then the stand-in's row goes.
     rows = [{**row, "svn": listed.get(row["svn"], row["svn"])} for row in tracked
-            if listed.get(row["svn"]) not in held]   # the IGS SVN already tracked: keep that row alone
+            if row["svn"] not in listed or listed[row["svn"]] not in held]
     for sighting in new_sightings:
         name = BRACKETED.sub("", sighting["note"].split("; ", 1)[-1]).split(" (")[0].strip() or sighting["svn"]
         at = max((i + 1 for i, row in enumerate(rows) if row["svn"][:1] == sighting["svn"][:1]), default=len(rows))
