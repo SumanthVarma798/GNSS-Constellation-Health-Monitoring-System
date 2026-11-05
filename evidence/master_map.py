@@ -246,15 +246,30 @@ def summary(satellites, catalogue, signal_ids):
             "signal_ids_reused": sum(len(svns) > 1 for svns in holders.values())}
 
 
+# A catalogue number past 99999 is written in a TLE's five characters as Alpha-5: a letter for its first two digits
+# (A = 10 ... Z = 33, skipping I and O, which look like 1 and 0), then the last four. NVS-03's 101228 is "A1228".
+ALPHA5 = "ABCDEFGHJKLMNPQRSTUVWXYZ"
+
+
+def tle_catalogue_number(field):
+    """The catalogue number in a TLE's five-character field (digits, or Alpha-5), or None if it is neither."""
+    field = field.strip()
+    if field.isdigit():
+        return int(field)
+    if len(field) == 5 and field[0] in ALPHA5 and field[1:].isdigit():
+        return (ALPHA5.index(field[0]) + 10) * 10000 + int(field[1:])
+    return None
+
+
 def _feed_names_in(text):
     """{catalogue number: name} from three-line element sets: a name, then line 1, then line 2."""
     lines = text.splitlines()
     names = {}
     for first in range(0, len(lines) - 2, 3):
         name, line_one = lines[first].strip(), lines[first + 1]
-        number = line_one[2:7].strip()  # characters 3 to 7 of line 1
-        if line_one.startswith("1 ") and number.isdigit():
-            names[int(number)] = name
+        number = tle_catalogue_number(line_one[2:7])  # characters 3 to 7 of line 1
+        if line_one.startswith("1 ") and number is not None:
+            names[number] = name
     return names
 
 

@@ -113,3 +113,11 @@ def test_the_page_has_no_stock_dropdown_and_no_outside_address():
     source = PAGE_FILE.read_text(encoding="utf-8")
     assert "<select" not in source.lower() and 'role="listbox"' in source
     assert not re.search(r"https?://|//cdn|@import", source)
+
+
+def test_a_six_digit_catalogue_number_is_read_from_its_alpha5_tle_field():
+    from evidence.master_map import tle_catalogue_number
+    assert tle_catalogue_number("56759") == 56759
+    assert tle_catalogue_number("A1228") == 101228          # NVS-03
+    assert tle_catalogue_number("Z9999") == 339999
+    assert tle_catalogue_number("I1228") is None and tle_catalogue_number("     ") is None
