@@ -76,6 +76,14 @@ def test_runs_with_no_side_panel():
     assert len(at.sidebar) == 0
 
 
+def test_a_footer_names_the_licences_and_whose_data_it_is():
+    footers = [body for body in htmls(run()) if 'class="footer' in body]
+
+    assert len(footers) == 1
+    for words in ("Apache-2.0", "CC BY 4.0", "CelesTrak", "Space-Track", "IGS", "GCAT", "Natural Earth"):
+        assert words in footers[0]
+
+
 def test_navic_is_the_default_and_shows_a_tile_per_satellite_with_its_count():
     at = run()
 
