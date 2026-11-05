@@ -43,6 +43,7 @@ J2 = 1.08262668e-3
 WEIGHTS = {"plane": 0.20, "spacing": 0.30, "inclination": 0.20, "height": 0.15, "eccentricity": 0.15}
 BANDS = ((80, "🟢 Healthy"), (60, "🟡 Fair"), (40, "🟠 Degraded"), (-math.inf, "🔴 Critical"))
 EXTENDED = "Extended"   # the plane name for Galileo's eccentric-orbit pair
+NO_PLANE = "No plane"   # the plane name for a GPS or GLONASS satellite the registry gives no plane yet: no score
 
 
 def wrap(deg):
@@ -146,7 +147,8 @@ def assess(system, elements, registry):
     slot, signal_id_now)}. Each row: name, signal_id, plane (from the orbit), registry_plane, plane_agrees,
     slot (the registry's), u (argument of latitude now), slot_at (where its slot is now, or None),
     node_rate (its node's drift from J2, degrees a day), checks ([(measure, should be, is, error, score)]),
-    parts ({measure: score}), score, status.
+    parts ({measure: score}), score, status. A GPS or GLONASS satellite the registry gives no plane yet has plane
+    NO_PLANE, no checks, score None and status "": there is nothing to judge it against.
     """
     nominal = {key: value.value for key, value in NOMINAL[system].items()}
     now = at_common_time(elements)
@@ -155,7 +157,7 @@ def assess(system, elements, registry):
     in_planes = [name for name in names if plane_of[name]]
     rows = {name: {"name": name, "signal_id": registry[name]["signal_id_now"], "u": now[name]["u"],
                    "registry_plane": plane_of[name], "slot": registry[name]["slot"], "slot_at": None,
-                   "checks": [], "plane": EXTENDED, "plane_agrees": True,
+                   "checks": [], "plane": EXTENDED if "extended" in nominal else NO_PLANE, "plane_agrees": True,
                    "node_rate": _node_rate_deg_day(now[name]["a"], now[name]["e"], now[name]["i"],
                                                    float(elements[name]["MEAN_MOTION"]))} for name in names}
 
@@ -217,7 +219,7 @@ def plane_drift(system, rows):
     The limits are those the satellites' own plane and spacing checks use.
     """
     nominal = NOMINAL[system]
-    in_planes = [row for row in rows if row["plane"] != EXTENDED]
+    in_planes = [row for row in rows if row["plane"] not in (EXTENDED, NO_PLANE)]
     if not in_planes:
         return {}
     pattern_rate = np.mean([row["node_rate"] for row in in_planes])

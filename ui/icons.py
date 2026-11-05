@@ -20,9 +20,23 @@ TABLER = {
     "chevron-down": ['M6 9l6 6l6 -6'],
     "chevron-up": ['M6 15l6 -6l6 6'],
     "search": ['M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0', 'M21 21l-6 -6'],
+    "map": ['M3 7l6 -3l6 3l6 -3v13l-6 3l-6 -3l-6 3v-13', 'M9 4v13', 'M15 7v13'],
+    "click": ['M3 12l3 0', 'M12 3l0 3', 'M7.8 7.8l-2.2 -2.2', 'M16.2 7.8l2.2 -2.2', 'M7.8 16.2l-2.2 2.2',
+              'M12 12l9 3l-4 2l-2 4l-3 -9'],
+    "radar": ['M21 12h-8a1 1 0 1 0 -1 1v8a9 9 0 0 0 9 -9', 'M16 9a5 5 0 1 0 -7 7', 'M20.486 9a9 9 0 1 0 -11.482 11.495'],
+    "player-play": ['M7 4v16l13 -8z'],
+    "planet": ['M18.816 13.58c2.292 2.138 3.546 4 3.092 4.9c-.745 1.46 -5.783 -.259 -11.255 -3.838c-5.47 -3.579 '
+               '-9.304 -7.664 -8.56 -9.123c.464 -.91 2.926 -.444 5.803 .805', 'M12 12m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0'],
 }
 
 # Each lifecycle step's icon (the Library's lifecycles); a step not listed has none.
 LIFECYCLE_STEP_ICONS = {"built": "tool", "launch": "rocket", "separation": "arrows-split-2", "burn": "flame",
                         "gso": "satellite", "slot": "satellite", "payload": "broadcast", "service": "broadcast",
                         "end": "power", "disposal": "trash", "note": "info-circle"}
+
+
+def svg(name):
+    """One icon as inline <svg>, in the text's colour. Hidden from screen readers: the words beside it say it."""
+    paths = "".join(f'<path d="{d}"/>' for d in TABLER[name])
+    return ('<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+            f'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{paths}</svg>')

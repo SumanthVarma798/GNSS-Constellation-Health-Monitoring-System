@@ -54,17 +54,19 @@ def band(score):
     return "ok" if score >= 80 else "warn" if score >= 60 else "bad"
 
 
-def tile(name, orbit="", score=None, status="", slot="", slot_status="idle", weakest=None, age_html=""):
+def tile(name, orbit="", score=None, status="", slot="", slot_status="idle", weakest=None, age_html="",
+         unscored="set aside"):
     """One satellite: its name and orbit type, overall score, status word, slot state, weakest part.
 
-    A score of None is a satellite set aside: the tile reads "set aside" and shows only the slot state.
+    A score of None is a satellite set aside, or one with nothing to score it against: the tile reads `unscored`
+    and shows only the slot state.
     weakest is (label, score) or None. The score decides the tile's colour; a satellite set aside takes the slot state's.
     age_html, when given, is one more tag drawn in the tile's tag row after the state words.
     """
     _check_status(slot_status)
     edge = slot_status if score is None else band(score)
     kind = f' <span class="muted">{escape(orbit)}</span>' if orbit else ""
-    big = ('<div class="s idle">set aside</div>' if score is None
+    big = (f'<div class="s idle">{escape(unscored)}</div>' if score is None
            else f'<div class="s num {edge}">{score:.1f}</div>')
     chips = chip(slot, slot_status) if score is None else chip(status, edge) + chip(slot, slot_status)
     low = f'<div class="small low">Weakest: {escape(weakest[0])} {weakest[1]:.0f}</div>' if weakest else ""

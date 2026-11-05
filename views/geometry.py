@@ -29,12 +29,7 @@ WHOLE_CONSTELLATION = ("Position quality", "Sky and ground")
 # What each section shows, behind a pill above it.
 SECTION_KEYS = {
     "Position quality": gf.dop_key(),
-    "Sky and ground": ('<p>The map: where each satellite passes over the ground, and where it is now; the crosses are '
-                       'the key places. Click anywhere on it, pick a key place or type a latitude and longitude to see '
-                       'the sky above that place.</p>'
-                       '<p>The sky: overhead in the middle, the horizon at the edge; the dotted ring is the elevation '
-                       'mask. Play or drag through the next 24 hours.</p>'
-                       f'<p>Plane spacing: {gs.SPACING_INTRO}</p>'),
+    "Sky and ground": tooltip.glance(gs.SKY_GROUND_LEAD, gs.SKY_GROUND_KEY, gs.SKY_GROUND_NOTE),
     "Orbit trends": gf.trends_key(),
 }
 
