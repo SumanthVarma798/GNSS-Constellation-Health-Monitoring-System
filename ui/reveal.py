@@ -7,7 +7,7 @@ section. Tables open closed, except each page's one most important table, which 
                    satellite for GPS, GLONASS and Galileo, one for the satellites picked under Compare
   Station-keeping  burns per satellite
   Geometry         position quality by place; in "Sky and ground", when each satellite is in view (the question asked)
-  Library          the count per system
+  Library          the count per system, and the lifecycles (a picture, not a table)
   Master map       none: the map is the page
 
 The header is a checkbox drawn as a header row: Tab reaches it, Space opens and closes it, and a screen reader
@@ -44,11 +44,12 @@ def body(body_html):
 
 
 def section(key, title, summary, body_html, open=False):
-    """Draw one section. key must be unique on the page; open is the state until the reader changes it."""
+    """Draw one section. key must be unique on the page; open is the state until the reader changes it.
+    body_html may instead be a function that draws a component frame there."""
     key = re.sub(r"\W", "_", key)
     with st.container(key=f"rv_{key}"):
         _header(key, label(title, summary), open)
-        st.html(body(body_html))
+        body_html() if callable(body_html) else st.html(body(body_html))
 
 
 @st.fragment

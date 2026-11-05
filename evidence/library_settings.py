@@ -44,3 +44,39 @@ FAILED_LAUNCH_NAMES = [
 ]
 
 DAYS_PER_YEAR = 365.25
+
+# ---- Lifecycle timelines (ui/components/lifecycle.*) ----
+LIFECYCLE_EVENTS_FILE = "lifecycle_events.csv"   # in registry/: kept by hand, every row with its public source
+LIFECYCLE_EVENTS_COLUMNS = ["satellite", "step", "title", "from_utc", "at_utc", "when", "evidence", "result", "detail",
+                            "picture", "picture_credit", "source_name", "source_link"]
+# The steps each series goes through, in order. No agency publishes a checklist like this: it is ISRO's mission
+# sequence as its NVS mission pages and updates describe it. A row's step is one of these, or NOTE_STEP for context
+# that is not a step (it is shown, and never counted).
+LIFECYCLE_STEPS = {
+    "NVS": [("built", "Built and tested"), ("launch", "Launch"), ("separation", "Separated in transfer orbit"),
+            ("burn", "Orbit raising"), ("gso", "Reached geosynchronous orbit"), ("slot", "At its slot"),
+            ("payload", "Payload tested"), ("service", "In navigation service"), ("end", "Service ended"),
+            ("disposal", "Moved out of its orbit")],
+}
+NOTE_STEP = "note"
+SERVICE_STEP, END_STEP = "service", "end"
+LIFECYCLE_SERIES = {"NVS-01": "NVS", "NVS-02": "NVS", "NVS-03": "NVS"}   # satellite -> its series
+SERIES_SYSTEM = {"NVS": "NavIC"}   # series -> navigation system, for a satellite only the hand-kept table has
+# Every satellite in the registry also gets these steps, from tables already kept: the IGS file's launch date and
+# signal-ID periods (satellites.csv, signal_ids.csv) and GCAT's end of regular operations (catalogue.csv). A signal
+# ID assigned is the nearest the registry comes to "in service": an assignment is not proof it was broadcasting.
+# Hand-kept rows replace these step by step.
+REGISTRY_STEPS = [("launch", "Launch"), ("service", "Signal ID assigned"), ("end", "Regular operations ended")]
+SYSTEM_ORDER = ("NavIC", "QZSS", "BeiDou", "GPS", "Galileo", "GLONASS")   # the picker's order: regional systems first
+# Design life in years, from the NVS-01 mission brochure ("more than 12 years").
+DESIGN_LIFE_YEARS = {"NVS": 12}
+# How exact at_utc is. "on": the day only (placed at midday); "in": the month only (placed mid-month).
+WHEN_WORDS = {"at": "", "by": "by ", "about": "about ", "on": "", "in": ""}
+EVIDENCE_WORDS = {"operator": "operator", "orbit records": "orbit records", "press": "press report",
+                  "IGS file": "IGS file", "catalogue": "GCAT"}
+FAILED = "failed"
+# Pictures are Wikimedia Commons files, loaded by the reader's browser; the file's own page carries its licence.
+# Widths are Wikimedia's standard thumbnail steps: other widths are made on demand and may be refused when busy.
+COMMONS_PICTURE = "https://commons.wikimedia.org/wiki/Special:FilePath/{name}?width=500"
+COMMONS_LARGE = "https://commons.wikimedia.org/wiki/Special:FilePath/{name}?width=1280"   # shown when expanded
+COMMONS_PAGE = "https://commons.wikimedia.org/wiki/File:{name}"
