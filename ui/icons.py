@@ -36,6 +36,10 @@ TABLER = {
     "alert-circle": ['M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0', 'M12 8v4', 'M12 16h.01'],
     "circle-check": ['M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0', 'M9 12l2 2l4 -4'],
     "check": ['M5 12l5 5l10 -10'],
+    "calculator": ['M4 3m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z', 'M8 7m0 1a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1v1a1 1 0 0 1 -1 1h-6a1 1 0 0 1 -1 -1z', 'M8 14l0 .01', 'M12 14l0 .01', 'M16 14l0 .01', 'M8 17l0 .01', 'M12 17l0 .01', 'M16 17l0 .01'],
+    "hourglass": ['M6.5 7h11', 'M6.5 17h11', 'M6 20v-2a6 6 0 1 1 12 0v2a1 1 0 0 1 -1 1h-10a1 1 0 0 1 -1 -1z', 'M6 4v2a6 6 0 1 0 12 0v-2a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1z'],
+    "coin": ['M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0', 'M14.8 9a2 2 0 0 0 -1.8 -1h-2a2 2 0 1 0 0 4h2a2 2 0 1 1 0 4h-2a2 2 0 0 1 -1.8 -1', 'M12 7v10'],
+    "database": ['M12 6m-8 0a8 3 0 1 0 16 0a8 3 0 1 0 -16 0', 'M4 6v6a8 3 0 0 0 16 0v-6', 'M4 12v6a8 3 0 0 0 16 0v-6'],
 }
 
 # Each lifecycle step's icon (the Library's lifecycles); a step not listed has none.
@@ -48,8 +52,10 @@ LIFECYCLE_STEP_ICONS = {"built": "tool", "launch": "rocket", "separation": "arro
 STATUS_ICONS = {"ok": "circle-check", "warn": "alert-triangle", "bad": "alert-circle", "idle": "info-circle",
                 "accent": "info-circle"}
 # The icons the stylesheet carries as --ic-<name>: the inbox's bell, its "mark read" tick, the status icons, and the
-# Sky and ground card's (ui/geometry_settings.py SKY_GROUND_KEY). An icon a page shows must be here.
-MASKED = ("bell", "check", *dict.fromkeys(STATUS_ICONS.values()), "map", "click", "radar", "player-play", "planet")
+# Sky and ground card's (ui/geometry_settings.py SKY_GROUND_KEY), the Library's. An icon a page shows must be here.
+MASKED = ("bell", "check", *dict.fromkeys(STATUS_ICONS.values()), "map", "click", "radar", "player-play", "planet",
+          # the Library's column help (evidence/library_settings.py LIBRARY_COLUMN_HELP)
+          "rocket", "power", "broadcast", "calculator", "hourglass", "coin", "database")
 
 
 def mask_url(name):

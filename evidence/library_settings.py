@@ -80,3 +80,35 @@ FAILED = "failed"
 COMMONS_PICTURE = "https://commons.wikimedia.org/wiki/Special:FilePath/{name}?width=500"
 COMMONS_LARGE = "https://commons.wikimedia.org/wiki/Special:FilePath/{name}?width=1280"   # shown when expanded
 COMMONS_PAGE = "https://commons.wikimedia.org/wiki/File:{name}"
+
+# ---- What each Library count means: the card its heading opens (ui/library.py). (lead line, [(icon, key term,
+# words)], note); icons are names in ui/icons.py MASKED; "{updated}" is GCAT's update date. Read at a glance: one line
+# says what it is, the rest where it comes from and how it is counted.
+LIBRARY_COLUMN_HELP = {
+    "launched": ("Spacecraft launched, as GCAT lists them.",
+                 [("rocket", "Reached orbit", "GCAT's payload catalogue, grouped by programme name (the names are in our settings)."),
+                  ("alert-triangle", "Never reached orbit", "launches in GCAT's failed-launch catalogue, found by name.")],
+                 "GCAT as of {updated}."),
+    "failed_at_launch": ("The launch never put the spacecraft in orbit.",
+                         [("database", "From", "GCAT's failed-launch catalogue.")], ""),
+    "failed_in_orbit": ("Reached orbit, then failed early in its mission.",
+                        [("database", "From", "GCAT's result flag for the mission.")], ""),
+    "retired": ("Not failed early, and its regular operations have ended.",
+                [("power", "Counts", "a full working life and an early end alike."),
+                 ("database", "From", "the end date GCAT gives.")], ""),
+    "operating": ("GCAT believes it is still operating.",
+                  [("broadcast", "Read as", "the catalogue author's latest word, not a live status: he updates it patchily.")], ""),
+    "launch_success": ("Share of launches that put the spacecraft in orbit.",
+                       [("calculator", "Worked out", "(launched - failed at launch) / launched.")], ""),
+    "orbit_success": ("Share of spacecraft in orbit that did not fail early.",
+                      [("calculator", "Worked out", "(reached orbit - failed in orbit) / reached orbit.")], ""),
+    "satellite_years": ("Years in service, added up over the satellites.",
+                        [("power", "Retired", "launch to the end of regular operations."),
+                         ("broadcast", "Operating", "launch to GCAT's update date."),
+                         ("hourglass", "Approximate", "a date known only to the month or year is taken mid-month or mid-year.")], ""),
+    "average_retired": ("Years in service of the retired satellites, per satellite.",
+                        [("calculator", "Worked out", "their years in service / how many retired.")],
+                        "Design life is not in GCAT, so service is not compared with it."),
+    "money": ("Only figures a public source states, each with its source.",
+              [("coin", "Not compared", "they cover different things, in different years and currencies.")], ""),
+}

@@ -43,7 +43,6 @@ reveal.section("library_generations", "By design generation", reveal.count(len(c
                library.generations(counts))
 reveal.section("library_money", "Money stated by public sources",
                f"{reveal.count(stated, 'figure')} stated · {len(figures) - stated} not known", library.costs(figures))
-reveal.section("library_notes", "Notes", "what each count means, and where it comes from", library.notes(counts))
 surfaces.show(surfaces.notice(library.matching(matched), "idle"))
 lag = library.registry_lag_note(matched, satellites)
 if lag:
