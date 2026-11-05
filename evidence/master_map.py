@@ -15,12 +15,12 @@ from datetime import date
 from pathlib import Path
 
 from evidence.settings import (GCAT_MISSION_FAILED, GCAT_STILL_OPERATING, IDENTITY_AGREE, IDENTITY_DIFFER,
-                               IDENTITY_ONE_SOURCE, MAP_ACCENT, MAP_IDLE, MAP_OK, MAP_WARN, NOT_RECORDED,
+                               IDENTITY_ONE_SOURCE, MAP_ACCENT, MAP_IDLE, MAP_OK, MAP_WARN, NOT_RECORDED, NOT_YET_KNOWN,
                                ORBIT_FEED_FILES, SCHEME_COSPAR, SCHEME_DASHBOARD, SCHEME_GCAT, SCHEME_ISSUERS,
                                SCHEME_NORAD, SCHEME_ORBIT_FEED, SCHEME_SIGNAL_ID, SERVICE_AGREE_NOT_IN_SERVICE,
                                SERVICE_AGREE_OPERATING, SERVICE_DISAGREE, SERVICE_NOT_IN_CATALOGUE,
                                SIGNAL_ID_ISSUERS, SOURCE_DASHBOARD, SOURCE_GCAT, SOURCE_IGS, SOURCE_ORBIT_FEED,
-                               SOURCE_SILENT)
+                               SOURCE_SIGHTING, SOURCE_SILENT)
 
 NUMBER_WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
 SIGNAL_ID_IN_BRACKETS = re.compile(r"\(([^()\s]+)\)\s*$")  # "BEIDOU-3 G1 (C59)" -> "C59"
@@ -121,11 +121,12 @@ def _catalogue_identifier(satellite, entry):
     return {"scheme": SCHEME_GCAT, "value": value, "status": MAP_WARN, "remark": "launch designator differs"}
 
 
-def _signal_id_identifier(satellite, periods):
-    """Today's signal ID and since when, or 'none'."""
+def _signal_id_identifier(satellite, periods, sighting):
+    """Today's signal ID and since when, or 'none' ('not yet known' for a sighting, as only the IGS file gives it)."""
     now = [period for period in periods if period["current"]]
     if not satellite["signal_id_now"] or not now:
-        return {"scheme": SCHEME_SIGNAL_ID, "value": "none", "status": MAP_IDLE, "remark": ""}
+        return {"scheme": SCHEME_SIGNAL_ID, "value": NOT_YET_KNOWN if sighting else "none", "status": MAP_IDLE,
+                "remark": ""}
     return {"scheme": SCHEME_SIGNAL_ID, "value": satellite["signal_id_now"], "status": MAP_OK,
             "remark": f"since {now[-1]['start']}"}
 
@@ -147,14 +148,15 @@ def _says(source, held, value):
     return {"source": source, "status": MAP_WARN, "note": f"says {held}"}
 
 
-def identifiers(svn, satellites, catalogue, tracked, signal_ids, feed_names=None, feed_checked=None):
+def identifiers(svn, satellites, catalogue, tracked, signal_ids, feed_names=None, feed_checked=None, sighting=False):
     """Every identifier of one spacecraft, in a fixed order, each as
     {"scheme", "value", "status", "remark", "issuer", "checked", "sources"}. feed_names is
     orbit_feed_names(); without it the orbit feed line is left out. feed_checked is
     orbit_feed_checked(). Only the orbit feed records when it was last checked; every
     other line says NOT_RECORDED. "sources" lists each of our sources that keeps this kind
     of identifier and whether it holds the same value, another, or none; a "none" line
-    lists no sources. An unknown SVN gives an empty list."""
+    lists no sources. An unknown SVN gives an empty list. sighting says the row is from
+    sightings.csv: its numbers came from CelesTrak's GNSS group, and the IGS file holds nothing for it yet."""
     satellite = _by_svn(satellites).get(svn)
     if satellite is None:
         return []
@@ -168,16 +170,17 @@ def identifiers(svn, satellites, catalogue, tracked, signal_ids, feed_names=None
     if satellite["cospar_id"]:
         found.append({"scheme": SCHEME_COSPAR, "value": satellite["cospar_id"], "status": MAP_OK, "remark": ""})
     found.append(_catalogue_identifier(satellite, entry))
-    found.append(_signal_id_identifier(satellite, periods))
+    found.append(_signal_id_identifier(satellite, periods, sighting))
     found.append(_feed_identifier(feed_name, periods, (feed_checked or {}).get(number, NOT_RECORDED)))
     if dashboard_name:
         found.append({"scheme": SCHEME_DASHBOARD, "value": dashboard_name, "status": MAP_ACCENT, "remark": ""})
     issuers = {**SCHEME_ISSUERS, SCHEME_SIGNAL_ID: SIGNAL_ID_ISSUERS.get(satellite["constellation"], NOT_RECORDED)}
     in_brackets = SIGNAL_ID_IN_BRACKETS.search(feed_name or "")
+    listed_by = SOURCE_SIGHTING if sighting else SOURCE_IGS
     # Which of our sources hold each kind of identifier, and what each holds for this spacecraft.
-    held = {SCHEME_NORAD: [(SOURCE_IGS, satellite["catalogue_no"]),
+    held = {SCHEME_NORAD: [(listed_by, satellite["catalogue_no"]),
                            (SOURCE_ORBIT_FEED, satellite["catalogue_no"] if feed_name is not None else "")],
-            SCHEME_COSPAR: [(SOURCE_IGS, satellite["cospar_id"]), (SOURCE_GCAT, entry["cospar_id"] if entry else "")],
+            SCHEME_COSPAR: [(listed_by, satellite["cospar_id"]), (SOURCE_GCAT, entry["cospar_id"] if entry else "")],
             SCHEME_GCAT: [(SOURCE_GCAT, entry["name"] if _in_catalogue(entry) else "")],
             SCHEME_SIGNAL_ID: [(SOURCE_IGS, satellite["signal_id_now"]),
                                (SOURCE_ORBIT_FEED, in_brackets.group(1) if in_brackets else "")],

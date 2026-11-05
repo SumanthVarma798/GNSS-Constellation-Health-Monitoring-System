@@ -9,7 +9,8 @@ import re
 from pathlib import Path
 
 from evidence.master_map import agreement, display_name, identifiers, signal_ids_of
-from evidence.settings import COUNTRY_NAMES, COUNTRY_NOT_GIVEN, IDENTITY_DIFFER, SCHEME_SIGNAL_ID, SERVICE_DISAGREE
+from evidence.settings import (COUNTRY_NAMES, COUNTRY_NOT_GIVEN, IDENTITY_DIFFER, SCHEME_SIGNAL_ID, SERVICE_DISAGREE,
+                               SIGHTING_NOTE)
 from ui import palette
 from ui.theme import root_block
 from ui.tooltip import CARD_CSS
@@ -27,14 +28,15 @@ def _disagreement(line):
 
 
 def master_map_records(data):
-    """One record per spacecraft, in registry order, from load_master_map_data()'s dict."""
-    satellites, catalogue, tracked = data["satellites"], data["catalogue"], data["tracked"]
+    """One record per spacecraft, in registry order and then each sighting, from load_master_map_data()'s dict."""
+    satellites, catalogue, tracked = data["satellites"] + data["sightings"], data["catalogue"], data["tracked"]
     signal_ids, feed_names, feed_checked = data["signal_ids"], data["feed_names"], data["feed_checked"]
     states = {row["svn"]: row["state"] for row in catalogue}
+    sighted = {row["svn"] for row in data["sightings"]}
     records = []
     for line in agreement(satellites, catalogue):
         svn = line["svn"]
-        found = identifiers(svn, satellites, catalogue, tracked, signal_ids, feed_names, feed_checked)
+        found = identifiers(svn, satellites, catalogue, tracked, signal_ids, feed_names, feed_checked, svn in sighted)
         records.append({
             "svn": svn,
             "name": display_name(svn, satellites, catalogue, tracked),
@@ -42,6 +44,7 @@ def master_map_records(data):
             "country": COUNTRY_NAMES.get(states.get(svn, ""), COUNTRY_NOT_GIVEN),
             "disagreement": _disagreement(line),
             "identity": line["identity"],
+            "sighting": SIGHTING_NOTE if svn in sighted else "",
             "signal_id": next(item["value"] for item in found if item["scheme"] == SCHEME_SIGNAL_ID),
             "identifiers": found,
             "periods": signal_ids_of(svn, signal_ids),

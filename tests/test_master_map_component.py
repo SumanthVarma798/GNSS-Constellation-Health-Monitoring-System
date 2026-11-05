@@ -7,19 +7,22 @@ import pytest
 from evidence.catalogue_check import disagreements
 from evidence.registry_tables import read_table
 from evidence.settings import (COUNTRY_NAMES, COUNTRY_NOT_GIVEN, MAP_WARN, REGISTRY_CATALOGUE_FILE,
-                               REGISTRY_SATELLITES_FILE, SCHEME_ORBIT_FEED)
+                               REGISTRY_SATELLITES_FILE, REGISTRY_SIGHTINGS_FILE, SCHEME_ORBIT_FEED)
 from ui import palette
 from ui.components.master_map import PAGE_FILE, master_map_html, master_map_records
 from ui.pages_data import DATA_DIR
 from evidence.master_map import orbit_feed_checked, orbit_feed_names
 from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_SIGNAL_IDS_FILE
+from evidence.settings import (MAP_IDLE, NOT_YET_KNOWN, SCHEME_COSPAR, SCHEME_NORAD, SCHEME_SIGNAL_ID, SIGHTING_NOTE,
+                               SOURCE_IGS, SOURCE_SIGHTING)
 
 HOSTILE = "</script><script>alert(1)</script>"
 
 
 @pytest.fixture(scope="module")
 def real():
-    return {"satellites": read_table(REGISTRY_SATELLITES_FILE), "catalogue": read_table(REGISTRY_CATALOGUE_FILE),
+    return {"satellites": read_table(REGISTRY_SATELLITES_FILE), "sightings": read_table(REGISTRY_SIGHTINGS_FILE),
+            "catalogue": read_table(REGISTRY_CATALOGUE_FILE),
             "tracked": read_table(REGISTRY_DASHBOARD_SATELLITES_FILE),
             "signal_ids": read_table(REGISTRY_SIGNAL_IDS_FILE), "feed_names": orbit_feed_names(DATA_DIR),
             "feed_checked": orbit_feed_checked(DATA_DIR)}
@@ -31,8 +34,25 @@ def records(real):
 
 
 def test_one_record_per_spacecraft(records, real):
-    assert len(records) == len(real["satellites"])
-    assert [r["svn"] for r in records] == [row["svn"] for row in real["satellites"]]
+    listed = real["satellites"] + real["sightings"]
+    assert [r["svn"] for r in records] == [row["svn"] for row in listed]
+
+
+def test_a_sighting_reaches_the_map_marked_as_one(real):
+    nvs03 = {"svn": "I-101228", "constellation": "NavIC", "block": "", "cospar_id": "2026-245A",
+             "catalogue_no": "101228", "signal_id_now": "", "plane": "", "slot": "",
+             "note": "Launched 2026-10-30; NVS-03 (IRNSS-1L)"}
+    page = master_map_html({**real, "sightings": [nvs03]})
+    payload = json.loads(re.search(r'id="map-data">(.*?)</script>', page, re.S).group(1))
+    record = payload["records"][-1]
+    assert (record["svn"], record["name"], record["sighting"]) == ("I-101228", "NVS-03 (IRNSS-1L)", SIGHTING_NOTE)
+    said = {i["scheme"]: i for i in record["identifiers"]}
+    assert said[SCHEME_NORAD]["value"] == "101228" and said[SCHEME_COSPAR]["value"] == "2026-245A"
+    assert said[SCHEME_SIGNAL_ID]["value"] == NOT_YET_KNOWN == record["signal_id"]
+    # Its numbers came from CelesTrak's GNSS group; the IGS file is never said to hold them.
+    sources = [s["source"] for i in record["identifiers"] for s in i["sources"] if s["status"] != MAP_IDLE]
+    assert SOURCE_SIGHTING in sources and SOURCE_IGS not in sources
+    assert all(r["sighting"] == "" for r in payload["records"][:-1])
 
 
 def test_c217_carries_the_out_of_date_orbit_feed_name(records):

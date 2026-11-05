@@ -135,8 +135,13 @@ function fit(text, font, width) {   // one line, shortened with an ellipsis if i
 }
 // level 1: shown from middle zoom; level 2: only when close.
 function layout(r) {
-  const lines = [], dots = [], rows = []; let y = 46;
+  const lines = [], dots = [], rows = []; let y = 46, badge = null;
   const add = (text, font, colour, level, x, step) => { y += step; lines.push({ text, font, colour, level, x, y }); };
+  if (r.sighting) {   // a sighting: an outlined note under the name says where its identity comes from
+    const top = y + 2;
+    wrap(r.sighting, F.small, W - 2 * PAD - 16).forEach(t => add(t, F.small, C.muted, 1, PAD + 8, 12));
+    y += 7; badge = { top, h: y - top };
+  }
   r.identifiers.forEach(it => {
     const warn = it.status === "warn", x = PAD + INDENT, top = y + 4;
     y += 10;
@@ -148,7 +153,9 @@ function layout(r) {
     rows.push({ top, bottom: y + 4, it });
   });
   if (r.disagreement) { y += 12; wrap(r.disagreement, F.note, W - 2 * PAD).forEach(t => add(t, F.note, C.warn, 1, PAD, 12.5)); }
-  return { lines, dots, rows, h: y + 14, name: fit(r.name, F.name, W - 2 * PAD - 22), chipName: fit(r.name, `20px ${SANS}`, W - 24),
+  ctx.font = `700 56px ${MONO}`;   // the chip's SVN: 56px, smaller for a long stand-in SVN so it stays inside the card
+  const chipSize = Math.min(56, 56 * (W - 24) / ctx.measureText(r.svn).width);
+  return { lines, dots, rows, badge, chipSize, h: y + 14, name: fit(r.name, F.name, W - 2 * PAD - 22), chipName: fit(r.name, `20px ${SANS}`, W - 24),
            mark: !!r.disagreement || r.identifiers.some(it => it.status === "warn") };
 }
 const card = new Map(RECS.map(r => [r.svn, layout(r)]));
@@ -225,7 +232,7 @@ function drawCard(r, a0, a1, a2) {
   };
   if (a0 > 0) {   // the chip
     ctx.globalAlpha = base * a0; ctx.textAlign = "center";
-    if (56 * k >= 5) { ctx.fillStyle = C.ink; ctx.font = `700 56px ${MONO}`; ctx.fillText(r.svn, x + W / 2, y + h / 2 + 4); }
+    if (c.chipSize * k >= 5) { ctx.fillStyle = C.ink; ctx.font = `700 ${c.chipSize}px ${MONO}`; ctx.fillText(r.svn, x + W / 2, y + h / 2 + 4); }
     if (20 * k >= 5) { ctx.fillStyle = C.muted; ctx.font = `20px ${SANS}`; ctx.fillText(c.chipName, x + W / 2, y + h / 2 + 40); }
     ctx.textAlign = "left";
     if (c.mark) { const rad = clamp(6 / k, 15, 70); mark(x + W - rad - 10, y + rad + 10, rad); }   // stays visible from far away
@@ -235,6 +242,7 @@ function drawCard(r, a0, a1, a2) {
     ctx.fillStyle = C.ink; ctx.font = F.id; ctx.fillText(r.svn, x + PAD, y + 24);
     ctx.fillStyle = C.muted; ctx.font = F.name; ctx.fillText(c.name, x + PAD, y + 40);
     if (c.mark) mark(x + W - 20, y + 20, 8);
+    if (c.badge) { box(x + PAD, y + c.badge.top, W - 2 * PAD, c.badge.h, 8); ctx.lineWidth = 1; ctx.strokeStyle = C.muted; ctx.stroke(); }
     c.dots.forEach(d => { ctx.beginPath(); ctx.arc(x + PAD + 3.5, y + d.y, 3.5, 0, 6.2832); ctx.fillStyle = dim ? C.idle : d.tone; ctx.fill(); });
     let font = "";
     c.lines.forEach(l => {
@@ -335,9 +343,11 @@ function showTip(e) {
       fillTip(it.value, it.scheme, pairs);
     } else {
       const look = r.identifiers.filter(it => it.status === "warn").length;
-      fillTip(r.svn, r.name, [["System", r.constellation], ["Signal ID today", r.signal_id],
+      const pairs = [["System", r.constellation], ["Signal ID today", r.signal_id],
         ["Identifiers", `${r.identifiers.length} · ${look ? look + (look === 1 ? " needs" : " need") + " a look" : "none need a look"}`],
-        ["Sources", r.disagreement ? el("span", "warn", r.disagreement) : r.identity]]);   // matches the card's "!" mark
+        ["Sources", r.disagreement ? el("span", "warn", r.disagreement) : r.identity]];   // matches the card's "!" mark
+      if (r.sighting) pairs.push(["Registry", r.sighting]);
+      fillTip(r.svn, r.name, pairs);
     }
     tip.classList.add("on");
   }
@@ -377,7 +387,7 @@ canvas.addEventListener("wheel", e => {
 }, { passive: false });
 
 /* ---------- keyboard and screen readers: one hidden button per card, in registry order ---------- */
-$("cards").innerHTML = RECS.map(r => `<div role="listitem"><button type="button" data-svn="${esc(r.svn)}">${esc(r.svn + ", " + r.name + ". "
+$("cards").innerHTML = RECS.map(r => `<div role="listitem"><button type="button" data-svn="${esc(r.svn)}">${esc(r.svn + ", " + r.name + ". " + (r.sighting ? r.sighting + ". " : "")
   + r.identifiers.map(it => `${it.scheme}: ${it.value}${it.remark ? " (" + it.remark + ")" : ""}, from ${it.issuer}, last checked ${it.checked}`
     + it.sources.map(s => `, ${s.source} ${s.note || "agrees"}`).join("")).join(". ")
   + (r.disagreement ? ". " + r.disagreement : ""))}</button></div>`).join("");
@@ -489,6 +499,7 @@ function select(svn) {
   const r = RECS.find(x => x.svn === svn); if (!r) return;
   current = svn; paint();
   $("side-body").innerHTML = `<h2>${esc(r.svn)}</h2><p class="name">${esc(r.name)}</p><p class="where">${esc(r.constellation)} · ${esc(r.country)}</p>`
+    + (r.sighting ? `<p class="where">${esc(r.sighting)}</p>` : "")
     + `<h3>Signal IDs over time</h3>${timeline(r.periods)}`;
   stage.classList.add("has-side"); $("side").scrollTop = 0; $("close").focus({ preventScroll: true });
 }
