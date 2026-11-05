@@ -118,6 +118,8 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 
 /* ---- our own parts ---- */
 .small { font-size: var(--fs-small); color: var(--fc-small); }
+.footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid var(--edge); font-size: var(--fs-small); line-height: 1.6; }
+.footer a { color: var(--muted); text-decoration: underline dotted; text-underline-offset: 3px; }
 .num { font-variant-numeric: tabular-nums; }
 
 .raised { background: var(--platform); border-radius: var(--r); box-shadow: var(--raised); border: 1px solid var(--edge); padding: 18px 20px; color: var(--ink); }

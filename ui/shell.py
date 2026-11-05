@@ -55,6 +55,21 @@ THRESHOLDS = [
 ]
 QZSS_INCLINATION_TOLERANCE = 4.0   # as app.py: QZSS's IGSO satellites have a wider tolerance
 
+# Under every page: the licences (LICENSE, LICENSE-DATA) and whose data the pages draw on, as NOTICE lists them.
+FOOTER_HTML = (
+    '<div class="footer small">'
+    'Code <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache-2.0</a> · '
+    'Our data <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> · '
+    'Orbits from CelesTrak and Space-Track · Navigation messages from the IGS, via BKG · '
+    'Catalogue from GCAT (J. McDowell, planet4589.org/space/gcat) · Land from Natural Earth'
+    '</div>'
+)
+
+
+def footer():
+    """The licence and credits line, after the page."""
+    st.html(FOOTER_HTML)
+
 
 def pages():
     """PAGES as st.Page objects."""
