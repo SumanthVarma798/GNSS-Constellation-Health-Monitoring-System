@@ -13,7 +13,7 @@ from ui.components.master_map import embed
 from ui.theme import root_block
 
 PAGE_FILE = Path(__file__).with_name("lifecycle.html")
-FIRST_SHOWN = ("NVS-03", "NVS-01")   # the newest satellite beside the one it most resembles
+FIRST_SHOWN = ("NVS-01", "NVS-03")   # left, then right: the newest satellite beside the one it most resembles
 COLOURS = [palette.ACCENT, palette.WARN, palette.OK]
 
 
@@ -23,7 +23,8 @@ def lifecycle_html(rows, today):
     for placeholder, text in {"__ROOT__": root_block(), "__FONT__": palette.FONT, "__FONT_NUMBERS__": palette.FONT_NUMBERS}.items():
         page = page.replace(placeholder, text)
     payload = {"satellites": timelines(rows, today), "first": list(FIRST_SHOWN), "colours": COLOURS,
-               "today": today.isoformat(), "when_words": WHEN_WORDS, "evidence_words": EVIDENCE_WORDS}
+               "today": today.strftime("%Y-%m-%dT%H:%M:%SZ"),   # whole seconds: every browser reads these
+               "when_words": WHEN_WORDS, "evidence_words": EVIDENCE_WORDS}
     return page.replace("const DATA = __DATA__;", f"const DATA = {embed(payload)};", 1)
 
 

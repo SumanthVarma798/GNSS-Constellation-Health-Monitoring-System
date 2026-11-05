@@ -85,3 +85,13 @@ def test_text_cannot_break_out_of_the_page_and_is_put_in_as_text():
     assert {s["name"] for s in json.loads(data)["satellites"]} == {row["satellite"] for row in ROWS}
     assert "innerHTML" not in page and "__" not in page.replace("__proto__", "")
     assert "https://commons.wikimedia.org/wiki/Special:FilePath/" in page
+
+
+def test_a_step_before_a_failed_one_happened_even_without_a_date():
+    states = {c["step"]: c["state"] for c in checklist(STEPS, _events("launch", failed=("burn",), undated=("separation",)))}
+    assert states["separation"] == IMPLIED and states["burn"] == FAILED_STATE
+
+
+def test_today_reaches_the_page_in_whole_seconds_and_the_first_pair_in_order():
+    data = json.loads(lifecycle_html(ROWS, datetime(2026, 11, 5, 6, 12, 34, 123456, tzinfo=timezone.utc)).split("const DATA = ", 1)[1].split(";\nconst $", 1)[0])
+    assert data["today"] == "2026-11-05T06:12:34Z" and data["first"] == list(FIRST_SHOWN)

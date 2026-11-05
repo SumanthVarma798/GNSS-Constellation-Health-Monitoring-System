@@ -62,6 +62,7 @@ svg.links text.now { fill: var(--warn); font: 600 11px __FONT_NUMBERS__; }
 .card:hover { border-color: var(--accent); }
 .card.failed { border-color: var(--bad); }
 .card.ghost { background: transparent; border-style: dashed; box-shadow: none; cursor: default; color: var(--muted); }
+button.card.ghost { cursor: pointer; }
 .card .t { font: 11px var(--mono); color: var(--muted); }
 .card .t b { color: var(--warn); font-weight: 600; }
 .card .h { font-weight: 600; margin: 2px 0 0; }
@@ -114,7 +115,7 @@ const SCALES = {
                         [30, "+1 month"], [365.25, "+1 year"], [5 * 365.25, "+5 years"], [12 * 365.25, "+12 years"]] },
 };
 const BADGE = { operator: "operator", "orbit records": "records", press: "press" };
-let picked = DATA.satellites.filter((s) => DATA.first.includes(s.name)).map((s) => s.name);
+let picked = DATA.first.filter((n) => DATA.satellites.some((s) => s.name === n));
 let scale = "days";
 const opened = new Set();
 
@@ -232,7 +233,10 @@ function draw() {
     const x = G.rails[side];
     const rail = el("div", undefined, "rail"); rail.style.left = x + "px"; rail.style.background = colourOf(s); rail.style.opacity = ".5"; tl.append(rail);
     const b = el("div", undefined, "flow"), a = el("div", undefined, "flow"); const rows = []; const counts = {};
+    const aheadSteps = new Set(s.checklist.filter((c) => c.state === "ahead").map((c) => c.step));
+    const pending = {};   // an undated event for a step still ahead: shown as that step's "not yet" card, with its source
     s.events.forEach((e, i) => {
+      if (!e.at && aheadSteps.has(e.step)) { const g = card(e, s.launch, `${s.name}|${i}`, null, ""); g.classList.add("ghost"); g.querySelector(".t").textContent = "not yet"; pending[e.step] = g; return; }
       const n = counts[e.step] = (counts[e.step] || 0) + 1;
       // A fact known only by its day sits at midday: never more than half a day out.
       const key = `${s.name}|${i}`, d = e.at ? days(e.at, s.launch) + (e.when === "on" ? 0.5 : 0) : null;
@@ -254,8 +258,8 @@ function draw() {
     const ahead = failed ? [] : s.checklist.filter((c) => c.state === "ahead");
     if (!failed && inWindow(nowD)) {
       rows.push({ now: true, d: nowD, side });
-      ahead.forEach((c) => { const g = ghost(c.title); const [l, r] = G.cards[side]; g.style.left = l + "px"; g.style.width = (r - l) + "px"; tl.append(g); rows.push({ card: g, d: nowD, side, ghost: true }); });
-    } else ahead.forEach((c) => a.append(ghost(c.title)));
+      ahead.forEach((c) => { const g = pending[c.step] || ghost(c.title); const [l, r] = G.cards[side]; g.style.left = l + "px"; g.style.width = (r - l) + "px"; tl.append(g); rows.push({ card: g, d: nowD, side, ghost: true }); });
+    } else ahead.forEach((c) => a.append(pending[c.step] || ghost(c.title)));
     bands.before.push(b); bands.after.push(a); placed.push(rows);
   });
   ["before", "after"].forEach((k) => {

@@ -35,7 +35,8 @@ def checklist(steps, events):
     """One entry per step: its state, and for the service step how much of the design life is used (0 to 1)."""
     dated = {e["step"] for e in events if e["at"] and not e["failed"]}
     failed_at = next((i for i, (step, _) in enumerate(steps) if any(e["step"] == step and e["failed"] for e in events)), None)
-    last_dated = max((i for i, (step, _) in enumerate(steps) if step in dated), default=-1)
+    # The furthest step known to have been reached, or tried: every step before it happened, dated or not.
+    last_dated = max([i for i, (step, _) in enumerate(steps) if step in dated] + [failed_at if failed_at is not None else -1])
     out = []
     for i, (step, title) in enumerate(steps):
         if failed_at is not None and i >= failed_at:
