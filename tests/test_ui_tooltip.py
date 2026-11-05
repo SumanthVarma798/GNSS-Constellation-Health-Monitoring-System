@@ -62,7 +62,7 @@ def test_a_glance_card_leads_in_bold_highlights_each_key_term_and_escapes_its_wo
     html = tooltip.glance(ATTACK, [("map", "Map", ATTACK), ("", "<b>Sky</b>", "words")], note=ATTACK)
 
     assert '<span class="tt-lead">' in html and '<span class="tt-note">' in html
-    assert html.count('class="tt-item"') == 2 and html.count("<svg") == 1   # an icon only where one is named
+    assert html.count('class="tt-item"') == 2 and html.count('class="ic"') == 1   # an icon only where one is named
     assert "<b>Map</b>" in html and "<b>&lt;b&gt;Sky&lt;/b&gt;</b>" in html
     assert "<script>" not in html and html.count("&lt;script&gt;") == 3
     assert not any(tag in html for tag in ("<p>", "<p ", "<div", "<ul"))   # spans only: it may sit inside a <p>
@@ -73,3 +73,9 @@ def test_the_sky_and_ground_key_names_only_icons_there_are():
 
     assert 3 <= len(gs.SKY_GROUND_KEY) <= 5
     assert all(icon in icons.TABLER for icon, _, _ in gs.SKY_GROUND_KEY if icon)
+
+
+def test_every_glance_icon_the_geometry_page_names_is_on_the_page_as_a_mask():
+    # st.html drops inline <svg>, so an icon is a mask, and its variable must be in the root block.
+    from ui import geometry_settings, icons
+    assert {name for name, _, _ in geometry_settings.SKY_GROUND_KEY if name} <= set(icons.MASKED)

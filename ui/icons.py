@@ -44,17 +44,12 @@ LIFECYCLE_STEP_ICONS = {"built": "tool", "launch": "rocket", "separation": "arro
                         "end": "power", "disposal": "trash", "note": "info-circle"}
 
 
-def svg(name):
-    """One icon as inline <svg>, in the text's colour. Hidden from screen readers: the words beside it say it."""
-    paths = "".join(f'<path d="{d}"/>' for d in TABLER[name])
-    return ('<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
-            f'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{paths}</svg>')
-
 # Each status's icon (ui/surfaces.py STATUSES), in the notices inbox and in what the checks found.
 STATUS_ICONS = {"ok": "circle-check", "warn": "alert-triangle", "bad": "alert-circle", "idle": "info-circle",
                 "accent": "info-circle"}
-# The icons the stylesheet carries as --ic-<name>: the inbox's bell, its "mark read" tick, and the status icons.
-MASKED = ("bell", "check", *dict.fromkeys(STATUS_ICONS.values()))
+# The icons the stylesheet carries as --ic-<name>: the inbox's bell, its "mark read" tick, the status icons, and the
+# Sky and ground card's (ui/geometry_settings.py SKY_GROUND_KEY). An icon a page shows must be here.
+MASKED = ("bell", "check", *dict.fromkeys(STATUS_ICONS.values()), "map", "click", "radar", "player-play", "planet")
 
 
 def mask_url(name):
@@ -65,6 +60,11 @@ def mask_url(name):
     return f'url("data:image/svg+xml;base64,{base64.b64encode(svg.encode()).decode("ascii")}")'
 
 
+def mask(name, cls=""):
+    """One icon in MASKED as a span in the text's colour. Hidden from screen readers: the words beside it say it."""
+    return f'<span class="ic{" " + cls if cls else ""}" style="--ic: var(--ic-{name})" aria-hidden="true"></span>'
+
+
 def tag(status):
     """A status's icon as a span in the status's colour. Hidden from screen readers: say the status in words too."""
-    return f'<span class="ic {status}" style="--ic: var(--ic-{STATUS_ICONS[status]})" aria-hidden="true"></span>'
+    return mask(STATUS_ICONS[status], status)

@@ -56,7 +56,7 @@ def glance(lead, items, note=""):
     """A card body read at a glance, for tip_html: a bold lead line, then one short line per item led by its key
     term in the accent colour, with an icon (ui/icons.py) before it where one is named, then an optional muted note.
     items: (icon name or "", key term, words). All text is escaped; spans only, so it can sit inside a <p>."""
-    lines = "".join(f'<span class="tt-item">{icons.svg(icon) if icon else "<span></span>"}'
+    lines = "".join(f'<span class="tt-item">{icons.mask(icon) if icon else "<span></span>"}'
                     f'<span><b>{escape(term)}</b> {escape(words)}</span></span>' for icon, term, words in items)
     return (f'<span class="tt-lead">{escape(lead)}</span><span class="tt-items">{lines}</span>'
             + (f'<span class="tt-note">{escape(note)}</span>' if note else ""))

@@ -166,7 +166,7 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .tt-lead { display: block; font-weight: 600; margin-bottom: 8px; }
 .tt-items { display: grid; gap: 6px; }
 .tt-item { display: grid; grid-template-columns: 16px minmax(0, 1fr); column-gap: 8px; align-items: start; }
-.tt-item .icon { width: 16px; height: 16px; margin-top: 1px; color: var(--muted); }
+.tt-item .ic { width: 16px; height: 16px; margin-top: 1px; color: var(--muted); }
 .tt-item b { color: var(--accent); font-weight: 600; }
 .tt-note { display: block; margin-top: 8px; color: var(--muted); }
 .swatch { margin-top: 4px; }
@@ -406,7 +406,7 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
 /* what the checks found (Overview): the counts per outcome, then one group per outcome, worst first; in a group,
    a satellite's name and its findings beside it, one line each with its status icon */
 .ck-counts { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 6px; }
-.ck-title { margin: 16px 0 4px; font-size: var(--fs-side); font-weight: var(--fw-side); color: var(--muted); }
+.stApp .ck-title { margin: 16px 0 4px; font-size: var(--fs-side); font-weight: var(--fw-side); color: var(--muted); }
 .ck-list { margin: 0; padding: 0; list-style: none; font-size: var(--fs-body); }
 .ck-list li { display: grid; grid-template-columns: minmax(110px, 160px) minmax(0, 1fr); gap: 4px 16px; padding: 8px 0; }
 .ck-list li + li { border-top: 1px solid var(--edge); }
