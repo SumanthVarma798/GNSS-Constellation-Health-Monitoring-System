@@ -2,6 +2,7 @@
 
 These drive the real script without a browser, with the clock frozen as tests/test_dashboard_notices.py does.
 """
+import json
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -422,14 +423,26 @@ def _on(page):
     return lambda at: at.session_state.__setitem__("page", page)
 
 
-def test_station_keeping_shows_a_rhythm_line_per_satellite_and_two_charts():
+def test_station_keeping_shows_a_rhythm_line_per_satellite_and_the_timeline():
     at = run(_on("Station-keeping"))
     lines = [b for body in htmls(at) for b in body.split('<div class="rh">')[1:]]
 
     assert len(lines) == 8
-    assert len(at.get("plotly_chart")) == 2
+    assert len(at.get("plotly_chart")) == 1
     counts = table_rows(at)[0]
     assert len(counts) == 8 and "IRNSS-1D" in counts   # burns in the window, the set-aside one included
+
+
+def test_every_burn_is_grouped_under_its_satellite_in_the_timelines_order():
+    at = run(_on("Station-keeping"))
+    burn_list = next(body for body in htmls(at) if '<div class="bl">' in body)
+    names = [g.split("</b>")[0] for g in burn_list.split('<div class="bl-sat"><b>')[1:]]
+    rows = json.loads(at.get("plotly_chart")[0].proto.spec)["layout"]["yaxis"]["ticktext"]
+
+    assert names and names == [name for name in rows if name in names]
+    for group in burn_list.split('<div class="bl-sat">')[1:]:   # each header's count is the burns under it
+        said = int(group.split('class="muted">')[1].split(" burn")[0])
+        assert group.count('<div class="bl-row">') == said
 
 
 def test_the_master_map_draws_its_canvas_and_hides_the_constellation_controls():

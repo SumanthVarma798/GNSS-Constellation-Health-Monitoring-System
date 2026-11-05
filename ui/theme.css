@@ -331,6 +331,25 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .cycle.late i { background: var(--warn); }
 .due { font-weight: 600; } .due.ok { color: var(--ok); } .due.warn { color: var(--warn); } .due.idle { color: var(--idle); } .due.accent { color: var(--accent); }
 @media (max-width: 900px) { .rh { grid-template-columns: 1fr 1fr; } .rh.hd { display: none; } }
+/* station-keeping: every burn in the window, a group per satellite in the timeline's order and with its marks
+   (ui/figures/burns.py KIND_SYMBOL): a dot for east-west, an open diamond for north-south */
+.bl { font-size: 14px; }
+.bl-row { display: grid; grid-template-columns: minmax(110px, 1fr) minmax(150px, 1.4fr) minmax(90px, 1fr) minmax(90px, 1fr); gap: 12px; align-items: center; padding: 5px 0; }
+.bl-row > :nth-child(n+3) { text-align: right; }
+.bl-row .num { color: var(--muted); } .bl-row .num.on { color: var(--ink); font-weight: 700; }
+.bl-hd { align-items: end; padding-bottom: 6px; color: var(--muted); font-size: 12px; font-weight: 500; }
+.bl-hd small { display: block; font-weight: 400; color: var(--idle); }
+.bl-sat { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-top: 8px; padding: 12px 0 4px; border-top: 1px solid var(--edge); }
+.bl .kd { display: inline-flex; align-items: center; gap: 10px; }
+.mk { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--ink); }
+.mk.ns { width: 7px; height: 7px; margin: 1px; border-radius: 0; background: none; border: 1.5px solid var(--ink); transform: rotate(45deg); }
+@media (max-width: 639.98px) {   /* phones: the mark alone says the kind (its word kept for screen readers), the time under the date */
+  .bl-row { grid-template-columns: 12px minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); gap: 10px; align-items: start; }
+  .bl .kd { padding-top: 5px; }
+  .bl .kd > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .bl-hd > :first-child { visibility: hidden; }
+  .bl-row .t { display: block; }
+}
 
 /* ---- major changes: a strip of notices under the top bar; each opens on click, each can be dismissed ---- */
 .st-key-changes { gap: 10px; margin: -8px 0 20px; }
