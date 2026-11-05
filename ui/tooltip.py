@@ -24,7 +24,7 @@ _SWATCH = re.compile(r"#[0-9a-fA-F]{3,8}|var\(--[a-z-]+\)")
 CARD_CSS = """
 .tt-card { display: block; width: max-content; max-width: min(360px, calc(100vw - 32px)); padding: 12px 16px;
   background: var(--platform); color: var(--ink); border: 1px solid var(--edge); border-radius: var(--r);
-  box-shadow: var(--raised); font-size: 13px; line-height: 1.45; font-weight: 400; text-align: left; white-space: normal;
+  box-shadow: var(--raised); font-size: var(--fs-small); line-height: 1.45; font-weight: 400; text-align: left; white-space: normal;
   letter-spacing: normal; text-transform: none; z-index: 1000; pointer-events: none;
   opacity: 0; visibility: hidden; transition: opacity 150ms ease, visibility 0s linear 150ms; }
 .tt-card.on, .tt-trigger:hover + .tt-card, .tt-trigger:focus + .tt-card {

@@ -12,14 +12,21 @@ html, body, .stApp, [data-testid="stApp"] { background: var(--platform); color: 
    2560px screen. Running text is held to a readable length on its own (see p below). */
 [data-testid="stMain"] .block-container, [data-testid="stMainBlockContainer"] { max-width: 1560px; padding: 32px 20px 90px; }
 [data-testid="stMain"] p { max-width: 90ch; }
+/* ---- type: one scale, ui/type_scale.py. Levels differ in size, weight and colour together, and grow from a phone to
+   a desktop. ".stApp h1" outranks Streamlit's own heading sizes, so st.title, st.header, st.subheader and markdown
+   headings follow the scale: h1 the page title, h2 a section, h3 and h4 a side heading. ---- */
+.stApp, [data-testid="stMarkdown"] [data-testid="stMarkdownContainer"] { font-size: var(--fs-body); font-weight: var(--fw-body); }
 h1, h2, h3, h4, h5, h6, [data-testid="stHeading"] { color: var(--ink); letter-spacing: -.01em; }
-h1 { font-size: 30px; line-height: 1.15; }
-h2 { font-size: 22px; }
-h3 { font-size: 18px; }
+.stApp h1 { font-size: var(--fs-title); font-weight: var(--fw-title); color: var(--fc-title); line-height: 1.15; }
+.stApp h2 { font-size: var(--fs-section); font-weight: var(--fw-section); color: var(--fc-section); line-height: 1.2; }
+.stApp :is(h3, h4) { font-size: var(--fs-side); font-weight: var(--fw-side); color: var(--fc-side); line-height: 1.3; }
+.stApp :is(h5, h6) { font-size: var(--fs-body); font-weight: var(--fw-side); color: var(--fc-side); }
 a { color: var(--accent); }
 hr { border-color: var(--edge); }
 code { color: var(--accent); background: var(--well); border-radius: 8px; }
 [data-testid="stCaptionContainer"], .stCaption, small { color: var(--muted); }
+/* Streamlit also fades captions to 60%, which drops the muted colour below a readable contrast */
+[data-testid="stCaptionContainer"], .stCaption { font-size: var(--fs-small); font-weight: var(--fw-small); color: var(--fc-small); opacity: 1; }
 
 /* ---- sidebar ---- */
 [data-testid="stSidebar"] { background: var(--platform); border-right: 1px solid var(--edge); box-shadow: var(--raised-sm); }
@@ -69,7 +76,7 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 /* ---- metrics ---- */
 [data-testid="stMetric"] { background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); padding: 16px 20px; }
 [data-testid="stMetricLabel"], [data-testid="stMetricLabel"] p { color: var(--muted); }
-[data-testid="stMetricValue"] { color: var(--ink); font-weight: 700; }
+[data-testid="stMetricValue"] { color: var(--ink); font-size: var(--fs-num); font-weight: var(--fw-num); }
 
 /* ---- expanders ---- */
 [data-testid="stExpander"] { background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised-sm); overflow: hidden; }
@@ -110,14 +117,14 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 [data-testid="stDataFrame"] { border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--pressed); overflow: hidden; }
 
 /* ---- our own parts ---- */
-.small { font-size: 14px; color: var(--muted); }
+.small { font-size: var(--fs-small); color: var(--fc-small); }
 .num { font-variant-numeric: tabular-nums; }
 
 .raised { background: var(--platform); border-radius: var(--r); box-shadow: var(--raised); border: 1px solid var(--edge); padding: 18px 20px; color: var(--ink); }
 .well { background: var(--well); border-radius: var(--r); box-shadow: var(--pressed); border: 1px solid transparent; padding: 17px 19px; color: var(--ink); }
-.part-title { font-size: 16px; font-weight: 600; margin: 0 0 6px; color: var(--ink); }
+.part-title { font-size: var(--fs-side); font-weight: var(--fw-side); margin: 0 0 6px; color: var(--fc-side); }
 
-.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 3px 11px; border-radius: 999px; box-shadow: var(--pressed); background: var(--well); white-space: nowrap; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-small); font-weight: 600; padding: 3px 11px; border-radius: 999px; box-shadow: var(--pressed); background: var(--well); white-space: nowrap; }
 /* Avenir sits high in its line box, so the words rode about 1.5px above a chip's middle. Where the browser can, trim the
    line box to the capitals and the baseline and let even padding centre them; elsewhere the plain padding above stands. */
 @supports (text-box: trim-both cap alphabetic) { .chip { display: inline-block; text-box: trim-both cap alphabetic; padding-block: .68em; } }
@@ -127,13 +134,13 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .notice.ok { border-left-color: var(--ok); } .notice.warn { border-left-color: var(--warn); } .notice.bad { border-left-color: var(--bad); }
 .notice.idle { border-left-color: var(--idle); } .notice.accent { border-left-color: var(--accent); }
 
-.big { font-size: 34px; font-weight: 700; line-height: 1.05; color: var(--ink); }
+.big { font-size: var(--fs-num); font-weight: var(--fw-num); line-height: 1.05; color: var(--fc-num); }   /* the key number: accent, to be seen first */
 .big-number .small { margin-top: 4px; }
 
 /* ---- the one tooltip (ui/tooltip.py). Its card's look and open state are tooltip.CARD_CSS, shared with the canvases ---- */
 .tt-trigger { cursor: help; border-radius: 6px; text-decoration: underline dotted var(--muted); text-decoration-thickness: 1px; text-underline-offset: 3px; }
 .tt-trigger.pill { display: inline-block; padding: 6px 16px; border-radius: 999px; border: 1px solid var(--edge); box-shadow: var(--raised-sm);
-  background: var(--platform); color: var(--ink); font-size: 14px; font-weight: 400; text-decoration: none; white-space: nowrap; transition: color 150ms ease, box-shadow 150ms ease; }
+  background: var(--platform); color: var(--ink); font-size: var(--fs-body); font-weight: var(--fw-body); text-decoration: none; white-space: nowrap; transition: color 150ms ease, box-shadow 150ms ease; }
 .tt-trigger.pill:is(:hover, :focus) { box-shadow: var(--pressed); background: var(--well); color: var(--accent); }
 /* One placement: under the trigger, centred on it, slid along to stay on the screen, above it when there is no room
    below. Fixed to the screen, so a scrolling table never cuts it off. A browser that cannot anchor shows it at the foot. */
@@ -149,7 +156,7 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 [data-baseweb="tooltip"] > div { background: var(--platform); color: var(--ink); border: 1px solid var(--edge); border-radius: var(--r);
   box-shadow: var(--raised); }
 [data-testid="stTooltipContent"] { padding: 12px 16px; max-width: min(360px, calc(100vw - 32px)); }
-[data-testid="stTooltipContent"], [data-testid="stTooltipContent"] :is(p, [data-testid="stMarkdownContainer"]) { color: var(--ink); font-size: 13px !important; line-height: 1.45; background: transparent; }
+[data-testid="stTooltipContent"], [data-testid="stTooltipContent"] :is(p, [data-testid="stMarkdownContainer"]) { color: var(--ink); font-size: var(--fs-small) !important; line-height: 1.45; background: transparent; }
 .tt-card p { margin: 0 0 6px; max-width: none; } .tt-card p:last-child { margin-bottom: 0; }
 .tt-card .muted, .tt-card small { color: var(--muted); }
 .tt-list { list-style: none; margin: 0; padding: 0; }
@@ -195,14 +202,13 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
   .st-key-filters > div:has(.st-key-scope_menu) { display: block; }  /* ...the menu */
   .st-key-filters > div:has(.st-key-range) { margin-left: 0; }
 }
-.brand { display: block; font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: -.01em; color: var(--ink); white-space: nowrap; }
-@media (max-width: 639.98px) { .brand { font-size: 18px; } }
+.brand { display: block; font-size: var(--fs-section); font-weight: var(--fw-section); line-height: 1.2; letter-spacing: -.01em; color: var(--fc-section); white-space: nowrap; }
 .right { display: flex; justify-content: flex-end; }
 
 /* segmented controls: a pressed track, the chosen item raised in the accent colour */
 [data-testid="stButtonGroup"] [data-baseweb="button-group"] { display: inline-flex; flex-wrap: nowrap; gap: 4px; padding: 4px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); }
 [data-testid="stButtonGroup"] button[data-testid^="stBaseButton-segmented"] {
-  background: transparent; color: var(--muted); border: 1px solid transparent; border-radius: 999px; box-shadow: none; padding: 4px 13px; min-height: 0; font-size: 13px; white-space: nowrap;
+  background: transparent; color: var(--muted); border: 1px solid transparent; border-radius: 999px; box-shadow: none; padding: 4px 13px; min-height: 0; font-size: var(--fs-small); white-space: nowrap;
 }
 [data-testid="stButtonGroup"] button[data-testid^="stBaseButton-segmented"]:hover { color: var(--accent); border-color: transparent; }
 [data-testid="stButtonGroup"] button[data-testid^="stBaseButton-segmented"] :is([data-testid="stMarkdownContainer"], p) { color: inherit; }
@@ -211,7 +217,7 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 /* the bar's buttons that open a panel: the gear (round), the time range and the phone's constellation menu (pills) */
 [data-testid="stPopover"] button {
   min-height: 0; padding: 5px 12px 5px 16px; gap: 6px; border-radius: 999px; background: var(--platform); color: var(--muted);
-  border: 1px solid var(--edge); box-shadow: var(--raised-sm); font-size: 13px; font-weight: 600; white-space: nowrap;
+  border: 1px solid var(--edge); box-shadow: var(--raised-sm); font-size: var(--fs-small); font-weight: 600; white-space: nowrap;
 }
 [data-testid="stPopover"] button:hover { color: var(--accent); border-color: var(--accent); }
 [data-testid="stPopover"] button[aria-expanded="true"] { box-shadow: var(--pressed); background: var(--well); color: var(--accent); }
@@ -247,8 +253,8 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .st-key-refresh [data-testid="stHtml"] { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; row-gap: 2px; }
 /* the UTC clock over the wait to the next automatic refresh */
 .st-key-clock [data-testid="stHtml"] { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.25; }
-.st-key-clock .clock { font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; }
-.st-key-clock .next { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.st-key-clock .clock { font-size: var(--fs-small); font-weight: 600; color: var(--ink); white-space: nowrap; }
+.st-key-clock .next { font-size: var(--fs-small); color: var(--fc-small); white-space: nowrap; }
 .st-key-refresh_button { margin-inline: 5px; }   /* room for the ring, so the gaps either side are even */
 .st-key-refresh_button button {
   position: relative; width: 36px; height: 36px; min-height: 0; padding: 0; border-radius: 50%; color: var(--muted); overflow: visible;
@@ -264,7 +270,7 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 }
 
 /* Compare stands apart from the constellation chips: raised when off, pressed in the accent colour when on */
-.st-key-compare_toggle button { padding: 5px 16px; min-height: 0; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.st-key-compare_toggle button { padding: 5px 16px; min-height: 0; font-size: var(--fs-small); color: var(--muted); white-space: nowrap; }
 .st-key-compare_toggle button[data-testid="stBaseButton-primary"] { background: var(--well); color: var(--accent); box-shadow: var(--pressed); border-color: var(--edge); }
 .st-key-compare_toggle button :is(p, span) { color: inherit; }
 
@@ -272,13 +278,13 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .st-key-picker { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px; margin-bottom: 18px;
   background: var(--well); border-radius: 18px; box-shadow: var(--pressed); }
 .st-key-picker > div { width: auto !important; flex: 0 0 auto; }
-.st-key-picker [data-testid="stButton"] button { padding: 4px 12px; min-height: 0; font-size: 13px; color: var(--accent); flex-direction: row-reverse; gap: 6px; }
+.st-key-picker [data-testid="stButton"] button { padding: 4px 12px; min-height: 0; font-size: var(--fs-small); color: var(--accent); flex-direction: row-reverse; gap: 6px; }
 .st-key-picker [data-testid="stButton"] button:hover { color: var(--bad); border-color: var(--bad); }
 .st-key-picker [data-testid="stButton"] button :is(p, span) { color: inherit; }
 .st-key-picker .st-key-picker_toggle button { flex-direction: row; color: var(--muted); }
 .st-key-picker .st-key-picker_toggle button:hover { color: var(--accent); border-color: var(--accent); }
 .st-key-picker > div:has(.st-key-picker_list) { flex: 1 0 100%; width: 100% !important; padding: 4px 8px 6px; }
-.st-key-picker_list [data-testid="stWidgetLabel"] p { color: var(--muted); font-size: 13px; }
+.st-key-picker_list [data-testid="stWidgetLabel"] p { color: var(--fc-small); font-size: var(--fs-small); }
 .st-key-picker_list [data-baseweb="button-group"] { flex-wrap: wrap; gap: 8px; padding: 2px; background: transparent; box-shadow: none; }
 .st-key-picker_list [data-testid="stBaseButton-pillsActive"] { border-color: var(--accent); }
 
@@ -290,11 +296,11 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .tile { background: var(--platform); border-radius: 18px; box-shadow: var(--raised-sm); border: 1px solid var(--edge); border-top: 3px solid var(--idle); padding: 13px 15px; min-width: 0; }
 .tile.ok { border-top-color: var(--ok); } .tile.warn { border-top-color: var(--warn); } .tile.bad { border-top-color: var(--bad); }
 .tile .n { font-weight: 600; overflow-wrap: anywhere; }
-.tile .s { font-size: 28px; font-weight: 700; line-height: 1.1; margin: 6px 0; }
-.tile .s.ok { color: var(--ok); } .tile .s.warn { color: var(--warn); } .tile .s.bad { color: var(--bad); } .tile .s.idle { color: var(--idle); font-size: 22px; font-family: inherit; }
+.tile .s { font-size: var(--fs-num); font-weight: var(--fw-num); line-height: 1.1; margin: 6px 0; }   /* coloured by its status below */
+.tile .s.ok { color: var(--ok); } .tile .s.warn { color: var(--warn); } .tile .s.bad { color: var(--bad); } .tile .s.idle { color: var(--idle); font-size: var(--fs-section); font-family: inherit; }
 .tile .r { display: flex; gap: 6px; flex-wrap: wrap; }
 .tile .r .tt-trigger { text-decoration: none; }
-.tile .low { font-size: 13px; margin-top: 8px; }
+.tile .low { font-size: var(--fs-small); margin-top: 8px; }
 .muted { color: var(--muted); font-weight: 400; }
 
 /* score parts side by side, in the same columns as the tiles above them */
@@ -306,7 +312,7 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .mrow .ml, .tiles.cmp > :first-child { position: sticky; left: 0; z-index: 1; background: var(--platform); align-self: stretch; }
 .mrow .ml { display: flex; align-items: center; }   /* the tiles' empty gutter is held too, so tiles stay over their scores */
 .tiles.cmp { margin-bottom: 8px; align-items: start; }
-.mrow { display: grid; gap: 16px; align-items: center; padding: 11px 0; font-size: 14px; }
+.mrow { display: grid; gap: 16px; align-items: center; padding: 11px 0; font-size: var(--fs-body); }
 .mrow + .mrow { border-top: 1px solid var(--edge); }
 .ml { color: var(--muted); font-weight: 500; }
 .mc { position: relative; padding: 0 15px 7px; font-weight: 700; }
@@ -320,9 +326,9 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 }
 
 /* station-keeping rhythm: one line per satellite */
-.rh { display: grid; grid-template-columns: minmax(120px, 1.3fr) minmax(150px, 1.4fr) minmax(140px, 2fr) 110px 90px; gap: 16px; align-items: center; padding: 10px 0; font-size: 14px; }
+.rh { display: grid; grid-template-columns: minmax(120px, 1.3fr) minmax(150px, 1.4fr) minmax(140px, 2fr) 110px 90px; gap: 16px; align-items: center; padding: 10px 0; font-size: var(--fs-body); }
 .rh + .rh { border-top: 1px solid var(--edge); }
-.rh.hd { color: var(--muted); font-size: 12px; font-weight: 500; padding-top: 0; }
+.rh.hd { color: var(--fc-small); font-size: var(--fs-small); font-weight: 500; padding-top: 0; }
 .rh .ev { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .cycle { position: relative; height: 8px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); }
 .cycle em { position: absolute; top: 0; bottom: 0; border-radius: 999px; background: var(--fill); opacity: .45; }
@@ -337,14 +343,14 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .st-key-changes [data-testid="stHorizontalBlock"] { flex-wrap: nowrap; gap: 12px; align-items: flex-start; }
 .st-key-changes [data-testid="stColumn"] { min-width: 0; }
 .st-key-changes [data-testid="stColumn"]:last-child { flex: 0 0 auto !important; width: auto !important; }
-.st-key-changes [data-testid="stColumn"]:last-child button { min-height: 0; padding: 4px 14px; font-size: 13px; margin-top: 8px; white-space: nowrap; }
+.st-key-changes [data-testid="stColumn"]:last-child button { min-height: 0; padding: 4px 14px; font-size: var(--fs-small); margin-top: 8px; white-space: nowrap; }
 .change { padding: 0; }
 .change summary { display: flex; align-items: center; gap: 12px; padding: 10px 18px; cursor: pointer; list-style: none; border-radius: var(--r); }
 .change summary::-webkit-details-marker { display: none; }
 .change summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.change .when { flex: 0 0 5.6em; font-size: 13px; color: var(--muted); white-space: nowrap; }   /* one width, so the headlines line up */
+.change .when { flex: 0 0 5.6em; font-size: var(--fs-small); color: var(--fc-small); white-space: nowrap; }   /* one width, so the headlines line up */
 .change .headline { flex: 1 1 auto; min-width: 0; font-weight: 600; }
-.change .more { font-size: 13px; color: var(--accent); white-space: nowrap; }
+.change .more { font-size: var(--fs-small); color: var(--accent); white-space: nowrap; }
 .change .more { display: inline-flex; align-items: center; gap: 10px; }
 .change p { margin: 0; padding: 0 18px 12px; }
 .change a { color: var(--accent); }
@@ -356,32 +362,32 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 }
 /* groups of satellites by orbit type, and the "Measured against limits" tables */
 .group { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 8px 0 12px; }
-.group .gt { font-size: 18px; font-weight: 700; letter-spacing: .02em; }
-.facts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: -4px 0 16px; font-size: 14px; color: var(--muted); }
+.group .gt { font-size: var(--fs-section); font-weight: var(--fw-section); color: var(--fc-section); letter-spacing: .02em; }
+.facts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: -4px 0 16px; font-size: var(--fs-body); color: var(--muted); }
 .tablewrap { overflow-x: auto; margin: 0 0 30px; background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); padding: 4px 12px; }
-table.grid { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px; color: var(--ink); }
+table.grid { width: 100%; min-width: 760px; border-collapse: collapse; font-size: var(--fs-body); color: var(--ink); }
 table.grid th, table.grid td { text-align: left; vertical-align: top; padding: 10px; border: 0; }
-table.grid thead th { vertical-align: bottom; font-size: 13px; font-weight: 600; }
-table.grid thead th small { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; font-weight: 400; }
+table.grid thead th { vertical-align: bottom; font-size: var(--fs-small); font-weight: 600; }
+table.grid thead th small { display: block; margin-top: 2px; color: var(--fc-small); font-size: var(--fs-small); font-weight: var(--fw-small); }
 table.grid tbody tr { border-top: 1px solid var(--edge); }
 table.grid tbody th { font-weight: 600; min-width: 150px; }
 table.grid td > * { display: block; }
 table.grid td b { font-weight: 700; white-space: nowrap; }
 table.grid td b.ok { color: var(--ok); } table.grid td b.warn { color: var(--warn); } table.grid td b.bad { color: var(--bad); }
 table.grid td b.idle { color: var(--ink); } table.grid td b.accent { color: var(--accent); }
-table.grid .sb { margin-top: 2px; color: var(--muted); font-size: 12.5px; }
-table.grid .nt { margin-top: 2px; color: var(--idle); font-size: 12px; }
-.remarks { margin: 0; padding: 0; list-style: none; font-size: 14px; }
+table.grid .sb { margin-top: 2px; color: var(--fc-small); font-size: var(--fs-small); }
+table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small); }
+.remarks { margin: 0; padding: 0; list-style: none; font-size: var(--fs-body); }
 .remarks li { padding: 8px 0; } .remarks li + li { border-top: 1px solid var(--edge); }
 .remarks b { display: block; margin-bottom: 2px; }
 .remarks span { display: block; color: var(--muted); }
 /* GPS, GLONASS and Galileo: a row per orbital plane, and every measure against its limit */
 .tiles.meo { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin: 12px 0 22px; }
-.tiles.meo .tile .s { font-size: 22px; }
+.tiles.meo .tile .s { font-size: var(--fs-section); }   /* narrower tiles: the number a step down */
 .raised > .facts { margin: 12px 0 0; }   /* a plane card's figures, under its strip */
 .meanings { margin: 0 0 10px; padding-left: 18px; }
 .sb-wrap { overflow-x: auto; }
-.sb { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+.sb { border-collapse: collapse; width: 100%; font-size: var(--fs-small); font-variant-numeric: tabular-nums; }
 .sb th, .sb td { padding: 6px 10px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--edge); }
 .sb tr:first-child th { color: var(--muted); font-weight: 500; }
 .sb td.ok { color: var(--ok); } .sb td.warn { color: var(--warn); } .sb td.bad { color: var(--bad); } .sb td.idle { color: var(--idle); }
@@ -417,8 +423,8 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: 12px; }
   background-color: transparent !important; }   /* Streamlit tints a focused checkbox's row; the ring below says focus instead */
 [class*="st-key-rvx_"] label > span:first-child { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip-path: inset(50%); }
 [class*="st-key-rvx_"] label > div { flex: 1 1 auto; min-width: 0; padding: 0; }
-[class*="st-key-rvx_"] label p { margin: 0; max-width: none; color: var(--muted); font-size: 14px; }
-[class*="st-key-rvx_"] label strong { color: var(--ink); font-size: 16px; font-weight: 600; margin-right: 10px; }
+[class*="st-key-rvx_"] label p { margin: 0; max-width: none; color: var(--muted); font-size: var(--fs-body); }
+[class*="st-key-rvx_"] label strong { color: var(--fc-side); font-size: var(--fs-side); font-weight: var(--fw-side); margin-right: 10px; }
 [class*="st-key-rvx_"] label:hover strong { color: var(--accent); }
 [class*="st-key-rvx_"] label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
 /* one chevron for every section and for the changes strip: down when closed, up when open, turning in 200 ms */
@@ -459,10 +465,10 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: 12px; }
 
 /* the time range's panel: the presets in a pressed track, the chosen one raised in the accent colour; a greyed preset
    is longer than the orbit records held. Then a date of the reader's own to now, and what bounds the range. */
-.range-title { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.range-title { margin: 0 0 8px; font-size: var(--fs-small); font-weight: 600; color: var(--fc-small); }
 .st-key-range_presets { flex-direction: row; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); width: max-content; max-width: 100%; }
 .st-key-range_presets > div { width: auto !important; }
-.st-key-range_presets button { padding: 4px 13px; min-height: 0; font-size: 13px; background: transparent; color: var(--muted); border-color: transparent; box-shadow: none; }
+.st-key-range_presets button { padding: 4px 13px; min-height: 0; font-size: var(--fs-small); background: transparent; color: var(--muted); border-color: transparent; box-shadow: none; }
 .st-key-range_presets button:hover { color: var(--accent); border-color: transparent; }
 .st-key-range_presets button[data-testid="stBaseButton-secondary"]:focus:not(:focus-visible) { box-shadow: none; }   /* the panel focuses its first preset on opening */
 .st-key-range_presets button[data-testid="stBaseButton-primary"] { background: var(--platform); color: var(--accent); border-color: var(--edge); box-shadow: var(--raised-sm); }
@@ -470,8 +476,8 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: 12px; }
 .st-key-range_presets button :is(p, span) { color: inherit; }
 .st-key-range_custom { flex-direction: row; align-items: flex-end; gap: 10px; margin-top: 12px; }
 .st-key-range_custom > div { width: auto !important; }
-.range-to { display: block; padding-bottom: 10px; font-size: 13px; color: var(--muted); white-space: nowrap; }
-.range-note { margin: 10px 0 0; max-width: 34ch; font-size: 12.5px; line-height: 1.45; color: var(--muted); }
+.range-to { display: block; padding-bottom: 10px; font-size: var(--fs-small); color: var(--fc-small); white-space: nowrap; }
+.range-note { margin: 10px 0 0; max-width: 34ch; font-size: var(--fs-small); line-height: 1.45; color: var(--fc-small); }
 [data-testid="stDateInput"] [data-baseweb="input"] { background: var(--well); border: 1px solid var(--edge); border-radius: 14px; box-shadow: var(--pressed); }
 [data-testid="stDateInput"] [data-baseweb="base-input"] { background: transparent; border: 0; }
 [data-testid="stDateInput"] input { color: var(--ink); background: transparent; }

@@ -17,9 +17,9 @@ NOT_KNOWN = "not known"
 
 CSS = """<style>
 .lib { overflow-x: auto; }
-.lib table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 800px; }
-.lib caption { text-align: left; color: var(--muted); font-size: 13px; padding-bottom: 10px; }
-.lib th { color: var(--muted); font-size: 12px; font-weight: 600; text-align: right; padding: 6px 7px; vertical-align: bottom; }
+.lib table { border-collapse: collapse; width: 100%; font-size: var(--fs-body); min-width: 800px; }
+.lib caption { text-align: left; color: var(--fc-small); font-size: var(--fs-small); padding-bottom: 10px; }
+.lib th { color: var(--fc-small); font-size: var(--fs-small); font-weight: 600; text-align: right; padding: 6px 7px; vertical-align: bottom; }
 .lib td { padding: 11px 7px; text-align: right; border-top: 1px solid var(--edge); vertical-align: top; }
 .lib th:first-child, .lib td:first-child { text-align: left; position: sticky; left: 0; z-index: 1; background: var(--platform); }
 .lib td.who { min-width: 150px; }
@@ -31,8 +31,8 @@ CSS = """<style>
 .lib .rate { display: block; font-weight: 700; }
 .lib .bar { display: block; height: 5px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); margin-top: 5px; min-width: 70px; }
 .lib .bar i { display: block; height: 100%; border-radius: 999px; background: var(--accent); opacity: .7; }
-.lib sup { color: var(--accent); font-size: 12px; margin-left: 2px; }
-.lib-notes { font-size: 13px; color: var(--muted); }
+.lib sup { color: var(--accent); font-size: var(--fs-small); margin-left: 2px; }
+.lib-notes { font-size: var(--fs-small); color: var(--fc-small); }
 .lib-notes ol { margin: 6px 0 0; padding-left: 20px; } .lib-notes li { margin: 4px 0; }
 .lib-notes a, .lib a { color: var(--accent); overflow-wrap: anywhere; }
 </style>"""
