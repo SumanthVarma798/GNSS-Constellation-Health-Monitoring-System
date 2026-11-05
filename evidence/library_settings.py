@@ -76,6 +76,7 @@ EVIDENCE_WORDS = {"operator": "operator", "orbit records": "orbit records", "pre
                   "IGS file": "IGS file", "catalogue": "GCAT"}
 FAILED = "failed"
 # Pictures are Wikimedia Commons files, loaded by the reader's browser; the file's own page carries its licence.
-COMMONS_PICTURE = "https://commons.wikimedia.org/wiki/Special:FilePath/{name}?width=480"
-COMMONS_LARGE = "https://commons.wikimedia.org/wiki/Special:FilePath/{name}?width=1600"   # shown when expanded
+# Widths are Wikimedia's standard thumbnail steps: other widths are made on demand and may be refused when busy.
+COMMONS_PICTURE = "https://commons.wikimedia.org/wiki/Special:FilePath/{name}?width=500"
+COMMONS_LARGE = "https://commons.wikimedia.org/wiki/Special:FilePath/{name}?width=1280"   # shown when expanded
 COMMONS_PAGE = "https://commons.wikimedia.org/wiki/File:{name}"

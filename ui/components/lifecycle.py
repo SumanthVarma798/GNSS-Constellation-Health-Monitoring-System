@@ -11,12 +11,12 @@ from evidence.library_settings import EVIDENCE_WORDS, WHEN_WORDS
 from evidence.lifecycle import timelines
 from ui import palette
 from ui.components.master_map import embed
+from ui.icons import LIFECYCLE_STEP_ICONS, TABLER
 from ui.theme import root_block
 
 PAGE_FILE = Path(__file__).with_name("lifecycle.html")
 FIRST_SHOWN = ("NVS-01", "NVS-03")   # left, then right: the newest satellite beside the one it most resembles
 MAX_COMPARED = 5   # satellites of one system compared at once
-COLOURS = palette.COMPARE_COLOURS
 
 
 def _shared(records):
@@ -46,8 +46,9 @@ def lifecycle_html(rows, today, registry=None):
         page = page.replace(placeholder, text)
     satellites, texts, sources = _shared(timelines(rows, today, registry))
     payload = {"satellites": satellites, "texts": texts, "sources": sources, "first": list(FIRST_SHOWN),
-               "max_compared": MAX_COMPARED, "colours": COLOURS,
+               "max_compared": MAX_COMPARED,
                "step_colours": palette.LIFECYCLE_STEP_COLOURS,
+               "icons": {step: TABLER[name] for step, name in LIFECYCLE_STEP_ICONS.items()}, "zoom": TABLER["maximize"],
                "today": today.strftime("%Y-%m-%dT%H:%M:%SZ"),   # whole seconds: every browser reads these
                "when_words": WHEN_WORDS, "evidence_words": EVIDENCE_WORDS}
     return page.replace("const DATA = __DATA__;", f"const DATA = {embed(payload)};", 1)

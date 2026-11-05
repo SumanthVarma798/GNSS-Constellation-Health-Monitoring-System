@@ -31,7 +31,9 @@ a { color: var(--accent); overflow-wrap: anywhere; }
   background: var(--platform); color: var(--muted); box-shadow: var(--raised-sm); cursor: pointer; font-size: 12.5px; min-height: 30px; }
 .chip:hover { color: var(--accent); }
 .chip[aria-pressed="true"] { background: var(--well); box-shadow: var(--pressed); color: var(--ink); }
-.chip .dot, .head h3 .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+/* a picked satellite's place in the comparison: a number, as colour already means the phase of life */
+.num { flex: none; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; display: inline-grid; place-items: center;
+  font: 600 11px var(--mono); color: var(--ink); background: var(--well); box-shadow: var(--pressed); }
 .chip.more { font-weight: 600; color: var(--accent); }
 
 /* ---- the picture: in a scroller, so five satellites keep a readable width on a phone ---- */
@@ -46,13 +48,15 @@ a { color: var(--accent); overflow-wrap: anywhere; }
 .head { border-radius: var(--r); background: var(--platform); border: 1px solid var(--edge); box-shadow: var(--raised-sm); padding: 12px 14px; min-width: 0; }
 .head h3 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px; }
 .head .sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+/* Colour says one thing on this page: the phase of life (--c, from LIFECYCLE_STEP_COLOURS), in the step bar, on each
+   card's edge and icon, and on each pin. Who said it is the pin's shape; which satellite is the column. */
 .steps { display: flex; gap: 3px; margin: 10px 0 6px; height: 12px; align-items: stretch; }
 .steps button { flex: 1 1 0; min-width: 6px; padding: 0; border: 0; border-radius: 3px; background: var(--well); box-shadow: var(--pressed);
   position: relative; overflow: hidden; cursor: pointer; transform-origin: 50% 100%; }
 .steps button.service { flex-grow: 4; }
 .steps button.done { background: var(--c); box-shadow: none; }
-.steps button.implied { background: var(--c); opacity: .5; box-shadow: none; }
-.steps button.ahead { box-shadow: inset 0 -2px 0 var(--c); }
+.steps button.implied { background: var(--well); box-shadow: inset 0 0 0 2px var(--c); }   /* done, date not published */
+.steps button.ahead { box-shadow: var(--pressed), inset 0 -2px 0 var(--c); }
 .steps button.failed { background: var(--bad); box-shadow: none; }
 .steps button.missed { background: repeating-linear-gradient(135deg, var(--well) 0 3px, var(--track) 3px 5px); box-shadow: none; }
 .steps button .fill { position: absolute; inset: 0 auto 0 0; background: var(--c); }
@@ -65,59 +69,71 @@ a { color: var(--accent); overflow-wrap: anywhere; }
 .tip b { display: block; font-size: 12.5px; }
 .tip span { color: var(--muted); }
 
-/* ---- the timeline: an axis on the left, a rail per satellite, its cards beside it. Each pin sits at its card;
-   where cards need more room than the scale gives, the axis stretches there and is drawn dashed ---- */
+/* ---- the timeline: an axis on the left with a line across at each mark, a rail per satellite, its cards beside it.
+   Each pin sits at its card; where cards need more room than the scale gives, the axis stretches there (dashed) ---- */
 .tl { position: relative; margin-top: 14px; }
 .tick { position: absolute; transform: translateY(-50%); font: 11px var(--mono); color: var(--muted); white-space: nowrap; text-align: right; }
-.tick.zero { color: var(--accent); font-weight: 700; }
+.tick.zero { color: var(--ink); font-weight: 700; }
+.gridline { position: absolute; right: 0; height: 1px; background: var(--lift); }
 .axis, .stretch { position: absolute; width: 0; border-left: 2px solid var(--track); }
 .stretch { border-left: 2px dashed var(--platform); }
-.rail { position: absolute; width: 2px; margin-left: -1px; border-radius: 2px; opacity: .5; }
-.win { position: absolute; width: 8px; margin-left: -4px; border-radius: 4px; background: var(--accent); opacity: .4; }
-.win.records { background: var(--ok); }
-.pin { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--platform); border: 2px solid var(--accent); z-index: 2; }
-.pin.records { border-color: var(--ok); } .pin.press { border-color: var(--warn); } .pin.table { border-color: var(--idle); }
-.pin.failed { border-color: var(--bad); background: var(--bad); }
-.nowmark { position: absolute; height: 2px; background: var(--warn); z-index: 2; }
-.nowword { position: absolute; transform: translateY(-50%); font: 600 11px var(--mono); color: var(--warn); }
+.rail { position: absolute; width: 2px; margin-left: -1px; border-radius: 2px; background: var(--track); }
+.win { position: absolute; width: 4px; margin-left: -2px; border-radius: 2px; background: var(--c); }   /* between two records, or a stated burn */
+.pin { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; z-index: 2; border: 2px solid var(--c); background: var(--c); }
+.pin.records { background: var(--platform); }                                       /* ring: seen in the orbit records */
+.pin.press { width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 1px; transform: rotate(45deg); background: var(--platform); }   /* diamond */
+.pin.table { width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 1px; }   /* square: the registry tables */
+.nowmark { position: absolute; height: 2px; background: var(--ink); z-index: 2; }
+.nowword { position: absolute; transform: translateY(-50%); font: 600 11px var(--mono); color: var(--ink); }
 
-/* ---- an event card: time, title, picture; open it for what happened and the source ---- */
-.card { position: absolute; padding: 8px 10px; border-radius: 14px; background: var(--platform); border: 1px solid var(--edge);
-  box-shadow: var(--raised-sm); cursor: pointer; text-align: left; z-index: 1; }
-.card:hover, .card.match { border-color: var(--accent); }
-.card.failed { border-color: var(--bad); }
-.card.ghost { background: transparent; border-style: dashed; box-shadow: none; color: var(--muted); }
+/* ---- an event card: its phase on the left edge and icon; time, title, picture; open it for what happened and the source ---- */
+.card { position: absolute; padding: 8px 10px 8px 12px; border-radius: 14px; background: var(--platform); border: 1px solid var(--edge);
+  border-left: 3px solid var(--c); box-shadow: var(--raised-sm); cursor: pointer; text-align: left; z-index: 1; }
+.card:hover, .card.match { border-color: var(--c); }
+.card.ghost { background: transparent; border-style: dashed; border-color: var(--track); border-left-color: var(--c); box-shadow: none; color: var(--muted); }
 .card.flash { animation: flash 1.4s ease; }
-@keyframes flash { 0%, 60% { border-color: var(--warn); box-shadow: 0 0 0 3px var(--warn); } }
+@keyframes flash { 0%, 60% { box-shadow: 0 0 0 3px var(--c); } }
 .card .t { font: 11px var(--mono); color: var(--muted); }
-.card .t b { color: var(--warn); font-weight: 600; }
-.card .h { font-weight: 600; margin: 2px 0 0; }
+.card .t b { color: var(--ink); font-weight: 600; }
+.card .h { display: flex; align-items: center; gap: 7px; font-weight: 600; margin: 3px 0 0; }
 .card.failed .h { color: var(--bad); }
-.badge { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 999px; font: 600 10.5px __FONT__; vertical-align: 1px; background: var(--well); box-shadow: var(--pressed); }
-.badge.operator { color: var(--accent); } .badge.records { color: var(--ok); } .badge.press { color: var(--warn); } .badge.table { color: var(--idle); }
-.pic { position: relative; margin-top: 7px; }
-.pic img { display: block; width: 100%; height: var(--pic, 110px); object-fit: cover; border-radius: 10px; background: var(--well); }
+.ico { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; color: var(--c);
+  background: color-mix(in srgb, var(--c) 16%, var(--well)); }
+.ico svg { width: 14px; height: 14px; }
+.badge { flex: none; padding: 0 7px; border-radius: 999px; font: 600 10.5px __FONT__; color: var(--muted); background: var(--well); box-shadow: var(--pressed); }
+/* The picture slot shows the step's icon until the photo arrives, and keeps it if the photo never does. */
+.pic { position: relative; margin-top: 7px; height: var(--pic, 110px); border-radius: 10px; overflow: hidden; color: var(--c);
+  background: color-mix(in srgb, var(--c) 10%, var(--well)); display: grid; place-items: center; }
+.pic > svg { width: 34px; height: 34px; opacity: .9; }
+.pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; }
+.pic img.loaded { opacity: 1; }
+.pic img.small { object-fit: contain; background: var(--well); }   /* a picture smaller than its slot is shown whole, not stretched */
 .pic .zoom { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--edge); cursor: pointer;
-  background: rgba(20, 23, 27, .78); color: var(--ink); display: grid; place-items: center; padding: 0; }
+  background: var(--sink); color: var(--ink); display: grid; place-items: center; padding: 0; z-index: 1; }
 .pic .zoom:hover { color: var(--accent); }
 .pic .zoom svg { width: 16px; height: 16px; }
 .card .credit { display: none; font-size: 10.5px; color: var(--muted); margin-top: 2px; }
 .card .more { display: none; margin-top: 6px; font-size: 12.5px; }
 .card.open :is(.more, .credit) { display: block; }
-.card .h button { all: unset; cursor: pointer; }
+.card .h button { all: unset; cursor: pointer; min-width: 0; }
 .card .h button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 .card .more p { margin: 0 0 5px; }
 .card .more .src { color: var(--muted); }
-.compare .card { padding: 7px 9px; font-size: 12.5px; }
+.compare .card { padding: 7px 9px 7px 11px; font-size: 12.5px; }
+.compare .card .h { flex-wrap: wrap; }
 .compare .pic { --pic: 56px; }
+.compare .pic > svg { width: 24px; height: 24px; }
 .flow { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .flow .card { position: static; }
 .rowlabel { font: 11px var(--mono); color: var(--muted); padding: 10px 0 0; }
 .band { margin: 12px 0; }
 .band[hidden] { display: none; }
-.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-size: 12px; margin-top: 14px; }
-.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 2px solid; margin-right: 6px; vertical-align: -1px; }
-.legend i.dash { width: 0; height: 12px; border-radius: 0; border-width: 0 0 0 2px; border-style: dashed; }
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; color: var(--muted); font-size: 12px; margin-top: 14px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend .swatch { width: 14px; height: 6px; border-radius: 3px; background: var(--c); }
+.legend .pin { position: static; margin: 0 2px; --c: var(--muted); }
+.legend .dash { width: 0; height: 12px; border-left: 2px dashed var(--muted); }
+.legend .line { width: 14px; height: 1px; background: var(--muted); }
 
 /* ---- a picture, large: the page dims behind it; a click outside the picture, or Escape, closes it ---- */
 .lightbox { position: absolute; inset: 0; z-index: 30; background: rgba(10, 12, 15, .82); }
@@ -133,6 +149,7 @@ a { color: var(--accent); overflow-wrap: anywhere; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .card { transition: border-color 150ms ease; }
+  .pic img { transition: opacity 250ms ease; }
   .steps button { transition: transform 150ms ease; }
 }
 @media (prefers-reduced-motion: reduce) { .steps button:hover, .steps button:focus-visible { transform: none; outline: 2px solid var(--c); } }
@@ -183,7 +200,7 @@ let system = byName[picked[0]].system;
 let scale = null;            // null: chosen for the satellites shown; set once the reader picks one
 let query = "", allChips = false;
 const opened = new Set();
-const colourOf = (name) => DATA.colours[picked.indexOf(name) % DATA.colours.length];
+const number = (name) => el("span", String(picked.indexOf(name) + 1), "num");
 
 const days = (iso, launch) => (Date.parse(iso) - Date.parse(launch)) / DAY;
 // A fact known only by its day sits at midday, one known only by its month mid-month: never more than half out.
@@ -235,7 +252,7 @@ function drawControls() {
   shown.forEach((s) => {
     const b = el("button", undefined, "chip"); b.type = "button"; const on = picked.includes(s.name);
     b.setAttribute("aria-pressed", on);
-    if (on) { const dot = el("span", undefined, "dot"); dot.style.background = colourOf(s.name); b.append(dot); }
+    if (on) b.append(number(s.name));
     b.append(s.name);
     if (s.svn && s.svn !== s.name) b.title = s.svn + (s.series ? " · " + s.series : "");
     b.addEventListener("click", () => {
@@ -245,9 +262,11 @@ function drawControls() {
     });
     pick.append(b);
   });
-  if (shown.length < all.length) {
-    const more = el("button", `Show all ${all.length}`, "chip more"); more.type = "button";
-    more.addEventListener("click", () => { allChips = true; drawControls(); fitFrame(); }); pick.append(more);
+  if (!q && all.length > CHIPS_SHOWN) {
+    const more = el("button", allChips ? "Show fewer" : `Show all ${all.length}`, "chip more"); more.type = "button";
+    more.setAttribute("aria-expanded", allChips);
+    more.addEventListener("click", () => { allChips = !allChips; drawControls(); fitFrame(); $("pick").querySelector(".more").focus(); });
+    pick.append(more);
   }
   $("hint").textContent = picked.length === 1 ? `Pick up to ${MAX - 1} more ${system} satellites to compare.`
     : `Comparing ${picked.length} of up to ${MAX}. Picking another drops the first picked.`;
@@ -267,7 +286,7 @@ const hideTip = () => { tip.hidden = true; };
 
 function head(s) {
   const h = el("div", undefined, "head");
-  const t = el("h3"); const dot = el("span", undefined, "dot"); dot.style.background = colourOf(s.name); t.append(dot, s.name);
+  const t = el("h3"); t.append(number(s.name), s.name);
   h.append(t, el("div", `${s.system}${s.series ? " · " + s.series : ""}${s.svn ? " · " + s.svn : ""} · launched ${fmtDay(s.launch)}`, "sub"));
   const bar = el("div", undefined, "steps");
   bar.setAttribute("role", "group");
@@ -314,24 +333,33 @@ function goTo(name, step) {
 }
 
 // ---- an event card ----
-function zoomIcon() {
-  const ns = "http://www.w3.org/2000/svg", svg = document.createElementNS(ns, "svg"), path = document.createElementNS(ns, "path");
-  [["viewBox", "0 0 16 16"], ["fill", "none"], ["stroke", "currentColor"], ["stroke-width", "1.6"], ["aria-hidden", "true"]].forEach(([k, v]) => svg.setAttribute(k, v));
-  path.setAttribute("d", "M10 2h4v4M6 14H2v-4M14 2 9.5 6.5M2 14l4.5-4.5"); svg.append(path); return svg;
+// The phase colour of an event: what colour means on this page. Red only for a failure.
+const phase = (e) => e.failed ? "var(--bad)" : DATA.step_colours[e.step] || "var(--muted)";
+// A Tabler icon (ui/icons.py) from its paths.
+function icon(paths) {
+  const ns = "http://www.w3.org/2000/svg", svg = document.createElementNS(ns, "svg");
+  [["viewBox", "0 0 24 24"], ["fill", "none"], ["stroke", "currentColor"], ["stroke-width", "2"], ["stroke-linecap", "round"],
+   ["stroke-linejoin", "round"], ["aria-hidden", "true"]].forEach(([k, v]) => svg.setAttribute(k, v));
+  (paths || []).forEach((d) => { const p = document.createElementNS(ns, "path"); p.setAttribute("d", d); svg.append(p); });
+  return svg;
 }
+const stepIcon = (step) => { const i = el("span", undefined, "ico"); i.append(icon(DATA.icons[step] || DATA.icons.note)); return i; };
 // A card opens on a click anywhere on it; its title is the button a keyboard or screen reader uses.
 function card(s, e, key, other, otherName) {
   const c = el("div", undefined, "card" + (e.failed ? " failed" : ""));
+  c.style.setProperty("--c", phase(e));
   const time = el("div", whenText(e, s.launch), "t");
   if (other !== null && Math.abs(other) >= 0.05) time.append(" · ", el("b", `${since(Math.abs(other)).slice(2)} ${other > 0 ? "later" : "sooner"} than ${otherName}`));
   c.append(time);
   const h = el("div", undefined, "h"), toggle = el("button", e.title); toggle.type = "button";
-  h.append(toggle, el("span", DATA.evidence_words[e.evidence], "badge " + BADGE[e.evidence])); c.append(h);
+  h.append(stepIcon(e.step), toggle, el("span", DATA.evidence_words[e.evidence], "badge " + BADGE[e.evidence])); c.append(h);
   if (e.picture) {
-    const pic = el("div", undefined, "pic");
+    // The slot keeps its height whatever the photo does, so nothing below it moves when the photo arrives.
+    const pic = el("div", undefined, "pic"); pic.append(icon(DATA.icons[e.step] || DATA.icons.note));
     const img = el("img"); img.loading = "lazy"; img.alt = e.title; img.src = e.picture.src;
-    img.addEventListener("error", () => pic.remove()); img.addEventListener("load", () => layout());
-    const zoom = el("button", undefined, "zoom"); zoom.type = "button"; zoom.setAttribute("aria-label", "Show the picture large"); zoom.append(zoomIcon());
+    const zoom = el("button", undefined, "zoom"); zoom.type = "button"; zoom.setAttribute("aria-label", "Show the picture large"); zoom.append(icon(DATA.zoom));
+    img.addEventListener("load", () => { img.classList.add("loaded"); if (img.naturalWidth < pic.clientWidth * 0.8) img.classList.add("small"); });
+    img.addEventListener("error", () => { img.remove(); zoom.remove(); });   // the step's icon stays
     zoom.addEventListener("click", (ev) => { ev.stopPropagation(); showLarge(e, zoom); });
     pic.append(img, zoom); c.append(pic, el("div", e.picture.credit, "credit"));
   }
@@ -345,7 +373,10 @@ function card(s, e, key, other, otherName) {
   c.addEventListener("click", () => { opened.has(key) ? opened.delete(key) : opened.add(key); shown(); layout(); });
   return c;
 }
-function ghost(title) { const g = el("div", undefined, "card ghost"); g.append(el("div", "not yet", "t"), el("div", title, "h")); return g; }
+function ghost(c) {
+  const g = el("div", undefined, "card ghost"); g.style.setProperty("--c", DATA.step_colours[c.step] || "var(--muted)");
+  const h = el("div", undefined, "h"); h.append(stepIcon(c.step), c.title); g.append(el("div", "not yet", "t"), h); return g;
+}
 
 // ---- the large picture ----
 const box = $("lightbox"), boxImg = box.querySelector("img"), boxFig = box.querySelector("figure");
@@ -395,7 +426,7 @@ function draw() {
   const firstAt = {};   // step#n -> days after launch, for the first picked satellite
   sats.forEach((s, col) => {
     const x = G.rails[col];
-    const rail = el("div", undefined, "rail"); rail.style.left = x + "px"; rail.style.background = colourOf(s.name); tl.append(rail); G[`rail${col}`] = rail;
+    const rail = el("div", undefined, "rail"); rail.style.left = x + "px"; tl.append(rail); G[`rail${col}`] = rail;
     const b = el("div", undefined, "flow"), a = el("div", undefined, "flow"); const counts = {};
     cards[s.name] = {};
     const aheadSteps = new Set(s.checklist.filter((c) => c.state === "ahead").map((c) => c.step));
@@ -413,9 +444,10 @@ function draw() {
       if (!cards[s.name][e.step]) cards[s.name][e.step] = c;
       if (!inWindow(d)) { (d === null || d < (S.from ?? 0) ? b : a).append(c); return; }
       const ev = " " + BADGE[e.evidence];
-      const pin = el("div", undefined, "pin" + ev + (e.failed ? " failed" : "")); pin.style.left = x + "px";
+      const pin = el("div", undefined, "pin" + ev); pin.style.left = x + "px"; pin.style.setProperty("--c", phase(e));
+      pin.setAttribute("aria-hidden", "true");
       let win = null;
-      if (e.from) { win = el("div", undefined, "win" + ev); win.style.left = x + "px"; tl.append(win); }
+      if (e.from) { win = el("div", undefined, "win"); win.style.left = x + "px"; win.style.setProperty("--c", phase(e)); tl.append(win); }
       const [l, r] = G.cards[col]; c.style.left = l + "px"; c.style.width = (r - l) + "px";
       tl.append(pin, c);
       placed.push({ col, u: S.y(d), d, card: c, pin, win, uFrom: e.from ? S.y(days(e.from, s.launch)) : null });
@@ -424,7 +456,7 @@ function draw() {
     const nowD = place({ at: DATA.today }, s);
     const ended = s.checklist.some((c) => c.step === "end" && c.state.startsWith("done"));
     const ahead = failed ? [] : s.checklist.filter((c) => c.state === "ahead");
-    const ghostFor = (c) => { const g = pending[c.step] || ghost(c.title); if (!cards[s.name][c.step]) cards[s.name][c.step] = g; return g; };
+    const ghostFor = (c) => { const g = pending[c.step] || ghost(c); if (!cards[s.name][c.step]) cards[s.name][c.step] = g; return g; };
     if (!failed && !ended && inWindow(nowD)) {
       placed.push({ col, u: S.y(nowD), d: nowD, now: true });
       ahead.forEach((c) => { const g = ghostFor(c); const [l, r] = G.cards[col]; g.style.left = l + "px"; g.style.width = (r - l) + "px"; tl.append(g);
@@ -451,7 +483,7 @@ function draw() {
 function layout() {
   if (!G) return;
   const tl = $("tl");
-  tl.querySelectorAll(".tick, .axis, .stretch, .nowmark, .nowword").forEach((e) => e.remove());
+  tl.querySelectorAll(".tick, .gridline, .axis, .stretch, .nowmark, .nowword").forEach((e) => e.remove());
   const rows = placed.slice().sort((p, q) => p.u - q.u || (p.now ? -1 : q.now ? 1 : 0) || p.col - q.col);
   const S = G.S, ticks = S.ticks();
   let lo = S.from !== undefined ? S.y(S.from) : Math.min(S.y(-1 / 24), ...rows.map((r) => r.uFrom ?? r.u));
@@ -500,7 +532,9 @@ function layout() {
   ticks.forEach(([d, label]) => {
     const u = S.y(d); if (u < lo - 1 || u > hiU + 1) return;
     const y = Y(u); if (y - lastTick < 16) return; lastTick = y;
-    const t = el("div", label, "tick" + (d === 0 ? " zero" : "")); t.style.right = (G.W - ax + 8) + "px"; t.style.top = y + "px"; tl.append(t);
+    const t = el("div", label, "tick" + (d === 0 ? " zero" : "")); t.style.right = (G.W - ax + 8) + "px"; t.style.top = y + "px";
+    const line = el("div", undefined, "gridline"); line.style.left = (ax + 2) + "px"; line.style.top = y + "px";   // a line across at each mark
+    tl.prepend(line); tl.append(t);
   });
   for (let c = 0; c < G.rails.length; c++) { const rail = G[`rail${c}`]; if (rail) { rail.style.top = "0px"; rail.style.height = end + "px"; } }
   tl.style.height = end + "px";
@@ -509,9 +543,14 @@ function layout() {
 
 function legend() {
   const l = $("legend"); l.replaceChildren();
-  [["var(--accent)", "the operator said so"], ["var(--ok)", "seen in the orbit records (bar: between two records)"], ["var(--warn)", "press report"],
-   ["var(--idle)", "registry tables (IGS file, GCAT)"], ["var(--bad)", "failed"]].forEach(([c, words]) => { const s = el("span"); const i = el("i"); i.style.borderColor = c; s.append(i, words); l.append(s); });
-  const s = el("span"); const i = el("i", undefined, "dash"); i.style.borderColor = "var(--muted)"; s.append(i, "dashed axis: stretched to make room for the cards; solid: to scale"); l.append(s);
+  const item = (mark, words) => { const s = el("span"); s.append(mark, words); l.append(s); };
+  [["launch", "getting there"], ["burn", "raising the orbit"], ["gso", "on station"], ["service", "working"], ["end", "before launch, after service"]]
+    .forEach(([step, words]) => { const m = el("i", undefined, "swatch"); m.style.setProperty("--c", DATA.step_colours[step]); item(m, words); });
+  const failed = el("i", undefined, "swatch"); failed.style.setProperty("--c", "var(--bad)"); item(failed, "failed");
+  [["operator", "the operator said so"], ["records", "seen in the orbit records"], ["press", "press report"], ["table", "registry tables (IGS file, GCAT)"]]
+    .forEach(([kind, words]) => item(el("i", undefined, "pin " + kind), words));
+  item(el("i", undefined, "line"), "a line across at each mark of the scale");
+  item(el("i", undefined, "dash"), "dashed axis: stretched to make room for the cards");
 }
 
 // The frame takes the page's own height, so the dashboard scrolls as one page and nothing scrolls inside the frame.

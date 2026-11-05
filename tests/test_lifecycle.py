@@ -141,7 +141,8 @@ def test_the_page_shares_each_text_once_and_keeps_the_first_one():
     events = [e for s in data["satellites"] for e in s["events"]]
     assert all(0 <= e["detail"] < len(data["texts"]) and 0 <= e["source"] < len(data["sources"]) for e in events)
     assert any(e["detail"] == 0 for e in events) and any(e["source"] == 0 for e in events)   # index 0 is not "empty"
-    assert data["max_compared"] == 5 and len(set(data["colours"])) >= 5 and palette.BAD not in data["colours"]
+    assert data["max_compared"] == 5 and palette.BAD not in data["step_colours"].values()   # red is kept for failure
+    assert set(data["step_colours"]) <= set(data["icons"])   # every coloured step has its icon
 
 
 def test_a_hand_kept_satellite_with_notes_keeps_the_registry_notes_too():
