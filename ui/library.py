@@ -17,9 +17,9 @@ NOT_KNOWN = "not known"
 
 CSS = """<style>
 .lib { overflow-x: auto; }
-.lib table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 800px; }
-.lib caption { text-align: left; color: var(--muted); font-size: 13px; padding-bottom: 10px; }
-.lib th { color: var(--muted); font-size: 12px; font-weight: 600; text-align: right; padding: 6px 7px; vertical-align: bottom; }
+.lib table { border-collapse: collapse; width: 100%; font-size: var(--fs-body); min-width: 800px; }
+.lib caption { text-align: left; color: var(--fc-small); font-size: var(--fs-small); padding-bottom: 10px; }
+.lib th { color: var(--fc-small); font-size: var(--fs-small); font-weight: 600; text-align: right; padding: 6px 7px; vertical-align: bottom; }
 .lib td { padding: 11px 7px; text-align: right; border-top: 1px solid var(--edge); vertical-align: top; }
 .lib th:first-child, .lib td:first-child { text-align: left; position: sticky; left: 0; z-index: 1; background: var(--platform); }
 .lib td.who { min-width: 150px; }
@@ -31,25 +31,25 @@ CSS = """<style>
 .lib .rate { display: block; font-weight: 700; }
 .lib .bar { display: block; height: 5px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); margin-top: 5px; min-width: 70px; }
 .lib .bar i { display: block; height: 100%; border-radius: 999px; background: var(--accent); opacity: .7; }
-.lib sup { color: var(--accent); font-size: 12px; margin-left: 2px; }
+.lib sup { color: var(--accent); font-size: var(--fs-small); margin-left: 2px; }
 /* by design generation: a bar per generation */
-.gen-caption { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
-.gen-key { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--muted); margin-bottom: 6px; }
+.gen-caption { color: var(--fc-small); font-size: var(--fs-small); margin: 0 0 8px; }
+.gen-key { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--fs-small); color: var(--fc-small); margin-bottom: 6px; }
 .gen-key span { display: inline-flex; align-items: center; gap: 6px; }
 .gen-key i { width: 14px; height: 8px; border-radius: 3px; }
-.gen-sys { margin: 18px 0 4px; font-size: 13px; color: var(--ink); letter-spacing: .02em; }
+.gen-sys { margin: 18px 0 4px; font-size: var(--fs-side); font-weight: var(--fw-side); color: var(--fc-side); letter-spacing: .02em; }
 .gen-row { display: grid; grid-template-columns: minmax(150px, 300px) 1fr auto; align-items: center; gap: 4px 14px; padding: 8px 0;
   border-top: 1px solid var(--edge); }
 .gen-name b { display: block; font-weight: 600; } .gen-name .small { display: block; }
 .gen-track { height: 12px; }
 .gen-bar { display: flex; gap: 2px; height: 100%; min-width: 6px; }
 .gen-bar i { display: block; height: 100%; border-radius: 3px; min-width: 3px; }
-.gen-n { text-align: right; white-space: nowrap; } .gen-n b { font-size: 15px; margin-right: 4px; }
+.gen-n { text-align: right; white-space: nowrap; } .gen-n b { font-size: var(--fs-body); margin-right: 4px; }
 @media (max-width: 640px) {
   .gen-row { grid-template-columns: 1fr auto; }
   .gen-name { grid-column: 1 / -1; }
 }
-.lib-notes { font-size: 13px; color: var(--muted); }
+.lib-notes { font-size: var(--fs-small); color: var(--fc-small); }
 .lib-notes ol { margin: 6px 0 0; padding-left: 20px; } .lib-notes li { margin: 4px 0; }
 .lib-notes a, .lib a { color: var(--accent); overflow-wrap: anywhere; }
 </style>"""

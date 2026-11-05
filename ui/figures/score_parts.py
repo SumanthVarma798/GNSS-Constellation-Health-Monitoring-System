@@ -14,9 +14,9 @@ _SHADOW_PRESSED = f"inset -3px -3px 7px {palette.LIFT}, inset 4px 4px 9px {palet
 
 CSS = f"""
 .sparts-card {{ font-family: {palette.FONT}; color: var(--ink, {palette.INK}); }}
-.sparts-head {{ display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; margin: 0; font-size: 16px; }}
-.sparts-score {{ font-family: {palette.FONT_NUMBERS}; font-size: 20px; font-weight: 700; }}
-.sparts-status {{ font-size: 13px; font-weight: 600; padding: 3px 11px; border-radius: 999px;
+.sparts-head {{ display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; margin: 0; font-size: var(--fs-side, 16px); font-weight: var(--fw-side, 600); }}
+.sparts-score {{ font-family: {palette.FONT_NUMBERS}; font-size: var(--fs-section, 20px); font-weight: 700; }}
+.sparts-status {{ font-size: var(--fs-small, 13px); font-weight: 600; padding: 3px 11px; border-radius: 999px;
   background: var(--well, {palette.WELL}); box-shadow: var(--pressed, {_SHADOW_PRESSED}); color: var(--muted, {palette.MUTED}); }}
 .sparts-bar {{ display: flex; gap: 5px; height: 16px; margin: 8px 0 4px; }}
 .sparts-bar > .tt, .sparts-bar .tt-trigger {{ flex: 1; display: flex; text-decoration: none; border-radius: 999px; }}
@@ -25,7 +25,7 @@ CSS = f"""
 .sparts-fill {{ position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--accent, {palette.ACCENT}); }}
 .sparts-seg.sparts-missing {{ box-shadow: none; border: 1px dashed var(--idle, {palette.IDLE});
   background: repeating-linear-gradient(135deg, {palette.WELL} 0 5px, {palette.LIFT} 5px 10px); }}
-.sparts-note {{ margin: 0; font-size: 14px; color: var(--muted, {palette.MUTED}); }}
+.sparts-note {{ margin: 0; font-size: var(--fs-small, 14px); color: var(--muted, {palette.MUTED}); }}
 """
 
 

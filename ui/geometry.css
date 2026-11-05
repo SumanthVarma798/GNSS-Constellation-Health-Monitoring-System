@@ -3,23 +3,23 @@
 .geo-key { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 6px; }
 .geo-key li { display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: 10px; align-items: baseline; }
 .geo-key li > :nth-child(3) { grid-column: 2; }   /* "should be" under the meaning */
-.geo-head { font-size: 16px; font-weight: 600; margin: 22px 0 6px; }
+.geo-head { font-size: var(--fs-side); font-weight: var(--fw-side); color: var(--fc-side); margin: 22px 0 6px; }
 .geo-grid { overflow-x: auto; }
 .geo-grid .gr { display: grid; grid-template-columns: minmax(170px, 2.2fr) repeat(var(--n), minmax(64px, 1fr)); gap: 12px;
-  align-items: center; padding: 9px 0; font-size: 14px; min-width: 700px; }
+  align-items: center; padding: 9px 0; font-size: var(--fs-body); min-width: 700px; }
 .geo-grid .gr + .gr { border-top: 1px solid var(--edge); }
-.geo-grid .gr.hd { color: var(--muted); font-size: 12px; font-weight: 600; padding-top: 0; align-items: end; }
-.geo-grid small { display: block; font-size: 12px; font-weight: 400; color: var(--muted); }
+.geo-grid .gr.hd { color: var(--fc-small); font-size: var(--fs-small); font-weight: 600; padding-top: 0; align-items: end; }
+.geo-grid small { display: block; font-size: var(--fs-small); font-weight: var(--fw-small); color: var(--fc-small); }
 .gp { font-weight: 600; overflow-wrap: anywhere; }
 .gc b { font-weight: 700; }
 .gc.ok b { color: var(--ok); } .gc.warn b { color: var(--warn); } .gc.bad b { color: var(--bad); } .gc.idle b { color: var(--idle); }
 .tiles.geo-three { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 16px; }
 .geo-facts { display: flex; flex-wrap: wrap; gap: 28px; margin-bottom: 12px; }
 .geo-facts span { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
-.geo-facts small { color: var(--muted); font-size: 12px; }
-.spacing .sr { display: grid; grid-template-columns: minmax(110px, 1.5fr) repeat(4, minmax(0, 1fr)); gap: 12px; padding: 8px 0; font-size: 14px; }
+.geo-facts small { color: var(--fc-small); font-size: var(--fs-small); }
+.spacing .sr { display: grid; grid-template-columns: minmax(110px, 1.5fr) repeat(4, minmax(0, 1fr)); gap: 12px; padding: 8px 0; font-size: var(--fs-body); }
 .spacing .sr + .sr { border-top: 1px solid var(--edge); }
-.spacing .sr.hd { color: var(--muted); font-size: 12px; font-weight: 600; padding-top: 0; }
+.spacing .sr.hd { color: var(--fc-small); font-size: var(--fs-small); font-weight: 600; padding-top: 0; }
 /* phones: the three tiles one under another; the place column stays put while the grid scrolls */
 @media (max-width: 639.98px) {
   .tiles.geo-three { grid-template-columns: minmax(0, 1fr); }
@@ -29,10 +29,10 @@
 .geo-grid .gr.hd > :first-child { justify-content: flex-end; }
 /* when each satellite is in view: satellite, now, until or next; on a phone the time goes under the other two */
 .geo-next .nr { display: grid; grid-template-columns: minmax(150px, 1.2fr) minmax(110px, .7fr) minmax(0, 2.6fr); gap: 12px;
-  align-items: center; padding: 9px 0; font-size: 14px; }
+  align-items: center; padding: 9px 0; font-size: var(--fs-body); }
 .geo-next .nr + .nr { border-top: 1px solid var(--edge); }
-.geo-next .nr.hd { color: var(--muted); font-size: 12px; font-weight: 600; padding-top: 0; }
-.geo-next .nr b small { display: block; font-size: 12px; font-weight: 400; color: var(--muted); }
+.geo-next .nr.hd { color: var(--fc-small); font-size: var(--fs-small); font-weight: 600; padding-top: 0; }
+.geo-next .nr b small { display: block; font-size: var(--fs-small); font-weight: var(--fw-small); color: var(--fc-small); }
 @media (max-width: 639.98px) {
   .geo-next .nr { grid-template-columns: minmax(0, 1fr) auto; row-gap: 4px; }
   .geo-next .nr > :last-child { grid-column: 1 / -1; }
