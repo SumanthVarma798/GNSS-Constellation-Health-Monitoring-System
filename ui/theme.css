@@ -209,7 +209,7 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
   .st-key-refresh > div:nth-child(2) { order: 5; }
   .st-key-topbar [data-testid="stColumn"]:nth-child(2) { order: 6; }
   .st-key-topbar [data-testid="stHorizontalBlock"] { column-gap: 10px; }   /* the clock and the data chip share a row */
-  .st-key-topbar .st-key-clock [data-testid="stHtml"] { align-items: flex-start; }
+  .st-key-topbar .st-key-clock, .st-key-topbar .st-key-clock [data-testid="stHtml"] { align-items: flex-start; }
   .st-key-filters { flex-wrap: wrap; gap: 8px; }
   .st-key-range button span:has(> [data-testid="stIconMaterial"]) { display: none; }   /* room for the menu, Compare and the range in one row */
   .st-key-filters > div:first-child { display: none; }               /* the chips give way to... */
@@ -267,8 +267,10 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .st-key-refresh .chip + .chip { margin-left: 6px; }
 .st-key-refresh [data-testid="stHtml"] { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; row-gap: 2px; }
 /* the UTC clock over the wait to the next automatic refresh */
+.st-key-clock { gap: 0; align-items: flex-end; }   /* the clock's own frame (ui/components/clock.py), then the wait */
+.st-key-clock > [data-testid="stElementContainer"] { width: auto !important; }
+.st-key-clock iframe { display: block; border: 0; }
 .st-key-clock [data-testid="stHtml"] { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.25; }
-.st-key-clock .clock { font-size: var(--fs-small); font-weight: 600; color: var(--ink); white-space: nowrap; }
 .st-key-clock .next { font-size: var(--fs-small); color: var(--fc-small); white-space: nowrap; }
 .st-key-refresh_button { margin-inline: 5px; }   /* room for the ring, so the gaps either side are even */
 .st-key-refresh_button button {
@@ -543,14 +545,13 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
 .ic.ok { color: var(--ok); } .ic.warn { color: var(--warn); } .ic.bad { color: var(--bad); }
 .ic.idle { color: var(--idle); } .ic.accent { color: var(--accent); }
 
-/* ---- notices inbox (ui/notices.py): a round bell floating at the top right, a count on it while anything is unread ---- */
+/* ---- notices inbox (ui/notices.py): a bell in a rounded square, floating at the top right, a count on it while anything is unread ---- */
 /* The bell is drawn after the page, so its strip is moved to the top of the page (order) and held there on scroll
    (sticky, in the page's own scroll box): a zero-height strip over the top bar (its -16px undoes the page's gap), the
    bell at the bar's inner right edge, level with the bar's first row. Only that row keeps room for the bell, so the
    filters strip and its line run the bar's full width. --bell: the bell's size; 29px: the bar's edge and top padding
    (11px) plus half its first row (18px). */
-:root { --bell: 36px; }
-@media (min-width: 1024px) { :root { --bell: 46px; } }   /* room enough: a bigger bell */
+:root { --bell: 36px; }   /* the size of the bar's other round controls (40px on phones, below) */
 [data-testid="stMainBlockContainer"] > div > [data-testid="stVerticalBlock"] > :has(.st-key-notices) {
   order: -1; position: sticky; top: 22px; z-index: 100; height: 0; margin-bottom: -16px; }
 .st-key-notices { position: absolute; top: calc(29px - var(--bell) / 2); right: 17px; width: auto !important; gap: 0; }
@@ -563,7 +564,8 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
   .st-key-topbar [data-testid="stColumn"]:first-child {   /* the row the bell is level with */
     display: flex; flex-direction: column; justify-content: center; min-height: 36px; }
 }
-.st-key-notices [data-testid="stPopover"] button { position: relative; width: var(--bell); height: var(--bell); padding: 0; border-radius: 50%; justify-content: center; }
+/* a rounded square, not a circle: the same size as refresh, the gear and the key, but an inbox, not an action */
+.st-key-notices [data-testid="stPopover"] button { position: relative; width: var(--bell); height: var(--bell); padding: 0; border-radius: 30%; justify-content: center; }
 .st-key-notices [data-testid="stPopover"] button > :not(:first-child) { display: none; }   /* no arrow */
 .st-key-notices [data-testid="stPopover"] button :is([data-testid="stMarkdownContainer"], p),
 [class*="st-key-ntread_"] button :is([data-testid="stMarkdownContainer"], p),

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+__ROOT__
+html, body { margin: 0; background: transparent; overflow: hidden; }
+button { all: unset; cursor: pointer; font: 600 var(--fs-small)/18px __FONT_NUMBERS__; color: var(--ink); white-space: nowrap; border-radius: 4px; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+</style>
+</head>
+<body>
+<button id="clock" type="button"></button>
+<script>
+// UTC by default; a double-click (or Enter or Space) shows the reader's local time in 12-hour form, and back.
+// The choice stays in this browser. The clock ticks here, on the minute, so it never waits for the page.
+const clock = document.getElementById("clock"), KEY = "gnss-clock-local";
+let local = false;
+try { local = localStorage.getItem(KEY) === "1"; } catch (err) { /* storage blocked: start at UTC */ }
+function draw() {
+  const now = new Date();
+  if (local) {
+    const zone = new Intl.DateTimeFormat([], { timeZoneName: "short" }).formatToParts(now).find((p) => p.type === "timeZoneName");
+    clock.textContent = `${now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })} ${zone ? zone.value : ""}`.trim();
+  } else {
+    clock.textContent = now.toISOString().slice(11, 16) + " UTC";
+  }
+  clock.title = local ? "Your local time. Double-click for UTC" : "Double-click for your local time";
+  clock.setAttribute("aria-label", `${clock.textContent}. Double-click, or press Enter, for ${local ? "UTC" : "your local time"}`);
+  // The frame takes its text's width, so the bar has no gap beside it.
+  if (window.frameElement) window.frameElement.style.width = Math.ceil(clock.getBoundingClientRect().width) + 4 + "px";
+}
+function flip() {
+  local = !local;
+  try { localStorage.setItem(KEY, local ? "1" : "0"); } catch (err) { /* not kept: it still switches */ }
+  draw();
+}
+clock.addEventListener("dblclick", flip);
+clock.addEventListener("keydown", (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); flip(); } });
+draw();
+(function tick() { setTimeout(() => { draw(); tick(); }, 60000 - (Date.now() % 60000) + 50); })();
+</script>
+</body>
+</html>

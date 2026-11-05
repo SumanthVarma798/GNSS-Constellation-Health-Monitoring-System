@@ -17,7 +17,7 @@ from test_celestrak import IRNSS_1B
 from test_golden_scores import GOLDEN
 from ui import time_range
 import ui.shell as shell
-from ui.shell import age_words, clock_words, copy_words, failing_words, next_words
+from ui.shell import age_words, copy_words, failing_words, next_words
 
 ROOT = Path(__file__).resolve().parent.parent
 FROZEN = datetime.fromisoformat(GOLDEN["frozen_utc"])
@@ -258,11 +258,10 @@ def test_rows_from_celestrak_make_the_chip_say_today_and_its_time(monkeypatch):
     assert len(tiles(at)) == 8
 
 
-def test_the_bar_says_how_long_to_the_next_automatic_refresh_and_the_time_in_utc():
+def test_the_bar_says_how_long_to_the_next_automatic_refresh():
     chips = " ".join(htmls(run()))
 
     assert '<span class="next">Next update in 2 h</span>' in chips   # tried at the frozen 12:00 UTC, every two hours
-    assert '<span class="clock num">12:00 UTC</span>' in chips
 
 
 def test_next_words_say_hours_and_minutes_rounded_up():
@@ -273,8 +272,12 @@ def test_next_words_say_hours_and_minutes_rounded_up():
     assert next_words(0) == "Next update due now"
 
 
-def test_clock_words_are_utc():
-    assert clock_words(datetime.fromisoformat("2026-10-20T19:35:59+05:30")) == "14:05 UTC"
+def test_the_clock_starts_at_utc_and_a_double_click_or_key_switches_to_local_12_hour_time():
+    from ui.components.clock import clock_html
+    page = clock_html()
+    assert "__" not in page and "innerHTML" not in page
+    assert '" UTC"' in page and "hour12: true" in page                     # UTC, or local in 12-hour form
+    assert '"dblclick"' in page and 'ev.key === "Enter"' in page             # a double-click, or a key for keyboards
 
 
 def test_the_range_presets_and_custom_dates_are_bounded_by_the_records_held():
@@ -337,7 +340,7 @@ def test_a_failed_copy_read_keeps_the_archive_and_says_so(monkeypatch):
     chips = " ".join(htmls(at))
 
     assert 'class="chip warn">Orbit data 4 Oct, 2 days old' in chips
-    assert 'class="chip warn">Archive copy failing since 12:00' in chips   # the frozen clock's time, in UTC
+    assert 'class="chip warn">Orbit fetch failing since 12:00' in chips   # the frozen clock's time, in UTC
     assert len(tiles(at)) == 8
 
 
@@ -345,7 +348,7 @@ def test_while_the_archive_jobs_copy_stands_in_the_chip_says_so_not_failing(monk
     monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: ({}, set(), FROZEN - timedelta(hours=1)))
     chips = " ".join(htmls(run(lambda at: at.button(key="refresh_button").click())))
 
-    assert 'class="chip idle">CelesTrak via the archive job' in chips
+    assert 'class="chip idle">Orbits from CelesTrak' in chips
     assert "CelesTrak failing" not in chips
     assert 'class="chip ok">Orbit data 6 Oct 11:00' in chips   # the copy's own age, not the bundled history's
 
@@ -354,15 +357,15 @@ def test_the_copy_chip_says_which_copy_and_when_the_next_orbital_run_is_due(monk
     monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: ({}, set(), FROZEN - timedelta(hours=1)))
     chips = " ".join(htmls(run(lambda at: at.button(key="refresh_button").click())))
 
-    assert 'class="chip idle">CelesTrak via the archive job · copy 11:00 · next about 14:15' in chips
+    assert 'class="chip idle">Orbits from CelesTrak, fetched 11:00 · next fetch about 14:15' in chips
 
 
 def test_when_the_copy_read_fails_the_chip_says_the_archive_copy_is_failing(monkeypatch):
     celestrak.state.update(tried=FROZEN, ok=False, failing_since=FROZEN, fetched=FROZEN - timedelta(hours=1))
     chips = " ".join(htmls(run()))
 
-    assert 'class="chip warn">Archive copy failing since 12:00' in chips
-    assert "CelesTrak via the archive job" not in chips and "CelesTrak failing" not in chips
+    assert 'class="chip warn">Orbit fetch failing since 12:00' in chips
+    assert "Orbits from CelesTrak" not in chips and "CelesTrak failing" not in chips
 
 
 def test_a_state_saved_by_the_old_code_with_a_copy_in_use_is_not_shown_as_failing(monkeypatch):
@@ -370,7 +373,7 @@ def test_a_state_saved_by_the_old_code_with_a_copy_in_use_is_not_shown_as_failin
                            copy_at=FROZEN - timedelta(hours=1), fetched=FROZEN - timedelta(hours=1))
     chips = " ".join(htmls(run()))
 
-    assert 'class="chip idle">CelesTrak via the archive job' in chips
+    assert 'class="chip idle">Orbits from CelesTrak' in chips
     assert "failing since" not in chips
 
 
@@ -381,7 +384,7 @@ def test_a_failing_copy_read_since_yesterday_says_since_when(monkeypatch):
     celestrak.state.update(tried=FROZEN, ok=False, failing_since=FROZEN)
     chips = " ".join(htmls(run(now=FROZEN + timedelta(days=1))))   # due again: tried, and refused again
 
-    assert 'class="chip warn">Archive copy failing since 6 Oct 12:00' in chips
+    assert 'class="chip warn">Orbit fetch failing since 6 Oct 12:00' in chips
     assert 'class="chip bad">Orbit data 4 Oct, 3 days old' in chips   # the saved copies stay in use
 
 
@@ -401,22 +404,22 @@ def test_failing_words():
 
     assert failing_words(now.replace(hour=8, minute=2), now) == "CelesTrak failing since 08:02"
     assert failing_words(now.replace(day=18, hour=23), now) == "CelesTrak failing since 18 Oct 23:00"
-    assert failing_words(now.replace(hour=8, minute=2), now, what="Archive copy") == "Archive copy failing since 08:02"
+    assert failing_words(now.replace(hour=8, minute=2), now, what="Orbit fetch") == "Orbit fetch failing since 08:02"
 
 
 def test_copy_words_say_the_copy_time_and_the_next_orbital_run():
     now = FROZEN.replace(hour=9, minute=0)
 
     assert copy_words(now.replace(hour=5, minute=6), now) == \
-        "CelesTrak via the archive job · copy 05:06 · next about 14:15"
+        "Orbits from CelesTrak, fetched 05:06 · next fetch about 14:15"
     assert copy_words(now.replace(hour=5, minute=6), FROZEN.replace(hour=21, minute=0)) == \
-        "CelesTrak via the archive job · copy 05:06 · next about 7 Oct 01:15"
+        "Orbits from CelesTrak, fetched 05:06 · next fetch about 7 Oct 01:15"
 
 
 def test_copy_words_leaves_out_the_next_time_without_a_readable_schedule(monkeypatch, tmp_path):
     monkeypatch.setattr(shell, "WORKFLOWS_DIR", tmp_path)
 
-    assert copy_words(FROZEN - timedelta(hours=1), FROZEN) == "CelesTrak via the archive job · copy 11:00"
+    assert copy_words(FROZEN - timedelta(hours=1), FROZEN) == "Orbits from CelesTrak, fetched 11:00"
 
 
 def _on(page):
