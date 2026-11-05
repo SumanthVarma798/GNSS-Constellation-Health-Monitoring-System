@@ -56,3 +56,20 @@ def test_the_same_tip_twice_gets_two_ids_when_keyed():
     from ui import tooltip
     a, b = tooltip.tip("Node", "How far the plane sits", key="A"), tooltip.tip("Node", "How far the plane sits", key="B")
     assert a != b and tooltip.tip("Node", "x") == tooltip.tip("Node", "x")
+
+
+def test_a_glance_card_leads_in_bold_highlights_each_key_term_and_escapes_its_words():
+    html = tooltip.glance(ATTACK, [("map", "Map", ATTACK), ("", "<b>Sky</b>", "words")], note=ATTACK)
+
+    assert '<span class="tt-lead">' in html and '<span class="tt-note">' in html
+    assert html.count('class="tt-item"') == 2 and html.count("<svg") == 1   # an icon only where one is named
+    assert "<b>Map</b>" in html and "<b>&lt;b&gt;Sky&lt;/b&gt;</b>" in html
+    assert "<script>" not in html and html.count("&lt;script&gt;") == 3
+    assert not any(tag in html for tag in ("<p>", "<p ", "<div", "<ul"))   # spans only: it may sit inside a <p>
+
+
+def test_the_sky_and_ground_key_names_only_icons_there_are():
+    from ui import geometry_settings as gs, icons
+
+    assert 3 <= len(gs.SKY_GROUND_KEY) <= 5
+    assert all(icon in icons.TABLER for icon, _, _ in gs.SKY_GROUND_KEY if icon)

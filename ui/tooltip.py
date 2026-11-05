@@ -16,7 +16,7 @@ import hashlib
 import re
 from html import escape
 
-from ui import palette
+from ui import icons, palette
 
 # A legend swatch may only be a hex colour or one of the theme variables, nothing that could carry other CSS.
 _SWATCH = re.compile(r"#[0-9a-fA-F]{3,8}|var\(--[a-z-]+\)")
@@ -50,6 +50,16 @@ def tip_html(trigger_html, body_html, pill=False, key=""):
 def tip(trigger, text, pill=False, key=""):
     """A tip from plain words: both are escaped."""
     return tip_html(escape(trigger), escape(text), pill, key)
+
+
+def glance(lead, items, note=""):
+    """A card body read at a glance, for tip_html: a bold lead line, then one short line per item led by its key
+    term in the accent colour, with an icon (ui/icons.py) before it where one is named, then an optional muted note.
+    items: (icon name or "", key term, words). All text is escaped; spans only, so it can sit inside a <p>."""
+    lines = "".join(f'<span class="tt-item">{icons.svg(icon) if icon else "<span></span>"}'
+                    f'<span><b>{escape(term)}</b> {escape(words)}</span></span>' for icon, term, words in items)
+    return (f'<span class="tt-lead">{escape(lead)}</span><span class="tt-items">{lines}</span>'
+            + (f'<span class="tt-note">{escape(note)}</span>' if note else ""))
 
 
 def legend(entries, label="Legend"):

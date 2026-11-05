@@ -155,6 +155,13 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .tt-list { list-style: none; margin: 0; padding: 0; }
 .tt-list li { display: flex; align-items: flex-start; gap: 10px; margin: 5px 0; }
 .tt-list li .swatch { margin-top: 2px; }
+/* ---- tooltip.glance: a bold lead, then short lines each led by an icon and a key term in the accent colour ---- */
+.tt-lead { display: block; font-weight: 600; margin-bottom: 8px; }
+.tt-items { display: grid; gap: 6px; }
+.tt-item { display: grid; grid-template-columns: 16px minmax(0, 1fr); column-gap: 8px; align-items: start; }
+.tt-item .icon { width: 16px; height: 16px; margin-top: 1px; color: var(--muted); }
+.tt-item b { color: var(--accent); font-weight: 600; }
+.tt-note { display: block; margin-top: 8px; color: var(--muted); }
 .swatch { margin-top: 4px; }
 .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 999px; box-shadow: var(--raised-sm); border: 1px solid var(--edge); flex: none; }
 
