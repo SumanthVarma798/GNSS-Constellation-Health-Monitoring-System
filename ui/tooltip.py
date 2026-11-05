@@ -16,7 +16,7 @@ import hashlib
 import re
 from html import escape
 
-from ui import icons, palette
+from ui import icons, palette, type_scale
 
 # A legend swatch may only be a hex colour or one of the theme variables, nothing that could carry other CSS.
 _SWATCH = re.compile(r"#[0-9a-fA-F]{3,8}|var\(--[a-z-]+\)")
@@ -72,6 +72,24 @@ def legend(entries, label="Legend"):
     return tip_html(escape(label), f'<ul class="tt-list">{rows}</ul>', pill=True)
 
 
-# Plotly draws its own hover labels (no shadow, no rounded corners): these give them the card's colours and type.
-PLOTLY_HOVER = {"bgcolor": palette.PLATFORM, "bordercolor": palette.TRACK,
-                "font": {"color": palette.INK, "family": palette.FONT, "size": 13}}
+# Plotly draws its own hover labels as SVG, so the card's look reaches them in three parts: PLOTLY_HOVER (every
+# figure's layout.hoverlabel) sets the card's colours, typeface and size; plotly_card and plotly_line write the text in
+# the card's order; ui/theme.css (".hoverlayer") adds the raised shadow, the padding and the rounded corners.
+PLOTLY_HOVER = {"bgcolor": palette.PLATFORM, "bordercolor": palette.PLATFORM, "align": "left",
+                "font": {"color": palette.INK, "family": palette.FONT, "size": type_scale.LEVELS["small"][1]}}
+
+
+def plotly_line(label, value):
+    """One "label value" line of a Plotly hover, the label muted. Escaped, as Plotly reads it as markup; Plotly's own
+    placeholders (%{y:.2f}) pass through untouched."""
+    return f'<span style="color:{palette.MUTED}">{escape(label)}</span>  {escape(value)}'
+
+
+def plotly_card(title, *lines):
+    """A Plotly hover in the card's order: the title in bold, then one plotly_line per (label, value)."""
+    return "<br>".join([f"<b>{escape(title)}</b>", *(plotly_line(*line) for line in lines)])
+
+
+def plotly_template(title, *lines):
+    """plotly_card as a trace's hovertemplate, without Plotly's box for the trace's name."""
+    return plotly_card(title, *lines) + "<extra></extra>"

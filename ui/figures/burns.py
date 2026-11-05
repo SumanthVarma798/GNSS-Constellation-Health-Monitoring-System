@@ -23,7 +23,7 @@ import plotly.graph_objects as go
 
 from evidence import settings
 from ui import palette
-from ui.tooltip import PLOTLY_HOVER
+from ui.tooltip import PLOTLY_HOVER, plotly_card
 
 EAST_WEST = "east-west"
 NORTH_SOUTH = "north-south"
@@ -89,13 +89,6 @@ def _width_words(delta):
     return f"{hours:.0f} hours" if hours < 48 else f"{hours / 24:.1f} days"
 
 
-def _card(title, *lines):
-    """A hover label in the card's order: the title in bold, then (label, value) lines, labels muted.
-    Plotly reads the text as markup, so the values are escaped here."""
-    rows = "".join(f'<br><span style="color:{palette.MUTED}">{label}</span>  {escape(value)}' for label, value in lines)
-    return f"<b>{escape(title)}</b>{rows}"
-
-
 def _days(value):
     return f"{value:.0f} d"
 
@@ -108,19 +101,19 @@ def _mark_hover(row):
     gap = "first in view" if pd.isna(row.gap_days) else f"{_days(row.gap_days)} after the one before"
     if not pd.isna(row.usual_days):
         gap += f", usually {_days(row.usual_days)}"
-    return _card(f"{row.satellite} · {row.kind} burn", ("When", when), ("Change", change), ("Gap", gap))
+    return plotly_card(f"{row.satellite} · {row.kind} burn", ("When", when), ("Change", change), ("Gap", gap))
 
 
 def _since_hover(r):
     """The row's end: days since its last east-west burn, the usual interval, and whether that has run out."""
     if r["since_days"] is None:
-        return _card(r["satellite"], ("Last east-west burn", "none in view"))
+        return plotly_card(r["satellite"], ("Last east-west burn", "none in view"))
     lines = [("Last east-west burn", f"{_days(r['since_days'])} ago, {_when(r['last'])} UTC")]
     if r["median_days"] is not None:
         lines.append(("Usually", f"every {_days(r['median_days'])} ({r['q1_days']:.0f} to {_days(r['q3_days'])})"))
     if r["late"]:
         lines.append(("Late", f"past the usual {_days(r['q3_days'])}"))
-    return _card(r["satellite"], *lines)
+    return plotly_card(r["satellite"], *lines)
 
 
 def burn_timeline(burns, satellites, start, end):
@@ -151,12 +144,12 @@ def burn_timeline(burns, satellites, start, end):
                            text="–" if r["since_days"] is None else _days(r["since_days"]),
                            font={"color": palette.WARN if late else palette.MUTED, "family": palette.FONT_NUMBERS,
                                  "size": 13},
-                           hovertext=_since_hover(r), hoverlabel=PLOTLY_HOVER)
+                           hovertext=_since_hover(r), hoverlabel={k: v for k, v in PLOTLY_HOVER.items() if k != "align"})
     axis = {"fixedrange": True, "zeroline": False, "automargin": True}
     fig.update_layout(
         height=ROW_PX * max(len(satellites), 1) + FRAME_PX, margin={"l": 8, "r": END_PX, "t": 8, "b": 8},
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font={"color": palette.INK, "family": palette.FONT},
-        dragmode=False, hoverlabel={**PLOTLY_HOVER, "align": "left"},
+        dragmode=False, hoverlabel=PLOTLY_HOVER,
         legend={"orientation": "h", "x": 0, "y": 1, "yanchor": "bottom", "itemwidth": 30, "bgcolor": "rgba(0,0,0,0)",
                 "font": {"color": palette.MUTED, "size": 12}},
         xaxis={"type": "date", "range": [start, end], "showgrid": False, "linecolor": palette.TRACK,
