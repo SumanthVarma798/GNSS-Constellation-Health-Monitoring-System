@@ -13,6 +13,7 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
+from skyfield.api import EarthSatellite
 
 from analysis.raan_analysis import analyze_raan_spacing
 from ui import data, reveal, shell, surfaces, tooltip
@@ -71,11 +72,20 @@ def _position_quality(constellation, satellites, now, mask):
                                       "can be worked out.", "bad"))
     _heading("Over the last 24 hours")
     place = _place(constellation, "trend")
-    series = gd.dop_series(satellites, *gs.PLACES[constellation][place], now, mask)
-    summary = gf.gdop_summary(series)
+    end = now - timedelta(minutes=now.minute % gs.TREND_STEP_MINUTES)   # on the trend's own steps, so it can be kept
+    summary, figure = _trend(satellites, *gs.PLACES[constellation][place], end, mask, place)
     if summary:
         surfaces.show(summary)
-    st.plotly_chart(gf.dop_trend(series, place), **CHART)
+    st.plotly_chart(figure, **CHART)
+
+
+# cache_resource, as Station-keeping's timeline: never changed after they are made. A satellite counts by its element set.
+@st.cache_resource(show_spinner=False, max_entries=16,
+                   hash_funcs={EarthSatellite: lambda sat: (sat.name, sat.model.satnum, sat.epoch.tt)})
+def _trend(satellites, lat, lon, end, mask, place):
+    """The trend's summary and chart, made once per step (15 minutes): on Render's share of a CPU about 3 seconds."""
+    series = gd.dop_series(satellites, lat, lon, end, mask)
+    return gf.gdop_summary(series), gf.dop_trend(series, place)
 
 
 def _where(constellation):

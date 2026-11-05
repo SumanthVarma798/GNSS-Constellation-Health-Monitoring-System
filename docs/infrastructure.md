@@ -38,7 +38,10 @@ Streamlit Community Cloud cannot use our own domain, so both apps run on Render'
 except commits that only touch files it never reads (the dashboard skips docs, tests, the console and the Worker;
 the console, whose assistant reads the docs and the code, skips only tests and the Worker). Each sleeps after 15
 minutes with no visitors and takes about a minute to wake, so open them a minute before a demo. Free workspaces get
-750 instance hours a month; sleeping services use none, so two mostly idle services fit.
+750 instance hours a month; sleeping services use none, so two mostly idle services fit. The 750 are shared by the
+workspace: one service kept awake all month (by a ping every few minutes, say) uses about 730 of them, and when they
+run out Render suspends every free service until the next month. A free instance has 512 MB and a tenth of a CPU,
+so even awake a page takes 5 to 10 seconds to show, and the first visit after waking about 20 more.
 
 The console's settings are a secret file in Render (**opengnss-console → Environment → Secret Files**, named
 `secrets.toml`, laid out as `.streamlit/secrets.example.toml`); the start command copies it to where Streamlit reads

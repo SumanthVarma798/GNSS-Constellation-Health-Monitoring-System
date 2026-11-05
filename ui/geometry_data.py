@@ -33,7 +33,8 @@ def satellites_from_history(history, names):
 
 def orbit_types(health, history):
     """{name: 'GEO' | 'IGSO' | 'QZO'}: the health table's type, else the history's own (for satellites set aside)."""
-    types = {row["satellite"]: row["type"] for row in history.sort_values("EPOCH").to_dict("records")}
+    newest = history.sort_values("EPOCH").drop_duplicates("satellite", keep="last")   # each one's newest row
+    types = dict(zip(newest["satellite"], newest["type"]))
     types.update(dict(zip(health["Satellite"], health["Type"])))
     return types
 

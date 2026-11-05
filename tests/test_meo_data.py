@@ -77,6 +77,24 @@ def test_no_orbit_data_at_all_says_where_it_will_come_from():
         assess_meo("GPS", NOW, fresh={})
 
 
+def test_a_satellite_with_no_part_worked_out_has_no_score_and_the_page_still_draws(monkeypatch):
+    # COSMOS 2620 on 4 Nov 2026: its None score stopped GLONASS's Overview and the World map.
+    from analysis import meo_run
+    from ui import meo_overview
+    real = meo_run.assess
+
+    def unscored(*args):
+        rows = real(*args)
+        next(row for row in rows if row["name"] == "GSAT0101").update(score=None, status="", parts={})
+        return rows
+    monkeypatch.setattr(meo_run, "assess", unscored)
+    result = assess_meo("Galileo", NOW, fresh=fresh(GSAT0101, GSAT0102))
+
+    assert result["health"].set_index("Satellite")["Overall Score"].isna().to_dict() == {"GSAT0101": True,
+                                                                                        "GSAT0102": False}
+    assert meo_overview.tiles(result)["GSAT0101"][1] is False   # not counted as healthy
+
+
 def test_elements_much_older_than_the_rest_are_named():
     old = {**GSAT0102, "EPOCH": (datetime(2026, 10, 16) - timedelta(days=9)).isoformat(timespec="microseconds")}
 

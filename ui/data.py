@@ -65,7 +65,9 @@ def fitted_by_norad():
     return out
 
 
-@st.cache_data(show_spinner=False)
+# Keyed by the hour, so a new entry (2 to 4 MB) every hour per constellation: without a bound they pile up past the
+# 512 MB Render gives the dashboard within about a day awake. 24 holds every constellation at a few time ranges.
+@st.cache_data(show_spinner=False, max_entries=24)
 def _assess(constellation, window_days, params, now, fresh):
     assess_any = assess_meo if constellation in MEO_SATS else assess_constellation
     return assess_any(constellation, now, window_days, params, fresh)

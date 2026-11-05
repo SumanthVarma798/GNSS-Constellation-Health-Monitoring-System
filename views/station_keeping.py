@@ -90,6 +90,15 @@ def _counts(results, chosen, window_days, today):
     return rows, pd.concat(recent, ignore_index=True)
 
 
+# cache_resource, not cache_data: a pickled Plotly figure is checked over again as it is read back, which costs what
+# building it did. The figure is never changed after it is made.
+@st.cache_resource(show_spinner=False, max_entries=16)
+def _timeline(burns, satellites, start, end):
+    """The burn timeline, made once per set of burns: on Render's share of a CPU it takes seconds to build."""
+    return burn_timeline(burns, satellites, start, end)
+
+
+
 def _events(recent, satellites, rhythm_rows):
     """Every burn in the window, one group per satellite in the timeline's order. Each group opens with the satellite's
     name, its burns by kind and its last one, marked late as the timeline marks it; then its burns, newest first: the
@@ -156,7 +165,7 @@ surfaces.show(surfaces.group_head(time_range.words(window_days),
                                   _detection(measures.thresholds(None, st.session_state["params"]))))
 rhythm_rows = rhythm(burns, satellites, end)
 surfaces.show(_rhythm(rhythm_rows))
-st.plotly_chart(burn_timeline(burns, satellites, start, end), **CHART)
+st.plotly_chart(_timeline(burns, satellites, start, end), **CHART)
 late = sum(any(c["status"] == "warn" for c in cells) for _, cells in counts)
 reveal.section("burns_per_satellite", "Burns per satellite",
                f"{reveal.count(len(counts), 'satellite')} · " + (f"{late} overdue" if late else "none overdue"),

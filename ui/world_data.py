@@ -10,7 +10,7 @@ import streamlit as st
 from ui import data, geometry_data as gd, geometry_settings as gs
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner=False, max_entries=4)   # a new key every hour: keep only the last few
 def load(hour_key, fetched_key, window_days, params):
     """One entry per constellation that has orbit data, plus any notices for the others.
 
