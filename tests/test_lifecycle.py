@@ -142,3 +142,16 @@ def test_the_page_shares_each_text_once_and_keeps_the_first_one():
     assert all(0 <= e["detail"] < len(data["texts"]) and 0 <= e["source"] < len(data["sources"]) for e in events)
     assert any(e["detail"] == 0 for e in events) and any(e["source"] == 0 for e in events)   # index 0 is not "empty"
     assert data["max_compared"] == 5 and len(set(data["colours"])) >= 5 and palette.BAD not in data["colours"]
+
+
+def test_a_hand_kept_satellite_with_notes_keeps_the_registry_notes_too():
+    row = dict.fromkeys(LIFECYCLE_EVENTS_COLUMNS, "")
+    rows = [{**row, "satellite": "NVS-02", "step": "launch", "title": "Launch", "at_utc": "2025-01-29T00:53:00Z", "when": "at"},
+            {**row, "satellite": "NVS-02", "step": "note", "title": "A note", "at_utc": "2025-03-01T00:00:00Z", "when": "on"}]
+    registry = {"satellites": [{"svn": "I011", "constellation": "NavIC", "block": "IRS-2I", "note": "Launched 2025-01-29; NVS-02"}],
+                "signal_ids": [{"svn": "I011", "signal_id": "I11", "valid_from": "2025-01-29T00:00:00Z", "valid_to": "2025-06-01T00:00:00Z"},
+                               {"svn": "I011", "signal_id": "I12", "valid_from": "2025-07-01T00:00:00Z", "valid_to": ""}],
+                "catalogue": [], "tracked": []}
+    [record] = [r for r in timelines(rows, TODAY, registry) if r["name"] == "NVS-02"]
+    titles = [e["title"] for e in record["events"]]
+    assert "A note" in titles and "Signal ID I12" in titles and "Signal ID I11 assigned" in titles

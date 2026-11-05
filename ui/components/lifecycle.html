@@ -37,7 +37,10 @@ a { color: var(--accent); overflow-wrap: anywhere; }
 /* ---- the picture: in a scroller, so five satellites keep a readable width on a phone ---- */
 .scroller { overflow-x: auto; overflow-y: hidden; }
 .inner { position: relative; }
-.grid { display: grid; grid-template-columns: var(--grid); gap: 0 12px; }
+/* the same columns as the timeline below: an axis column, then one per satellite, its content where its cards are */
+.grid { display: grid; grid-template-columns: var(--grid); gap: 0; }
+.grid > * + * { margin: 0 10px 0 22px; min-width: 0; }
+.grid > :last-child { margin-right: 0; }
 
 /* ---- one head card per satellite: where it is in its life ---- */
 .head { border-radius: var(--r); background: var(--platform); border: 1px solid var(--edge); box-shadow: var(--raised-sm); padding: 12px 14px; min-width: 0; }
@@ -369,7 +372,7 @@ function geometry(n) {
   const narrow = window.innerWidth < 640, axis = narrow ? 64 : 92, min = n === 1 ? 0 : narrow ? 170 : 190;
   const avail = document.body.clientWidth - (narrow ? 32 : 40);
   const W = Math.max(avail, axis + n * min), col = (W - axis) / n;
-  return { W, axis, col, grid: `${axis - 12}px repeat(${n}, minmax(0, 1fr))`,
+  return { W, axis, col, grid: `${axis}px repeat(${n}, ${col}px)`,
            rails: [...Array(n).keys()].map((i) => axis + i * col + 8), cards: [...Array(n).keys()].map((i) => [axis + i * col + 22, axis + (i + 1) * col - (i === n - 1 ? 0 : 10)]) };
 }
 

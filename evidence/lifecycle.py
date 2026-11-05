@@ -159,7 +159,7 @@ def timelines(rows, today, registry=None):
         if name in hand:
             series = LIFECYCLE_SERIES[name]
             system = system or SERIES_SYSTEM[series]
-            kept = {e["step"] for e in hand[name]}
+            kept = {e["step"] for e in hand[name]} - {NOTE_STEP}   # the table's notes never replace the registry's
             steps = LIFECYCLE_STEPS[series]
             # A registry event for a step the table has is replaced; any other is kept as a note, never a step:
             # the table's steps are the operator's (NVS-02 was given a signal ID but never entered service).
