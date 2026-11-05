@@ -110,15 +110,17 @@ if not chosen:
 try:
     results = {name: data.load(name, st.session_state["window_days"], st.session_state["params"]) for name in chosen}
 except ValueError as error:
-    surfaces.show(surfaces.notice(str(error), "warn"))
+    surfaces.show(surfaces.notice(str(error), "warn", inline=True))
     st.stop()
 
+kept = {name: result for name, result in results.items()
+        if "history_note" not in result or not result["burns"].empty}
 for name, result in results.items():   # GPS, GLONASS and Galileo: how much history the burns are looked for in
-    if "history_note" in result:
+    if "history_note" in result:   # in the page when nothing else is left to show, else in the inbox
         surfaces.show(surfaces.notice(
-            f"{name}. {result['history_note']} Burns show here once weeks of it have built up.", "idle"))
-results = {name: result for name, result in results.items()
-           if "history_note" not in result or not result["burns"].empty}
+            f"{name}. {result['history_note']} Burns show here once weeks of it have built up.", "idle",
+            inline=not kept))
+results = kept
 if not results:
     st.stop()
 

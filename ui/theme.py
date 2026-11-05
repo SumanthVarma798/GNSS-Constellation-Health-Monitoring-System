@@ -4,7 +4,7 @@ Every colour comes from ui/palette.py. The rules that use them are in ui/theme.c
 """
 from pathlib import Path
 
-from ui import palette
+from ui import icons, palette
 from ui.tooltip import CARD_CSS
 
 CSS_FILE = Path(__file__).with_name("theme.css")
@@ -32,6 +32,8 @@ VARIABLES = {
     "raised-sm": "-3px -3px 8px var(--lift), 4px 4px 10px var(--sink)",
     "pressed": "inset -3px -3px 7px var(--lift), inset 4px 4px 9px var(--sink)",
     "r": f"{palette.RADIUS_PX}px",
+    # Icons for CSS masks (ui/icons.py): --ic-bell and the rest.
+    **{f"ic-{name}": icons.mask_url(name) for name in icons.MASKED},
 }
 
 

@@ -11,7 +11,7 @@ st.html(f"<style>{news.CSS}</style>")
 data, problem = news.load_news()
 if problem:
     surfaces.show(surfaces.notice(f"No news to show just now: {problem}. The rest of the dashboard works as usual; "
-                                  f"news collection runs every {news.NEWS_CYCLE_HOURS} hours.", "warn"))
+                                  f"news collection runs every {news.NEWS_CYCLE_HOURS} hours.", "warn", inline=True))
 else:
     now = datetime.now(timezone.utc)
     scope = st.session_state.get("scope", shell.CONSTELLATIONS[0])
@@ -51,9 +51,9 @@ else:
 
     category_filter, grade_filter = set(picked_categories or []), set(standings or [])
     if not category_filter:
-        surfaces.show(surfaces.notice("Choose at least one category", "idle"))
+        surfaces.show(surfaces.notice("Choose at least one category", "idle", inline=True))
     if not grade_filter:
-        surfaces.show(surfaces.notice("Choose at least one grade", "idle"))
+        surfaces.show(surfaces.notice("Choose at least one grade", "idle", inline=True))
     filtered = news.filter_items(data["items"], scope, category_filter, grade_filter, window or "90 days",
                                  only_new, seen_at, now)
     new_count = sum(1 for item in filtered if item["_new"])

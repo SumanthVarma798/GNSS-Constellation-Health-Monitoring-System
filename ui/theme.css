@@ -371,10 +371,17 @@ table.grid td b.ok { color: var(--ok); } table.grid td b.warn { color: var(--war
 table.grid td b.idle { color: var(--ink); } table.grid td b.accent { color: var(--accent); }
 table.grid .sb { margin-top: 2px; color: var(--muted); font-size: 12.5px; }
 table.grid .nt { margin-top: 2px; color: var(--idle); font-size: 12px; }
-.remarks { margin: 0; padding: 0; list-style: none; font-size: 14px; }
-.remarks li { padding: 8px 0; } .remarks li + li { border-top: 1px solid var(--edge); }
-.remarks b { display: block; margin-bottom: 2px; }
-.remarks span { display: block; color: var(--muted); }
+/* what the checks found (Overview): the counts per outcome, then one group per outcome, worst first; in a group,
+   a satellite's name and its findings beside it, one line each with its status icon */
+.ck-counts { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 6px; }
+.ck-title { margin: 16px 0 4px; font-size: 14px; font-weight: 600; color: var(--muted); }
+.ck-list { margin: 0; padding: 0; list-style: none; font-size: 14px; }
+.ck-list li { display: grid; grid-template-columns: minmax(110px, 160px) minmax(0, 1fr); gap: 4px 16px; padding: 8px 0; }
+.ck-list li + li { border-top: 1px solid var(--edge); }
+.ck-list li > span { display: flex; flex-direction: column; gap: 4px; }
+.ck-list li > span > span { display: flex; align-items: flex-start; gap: 8px; }
+.ck-list .ic { width: 16px; height: 16px; margin-top: 2px; }
+@media (max-width: 639.98px) { .ck-list li { grid-template-columns: minmax(0, 1fr); } }
 /* GPS, GLONASS and Galileo: a row per orbital plane, and every measure against its limit */
 .tiles.meo { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin: 12px 0 22px; }
 .tiles.meo .tile .s { font-size: 22px; }
@@ -489,3 +496,54 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: 12px; }
 [data-testid="stPopoverBody"]:has(:is([class*="st-key-_scope_menu"], [class*="st-key-_compare_constellations_menu"])) { min-width: 0; width: 220px; }
 [data-testid="stPopoverBody"] :is([class*="st-key-_scope_menu"], [class*="st-key-_compare_constellations_menu"]) [data-baseweb="button-group"] { display: flex; width: 100%; max-width: none; flex-direction: column; align-items: stretch; border-radius: 18px; }
 [data-testid="stPopoverBody"] :is([class*="st-key-_scope_menu"], [class*="st-key-_compare_constellations_menu"]) button { justify-content: flex-start; min-height: 40px; }
+
+/* ---- icons (ui/icons.py): a Tabler icon drawn as a mask, in its status colour ---- */
+.ic { display: inline-block; flex: none; width: 18px; height: 18px; background: currentColor;
+  -webkit-mask: var(--ic) center / contain no-repeat; mask: var(--ic) center / contain no-repeat; }
+.ic.ok { color: var(--ok); } .ic.warn { color: var(--warn); } .ic.bad { color: var(--bad); }
+.ic.idle { color: var(--idle); } .ic.accent { color: var(--accent); }
+
+/* ---- notices inbox (ui/notices.py): a round bell floating at the top right, a count on it while anything is unread ---- */
+/* The bell sits in room kept free at the right end of the top bar, level with its first row, and stays put on scroll.
+   Its right edge: the page's side margin beyond 1560px, the page padding (20px), the bar's edge and padding (17px). */
+.st-key-topbar { padding-right: 68px; }
+.st-key-notices { position: fixed; z-index: 100; top: 34px; right: calc(max(0px, (100vw - 1560px) / 2) + 37px); width: auto !important; gap: 0; }
+.st-key-notices > div { width: auto !important; }
+.st-key-notices [data-testid="stPopover"] button { position: relative; width: 36px; height: 36px; padding: 0; border-radius: 50%; justify-content: center; }
+.st-key-notices [data-testid="stPopover"] button > :not(:first-child) { display: none; }   /* no arrow */
+.st-key-notices [data-testid="stPopover"] button :is([data-testid="stMarkdownContainer"], p),
+[class*="st-key-ntread_"] button :is([data-testid="stMarkdownContainer"], p),
+.nt-sr {   /* the words stay for screen readers only */
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+.st-key-notices [data-testid="stPopover"] button::before {
+  content: ""; width: 20px; height: 20px; background: currentColor;
+  -webkit-mask: var(--ic-bell) center / contain no-repeat; mask: var(--ic-bell) center / contain no-repeat;
+}
+/* the count: only while something is unread, in the colour of the worst unread notice */
+.st-key-notices > div:has(.nt-count) { position: absolute; top: -6px; right: -6px; pointer-events: none; }
+.nt-count { display: block; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--idle);
+  color: var(--platform); font-size: 12px; font-weight: 700; line-height: 20px; text-align: center; box-shadow: var(--raised-sm); }
+.nt-count.bad { background: var(--bad); } .nt-count.warn { background: var(--warn); }
+.nt-count.accent { background: var(--accent); } .nt-count.ok { background: var(--ok); }
+/* the list: each notice with a round tick that marks it read; a read notice is quieter and its tick pressed in */
+[data-testid="stPopoverBody"]:has(.nt-head) { width: min(420px, calc(100vw - 32px)); min-width: 0; }
+.nt-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.nt-row { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; line-height: 1.45; }
+.nt-row .ic { margin-top: 1px; }
+.nt-row.read, .nt-row.read .ic { color: var(--muted); }
+[class*="st-key-ntrow_"]:has(.nt-row.read) [class*="st-key-ntread_"] button { background: var(--well); box-shadow: var(--pressed); }
+[class*="st-key-ntrow_"] [data-testid="stHorizontalBlock"] { flex-wrap: nowrap; gap: 8px; }
+[class*="st-key-ntrow_"] [data-testid="stColumn"]:first-child { min-width: 0; }
+[class*="st-key-ntrow_"] [data-testid="stColumn"]:last-child { flex: 0 0 auto !important; width: auto !important; min-width: 0; }
+[class*="st-key-ntread_"] button { position: relative; width: 32px; height: 32px; min-height: 0; padding: 0; border-radius: 50%; color: var(--muted); }
+[class*="st-key-ntread_"] button:hover { color: var(--ok); }
+[class*="st-key-ntread_"] button::before {
+  content: ""; width: 16px; height: 16px; background: currentColor;
+  -webkit-mask: var(--ic-check) center / contain no-repeat; mask: var(--ic-check) center / contain no-repeat;
+}
+@media (max-width: 639.98px) {   /* phones: smaller page and bar paddings, and controls 40px for a finger */
+  .st-key-topbar { padding-right: 62px; }
+  .st-key-notices { top: 28px; right: 29px; }
+  .st-key-notices [data-testid="stPopover"] button, [class*="st-key-ntread_"] button { width: 40px; height: 40px; }
+}
