@@ -1,6 +1,38 @@
 {
- "generated_at": "2026-11-05T11:37:31Z",
+ "generated_at": "2026-11-05T20:20:37Z",
  "items": [
+  {
+   "address": "https://www.space.com/space-exploration/on-this-day-in-space-november-5-2026",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-05T20:18:57Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "Space.com",
+   "published_at": "2026-11-05T18:27:44Z",
+   "source_id": "space.com",
+   "summary": "On Nov. 5, 2002, NASA's old Galileo spacecraft flew by a small moon called Amalthea and made a surprising find. Here's why it mattered.",
+   "title": "On this day in space! Nov. 5, 2002: NASA's Galileo spacecraft flies by Jupiter moon Almathea only to find it's a 'pile of icy rubble less dense than water'",
+   "via": "https://www.space.com/feeds/all"
+  },
+  {
+   "address": "https://www.thehindu.com/news/cities/chennai/isros-latest-navigation-satellite-nvs-03-is-fully-healthy-says-chairman-v-narayanan/article71670095.ece",
+   "category": "programme and policy",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-05T20:19:00Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "The Hindu: science",
+   "published_at": "2026-11-05T17:14:46Z",
+   "source_id": "thehindu.com",
+   "summary": "ISRO to conduct in-orbit testing for satellite payload as part of developing NavIC, an indigenous GPS alternative; ISRO chief recalls Indian scientists’ role in saving lives on the Axiom-4 mission; praises Russian support of India’s space programme",
+   "title": "ISRO’s latest navigation satellite NVS-03 is fully healthy, says Chairman V. Narayanan",
+   "via": "https://www.thehindu.com/sci-tech/science/feeder/default.rss"
+  },
   {
    "address": "https://rntfnd.org/2026/11/05/putins-electronic-wall-gps-jamming-hits-almost-all-of-natos-eastern-flank-in-one-day-defense-blog/",
    "category": "signal and service",
@@ -2651,22 +2683,6 @@
    "summary": "T–30 minutes to the scheduled lift-off of GSLV-F18/NVS-03 Mission. Watch live: https://t.co/6X42ANRnTC Mission details: https://t.co/wtZ6TmjUhc #GSLVF18 #NVS03 #ISRO #NavIC https://t.co/asisgYtFlU",
    "title": "T–30 minutes to the scheduled lift-off of GSLV-F18/NVS-03 Mission. Watch live: https://t.co/6X42ANRnTC Mission details:…",
    "via": "https://x.com/isro"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMi-wFBVV95cUxOZEc3ZVpIWldYbHBYcUtXUXVQOHhzZk01elhuekViQkJLT0RtQmNFLVFrRXh5WHc4YW0wNW5mU2oxRDdOMnE3cmVucjdNT2YyQnJTVFRuVWNLVEpZbWRMbERBTFlTZE1KVkFya3BmMmVYSHNkUnB2QUFEeDNaV1BidE05ZXZDMG9UN3IxUkprbmJub1F6eHVxY01xSUprNnd0V2xnREFFcWdyTlNDUFVWTzlTNmdrRHZ2bGVOX0lIdC01OUlzTDRFTmVZdHJ6cWpMN1hvS0RoUHRuU3dqZDQ5UTB3cG9Yd21DbnUyZ2ZkSFgxMDZld2ZjblJXZ9IBgAJBVV95cUxPaHdSUGIyMlNjTzdTYko5ZU1GR0lBVTdkLVUtS1k4Tk1UdWR5dEdXYlpGLUtxRDZpOWtGai1Kb0ZxWWZMamR1SlRtX2wzVE5HMXJxNHRzMXIzX1FMalNJdWVxNzlhQmNaMzVLb04tZV9JQWpKQmF2TjVBNElsc3NxZ0d5MmVvWVBzWVRSc3FnSl9CbWk3SzdSaUhTWldlZGo0Nmgxb1JrSTI0S09RMmN0TUliWndZUGRRUENnOEgwblVZZlRpYWJ2WlVoRjRrdjlQNG5XSVl4TU1HdDk2dGlQel8wVTV2MWxpc1Fxdy1COV9VcDFUSjY4Y1o4cnBMRVh4?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T20:10:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Moneycontrol.com",
-   "published_at": "2026-10-30T17:30:49Z",
-   "source_id": "moneycontrol.com",
-   "summary": "",
-   "title": "ISRO GSLV-F18 Launch 2026 tonight: NVS-03 liftoff from Sriharikota, India's NavIC mission explained |...",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://insidegnss.com/esa-adds-four-galileo-g2-satellites-funds-norwegian-work-on-jamming-and-spoofing-resilience/",
