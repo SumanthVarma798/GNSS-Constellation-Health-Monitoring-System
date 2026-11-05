@@ -7,9 +7,11 @@ from ui import palette
 HOME_LAT = 15.0
 HOME_LON = 80.0
 
-# The NavIC extended service area, drawn as a dashed outline: 30°S-50°N, 30°E-130°E.
-NAVIC_AREA = {"south": -30.0, "north": 50.0, "west": 30.0, "east": 130.0}
-NAVIC_AREA_LABEL = "NavIC service area (approx.)"
+# The service area of each regional system, drawn as a dashed outline while that system is the only one shown.
+# NavIC's extended service area: 30°S-50°N, 30°E-130°E.
+SERVICE_AREAS = {
+    "NavIC": {"south": -30.0, "north": 50.0, "west": 30.0, "east": 130.0, "label": "NavIC service area (approx.)"},
+}
 
 # One quiet colour per constellation. BeiDou-3 reuses the dashboard's BeiDou colour.
 SYSTEM_COLOURS = {
