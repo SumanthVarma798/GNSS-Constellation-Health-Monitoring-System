@@ -182,8 +182,10 @@ def identifiers(svn, satellites, catalogue, tracked, signal_ids, feed_names=None
                            (SOURCE_ORBIT_FEED, satellite["catalogue_no"] if feed_name is not None else "")],
             SCHEME_COSPAR: [(listed_by, satellite["cospar_id"]), (SOURCE_GCAT, entry["cospar_id"] if entry else "")],
             SCHEME_GCAT: [(SOURCE_GCAT, entry["name"] if _in_catalogue(entry) else "")],
-            SCHEME_SIGNAL_ID: [(SOURCE_IGS, satellite["signal_id_now"]),
-                               (SOURCE_ORBIT_FEED, in_brackets.group(1) if in_brackets else "")],
+            # A sighting has no signal ID from anyone yet: the bracket in CelesTrak's name ("NVS-03 (IRNSS-1L)") is
+            # another name, not one.
+            SCHEME_SIGNAL_ID: [] if sighting else [(SOURCE_IGS, satellite["signal_id_now"]),
+                                                   (SOURCE_ORBIT_FEED, in_brackets.group(1) if in_brackets else "")],
             SCHEME_ORBIT_FEED: [(SOURCE_ORBIT_FEED, feed_name)],
             SCHEME_DASHBOARD: [(SOURCE_DASHBOARD, dashboard_name)]}
     return [{"issuer": issuers[item["scheme"]], "checked": NOT_RECORDED, **item,

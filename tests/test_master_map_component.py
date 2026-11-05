@@ -42,13 +42,14 @@ def test_a_sighting_reaches_the_map_marked_as_one(real):
     nvs03 = {"svn": "I-101228", "constellation": "NavIC", "block": "", "cospar_id": "2026-245A",
              "catalogue_no": "101228", "signal_id_now": "", "plane": "", "slot": "",
              "note": "Launched 2026-10-30; NVS-03 (IRNSS-1L)"}
-    page = master_map_html({**real, "sightings": [nvs03]})
+    # CelesTrak's name carries a bracket, as BeiDou names carry their signal ID; here it is another name.
+    page = master_map_html({**real, "sightings": [nvs03], "feed_names": {**real["feed_names"], 101228: "NVS-03 (IRNSS-1L)"}})
     payload = json.loads(re.search(r'id="map-data">(.*?)</script>', page, re.S).group(1))
     record = payload["records"][-1]
     assert (record["svn"], record["name"], record["sighting"]) == ("I-101228", "NVS-03 (IRNSS-1L)", SIGHTING_NOTE)
     said = {i["scheme"]: i for i in record["identifiers"]}
     assert said[SCHEME_NORAD]["value"] == "101228" and said[SCHEME_COSPAR]["value"] == "2026-245A"
-    assert said[SCHEME_SIGNAL_ID]["value"] == NOT_YET_KNOWN == record["signal_id"]
+    assert said[SCHEME_SIGNAL_ID]["value"] == NOT_YET_KNOWN == record["signal_id"] and said[SCHEME_SIGNAL_ID]["sources"] == []
     # Its numbers came from CelesTrak's GNSS group; the IGS file is never said to hold them.
     sources = [s["source"] for i in record["identifiers"] for s in i["sources"] if s["status"] != MAP_IDLE]
     assert SOURCE_SIGHTING in sources and SOURCE_IGS not in sources
