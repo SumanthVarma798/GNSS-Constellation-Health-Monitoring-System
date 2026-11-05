@@ -5,13 +5,15 @@
     python scripts/build_registry.py --archive FOLDER     # use the newest archived copy
     python scripts/build_registry.py --report CHANGES.md  # also describe what changed
 
-Writes registry/satellites.csv (one row per physical satellite) and
-registry/signal_ids.csv (one row per satellite per signal-ID period).
+Writes registry/satellites.csv (one row per physical satellite),
+registry/signal_ids.csv (one row per satellite per signal-ID period) and
+registry/sightings.csv (satellites CelesTrak's GNSS group lists before the IGS file does).
 The output has a fixed order and no build date, so `git diff registry/`
 is the change report: no difference means nothing changed at the source.
 """
 import argparse
 import csv
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -32,8 +34,8 @@ from evidence.sources import IGS_SATELLITE_METADATA_URL
 from evidence.settings import (REGISTRY_CONSTELLATIONS_FILE, REGISTRY_DIR, REGISTRY_SATELLITE_COLUMNS,
                                REGISTRY_DASHBOARD_SATELLITE_COLUMNS,
                                REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_DASHBOARD_TRACKED_SYSTEMS,
-                               REGISTRY_SATELLITES_FILE, REGISTRY_SIGNAL_ID_COLUMNS, REGISTRY_SIGNAL_IDS_FILE,
-                               SOURCE_CANDIDATES_FILE)
+                               REGISTRY_SATELLITES_FILE, REGISTRY_SIGHTINGS_FILE, REGISTRY_SIGNAL_ID_COLUMNS,
+                               REGISTRY_SIGNAL_IDS_FILE, SIGHTING_NAMES, SOURCE_CANDIDATES_FILE)
 
 
 def build_tables(text):
@@ -110,6 +112,48 @@ def dashboard_updates(before, satellites, today, celestrak_reads=None):
     details.update({svn: "Approving also stops the dashboard tracking it: it has no signal ID today."
                     for svn in [row["svn"] for row in before if row["svn"] in had - now]})
     return updated, lines, details, reads
+
+
+def sightings_update(before, satellites, group):
+    """(rows, {new stand-in SVN: CelesTrak read}, {stand-in SVN: IGS SVN}) for sightings.csv.
+
+    `group` is CelesTrak's GNSS group (GP rows), or None when it could not be read: then nothing new is
+    looked for. A sighting leaves once the IGS file (`satellites`) lists its catalogue number.
+    """
+    in_igs = {row["catalogue_no"]: row["svn"] for row in satellites}
+    listed = {row["svn"]: in_igs[row["catalogue_no"]] for row in before if row["catalogue_no"] in in_igs}
+    rows = [[row[column] for column in REGISTRY_SATELLITE_COLUMNS] for row in before if row["svn"] not in listed]
+    known = {row[4] for row in rows} | in_igs.keys()
+    letters = {name: letter for letter, name in constellation_names().items()}
+    reads = {}
+    for entry in group or []:
+        catalogue_no, name = str(entry.get("NORAD_CAT_ID", "")), str(entry.get("OBJECT_NAME", "")).strip()
+        system = next((system for system, names in SIGHTING_NAMES.items() if re.match(names, name)), None)
+        if not system or not catalogue_no.isdigit() or catalogue_no in known:
+            continue
+        svn = f"{letters[system]}-{catalogue_no}"
+        reads[svn] = read = celestrak_read(catalogue_no)
+        launched = str((read.get("catalogue_entry") or {}).get("LAUNCH_DATE", "")).strip()
+        note = f"{f'Launched {launched}' if launched else 'Launch date not read'}; {name}"
+        rows.append([svn, system, "", str(entry.get("OBJECT_ID", "")), catalogue_no, "", "", "", note])
+        known.add(catalogue_no)
+    return sorted(rows), reads, listed
+
+
+def dashboard_with_sightings(tracked, new_sightings, listed, today):
+    """dashboard_satellites.csv rows with new sightings tracked and listed ones moved to their IGS SVN.
+
+    `new_sightings` are sightings.csv rows; each goes after the last tracked row of its system, named
+    from CelesTrak ("NVS-03 (IRNSS-1L)" is shown as NVS-03).
+    """
+    held = {row["svn"] for row in tracked}
+    rows = [{**row, "svn": listed.get(row["svn"], row["svn"])} for row in tracked
+            if listed.get(row["svn"]) not in held]   # the IGS SVN already tracked: keep that row alone
+    for sighting in new_sightings:
+        name = BRACKETED.sub("", sighting["note"].split("; ", 1)[-1]).split(" (")[0].strip() or sighting["svn"]
+        at = max((i + 1 for i, row in enumerate(rows) if row["svn"][:1] == sighting["svn"][:1]), default=len(rows))
+        rows.insert(at, {"svn": sighting["svn"], "dashboard_name": name, "added": today})
+    return rows
 
 
 def metadata_lines(text):
@@ -206,17 +250,43 @@ def main():
     today = datetime.now(timezone.utc).date()
     dashboard_rows, dashboard_lines, dashboard_details, celestrak_reads = dashboard_updates(before[2], after_satellites,
                                                                                             today.isoformat())
+    before_sightings = read_table(REGISTRY_SIGHTINGS_FILE)
+    try:
+        group = celestrak._get(GROUP="gnss")
+    except (requests.RequestException, ValueError, KeyError, TypeError):
+        group = None
+    sightings, sighting_reads, listed = sightings_update(before_sightings, after_satellites, group)
+    write_table(REGISTRY_SIGHTINGS_FILE, REGISTRY_SATELLITE_COLUMNS, sightings)
+    after_sightings = read_table(REGISTRY_SIGHTINGS_FILE)
+    new_sightings = [row for row in after_sightings if row["svn"] in sighting_reads]
+    dashboard_rows = dashboard_with_sightings(dashboard_rows, new_sightings, listed, today.isoformat())
+    celestrak_reads.update(sighting_reads)
+    names = {row["svn"]: row["dashboard_name"] for row in dashboard_rows}
+    for row in new_sightings:
+        dashboard_lines.append(f"The dashboard will track {row['svn']} as {names[row['svn']]}: CelesTrak lists it, "
+                               "the IGS file does not yet.")
+        dashboard_details[row["svn"]] = (f"Not yet in the IGS file: CelesTrak's GNSS group lists it. Approving adds it "
+                                         f"to the dashboard as {names[row['svn']]} under the stand-in SVN {row['svn']}, "
+                                         "until the IGS file lists it.")
+    for stand_in, svn in listed.items():
+        dashboard_lines.append(f"The IGS file now lists {stand_in} as {svn}: the dashboard keeps tracking it under {svn}.")
+        dashboard_details[svn] = f"First seen by CelesTrak as {stand_in}; approving moves it to the IGS file's SVN."
     write_table(REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_DASHBOARD_SATELLITE_COLUMNS,
                 [[row["svn"], row["dashboard_name"], row.get("added", "")] for row in dashboard_rows])
     print(f"{len(satellites)} satellites, {len(signal_ids)} signal-ID periods written to {REGISTRY_DIR}")
     if args.report:
         identifier_lines, prn_lines = metadata_lines(text)
         news_items, news_error = findings_news(args.archive)
-        findings = registry_findings(before[0], after_satellites, before[1], after_signal_ids, dashboard_details,
+        # Sightings count as registry rows here, each under the SVN it ends up with, so a new one is a new satellite.
+        findings = registry_findings(before[0] + [{**row, "svn": listed.get(row["svn"], row["svn"])}
+                                                  for row in before_sightings],
+                                     after_satellites + after_sightings, before[1], after_signal_ids, dashboard_details,
                                      identifier_lines, new_prn_lines(before[1], after_signal_ids, prn_lines),
                                      celestrak_reads, today, news_items, read_source_grades(), read_source_candidates())
-        if news_error:
-            copy_used = f"{copy_used}\n\n{news_error}".strip() if copy_used else news_error
+        sighting_note = ("CelesTrak's GNSS group could not be read, so no new sightings were looked for." if group is None
+                         else f"Satellites the IGS file does not list yet come from CelesTrak's GNSS group, read "
+                              f"{today.isoformat()}." if new_sightings else "")
+        copy_used = "\n\n".join(note for note in (copy_used, news_error, sighting_note) if note)
         Path(args.report).write_text(change_report(text.splitlines()[0].strip(),
                                                    describe_satellite_changes(before[0], after_satellites),
                                                    describe_signal_id_changes(before[1], after_signal_ids),

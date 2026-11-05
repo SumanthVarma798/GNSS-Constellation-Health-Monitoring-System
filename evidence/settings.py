@@ -106,6 +106,14 @@ REGISTRY_SATELLITE_COLUMNS = ["svn", "constellation", "block", "cospar_id", "cat
 REGISTRY_SIGNAL_IDS_FILE = "signal_ids.csv"
 REGISTRY_SIGNAL_ID_COLUMNS = ["svn", "signal_id", "valid_from", "valid_to", "note"]
 
+# Built by scripts/build_registry.py: satellites CelesTrak's GNSS group lists before the IGS file does, in
+# satellites.csv's columns, each under a stand-in SVN (system letter, "-", catalogue number). A row leaves when the
+# IGS file lists its catalogue number.
+REGISTRY_SIGHTINGS_FILE = "sightings.csv"
+# CelesTrak names that make a sighting, by system.
+# ponytail: NavIC only, as IGS took weeks to list NVS-03; add a system here if IGS is ever that slow for it.
+SIGHTING_NAMES = {"NavIC": r"^(IRNSS|NVS)-"}
+
 REGISTRY_CONSTELLATIONS_FILE = "constellations.csv"  # kept by hand: system letter -> constellation
 # Kept by hand: which satellites the dashboard tracks, in display order, and its name for each.
 REGISTRY_DASHBOARD_SATELLITES_FILE = "dashboard_satellites.csv"

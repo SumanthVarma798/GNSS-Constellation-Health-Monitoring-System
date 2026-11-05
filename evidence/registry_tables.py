@@ -8,7 +8,8 @@ import csv
 from datetime import date, timedelta
 
 from evidence.settings import (REGISTRY_CONSTELLATIONS_FILE, REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_DIR,
-                               REGISTRY_DASHBOARD_TRACKED_SYSTEMS, REGISTRY_SATELLITES_FILE, NEW_ON_DASHBOARD_DAYS)
+                               REGISTRY_DASHBOARD_TRACKED_SYSTEMS, REGISTRY_SATELLITES_FILE, REGISTRY_SIGHTINGS_FILE,
+                               NEW_ON_DASHBOARD_DAYS)
 
 
 def read_table(name):
@@ -33,8 +34,9 @@ def constellation_names():
 def _tracked(constellation):
     """(dashboard name, registry row or None) for each satellite the dashboard tracks in
     one constellation, in display order. The constellation is read from the SVN's letter,
-    so it is known even for a satellite the registry does not list."""
-    registry = {row["svn"]: row for row in read_table(REGISTRY_SATELLITES_FILE)}
+    so it is known even for a satellite the registry does not list. A satellite CelesTrak lists before
+    the IGS file does is found in sightings.csv."""
+    registry = {row["svn"]: row for row in read_table(REGISTRY_SATELLITES_FILE) + read_table(REGISTRY_SIGHTINGS_FILE)}
     letters = constellation_names()
     return [(row["dashboard_name"], registry.get(row["svn"])) for row in read_table(REGISTRY_DASHBOARD_SATELLITES_FILE)
             if letters.get(row["svn"][:1]) == constellation]
