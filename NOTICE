@@ -1,0 +1,38 @@
+OpenGNSS: GNSS Constellation Health Monitoring System
+Copyright 2026 The OpenGNSS contributors
+
+Code
+----
+The source code in this repository is licensed under the Apache License,
+Version 2.0 (the file LICENSE).
+
+Data
+----
+The data the project makes itself is licensed under the Creative Commons
+Attribution 4.0 International licence (the file LICENSE-DATA). That is:
+
+  - registry/*.csv, except registry/catalogue.csv (see below)
+  - evidence/*.csv
+  - the files the project's own jobs publish, such as orbit_gap.json and
+    fitted_orbits.json on the orbit-checks branch
+
+Credit it as "data from OpenGNSS (opengnss.org)".
+
+Data from others
+----------------
+These keep their owners' terms. Neither licence above applies to them.
+
+  - data/*.json and latest_gnss.json on the orbit-data branch: orbital
+    records from Space-Track.org and CelesTrak, under their terms of use.
+  - registry/catalogue.csv: from the General Catalog of Artificial Space
+    Objects (GCAT) by Jonathan McDowell, under CC BY. Cite it as
+    "data from GCAT (J. McDowell, planet4589.org/space/gcat)".
+    registry/library_counts.csv and registry/library_matching.csv are
+    counted from GCAT, so they carry the same credit as well as ours.
+  - registry/satellites.csv and registry/signal_ids.csv are built from the
+    International GNSS Service (IGS) satellite metadata file, and IGS
+    broadcast navigation files are read from BKG. Acknowledge the IGS when
+    using them.
+  - ui/figures/land.json: Natural Earth 110 m land, public domain (CC0).
+  - latest_news.json on the news-data branch: headlines and excerpts belong
+    to the publishers they came from.

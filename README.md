@@ -1,7 +1,8 @@
 > **Private working copy.** This repository is Sumanth Varma's private mirror of the team's
-> project at `ElectricPlant19/GNSS-Constellation-Health-Monitoring-System`. The team's
-> repository has no licence file, so this copy must stay private and must not be
-> redistributed. Nothing here has been agreed with the team.
+> project at `ElectricPlant19/GNSS-Constellation-Health-Monitoring-System`. This copy carries
+> the proposed licences (Apache-2.0 for code, CC BY 4.0 for the project's own data; see
+> [NOTICE](NOTICE)). The team's repository has none until all four contributors agree, so
+> until then this copy stays private and must not be redistributed.
 >
 > **Where things live.** The project's own domain is `opengnss.org`; how it is held and renewed is in
 > [docs/infrastructure.md](docs/infrastructure.md).
@@ -484,7 +485,11 @@ Customizable through sidebar:
 
 ## 📝 License & Credits
 
-This project uses data from Space-Track.org (free registration required). Built with open-source libraries following modular design principles.
+Code: Apache License 2.0 ([LICENSE](LICENSE)). The project's own data: CC BY 4.0
+([LICENSE-DATA](LICENSE-DATA)). Copyright 2026 The OpenGNSS contributors.
+
+Data from Space-Track.org, CelesTrak, GCAT, the IGS and Natural Earth keeps its owners'
+terms; [NOTICE](NOTICE) lists which files are which and how to credit each.
 
 **Made with ❤️ for GNSS monitoring and analysis**
 

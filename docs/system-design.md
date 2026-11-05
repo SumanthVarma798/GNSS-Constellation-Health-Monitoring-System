@@ -286,7 +286,7 @@ These are for the team to settle together. The next team call is Thu 29 Oct 2026
 | Sources | Which publications, subreddits and pages are on the first news list? | Issue 13 |
 | Sources | May we read galmon's public feed, and who emails its maintainer? | Issue 7 |
 | Extraction | Which language model, and what monthly spending ceiling? | Issue 15 |
-| Repository | Will the team add a licence to its repository? | - |
+| Repository | Do all four contributors agree to Apache-2.0 for the code and CC BY 4.0 for the project's own data, as this mirror's `LICENSE`, `LICENSE-DATA` and `NOTICE` propose? Each says so on the team repository's pull request. | - |
 | Backend | Which database does the team's planned backend use? | - |
 | Orbits | Is 2 days the right freshness target? For some satellites, mostly Galileo, neither CelesTrak nor Space-Track has anything newer for 3 to 8 days. | O1's "every satellite under 2 days" |
 | Orbits | May a daily copy of CelesTrak's GNSS group be kept on a public branch (`orbit-data`) for the dashboard, which CelesTrak refuses? | - |
