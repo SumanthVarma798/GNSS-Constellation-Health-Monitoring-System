@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-05T20:20:37Z",
+ "generated_at": "2026-11-05T20:22:02Z",
  "items": [
   {
    "address": "https://www.space.com/space-exploration/on-this-day-in-space-november-5-2026",
@@ -162,6 +162,22 @@
    "via": "https://x.com/iSpaceFlight_in"
   },
   {
+   "address": "https://x.com/ispaceflight_in/status/2117983944310497369",
+   "category": "signal and service",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-05T20:22:01Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "indianspaceflight.in (@iSpaceFlight_in)",
+   "published_at": "2026-11-04T14:14:57Z",
+   "source_id": "x.com/iSpaceFlight_in",
+   "summary": "Clarification: our earlier post (3 manoeuvres, 35,842.6 × 34,594.9 km orbit) was based on tracking data. ISRO has now confirmed 4 manoeuvres, with NVS-03 in a 35,765 × 36,196 km orbit. NVS-03 will begin PNT service only after in-orbit testing.",
+   "title": "Clarification: our earlier post (3 manoeuvres, 35,842.6 × 34,594.9 km orbit) was based on tracking data. ISRO has now…",
+   "via": "https://x.com/iSpaceFlight_in"
+  },
+  {
    "address": "https://x.com/ispaceflight_in/status/2117983088135594082",
    "category": "other",
    "constellations": [
@@ -211,6 +227,38 @@
    "via": "https://x.com/iSpaceFlight_in"
   },
   {
+   "address": "https://x.com/ISROSpaceflight/status/2117880396935475643",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-05T20:22:02Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "ISRO Spaceflight (@ISROSpaceflight)",
+   "published_at": "2026-11-04T07:23:29Z",
+   "source_id": "x.com/ISROSpaceflight",
+   "summary": "𝐍𝐚𝐯𝐈𝐂 𝐈𝐒 𝐁𝐀𝐂𝐊 🎉 8 months ago, India's regional satellite navigation constellation 'NavIC' fell below the minimum number of active satellites (4) needed to keep the system operational. Last Friday, ISRO had launched the NVS-03 satellite on GSLV-F18, aiming to bring the constellation back to service…",
+   "title": "𝐍𝐚𝐯𝐈𝐂 𝐈𝐒 𝐁𝐀𝐂𝐊 🎉 8 months ago, India's regional satellite navigation constellation 'NavIC' fell below the minimum number…",
+   "via": "https://x.com/ISROSpaceflight"
+  },
+  {
+   "address": "https://x.com/ISROSpaceflight/status/2117874847883968642",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-05T20:22:02Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "ISRO Spaceflight (@ISROSpaceflight)",
+   "published_at": "2026-11-04T07:01:26Z",
+   "source_id": "x.com/ISROSpaceflight",
+   "summary": "🚨 𝗡𝗩𝗦-𝟬𝟯 𝗵𝗮𝘀 𝗿𝗲𝗮𝗰𝗵𝗲𝗱 𝗶𝘁𝘀 𝗱𝗲𝘀𝘁𝗶𝗻𝗮𝘁𝗶𝗼𝗻! 🏁 The third and final orbit raise maneuver of NVS-03 has been successfully completed by ISRO! ✅️ It has been placed into a 35842.6 × 34594.9 km Geosynchronous Orbit. NavIC is back!! https://t.co/037ymRWbxs",
+   "title": "🚨 𝗡𝗩𝗦-𝟬𝟯 𝗵𝗮𝘀 𝗿𝗲𝗮𝗰𝗵𝗲𝗱 𝗶𝘁𝘀 𝗱𝗲𝘀𝘁𝗶𝗻𝗮𝘁𝗶𝗼𝗻! 🏁 The third and final orbit raise maneuver of NVS-03 has been successfully…",
+   "via": "https://x.com/ISROSpaceflight"
+  },
+  {
    "address": "https://x.com/ispaceflight_in/status/2117845008141484197",
    "category": "launch",
    "constellations": [
@@ -242,6 +290,22 @@
    "summary": "From a strategic perspective, the argument is quite straightforward given the origins of the IRNSS concept in the aftermath of the U.S.’s denial of its Global Positioning Service (GPS) during the 1999 Kargil conflict",
    "title": "What is the debate on NavIC vs GPS | Explained",
    "via": "https://www.thehindu.com/sci-tech/science/feeder/default.rss"
+  },
+  {
+   "address": "https://x.com/ispaceflight_in/status/2117802936428618183",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-05T20:22:01Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "indianspaceflight.in (@iSpaceFlight_in)",
+   "published_at": "2026-11-04T02:15:41Z",
+   "source_id": "x.com/iSpaceFlight_in",
+   "summary": "🚨 NVS-03 has completed its second orbit raising maneuver! Its 440 N LAM (Liquid Apogee Motor) engine burned for 51 min 25 s, raising perigee to 24,691 km from 5,477.6 km. With one more orbit raising maneuver NVS-03 will be placed in its intended GSO. https://t.co/qkCEZUZRdr",
+   "title": "🚨 NVS-03 has completed its second orbit raising maneuver! Its 440 N LAM (Liquid Apogee Motor) engine burned for 51 min…",
+   "via": "https://x.com/iSpaceFlight_in"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMixgFBVV95cUxOUmd0QXlmZlY4ZUp5MTgwRndKRUZabFZVTXRKVVMyaVFQd1FSbFNvdkdzdnB4X2pxallYcll4WlR6ZjdRT09QX1lOS2Z1dmFkaXEyQ0pwS2UzUWpwanZ2UGVZQ0pTSGI5RURkSDY2cFNaemkweUd1LUZwbUp4N0NNNG96RGVCMS11MXJzSVlsbnJvMWlEcHVLUFNPUjBIelBzOHc3UVZZR0hHLUZGSXdGVFBkR1BNOHF2RWU0QTRWaXQ2TlVHUWc?oc=5",
@@ -2607,8 +2671,7 @@
    "address": "https://news.google.com/rss/articles/CBMi4gFBVV95cUxPTEpDX1VtNF9fSWtScFlSV2ZBeUE4NlcwWFFUREJQVjIyc2F1WFRZT3luaS11SGlSaDYtQkZUQ0tqSXU0RGNWX2xvSWdTc3lwWW5UTmpWNV9DRXp3QmdOTWxaLWZ3TTNDY1lMV1hQNjNJQk55WVM3X0RWb29mOFB1R1U3azRKcVlycXJoSG1zcnBMZ0tzd3RFX2FwN1JpNU9vRlJReFNRRHNoa2VKYml3TFMySWVOT01ZcGxPNkJwbTBqYTJSalhFdkVZN0RCVzM0NlB2WmFZSXdVek93UGdXLTdR0gHnAUFVX3lxTE5IaTVmQ3ZoQnhqMU9zazlEdmxONUhRMHRGSWZuWGEyVnM4Zzltb2dReFZBbmpLWnNscGxubFNsblMxYlNlOC1iLUdRVF9zZ1E2clN3eGwzeUQtd2hfaXI5ckhFeVZtemdkZnpLazFXX1h5NGl4bTZBcEVxMnk2UW1vRHFkeHB4TEl5c3NXZTFIRXktSy1QNUU0a0ZmNXRlTERNMVhrT1c5WnQxaHJhaUV0Wm1NcXBVVGZVdWk2Z0VzTm5KdzVWVXl0ZXBLTTEyMGpCZlpxM2M1QVZTLTZnRm5fU1NrZ3NzUQ?oc=5",
    "category": "launch",
    "constellations": [
-    "GPS",
-    "NavIC"
+    "GPS"
    ],
    "fetched_at": "2026-10-31T01:06:36Z",
    "grade": "",
@@ -2618,38 +2681,6 @@
    "source_id": "indiatoday.in",
    "summary": "",
    "title": "India gets its own GPS boost: Isro launches NVS-03 to strengthen homegrown navigation",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://x.com/isro/status/2116233984367886641",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T22:41:35Z",
-   "grade": "A",
-   "grade_standing": "confirmed",
-   "outlet": "ISRO (@isro)",
-   "published_at": "2026-10-30T18:21:14Z",
-   "source_id": "x.com/isro",
-   "summary": "LIFT-OFF! GSLV-F18 carrying NVS-03 lifts off from Satish Dhawan Space Centre, SHAR, Sriharikota. Watch live: https://t.co/6X42ANRnTC Mission details: https://t.co/wtZ6TmjUhc #GSLVF18 #NVS03 #ISRO #NavIC",
-   "title": "LIFT-OFF! GSLV-F18 carrying NVS-03 lifts off from Satish Dhawan Space Centre, SHAR, Sriharikota. Watch live:…",
-   "via": "https://x.com/isro"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMizgFBVV95cUxPWXNHV3c0Q2xfUmpBTEo1ZHRpcDBBNnplVXBxTl8zQmdfdEJLYV9hNVNuZlBodE5WRnVPTW9acVc1MFBOcGE2OWZCalBjUENQR2NLbWlTX2hJNGFQZHl0RkhvQWc5ZmdLQ0d1dVNxc0trQldQZk1FaTJBN1VXcnNzVFRPV2xVWjk3dTdubVRQZDFQaG5hZDBrbjZlN2M5bk91bUhLXzg3NUUwdUpRRGNYRklhRHN1dzkwUHJoeGY0cW5QcG9CcHNMWFBQNjBKQdIBzgFBVV95cUxPWXNHV3c0Q2xfUmpBTEo1ZHRpcDBBNnplVXBxTl8zQmdfdEJLYV9hNVNuZlBodE5WRnVPTW9acVc1MFBOcGE2OWZCalBjUENQR2NLbWlTX2hJNGFQZHl0RkhvQWc5ZmdLQ0d1dVNxc0trQldQZk1FaTJBN1VXcnNzVFRPV2xVWjk3dTdubVRQZDFQaG5hZDBrbjZlN2M5bk91bUhLXzg3NUUwdUpRRGNYRklhRHN1dzkwUHJoeGY0cW5QcG9CcHNMWFBQNjBKQQ?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T20:10:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "India Today",
-   "published_at": "2026-10-30T18:16:32Z",
-   "source_id": "indiatoday.in",
-   "summary": "",
-   "title": "ISRO Prepares GSLV-F18 Launch With NVS-03 To Boost NavIC Navigation - India Today",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -2667,22 +2698,6 @@
    "summary": "Same constellation. Two generations of Ariane. 🚀 Then: Ariane 5 launched four Galileo satellites at once in 2016. Now: Ariane 6 continues the journey, helping build Europe's navigation constellation. Two generations of launchers. One mission: bringing Galileo satellites into orbit. 🛰️…",
    "title": "Same constellation. Two generations of Ariane. 🚀 Then: Ariane 5 launched four Galileo satellites at once in 2016. Now:…",
    "via": "https://x.com/Arianespace"
-  },
-  {
-   "address": "https://x.com/isro/status/2116226535351054463",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T22:41:35Z",
-   "grade": "A",
-   "grade_standing": "confirmed",
-   "outlet": "ISRO (@isro)",
-   "published_at": "2026-10-30T17:51:38Z",
-   "source_id": "x.com/isro",
-   "summary": "T–30 minutes to the scheduled lift-off of GSLV-F18/NVS-03 Mission. Watch live: https://t.co/6X42ANRnTC Mission details: https://t.co/wtZ6TmjUhc #GSLVF18 #NVS03 #ISRO #NavIC https://t.co/asisgYtFlU",
-   "title": "T–30 minutes to the scheduled lift-off of GSLV-F18/NVS-03 Mission. Watch live: https://t.co/6X42ANRnTC Mission details:…",
-   "via": "https://x.com/isro"
   },
   {
    "address": "https://insidegnss.com/esa-adds-four-galileo-g2-satellites-funds-norwegian-work-on-jamming-and-spoofing-resilience/",
@@ -9986,6 +10001,15 @@
    "name": "Arianespace (@Arianespace)",
    "note": "",
    "reason": "Launch provider for Galileo; reports its own launches"
+  },
+  "x.com/ISROSpaceflight": {
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "graded_by": "Sumanth Varma (until the source record settles it)",
+   "kind": "X account",
+   "name": "ISRO Spaceflight (@ISROSpaceflight)",
+   "note": "About 156,000 followers; since May 2020, about 1.3 posts a day. Posts NVS-03 updates",
+   "reason": "An unnamed individual's account about ISRO, which says it is not affiliated with ISRO"
   },
   "x.com/Septentrio": {
    "grade": "E",
