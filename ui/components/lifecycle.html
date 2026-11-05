@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lifecycles</title>
+<style>
+__ROOT__
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body { --mono: __FONT_NUMBERS__; background: var(--platform); color: var(--ink); font: 13.5px/1.4 __FONT__; padding: 2px 20px 16px; overflow-x: hidden; }
+button { font: inherit; color: inherit; }
+a { color: var(--accent); overflow-wrap: anywhere; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---- controls: which satellites, which scale ---- */
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 16px; }
+.group { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 999px; border: 1px solid var(--edge);
+  background: var(--platform); color: var(--muted); box-shadow: var(--raised-sm); cursor: pointer; font-weight: 600; min-height: 36px; }
+.pill:hover { color: var(--accent); }
+.pill[aria-pressed="true"] { background: var(--well); box-shadow: var(--pressed); color: var(--accent); }
+.pill .dot { width: 10px; height: 10px; border-radius: 50%; }
+.sep { flex: 1 1 0; }
+
+/* ---- one head card per satellite: where it is in its life. With two, they sit either side of the time axis ---- */
+.cols { display: grid; grid-template-columns: var(--grid); gap: 0; }
+.head { border-radius: var(--r); background: var(--platform); border: 1px solid var(--edge); box-shadow: var(--raised-sm); padding: 12px 14px; min-width: 0; }
+.head h3 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+.head h3 .dot, .rowlabel .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.head .sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.steps { display: flex; gap: 3px; margin: 10px 0 6px; height: 10px; }
+.steps i { flex: 1 1 0; border-radius: 3px; background: var(--well); box-shadow: var(--pressed); position: relative; overflow: hidden; }
+.steps i.service { flex-grow: 4; }
+.steps i.done, .steps i.implied { background: var(--accent); box-shadow: none; }
+.steps i.implied { opacity: .55; }
+.steps i.failed { background: var(--bad); box-shadow: none; }
+.steps i.missed { background: repeating-linear-gradient(135deg, var(--well) 0 3px, var(--track) 3px 5px); box-shadow: none; }
+.steps i .fill { position: absolute; inset: 0 auto 0 0; background: var(--accent); }
+.now { font-size: 12.5px; color: var(--muted); }
+.now b { color: var(--ink); font-weight: 600; }
+.now .bad { color: var(--bad); }
+
+/* ---- the timeline: a time axis, a rail per satellite beside it, cards beyond the rails ---- */
+.tl { position: relative; margin-top: 14px; }
+.tick { position: absolute; transform: translate(-50%, -50%); font: 11px var(--mono); color: var(--muted); white-space: nowrap; text-align: center; }
+.tick.zero { color: var(--accent); font-weight: 700; }
+.rail { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--track); border-radius: 2px; }
+.win { position: absolute; width: 10px; margin-left: -5px; border-radius: 5px; background: var(--accent); opacity: .4; }
+.win.records { background: var(--ok); }
+.pin { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--platform); border: 2px solid var(--accent); z-index: 2; }
+.pin.records { border-color: var(--ok); } .pin.press { border-color: var(--muted); } .pin.failed { border-color: var(--bad); background: var(--bad); }
+svg.links { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+svg.links .lead { fill: none; stroke: var(--track); stroke-width: 1; }
+svg.links .match { fill: none; stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 3 4; opacity: .7; }
+svg.links .nowmark { stroke: var(--warn); stroke-width: 2; }
+svg.links text.now { fill: var(--warn); font: 600 11px __FONT_NUMBERS__; }
+
+/* ---- an event card: time, title, picture; open it for what happened and the source ---- */
+.card { position: absolute; padding: 8px 10px; border-radius: 14px; background: var(--platform); border: 1px solid var(--edge);
+  box-shadow: var(--raised-sm); cursor: pointer; text-align: left; z-index: 1; }
+.card:hover { border-color: var(--accent); }
+.card.failed { border-color: var(--bad); }
+.card.ghost { background: transparent; border-style: dashed; box-shadow: none; cursor: default; color: var(--muted); }
+.card .t { font: 11px var(--mono); color: var(--muted); }
+.card .t b { color: var(--warn); font-weight: 600; }
+.card .h { font-weight: 600; margin: 2px 0 0; }
+.card.failed .h { color: var(--bad); }
+.badge { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 999px; font: 600 10.5px __FONT__; vertical-align: 1px; background: var(--well); box-shadow: var(--pressed); }
+.badge.operator { color: var(--accent); } .badge.records { color: var(--ok); } .badge.press { color: var(--muted); }
+.card img { display: block; width: 100%; height: 64px; object-fit: cover; border-radius: 10px; margin-top: 7px; background: var(--well); }
+.card[aria-expanded="true"] img { height: 170px; }
+.card .credit { display: none; font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+.card .more { display: none; margin-top: 6px; font-size: 12.5px; }
+.card[aria-expanded="true"] :is(.more, .credit) { display: block; }
+.card .more p { margin: 0 0 5px; }
+.card .more .src { color: var(--muted); }
+.flow { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.flow .card { position: static; }
+.rowlabel { font: 11px var(--mono); color: var(--muted); text-align: center; padding: 10px 6px 0; }
+.band { margin: 12px 0; }
+.band[hidden] { display: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-size: 12px; margin-top: 14px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 2px solid; margin-right: 6px; vertical-align: -1px; }
+@media (max-width: 640px) {
+  body { font-size: 13px; padding: 2px 16px 14px; }
+}
+@media (prefers-reduced-motion: no-preference) { .card { transition: border-color 150ms ease; } }
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="group" id="pick" role="group" aria-label="Satellites to compare"></div>
+  <span class="sep"></span>
+  <div class="group" id="scale" role="group" aria-label="Time scale"></div>
+</div>
+<div class="cols" id="heads"></div>
+<div class="cols band" id="before"></div>
+<div class="tl" id="tl"></div>
+<div class="cols band" id="after"></div>
+<div class="legend" id="legend"></div>
+<script>
+const DATA = __DATA__;
+const $ = (id) => document.getElementById(id);
+const el = (tag, text, cls) => { const e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (cls) e.className = cls; return e; };
+const DAY = 86400000, MAX_PICK = 2;
+const SCALES = {
+  // To scale: every day the same height, so the gaps between burns compare directly.
+  days: { label: "First 40 days, to scale", from: -1, to: 40, y: (d) => (d + 1) * 90,
+          ticks: () => [...Array(41).keys()].filter((d) => d % 5 === 0 || d < 5).map((d) => [d, d ? "day " + d : "launch"]) },
+  // Whole life: equal height per tenfold step in time from launch, so hours and years both fit.
+  life: { label: "Whole life, compressed", y: (d) => (Math.sign(d) * Math.log10(1 + Math.abs(d) * 24) + 4.6) * 210,
+          ticks: () => [[-30, "30 days before"], [-1, "1 day before"], [0, "launch"], [1 / 24, "+1 hour"], [1, "+1 day"], [7, "+1 week"],
+                        [30, "+1 month"], [365.25, "+1 year"], [5 * 365.25, "+5 years"], [12 * 365.25, "+12 years"]] },
+};
+const BADGE = { operator: "operator", "orbit records": "records", press: "press" };
+let picked = DATA.satellites.filter((s) => DATA.first.includes(s.name)).map((s) => s.name);
+let scale = "days";
+const opened = new Set();
+
+const days = (iso, launch) => (Date.parse(iso) - Date.parse(launch)) / DAY;
+const fmtDay = (iso) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const fmtDate = (iso) => new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) + " UTC";
+function since(d) {
+  const a = Math.abs(d), sign = d < 0 ? "T−" : "T+";
+  if (a < 1) { const h = Math.floor(a * 24), m = Math.round((a * 24 - h) * 60); return `${sign}${h} h ${m} m`; }
+  if (a < 60) return `${sign}${a.toFixed(1)} d`;
+  if (a < 730) return `${sign}${Math.round(a / 30.44)} mo`;
+  return `${sign}${(a / 365.25).toFixed(1)} y`;
+}
+const safeLink = (url) => /^https:\/\//.test(url) ? url : "";
+
+function drawControls() {
+  const pick = $("pick"); pick.replaceChildren();
+  DATA.satellites.forEach((s, i) => {
+    const b = el("button", undefined, "pill"); const dot = el("span", undefined, "dot"); dot.style.background = DATA.colours[i % DATA.colours.length];
+    b.append(dot, s.name); b.setAttribute("aria-pressed", picked.includes(s.name));
+    b.addEventListener("click", () => {
+      if (picked.includes(s.name)) { if (picked.length > 1) picked = picked.filter((n) => n !== s.name); }
+      else { picked = [...picked, s.name].slice(-MAX_PICK); }
+      draw();
+    });
+    pick.append(b);
+  });
+  const sc = $("scale"); sc.replaceChildren();
+  Object.entries(SCALES).forEach(([key, s]) => {
+    const b = el("button", s.label, "pill"); b.setAttribute("aria-pressed", key === scale);
+    b.addEventListener("click", () => { scale = key; draw(); }); sc.append(b);
+  });
+}
+
+function head(s, colour) {
+  const h = el("div", undefined, "head");
+  const t = el("h3"); const dot = el("span", undefined, "dot"); dot.style.background = colour; t.append(dot, s.name);
+  h.append(t, el("div", `${s.series} series · launched ${fmtDay(s.launch)}`, "sub"));
+  const bar = el("div", undefined, "steps"); bar.setAttribute("role", "img");
+  const done = s.checklist.filter((c) => c.state.startsWith("done")).length;
+  bar.setAttribute("aria-label", `${done} of ${s.checklist.length} steps done`);
+  const cls = { "done": "done", "done, date not published": "implied", failed: "failed", "not reached": "missed", ahead: "" };
+  s.checklist.forEach((c) => {
+    const i = el("i", undefined, (cls[c.state] + (c.step === "service" ? " service" : "")).trim()); i.title = `${c.title}: ${c.state}`;
+    if (c.step === "service" && s.life_used !== null) { const f = el("span", undefined, "fill"); f.style.width = (s.life_used * 100).toFixed(1) + "%"; i.className = "service"; i.append(f); }
+    bar.append(i);
+  });
+  h.append(bar);
+  const now = el("div", undefined, "now");
+  const failed = s.checklist.find((c) => c.state === "failed");
+  const last = [...s.checklist].reverse().find((c) => c.state.startsWith("done"));
+  const next = s.checklist.find((c) => c.state === "ahead");
+  if (failed) { now.append(el("span", `Stopped at: ${failed.title}`, "bad")); }
+  else {
+    if (s.life_used !== null) now.append(el("b", `${(s.life_used * s.design_life_years).toFixed(1)} of ${s.design_life_years} design years in service`));
+    else if (last) now.append(el("b", last.title));
+    if (next && s.life_used === null) now.append(` · next: ${next.title.toLowerCase()}`);
+  }
+  h.append(now);
+  return h;
+}
+
+function card(e, launch, key, other, otherName) {
+  const c = el("button", undefined, "card" + (e.failed ? " failed" : ""));
+  c.type = "button";
+  const d = e.at ? days(e.at, launch) : null;
+  const time = el("div", e.at ? `${DATA.when_words[e.when] || ""}${e.when === "on" ? fmtDay(e.at) : `${fmtDate(e.at)} · ${since(d)}`}` : "date not published", "t");
+  if (other !== null && other !== undefined && Math.abs(other) >= 0.05) time.append(" · ", el("b", `${since(Math.abs(other)).slice(2)} ${other > 0 ? "later" : "sooner"} than ${otherName}`));
+  c.append(time);
+  const h = el("div", e.title, "h"); h.append(el("span", DATA.evidence_words[e.evidence], "badge " + BADGE[e.evidence])); c.append(h);
+  if (e.picture) {
+    const img = el("img"); img.loading = "lazy"; img.alt = e.title; img.src = e.picture.src;
+    img.addEventListener("error", () => img.remove()); img.addEventListener("load", () => layout());
+    c.append(img, el("div", e.picture.credit, "credit"));
+  }
+  const more = el("div", undefined, "more"); more.append(el("p", e.detail));
+  const src = el("p", "Source: ", "src"); const link = safeLink(e.source.link);
+  if (link) { const a = el("a", e.source.name); a.href = link; a.target = "_blank"; a.rel = "noopener"; a.addEventListener("click", (ev) => ev.stopPropagation()); src.append(a); }
+  else src.append(e.source.name);
+  more.append(src);
+  if (e.picture) { const a = el("a", "Picture and its licence"); a.href = e.picture.page; a.target = "_blank"; a.rel = "noopener"; a.addEventListener("click", (ev) => ev.stopPropagation()); more.append(a); }
+  c.append(more);
+  c.setAttribute("aria-expanded", opened.has(key));
+  c.addEventListener("click", () => { opened.has(key) ? opened.delete(key) : opened.add(key); c.setAttribute("aria-expanded", opened.has(key)); layout(); });
+  return c;
+}
+
+function ghost(title) { const g = el("div", undefined, "card ghost"); g.append(el("div", "not yet", "t"), el("div", title, "h")); return g; }
+
+// Where things sit across the page. One satellite: axis, rail, cards. Two: cards, rail, axis, rail, cards.
+function geometry(n) {
+  const W = $("tl").clientWidth, mid = window.innerWidth < 640 ? 86 : 132;
+  if (n === 1) return { W, grid: `${mid}px 1fr`, axisX: mid / 2 - 6, rails: [mid - 14], cards: [[mid + 4, W]] };
+  const side = (W - mid) / 2;
+  return { W, grid: `1fr ${mid}px 1fr`, axisX: side + mid / 2, rails: [side + 16, side + mid - 16], cards: [[0, side], [side + mid, W]] };
+}
+
+let placed = [], G = null;   // placed: per satellite, its rows [{card, pin, win, d, from, match}]
+function draw() {
+  drawControls();
+  const sats = picked.map((n) => DATA.satellites.find((s) => s.name === n));
+  const colourOf = (s) => DATA.colours[DATA.satellites.indexOf(s) % DATA.colours.length];
+  const S = SCALES[scale];
+  G = geometry(sats.length);
+  document.body.style.setProperty("--grid", G.grid);
+  const lay = (parts) => sats.length === 1 ? [el("div"), parts[0]] : [parts[0], el("div"), parts[1]];
+  $("heads").replaceChildren(...lay(sats.map((s) => head(s, colourOf(s)))));
+  const inWindow = (d) => d !== null && (S.from === undefined || (d >= S.from && d <= S.to));
+  const bands = { before: [], after: [] };
+  const tl = $("tl"); tl.replaceChildren();
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"); svg.setAttribute("class", "links"); tl.append(svg);
+  placed = [];
+  const firstAt = {};   // step#n -> days after launch, for the left-hand satellite
+  sats.forEach((s, side) => {
+    const x = G.rails[side];
+    const rail = el("div", undefined, "rail"); rail.style.left = x + "px"; rail.style.background = colourOf(s); rail.style.opacity = ".5"; tl.append(rail);
+    const b = el("div", undefined, "flow"), a = el("div", undefined, "flow"); const rows = []; const counts = {};
+    s.events.forEach((e, i) => {
+      const n = counts[e.step] = (counts[e.step] || 0) + 1;
+      // A fact known only by its day sits at midday: never more than half a day out.
+      const key = `${s.name}|${i}`, d = e.at ? days(e.at, s.launch) + (e.when === "on" ? 0.5 : 0) : null;
+      const match = e.step === "note" || e.failed ? null : `${e.step}#${n}`;
+      if (side === 0 && match && d !== null) firstAt[match] = d;
+      const other = side === 1 && match && d !== null && match in firstAt ? d - firstAt[match] : null;
+      const c = card(e, s.launch, key, other, sats[0].name);
+      if (!inWindow(d)) { (d === null || d < (S.from ?? 0) ? b : a).append(c); return; }
+      const ev = e.evidence === "orbit records" ? " records" : e.evidence === "press" ? " press" : "";
+      const pin = el("div", undefined, "pin" + ev + (e.failed ? " failed" : "")); pin.style.left = x + "px";
+      let win = null;
+      if (e.from) { win = el("div", undefined, "win" + ev); win.style.left = x + "px"; tl.append(win); }
+      const [l, r] = G.cards[side]; c.style.left = l + "px"; c.style.width = (r - l) + "px";
+      tl.append(pin, c);
+      rows.push({ card: c, pin, win, d, side, from: e.from ? days(e.from, s.launch) : null, match });
+    });
+    const failed = s.checklist.some((c) => c.state === "failed");
+    const nowD = (Date.parse(DATA.today) - Date.parse(s.launch)) / DAY;
+    const ahead = failed ? [] : s.checklist.filter((c) => c.state === "ahead");
+    if (!failed && inWindow(nowD)) {
+      rows.push({ now: true, d: nowD, side });
+      ahead.forEach((c) => { const g = ghost(c.title); const [l, r] = G.cards[side]; g.style.left = l + "px"; g.style.width = (r - l) + "px"; tl.append(g); rows.push({ card: g, d: nowD, side, ghost: true }); });
+    } else ahead.forEach((c) => a.append(ghost(c.title)));
+    bands.before.push(b); bands.after.push(a); placed.push(rows);
+  });
+  ["before", "after"].forEach((k) => {
+    const label = el("div", k === "before" ? "not dated, or before the window" : "after the window", "rowlabel");
+    const parts = bands[k];
+    $(k).replaceChildren(...(sats.length === 1 ? [label, parts[0]] : [parts[0], label, parts[1]]));
+    $(k).hidden = parts.every((p) => !p.children.length);
+  });
+  // The axis spans what is shown: the window when to scale, every dated event (and now) for the whole life.
+  let lo = S.from, hi = S.to;
+  if (lo === undefined) {
+    const ds = placed.flat().flatMap((r) => r.from !== null && r.from !== undefined ? [r.d, r.from] : [r.d]);
+    lo = Math.min(-1 / 24, ...ds); hi = Math.max(1, ...ds);   // from an hour before launch
+  }
+  const top = S.y(lo);
+  G.Y = (d) => S.y(d) - top + 14; G.bottom = G.Y(hi) + 30;
+  S.ticks().filter(([d]) => d >= lo && d <= hi).forEach(([d, label]) => {
+    const t = el("div", label, "tick" + (d === 0 ? " zero" : "")); t.style.left = G.axisX + "px"; t.style.top = G.Y(d) + "px"; tl.append(t);
+  });
+  layout();
+}
+
+// Pins sit at their true time. Cards start there; when one would overlap the card above, it moves down and a thin
+// line ties it back to its pin.
+function layout() {
+  if (!G || !G.Y) return;
+  const tl = $("tl"), svg = tl.querySelector("svg.links"); svg.replaceChildren();
+  const line = (cls, d) => { const p = document.createElementNS(svg.namespaceURI, "path"); p.setAttribute("class", cls); p.setAttribute("d", d); svg.append(p); };
+  let bottom = G.bottom;
+  placed.forEach((rows, side) => {
+    const x = G.rails[side], [l, r] = G.cards[side], edge = side === 0 && G.rails.length === 2 ? r : l;
+    let next = 0;
+    rows.slice().sort((p, q) => p.d - q.d || (p.now ? -1 : q.now ? 1 : 0)).forEach((row) => {
+      const y = G.Y(row.d);
+      if (row.now) {
+        line("nowmark", `M${x - 10},${y} L${x + 10},${y}`);
+        const t = document.createElementNS(svg.namespaceURI, "text"); t.setAttribute("class", "now"); t.textContent = "now";
+        t.setAttribute("x", side === 0 && G.rails.length === 2 ? x + 14 : x - 40); t.setAttribute("y", y + 4); svg.append(t);
+        return;
+      }
+      const at = Math.max(y - 14, next);
+      row.card.style.top = at + "px"; next = at + row.card.offsetHeight + 8;
+      if (!row.pin) return;
+      row.pin.style.top = y + "px";
+      line("lead", `M${x},${y} L${(x + edge) / 2},${y} L${edge},${at + 16}`);
+      if (row.win) { const y0 = G.Y(row.from); row.win.style.top = y0 + "px"; row.win.style.height = Math.max(4, y - y0) + "px"; }
+    });
+    bottom = Math.max(bottom, next + 10);
+  });
+  if (placed.length === 2) placed[0].filter((r) => r.match && r.pin).forEach((r) => {
+    const o = placed[1].find((q) => q.match === r.match && q.pin); if (!o) return;
+    const x1 = G.rails[0] + 7, x2 = G.rails[1] - 7, y1 = G.Y(r.d), y2 = G.Y(o.d), m = (x1 + x2) / 2;
+    line("match", `M${x1},${y1} C${m},${y1} ${m},${y2} ${x2},${y2}`);
+  });
+  tl.style.height = bottom + "px";
+  fitFrame();
+}
+
+function legend() {
+  const l = $("legend"); l.replaceChildren();
+  [["var(--accent)", "the operator said so"], ["var(--ok)", "seen in the orbit records (bar: between two records)"], ["var(--muted)", "press report"],
+   ["var(--bad)", "failed"]].forEach(([c, words]) => { const s = el("span"); const i = el("i"); i.style.borderColor = c; s.append(i, words); l.append(s); });
+  l.append(el("span", "Dotted lines join the same step on the two satellites."));
+}
+
+// The frame takes the page's own height, so the dashboard scrolls as one page and nothing scrolls inside the frame.
+function fitFrame() {
+  if (!window.frameElement) return;
+  const parts = [...document.body.children].filter((e) => e.tagName !== "SCRIPT");
+  const bottom = Math.max(0, ...parts.map((e) => e.getBoundingClientRect().bottom + window.scrollY));
+  window.frameElement.style.height = Math.ceil(bottom) + 12 + "px";
+}
+legend();
+draw();
+if ("ResizeObserver" in window) { let w = window.innerWidth; new ResizeObserver(() => { if (window.innerWidth !== w) { w = window.innerWidth; draw(); } else fitFrame(); }).observe(document.body); }
+</script>
+</body>
+</html>

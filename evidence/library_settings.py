@@ -44,3 +44,28 @@ FAILED_LAUNCH_NAMES = [
 ]
 
 DAYS_PER_YEAR = 365.25
+
+# ---- Lifecycle timelines (ui/components/lifecycle.*) ----
+LIFECYCLE_EVENTS_FILE = "lifecycle_events.csv"   # in registry/: kept by hand, every row with its public source
+LIFECYCLE_EVENTS_COLUMNS = ["satellite", "step", "title", "from_utc", "at_utc", "when", "evidence", "result", "detail",
+                            "picture", "picture_credit", "source_name", "source_link"]
+# The steps each series goes through, in order. No agency publishes a checklist like this: it is ISRO's mission
+# sequence as its NVS mission pages and updates describe it. A row's step is one of these, or NOTE_STEP for context
+# that is not a step (it is shown, and never counted).
+LIFECYCLE_STEPS = {
+    "NVS": [("built", "Built and tested"), ("launch", "Launch"), ("separation", "Separated in transfer orbit"),
+            ("burn", "Orbit raising"), ("gso", "Reached geosynchronous orbit"), ("slot", "At its slot"),
+            ("payload", "Payload tested"), ("service", "In navigation service"), ("end", "Service ended"),
+            ("disposal", "Moved out of its orbit")],
+}
+NOTE_STEP = "note"
+SERVICE_STEP, END_STEP = "service", "end"
+LIFECYCLE_SERIES = {"NVS-01": "NVS", "NVS-02": "NVS", "NVS-03": "NVS"}   # satellite -> its series
+# Design life in years, from the NVS-01 mission brochure ("more than 12 years").
+DESIGN_LIFE_YEARS = {"NVS": 12}
+WHEN_WORDS = {"at": "", "by": "by ", "about": "about ", "on": ""}     # how exact at_utc is; "on": the day only
+EVIDENCE_WORDS = {"operator": "operator", "orbit records": "orbit records", "press": "press report"}
+FAILED = "failed"
+# Pictures are Wikimedia Commons files, loaded by the reader's browser; the file's own page carries its licence.
+COMMONS_PICTURE = "https://commons.wikimedia.org/wiki/Special:FilePath/{name}?width=480"
+COMMONS_PAGE = "https://commons.wikimedia.org/wiki/File:{name}"

@@ -1,21 +1,26 @@
-"""Library: how many navigation satellites each system has launched, lost and kept, and what public sources say it cost.
+"""Library: how many navigation satellites each system has launched, lost and kept, what public sources say it cost,
+and each satellite's life from build to end of service.
 
-Each table is in a section (ui/reveal.py): the count per system open, the rest closed.
+Each part is in a section (ui/reveal.py): the count per system and the lifecycles open, the rest closed.
 """
+from datetime import datetime, timezone
+
 import streamlit as st
 
-from evidence.library_settings import LIBRARY_COUNTS_FILE, LIBRARY_FIGURES_FILE, LIBRARY_MATCHING_FILE
+from evidence.library_settings import (LIBRARY_COUNTS_FILE, LIBRARY_FIGURES_FILE, LIBRARY_MATCHING_FILE,
+                                       LIFECYCLE_EVENTS_FILE)
 from evidence.settings import REGISTRY_SATELLITES_FILE
 from evidence.registry_tables import read_table
 from ui import library, reveal, surfaces
+from ui.components.lifecycle import lifecycle_frame
 
 
 @st.cache_data(show_spinner=False)
 def load():
-    return [read_table(name) for name in (LIBRARY_COUNTS_FILE, LIBRARY_FIGURES_FILE, LIBRARY_MATCHING_FILE)]
+    return [read_table(name) for name in (LIBRARY_COUNTS_FILE, LIBRARY_FIGURES_FILE, LIBRARY_MATCHING_FILE, LIFECYCLE_EVENTS_FILE)]
 
 
-counts, figures, matched = load()
+counts, figures, matched, lifecycle_rows = load()
 systems = library.system_rows(counts)
 stated = sum(figure["value"] != library.NOT_KNOWN for figure in figures)
 surfaces.show(library.CSS)
@@ -26,6 +31,9 @@ surfaces.show('<p class="small">Satellites launched, lost and kept by each navig
 reveal.section("library_systems", "Count per system",
                f"{reveal.count(len(systems), 'system')} · {sum(r['launched'] for r in systems)} launched · "
                f"{sum(r['operating'] for r in systems)} operating", library.scoreboard(counts, figures), open=True)
+lives = sorted({row["satellite"] for row in lifecycle_rows})
+reveal.section("library_lifecycles", "Lifecycles", f"{' · '.join(lives)}: each step from build to end of service, compared",
+               lambda: lifecycle_frame(lifecycle_rows, datetime.now(timezone.utc)), open=True)
 reveal.section("library_generations", "By design generation", reveal.count(len(counts), "generation"),
                library.generations(counts))
 reveal.section("library_money", "Money stated by public sources",

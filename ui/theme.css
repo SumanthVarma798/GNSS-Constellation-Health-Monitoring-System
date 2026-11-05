@@ -398,6 +398,8 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: 12px; }
   .stApp:has(.st-key-topbar) [data-testid="stMainBlockContainer"] { padding-top: 16px; }
   .st-key-topbar { padding: 10px 12px; margin-bottom: 16px; }
   [data-testid="stMain"] iframe[data-testid="stIFrame"] { max-height: 72vh; }
+  /* a frame in a section takes its content's height and never scrolls inside, so it cannot trap a finger */
+  [data-testid="stMain"] [class*="st-key-rv_"] iframe[data-testid="stIFrame"] { max-height: none; }
   [data-testid="stButtonGroup"] button, [data-testid="stButtonGroup"] button[data-testid^="stBaseButton-segmented"],
   [data-testid="stMain"] :is([data-testid="stButton"], [data-testid="stDownloadButton"]) button,
   .st-key-compare_toggle button, .st-key-picker [data-testid="stButton"] button,
@@ -429,13 +431,13 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: 12px; }
 [class*="st-key-rvx_"] label::after { color: var(--muted); }
 [class*="st-key-rvx_"] label:has(input:checked)::after, .change[open] .more::after { transform: translateY(4px) rotate(225deg); }
 /* the body: always on the page, closed to no height; it opens and closes in 200 ms */
-[class*="st-key-rv_"] > [data-testid="stElementContainer"]:has(.rv-body) {
+[class*="st-key-rv_"] > [data-testid="stElementContainer"]:has(.rv-body, iframe) {
   display: grid; grid-template-rows: 0fr; visibility: hidden; transition: grid-template-rows 200ms ease, visibility 0s linear 200ms;
 }
-[class*="st-key-rv_"]:has([class*="st-key-rvx_"] input:checked) > [data-testid="stElementContainer"]:has(.rv-body) {
+[class*="st-key-rv_"]:has([class*="st-key-rvx_"] input:checked) > [data-testid="stElementContainer"]:has(.rv-body, iframe) {
   grid-template-rows: 1fr; visibility: visible; transition: grid-template-rows 200ms ease, visibility 0s;
 }
-[class*="st-key-rv_"] > [data-testid="stElementContainer"]:has(.rv-body) > * { min-height: 0; overflow: hidden; }
+[class*="st-key-rv_"] > [data-testid="stElementContainer"]:has(.rv-body, iframe) > * { min-height: 0; overflow: hidden; }
 .rv-body { padding: 0 20px 16px; }
 /* a table or card inside a section takes the section's card instead of its own */
 .rv-body :is(.tablewrap, .raised) { margin: 0; padding: 0; border: 0; background: transparent; box-shadow: none; }
