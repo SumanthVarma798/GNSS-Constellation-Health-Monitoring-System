@@ -10,7 +10,7 @@ config/meo_nominal.py.
 from html import escape
 from datetime import datetime, timezone
 
-from analysis.meo_geometry import EXTENDED, part_score, plane_drift
+from analysis.meo_geometry import EXTENDED, NO_PLANE, part_score, plane_drift
 from config.config import TRACKED_NOT_IN_REGISTRY
 from evidence.registry_tables import new_on_dashboard
 from config.meo_nominal import MEANINGS, NOMINAL, PLANE_MEANINGS
@@ -25,6 +25,8 @@ LABELS = {"plane": "Plane", "spacing": "Spacing", "inclination": "Inclination", 
 # For Compare: the parts the other systems do not have, (label, column of the health table).
 PARTS = [("Plane", "_plane_score"), ("Spacing", "_spacing_score"), ("Height", "_height_score"),
          ("Eccentricity", "_ecc_score")]
+# The groups that are not a plane of slots, by their title; any other group is "Plane <name>".
+NOT_PLANES = {EXTENDED: "Eccentric orbit", NO_PLANE: "No plane in the registry"}
 
 
 def state_of(row):
@@ -41,6 +43,8 @@ def state_of(row):
             (palette.SLOT_OFF, f"out of step, {off:.1f}°", off)
     if row["plane"] == EXTENDED:
         return palette.SLOT_UNKNOWN, "own eccentric orbit", None
+    if row["plane"] == NO_PLANE:
+        return palette.SLOT_UNKNOWN, "no plane in the registry", None
     # left out of the gaps (analysis/meo_geometry.py): passing through at another height, or alone in its plane
     if "height" in checks and checks["height"][4] < 100:
         return palette.SLOT_UNKNOWN, "away from its working height", None
@@ -59,8 +63,9 @@ def tiles(result, tags=None):
         weakest = min(((LABELS[m], s) for m, s in row["parts"].items()), key=lambda part: part[1], default=None)
         html = surfaces.tile(row["name"], row["signal_id"], row["score"], row["status"].split(" ", 1)[-1], words,
                              orbit_section.CHIP_STATUS[state], weakest if weakest and weakest[1] < 100 else None,
-                             age_html=tags.get(row["name"], ""))
-        out[row["name"]] = (html, row["score"] >= HEALTHY_FROM and state != palette.SLOT_OFF, health[row["name"]])
+                             age_html=tags.get(row["name"], ""), unscored="no score")
+        healthy = row["score"] is not None and row["score"] >= HEALTHY_FROM and state != palette.SLOT_OFF
+        out[row["name"]] = (html, healthy, health[row["name"]])
     return out
 
 
@@ -110,11 +115,11 @@ def _gaps(name, result, today):
 
 
 def _planes(rows):
-    """{plane name: rows in orbit order}, the nominal planes by name and the eccentric pair last."""
+    """{plane name: rows in orbit order}, the nominal planes by name, then the eccentric pair and those with no plane."""
     planes = {}
     for row in sorted(rows, key=lambda r: r["u"]):
         planes.setdefault(row["plane"], []).append(row)
-    return dict(sorted(planes.items(), key=lambda item: (item[0] == EXTENDED, item[0])))
+    return dict(sorted(planes.items(), key=lambda item: (item[0] in NOT_PLANES, item[0])))
 
 
 def _strip(members):
@@ -148,9 +153,11 @@ def _plane_card(plane, members, drift):
     """One plane, plane-level only: its strip, how many in step and need a look, and its drift."""
     in_step, look = _counts(members)
     facts = [_fact("Need a look", reveal.count(look, "satellite") if look else "none", "warn" if look else "ok", plane)]
-    if plane == EXTENDED:   # not a plane of slots: no strip, nothing to be in step with or drift from
-        facts.append('<span>Its own orbit: no slots, no plane to drift from</span>')
-        return surfaces.raised(f'<div class="facts">{"".join(facts)}</div>', title=f"Eccentric orbit · {len(members)}")
+    if plane in NOT_PLANES:   # not a plane of slots: no strip, nothing to be in step with or drift from
+        facts.append('<span>Its own orbit: no slots, no plane to drift from</span>' if plane == EXTENDED else
+                     '<span>No plane or slot given yet: nothing to score it against</span>')
+        return surfaces.raised(f'<div class="facts">{"".join(facts)}</div>',
+                               title=f"{NOT_PLANES[plane]} · {len(members)}")
     out_of_step = any(state_of(row)[0] == palette.SLOT_OFF for row in members)
     rate, offset = drift["rate"], drift["offset"]
     moving = "steady" if abs(rate) < 0.005 else f"{abs(rate):.2f}° a year" + (   # away from or back to the pattern;
@@ -187,9 +194,9 @@ def page(name, result):
             surfaces.show(_plane_card(plane, members, drift.get(plane)))
     else:
         for plane, members in planes.items():
-            line = reveal.count(len(members), "satellite") + ("" if plane == EXTENDED
+            line = reveal.count(len(members), "satellite") + ("" if plane in NOT_PLANES
                                                              else f" · {_counts(members)[0]} in step")
-            surfaces.show(surfaces.group_head("Eccentric orbit" if plane == EXTENDED else f"Plane {plane}", line)
+            surfaces.show(surfaces.group_head(NOT_PLANES.get(plane, f"Plane {plane}"), line)
                           + f'<div class="tiles meo">{"".join(shown[row["name"]][0] for row in members)}</div>')
     in_order = [row for members in planes.values() for row in members]
     rows = [{"name": row["name"], "slot_lon": None, "actual_lon": None, "note": "", "state": state,

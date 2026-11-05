@@ -15,7 +15,7 @@ from test_dashboard_shell import (_compare, _on, celestrak_answers_with_nothing_
                                   run, segmented_controls_rerun)
 from ui import geometry_data as gd
 from ui import geometry_settings as gs
-from ui import shell
+from ui import palette, shell
 from ui.figures import geometry as gf
 
 WHEN = datetime(2026, 10, 4, 6, 0, tzinfo=timezone.utc)   # just after the bundled element sets
@@ -300,7 +300,7 @@ def test_the_map_holds_land_tracks_now_places_a_click_grid_and_the_chosen_place(
     assert [t.name for t in fig.data[-3:]] == ["key places", "click", "chosen place"]
     assert len(fig.data) == 1 + len(tracks) + 4 and len(fig.data[-3].x) == len(CHINA_KEY_POINTS)
     track = fig.data[1]
-    assert "height %{customdata[2]:,.0f} km" in track.hovertemplate and track.customdata[0][0].endswith("UTC")
+    assert "Height</span>  %{customdata[2]:,.0f} km" in track.hovertemplate and track.customdata[0][0].endswith("UTC")
     cells, step = fig.data[-2], gs.CLICK_GRID_DEG
     x_range, y_range = fig.layout.xaxis.range, fig.layout.yaxis.range
     assert min(cells.x) - step / 2 <= x_range[0] and max(cells.x) + step / 2 >= x_range[1]
@@ -328,10 +328,27 @@ def test_one_satellites_trends_share_one_time_axis_so_a_hover_reads_them_all():
     assert {t.xaxis or "x" for t in fig.data} == {"x"} and fig.layout.xaxis.showspikes
     lines = [t for t in fig.data if t.hoverinfo != "skip"]
     assert [t.name for t in lines] == ["Tilt", "Height"] and list(lines[1].y) == [35786.0]
-    assert "(should be 28 to 30)" in lines[0].hovertemplate and "km" in lines[1].hovertemplate
+    assert "(should be 28 to 30)" in lines[0].hovertemplate and "Height</span>  %{y:,.1f}" in lines[1].hovertemplate
     assert sum(t.fill == "toself" for t in fig.data) == 1 and sum(1 for t in fig.data if t.line.dash == "dash") == 1
-    titles = [fig.layout[f"yaxis{'' if i == 0 else i + 1}"].title.text for i in range(len(gs.TRENDS))]
-    assert titles == [f"{name}<br>{unit}" for _, name, unit, _ in gs.TRENDS]
+    labels = [a.text.split("  ")[0] for a in fig.layout.annotations if a.yref == "paper"]
+    assert labels == [name for _, name, _, _ in gs.TRENDS]          # each strip named, with its unit, above it
+    assert [a.text for a in fig.layout.annotations if a.yref != "paper"] == ["29.100", "35,786.0"]   # latest at the end
+
+
+def test_trends_mark_readings_outside_the_band_and_name_them_when_the_latest_is_outside():
+    epochs = pd.to_datetime(["2026-09-01", "2026-09-08", "2026-09-15"])
+    series = {"INCLINATION": pd.DataFrame({"satellite": ["A"] * 3, "EPOCH": epochs, "INCLINATION": [29.0, 31.0, 30.5]}),
+              "central_lon": pd.DataFrame({"satellite": ["A"] * 3, "EPOCH": epochs, "central_lon": [54.0, 56.0, 55.0]})}
+    bands = {"INCLINATION": (28.0, 30.0), "central_lon": (55.0, 55.0)}   # one value: no tolerance, so never outside
+
+    fig = gf.satellite_trends(series, "A", "GEO", bands, epochs[0], epochs[-1])
+
+    off = [t for t in fig.data if t.name and t.name.endswith("outside")]
+    assert [t.name for t in off] == ["Tilt outside"] and list(off[0].y) == [31.0, 30.5]
+    assert off[0].marker.color == palette.BAD and off[0].hoverinfo == "skip"
+    ends = {a.text: a.font.color for a in fig.layout.annotations if a.yref != "paper"}
+    assert ends == {"30.500": palette.BAD, "55.000": palette.INK}
+    assert any(a.text == "now outside: Tilt" and a.font.color == palette.BAD for a in fig.layout.annotations)
 
 
 # ---- when each satellite is in view, in words ----

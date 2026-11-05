@@ -1,10 +1,10 @@
 """Puts the dashboard's look on a page.
 
-Every colour comes from ui/palette.py. The rules that use them are in ui/theme.css.
+Every colour comes from ui/palette.py, every text size from ui/type_scale.py. The rules that use them are in ui/theme.css.
 """
 from pathlib import Path
 
-from ui import palette
+from ui import icons, palette, type_scale
 from ui.tooltip import CARD_CSS
 
 CSS_FILE = Path(__file__).with_name("theme.css")
@@ -12,7 +12,7 @@ CSS_FILE = Path(__file__).with_name("theme.css")
 # The faint light edge on raised things. Not a palette colour: it is white at low strength.
 EDGE = "rgba(255,255,255,.06)"
 
-# CSS variable name -> value. The shadows are written in terms of the colour variables.
+# CSS variable name -> value. The shadows are written in terms of the colour variables; the type scale follows.
 VARIABLES = {
     "platform": palette.PLATFORM,
     "lift": palette.LIFT,
@@ -32,6 +32,9 @@ VARIABLES = {
     "raised-sm": "-3px -3px 8px var(--lift), 4px 4px 10px var(--sink)",
     "pressed": "inset -3px -3px 7px var(--lift), inset 4px 4px 9px var(--sink)",
     "r": f"{palette.RADIUS_PX}px",
+    **type_scale.variables(),
+    # Icons for CSS masks (ui/icons.py): --ic-bell and the rest.
+    **{f"ic-{name}": icons.mask_url(name) for name in icons.MASKED},
 }
 
 

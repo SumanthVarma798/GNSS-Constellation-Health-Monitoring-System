@@ -54,11 +54,20 @@ DOP_SOURCE = "Bands from Isik and others (2020), Robotics 9(3) 66."
 # A quality band's status colour. The band's own word is always shown with it.
 QUALITY_STATUS = {"Ideal": "ok", "Excellent": "ok", "Good": "ok", "Moderate": "warn", "Fair": "bad", "Poor": "bad"}
 
-# Orbit plane spacing, from analysis/raan_analysis.py.
-SPACING_INTRO = ("Satellites that share one ground track should cross the equator northward at evenly spaced "
-                 "points around Earth's axis (the node, or right ascension of the ascending node): "
-                 "N satellites, 360 ÷ N degrees apart. Uneven spacing leaves gaps in the sky and worsens position "
-                 "quality. Shown for information; it is not part of the health score.")
+# Sky and ground's "What this shows" (ui/tooltip.glance): a lead, then (icon in ui/icons.py, key term, words), then
+# a note. Plane spacing is from analysis/raan_analysis.py.
+SKY_GROUND_LEAD = "Where the satellites are over the ground, and in the sky above one place."
+SKY_GROUND_KEY = [
+    ("map", "Map", "each satellite's ground track and where it is now; the crosses are the key places."),
+    ("click", "Pick a place", "click the map, choose a key place or type a latitude and longitude to see its sky."),
+    ("radar", "Sky", "overhead in the middle, the horizon at the edge; the dotted ring is the elevation mask."),
+    ("player-play", "Next 24 hours", "play or drag through them."),
+    ("planet", "Plane spacing", "satellites sharing one ground track should cross the equator northward at evenly "
+                                "spaced points around Earth's axis (the node, or right ascension of the ascending "
+                                "node): N satellites, 360 ÷ N degrees apart. Uneven spacing leaves gaps in the sky "
+                                "and worsens position quality."),
+]
+SKY_GROUND_NOTE = "Plane spacing is shown for information; it is not part of the health score."
 SPACING_STATUS = {"Ideal": "ok", "Good": "ok", "Moderate": "warn", "Poor": "bad", "N/A": "idle"}
 
 # Orbit trends: one row per satellite, one column per measure. (column in the history, name, unit, what it means).

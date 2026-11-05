@@ -8,7 +8,7 @@
 __ROOT__
 *, *::before, *::after { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
-body { background: var(--platform); color: var(--ink); font: 13.5px/1.4 __FONT__; padding: 14px 18px 18px; overflow: hidden;
+body { background: var(--platform); color: var(--ink); font: var(--fs-body)/1.4 __FONT__; padding: 14px 18px 18px; overflow: hidden;
   display: flex; flex-direction: column; gap: 14px; }
 button { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -18,23 +18,23 @@ canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: 
 /* which satellites: a pressed track, the chosen one raised in the accent colour, as the page's own switches */
 .top { position: absolute; top: 12px; left: 12px; display: flex; align-items: center; gap: 12px; }
 .seg { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); }
-.seg button { padding: 4px 13px; border-radius: 999px; border: 1px solid transparent; background: transparent; color: var(--muted); font-size: 13px; white-space: nowrap; cursor: pointer; }
+.seg button { padding: 4px 13px; border-radius: 999px; border: 1px solid transparent; background: transparent; color: var(--muted); font-size: var(--fs-small); white-space: nowrap; cursor: pointer; }
 .seg button:hover { color: var(--accent); }
 .seg button[aria-pressed="true"] { background: var(--platform); color: var(--accent); border-color: var(--edge); box-shadow: var(--raised-sm); }
-.note { color: var(--muted); font-size: 12px; }
-.note.named { color: var(--ink); font-weight: 600; font-size: 13px; }   /* the clicked orbit or plane */
+.note { color: var(--fc-small); font-size: var(--fs-small); }
+.note.named { color: var(--ink); font-weight: 600; font-size: var(--fs-small); }   /* the clicked orbit or plane */
 
 /* the satellites, one chip each: the legend, and the keyboard's way in */
 .sats { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0 4px; }
 .sat { display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px; border-radius: 999px; border: 1px solid var(--edge);
-  background: var(--platform); box-shadow: var(--raised-sm); cursor: default; font-size: 12.5px; white-space: nowrap; }
+  background: var(--platform); box-shadow: var(--raised-sm); cursor: default; font-size: var(--fs-small); white-space: nowrap; }
 .sat.on { background: var(--well); box-shadow: var(--pressed); }
 .dot, .ring { flex: none; display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
 .ring { border: 1.5px solid var(--muted); }
 .dot.faint { opacity: .5; }
 .dash { flex: none; width: 16px; border-top: 1.5px dashed var(--muted); }
 .dots { flex: none; width: 16px; border-top: 2px dotted var(--muted); }
-.key { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 0 6px; color: var(--muted); font-size: 12px; }
+.key { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 0 6px; color: var(--fc-small); font-size: var(--fs-small); }
 .key span { display: inline-flex; align-items: center; gap: 7px; }
 
 /* the hover card: the dashboard's one tooltip card (ui/tooltip.py CARD_CSS), placed by the script beside the pointer
@@ -43,11 +43,11 @@ __TIP__
 .tip { position: fixed; min-width: 190px; max-width: 280px; }
 .tip .n { font-weight: 600; overflow-wrap: anywhere; }
 .tip .k { color: var(--muted); font-weight: 400; margin-left: 6px; }
-.tip .note { margin-top: 8px; color: var(--muted); font-size: 12px; }
+.tip .note { margin-top: 8px; color: var(--fc-small); font-size: var(--fs-small); }
 .tip .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
-.chip { display: inline-flex; font-size: 12.5px; font-weight: 600; padding: 3px 11px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); white-space: nowrap; }
-.s { font: 700 24px/1 __FONT_NUMBERS__; }
-.s small { font: 400 12px __FONT__; color: var(--muted); margin-left: 4px; }
+.chip { display: inline-flex; font-size: var(--fs-small); font-weight: 600; padding: 3px 11px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); white-space: nowrap; }
+.s { font: var(--fw-num) var(--fs-num)/1 __FONT_NUMBERS__; }
+.s small { font: var(--fw-small) var(--fs-small) __FONT__; color: var(--fc-small); margin-left: 4px; }
 /* zoom: three small raised buttons in the bottom-right corner, pressed while held */
 .zoom { position: absolute; right: 12px; bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
 .zoom button { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--edge);
@@ -62,10 +62,10 @@ __TIP__
 .readout.tt-card { transition: opacity 250ms ease, visibility 0s linear 250ms; }
 .readout.tt-card.on { transition: opacity 250ms ease, visibility 0s; }
 .readout .zl { display: flex; align-items: center; gap: 14px; }
-.readout b { font: 700 18px/1 __FONT_NUMBERS__; }
-.readout .bar { display: inline-flex; flex-direction: column; gap: 3px; color: var(--muted); font-size: 12px; }
+.readout b { font: var(--fw-num) var(--fs-side)/1 __FONT_NUMBERS__; }
+.readout .bar { display: inline-flex; flex-direction: column; gap: 3px; color: var(--fc-small); font-size: var(--fs-small); }
 .readout .bar i { display: block; height: 6px; border: 1.5px solid var(--muted); border-top: 0; }
-.readout .fl { margin-top: 6px; font-size: 12px; }
+.readout .fl { margin-top: 6px; font-size: var(--fs-small); }
 .readout .fl.m { margin-top: 2px; color: var(--muted); }
 .readout .fl:empty { display: none; }
 @media (max-width: 639.98px), (pointer: coarse) { .zoom button { width: 40px; height: 40px; } }

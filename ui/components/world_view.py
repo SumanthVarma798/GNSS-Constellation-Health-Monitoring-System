@@ -159,11 +159,9 @@ def payload(systems, gap=None, now=None):
             records.append(_satellite_record(system, sat, tracks))
         shown_systems.append({"name": system, "colour": world_settings.SYSTEM_COLOURS.get(system, palette.FILL),
                               "satellites": records})
-    navic_area = {**world_settings.NAVIC_AREA, "label": world_settings.NAVIC_AREA_LABEL}
     return {
         "home": {"lat": world_settings.HOME_LAT, "lon": world_settings.HOME_LON},
-        "area": navic_area,
-        "navic_area": navic_area,
+        "areas": world_settings.SERVICE_AREAS,
         "as_of": as_of,
         "day": day or "no IGS file",
         "health_key": [

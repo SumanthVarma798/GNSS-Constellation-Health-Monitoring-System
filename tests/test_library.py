@@ -148,9 +148,8 @@ def test_the_scoreboard_shows_its_sources_and_cites_gcat():
     counts, figures = read_table(LIBRARY_COUNTS_FILE), read_table(LIBRARY_FIGURES_FILE)
     html = library.scoreboard(counts, figures)
 
-    assert GCAT_CITATION in library.notes(counts)
-    for note in range(1, 11):
-        assert f"<sup>{note}</sup>" in html
+    assert GCAT_CITATION in html and "<sup>" not in html   # cited where shown; no footnote numbers
+    assert html.count('class="tt-card"') == 10              # each counted column opens what it means
     assert "not known" in html                                                   # BeiDou has no stated cost
     rows = {row["system"]: row for row in library.system_rows(counts)}
     assert rows["GPS"]["launched"] == 82
@@ -173,3 +172,15 @@ def test_the_library_note_says_when_the_registry_now_lists_more_satellites():
     note = library.registry_lag_note(matching, registry)
     assert note == "The library was counted when the registry listed 101 GLONASS satellites; it now lists 102."
 
+
+
+def test_each_generation_bar_carries_its_counts_for_hover_and_no_zero_part():
+    counts = read_table(LIBRARY_COUNTS_FILE)
+    html = library.generations(counts)
+
+    assert GCAT_CITATION in html and "<sup>" not in html
+    assert html.count('class="gen-row"') == len(counts)
+    iif = html[html.index("<b>GPS IIF</b>"):]
+    bar = iif[:iif.index("</div></div>")]
+    assert "<b>12</b>" in bar and 'aria-label="12 launched: 12 operating"' in bar   # IIF: 12 launched, all operating
+    assert "retired" not in bar.split("aria-label")[1].split('"')[1]               # a zero part is not drawn

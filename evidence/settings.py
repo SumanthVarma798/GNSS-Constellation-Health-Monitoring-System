@@ -267,7 +267,6 @@ ORBIT_FEED_FILES = "*_tles.json"  # in the bundled data folder: one file of elem
 # A FIRST PROPOSAL for the team to tune: how the cadence picture names a burn pattern.
 BURN_MIN_FOR_PATTERN = 3           # fewer burns of one kind than this: "too few" to call a pattern
 BURN_REGULAR_MAX_IQR_SHARE = 0.25  # "regular" when the spread (IQR) is at most this share of the median interval
-BURN_TIMELINE_RECENT_DAYS = 90     # the burn timeline opens on this many days; the rest is a scroll away
 
 # --- The master map canvas ---
 
