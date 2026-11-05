@@ -22,6 +22,17 @@ button { font: inherit; color: inherit; }
 .home { border: 1px solid var(--edge); border-radius: 999px; background: var(--platform); box-shadow: var(--raised-sm);
   color: var(--muted); padding: 7px 16px; cursor: pointer; font-weight: 600; }
 .home:hover { color: var(--accent); }
+/* on/off switches: off, raised with the knob at the left of its pressed track; on, pressed in with the knob slid
+   right and lit, so the state shows by the knob's side and the depth, not by colour alone */
+.switch { display: inline-flex; align-items: center; gap: 9px; border: 1px solid var(--edge); border-radius: 999px;
+  background: var(--platform); box-shadow: var(--raised-sm); color: var(--muted); padding: 7px 14px 7px 8px; cursor: pointer; font-weight: 600; }
+.switch:hover { color: var(--accent); }
+.switch .knob { position: relative; flex: none; width: 34px; height: 20px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); }
+.switch .knob::after { content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%;
+  background: var(--muted); box-shadow: var(--raised-sm); transition: transform .15s ease; }
+.switch[aria-checked="true"] { background: var(--well); box-shadow: var(--pressed); color: var(--ink); }
+.switch[aria-checked="true"] .knob::after { transform: translateX(14px); background: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .switch .knob::after { transition: none; } }
 .systems { display: flex; flex-wrap: wrap; gap: 6px; }
 .system { border: 1px solid var(--edge); border-radius: 999px; background: var(--platform); box-shadow: var(--raised-sm);
   color: var(--muted); padding: 6px 12px; cursor: pointer; }
@@ -62,8 +73,8 @@ __TIP__
     <button type="button" data-colour="health" aria-pressed="true">Broadcast health</button>
     <button type="button" data-colour="system" aria-pressed="false">System</button>
   </div>
-  <button type="button" class="home" id="tracks" aria-pressed="false">All tracks</button>
-  <button type="button" class="home" id="labels" aria-pressed="false">Names</button>
+  <button type="button" class="switch" id="tracks" role="switch" aria-checked="false"><span class="knob" aria-hidden="true"></span>All tracks</button>
+  <button type="button" class="switch" id="labels" role="switch" aria-checked="false"><span class="knob" aria-hidden="true"></span>Names</button>
   <div class="systems" id="systems" role="group" aria-label="Show and hide systems"></div>
 </div>
 <div class="stage flat" id="stage">
@@ -145,8 +156,11 @@ function strokeLand() {
     ctx.stroke();
   }
 }
+// A regional system's service area, only while it is the one system shown: with others on the map it is clutter.
+const areaFor = shown => shown.length === 1 ? DATA.areas[shown[0]] || null : null;
 function drawArea() {
-  const a = DATA.area;
+  const a = areaFor([...visible]);
+  if (!a) return;
   ctx.setLineDash([5, 4]); ctx.lineWidth = 1; ctx.strokeStyle = C("muted"); ctx.fillStyle = C("muted");
   ctx.font = "11px " + getComputedStyle(document.body).fontFamily; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
   if (viewMode === "flat") {
@@ -163,7 +177,7 @@ function drawArea() {
     if (open) ctx.lineTo(p.x, p.y); else { ctx.moveTo(p.x, p.y); open = true; }
   }
   ctx.stroke();
-  const labelAt = projectGlobe(-15, 80);
+  const labelAt = projectGlobe(a.south + 15, (a.west + a.east) / 2);
   if (labelAt.visible) ctx.fillText(a.label, labelAt.x + 8, labelAt.y + 4);
 }
 function colourOf(sat) {
@@ -318,7 +332,7 @@ function fitFrame() {
 }
 function toggle(id, flip) {
   const button = $(id);
-  button.addEventListener("click", () => { button.setAttribute("aria-pressed", String(flip())); paint(); });
+  button.addEventListener("click", () => { button.setAttribute("aria-checked", String(flip())); paint(); });
 }
 function ready() {
   toggle("tracks", () => (allTracks = !allTracks));
