@@ -4,7 +4,11 @@ Tabler Icons is MIT-licensed: Copyright (c) 2020-2024 Pawel Kuna, https://tabler
 24 x 24 grid with stroke="currentColor", stroke-width 2 (or less), no fill. Only the paths are kept here; the page
 builds the <svg> around them. To add one, copy its <path d="..."> values from the same version, leaving out the
 invisible "M0 0h24v24H0z" frame.
+
+st.html drops inline <svg>, so the pages draw an icon as a mask instead: ui/theme.py puts each icon in MASKED on
+the page as a CSS variable, --ic-<name>, and tag() is the span that shows one in its status colour.
 """
+import base64
 
 TABLER = {
     "tool": ['M7 10h3v-3l-3.5 -3.5a6 6 0 0 1 8 8l6 6a2 2 0 0 1 -3 3l-6 -6a6 6 0 0 1 -8 -8l3.5 3.5'],
@@ -27,6 +31,11 @@ TABLER = {
     "player-play": ['M7 4v16l13 -8z'],
     "planet": ['M18.816 13.58c2.292 2.138 3.546 4 3.092 4.9c-.745 1.46 -5.783 -.259 -11.255 -3.838c-5.47 -3.579 '
                '-9.304 -7.664 -8.56 -9.123c.464 -.91 2.926 -.444 5.803 .805', 'M12 12m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0'],
+    "bell": ['M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6', 'M9 17v1a3 3 0 0 0 6 0v-1'],
+    "alert-triangle": ['M12 9v4', 'M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z', 'M12 16h.01'],
+    "alert-circle": ['M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0', 'M12 8v4', 'M12 16h.01'],
+    "circle-check": ['M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0', 'M9 12l2 2l4 -4'],
+    "check": ['M5 12l5 5l10 -10'],
 }
 
 # Each lifecycle step's icon (the Library's lifecycles); a step not listed has none.
@@ -40,3 +49,22 @@ def svg(name):
     paths = "".join(f'<path d="{d}"/>' for d in TABLER[name])
     return ('<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
             f'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{paths}</svg>')
+
+# Each status's icon (ui/surfaces.py STATUSES), in the notices inbox and in what the checks found.
+STATUS_ICONS = {"ok": "circle-check", "warn": "alert-triangle", "bad": "alert-circle", "idle": "info-circle",
+                "accent": "info-circle"}
+# The icons the stylesheet carries as --ic-<name>: the inbox's bell, its "mark read" tick, and the status icons.
+MASKED = ("bell", "check", *dict.fromkeys(STATUS_ICONS.values()))
+
+
+def mask_url(name):
+    """The icon as a CSS url() of an SVG data URI, for a mask. Base64, so the style block holds no angle bracket."""
+    paths = "".join(f'<path d="{d}"/>' for d in TABLER[name])
+    svg = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" '
+           f'stroke-linecap="round" stroke-linejoin="round">{paths}</svg>')
+    return f'url("data:image/svg+xml;base64,{base64.b64encode(svg.encode()).decode("ascii")}")'
+
+
+def tag(status):
+    """A status's icon as a span in the status's colour. Hidden from screen readers: say the status in words too."""
+    return f'<span class="ic {status}" style="--ic: var(--ic-{STATUS_ICONS[status]})" aria-hidden="true"></span>'

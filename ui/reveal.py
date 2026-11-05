@@ -1,8 +1,9 @@
 """The one expandable section: a header that says what is inside, a chevron, and the details under it.
 
 Every page reads top to bottom in the same order: the headline count, then the tiles or the picture, always in
-view; then the details, each in one of these sections. Notices (warnings) stay in view. Every table sits in a
-section. Tables open closed, except each page's one most important table, which opens by default:
+view; then the details, each in one of these sections. Notices (warnings) go to the notices inbox behind its bell
+(ui/notices.py). Every table sits in a section. Tables open closed, except each page's one most important table,
+which opens by default:
   Overview         the "Measured against limits" table: one per orbit type for NavIC, QZSS and BeiDou-3, one for every
                    satellite for GPS, GLONASS and Galileo, one for the satellites picked under Compare
   Station-keeping  burns per satellite

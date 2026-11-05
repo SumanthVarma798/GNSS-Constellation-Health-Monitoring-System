@@ -4,7 +4,7 @@ Every colour comes from ui/palette.py, every text size from ui/type_scale.py. Th
 """
 from pathlib import Path
 
-from ui import palette, type_scale
+from ui import icons, palette, type_scale
 from ui.tooltip import CARD_CSS
 
 CSS_FILE = Path(__file__).with_name("theme.css")
@@ -33,6 +33,8 @@ VARIABLES = {
     "pressed": "inset -3px -3px 7px var(--lift), inset 4px 4px 9px var(--sink)",
     "r": f"{palette.RADIUS_PX}px",
     **type_scale.variables(),
+    # Icons for CSS masks (ui/icons.py): --ic-bell and the rest.
+    **{f"ic-{name}": icons.mask_url(name) for name in icons.MASKED},
 }
 
 

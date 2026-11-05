@@ -133,7 +133,7 @@ def _place_controls(constellation):
                       help=gs.PLACE_HELP, on_change=_typed, args=(constellation,))
     error = st.session_state.get(f"geo_error_{constellation}")
     if error:
-        surfaces.show(surfaces.notice(error, "bad"))
+        surfaces.show(surfaces.notice(error, "bad", inline=True))
 
 
 def _sky_and_ground(constellation, satellites, own, types, now, mask, window):
@@ -178,7 +178,8 @@ def _trends(constellation, result, names, types, now):
 def _spacing(constellation, satellites):
     groups = analyze_raan_spacing(satellites)
     if not groups:
-        surfaces.show(surfaces.notice("No inclined orbits here share a ground track, so there is no spacing to check.", "idle"))
+        surfaces.show(surfaces.notice("No inclined orbits here share a ground track, so there is no spacing to check.",
+                                      "idle", inline=True))
     for i, group in enumerate(groups):
         card, wheel = st.columns([3, 2], vertical_alignment="center")
         with card:
@@ -193,7 +194,7 @@ def constellation(name, picks, section, choice, mask, window, now):
     """One constellation's part of the page. `picks` limits the satellite-by-satellite pictures (None: all)."""
     if name not in gs.PLACES:   # worked out for the regional systems' key places; GPS, GLONASS, Galileo have none yet
         regional = ", ".join(list(gs.PLACES)[:-1]) + " and " + list(gs.PLACES)[-1]
-        surfaces.show(surfaces.notice(f"Geometry covers {regional} only, not yet {name}.", "idle"))
+        surfaces.show(surfaces.notice(f"Geometry covers {regional} only, not yet {name}.", "idle", inline=True))
         return
     result = data.load(name, st.session_state["window_days"], st.session_state["params"])
     every = list(dict.fromkeys(result["history"]["satellite"]))
@@ -242,4 +243,4 @@ try:
             _heading(name)
         constellation(name, picks, section, choice, mask, window, now)
 except ValueError as error:
-    surfaces.show(surfaces.notice(str(error), "warn"))
+    surfaces.show(surfaces.notice(str(error), "warn", inline=True))

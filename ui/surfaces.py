@@ -35,9 +35,19 @@ def chip(text, status):
     return f'<span class="chip {status}">{escape(text)}</span>'
 
 
-def notice(text, status):
-    """A short message with a coloured edge."""
+def notice(text, status, inline=False):
+    """A short message for the reader.
+
+    By default it goes to the notices inbox (ui/notices.py), out of the page's way, and "" is returned, which show()
+    skips. inline=True returns it as a box with a coloured edge, for the page itself: for a message that stands in
+    for what the page could not draw (an error, an empty choice, a system the page does not cover).
+    """
     _check_status(status)
+    if not inline:
+        from ui import notices
+
+        notices.post(text, status)
+        return ""
     return f'<div class="notice {status}" role="status">{escape(text)}</div>'
 
 
@@ -148,7 +158,8 @@ def picture(html):
 
 
 def show(html):
-    """Put an HTML string on the page."""
+    """Put an HTML string on the page. An empty one (a notice sent to the inbox) draws nothing."""
     import streamlit as st
 
-    st.html(html)
+    if html:
+        st.html(html)

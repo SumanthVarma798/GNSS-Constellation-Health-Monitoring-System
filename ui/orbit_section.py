@@ -113,7 +113,7 @@ def _status_cards(rows, positions):
     """Cards for every satellite not in its slot, or one line saying all are."""
     away = [row for row in rows if row["state"] != palette.SLOT_IN]
     if not away:
-        st.html(surfaces.notice("Every satellite is in its own slot.", "ok"))
+        st.html(surfaces.notice("Every satellite is in its own slot.", "ok", inline=True))
     for row in away:
         st.html(_card(row, positions.get(row["name"])))
 
@@ -137,7 +137,8 @@ def attempt(picture, draw, *args):
     try:
         return draw(*args)
     except Exception as error:
-        st.html(surfaces.notice(f"The {picture} could not be drawn: {type(error).__name__}: {error}", "warn"))
+        st.html(surfaces.notice(f"The {picture} could not be drawn: {type(error).__name__}: {error}", "warn",
+                                inline=True))
         return None
 
 
@@ -184,7 +185,8 @@ def render_slot_pictures(health_df, set_aside_names, slot_of, history=None, cons
     if rows is None:
         return
     if not rows:
-        st.html(surfaces.notice(f"No {constellation or 'tracked'} satellite has a slot to compare against.", "idle"))
+        st.html(surfaces.notice(f"No {constellation or 'tracked'} satellite has a slot to compare against.", "idle",
+                                inline=True))
         return
     attempt("3D view and status cards", _top, rows, positions)
     render_belt(rows)
