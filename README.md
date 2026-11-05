@@ -486,7 +486,7 @@ Customizable through sidebar:
 ## 📝 License & Credits
 
 Code: Apache License 2.0 ([LICENSE](LICENSE)). The project's own data: CC BY 4.0
-([LICENSE-DATA](LICENSE-DATA)). Copyright 2026 The OpenGNSS contributors.
+([LICENSE-DATA](LICENSE-DATA)). Copyright 2026 Adithya Pani, Aditya Jhunjhunwala, Krishi Tiwari, Sumanth Varma Vitrouthu and the OpenGNSS contributors.
 
 Data from Space-Track.org, CelesTrak, GCAT, the IGS and Natural Earth keeps its owners'
 terms; [NOTICE](NOTICE) lists which files are which and how to credit each.
