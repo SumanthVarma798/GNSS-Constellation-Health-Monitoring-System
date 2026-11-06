@@ -130,7 +130,7 @@ def test_the_overview_groups_satellites_by_orbit_type_each_with_its_table():
 
     assert groups(at) == ["GEO", "IGSO"]
     tables = table_rows(at)
-    assert len(tables[0]) == 8 and "IRNSS-1D" in tables[0]   # orbit record age: every satellite, set-aside too
+    assert len(tables[0]) == 9 and {"IRNSS-1D", "NVS-03"} <= set(tables[0])   # orbit record age: every satellite, set-aside and not yet in the data too
     assert tables[1:3] == [["IRNSS-1C", "IRNSS-1F", "IRNSS-1G", "NVS-01"],
                            ["IRNSS-1B", "IRNSS-1E", "IRNSS-1I"]]   # IRNSS-1D is set aside
     assert len(tables[3]) == 8   # how each was classed from the window, the set-aside one too

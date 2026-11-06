@@ -2,6 +2,7 @@
 
 These drive the real app (app.py) without a browser, as tests/test_golden_scores.py does.
 """
+import re
 from datetime import datetime
 from pathlib import Path
 
@@ -27,10 +28,19 @@ def run_dashboard(load_data, then_interact=False):
         return [notice.value for notice in [*at.warning, *at.info]]
 
 
+def missing_orbit_data(notices):
+    """The tracked satellites the notices say have no orbit data."""
+    found = (re.findall(r"No orbit data for \d+ tracked satellite\(s\):\*\* ([^.]*)\.", text) for text in notices)
+    return {name.strip() for names in found for each in names for name in each.split(",")}
+
+
 def test_no_notice_when_nothing_is_left_out():
     warnings = run_dashboard(load_data=True)
 
-    assert not any("Left out" in text or "No orbit data" in text for text in warnings)
+    assert not any("Left out" in text for text in warnings)
+    # NVS-03 joined the dashboard on 6 Nov 2026, after the frozen date, so the bundled data cannot hold it until the
+    # next weekly update fetches its history.
+    assert missing_orbit_data(warnings) <= {"NVS-03"}
 
 
 def test_a_tracked_satellite_missing_from_the_registry_is_named_on_the_page(monkeypatch):
@@ -44,7 +54,7 @@ def test_a_tracked_satellite_with_no_orbit_data_is_named_on_the_page(monkeypatch
 
     warnings = run_dashboard(load_data=True)
 
-    assert any("No orbit data for 1 tracked satellite(s):** NVS-02" in text for text in warnings)
+    assert "NVS-02" in missing_orbit_data(warnings)
     assert not any("IRNSS-1D" in text and "No orbit data" in text for text in warnings)   # set aside for its orbit, not missing
 
 

@@ -43,7 +43,9 @@ def test_a_sighting_reaches_the_map_marked_as_one(real):
              "catalogue_no": "101228", "signal_id_now": "", "plane": "", "slot": "",
              "note": "Launched 2026-10-30; NVS-03 (IRNSS-1L)"}
     # CelesTrak's name carries a bracket, as BeiDou names carry their signal ID; here it is another name.
-    page = master_map_html({**real, "sightings": [nvs03], "feed_names": {**real["feed_names"], 101228: "NVS-03 (IRNSS-1L)"}})
+    untracked = [row for row in real["tracked"] if row["svn"] != "I-101228"]   # the dashboard tracks it now; here it is only seen
+    page = master_map_html({**real, "sightings": [nvs03], "tracked": untracked,
+                            "feed_names": {**real["feed_names"], 101228: "NVS-03 (IRNSS-1L)"}})
     payload = json.loads(re.search(r'id="map-data">(.*?)</script>', page, re.S).group(1))
     record = payload["records"][-1]
     assert (record["svn"], record["name"], record["sighting"]) == ("I-101228", "NVS-03 (IRNSS-1L)", SIGHTING_NOTE)
