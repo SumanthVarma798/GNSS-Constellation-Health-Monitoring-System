@@ -6,7 +6,8 @@ for each source belong in the source table, not here.
 import csv
 from datetime import datetime, timezone
 
-from evidence.settings import CANDIDATE_SOCIAL_KIND, CANDIDATE_WORKED, CANDIDATE_X_KIND, SOURCE_CANDIDATES_FILE
+from evidence.settings import (CANDIDATE_SOCIAL_KIND, CANDIDATE_WORKED, CANDIDATE_X_KIND, RECENT_LAUNCH_DAYS,
+                               SOURCE_CANDIDATES_FILE)
 
 # International GNSS Service: which physical satellite is which, with history.
 IGS_SATELLITE_METADATA_URL = "https://files.igs.org/pub/station/general/igs_satellite_metadata.snx"
@@ -26,6 +27,12 @@ CELESTRAK_BEIDOU_URL = "https://celestrak.org/NORAD/elements/gp.php?GROUP=beidou
 # 170 objects. Never TLE: CelesTrak ran out of 5-digit catalogue numbers on 11 Jul 2026, and
 # newer objects cannot be written as TLE. CelesTrak asks for one download per 2 hours at most.
 CELESTRAK_GNSS_URL = "https://celestrak.org/NORAD/elements/gp.php?GROUP=gnss&FORMAT=json"
+
+# Space-Track: payloads launched in the last RECENT_LAUNCH_DAYS days and still in orbit, in a period range wide enough to
+# hold every navigation orbit (evidence/recent_launches.py picks them out). Needs a login, so it is read by
+# evidence/recent_launches.py, not fetched like the rest; the address is what the archive files the copy under.
+SPACE_TRACK_RECENT_LAUNCHES_URL = ("https://www.space-track.org/basicspacedata/query/class/satcat/CURRENT/Y/OBJECT_TYPE/PAYLOAD"
+                                   f"/LAUNCH/%3Enow-{RECENT_LAUNCH_DAYS}/PERIOD/600--1500/orderby/NORAD_CAT_ID/format/json")
 
 # Galmon: signals heard live by a volunteer-run receiver network.
 # On hold: do not read it until its maintainer has been told.
@@ -81,6 +88,8 @@ ARCHIVED_SOURCES = {
     "social": [row["address"] for row in working_candidates() if row["kind"] == CANDIDATE_SOCIAL_KIND],
     # X accounts, read through a paid API (evidence/x_reader.py), not fetched from x.com. Each post is the account's own.
     "x": [row["address"] for row in working_candidates() if row["kind"] == CANDIDATE_X_KIND],
+    # Payloads Space-Track has tracked lately: a new navigation satellite shows here before the IGS file lists it.
+    "launches": [SPACE_TRACK_RECENT_LAUNCHES_URL],
 }
 # Groups read from the candidate list: provisional sources, archived before the team grades them.
 PROVISIONAL_GROUPS = ("news", "social", "x")

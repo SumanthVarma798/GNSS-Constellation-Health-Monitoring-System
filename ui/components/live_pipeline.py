@@ -29,7 +29,8 @@ _OVERVIEW_SAFE_MARGIN = 36
 _RUN_NUMBER = re.compile(r"/actions/runs/(\d+)")
 _FAILED_SOURCES = re.compile(r"failed:\s*(\d+)\s+of\s+(\d+)\s+sources")
 _STATE_TONE = {"running now": "info", "done": "ok", "failed": "bad", "waiting": "warn", "off": "idle"}
-_COLLECT = ["archive_documents", "archive_catalogues", "archive_orbital", "archive_news", "archive_social"]
+_COLLECT = ["archive_documents", "archive_catalogues", "archive_orbital", "archive_news", "archive_social",
+            "archive_launches"]
 _CHAIN = ["archive", "registry_update", "decision_waiting", "decision_made", "merged_main", "dashboard"]
 _WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 _EVENT_DRIVEN_KEYS = {"decision_waiting", "decision_made", "merged_main", "dashboard"}

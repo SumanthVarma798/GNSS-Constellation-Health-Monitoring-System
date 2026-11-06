@@ -13,6 +13,7 @@ CHECKS = [
     ("archive-news", "Archive: news"),
     ("archive-social", "Archive: social"),
     ("archive-x", "Archive: X posts"),
+    ("archive-launches", "Archive: recent launches"),
     ("registry-update", "Registry update"),
     ("source-record", "Source record"),
     ("update-tle-data", "Update orbit data"),
