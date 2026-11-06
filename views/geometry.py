@@ -208,7 +208,7 @@ def constellation(name, picks, section, choice, mask, window, now):
         return
     result = data.load(name, st.session_state["window_days"], st.session_state["params"])
     every = list(dict.fromkeys(result["history"]["satellite"]))
-    counted = gd.chosen_satellites(every, result["set_aside"], choice)
+    counted = gd.chosen_satellites(every, [*result["set_aside"], *result.get("moving", {})], choice)
     left_out = [n for n in every if n not in counted]
     if left_out:
         surfaces.show(surfaces.notice(f"Left out as not in service: {', '.join(left_out)}", "idle"))

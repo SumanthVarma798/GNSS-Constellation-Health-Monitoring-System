@@ -264,7 +264,7 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
                                        drift_tolerance_gso=0.05, drift_tolerance_igso=2.0,
                                        service_requirements=None,
                                        constellation_name=None,
-                                       pattern_maneuvers=None, pattern_df=None):
+                                       pattern_maneuvers=None, pattern_df=None, commissioned=None):
     """
     Comprehensive health assessment for a satellite including drift analysis.
     
@@ -354,7 +354,7 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
     # Get commission/active date from config if available
     commission_date = None
     try:
-        comm_raw = COMMISSION_DATES.get(sat_name)
+        comm_raw = COMMISSION_DATES.get(sat_name, commissioned)   # a date kept by hand wins over the one worked out
         if comm_raw is not None:
             cd = pd.to_datetime(comm_raw)
             # Ensure timezone-naive so comparisons with GP history epochs don't fail

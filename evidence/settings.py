@@ -110,9 +110,12 @@ REGISTRY_SIGNAL_ID_COLUMNS = ["svn", "signal_id", "valid_from", "valid_to", "not
 # satellites.csv's columns, each under a stand-in SVN (system letter, "-", catalogue number). A row leaves when the
 # IGS file lists its catalogue number.
 REGISTRY_SIGHTINGS_FILE = "sightings.csv"
-# CelesTrak names that make a sighting, by system.
-# ponytail: NavIC only, as IGS took weeks to list NVS-03; add a system here if IGS is ever that slow for it.
-SIGHTING_NAMES = {"NavIC": r"^(IRNSS|NVS)-"}
+# CelesTrak names that make a sighting, by system: how its GNSS group names each system's satellites today (GPS
+# "GPS BIII-9 (PRN 01)", GLONASS "COSMOS 2620 (709K)", Galileo "GSAT0234 (GALILEO 34)", BeiDou "BEIDOU-3 M23 (C45)", QZSS
+# "QZS-6 (QZSS/PRN 200)", NavIC "NVS-03 (IRNSS-1L)"). The augmentation satellites in the group (EGNOS, WAAS, GAGAN, SDCM)
+# belong to none of these and match none. The IGS file took weeks to list NVS-03; it can be as slow for any system.
+SIGHTING_NAMES = {"GPS": r"^GPS ", "GLONASS": r"^COSMOS \d+ \(", "Galileo": r"^GSAT0\d+", "BeiDou": r"^BEIDOU-",
+                  "QZSS": r"^QZS-", "NavIC": r"^(IRNSS|NVS)-"}
 
 # Space-Track lists a new payload as soon as it is tracked, weeks before the IGS file does. It says the object exists,
 # not that it is a navigation satellite or whose, so a payload launched in the last RECENT_LAUNCH_DAYS days is only

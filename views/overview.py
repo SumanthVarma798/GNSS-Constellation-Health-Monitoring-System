@@ -59,6 +59,10 @@ def _tiles(result, tags=None):
         html = surfaces.tile(name, slot=palette.SLOT_LEFT, slot_status=CHIP_STATUS[palette.SLOT_LEFT],
                              age_html=tags.get(name, ""))
         tiles[name] = (html, False, None)
+    for name in result.get("moving", {}):
+        html = surfaces.tile(name, slot="moving to its slot, on purpose", slot_status="accent", unscored="on its way",
+                             age_html=tags.get(name, ""))
+        tiles[name] = (html, False, None)
     return tiles, rows
 
 
@@ -70,7 +74,13 @@ def _gaps(constellation, result, today):
     """Notices for what is missing, so that nothing is left out in silence."""
     if new := new_on_dashboard(constellation, today):
         surfaces.show(surfaces.notice(new, "accent"))
-    shown = set(result["health"]["Satellite"]) | set(result["set_aside"])
+    moving = result.get("moving", {})
+    if moving:
+        named = ", ".join(f"{name} (first orbit record {_day(since)})" for name, since in moving.items())
+        surfaces.show(surfaces.notice(
+            f"On its way to its slot, on purpose: {named}. A new satellite is raised and drifted along the belt for "
+            "weeks, so its drift and burns are expected. It is left out of the scores until its orbit settles.", "accent"))
+    shown = set(result["health"]["Satellite"]) | set(result["set_aside"]) | set(moving)
     no_data = [name for name, norad in SATELLITES[constellation].items() if norad is not None and name not in shown]
     unlisted = TRACKED_NOT_IN_REGISTRY[constellation]
     for text in (*result["warnings"],
@@ -95,7 +105,7 @@ def _period(result, window, window_days, today):
     spans = [str(p).split(" to ") for p in result["health"].get("Pattern Analysis Period", []) if " to " in str(p)]
     year = (f'<span>scores read {_day(min(a for a, _ in spans))} to {_day(max(b for _, b in spans))}</span>'
             if spans else "")
-    shown = window[~window["satellite"].isin(result["set_aside"])]
+    shown = window[~window["satellite"].isin([*result["set_aside"], *result.get("moving", {})])]
     legend = tooltip.legend(
         [("var(--fill)", f"{label} {weight}%") for label, weight in limits.SCORE_WEIGHTS]
         + [(f"var(--{STATUS_CHIP[word]})", f"{word} from {low}" if low else f"{word} under {limits.STATUS_FROM[i - 1][1]}")
@@ -164,7 +174,7 @@ def constellation(name, window_days, params):
     tags = orbit_age.tags(name, result)
     tiles, rows = _tiles(result, tags)
     healthy = sum(healthy for _, healthy, _ in tiles.values())
-    surfaces.show(f'<div class="head"><span class="big num">{healthy} of {len(tiles)}</span>'
+    surfaces.show(f'<div class="head"><span class="big num">{healthy} of {len(tiles) - len(result.get("moving", {}))}</span>'
                   '<span class="muted">healthy and in their slot</span></div>')
     official = official_status.line(name)
     if official:

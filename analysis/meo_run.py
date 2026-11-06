@@ -67,6 +67,7 @@ def assess_meo(constellation, now, window_days=90, params=None, fresh=None):
     return {
         "health": health,
         "set_aside": [],
+        "moving": {},
         "history": history,
         "burns": _burns(history, {**DEFAULT_PARAMS, **(params or {})}),
         "data_time": bundled["timestamp"] if bundled["available"] else latest.isoformat(),
