@@ -1,6 +1,22 @@
 {
- "generated_at": "2026-11-06T11:35:10Z",
+ "generated_at": "2026-11-06T19:45:06Z",
  "items": [
+  {
+   "address": "https://rntfnd.org/2026/11/06/galileo-onsma-impacted-by-jamming-finnish-geospatial-research-institute/",
+   "category": "signal and service",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-06T19:43:25Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "Resilient Navigation and Timing Foundation",
+   "published_at": "2026-11-06T11:37:02Z",
+   "source_id": "rntfnd.org",
+   "summary": "Image: GPSThreatMap.com What’s new: A paper from Finland examining GNSS disruption found that strong jamming can overcome and degrade Galileo’s Open Navigation Service Message Authentication (ONSMA). Why it’s important: ONSMA is intended to make signals more resilient and much less subject to…",
+   "title": "Galileo ONSMA impacted by jamming: Finnish Geospatial Research Institute",
+   "via": "https://rntfnd.org/feed/"
+  },
   {
    "address": "https://www.space.com/space-exploration/on-this-day-in-space-november-5-2026",
    "category": "other",
