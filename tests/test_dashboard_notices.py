@@ -10,6 +10,8 @@ import time_machine
 from streamlit.testing.v1 import AppTest
 
 import config.config
+from evidence.registry_tables import read_table
+from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE
 from test_golden_scores import GOLDEN
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -34,13 +36,17 @@ def missing_orbit_data(notices):
     return {name.strip() for names in found for each in names for name in each.split(",")}
 
 
+def added_after_the_frozen_date():
+    frozen = GOLDEN["frozen_utc"][:10]
+    return {row["dashboard_name"] for row in read_table(REGISTRY_DASHBOARD_SATELLITES_FILE) if row["added"] > frozen}
+
+
 def test_no_notice_when_nothing_is_left_out():
     warnings = run_dashboard(load_data=True)
 
     assert not any("Left out" in text for text in warnings)
-    # NVS-03 joined the dashboard on 6 Nov 2026, after the frozen date, so the bundled data cannot hold it until the
-    # next weekly update fetches its history.
-    assert missing_orbit_data(warnings) <= {"NVS-03"}
+    # A satellite the registry added after the frozen date cannot be in the frozen bundled data.
+    assert missing_orbit_data(warnings) <= added_after_the_frozen_date()
 
 
 def test_a_tracked_satellite_missing_from_the_registry_is_named_on_the_page(monkeypatch):

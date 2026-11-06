@@ -1,4 +1,5 @@
 """The registry tables: built correctly from a sample, and sound as committed."""
+import re
 import sys
 from collections import Counter
 from datetime import date
@@ -269,10 +270,20 @@ def test_celestrak_names_the_igs_file_lacks_become_sightings_until_the_igs_file_
              {"NORAD_CAT_ID": 99999, "OBJECT_NAME": "GPS BIII-9 (PRN 01)"}]
 
     rows, reads, listed = build_registry.sightings_update([], igs, group)
-    assert rows == [list(SIGHTED.values())] and set(reads) == {"I-101228"} and listed == {}
+    assert SIGHTED in [dict(zip(SIGHTED, row)) for row in rows] and set(reads) == {"I-101228", "G-99999"} and listed == {}
     assert build_registry.sightings_update([SIGHTED], igs, None)[0] == [list(SIGHTED.values())]  # CelesTrak down
-    assert build_registry.sightings_update([SIGHTED], igs + [{"svn": "I012", "catalogue_no": "101228"}], group) == (
-        [], {}, {"I-101228": "I012"})
+    listed_now = build_registry.sightings_update([SIGHTED], igs + [{"svn": "I012", "catalogue_no": "101228"}], group)
+    assert listed_now[2] == {"I-101228": "I012"} and set(listed_now[1]) == {"G-99999"}
+
+
+def test_every_system_has_a_name_that_makes_a_sighting_and_the_augmentation_satellites_have_none():
+    named = {"GPS": "GPS BIII-9 (PRN 01)", "GLONASS": "COSMOS 2620 (709K)", "Galileo": "GSAT0234 (GALILEO 34)",
+             "BeiDou": "BEIDOU-3 M23 (C45)", "QZSS": "QZS-6 (QZSS/PRN 200)", "NavIC": "NVS-03 (IRNSS-1L)"}
+    for system, name in named.items():
+        matches = [other for other, pattern in build_registry.SIGHTING_NAMES.items() if re.match(pattern, name)]
+        assert matches == [system], (name, matches)
+    for name in ("GSAT-10 (GAGAN/PRN 128)", "ASTRA 5B (EGNOS/PRN 123)", "LUCH 5A (SDCM/PRN 140)", "SES-15 (WAAS/PRN 133)"):
+        assert not any(re.match(pattern, name) for pattern in build_registry.SIGHTING_NAMES.values()), name
 
 
 def test_a_sighting_is_tracked_after_its_system_and_moves_to_the_igs_svn_once_listed():

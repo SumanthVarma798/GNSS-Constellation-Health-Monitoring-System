@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 from skyfield.api import EarthSatellite, load, wgs84
 
+from analysis import commissioning
 from analysis.dop_calculations import parse_tle_data
 from analysis.drift_analysis import calculate_longitudinal_drift
 from analysis.health_assessment import assess_satellite_health_with_drift
@@ -249,14 +250,21 @@ def _add_longitude(health_df, satellites_dop, now, warnings):
             warnings.append(f"Longitude calculation failed for {sat_name}: {e}")
 
 
-def _burns(df_all_full, p):
-    """One row per detected manoeuvre in each satellite's whole bundled history."""
+def _burns(df_all_full, p, moving=()):
+    """One row per detected manoeuvre in each satellite's whole bundled history.
+
+    A satellite on its way to its slot has none yet, and one that has parked has none from before it parked:
+    the burns that raised it are not station-keeping.
+    """
     rows = []
     for sat_name in df_all_full['satellite'].unique():
+        if sat_name in moving:
+            continue
         sat_df = df_all_full[df_all_full['satellite'] == sat_name].sort_values('EPOCH').reset_index(drop=True)
+        parked = commissioning.commissioned_on(df_all_full, sat_name)
         det = _detect(sat_df, p)
         for i in det.index[det['MANEUVER']]:
-            if i == 0:
+            if i == 0 or (parked is not None and det.at[i, 'EPOCH'] < parked):
                 continue
             for flag, kind in (('EW_MANEUVER', 'east-west'), ('NS_MANEUVER', 'north-south')):
                 if det.at[i, flag]:
@@ -283,7 +291,8 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
     `fresh` ({norad: [history rows]}, from data.celestrak) is merged onto the bundled history, and
     the newest of those rows places the satellite for the longitude step.
 
-    Returns {'health', 'set_aside', 'history', 'burns', 'data_time', 'warnings'}.
+    Returns {'health', 'set_aside', 'moving', 'history', 'burns', 'data_time', 'warnings'}. `moving` is {satellite: day of
+    its first orbit record} for each new one still being moved to its slot (analysis/commissioning.py): left out of the scores.
     Raises ValueError for an unknown constellation, no bundled data, or no records in the window.
     """
     if constellation not in _CONSTELLATIONS:
@@ -316,13 +325,14 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
     if df_all.empty:
         raise ValueError(f"No bundled {constellation} data between {start_date} and {end_date}")
     graveyard_sats = get_graveyard_satellites(df_all)
-    df_all = df_all[~df_all['satellite'].isin(graveyard_sats)]
+    moving = commissioning.moving_to_slot(df_all_full, now)   # new, and still being moved to its slot on purpose
+    df_all = df_all[~df_all['satellite'].isin(graveyard_sats | set(moving))]
 
     # Pattern analysis over the 365 days up to `now`, from the unfiltered bundled history
     pattern_start_ts = pd.Timestamp((now - timedelta(days=365)).strftime("%Y-%m-%d"))
     pattern_end_ts = pd.Timestamp(now.strftime("%Y-%m-%d"))
     pattern_data = {}
-    for sat_name in [s for s, n in sat_dict.items() if n is not None]:
+    for sat_name in [s for s, n in sat_dict.items() if n is not None and s not in moving]:
         try:
             sat_df = df_all_full[df_all_full['satellite'] == sat_name].copy()
             if sat_df.empty:
@@ -386,6 +396,7 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
             constellation_name=constellation,
             pattern_maneuvers=health_maneuvers,
             pattern_df=health_sat_df,
+            commissioned=commissioning.commissioned_on(df_all_full, sat_name),
         ))
     health_df = pd.DataFrame(health_assessments)
 
@@ -405,8 +416,9 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
     return {
         'health': health_df,
         'set_aside': sorted(graveyard_sats),
+        'moving': {name: moving[name].strftime('%Y-%m-%d') for name in sorted(moving)},
         'history': df_all_full,
-        'burns': _burns(df_all_full, p),
+        'burns': _burns(df_all_full, p, moving),
         'data_time': gp_meta['timestamp'],
         'warnings': warnings,
     }

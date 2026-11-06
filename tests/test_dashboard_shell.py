@@ -12,6 +12,7 @@ import time_machine
 from streamlit.testing.v1 import AppTest
 from streamlit.testing.v1.element_tree import ButtonGroup
 
+from config.config import NAVIK_SATS
 from data import celestrak, spacetrack
 from test_celestrak import IRNSS_1B
 from test_golden_scores import GOLDEN
@@ -130,7 +131,7 @@ def test_the_overview_groups_satellites_by_orbit_type_each_with_its_table():
 
     assert groups(at) == ["GEO", "IGSO"]
     tables = table_rows(at)
-    assert len(tables[0]) == 9 and {"IRNSS-1D", "NVS-03"} <= set(tables[0])   # orbit record age: every satellite, set-aside and not yet in the data too
+    assert len(tables[0]) == len(NAVIK_SATS) and "IRNSS-1D" in tables[0]   # orbit record age: every satellite, set-aside and not yet in the data too
     assert tables[1:3] == [["IRNSS-1C", "IRNSS-1F", "IRNSS-1G", "NVS-01"],
                            ["IRNSS-1B", "IRNSS-1E", "IRNSS-1I"]]   # IRNSS-1D is set aside
     assert len(tables[3]) == 8   # how each was classed from the window, the set-aside one too

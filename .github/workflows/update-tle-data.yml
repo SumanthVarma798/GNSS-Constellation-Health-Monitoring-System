@@ -10,8 +10,17 @@ on:
   schedule:
     - cron: '0 0 * * 0'
   
+  # A registry change that adds a satellite to the dashboard fetches its history now, not on the next Sunday
+  push:
+    branches: [main]
+    paths: [registry/dashboard_satellites.csv]
+
   # Allow manual trigger from GitHub UI
   workflow_dispatch:
+
+concurrency:
+  group: update-tle-data  # two runs at once would race to push the same files
+  cancel-in-progress: false
 
 permissions:
   contents: write  # Explicitly grant write permissions

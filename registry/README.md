@@ -49,7 +49,7 @@ signal ID **and** the time, never on the signal ID alone.
 
 The IGS file can take weeks to list a new satellite. Each week the build script also reads
 CelesTrak's GNSS group, and a satellite named as in `SIGHTING_NAMES` (`evidence/settings.py`;
-NavIC only for now) whose catalogue number the IGS file lacks is proposed here, in the
+every system) whose catalogue number the IGS file lacks is proposed here, in the
 columns of `satellites.csv`, under a stand-in SVN: the system letter, a dash and the catalogue
 number (`I-101228`). Approving it also adds it to `dashboard_satellites.csv`. Once the IGS file
 lists that catalogue number, the row leaves this table and the dashboard row moves to the

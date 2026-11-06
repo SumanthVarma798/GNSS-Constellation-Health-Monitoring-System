@@ -7,6 +7,9 @@ material holds every other question's facts.
 """
 import re
 
+from evidence.registry_tables import read_table
+from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE
+
 NOT_IN_MATERIAL = ("isn't in the project's material", "is not in the project's material")
 
 QUESTIONS = [
@@ -37,7 +40,7 @@ QUESTIONS = [
     {"question": "Where does each archive run write its log line?",
      "facts": [("runs/archive.csv",)]},
     {"question": "How many satellites does the dashboard track?",
-     "facts": [("114",)]},
+     "facts": [(str(len(read_table(REGISTRY_DASHBOARD_SATELLITES_FILE))),)]},
     {"question": "How do I check that the RINEX check is working?",
      "facts": [("orbit-checks",), ("rinex-check",)]},
     {"question": "Where does the console run, and what does the hosting cost?",
