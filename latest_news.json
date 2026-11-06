@@ -1,6 +1,55 @@
 {
- "generated_at": "2026-11-06T19:45:06Z",
+ "generated_at": "2026-11-06T19:46:04Z",
  "items": [
+  {
+   "address": "https://x.com/Stellarixorine/status/2118757733117935776",
+   "category": "other",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-11-06T19:45:50Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "Stellarix (@Stellarixorine)",
+   "published_at": "2026-11-06T17:29:42Z",
+   "source_id": "x.com/Stellarixorine",
+   "summary": "🚀 Ever wondered what it takes to power humanity's journey into the cosmos? From the roaring launchpad to the deepest corners of the universe, space missions are the ultimate testament to human engineering and curiosity! 🌌 This incredible infographic breaks down the 10 core technologies driving…",
+   "title": "🚀 Ever wondered what it takes to power humanity's journey into the cosmos? From the roaring launchpad to the deepest…",
+   "via": "https://x.com/Stellarixorine"
+  },
+  {
+   "address": "https://x.com/Stellarixorine/status/2118748895559987529",
+   "category": "other",
+   "constellations": [
+    "GPS",
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-06T19:45:50Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "Stellarix (@Stellarixorine)",
+   "published_at": "2026-11-06T16:54:35Z",
+   "source_id": "x.com/Stellarixorine",
+   "summary": "From Aqua to Ziyuan-3, the universe of space technology is closer than you think! 🛰️✨ Ever wondered about the incredible machinery orbiting right above us? This ultimate A to Z guide breaks down the remarkable satellites charting our world and deep space. From legendary deep-space explorers like the…",
+   "title": "From Aqua to Ziyuan-3, the universe of space technology is closer than you think! 🛰️✨ Ever wondered about the…",
+   "via": "https://x.com/Stellarixorine"
+  },
+  {
+   "address": "https://x.com/ispaceflight_in/status/2118700460450480384",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-06T19:46:04Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "indianspaceflight.in (@iSpaceFlight_in)",
+   "published_at": "2026-11-06T13:42:07Z",
+   "source_id": "x.com/iSpaceFlight_in",
+   "summary": "You can actually see NVS-02 (I11) in the NavIC broadcast data now. It flips to HEALTHY for about 3 hours a day, then goes back to NOT_IN_SERVICE: 5 Nov: 4:20 – 7:20 pm IST 6 Nov: 2:20 – 5:20 pm IST During that window URA drops to 2–4 m. Outside it, URA sits at 8192 m (do-not-use). Data: IGS BRDM…",
+   "title": "You can actually see NVS-02 (I11) in the NavIC broadcast data now. It flips to HEALTHY for about 3 hours a day, then…",
+   "via": "https://x.com/iSpaceFlight_in"
+  },
   {
    "address": "https://rntfnd.org/2026/11/06/galileo-onsma-impacted-by-jamming-finnish-geospatial-research-institute/",
    "category": "signal and service",
@@ -2649,22 +2698,6 @@
    "source_id": "moneycontrol.com",
    "summary": "",
    "title": "ISRO launches GSLV-F18 rocket carrying NVS-03 satellite to strengthen NavIC",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMi0wFBVV95cUxNVjBXWUY5djNzWEl4Umo0VVFfV2dHSGE5RVl0YTdQczQ2ekRHYnk2NVZDMmUwdW5yNnBfZS1HODQ2LXNycExMV0FfT0tid21ic3ppeW1GdkU4cmNtUW1RcjNudDUxbFNUTFpWNUhoTzRINkExRk1nVzlQWUU4QXBJR2Z1VVZEQkg1bW1hRW9lUjVnWUE0SnVhdWxTZFF4R1NtaDNpVjhYcnVfclB1ZmVJczhUTC1xcGg0SjN2Zmh0RFB0YlQxclo0S190SUxyQ0gtN0tv?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-11-01T16:27:16Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "The Economic Times",
-   "published_at": "2026-10-30T18:28:05Z",
-   "source_id": "m.economictimes.com",
-   "summary": "",
-   "title": "LIVE: ISRO launches NavIC satellite NVS-03 aboard GSLV-F18 from Sriharikota",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -7332,7 +7365,6 @@
    "address": "https://news.google.com/rss/articles/CBMilAFBVV95cUxNY0NPR1o0aG5YenNkLXIwQjJaczRsVk5sMG1BcVgwRVpqcE5NLWlhUUxrNk8zU1ExRWtGNHBuVm8tRlJzWG9hVlAtaU5TdlQ1LTluVnh4U0cyekRCVW4tLXJhVU1Vb0g3amtKSDFSQk8yS3RLYmFJRnYzVkg0RGEtWm5NX25VdHJNMDBhTXBfVFVmU0ly?oc=5",
    "category": "other",
    "constellations": [
-    "GPS",
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
@@ -7344,22 +7376,6 @@
    "summary": "",
    "title": "Iran Abandons US GPS for China’s BeiDou, Redrawing the Strategic Map of Middle East Electronic Warfare",
    "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMijAFBVV95cUxNN3pkUmNadUxvSllOcmN3WEdPWTY3UDNZZzZ2N2xlUUtGYlBqbm83c2FGaVoybzBWSzRDOFR6b0E4LXgweUtmZ2dIYkVCMHlLUWFab0pyVDJXcXczOExYMkdsZDBmWm5EdWE0bHR3NXFrR2dzbV94cXp6dnNMVUl0QzJaVmYzc2RlSVl6cA?oc=5",
-   "category": "other",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Spatial Source",
-   "published_at": "2026-01-29T08:00:00Z",
-   "source_id": "spatialsource.com.au",
-   "summary": "",
-   "title": "Second-last GPS III-series satellite reaches orbit",
-   "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE9XMU0tbnVqS0I5WFVKYjI1WHdOOHc2VDNRUWNyN25CeEJ3S2NtanNCNjRUT2ktcm5MV24xNmFQaHpWYjJJeWhqenZ2Rl9LOTE0UWNr?oc=5",
