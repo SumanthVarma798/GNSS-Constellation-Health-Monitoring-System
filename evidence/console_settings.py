@@ -19,6 +19,8 @@ JOBS = [
     ("archive.yml", "orbital", "Archive: orbit records", "Copies CelesTrak's GNSS orbit records", "archive orbital"),
     ("archive.yml", "news", "Archive: news", "Copies news, official pages and newsletters", "archive news"),
     ("archive.yml", "social", "Archive: social", "Copies Reddit feeds, for the links they carry", "archive social"),
+    ("archive.yml", "launches", "Archive: recent launches", "Copies Space-Track's list of payloads launched lately",
+     "archive launches"),
     ("registry-update.yml", "", "Registry update", "Rebuilds the satellite tables from the IGS file; proposes any change",
      "registry update"),
     ("orbit-ages.yml", "", "Orbit ages", "Measures each satellite's orbit record age; Space-Track fills in old ones",

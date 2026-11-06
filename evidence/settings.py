@@ -114,6 +114,18 @@ REGISTRY_SIGHTINGS_FILE = "sightings.csv"
 # ponytail: NavIC only, as IGS took weeks to list NVS-03; add a system here if IGS is ever that slow for it.
 SIGHTING_NAMES = {"NavIC": r"^(IRNSS|NVS)-"}
 
+# Space-Track lists a new payload as soon as it is tracked, weeks before the IGS file does. It says the object exists,
+# not that it is a navigation satellite or whose, so a payload launched in the last RECENT_LAUNCH_DAYS days is only
+# picked out by its orbit: (name, period in minutes, inclination in degrees). A person decides what it is.
+# ponytail: geostationary navigation satellites (inclination near 0) look like every communications satellite, so this
+# cannot find them; add a way to name one by hand if that matters.
+RECENT_LAUNCH_DAYS = 60
+NAVIGATION_ORBITS = (("medium Earth orbit", (670, 860), (50, 66)),
+                     ("inclined geosynchronous orbit", (1420, 1450), (25, 60)))
+REGISTRY_UNIDENTIFIED_FILE = "unidentified.csv"   # payloads in a navigation orbit that no other registry table lists
+REGISTRY_UNIDENTIFIED_COLUMNS = ["catalogue_no", "name", "cospar_id", "launched", "orbit", "period_minutes",
+                                 "inclination_degrees"]
+
 REGISTRY_CONSTELLATIONS_FILE = "constellations.csv"  # kept by hand: system letter -> constellation
 # Kept by hand: which satellites the dashboard tracks, in display order, and its name for each.
 REGISTRY_DASHBOARD_SATELLITES_FILE = "dashboard_satellites.csv"

@@ -12,6 +12,7 @@ International GNSS Service (IGS) satellite metadata file by `scripts/build_regis
 | `satellites.csv` | the build script | One row per physical satellite |
 | `signal_ids.csv` | the build script | One row per satellite per signal-ID period |
 | `sightings.csv` | the build script | Satellites CelesTrak lists before the IGS file does |
+| `unidentified.csv` | the build script | Payloads Space-Track lists in a navigation orbit that no other table has yet |
 | `constellations.csv` | a person | Which system each SVN letter stands for |
 | `catalogue.csv` | its own build script | Owner and status of each satellite, as a second source states them |
 | `dashboard_satellites.csv` | a person | Which satellites the dashboard tracks, and its name for each |
@@ -53,6 +54,16 @@ columns of `satellites.csv`, under a stand-in SVN: the system letter, a dash and
 number (`I-101228`). Approving it also adds it to `dashboard_satellites.csv`. Once the IGS file
 lists that catalogue number, the row leaves this table and the dashboard row moves to the
 IGS file's SVN, in the same kind of proposal.
+
+## unidentified.csv: payloads Space-Track lists before anyone has named them
+
+Space-Track holds the US Space Force's catalogue, so a new payload is there as soon as it is tracked. The archive
+keeps a daily copy of its list of payloads launched in the last 60 days (group `launches`). Each week the build script
+keeps the ones whose orbit has a navigation satellite's shape (`NAVIGATION_ORBITS` in `evidence/settings.py`) and that
+neither `satellites.csv` nor `sightings.csv` lists. Nothing here is tracked on the dashboard: Space-Track says an
+object exists, not that it is a navigation satellite or whose. A person reads the proposal, matches it to a launch
+in the news, and either waits for the IGS file or adds a sighting. Geostationary navigation satellites (orbit tilt
+near 0) look like every communications satellite and are not found this way.
 
 ## constellations.csv: one row per navigation system
 

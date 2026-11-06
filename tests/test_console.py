@@ -173,6 +173,8 @@ def test_alerts_page_with_a_key_lists_checks_and_missing_slugs_without_showing_t
          "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
         {"slug": "archive-x", "name": "Archive x", "unique_key": "u-x", "status": "up",
          "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
+        {"slug": "archive-launches", "name": "Archive launches", "unique_key": "u-launches", "status": "up",
+         "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
         {"slug": "source-record", "name": "Source record", "unique_key": "u-source-record", "status": "up",
          "last_ping": "2026-10-20T10:00:00Z", "next_ping": "2026-10-20T13:00:00Z"},
         {"slug": "registry-update", "name": "Registry update", "unique_key": "u-registry", "status": "up",

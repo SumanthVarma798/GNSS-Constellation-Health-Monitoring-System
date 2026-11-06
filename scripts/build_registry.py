@@ -26,16 +26,17 @@ from data import celestrak
 from evidence.confidence import read_source_grades
 from evidence.archive import latest_version, object_path
 from evidence.igs_metadata import OPEN_END, block_rows, read_metadata, sinex_time
-from evidence import news
+from evidence import news, recent_launches
 from evidence.registry_changes import (change_report, describe_satellite_changes, describe_signal_id_changes,
                                       registry_findings, BRACKETED, signal_row_tuple)
 from evidence.registry_tables import constellation_names, read_table, tracked_list_in_step, write_table
-from evidence.sources import IGS_SATELLITE_METADATA_URL
+from evidence.sources import IGS_SATELLITE_METADATA_URL, SPACE_TRACK_RECENT_LAUNCHES_URL
 from evidence.settings import (REGISTRY_CONSTELLATIONS_FILE, REGISTRY_DIR, REGISTRY_SATELLITE_COLUMNS,
                                REGISTRY_DASHBOARD_SATELLITE_COLUMNS,
                                REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_DASHBOARD_TRACKED_SYSTEMS,
                                REGISTRY_SATELLITES_FILE, REGISTRY_SIGHTINGS_FILE, REGISTRY_SIGNAL_ID_COLUMNS,
-                               REGISTRY_SIGNAL_IDS_FILE, SIGHTING_NAMES, SOURCE_CANDIDATES_FILE)
+                               REGISTRY_SIGNAL_IDS_FILE, REGISTRY_UNIDENTIFIED_COLUMNS, REGISTRY_UNIDENTIFIED_FILE,
+                               SIGHTING_NAMES, SOURCE_CANDIDATES_FILE)
 
 
 def build_tables(text):
@@ -223,6 +224,20 @@ def findings_news(archive):
     return items, ""
 
 
+def unidentified_update(archive, satellites, sightings):
+    """(rows, the day Space-Track's list was read) for unidentified.csv; (None, "") when the archive holds no copy yet.
+
+    A row is a payload launched lately, in an orbit shaped like a navigation satellite's, that the IGS file and
+    sightings.csv do not list. It stays until one of them does, or it is old enough to leave Space-Track's list.
+    """
+    kept = latest_version(archive, SPACE_TRACK_RECENT_LAUNCHES_URL) if archive else None
+    if not kept or not kept["sha256"]:
+        return None, ""
+    listed = {row["catalogue_no"] for row in satellites + sightings}
+    rows = recent_launches.candidates(object_path(archive, kept["sha256"]).read_bytes())
+    return [row for row in rows if row[0] not in listed], kept["fetched_at"][:10]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     source = parser.add_mutually_exclusive_group()
@@ -259,6 +274,9 @@ def main():
     sightings, sighting_reads, listed = sightings_update(before_sightings, after_satellites, group)
     write_table(REGISTRY_SIGHTINGS_FILE, REGISTRY_SATELLITE_COLUMNS, sightings)
     after_sightings = read_table(REGISTRY_SIGHTINGS_FILE)
+    unidentified, launches_read = unidentified_update(args.archive, after_satellites, after_sightings)
+    if unidentified is not None:
+        write_table(REGISTRY_UNIDENTIFIED_FILE, REGISTRY_UNIDENTIFIED_COLUMNS, unidentified)
     new_sightings = [row for row in after_sightings if row["svn"] in sighting_reads]
     dashboard_rows = dashboard_with_sightings(dashboard_rows, new_sightings, listed, today.isoformat())
     celestrak_reads.update(sighting_reads)
@@ -287,7 +305,11 @@ def main():
         sighting_note = ("CelesTrak's GNSS group could not be read, so no new sightings were looked for." if group is None
                          else f"Satellites the IGS file does not list yet come from CelesTrak's GNSS group, read "
                               f"{today.isoformat()}." if new_sightings else "")
-        copy_used = "\n\n".join(note for note in (copy_used, news_error, sighting_note) if note)
+        unidentified_note = (f"Space-Track lists {len(unidentified)} payload{'s' if len(unidentified) != 1 else ''} launched "
+                             f"lately in a navigation orbit that neither the IGS file nor the sightings list has "
+                             f"(read {launches_read}): see registry/{REGISTRY_UNIDENTIFIED_FILE}. They are not tracked until "
+                             "a person says what they are." if unidentified else "")
+        copy_used = "\n\n".join(note for note in (copy_used, news_error, sighting_note, unidentified_note) if note)
         Path(args.report).write_text(change_report(text.splitlines()[0].strip(),
                                                    describe_satellite_changes(before[0], after_satellites),
                                                    describe_signal_id_changes(before[1], after_signal_ids),

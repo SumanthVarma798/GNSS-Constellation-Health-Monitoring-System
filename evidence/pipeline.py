@@ -19,6 +19,7 @@ _STAGE_KEYS = {
     "Archive: orbit records": "archive_orbital",
     "Archive: news": "archive_news",
     "Archive: social": "archive_social",
+    "Archive: recent launches": "archive_launches",
     "Registry update": "registry_update",
     "Orbit ages": "orbit_ages",
     "Orbit record check": "rinex_check",

@@ -23,6 +23,7 @@ _EVENT_STAGE_KEY = {
     "archive orbital": "archive_orbital",
     "archive news": "archive_news",
     "archive social": "archive_social",
+    "archive launches": "archive_launches",
     "archive all": "archive",
     "registry update": "registry_update",
 }

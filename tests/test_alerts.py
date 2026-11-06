@@ -65,6 +65,7 @@ def test_missing_slugs_are_reported_in_checks_order():
         "archive-news",
         "archive-social",
         "archive-x",
+        "archive-launches",
         "registry-update",
         "source-record",
         "orbit-ages",

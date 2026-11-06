@@ -26,12 +26,13 @@ on:
     - cron: '50 */3 * * *'  # news: every 3 hours from 00:50 UTC = 06:20 India time; first, to measure how often feeds change (issue 13)
     - cron: '40 1 * * *'  # social: once a day, 01:40 UTC = 07:10 India time; Reddit refuses requests in quick succession
     - cron: '55 */6 * * *'  # x: every 6 hours from 00:55 UTC; each read is paid (twitterapi.io), one page per account
+    - cron: '20 2 * * *'  # launches: once a day, 02:20 UTC = 07:50 India time; Space-Track allows one login an hour, orbit-ages (03:30) is the next
   workflow_dispatch:
     inputs:
       group:
         description: Which group to fetch
         type: choice
-        options: [all, documents, catalogues, orbital, news, social, x]
+        options: [all, documents, catalogues, orbital, news, social, x, launches]
         default: all
 
 permissions:
@@ -76,6 +77,7 @@ jobs:
             '50 */3 * * *') group=news ;;
             '40 1 * * *') group=social ;;
             '55 */6 * * *') group=x ;;
+            '20 2 * * *') group=launches ;;
             '') group="${CHOSEN:-all}" ;;
             *) echo "No group is assigned to the schedule '$SCHEDULE'. Add it to this step."; exit 1 ;;
           esac
@@ -92,6 +94,9 @@ jobs:
           GROUP: ${{ steps.due.outputs.group }}
           # Only the runs that read X get the key (read by evidence/x_reader.py); every other group gets an empty value.
           TWITTERAPI_IO_KEY: ${{ (steps.due.outputs.group == 'x' || steps.due.outputs.group == 'all') && secrets.TWITTERAPI_IO_KEY || '' }}
+          # Likewise the Space-Track login goes only to the runs that read it (evidence/recent_launches.py).
+          SPACETRACK_USERNAME: ${{ (steps.due.outputs.group == 'launches' || steps.due.outputs.group == 'all') && secrets.SPACETRACK_USERNAME || '' }}
+          SPACETRACK_PASSWORD: ${{ (steps.due.outputs.group == 'launches' || steps.due.outputs.group == 'all') && secrets.SPACETRACK_PASSWORD || '' }}
         run: |
           if [ "$GROUP" = all ]; then
             python scripts/archive_sources.py --archive archive

@@ -59,6 +59,35 @@ def _check(reply, login=False):
     raise SpaceTrackError(f"Space-Track status {status}.")
 
 
+def _log_in(session, username, password):
+    try:
+        login = session.post(LOGIN, data={"identity": username, "password": password}, timeout=30)
+    except requests.RequestException as error:
+        raise Busy("Space-Track is busy.") from error
+    _check(login, login=True)
+    if _login_failed(getattr(login, "text", "")):
+        raise LoginRefused("Space-Track login refused.")
+
+
+def read(url, username, password):
+    """The body of one Space-Track page, after one login."""
+    session = requests.Session()
+    session.headers["User-Agent"] = USER_AGENT
+    try:
+        _log_in(session, username, password)
+        try:
+            reply = session.get(url, timeout=60)
+        except requests.RequestException as error:
+            raise Busy("Space-Track is busy.") from error
+        _check(reply)
+        return reply.content
+    finally:
+        try:
+            session.get(LOGOUT, timeout=30)
+        except Exception:
+            pass
+
+
 def fetch(username, password, norad_ids):
     """{NORAD ID: newest GP row in bundled-history shape} for the wanted satellites Space-Track has."""
     if not norad_ids:
@@ -67,13 +96,7 @@ def fetch(username, password, norad_ids):
     session = requests.Session()
     session.headers["User-Agent"] = USER_AGENT
     try:
-        try:
-            login = session.post(LOGIN, data={"identity": username, "password": password}, timeout=30)
-        except requests.RequestException as error:
-            raise Busy("Space-Track is busy.") from error
-        _check(login, login=True)
-        if _login_failed(getattr(login, "text", "")):
-            raise LoginRefused("Space-Track login refused.")
+        _log_in(session, username, password)
 
         ids = ",".join(str(norad) for norad in sorted({int(norad) for norad in norad_ids}))
         try:
