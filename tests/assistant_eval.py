@@ -37,7 +37,7 @@ QUESTIONS = [
     {"question": "Where does each archive run write its log line?",
      "facts": [("runs/archive.csv",)]},
     {"question": "How many satellites does the dashboard track?",
-     "facts": [("113",)]},
+     "facts": [("114",)]},
     {"question": "How do I check that the RINEX check is working?",
      "facts": [("orbit-checks",), ("rinex-check",)]},
     {"question": "Where does the console run, and what does the hosting cost?",
