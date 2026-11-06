@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-06T01:50:43Z",
+ "generated_at": "2026-11-06T11:35:10Z",
  "items": [
   {
    "address": "https://www.space.com/space-exploration/on-this-day-in-space-november-5-2026",
@@ -16,6 +16,22 @@
    "summary": "On Nov. 5, 2002, NASA's old Galileo spacecraft flew by a small moon called Amalthea and made a surprising find. Here's why it mattered.",
    "title": "On this day in space! Nov. 5, 2002: NASA's Galileo spacecraft flies by Jupiter moon Almathea only to find it's a 'pile of icy rubble less dense than water'",
    "via": "https://www.space.com/feeds/all"
+  },
+  {
+   "address": "https://play.google.com/store/apps/details?id=com.android.gpstest",
+   "category": "signal and service",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-06T08:29:37Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "play.google.com",
+   "published_at": "2026-11-05T17:57:22Z",
+   "source_id": "play.google.com",
+   "summary": "",
+   "title": "Checking for NavIC signals using phone",
+   "via": "https://www.reddit.com/r/ISRO/.rss"
   },
   {
    "address": "https://www.thehindu.com/news/cities/chennai/isros-latest-navigation-satellite-nvs-03-is-fully-healthy-says-chairman-v-narayanan/article71670095.ece",
@@ -2633,22 +2649,6 @@
    "source_id": "m.economictimes.com",
    "summary": "",
    "title": "LIVE: ISRO launches NavIC satellite NVS-03 aboard GSLV-F18 from Sriharikota",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMie0FVX3lxTE9HajhHUWdPMTNyOU5iTFhmaEl6cktqdGFaRVRhT3lPN0RkSVVmV3dQN2phb2VWYUlNTmo0blphTTVuMWgybVp5bmhCZEJLeE5CcE9IT1VKWXh4UUNvaHJvYldRRFlrNHVRRFhIOFlvSEtwTThjdnZRVDVoNNIBgAFBVV95cUxPdlppX0tPYUcwbUJtVGlSSFB5UG5OMk9RMmg4YW1wT1VVc0pzQmhFMkFNdWZfWE1ySUNPRzgzOFdMZkN0V19pWW55RXppQWtMcDZGalB1OG1JWHZuNk1NZmZLbzludU92eTE3YU9HdzlaQ3I1emNwdGxfUWN5UnFiaQ?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T20:10:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "ThePrint",
-   "published_at": "2026-10-30T18:25:57Z",
-   "source_id": "theprint.in",
-   "summary": "",
-   "title": "ISRO launches third next-gen NavIC satellite after NVS-02 setback",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -9335,6 +9335,15 @@
    "name": "Press Information Bureau, Government of India",
    "note": "Answered #84's check, then refused the archive job's request (403) later on 19 Oct; read through Google News instead (row below)",
    "reason": "The Government of India's own release channel; carries Department of Space statements"
+  },
+  "play.google.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "play.google.com",
+   "note": "",
+   "reason": ""
   },
   "policyedge.in": {
    "grade": "",
