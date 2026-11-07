@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-06T19:46:04Z",
+ "generated_at": "2026-11-07T01:17:32Z",
  "items": [
   {
    "address": "https://x.com/Stellarixorine/status/2118757733117935776",
@@ -1284,6 +1284,22 @@
    "source_id": "timesofindia.indiatimes.com",
    "summary": "",
    "title": "ISRO Launches NVS-03 Satellite To Boost India's NavIC System, PM Modi Congratulates Scientists",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMi_AFBVV95cUxOc0ZLcEgxMXNmWVppVXJackx3cjZ4alJBc0xrX1NPdmhHV3FaamFCaFJ5V1FaX0E3eWw3dmZ3clZMSkdFbkRDd1BEeF9fS1BYUXFNS005SWFNT3ctVGJacEl4X3lWWkFscEhwUC1TOWI2S04yNllhYjBOZE9icG5VT193WnpiQnAxU1BaeFNpVEpUcmJoMklobG5Xc0k5XzZ5TUZCSzRiaGM1NVRwbUgxaDlFVXg4T2IweV9kZUk0WTNPaENmMlZlM3p2R1h6ZkZrRVRKNlF5WjB3eTBFRDBoVnVVWGl2UWhBaDVBSXVfZzlNXy1ZYmtlaVduOUU?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-07T01:16:19Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "ANI News",
+   "published_at": "2026-10-31T08:27:00Z",
+   "source_id": "aninews.in",
+   "summary": "",
+   "title": "Amit Shah congratulates ISRO on successful NVS-03 launch, says mission will strengthen NavIC capabilities",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -2682,22 +2698,6 @@
    "source_id": "m.economictimes.com",
    "summary": "",
    "title": "ISRO launches GSLV-F18 carrying NVS-03 satellite to strengthen India’s NavIC navigation system",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxPTFFHZXdiUjZqaVIweXg0d1NkS00yV2RKNldfSDlQZmpNdWVfcXNCWnF0ZUVjMHZCcVM1TWQ5Q3FYYnA4YmZvZEk0LUZ6N3VudUhkNFBYOXBlc2xiS2haVHk4eEItLVpRQnlKX0J6UGZvMHpEODlqT0JBN0RxUnRqNVNGQ01vUXptaHhsc0dDemNObUdKOUtXdHliZ2lORk9faFM4OVJTZG52RTdJekdWV01Tbk1OLXJWMGZKWkk0ZWdTeHBtck5rU9IBzgFBVV95cUxQdGYyRTI4MllTZ2VmUnAwcUNuLVBZcFE4eDhpcF9LTmxWQk9nN0xhZXREVVRtbnlqSlZkRXBSNkRrMUdrY210Snlub21vbkdMR2R6X2RCdWcyVml0VnFqbmw0TzdaMFFreWdjMzZIN1M0QWpnLXFsbzMyWFZMTkplbEpZX19rOVVMR05NWEZCZzhvN3BfWFBEdFpRTlN6T3FxTE9laGRJSlJJTDNzelZhbnBRSXV6WC0yVUc1LW5kNU5ydkg1WWRwUzQ1bXctZw?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T20:10:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Moneycontrol.com",
-   "published_at": "2026-10-30T18:32:20Z",
-   "source_id": "moneycontrol.com",
-   "summary": "",
-   "title": "ISRO launches GSLV-F18 rocket carrying NVS-03 satellite to strengthen NavIC",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
