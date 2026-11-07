@@ -1,6 +1,54 @@
 {
- "generated_at": "2026-11-07T22:22:05Z",
+ "generated_at": "2026-11-07T22:23:05Z",
  "items": [
+  {
+   "address": "https://x.com/RussianSpaceWeb/status/2119090480558506095",
+   "category": "other",
+   "constellations": [
+    "GLONASS"
+   ],
+   "fetched_at": "2026-11-07T22:23:03Z",
+   "grade": "C",
+   "grade_standing": "confirmed",
+   "outlet": "Anatoly Zak (@RussianSpaceWeb)",
+   "published_at": "2026-11-07T15:31:56Z",
+   "source_id": "x.com/RussianSpaceWeb",
+   "summary": "...and last but not least: it was the 131st mission of the Fregat which is the upper stage delivering GLONASS satellites from a suborbital trajectory to their deployment orbit some 19,000 kilometers above Earth: https://t.co/gXNWgnED5j",
+   "title": "...and last but not least: it was the 131st mission of the Fregat which is the upper stage delivering GLONASS…",
+   "via": "https://x.com/RussianSpaceWeb"
+  },
+  {
+   "address": "https://x.com/RussianSpaceWeb/status/2119087775035310432",
+   "category": "other",
+   "constellations": [
+    "GLONASS"
+   ],
+   "fetched_at": "2026-11-07T22:23:03Z",
+   "grade": "C",
+   "grade_standing": "confirmed",
+   "outlet": "Anatoly Zak (@RussianSpaceWeb)",
+   "published_at": "2026-11-07T15:21:10Z",
+   "source_id": "x.com/RussianSpaceWeb",
+   "summary": "...another piece of statistics: this is the 70th mission to deploy and replenish the GLONASS constellation (the Soviet/Russian equivalent of the GPS system): https://t.co/Q6xlx32JWI",
+   "title": "...another piece of statistics: this is the 70th mission to deploy and replenish the GLONASS constellation (the…",
+   "via": "https://x.com/RussianSpaceWeb"
+  },
+  {
+   "address": "https://x.com/Cosmic_Penguin/status/2119083906641146032",
+   "category": "launch",
+   "constellations": [
+    "GLONASS"
+   ],
+   "fetched_at": "2026-11-07T22:23:05Z",
+   "grade": "E",
+   "grade_standing": "confirmed",
+   "outlet": "Cosmic Penguin (@Cosmic_Penguin)",
+   "published_at": "2026-11-07T15:05:48Z",
+   "source_id": "x.com/Cosmic_Penguin",
+   "summary": "The Russians actually listed this launch (seems to be of yet another GLONASS navigation satellite) in NOTAMs yesterday but I have forgotten about it…",
+   "title": "The Russians actually listed this launch (seems to be of yet another GLONASS navigation satellite) in NOTAMs yesterday…",
+   "via": "https://x.com/Cosmic_Penguin"
+  },
   {
    "address": "https://news.google.com/rss/articles/CBMihwFBVV95cUxOZmp5VlhGQW8zeE8wNktJMFBCb3NNMVkwU3NZME5WQ24yQ0FpdHlTaUhINDFCT3VhMEhfaDJuWkZnbndEYVl2VjlfUWhucXl5V3VhMWpxMU1ZYmFld2laMTNYcG52Rjc4R1JHc0RxbG9BNlhSUlRlZUdveU9iZVF0SU5tX2lneHc?oc=5",
    "category": "launch",
@@ -10109,6 +10157,15 @@
    "note": "",
    "reason": "Launch provider for Galileo; reports its own launches"
   },
+  "x.com/Cosmic_Penguin": {
+   "grade": "E",
+   "grade_standing": "confirmed",
+   "graded_by": "Sumanth Varma (until the source record settles it)",
+   "kind": "X account",
+   "name": "Cosmic Penguin (@Cosmic_Penguin)",
+   "note": "QZSS-focused watcher",
+   "reason": "Social media; no grade proposed yet (too few checkable launch claims), so it starts at E"
+  },
   "x.com/ISROSpaceflight": {
    "grade": "D",
    "grade_standing": "confirmed",
@@ -10117,6 +10174,15 @@
    "name": "ISRO Spaceflight (@ISROSpaceflight)",
    "note": "About 156,000 followers; since May 2020, about 1.3 posts a day. Posts NVS-03 updates",
    "reason": "An unnamed individual's account about ISRO, which says it is not affiliated with ISRO"
+  },
+  "x.com/RussianSpaceWeb": {
+   "grade": "C",
+   "grade_standing": "confirmed",
+   "graded_by": "Sumanth Varma (until the source record settles it)",
+   "kind": "X account",
+   "name": "Anatoly Zak (@RussianSpaceWeb)",
+   "note": "",
+   "reason": "As russianspaceweb.com: Anatoly Zak, independent journalist on Russian space"
   },
   "x.com/Septentrio": {
    "grade": "E",
