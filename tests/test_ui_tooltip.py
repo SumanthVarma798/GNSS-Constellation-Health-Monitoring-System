@@ -102,3 +102,42 @@ def test_every_plotly_figure_builder_uses_the_shared_hover():
         assert "hoverlabel=PLOTLY_HOVER" in text, path.name
         assert re.findall(r"hovertemplate=(?!plotly_)", text) == [], path.name
         assert re.findall(r"hovertext=(?!_|hover\b|\[_|\[plotly_)", text) == [], path.name
+
+
+def _links(html):
+    return re.findall(r'<a class="tt-src" href="([^"]+)" target="_blank" rel="noopener noreferrer">([^<]+)</a>', html)
+
+
+def test_every_source_named_in_a_card_is_a_link_to_that_source():
+    from evidence.settings import SOURCE_LINKS
+
+    words = "; ".join(SOURCE_LINKS)
+    for html in (tooltip.tip("Heading", words), tooltip.tip_html("Heading", words),
+                 tooltip.tip_html("Heading", tooltip.glance(f"As {next(iter(SOURCE_LINKS))} lists them.", [("", "From", words)], words)),
+                 tooltip.legend([("#fff", words)])):
+        assert {(url, name) for name, url in SOURCE_LINKS.items()} <= set(_links(html)), html[:200]
+
+
+def test_a_source_in_the_cards_words_links_each_time_but_never_in_a_tag_or_a_link_or_half_a_word():
+    html = tooltip.tip_html("t", '<span title="GCAT">GCAT\'s list, GCAT again, <a href="/x">IGS</a>, Space-Tracking, '
+                                 'xCelesTrak, the IGS file</span>')
+    card = html.split('role="tooltip"')[1]
+
+    assert [name for _, name in _links(card)] == ["GCAT", "GCAT", "IGS"]                   # two GCAT, and "the IGS file"
+    assert 'title="GCAT"' in card and '<a href="/x">IGS</a>' in card                      # attribute and own link untouched
+    assert "Space-Tracking" in card and "xCelesTrak" in card and "<a class=\"tt-src\" href=\"https://www.space-track" not in card
+
+
+def test_text_with_markup_is_still_escaped_before_a_source_is_linked():
+    card = tooltip.tip("t", '<img src=x onerror=alert(1)> GCAT').split('role="tooltip"')[1]
+
+    assert "<img" not in card and "&lt;img" in card and _links(card)[0][1] == "GCAT"
+
+
+def test_an_open_card_takes_the_pointer_so_its_link_can_be_clicked_and_the_canvases_cards_do_not():
+    css = tooltip.CARD_CSS
+
+    assert ".tt:hover > .tt-card, .tt > .tt-card:focus-within { pointer-events: auto; }" in css
+    assert "a.tt-src" in css and "underline dotted" in css and "text-decoration-style: solid" in css
+    assert "z-index: -1" in css                      # the hover bridge sits behind the words, or it blocks the link
+    assert "pointer-events: auto" not in css.split(".tt-card.on")[0]   # the base card still ignores the pointer

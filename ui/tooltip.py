@@ -11,15 +11,22 @@ their script adds the class "on" where the page uses hover and focus.
 
 Text passed in is escaped; only parameters whose names end in _html are trusted to be markup already. Keep the
 card's markup to spans when the tip sits inside a <p>: a <p>, <div> or <ul> there would end the paragraph early.
+
+A source named in a card (SOURCE_LINKS in evidence/settings.py) becomes a link to it, dotted underlined and solid on
+hover. The card stays open while the pointer is on it, so the link can be clicked.
 """
 import hashlib
 import re
 from html import escape
 
+from evidence.settings import SOURCE_LINKS
 from ui import icons, palette, type_scale
 
 # A legend swatch may only be a hex colour or one of the theme variables, nothing that could carry other CSS.
 _SWATCH = re.compile(r"#[0-9a-fA-F]{3,8}|var\(--[a-z-]+\)")
+# A source's name as a whole word (longest names first); a hyphen or letter beside it makes it part of another word.
+_SOURCE_NAME = re.compile(r"(?<![\w-])(" + "|".join(re.escape(name) for name in sorted(SOURCE_LINKS, key=len, reverse=True)) + r")(?![\w-])")
+_TAG = re.compile(r"(<[^>]*>)")
 
 CARD_CSS = """
 .tt-card { display: block; width: max-content; max-width: min(360px, calc(100vw - 32px)); padding: 12px 16px;
@@ -27,14 +34,34 @@ CARD_CSS = """
   box-shadow: var(--raised); font-size: var(--fs-small); line-height: 1.45; font-weight: 400; text-align: left; white-space: normal;
   letter-spacing: normal; text-transform: none; z-index: 1000; pointer-events: none;
   opacity: 0; visibility: hidden; transition: opacity 150ms ease, visibility 0s linear 150ms; }
-.tt-card.on, .tt-trigger:hover + .tt-card, .tt-trigger:focus + .tt-card {
+.tt-card.on, .tt:hover > .tt-card, .tt-trigger:focus + .tt-card, .tt > .tt-card:focus-within {
   opacity: 1; visibility: visible; transition: opacity 150ms ease 200ms, visibility 0s linear 200ms; }
+/* An open card takes the pointer, so a link in it can be clicked; its edge reaches 10px over the gap to the trigger, so
+   crossing the gap does not close it. The canvases' cards follow the pointer and stay out of its way. */
+.tt:hover > .tt-card, .tt > .tt-card:focus-within { pointer-events: auto; }
+.tt > .tt-card::before { content: ""; position: absolute; inset: -10px 0; z-index: -1; }
+.tt-card a.tt-src { color: inherit; text-decoration: underline dotted; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.tt-card a.tt-src:is(:hover, :focus-visible) { color: var(--accent); text-decoration-style: solid; }
 """
 
 
 def _id(*parts):
     """The same text always gets the same id, so a page's markup does not change between runs."""
     return "tt-" + hashlib.sha1("\0".join(parts).encode("utf-8")).hexdigest()[:10]
+
+
+def link_sources(body_html):
+    """body_html with each source named in its words made a link to that source's page. Only the words between tags
+    are touched, and none inside a link already."""
+    parts, inside = _TAG.split(body_html), 0
+    for at, part in enumerate(parts):
+        if at % 2:   # a tag
+            inside += 1 if re.match(r"<a[\s>]", part, re.I) else -1 if part[:3].lower() == "</a" else 0
+        elif not inside:
+            parts[at] = _SOURCE_NAME.sub(lambda found: (
+                f'<a class="tt-src" href="{escape(SOURCE_LINKS[found.group(1)], quote=True)}" target="_blank" '
+                f'rel="noopener noreferrer">{found.group(1)}</a>'), part)
+    return "".join(parts)
 
 
 def tip_html(trigger_html, body_html, pill=False, key=""):
@@ -44,7 +71,7 @@ def tip_html(trigger_html, body_html, pill=False, key=""):
     card = _id(trigger_html, body_html, key)
     kind = "tt-trigger pill" if pill else "tt-trigger"
     return (f'<span class="tt"><span class="{kind}" tabindex="0" aria-describedby="{card}">{trigger_html}</span>'
-            f'<span class="tt-card" role="tooltip" id="{card}">{body_html}</span></span>')
+            f'<span class="tt-card" role="tooltip" id="{card}">{link_sources(body_html)}</span></span>')
 
 
 def tip(trigger, text, pill=False, key=""):
