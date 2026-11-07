@@ -137,7 +137,9 @@ def test_text_with_markup_is_still_escaped_before_a_source_is_linked():
 def test_an_open_card_takes_the_pointer_so_its_link_can_be_clicked_and_the_canvases_cards_do_not():
     css = tooltip.CARD_CSS
 
-    assert ".tt:hover > .tt-card, .tt > .tt-card:focus-within { pointer-events: auto; }" in css
+    taking_the_pointer = css.split("pointer-events: auto;")[0].rsplit("}", 1)[-1]   # the selectors of the rule that gives it
+    for opened_by in (".tt:hover > .tt-card", ".tt-trigger:focus + .tt-card", ":focus-within", ":hover"):
+        assert opened_by in taking_the_pointer, opened_by   # a click or the keyboard opens the card too, not only hover
     assert "a.tt-src" in css and "underline dotted" in css and "text-decoration-style: solid" in css
     assert "z-index: -1" in css                      # the hover bridge sits behind the words, or it blocks the link
     assert "pointer-events: auto" not in css.split(".tt-card.on")[0]   # the base card still ignores the pointer
