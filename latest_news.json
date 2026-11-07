@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-07T17:54:36Z",
+ "generated_at": "2026-11-07T22:22:05Z",
  "items": [
   {
    "address": "https://news.google.com/rss/articles/CBMihwFBVV95cUxOZmp5VlhGQW8zeE8wNktJMFBCb3NNMVkwU3NZME5WQ24yQ0FpdHlTaUhINDFCT3VhMEhfaDJuWkZnbndEYVl2VjlfUWhucXl5V3VhMWpxMU1ZYmFld2laMTNYcG52Rjc4R1JHc0RxbG9BNlhSUlRlZUdveU9iZVF0SU5tX2lneHc?oc=5",
@@ -115,6 +115,22 @@
    "via": "https://rntfnd.org/feed/"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMifkFVX3lxTFBZckstMlp6Qm8tM3NmTXhFRk52VFhhZlhqWXNWQ1BsYUVrY2NWdS1aRXluTmMwdG91Q0hmbm13RURJSFdsWnhRSlhuN1gxZTdaQ2o3NFFicGdZWVk3Umh0WDQ2Mks2RWE1RzdzWlYyaU1HQ0c4SkpyZ1dSOGcydw?oc=5",
+   "category": "signal and service",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-07T22:20:52Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Kerala Kaumudi",
+   "published_at": "2026-11-05T20:17:24Z",
+   "source_id": "keralakaumudi.com",
+   "summary": "",
+   "title": "NavIC-03 reaches orbit; smartphone navigation services may take time - INDIA - GENERAL",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://www.space.com/space-exploration/on-this-day-in-space-november-5-2026",
    "category": "other",
    "constellations": [
@@ -179,6 +195,22 @@
    "via": "https://rntfnd.org/feed/"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMiekFVX3lxTFBqYTRHR1BHallVQjFrUTdSU3dSSWhzZDBYRjd1TVRJUHZPM09JRGFtRGY1YVM2em9lR2lIcjV6Z0s4aTBlMkY0UnhKLVlxbVBjMXR3MmN1c1V3RjJJUHRFTkdqYThTM0Nybmxma3VhVFJYcnhHR05CcFJ3?oc=5",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-07T22:20:52Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Indianmasterminds",
+   "published_at": "2026-11-05T10:01:40Z",
+   "source_id": "indianmasterminds.com",
+   "summary": "",
+   "title": "NVS-03 Satellite Activated: How ISRO Is Making India’s NavIC System Stronger",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMipAFBVV95cUxOWU1tOVRfc2tyN0JxcTBuRFhFM2xrWjRwNEQ2ZE5yN3ZIZTdFYmZBdnpiX0ZNR2IxTnIzUDZaSUZWUi1xRGJJSVhieENtMHE5UFFWYjk5QURjOXg5eV9yV2dfTDltblg5MnpUeG5WdlByY2dOWXQzQXRKX2htdm51dHhNblJhRzhwc2hIZVNhTTF1el8zbk40aWJGczhSdV9ER1Q5dg?oc=5",
    "category": "other",
    "constellations": [
@@ -208,6 +240,22 @@
    "source_id": "newindianexpress.com",
    "summary": "",
    "title": "Karnataka: NVS-03 now in its intended orbit",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMikwFBVV95cUxQcnlSTHdXWndVSFFyc1NXWVJkOGNsLTdBODBjQjVVOFJpaTZURzJnYzUyRDlBcE9wNkZ1M2lsUkJNOEhnR0J2MXZacnNmMnpORXY5cC11ZExFaHIya0ZqaE4wZzNHcXVwdHZUelJScG5BTlhwc3RDekN6VlcxeHFFTkRDLXJuYzZpZXRHWlp0cjMtcUk?oc=5",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-07T22:20:52Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "The Hans India",
+   "published_at": "2026-11-04T23:46:26Z",
+   "source_id": "thehansindia.com",
+   "summary": "",
+   "title": "NVS-03 reaches its destination",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -275,6 +323,22 @@
    "via": "https://www.space.com/feeds/all"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMi1gFBVV95cUxOZlNSMjZ1Z0lrdUd3Q2VLMkpRdVBNMVRtRUgtY1prYWYyOHdSb05lZWk2UFhMeTR5TnhDMnA1WnQteDk3VXZ5N3R0dUJIdXBGVDJpZVpmN2dnRUszekx6dVh6aU45Ykd6TEpWejA4X2h3SGp0UURObXc5XzB5ZXpNaHVkbmpaRG1BUkIyTnJvOHN0YktpNENDTHdzYjNaVDJiWENiUUYtSVU4TElXU1R4ZjlwU1pXanlRZkZ6d2VXS0xVUjZQdENWUkNVVzZ2S0Z5Q3VHWTZR?oc=5",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-07T22:20:52Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Business Upturn",
+   "published_at": "2026-11-04T16:09:02Z",
+   "source_id": "businessupturn.com",
+   "summary": "",
+   "title": "ISRO completes NVS-03 orbit manoeuvres, brings India’s next-gen NavIC satellite closer to operation",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://www.isro.gov.in/Final_Orbit_manoeuvring_of_NVS03_spacecraft.html",
    "category": "other",
    "constellations": [
@@ -337,6 +401,56 @@
    "summary": "NVS-03 is now in Geosynchronous Orbit! @isro completed 4 orbit raising manoeuvres with a cumulative LAM burn of 6,164 s. Orbit: 35,765 × 36,196 km Inclination: 29.98° Health: Normal ✅ #NVS03 #NavIC #ISRO #GSLVF18 #IndianSpaceflight https://t.co/ZcOiRIRbwv",
    "title": "NVS-03 is now in Geosynchronous Orbit! @isro completed 4 orbit raising manoeuvres with a cumulative LAM burn of 6,164…",
    "via": "https://x.com/iSpaceFlight_in"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMigwJBVV95cUxOWjkyMGlBeVVaa1FLY05ucnlmWFZjR3N4SVByT1gyZzJja1lHMVhsbUFwRmR5WjJubmxQS20tNFZ4UXE4VzhnRXpTdVdtX3ZscVhxNVJ4cnMwVHVaVWVtX29iWU15X2FCcWJrME1aalRRY28yd19RZ0dUUE9XekxzUmg4cW1fYzBGUDRJeVRUSHUtTFF6enVkQUpsdzVaNnJyX21TbTVkUU04QjdGZkkxZjc4eHdBUE5GdEFoTWZ0S0x3WUJEd2tWNi1lWGtTb0VJMGtENXd3R3J5VF9lckZYWmFlOXI3dkp5Uzh2QzZxLWZnb2cxRUNXbFBYUEN0OUVKZ2M00gGHAkFVX3lxTE13WXgzbWRNWkFnWFRWUzAxNksyc2ttRWVMYlJZbFVJLWpQSl9ocnl5TUluaW5uLVd4STBRMUM0Y3hhY2R3ZXllT1o2OVc1azVzdG9jc1RMcEpnQjJ2OXNTTmM2NXBhc0l2Q3VneXQ4UExiNWFLazFFeXpnVi1fV3ZIdVdjTzhnX1BiVks0OEtialFrSG5Wd3AxNkhZMTdBQ1NJRkJmX3R2NFZpWjZFZ2Y1b2VrMFl4Si1WeE82WWhjeXFMYnRpSEdsQkRaX0xWUkRtY1huYlczZWdPTEEzX3BzcXVXZmFKRVk3M1NKblcyTUhVdDNnM2h6cy1TWUE4R0dGN05pbWRV?oc=5",
+   "category": "other",
+   "constellations": [
+    "GPS",
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-07T22:20:52Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "News24Online",
+   "published_at": "2026-11-04T12:50:29Z",
+   "source_id": "news24online.com",
+   "summary": "",
+   "title": "What is NavIC? How India's home-grown GPS alternative works, why ISRO's new NVS-03 satellite is important, check how navigation system works",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiowFBVV95cUxPZ0JpTWVKYkNEV3R1LWhhSmFNTk90THJnSU9paE9vaFVjWW40enBkMXY3c0RiU2xLVmpVWHpibTlGa0ZvQ1BhTGVVQm1Xa0FoZ1JpcG5sd0RYSURlSW9MMnBWTG1XSHBnUlVJeTdsTjNEYkd5UEZ0cXc0LVVRZUhocGd0Qmx3Y1p1bDlMVTk0cnQwZHpfd0VCeDlfNWNNR20weWlF0gGoAUFVX3lxTE53djRKeDQ3bzlBQVVHYldBYUpXeU1Sd2FvajNEbHFfUEp2emc3YW5BWWxtS0htbGdYYl9qM3BHc0FwQW1nLUp6TlNtUWFmc0tjRmNhLVVyaUV3akV0bF9RdzZxQ2ZlRlNTUjdSTXhrWWo4OWdqLXBGaFZsdVQtTjFEc3JRQjZtUFpOaUZGU1VyQ1RzX1NFM0x6TGsyNS1Yc3VhbHBFY1F3aw?oc=5",
+   "category": "other",
+   "constellations": [
+    "GPS",
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-07T22:20:52Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Mathrubhumi",
+   "published_at": "2026-11-04T10:15:16Z",
+   "source_id": "english.mathrubhumi.com",
+   "summary": "",
+   "title": "India's home-grown GPS alternative: What is NavIC, how does it work and what changes with NVS-03?",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMioAFBVV95cUxQUXhlb21FUndIdzJjc01fM0pYb3dQOS1lS2NrVFJBUk5hR3hRZFUzdVBXYlNuVlVhOG9ES1JpSkhwUEJiQU03SkJ5MXZTejhUQTlEMGFnWDdtSDZ6MUt5dDdZNThrbE5FR0l4aHVQc3B0UEdfVGcxT0g3YmZWTlYteVZwRDItSXRnWFZ3ZllfM3kwc29NMlpRVTlSaGtoQTZW?oc=5",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-07T22:20:52Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "NewsBytes",
+   "published_at": "2026-11-04T10:04:25Z",
+   "source_id": "newsbytesapp.com",
+   "summary": "",
+   "title": "ISRO places NVS-03 in orbit to revive India's NavIC",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxNRHVSeHNrZEF2T0h5V2t3YldjdHI5bWt0a1BOZzhjOGxJVmotME9BNVpSWDBGeTdVUkpKSjFTNHFlWGItNXFsbmJwV0c2bWtIMXVSZlJhOVd2UDBvc0t6MTZPRlpla3AtSVdaZXJLdWI4WF9MMDhxOXlsVy1FQmthWnpoNlNXYjB6dU4xQjNsbzVWeTdGYWphblZJNjFGTFhXbW9FNVNjYi1oellBZzdnQXNpRDNRVnlOcTlLQWxyNnZEVFhhNmg2eU9pZEhFOWFT0gHWAUFVX3lxTE9Dc3IyZlJXRUxoOFFCcXpDMGVMcjRPelRYU3FSRkdIdGlTYUNidUZOOEhVMFcyRU1hUEZQSzdZbm5VU3k4bVRDaEJnRWc0UWJESThndER4UVhUSEV0X0xUeFJ2am5ybUdmWWdOeFQ2SEplYThmWGliQThua0F6X0RjaFFYN3B5dFU4cG5qZU5nc29Idm5lRGdMMUNHMmFHazdGU3N3Vl9kVTFtNmNuMkJneFZMNFlEVUFPdkMzQ0tmT2l3a1M3UHFKVV9SdjRibmRyOU9Cb3c?oc=5",
@@ -435,6 +549,22 @@
    "summary": "From a strategic perspective, the argument is quite straightforward given the origins of the IRNSS concept in the aftermath of the U.S.’s denial of its Global Positioning Service (GPS) during the 1999 Kargil conflict",
    "title": "What is the debate on NavIC vs GPS | Explained",
    "via": "https://www.thehindu.com/sci-tech/science/feeder/default.rss"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMinwFBVV95cUxNbVRJRll3TEVqVTlJLUdCZXRwMGFkcWNaajZmNndHZEpfUnZaWTZaUm8xS05BaWRDSkNzR2w0bU1rck1IQmZoSWJveF9lTGxSUWhSY0JKb1pfelVFLTVkdVNvdEozUkZXRDdKQ0xacGZ3WmMzSEJmUF9wMzNxenhBSVlyR2p2TW55SUxvTUZOMEJHeWtJRGdpaWhZU2dnMU0?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-07T22:20:52Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Infomance",
+   "published_at": "2026-11-04T04:00:37Z",
+   "source_id": "infomance.com",
+   "summary": "",
+   "title": "ISRO Launches NVS-03: What This Means for India’s NavIC System",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://x.com/ispaceflight_in/status/2117802936428618183",
@@ -677,6 +807,23 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE5DRElobnNTQ0J2STFIQy1uZTg3aDR4VlZnYWVSbmNPZUhNY1BvTWd0Q0R3bXdvOHZuQUQ0WlNLVjZRRUNpb01peWRNb1ZFWFFlUzRtcTNoXzZ6Nndm?oc=5",
+   "category": "launch",
+   "constellations": [
+    "GPS",
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-07T22:20:52Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Wake Up Singapore",
+   "published_at": "2026-11-02T08:30:02Z",
+   "source_id": "wakeup.sg",
+   "summary": "",
+   "title": "India Launches NVS-03 Satellite to Strengthen Homegrown GPS Alternative and Improve Smartphone Navigation",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://x.com/Septentrio/status/2116979893401489543",
    "category": "launch",
    "constellations": [
@@ -819,6 +966,22 @@
    "source_id": "varindia.com",
    "summary": "",
    "title": "ISRO Boosts India’s GPS Independence",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMicEFVX3lxTE1lSUF0eU15dEpQUTJTV2NpanJMLU5pTi1RbVRWXzluLWN6RUZud05yc1RhMVVoNzVwYlJWLWVRNy1hQ2hMd3AxNms3bTloZEE5cW52U2hyX2stZHNWWXlfOXFNSTlFRFY0VGc2cGloUGc?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-07T22:20:52Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Sprouts News",
+   "published_at": "2026-11-01T08:45:31Z",
+   "source_id": "sproutsnews.com",
+   "summary": "",
+   "title": "ISRO NVS-03 Satellite Launch Marks Major NavIC Milestone",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -1640,6 +1803,22 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMizgFBVV95cUxQb2IxZU9fQ0h1Ukpydno5bXhWYmNGRndlMGg4YXd6Q2tUM0lIaUFXT2VnRTFtWi1GMzlTTHRRZXJMRGFZUUlSOFlOMFVzRmRucVRPZ2dkdm9nNUVaQll2ME4xTFBHNHkyT0xQRnlleUY1YW1UUTZtMW9rb1VKM2hRZUpFNlpodUd0a2MyRWk4cWhmM2tjaW1zNzRNY1Qybm1ObHhlQnFGU1BMaXlDVjdYYTNjdmZPQ0ZyOGFoYTlGSDQ4QXZ6WHFhU3V3Y2dLZw?oc=5",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-07T22:20:52Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Deccan Herald",
+   "published_at": "2026-10-31T05:34:15Z",
+   "source_id": "deccanherald.com",
+   "summary": "",
+   "title": "To overcome technical hurdles, ISRO flew NVS-03 satellite with pyro valves open: V Narayanan",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMirgFBVV95cUxNZElCVHlQczY1blJKMmsxNlgwUTFnRy1LWFFNYXF0bHRKT29xMlNFODJkdTVfaVhGOEJhLWlWT2xxTXlqSS1lUFlsS3FrWGhGS05UUFdJbTR5bXRRemotLTQxd2xZRFlwSF9Tam9OdW80RUVXNXhoSVBqQTJxa2owWGdfMXZta2Uyc1dRQkRxcnR0eUZpQUhBZlZUMVBXaDQ0NVZrTjV2UFhZbjdGMlE?oc=5",
    "category": "launch",
    "constellations": [
@@ -1701,6 +1880,22 @@
    "source_id": "outlookindia.com",
    "summary": "",
    "title": "‘Continue To Make Our Nation Proud’: PM Modi Congratulates ISRO After Successful NVS-03 Launch",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiygFBVV95cUxPeml0Q3MwZWJzdjM1aExWOGJyVEt5cExVSmYtMGwzOWVMZ1hId0ZLSXljUjJKYjdVWVZLRkpGemZFRVZDTGYxTzIyeUVTUHpMWHRrcDVUajBGXzFLSzlGYTVDQmVCWUtuMVl5X05oYVhUaDlGNjZfTE5qbDhsYUk2N1hYemJUVDQtNWJDdGxkVU5RTGVSdUxnVVpxLThvOUY1RHZTaHgwcUpIMHFOaVE2UWRhZDdWdjRlMXFwWXY3OE5hY3VaVzBpaWxR?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-07T22:20:52Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "NKTV",
+   "published_at": "2026-10-31T05:23:32Z",
+   "source_id": "nktv.in",
+   "summary": "",
+   "title": "ISRO Successfully Launches Next-Generation NVS-03 Satellite to Strengthen India's Indigenous Navigation System",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -1832,6 +2027,22 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMitgFBVV95cUxPc1ZjYnVjUlN5V0lqcTBkZEttUXM0Y1N4R1o4WjI1ZFB4UEhKT0U0M05PcFpFMXd0a3daaXNqY1N4bThwSlFQWXU4NllTMm4zQUtqaGxOYWRUNWFWQUdST0NHZjdXOXVrd29DblNXMmhScDNia2U0M3JjWGFoV1F2cjZYSV9Lc1ZfZHdoU1lzbEFXd3E0NjFCYm5pdW5FbzBOUEFBaXFRU1JrLVZjaF9IYTBJYm5Sd9IBuwFBVV95cUxNMTYtbVVoMTlnQ3JnNFNCTGh1Y3hDWTZ5czF5T3RXSE9uRFpsT2JRbjBzRXdvU0U4Vk9MWVZ0Z29KaUk4b21YM0ZGNURvUmhDRFE3d3FLZ0xuOGdHbndYUkZmQ3FQZm9oOC15SzRFOVJGZEZKVFh4eEZfckZNWEpLXzYyVkFURjVlLVpyU1BpbTZ6U2JVNDQtMmMwTlJER2hoUWVOVDFjNTRySUstOXg1cF84S29FR3JrTFJr?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-07T22:20:52Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Deccan Chronicle",
+   "published_at": "2026-10-31T04:21:56Z",
+   "source_id": "deccanchronicle.com",
+   "summary": "",
+   "title": "Modi Hails Team ISRO for Successful Launch of NVS-03",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMizwFBVV95cUxNQ3V1WXBNbWRtTUFKWUc2WkxlSGpnZkxFNUtmQzVldHpFRFlWRG44cFN6ZVhkdHNUYm5BTS1PNl9OVWVtOW56WDFOWFFhZmxnT2tlQzVPcS1QVUF2SlRyVHNFVVBmRGRVanVIdVJKdHB0S3VNSDJGYTFUZ2gxX2lyWUxMY2VMUlE4ekotbnlDTUUxRTE5Y1RFTlpNT1FxbGI3QjlVaExiUDVzU05rZlBLZ0c1NGZJdTl1R2J0ZkxES0VnQ05VRTQxRnNQZ1B4Yk0?oc=5",
    "category": "launch",
    "constellations": [
@@ -1909,6 +2120,22 @@
    "source_id": "m.economictimes.com",
    "summary": "",
    "title": "ISRO's NVS-03 launch: Third indigenous atomic clock now in orbit",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMi7wFBVV95cUxQSy1ySTNEdFZSbzlWSWVmdUlKNWRfQVBDenlld0xqWjlZSWF0TUY0eGNScW55eHVMYnhyX3FZRDJHTXNzcm9Wcnh6Y3NlS1dUYlNaS0MwRmhVU1RkamU2U1VzajJaSVgyX0ljWk5mcnNaLUtubks2dHBZRXZmbFA0UUladE1SYk1BUXI4a2NpT2xJQ1NGRTVOcTI5Q09RNm9sRmZkVlA5aXgwRTFQUWlRMDJ0aHhHYllGbTVORVhQTWRZUW9ZVzVzSjR3RFNPa1M2dzRxY3Jjb3hldkRCcWlxX1BBZ0JPV3huMXVBYTNIb9IB9AFBVV95cUxPR2FWYWhDZDVWOVNORl9iQ3Bzc0p3WlItLTJuZkw1NTJpV01pelRYcmIxZWxWRTZaRUlDaDJiTEpGVEhoUGtUY2Fyc0tDMHBzOHlPbFFaeVRCblFsNzJnZkh5V1hMYzVfLWdySGZsb0h5SVVzQkYwYXBqNnB2Y2gyZnFZSEhYb3BaZFJjbjlSVjhFOGhETVdYakdOamdsdDF1YXgwNjE2d0d0N0xZNnJScFFCR1hlUGk2b3A5NHZhNGtOMWpKeFpGZTFMbzkxWTFiS1BOTjhhNXl1UmtReDU5LXB5dUZIUWhNclhrQnMtdzllS3JZ?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-07T22:20:52Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "India TV News",
+   "published_at": "2026-10-31T03:28:14Z",
+   "source_id": "indiatvnews.com",
+   "summary": "",
+   "title": "Watch: ISRO's NVS-03 launch restores NavIC's operational strength, boosts India's navigation capabilities",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -2284,6 +2511,23 @@
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMi2wFBVV95cUxNV1RlMHIxWnVRU3NYN1hJOS1heC1OTGwta3FxVVIwYjZlZktwUlBJaGJwUkZTWGRmcnJJRGJ1d2VvLUpzSF9jYjZXa1RHVDJGTmtlZ3NEQ1VheGd0Ri1OcUlSeUlqZnRXRzdnVTZkaERKeldRQzVYcTRMM25lWk5oZTQ5NnRfdHRYSVBsU1pNQ2FFeWxNSnpZYW5GQThmR3hpcWpPdURFUk55M1RkWG5KS1p5aXdlTU5oajdHTEF5aF9Yc1R2YWFYY1FOTENLMlNtRlFDZFBNUVQ1MGvSAeABQVVfeXFMTnJPRElZSzFicHdBVUxnRmpDdlZRVlhpYU1hS0VrbTJDc3AzSHF4YWdCeTJ4WVI3d00xQ3AwakhjODBMajNWNENsRnFway0tNWpqVGpEeGtBTXZIZnN5V2VjTE1JdkNxaVk4RjNqZkNESTVFY1N0VnlTQWxEMVN2V0h0elFaSk9LbG1KeUhqSm5yd3R3MjRCcnFETjhwN21wX045S2JzdGJPaS1vMkJ5cGhIZ3psaGNnNWc5RUNsS3kwMGZERGxtYzNkOHFLNno3RkpPZ1hzT29EQlNadEwyY0c?oc=5",
+   "category": "launch",
+   "constellations": [
+    "GPS",
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-07T22:20:52Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Business Today",
+   "published_at": "2026-10-31T02:13:14Z",
+   "source_id": "businesstoday.in",
+   "summary": "",
+   "title": "India's GPS rival gets a boost as ISRO places NVS-03 into orbit. Why it matters?",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE5IQndZQUdkTGdyMGNKUXBiSGNzZ0liWFpfRVZBRXVKWFE4bEhLTnlWRFlQcWxZXzJSeXhEZnozNW00VzhjUGh3dW1KVWJRNkdkNHhr?oc=5",
    "category": "launch",
    "constellations": [
@@ -2316,6 +2560,22 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMi_gFBVV95cUxOSlZ1c19JX0JsRm5Kdjc2NUJ5aEJBRmJpcURyWDU2bk5sTTVmM2R2X2pORXA0TGFQM3NuWmVWbk8ycmprU1l5dzEzaEVxVWw5cVRhQVBNLVFxZHNyRWdxYnp4SXVmSG9sT3YwS2F2TUJVamUybVRjdVp5NzIzN1N6R2RTWjNlQzlPdlhKMGRIUlBuWFI2cl9iWFY5S2l5clAyV2s0Yl9USUFrSlgwYVh4RjVyUmw4MjJUVWZmLUo5dkNNYlI1MWZXMW5xamFGdnF5bXdfekRvZmIzQzQ0Qm02MUprTzdSUGNycE1BWllkVXdoTElYSnVMa3V2eUxyQdIBgwJBVV95cUxOazlCbzJfeGdNLTVZVVZVV0dBVmpYUFFYVUhTaTRRX1BHTUk4a0t0OFRod2tSNDByTGQ1MkwzZkhvS01US3UtLVRTSHBSaDhZM1ppTzMwaEFjV2sxcVhIeUYyTWZqdWU4WjFDaXBpdzVwSkFab1A1WUNEd0tqMFpfZjcwckh5YnU1eTJTV2RvcHhuNk52aXZSRVZlMjBhdkEwRFhKMWl4R0pMX1ZVUG5ZX2hCUE4xa0VFWFZvOGlzbzlBa1JKOHVmclJZWTl4Y0tmX1RmdEg4Q19BM293Y0JYTThrN195c190WU1YVWpMY1hfZnZhb0dIeDV5YVA3SnYtYzBJ?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-07T22:20:52Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Livemint",
+   "published_at": "2026-10-31T02:00:13Z",
+   "source_id": "livemint.com",
+   "summary": "",
+   "title": "NVS-03 satellite launch: ISRO places third next-gen satellite in orbit, PM Modi congratulates; 10 things to know",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMi9AFBVV95cUxNbGtoRUxrNnp2ZF9ZdHdsZUZRWlI4ME50ZHI3b3pKa3N3cmF4V2FKNlRPbVlXMjM5Um9VRXR5b3MyVTFJZGpVRm44N2x3aVo1R3FXMW1tUmE1eGdjSVFaaF91c0F2QVg0dFRIb3NLcWxfOXUxZXVzMnJPeklGeE0zOTN2U093cGZ1WU5nMmhTcXFFMHh0SVlPeS1EZVoxVkJYbTBYaS0wTWVsbTlMRDZTLWJ6NjBTczVuckk3S1hTQ0dYbEs5Qmx1czkwOWw4QmpQSmZQRlV3V24wT0UwN3lpeVVnaTBick1DZGNOWG4zTzhMaXdP0gH6AUFVX3lxTE82VnB4dFNaZVpteXgtdkM1UWdUdVpFNWZVTzRRS3ZYR0NCU2U1bHZTeVZsdGRpVzJTLU1GYVhyWWZENDNwUkt5VlhyQVJTS1FSRW11eVVGNHBKa0RPelVuVDlZR0RiRGFSVG5hTW5mMFRPZWppRVdONmhsa050TXhLMlh5V25aQ1B3cGFSMjRWMkstNFM4TUgzNU85eVFwWGk0ZnZKRFhNdzNGX2FsdGV2QlVzZEJiZVBGby1Sd3JTVW5kcExFVU9nRFdINDFpU3d6M2ppcXl3RzNmemQ0WlZRdV9DNGpUV2tTXzlYNmtpVGFIaUxVZ3NZWVE?oc=5",
    "category": "launch",
    "constellations": [
@@ -2332,17 +2592,17 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMi7wFBVV95cUxOVmpzdnBiZ3dqYWZDUlpRajdkSjFNbFFDeGtVRUM2dUdTaUNjdW51UExaNVJ3ZEFIV1F3azlmcWVVX2Z0SFB0VmJPdTBfSGJkeE5hLUNQSnpkM0hod21RQVozVUpHbER5el9MQkZWQ0JtcnpZeUtaQUtSQnVTOXBTdkphbmZYTHAtQjYteDluOXFRZ2lBQ29tWmRjTUNBUXE5X1ZSTFZZVll4UWF5LXlxdU9xSGc1enNVV0hZTTdhZVlsZWVaZVZ3d2ZSZXI2WTZnRVN2NjJFVEMwNU9MN2NYajFRNld1U1JQZTExdzJndw?oc=5",
+   "address": "https://news.google.com/rss/articles/CBMi6wFBVV95cUxQWVNVc2l2NGlZR3RrMURaZm9CQTZmYWNpR3BIN282WXNUSk84VEJicktlZ1pNRlZoeW1fakFaTGJ1RHdNckw0Njc3UlZ2SHRXYkc5Ul9ObC1DRGF5MmlCVkFZaW1qbnBnS3NiZWoycjhrbmJQenRfS0E1ckdoWF8zRUFkc0xLakdlZjVVLXdYeUdnQVZ0X1lmNU9XSmdHMVZkUVBDRGxtWkI4aG8tLWJkXzFlMTAtc2l6dnQxSFZBVVRPMDlmc0pyNHZDOUhXSXAzdURMRkVHR3ppZlpzQXN2UktZOHBDemhMakZJ0gHwAUFVX3lxTFBjV0ZWcGdibkp4WWkxWkZka3pkaVc5b3JETG05UlZocTVMTlAzTEh1R09PNnRpdVFJUkstSDVGWlMyQ01uMlluZG8xU0VCaUE2RUt2cE93UkpzWXhVczJ3RTM2MjZZRmtHazhHb1dWMTc4bHpFb2dDbUd1RUgzSW5MazlSczBoYVJSZnpRNW5VUEdPX0YyRHdEaHdndVBqUlp2TW14WWw5WVFvVWpubmEtZTk2SHNOX3p1OTFvNzlOUHRSVUpoVUZocTNhQ05nUVJOTjJGV3E5UkdvR1FVZ01WN214SUxvYUJtMkFjaVJVSw?oc=5",
    "category": "launch",
    "constellations": [
     "NavIC"
    ],
-   "fetched_at": "2026-10-31T17:24:13Z",
+   "fetched_at": "2026-11-07T22:20:52Z",
    "grade": "",
    "grade_standing": "not graded",
    "outlet": "The Economic Times",
-   "published_at": "2026-10-31T01:22:00Z",
-   "source_id": "economictimes.indiatimes.com",
+   "published_at": "2026-10-31T01:36:51Z",
+   "source_id": "m.economictimes.com",
    "summary": "",
    "title": "ISRO launches GSLV-F18 with NVS-03, boosts NavIC & make-in-india navigation capabilities",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
@@ -2474,262 +2734,6 @@
    "source_id": "organiser.org",
    "summary": "",
    "title": "ISRO NVS-03 Launch News: GSLV-F18 places Next-Gen Navigation satellite in orbit, strengthening NavIC",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMi5gFBVV95cUxOblA5X2hkcHpnSnAwSzUzV0hLS3ZHdjVtdU9sbkQ1aVN6M3RQRS0xNGpPT1NYNnZvdmNBS1BXSVg1YjFhWm1aYmVyWGNTQTdGWGJUajJQVm5wdGxHOElzamo4dmdDd2s2a2lmend0RE5LcGc0NW91MFhSMUtaQlRKUHdvVkcwUWdYa1lrYkw5VEMyUnlFUEhuWEhfdEY5bWRhRnpxcXJXVmZxUlJtX3lvTFA3UkhkcDFYbEJvTl9tamFtOHBIZjZndjFYMUQ5cTJTMmU2SzVwNFBFZG5lVUxHX0tPR01jZw?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T20:10:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "India Sentinels",
-   "published_at": "2026-10-30T19:47:32Z",
-   "source_id": "indiasentinels.com",
-   "summary": "",
-   "title": "Isro’s GSLV-F18 places NVS-03 navigation satellite in intended orbit, strengthening NavIC",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMi6AFBVV95cUxPVXVfMWYyUVdvSlNTRnFMZUFndnhscDNrZ1VZVmdoQ0FKakt3ejdseGN6d01jWTItc0hGZDhFVmV6aDluZHJDbkZiQng4S1g0V2YxMnFFSHFMT0lQX1F2MjYway1lOGQtTDlwZ21feEpkclJKN3I4Z2FnYkk0Njlrb3BYUFNjRWpXTmVhM1AycHJIRjgxbWVkb09haGFtbHR3bmRoMFZSeEtBanJSQUlIbV8tUlVFNTBuTngyZEoyN29DSFJnUTl2dUdaeFhDbTllajFpSWZQa0RhbVdaQjVGQlVfdE1KOWV3?oc=5",
-   "category": "other",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-31T01:06:36Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "ANI News",
-   "published_at": "2026-10-30T19:43:00Z",
-   "source_id": "aninews.in",
-   "summary": "",
-   "title": "ISRO places NVS-03 satellite in orbit, restores NavIC to minimum operational configuration",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMiswFBVV95cUxQQ1J0YUxud1ZZU0FhV0NNNk8yRkluLXhzTGxFQ1UxNlQtZlFMYXVhVHVSX1NOMkN5Z042Q25YQ1JZanFSTXQ2ZzJQQUFqNGF6bVU5TnNQR3VsWFM3S2JHcE51OVI1S2ZBNTF5cnFJc1VqT0dWYmZIMHhJV0JSeXgtZmJiTk5vb1VlZldaT1FYQ1dEUmE0cE5YblFBWGJpUUNNMWFDTzMydmFyS1ZUbzR6aEplMNIBuAFBVV95cUxOZFpRZ3lfSFZMUmFUSl9TSXZUbzRJbWxxVGs4RTBmOFlHNEZTRVJuLUFoUW52dVFtOHRQT2owQXI2Y1ZqdTgyd0lzN0t6RnRLZkY3cFljRi1PVEJQbVE0cWx3MVJYOXJZMUtMYWFXUExvZTRtZHE5blNhVjZHN0FkZlRIcG43azhnYjIxTDdLT3FGemN1aVc2Ty1lX01uNlJ5SURnaDVoazlhZE9DMG1GYWNySlBSNVB0?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-31T01:06:36Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "WION",
-   "published_at": "2026-10-30T19:41:00Z",
-   "source_id": "wionews.com",
-   "summary": "",
-   "title": "ISRO's GSLV-F18 launch success revives NAVIC, but there's a catch...",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMiwAFBVV95cUxNNDEyUm0xRV9vMFNQNWwzbUk2UHpvNWh1c1V6TVNpTlBtYlg3M1N1NS1VQ3VYWnljVnlpdjdVOWxkQ3pUSE1uZzdobS1xbFJSNHhGQjhCczctODVPbk9uRHpuMS1rNGNiYWtLQzVzeThyb2NRcTRRb3RLeFI2UjhnNmZxVUN3dGdTY1VwNzhHQ0lqRWI4TDRGbU10QlFvOEhKRWZ4MUh6Zm9JQXh1YXFQZW12NTE2emVVSDBUZnNMbTfSAccBQVVfeXFMTmZZOS1sY21wZGNkelRjY3ZBSVZnaWk5TlF3Y09UamwzLUNObGhaZXMtbE5hNVhQazJheWZaUl9RdW0waTN5Wm1lNC1oMElYT2k5ZVNBZG5HNlV3aVFUOGFzbk5LRy1pZ1lmSktVMFJvb24yUjdfYktvWmVxSzJtdVJhZzVzSDhHNFMyVkp0bUhpYUE1ejJkSERhTDhuQ1hWbnkyV2FDMG9mVWJlNHUtRC1uSEtic0dfdTd5WlVHaU9ndF9hb3lQMA?oc=5",
-   "category": "other",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T20:10:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "BusinessLine",
-   "published_at": "2026-10-30T19:32:04Z",
-   "source_id": "thehindubusinessline.com",
-   "summary": "",
-   "title": "ISRO successfully injects third NavIC satellite NVS-03 in GTO",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMipwJBVV95cUxPUHlRNGdGanFXWVFkRmlrbkxXYWJyakkwUGhYWWctMmtTc2hhWG5uMmY5V29UMzFwX2tkRk5US0tLT1Z3UERSclB1RzU4Z2tqczQ5MjRwbHZObmE0VmFuRDFIOXZrUFY1UlRSMWsxWlM1UTNySGtZTmM3S2dkZmxWaDFoQmZIbFZ5czFqempGeG5NNm0yS05ic3NsN05NZEJVSFVyaXZWMkVCN3BhbUVZdnBISUh4SWtfYU1qVW5HQzVPSU5iSS1zYmJQQkxmUmpQSHlpODZBcF9PUEk0eU1uZ3liX1FVT3ZkVnNyLTVLWDViZWIwNUZ0azBheVh0Vm45cGUwaU9ZR2NjdTh5V2JNZkRaOTBKSEYtQ0E5MXp3Z1k5MHpoSXBR0gGsAkFVX3lxTE9CbGJXOHh6Zl9WOTdsbXN0akxta0RMV2ZPTDVmSklDdjBkRWhkYVhFV1V3OWJnaG05RF80YjROdWIzZXN4N3JlNU1hM1ZKZWltTlRvNi0zY0hxQlJiY01xME1rUVAzeDh0cE9zUXFraVJUOFZ1aEQ5VVB0NzZyWEZFLXRHUHNQM3lucV9QQ0hBU1ExVW91LTczNG5kMl9xSHNKRS1TZGVDb05LRk1uUk5aWHRON0JMTHBfT2c2c2FuN01PVkpxaTNYOElwOTZiWFVINExBLWVFZW5Nbzd4RnBFYlJIbGVEUGZ3bS1HM05lZFVNQ0I4MDc5X1o4REJJYVlrS0pFOHdXMGtzRXEyNTdtSmp4VXhfdXp3MGQzTl8zUkRydFl5bW1CLV9BLQ?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T20:10:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "The Times of India",
-   "published_at": "2026-10-30T19:27:00Z",
-   "source_id": "timesofindia.indiatimes.com",
-   "summary": "",
-   "title": "Success launch of navigation sat NVS-03 with desi atomic clock will make NaVIC up & running, and give mil",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://www.thehindu.com/sci-tech/science/isro-gslv-f18-nvs-03-navigation-satellite-launch-sriharikota-october-30-2026-live-updates/article71645088.ece",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T20:10:00Z",
-   "grade": "D",
-   "grade_standing": "confirmed",
-   "outlet": "The Hindu: science",
-   "published_at": "2026-10-30T19:22:52Z",
-   "source_id": "thehindu.com",
-   "summary": "NVS-03 satellite is equipped with an indigenous atomic clock alongside procured atomic clocks",
-   "title": "NVS-03 launched successfully; satellite placed in intended orbit | LIVE",
-   "via": "https://www.thehindu.com/sci-tech/science/feeder/default.rss"
-  },
-  {
-   "address": "https://www.thehindu.com/sci-tech/science/nvs-03-satellite-launch-successful-isro/article71646807.ece",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T20:10:00Z",
-   "grade": "D",
-   "grade_standing": "confirmed",
-   "outlet": "The Hindu: science",
-   "published_at": "2026-10-30T19:20:32Z",
-   "source_id": "thehindu.com",
-   "summary": "The 2250 kg NVS-03 is the third satellite in the next-generation navigation satellite system envisaged for providing continuity of navigation services for the Indian Regional Navigation Satellite System series",
-   "title": "NVS-03 satellite launch successful: ISRO",
-   "via": "https://www.thehindu.com/sci-tech/science/feeder/default.rss"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMihgFBVV95cUxObnNDSkl6Zm1VOUtKUUV3SlFuRkdoMEdHdnBCTWRSMUYtcjY4QnpmUG5aRFdtZDlLdFpvVkVPT3FtdEczX1A3NUNNMEkydENwT0t1cndNa3oySlFuTDNSUm4wZjVDNGlidEthcEluTHgwOU5qRlRtaTVxazFPSThrTG5MWTV2Zw?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T20:10:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "shattered.io",
-   "published_at": "2026-10-30T19:16:10Z",
-   "source_id": "shattered.io",
-   "summary": "",
-   "title": "GSLV-F18 Launch Lifts NVS-03 Satellite to GTO [2026]",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMirgFBVV95cUxNWkhUMHk1R3lubkVoMGR3OEZjM25QNzVvVzByYml6a0Z4OTBITi1CZEYyY0s5amVUeHl2QmFYa0daWU1Xa1ZIMVd1eUp6cnFQdUt6N0VzZDhFal9GYXExSWlLVGdDLU1LN25DTkdWMUtHTmhKRndyS1RjcC1rSUdxaVk0OF9SaVlUVlp0N0t0eGpqMHQwRTVKQ1ZTanZwZHFWM1E4ZmI4ZHlKb0M0eXc?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T20:10:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Telangana Today",
-   "published_at": "2026-10-30T19:13:52Z",
-   "source_id": "telanganatoday.com",
-   "summary": "",
-   "title": "Watch: ISRO launches NVS-03 satellite to strengthen India’s NavIC navigation network",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMiowFBVV95cUxNbFQxU3kwUzdybnBib0l1U1BmZzZ1aF9FYlVJQjlJUHhxRkxRelRrUVFYRzdDZDMxMHpuTkhxXzEyY0FRU1I1d01YOHBMZzhRT2d1T1d1azFqalBQX0h5Z25wVWlxemhoS1dIVUJDb3NOTTVMSVdOSHlXQk0ydGYxS2ctd3RjZGtFLU8xb1hCSHA4NU42T3dUeFRVLWkxd3o2SFRv0gGqAUFVX3lxTE8zdU5LNFZLZzFHcTU4WDRuNmt3cGlMUjdRbnkzcl9WVDlSYjhhelpaT0twQlprRzROSXl5S3IwY3lCZkZTOERlNnB0c1A4SDVCR1U5ZGlMaVlmcFNZRWNBY1RmYjdyMHdISmIwZVZKdkVuM1A2Nmg2ZGI2bk1KOEhHWHNINEtFWEtxMlhYR3J4REwwZnJ0T1ZkWVl1ck01djRPU1l4R2E0djBn?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-31T01:06:36Z",
-   "grade": "D",
-   "grade_standing": "confirmed",
-   "outlet": "The Hindu",
-   "published_at": "2026-10-30T19:09:21Z",
-   "source_id": "thehindu.com",
-   "summary": "",
-   "title": "GSLV places next-generation navigation satellite NVS-03 into orbit",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMimAFBVV95cUxPeEhkdjBWVFNPXzJ0MXo1Yl9ZY1dRR2RXUTE0bmZuNnN0RTJqLVctaWdpNmxQN2QzU0t4VXp0Tzc1TUhTcnBVT1hTZ011WGNvN3I5M1pvM2dKNEE0MlVpOFgtRXJSM0RQY0kwa2VReFIyNFJfNFlEUG5iMFVLZXlPNWsxWkhhNWNCazdwSmQxdF9MNGtxd1lDag?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T20:10:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "The News Mill",
-   "published_at": "2026-10-30T19:02:12Z",
-   "source_id": "thenewsmill.com",
-   "summary": "",
-   "title": "Isro launches NVS-03 navigation satellite on GSLV-F18 rocket",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMi1AFBVV95cUxQd19qSVpqdDNHMTVzUXNHQW5uMGUycHlMZXp6R2g1THlSV2NrUnVLbmR3dWRVRzFUdGVYR0F0a1Rzeml1d2hfMlF1eGVPdVVfVjl3d1psNmdUR3pLSkZBWGhSQ1A0QTV3cWJ5emtNRmpxOWNuc2xlcy02RkF4dUZYamdMVml5dDhoY2E3SnN1RlpaOEF5OUpSLTFHbTh1Wi12WGx2dl9YNFBheDBfbG0xTnhaUjI5ZmlPM2d0VU9zUGthQlZOTnd1c1JSOTlobzd5emJiTtIB2gFBVV95cUxPUjZyUFlOR2UxT3hQT2VPekloYmQ4UTVTX1B0X0lTRENIdDhtTkQwWDc1eXJZZkt0V3Vya3lrZ0VzZThWcGJ1NVhnOVBkVmtCVnNtT0E0OXcwYlNBY3BVSVZKcHhZemxLbUhhaHg0QVlkR3N1dXcwVW1uOG9YZWVjdnNZYjVIanRuTTNTZU1UclppcVhNUHFNY0N2UHBESC1VM3Rjemx4QUhEMzYtYmpRZ2hvNE03VGF0cEJQdDRKRnZibVFkSGxGX04xZVRyaTVjalAwSUFTbThjUQ?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-11-04T11:37:55Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "India Today",
-   "published_at": "2026-10-30T19:00:24Z",
-   "source_id": "indiatoday.in",
-   "summary": "",
-   "title": "Watch: Moment Isro's GSLV-F18 turned night into day, roared into space with NVS-03",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://x.com/isro/status/2116242156646220265",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T22:41:35Z",
-   "grade": "A",
-   "grade_standing": "confirmed",
-   "outlet": "ISRO (@isro)",
-   "published_at": "2026-10-30T18:53:42Z",
-   "source_id": "x.com/isro",
-   "summary": "Mission Success! GSLV-F18 has successfully placed NVS-03 in the intended orbit. Congratulations! Watch live: https://t.co/6X42ANRnTC Mission details: https://t.co/wtZ6TmjUhc #GSLVF18 #NVS03 #ISRO #NavIC",
-   "title": "Mission Success! GSLV-F18 has successfully placed NVS-03 in the intended orbit. Congratulations! Watch live:…",
-   "via": "https://x.com/isro"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMi3gFBVV95cUxOVW1fWEFaemJvRE56X0FQd2loNEJHQXYxQjlEdGpoaHhXMFk0TDJKZkN2THpMTjJqYncyQWRPZWZBOHNiWE9KX3lJdVRXMnVKTVF2TDFlWTdrQjVtQmxfemk4azloZHFyV0ZwT0szV3ppdWx0MnFTeDJvSzl1S2dERHQ4NUxrYUlBZGhCQkpoME5kbkZob2pZVEVkdnBfQk5Ta0JKMFFSYmQ2QUxybTEtLTZXYTkzN1JlaXBkNzJlaVJNTzVJNTBueWhpZ21SZU9uc1hsdHc4ZkxyVFhNY3fSAeMBQVVfeXFMTlVRdkZJNTJTWEVVMXBUOUpSQXJnZkVSNUtINHJUM2JzVUJCUHNPMkJmTjVGdmJYU29SakFncE1xRV95U3lVZGl6TVZ0dXI4bjU5RTFTREFveDNyTmdGNTdKR3JRTDFheWVWODI0aTVnREp6aVVXN0VHZGhWcVZxeVJueXFTMzJTMFZHWU1jUmRLS0IwS3QtaUJlS2tEVE9taExvTmhubE5vZHZMSm0ycnAxVWRzWmhCbFE1c0VuMWN6UHNFeW9aU3NzQm45WlBwQ0I3S3hDOS1zZlJoWGRkLUtNWDQ?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T20:10:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Moneycontrol.com",
-   "published_at": "2026-10-30T18:46:35Z",
-   "source_id": "moneycontrol.com",
-   "summary": "",
-   "title": "ISRO's GSLV-F18 Launch Successful: India sends NVS-03 into space in major NavIC mission",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMihgJBVV95cUxOUUI3ODdRdjZFV2pRaHpfSE1IYjFmSHVvdTRiMzZJZXNUbnlNbU4tR3F0SU9qZ094dW8tdnJibmRJOHBUN2VmYXVXb2xnYmJiQ1lXRkxZVmVnZE5sd2F3UjY3by1UUjdEWHMyVUpUTHlTU3ZYU3dSS1ZrdFVhcWNRbEprRHoya2JKSDNrcjRtUFU3QTVRUU44d1VYZ0NtOXItUVRTR2tfZ3NrcGJtZzhOZldfR2pMRFBIM01SYXFsTzJ2eDF5ck1oVXhCWnlMN2Ztelpmem5pV0hSaTB0VzVLdm5SQkc5STFkTnNmejFrZ0s1RTRBUTZSYTBaeVBYVGVDaHExS3l30gGLAkFVX3lxTE93eVQ1UXUyNFJlWUd0MzRSeGJEVER6YkxnZk5IM2tiY003OUs2Q2d1V0NybUdGWVc4VFBaVXFaNFFvNnBkcmIzVmQ1bnlJY0FzSk5iTk84MlNZWWlVNVBzUlV3MU1QaURaSmRCVC16cWdOMWUzNk9jQ014dnBaa2FBMzd5ckQ0VERrNjIzaVR0c1hKc0VTdnczU0ZrdV9yMmR3NFUtQVFMR0xZbU9KdWYzZW9YLXU2Y0JGT3JacGp2VlZxdWlObEQ2OW0zclNzLVVIMnpqRzFyNnc5SE5vUHg5bjZ6RVJpaUJPbEZDWHBDQkZVT0ZJUmtkRXdQTkdmYTRlcDFIQWZ6VHVCYw?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T20:10:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Hindustan Times",
-   "published_at": "2026-10-30T18:41:44Z",
-   "source_id": "hindustantimes.com",
-   "summary": "",
-   "title": "Isro successfully launches NVS-03 satellite to strengthen India's NavIC navigation system, improve civilian access | India News",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMinwJBVV95cUxPZEluajZSZVVIU0tyeUhZWTdYVUxqZlBTOUp3QlRkZXItc0xVeHJZLXBsNUpyMmk0MGduZGUyZHRhZ2lrbUtEZF9wbl9ubmM1QzZQdEN1T1NPX1FmV0RuTlMzMHRhdzFIdkVLZDQ4QWJTbHRXcGhOX2ltOUk0d0dZNXllckhDQUFKQVdGUmo5OURLRzVBeGRTU1RobnZTS2RkNGJIOEl6NVc3VFRGMlFGb1R0UXBBTklTUDJtZmgxeVd4cEFUNWo3Zjd2SkMtczgycTlJU1U1bzlHZWItMWpJaUtBRWljcEo1N1dpNkxkNW04M09VOEFsZ1E5a0ZzZFJvR3RINE9kbnRjZ0V5Z09OekQxcXhxb3hsRkFtMmlKTdIBpAJBVV95cUxPaThTUGJ2eVJBc2xpRWN4eUJEUnpSaHVPS0g3Q2s1T2NpVDNCMkZXc2dXTHZEYXdtcWg5bk9DeFdwY1RWT20tNmNTZVZaUi1tN1dJd3dHQWQ1M2ZuRmExNlhwWjl5blVLSzlVU09rSWhyR1pfYkpyVFdUcDU5UjJlcVJrUVlyVHNxemtQdEhycEFZR3Z1MmdaQV9BRzBPUTVjcTR4UDR4cW4zbldkTW9sSTRXalNMLVNxNGxUWE5NM29zZmFmTVhZY3h1NHpMM21CUEdLRVQ4YzJQU3N3RWNVcEhVakJRS3FwZmUwbF9VMkhuX2dSMTVOZXUwQ2pvWWJCOTJoczl6WWE4ckw2dVgtN1g0eVoydUFOMVFFWUxGRHBobi1R?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T20:10:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "The Times of India",
-   "published_at": "2026-10-30T18:40:00Z",
-   "source_id": "timesofindia.indiatimes.com",
-   "summary": "",
-   "title": "Isro’s GSLV-F18/NVS-03 mission successful: Next-generation navigation satellite placed in orbit; NavIC co",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -7218,7 +7222,6 @@
    "address": "https://news.google.com/rss/articles/CBMinAFBVV95cUxPdmRtRlp1dDdjLXVGSFBTZTktWWlvNTBaUWJsdGdxQVZPdmYwVl9tZDFMTlg2Q3RLMW9TZUF4U05CZFJ4MUFIQUluNzgtQUFRZVRYWHE2ZVVXRjN0T3BnU2ZOTF9FQzlIMVBqV3pkX2k4cXpJM0RmRS10MWtheVhIVTBaWVVzMGlSdHhBd2dxWnVnSEZ4Q1JzNXl0ZW_SAZwBQVVfeXFMT3ZkbUZadXQ3Yy11RkhQU2U5LVlpbzUwWlFibHRncUFWT3ZmMFZfbWQxTE5YNkN0SzFvU2VBeFNOQmRSeDFBSEFJbjc4LUFBUWVUWFhxNmVVV0YzdE9wZ1NmTkxfRUM5SDFQald6ZF9pOHF6STNEZkUtdDFrYXlYSFUwWllVczBpUnR4QXdncVp1Z0hGeENSczV5dGVv?oc=5",
    "category": "signal and service",
    "constellations": [
-    "GPS",
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
@@ -7235,7 +7238,6 @@
    "address": "https://news.google.com/rss/articles/CBMirgFBVV95cUxPT2NWWmM0UTlEdmFhdHV1cS1meURhWmRQbGxZZkdrTFVyeUhZX1ZGY3ZQVzNsajA4ZFJ6dkoyUlAwTE1Kd0tpOEQ1WnA1NGlxT0lVX3huT3pJeTRHWkVUaVV1c1FRVUdlMmp3UUttcHNPZE1ON2JPU2xyR0JjMkpVMF9ENDd3N3lobldPSU14VXFlMEpXRk5GSGhQbG9oMVZfRHNVdWh5dDZ4eXBILVE?oc=5",
    "category": "signal and service",
    "constellations": [
-    "GPS",
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:40:40Z",
@@ -7297,26 +7299,9 @@
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMilAFBVV95cUxQZkdjWEdUTmNISWFlaXZySFJUamVuaWtEYkdzekdwTHJWbjlwUlYzVXFETWxyQWVZNjMydHBIS1FJc2I1cDJMaklocktMTWJpN1IzRzQ3TUJ4UmU3aE1xLVlJeDlXLVBDdWtsdGRhdDRzQkJsdGs4aFRXcDZZWmZnMVVCRXd0SUxDZi1RS1hQcUJsNVF4?oc=5",
-   "category": "other",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "C",
-   "grade_standing": "confirmed",
-   "outlet": "SpaceNews",
-   "published_at": "2026-02-18T08:00:00Z",
-   "source_id": "spacenews.com",
-   "summary": "",
-   "title": "Why GPS III, and what comes after it, still falls short in modern war",
-   "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMi8AFBVV95cUxQV2s5UmpMUDFTWTYtS2YtcnAtUG1iRllPODhsWk9wWms0WDNpTThmODFTTHFuejV4eU02R1oweFctbjdQSlV0dmRfMXZLLVB1ZndQQmNhRXBua1J4NjZ4YTZrUjNWYzVlUGtNekp6dXZnOTB1MlluOFpsaWt5LXo3VnlkRnVVMEFDVm55UERaaVl3VXlpVFl2alRucVUzYjlnWGUtemxpTXVWRENLTWhXLWNGRjRSdExJeV83MmVEUmhuMmVfU0J2aXpKX2M0UzNfSmtMLUQzdTljTGtnbU5CLVkzcUZSZmNzUVlJUENTMUg?oc=5",
    "category": "signal and service",
    "constellations": [
-    "GPS",
     "Galileo"
    ],
    "fetched_at": "2026-10-22T12:31:14Z",
@@ -8081,6 +8066,15 @@
    "note": "",
    "reason": ""
   },
+  "businesstoday.in": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "businesstoday.in",
+   "note": "",
+   "reason": ""
+  },
   "businessupturn.com": {
    "grade": "",
    "grade_standing": "not graded",
@@ -8321,15 +8315,6 @@
    "graded_by": "",
    "kind": "",
    "name": "e.vnexpress.net",
-   "note": "",
-   "reason": ""
-  },
-  "economictimes.indiatimes.com": {
-   "grade": "",
-   "grade_standing": "not graded",
-   "graded_by": "",
-   "kind": "",
-   "name": "economictimes.indiatimes.com",
    "note": "",
    "reason": ""
   },
@@ -8855,12 +8840,30 @@
    "note": "",
    "reason": ""
   },
+  "indiatvnews.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "indiatvnews.com",
+   "note": "",
+   "reason": ""
+  },
   "indtoday.com": {
    "grade": "",
    "grade_standing": "not graded",
    "graded_by": "",
    "kind": "",
    "name": "indtoday.com",
+   "note": "",
+   "reason": ""
+  },
+  "infomance.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "infomance.com",
    "note": "",
    "reason": ""
   },
@@ -8987,6 +8990,15 @@
    "graded_by": "",
    "kind": "",
    "name": "keeptrack.space",
+   "note": "",
+   "reason": ""
+  },
+  "keralakaumudi.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "keralakaumudi.com",
    "note": "",
    "reason": ""
   },
@@ -9278,6 +9290,24 @@
    "note": "",
    "reason": ""
   },
+  "news24online.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "news24online.com",
+   "note": "",
+   "reason": ""
+  },
+  "newsbytesapp.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "newsbytesapp.com",
+   "note": "",
+   "reason": ""
+  },
   "newsghana.com.gh": {
    "grade": "",
    "grade_standing": "not graded",
@@ -9311,6 +9341,15 @@
    "graded_by": "",
    "kind": "",
    "name": "newswise.com",
+   "note": "",
+   "reason": ""
+  },
+  "nktv.in": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "nktv.in",
    "note": "",
    "reason": ""
   },
@@ -9656,6 +9695,15 @@
    "note": "",
    "reason": ""
   },
+  "sproutsnews.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "sproutsnews.com",
+   "note": "",
+   "reason": ""
+  },
   "ssbcrack.com": {
    "grade": "",
    "grade_standing": "not graded",
@@ -9854,15 +9902,6 @@
    "note": "",
    "reason": "General news; covers ISRO and NavIC often"
   },
-  "thehindubusinessline.com": {
-   "grade": "",
-   "grade_standing": "not graded",
-   "graded_by": "",
-   "kind": "",
-   "name": "thehindubusinessline.com",
-   "note": "",
-   "reason": ""
-  },
   "themachinemaker.com": {
    "grade": "",
    "grade_standing": "not graded",
@@ -10022,6 +10061,15 @@
    "graded_by": "",
    "kind": "",
    "name": "voiceofsikkim.com",
+   "note": "",
+   "reason": ""
+  },
+  "wakeup.sg": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "wakeup.sg",
    "note": "",
    "reason": ""
   },
