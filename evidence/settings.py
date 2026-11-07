@@ -149,6 +149,12 @@ GCAT_MISSION_FAILED = "F"   # in mission_result: failed early in its mission
 # The catalogue is released under CC-BY. This citation goes wherever its data is shown.
 GCAT_CITATION = "data from GCAT (J. McDowell, planet4589.org/space/gcat)"
 
+# Where each source named in a tooltip leads: its own page (ui/tooltip.py makes the name a link). Add a source here and
+# every tooltip that names it links to it.
+SOURCE_LINKS = {"GCAT": "https://planet4589.org/space/gcat/", "CelesTrak": "https://celestrak.org/",
+                "Space-Track": "https://www.space-track.org/", "IGS": "https://igs.org/",
+                "BKG": "https://igs.bkg.bund.de/", "Natural Earth": "https://www.naturalearthdata.com/"}
+
 # Column name -> how to say it to a reader who does not write software.
 REGISTRY_COLUMN_PLAIN_NAMES = {
     "constellation": "constellation",

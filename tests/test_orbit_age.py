@@ -1,4 +1,5 @@
 """Orbit record ages: source choice, age bands, the tile tags, and the details section."""
+import re
 from datetime import datetime, timedelta, timezone
 
 import requests
@@ -6,6 +7,11 @@ import requests
 from ui import orbit_age
 from ui import data as dashboard_data
 from ui.data import orbit_age_rows
+
+
+def _words(html):
+    """The text of some markup, without its tags."""
+    return re.sub(r"<[^>]+>", "", html)
 
 ORBIT_GAP = dashboard_data.orbit_gap   # the real one: tests/conftest.py puts a stand-in in its place for every test
 
@@ -79,12 +85,13 @@ def test_tag_says_its_age_source_and_limits_and_is_coloured_by_status():
     idle = orbit_age.tag(rows[2])
 
     assert 'class="chip ok">orbit 1.4 days old' in ok
-    assert "Orbit record from 25 Oct 09:12 UTC, CelesTrak" in ok
+    assert "Orbit record from 25 Oct 09:12 UTC, CelesTrak" in _words(ok)   # CelesTrak is a link to it
+    assert '<a class="tt-src" href="https://celestrak.org/"' in ok
     assert "alert at 2 days, stale at 3" in ok
     assert "off by" not in ok
 
     assert 'class="chip bad">orbit 3.1 days old' in bad
-    assert "Orbit record from 23 Oct 09:12 UTC, Space-Track" in bad
+    assert "Orbit record from 23 Oct 09:12 UTC, Space-Track" in _words(bad)
     assert "alert at 2 days, stale at 3" in bad
 
     assert 'class="chip idle">no orbit record' in idle
@@ -102,7 +109,7 @@ def test_tag_and_table_add_the_broadcast_gap_when_one_is_published():
     html = orbit_age.tag(rows[0], orbit_age._gap_by_satellite(GAP)["IRNSS-1B"])
     summary, body, stale_notice = orbit_age.section_markup(rows, gap=GAP)
 
-    assert "Orbit record from 25 Oct 09:12 UTC, CelesTrak · off by 3.2 km on 25 Oct · alert at 2 days, stale at 3" in html
+    assert "Orbit record from 25 Oct 09:12 UTC, CelesTrak · off by 3.2 km on 25 Oct · alert at 2 days, stale at 3" in _words(html)
     assert summary.endswith(" · broadcast check 25 Oct")
     assert "Off from its broadcast orbit" in body
     assert 'class="num idle">3.2 km</b><span class="nt">25 Oct</span>' in body
