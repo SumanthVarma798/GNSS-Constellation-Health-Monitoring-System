@@ -34,13 +34,15 @@ CARD_CSS = """
   box-shadow: var(--raised); font-size: var(--fs-small); line-height: 1.45; font-weight: 400; text-align: left; white-space: normal;
   letter-spacing: normal; text-transform: none; z-index: 1000; pointer-events: none;
   opacity: 0; visibility: hidden; transition: opacity 150ms ease, visibility 0s linear 150ms; }
-.tt-card.on, .tt:hover > .tt-card, .tt-trigger:focus + .tt-card, .tt > .tt-card:focus-within {
+.tt-card.on, .tt:hover > .tt-card, .tt-trigger:focus + .tt-card, .tt > .tt-card:is(:focus-within, :hover) {
   opacity: 1; visibility: visible; transition: opacity 150ms ease 200ms, visibility 0s linear 200ms; }
-/* An open card takes the pointer, so a link in it can be clicked; its edge reaches 10px over the gap to the trigger, so
-   crossing the gap does not close it. The canvases' cards follow the pointer and stay out of its way. */
-.tt:hover > .tt-card, .tt > .tt-card:focus-within { pointer-events: auto; }
+/* An open card takes the pointer, however it was opened (hover, a click on its heading, the keyboard), so a link in it
+   can be clicked; a card the pointer is on stays open even if the heading has lost its focus (Safari does not focus a
+   link it is clicking). Its edge reaches 10px over the gap to the trigger, so crossing the gap does not close it. The
+   canvases' cards follow the pointer and stay out of its way. */
+.tt:hover > .tt-card, .tt-trigger:focus + .tt-card, .tt > .tt-card:is(:focus-within, :hover) { pointer-events: auto; }
 .tt > .tt-card::before { content: ""; position: absolute; inset: -10px 0; z-index: -1; }
-.tt-card a.tt-src { color: inherit; text-decoration: underline dotted; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.tt-card a.tt-src { color: inherit; cursor: pointer; text-decoration: underline dotted; text-decoration-thickness: 1px; text-underline-offset: 3px; }
 .tt-card a.tt-src:is(:hover, :focus-visible) { color: var(--accent); text-decoration-style: solid; }
 """
 
