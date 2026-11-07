@@ -1,8 +1,14 @@
 """Orbit record gap report helpers use one row model for markdown, JSON and summary text."""
 import json
-from datetime import date
+from datetime import date, datetime, timezone
 
+import numpy as np
+from skyfield.api import EarthSatellite
+from skyfield.framelib import itrs
+
+from data import celestrak
 from scripts import orbit_record_gap
+from test_celestrak import IRNSS_1B
 
 
 ROWS = [
@@ -95,8 +101,8 @@ def test_rows_for_day_fills_every_field_the_report_json_and_dashboard_read(monke
     monkeypatch.setattr(orbit_record_gap, "tracked", lambda day: [("I002", "IRNSS-1B", 39635, "I02"),
                                                                   ("I003", "IRNSS-1C", 40269, "I03")])
     monkeypatch.setattr(orbit_record_gap, "orbit_records", lambda norads, now: {39635: ["record"]})
-    monkeypatch.setattr(orbit_record_gap, "compare", lambda broadcast, records, signal_id, leap, day:
-                        ([sample(2.0, used), sample(4.0, used)], used))
+    monkeypatch.setattr(orbit_record_gap, "broadcast_samples", lambda broadcast, signal_id, leap, day: [])
+    monkeypatch.setattr(orbit_record_gap, "compare", lambda positions, records: ([sample(2.0, used), sample(4.0, used)], used))
 
     rows, leap, checked, corrections = orbit_record_gap.rows_for_day(date(2026, 10, 24), now=datetime(2026, 10, 26, 6, tzinfo=timezone.utc))
 
@@ -157,3 +163,52 @@ G05 2026 10 17 12 00 00-2.374444156890E-04-2.273736754430E-13 0.000000000000E+00
         "satellites": [{"satellite": "NAVSTAR 5", "signal_id": "G05", "norad": 56564,
                         "fit_km": 0.12, "row": row}],
     }
+
+
+def _on_track(row, utc, shift_km=0.0):
+    """(utc, Earth-fixed xyz km) where the orbit record puts its satellite, pushed `shift_km` away from the Earth."""
+    ts = orbit_record_gap._ts
+    at = EarthSatellite(row["TLE_LINE1"], row["TLE_LINE2"], ts=ts).at(ts.from_datetime(utc))
+    guess = at.position.km * (1 + shift_km / np.linalg.norm(at.position.km))
+    return utc, itrs.rotation_at(ts.from_datetime(utc)) @ guess   # inertial -> Earth-fixed, as compare undoes it
+
+
+def test_the_gap_is_how_far_each_broadcast_position_is_from_where_the_record_puts_the_satellite():
+    row = celestrak.as_history_row(IRNSS_1B)
+    epoch = datetime(2026, 10, 7, 23, 9, 31, tzinfo=timezone.utc)
+    record = (epoch, row["TLE_LINE1"], row["TLE_LINE2"])
+    moments = [datetime(2026, 10, 8, 0, 15, tzinfo=timezone.utc), datetime(2026, 10, 8, 0, 45, tzinfo=timezone.utc)]
+
+    exact, _ = orbit_record_gap.compare([_on_track(row, m) for m in moments], [record])
+    off, _ = orbit_record_gap.compare([_on_track(row, m, shift_km=5.0) for m in moments], [record])
+
+    assert max(s[0] for s in exact) < 1e-3   # on the track: no gap
+    assert all(abs(s[0] - 5.0) < 0.01 and abs(s[3] - 5.0) < 0.01 for s in off)   # 5 km, all of it radial
+    assert orbit_record_gap.compare([_on_track(row, moments[0])], []) == ([], None)   # no orbit record: nothing to compare
+
+
+def test_a_glonass_satellite_is_compared_at_the_moments_its_own_records_give(monkeypatch):
+    used = datetime(2026, 10, 24, 22, 0, tzinfo=timezone.utc)
+    at_0015, at_0045 = datetime(2026, 10, 24, 0, 15, tzinfo=timezone.utc), datetime(2026, 10, 24, 0, 45, tzinfo=timezone.utc)
+    seen = []
+
+    def compare(positions, records):
+        seen.append([utc for utc, _ in positions])
+        return [(2.0, 2.0, 0.1, 0.0, 55.0, used)] * 2, used
+
+    monkeypatch.setattr(orbit_record_gap, "navigation_text", lambda day, file=None: "text")
+    monkeypatch.setattr(orbit_record_gap, "leap_seconds", lambda text: 18)
+    monkeypatch.setattr(orbit_record_gap, "read_navigation", lambda text: {})
+    monkeypatch.setattr(orbit_record_gap, "read_status", lambda text: {
+        "R01": {"health": 0, "accuracy_m": 2.0, "iod": 0, "newest": datetime(2026, 10, 24, 12, 0)}})
+    monkeypatch.setattr(orbit_record_gap, "time_corrections", lambda text: {})
+    monkeypatch.setattr(orbit_record_gap, "read_glonass", lambda text: {
+        "R01": {at_0045: (1.0, 2.0, 3.0), at_0015: (4.0, 5.0, 6.0), datetime(2026, 10, 23, 23, 45, tzinfo=timezone.utc): (7.0, 8.0, 9.0)}})
+    monkeypatch.setattr(orbit_record_gap, "tracked", lambda day: [("R001", "COSMOS 2620", 99999, "R01")])
+    monkeypatch.setattr(orbit_record_gap, "orbit_records", lambda norads, now: {99999: ["record"]})
+    monkeypatch.setattr(orbit_record_gap, "compare", compare)
+
+    (row,), *_ = orbit_record_gap.rows_for_day(date(2026, 10, 24), now=datetime(2026, 10, 26, 6, tzinfo=timezone.utc))
+
+    assert seen == [[at_0015, at_0045]]   # that day's records only, in time order
+    assert row["typical_km"] == 2.0 and "not compared" not in row["note"] and row["note"] == ""

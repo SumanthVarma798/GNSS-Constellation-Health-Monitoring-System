@@ -5,7 +5,7 @@ import math
 from datetime import date, datetime, timedelta, timezone
 
 from analysis.broadcast_orbit import nearest, position, read_glonass, read_navigation, read_status, system_time, time_corrections
-from scripts.orbit_record_gap import compare
+from scripts.orbit_record_gap import broadcast_samples, compare
 
 FILE = """\
      3.04           N: GNSS NAV DATA    M: MIXED            RINEX VERSION / TYPE
@@ -81,7 +81,7 @@ def test_the_gap_report_finds_a_fresh_record_within_kilometres_and_skips_uncover
     record = (datetime(2026, 10, 19, 7, 32, 57, tzinfo=timezone.utc),
               "1 56564U 23066A   26292.31455302 -.00000278  00000-0  00000+0 0  9994",
               "2 56564   0.4524   8.1520 0005748 207.1566  65.7354  1.00267984 12639")
-    samples, used = compare(read_navigation(FILE)["C01"], [record], "C01", 18, date(2026, 10, 17))
+    samples, used = compare(broadcast_samples(read_navigation(FILE)["C01"], "C01", 18, date(2026, 10, 17)), [record])
     assert used == record[0] and 30 <= len(samples) <= 34      # only the hours the one broadcast record covers
     gaps = sorted(sample[0] for sample in samples)
     assert gaps[len(gaps) // 2] < 15                           # orbit records are good to kilometres, not hundreds

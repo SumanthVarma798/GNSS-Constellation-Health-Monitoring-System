@@ -3,8 +3,9 @@ and fresh orbit records fitted to the broadcast positions when the newest regula
 
 For one UTC day, every 15 minutes: where the orbit record nearest in time (TLE, rolled with SGP4)
 puts each dashboard satellite, against where the satellite's broadcast orbit puts it (good to
-metres). It can also fit an SGP4 record to those broadcast positions (GLONASS uses the positions
-its own records give), so a day with no fresh regular record still leaves a usable one behind.
+metres). It can also fit an SGP4 record to those broadcast positions, so a day with no fresh regular
+record still leaves a usable one behind. GLONASS broadcasts a position every 30 minutes and no orbit elements,
+so it is compared and fitted at those moments, not every 15 minutes.
 Prints a Markdown report. Read-only apart from the files it is told to write.
 
     python scripts/orbit_record_gap.py                   # the newest day BKG has, from its copy of the IGS file
@@ -154,12 +155,12 @@ def previous_fitted(path, day):
     return out
 
 
-def compare(broadcast, records, signal_id, leap, day):
-    """Per 15 minutes a broadcast record covers: (gap km, along km, cross km, radial km, broadcast longitude, UTC); and the last orbit record used."""
+def compare(positions, records):
+    """Per broadcast position ([(utc, Earth-fixed xyz km)]): (gap km, along km, cross km, radial km, broadcast longitude, UTC); and the last orbit record used."""
     samples, used = [], None
     if not records:
         return samples, used
-    for utc, fixed in broadcast_samples(broadcast, signal_id, leap, day):
+    for utc, fixed in positions:
         epoch, line1, line2 = min(records, key=lambda record: abs(record[0] - utc))   # nearest in time, either side
         used = epoch
         t = _ts.from_datetime(utc)
@@ -224,16 +225,12 @@ def rows_for_day(day, file=None, now=None, previous_fitted_dir=None):
             row["note"] = "not in the day's broadcast file"
             rows.append(row)
             continue
+        positions = (glonass_samples(glonass, signal_id, day) if signal_id[0] == "R"
+                     else broadcast_samples(broadcast[signal_id], signal_id, leap, day))
         previous = fitted.get(norad)
         if previous and isinstance(previous.get("row"), dict):
-            positions = (glonass_samples(glonass, signal_id, day) if signal_id[0] == "R"
-                         else broadcast_samples(broadcast[signal_id], signal_id, leap, day))
             row["fitted_km"] = _fitted_gap(positions, previous["row"])
-        if signal_id[0] == "R":
-            row["note"] = "orbit not compared: GLONASS broadcasts position, not elements"
-            rows.append(row)
-            continue
-        samples, used = compare(broadcast[signal_id], records.get(norad, []), signal_id, leap, day)
+        samples, used = compare(positions, records.get(norad, []))
         if not samples:
             row["note"] = "no orbit record"
             rows.append(row)
@@ -269,9 +266,6 @@ def markdown_report(day, leap, rows):
             continue
         if row["note"] == "no orbit record":
             lines.append(f"| {satellite} | {signal} | no orbit record | | | | | | {fitted} |")
-            continue
-        if row["note"] == "orbit not compared: GLONASS broadcasts position, not elements":
-            lines.append(f"| {satellite} | {signal} | | | | | {row['note']} | | {fitted} |")
             continue
         when = datetime.fromisoformat(row["record_epoch"].replace("Z", "+00:00"))
         lines.append(f"| {satellite} | {signal} | {when:%d %b %H:%M} | {row['age_days']:.1f} days | "
