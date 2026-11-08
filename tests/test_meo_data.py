@@ -129,3 +129,25 @@ def test_a_satellite_the_registry_gives_no_plane_is_kept_with_no_score():
     assert list(result["health"]["Satellite"]) == ["COSMOS 2620"]
     assert pd.isna(result["health"]["Overall Score"].iloc[0])
 
+
+
+def test_a_new_beidou_satellite_is_announced_on_its_own_page_only(monkeypatch):
+    from datetime import date
+
+    from evidence import registry_tables
+
+    real = registry_tables.read_table
+    added = {"C215": "2026-11-07", "C217": "2026-11-07"}   # BeiDou-3 M16 (MEO) and BeiDou-3 G1 (GEO)
+
+    def read_table(name):
+        rows = real(name)
+        if name == REGISTRY_DASHBOARD_SATELLITES_FILE:
+            rows = [{**row, "added": added.get(row["svn"], row["added"])} for row in rows]
+        return rows
+
+    monkeypatch.setattr(registry_tables, "read_table", read_table)
+    meo = registry_tables.new_on_dashboard("BeiDou-3 MEO", date(2026, 11, 8))
+    geo_igso = registry_tables.new_on_dashboard("BeiDou-3", date(2026, 11, 8))
+
+    assert "BeiDou-3 M16" in meo and "BeiDou-3 G1" not in meo
+    assert "BeiDou-3 G1" in geo_igso and "BeiDou-3 M16" not in geo_igso
