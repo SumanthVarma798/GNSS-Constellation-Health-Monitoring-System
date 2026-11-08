@@ -110,7 +110,7 @@ def _slot_label(group):
     """The longitude, then who the slot belongs to if its satellite is gone or not known."""
     empty = _owners_in(group, EMPTY_STATES)
     unknown = _owners_in(group, (palette.SLOT_UNKNOWN,))
-    text = f"{group['lon']:g}"
+    text = f"{_east(group['lon']):g}"
     if empty:
         text += f", empty slot of {' and '.join(empty)}"
     if unknown:

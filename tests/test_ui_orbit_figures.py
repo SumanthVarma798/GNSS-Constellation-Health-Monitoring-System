@@ -332,3 +332,5 @@ def test_slots_either_side_of_the_date_line_are_drawn_as_one_stretch():
     ticks = [e.text for e in svg.iter("text") if e.text and e.text.endswith(("E", "W")) and "°" in e.text]
     assert "160° W" in ticks and "180° W" not in ticks[:1]                           # east of 180 reads as west
     assert {e.get("data-slot-lon") for e in svg.iter("circle") if e.get("data-owner") == "QZS-7"} == {"-175"}
+    words = [e.text for e in svg.iter("text") if e.text]
+    assert "-175" in words and not any(w.startswith("185") for w in words)   # the slot's own label, in degrees east
