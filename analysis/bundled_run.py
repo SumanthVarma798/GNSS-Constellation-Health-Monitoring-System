@@ -27,7 +27,7 @@ from config.config import (
     BEIDOU3_SATS, BEIDOU3_SERVICE_REQUIREMENTS, DEFAULT_PARAMS, GRAVEYARD_ORBIT_MIN,
     NAVIK_SATS, QZSS_SATS, QZSS_SERVICE_REQUIREMENTS, R_EARTH,
 )
-from data.tle_cache import get_gp_history_metadata, load_bundled_gp_history, load_bundled_tles
+from data.tle_cache import bundle_key, get_gp_history_metadata, load_bundled_gp_history, load_bundled_tles
 
 # constellation -> (satellites it tracks, service requirements), as app.py picks them.
 _CONSTELLATIONS = {
@@ -43,7 +43,7 @@ def load_bundled_gp_as_dataframes(constellation_key: str, sat_dict: dict, fresh=
     """Copy of app.py's load_bundled_gp_as_dataframes (same behaviour); app.py cannot be
     imported without running its Streamlit script. `fresh` ({norad: [rows]}, from data.celestrak)
     is added to each satellite's bundled records, leaving out epochs already there. With no bundled
-    file the fresh rows alone are used (BeiDou-3 MEO, GPS, GLONASS and Galileo have none yet)."""
+    file the fresh rows alone are used (the MEO systems have one only for satellites CelesTrak publishes no orbit for)."""
     all_dfs = []
     sat_data = (load_bundled_gp_history(constellation_key) or {}).get('satellites') or {}
     fresh = fresh or {}
@@ -305,7 +305,7 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
         p["inclination_tolerance"] = 4.0
     warnings = []
 
-    key = constellation.lower().replace('-', '')
+    key = bundle_key(constellation)
     gp_meta = get_gp_history_metadata(key)
     if not gp_meta['available']:
         raise ValueError(f"No bundled data for {constellation}")

@@ -360,3 +360,63 @@ def test_epochs_without_an_offset_are_utc_and_the_window_starts_at_midnight():
     cutoff = datetime(2025, 10, 26, tzinfo=timezone.utc)
     kept = updater.merge_rows_by_epoch([{"EPOCH": "2025-10-26T00:10:00"}, {"EPOCH": "2025-10-25T23:50:00"}], [], cutoff)
     assert [row["EPOCH"] for row in kept] == ["2025-10-26T00:10:00"]
+
+
+def test_all_adds_only_the_meo_satellites_outside_celestraks_gnss_group(monkeypatch):
+    use_small_targets(monkeypatch)
+    monkeypatch.setattr(updater, "MEO_SATS", {"GLONASS": {"COSMOS 2619": 100460, "COSMOS 2600": 7},
+                                              "BeiDou-3 MEO": {"BeiDou-3 M7": 8}})
+    copy = {"rows": [{"NORAD_CAT_ID": 7}, {"NORAD_CAT_ID": 8}]}
+    asked = []
+
+    class CopyReply:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return copy
+
+    monkeypatch.setattr(updater.requests, "get", lambda url, timeout: asked.append(url) or CopyReply())
+    targets = updater.resolve_targets("all")
+
+    assert asked == [updater.GNSS_GROUP_COPY_URL]                 # GitHub's copy, never CelesTrak itself
+    assert targets["glonass"] == {"COSMOS 2619": 100460}           # only the one CelesTrak's group leaves out
+    assert "beidou3_meo" not in targets                            # nothing outside the group: no entry
+    assert targets["navic"] == {"SAT-A": 1001, "SAT-B": 1002}      # the regional systems in full, as before
+
+
+def test_all_without_the_group_copy_still_updates_the_regional_systems(monkeypatch, capsys):
+    use_small_targets(monkeypatch)
+    monkeypatch.setattr(updater, "MEO_SATS", {"GLONASS": {"COSMOS 2619": 100460}})
+
+    def refused(url, timeout):
+        raise requests.ConnectionError("down")
+
+    monkeypatch.setattr(updater.requests, "get", refused)
+
+    assert set(updater.resolve_targets("all")) == {"navic", "qzss", "beidou3"}
+    assert "MEO satellites outside it not fetched" in capsys.readouterr().out
+
+
+def test_every_reader_and_writer_names_a_system_s_bundle_the_same_way():
+    from data.tle_cache import bundle_key
+
+    assert [bundle_key(s) for s in ("BeiDou-3", "BeiDou-3 MEO", "GLONASS", "NavIC")] == \
+        ["beidou3", "beidou3_meo", "glonass", "navic"]
+    assert set(updater.resolve_targets("beidou3_meo")) == {"beidou3_meo"}
+
+
+def test_a_run_over_some_satellites_keeps_the_history_of_the_others(monkeypatch):
+    monkeypatch.setattr(updater, "datetime", FrozenDateTime)
+    held = {"COSMOS 2460": [{"EPOCH": "2026-09-22T09:38:57"}], "COSMOS 2600": [{"EPOCH": "2026-10-01T00:00:00"}]}
+    monkeypatch.setattr(updater, "load_bundled_gp_history", lambda constellation: {"satellites": held})
+    monkeypatch.setattr(updater, "fetch_gp_history_for_satellite", lambda *args, **kwargs: [])
+    monkeypatch.setattr(updater.time, "sleep", lambda seconds: None)
+    saved = {}
+    monkeypatch.setattr(updater, "save_gp_history_to_bundle",
+                        lambda constellation, satellite_data, start, end: saved.update(satellite_data) or True)
+
+    updater.update_constellation_gp_history("glonass", {"COSMOS 2460": 36402}, object(), days=365,
+                                            query_state={"queries_made": 0}, verbose=False)
+
+    assert set(saved) == {"COSMOS 2460", "COSMOS 2600"}   # the satellite not asked about keeps its year
