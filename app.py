@@ -22,6 +22,7 @@ from analysis.maneuver_detection import detect_navik_maneuvers
 from analysis.health_assessment import assess_satellite_health_with_drift
 from analysis.dop_calculations import parse_tle_data, calculate_dop_for_location, get_dop_quality
 from analysis.raan_analysis import analyze_raan_spacing
+from analysis import commissioning
 from data.tle_cache import (
     bundle_key, load_bundled_tles, load_bundled_gp_history, get_tle_metadata, 
     get_gp_history_metadata, format_timestamp_for_display
@@ -688,6 +689,13 @@ if run_analysis:
                     if graveyard_sats:
                         st.warning(f"⚠️ Excluding {len(graveyard_sats)} satellite(s) in graveyard orbit: {', '.join(sorted(graveyard_sats))}")
                         df_all = df_all[~df_all['satellite'].isin(graveyard_sats)]
+                    # New satellites still being moved to their slot are left out of the scores, as the dashboard
+                    # (analysis/bundled_run.py) leaves them out
+                    moving_sats = set(commissioning.moving_to_slot(df_all_full, datetime.now(timezone.utc)))
+                    if moving_sats:
+                        st.info(f"Drifting to its slot, left out of the scores: {', '.join(sorted(moving_sats))}")
+                        df_all = df_all[~df_all['satellite'].isin(moving_sats)]
+                    st.session_state['moving_sats'] = moving_sats
                     
                     # Store in session state
                     st.session_state['df_all'] = df_all
@@ -778,6 +786,11 @@ if run_analysis:
                     if graveyard_sats:
                         st.warning(f"⚠️ Excluding {len(graveyard_sats)} satellite(s) in graveyard orbit: {', '.join(sorted(graveyard_sats))}")
                         df_all = df_all[~df_all['satellite'].isin(graveyard_sats)]
+                    moving_sats = set(commissioning.moving_to_slot(df_all, datetime.now(timezone.utc)))
+                    if moving_sats:
+                        st.info(f"Drifting to its slot, left out of the scores: {', '.join(sorted(moving_sats))}")
+                        df_all = df_all[~df_all['satellite'].isin(moving_sats)]
+                    st.session_state['moving_sats'] = moving_sats
                 
                     # Store in session state
                     st.session_state['df_all'] = df_all
@@ -899,7 +912,8 @@ if st.session_state.get('analysis_complete', False):
             with st.spinner("Analyzing satellite health and maneuver patterns..."):
                 # Fetch pattern data for all satellites with progress
                 pattern_data = {}
-                sat_list = [s for s, n in SAT_DICT.items() if n is not None]
+                moving_sats = st.session_state.get('moving_sats', set())   # left out, as in analysis/bundled_run.py
+                sat_list = [s for s, n in SAT_DICT.items() if n is not None and s not in moving_sats]
                 data_source = st.session_state.get('data_source', 'api')
                 progress_bar = st.progress(0, text="Loading historical pattern data...")
 
