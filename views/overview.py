@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 import pandas as pd
 import streamlit as st
 
+from analysis.commissioning import SETTLING_DAYS
 from config.config import MEO_SATS, TRACKED_NOT_IN_REGISTRY
 from evidence.registry_tables import left_out_notice, new_on_dashboard
 from ui import (checks, data, limits, measures, meo_overview, official_status, orbit_age, orbit_section,
@@ -60,7 +61,7 @@ def _tiles(result, tags=None):
                              age_html=tags.get(name, ""))
         tiles[name] = (html, False, None)
     for name in result.get("moving", {}):
-        html = surfaces.tile(name, slot="drifting to its slot", slot_status="accent", unscored="on its way",
+        html = surfaces.tile(name, slot="on its way or just parked", slot_status="accent", unscored="settling",
                              age_html=tags.get(name, ""))
         tiles[name] = (html, False, None)
     return tiles, rows
@@ -80,8 +81,9 @@ def _gaps(constellation, result, today):
     if moving:
         named = ", ".join(f"{name} (first orbit record {_day(since)})" for name, since in moving.items())
         surfaces.show(surfaces.notice(
-            f"Drifting to its slot: {named}. A new satellite is raised and drifted along the belt for "
-            "weeks, so its drift and burns are expected. It is left out of the scores until its orbit settles.", "accent"))
+            f"New, on its way to its slot or parked there under {SETTLING_DAYS} days ago: {named}. A new satellite is raised "
+            "and drifted along the belt for weeks, so its drift and burns are expected. It is left out of the scores until "
+            f"it has been parked {SETTLING_DAYS} days.", "accent"))
     shown = set(result["health"]["Satellite"]) | set(result["set_aside"]) | set(moving)
     no_data = [name for name, norad in SATELLITES[constellation].items() if norad is not None and name not in shown]
     unlisted = TRACKED_NOT_IN_REGISTRY[constellation]

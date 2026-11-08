@@ -693,7 +693,7 @@ if run_analysis:
                     # (analysis/bundled_run.py) leaves them out
                     moving_sats = set(commissioning.moving_to_slot(df_all_full, datetime.now(timezone.utc)))
                     if moving_sats:
-                        st.info(f"Drifting to its slot, left out of the scores: {', '.join(sorted(moving_sats))}")
+                        st.info(f"New, on its way to its slot or just parked, left out of the scores: {', '.join(sorted(moving_sats))}")
                         df_all = df_all[~df_all['satellite'].isin(moving_sats)]
                     st.session_state['moving_sats'] = moving_sats
                     
@@ -792,7 +792,7 @@ if run_analysis:
                     began_inside = set(first_seen[first_seen > pd.Timestamp(start_date_str) + pd.Timedelta(days=1)].index)
                     moving_sats = set(commissioning.moving_to_slot(df_all, datetime.now(timezone.utc))) & began_inside
                     if moving_sats:
-                        st.info(f"Drifting to its slot, left out of the scores: {', '.join(sorted(moving_sats))}")
+                        st.info(f"New, on its way to its slot or just parked, left out of the scores: {', '.join(sorted(moving_sats))}")
                         df_all = df_all[~df_all['satellite'].isin(moving_sats)]
                     st.session_state['moving_sats'] = moving_sats
                 
