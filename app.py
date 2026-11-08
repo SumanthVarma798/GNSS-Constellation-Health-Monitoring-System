@@ -786,7 +786,11 @@ if run_analysis:
                     if graveyard_sats:
                         st.warning(f"⚠️ Excluding {len(graveyard_sats)} satellite(s) in graveyard orbit: {', '.join(sorted(graveyard_sats))}")
                         df_all = df_all[~df_all['satellite'].isin(graveyard_sats)]
-                    moving_sats = set(commissioning.moving_to_slot(df_all, datetime.now(timezone.utc)))
+                    # Only the fetched window is known here, so a satellite already there at its start may be an
+                    # old one still drifting (stranded), which is scored: only one first seen inside it can be new.
+                    first_seen = df_all.groupby('satellite')['EPOCH'].min()
+                    began_inside = set(first_seen[first_seen > pd.Timestamp(start_date_str) + pd.Timedelta(days=1)].index)
+                    moving_sats = set(commissioning.moving_to_slot(df_all, datetime.now(timezone.utc))) & began_inside
                     if moving_sats:
                         st.info(f"Drifting to its slot, left out of the scores: {', '.join(sorted(moving_sats))}")
                         df_all = df_all[~df_all['satellite'].isin(moving_sats)]
