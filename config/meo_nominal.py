@@ -1,4 +1,4 @@
-"""What each medium Earth orbit (MEO) system's orbits should be: GPS, GLONASS and Galileo.
+"""What each medium Earth orbit (MEO) system's orbits should be: BeiDou-3 MEO, GPS, GLONASS and Galileo.
 
 Every value says where it comes from and how sure we are of it:
   CHECKED     read in the document itself (17 Oct 2026)
@@ -20,6 +20,8 @@ GLONASS_ICD = ("GLONASS Interface Control Document, navigational radiosignal in 
                "section 5, https://www.unavco.org/help/glossary/docs/ICD_GLONASS_5.1_(2008)_en.pdf")
 GALILEO_GSC = ("European GNSS Service Centre, Orbital and Technical Parameters (source ESA, reference epoch "
                "21 Nov 2016), https://www.gsc-europa.eu/system-service-status/orbital-and-technical-parameters")
+BDS_OS = ("BeiDou Navigation Satellite System Open Service Performance Standard, version 3.0 (BDS-OS-PS-3.0, "
+          "May 2021), section 4.1, http://en.beidou.gov.cn/SYSTEMS/Officialdocument/202110/P020211014595952404052.pdf")
 DASHBOARD = "The dashboard's own tolerance; no document sets one."
 
 
@@ -42,6 +44,13 @@ def _glonass_slots():
     return {str(j): (145 + 26 / 60 + 37 / 3600 + 15 * (27 - 3 * j + 25 * ((j - 1) // 8))) % 360 for j in range(1, 25)}
 
 
+def _beidou_slots():
+    """Walker 24/3/1: slot n of a plane at 45 (n - 1), each plane 15 degrees on from the one before (A, B, C).
+    The standard gives the pattern but no slot table, so the numbering order is ours: on 8 Nov 2026 every one of the
+    24 satellites in a slot was within 5 degrees of it, against CelesTrak's elements."""
+    return {f"{plane}-{n}": (15 * k + 45 * (n - 1)) % 360 for k, plane in enumerate("ABC") for n in range(1, 9)}
+
+
 # The 24 baseline slots (table 3.2-1) and the six expanded ones (table 3.2-2), at 1 July 1993.
 _GPS_SLOTS = {
     "A1": 268.126, "A2": 161.786, "A3": 11.676, "A4": 41.806,
@@ -58,6 +67,22 @@ _GPS_SLOTS = {
 # {registry slot name: argument of latitude}; a satellite whose slot is not listed has no slot to
 # be measured against. Tolerances: within it a part scores 100 (see analysis/meo_geometry.py).
 NOMINAL = {
+    "BeiDou-3 MEO": {
+        "registry_planes": Nominal({"1": "A", "2": "B", "3": "C"},
+                                   BDS_OS + ": three planes (Walker 24/3/1); the letters are the registry's slot names",
+                                   CHECKED),
+        "plane_spacing_deg": Nominal(120.0, BDS_OS + ": Walker 24/3/1, three planes an equal step apart", CHECKED),
+        "plane_tolerance_deg": Nominal(2.0, DASHBOARD, OUR_CHOICE),
+        "inclination_deg": Nominal(55.0, BDS_OS, CHECKED),
+        "inclination_tolerance_deg": Nominal(2.0, DASHBOARD, OUR_CHOICE),
+        # The source gives the height, 21,528 km; the axis adds the Earth's equatorial radius, 6,378.137 km.
+        "semi_major_axis_km": Nominal(round(21528 + 6378.137, 1), BDS_OS + ", from the altitude 21,528 km", CHECKED),
+        "semi_major_axis_tolerance_km": Nominal(10.0, DASHBOARD, OUR_CHOICE),
+        "eccentricity_max": Nominal(0.01, DASHBOARD + " The source gives none.", OUR_CHOICE),
+        "slots": Nominal(_beidou_slots(), BDS_OS + ": Walker 24/3/1. No slot table is given; the numbering order "
+                         "is ours, checked against the satellites' orbits", OUR_CHOICE),
+        "spacing_tolerance_deg": Nominal(4.0, DASHBOARD, OUR_CHOICE),
+    },
     "GPS": {
         "registry_planes": Nominal({str(n): p for n, p in enumerate("ABCDEF", 1)}, GPS_SPS, CHECKED),
         "plane_spacing_deg": Nominal(60.0, GPS_SPS + ", table 3.2-1", CHECKED),

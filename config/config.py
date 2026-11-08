@@ -21,19 +21,22 @@ GRAVEYARD_ORBIT_MIN = 35986.0  # Minimum graveyard orbit altitude (GEO + 200 km)
 # registry/satellites.csv (NORAD IDs, built from the IGS satellite metadata file).
 NAVIK_SATS = dashboard_satellites("NavIC")
 
+# The medium Earth orbit (MEO) systems, in the order the constellation chips show them.
+MEO_SYSTEMS = ("BeiDou-3 MEO", "GPS", "GLONASS", "Galileo")
+
 # Tracked satellites the registry does not list, by the constellation name the dashboard
 # shows. Normally empty. The dashboard runs without them and says so in a notice.
 TRACKED_NOT_IN_REGISTRY = {
     "NavIC": dashboard_satellites_not_in_registry("NavIC"),
     "QZSS": dashboard_satellites_not_in_registry("QZSS"),
     "BeiDou-3": dashboard_satellites_not_in_registry("BeiDou"),
-    **{system: dashboard_satellites_not_in_registry(system) for system in ("GPS", "GLONASS", "Galileo")},
+    **{system: dashboard_satellites_not_in_registry(system) for system in MEO_SYSTEMS},
 }
 
 # The medium Earth orbit (MEO) systems, judged by orbital plane (analysis/meo_geometry.py), not by
 # longitude slot. Their nominal orbits are in config/meo_nominal.py. The dashboard tracks every
 # registry satellite with a signal ID today; tests/test_meo_data.py keeps the list in step.
-MEO_SATS = {system: dashboard_satellites(system) for system in ("GPS", "GLONASS", "Galileo")}
+MEO_SATS = {system: dashboard_satellites(system) for system in MEO_SYSTEMS}
 
 # Every satellite of the generation each dashboard constellation shows, for the 3D view's "All":
 # (the registry's constellation name, how its block names start). The block is the design generation;

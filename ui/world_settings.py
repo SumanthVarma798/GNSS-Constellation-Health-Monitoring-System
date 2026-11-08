@@ -19,6 +19,7 @@ SYSTEM_COLOURS = {
     "Galileo": palette.CONSTELLATION_COLOURS["Galileo"],
     "GLONASS": palette.CONSTELLATION_COLOURS["GLONASS"],
     "BeiDou-3": palette.CONSTELLATION_COLOURS["BeiDou"],
+    "BeiDou-3 MEO": palette.CONSTELLATION_COLOURS["BeiDou"],
     "NavIC": palette.CONSTELLATION_COLOURS["NavIC"],
     "QZSS": palette.CONSTELLATION_COLOURS["QZSS"],
 }

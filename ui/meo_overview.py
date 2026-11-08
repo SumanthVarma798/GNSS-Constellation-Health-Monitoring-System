@@ -1,4 +1,4 @@
-"""The Overview for a medium Earth orbit (MEO) system: GPS, GLONASS or Galileo, by orbital plane.
+"""The Overview for a medium Earth orbit (MEO) system: BeiDou-3 MEO, GPS, GLONASS or Galileo, by orbital plane.
 
 Two views, one switch (remembered for the session). Planes, the default: a card per plane with only what is
 true of the plane, its strip of slots and satellites along the orbit, how many are in step and how many need a

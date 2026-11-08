@@ -21,10 +21,10 @@ def scope(name, page="Overview"):
     return setup
 
 
-def test_the_constellation_chips_offer_the_three_meo_systems_after_the_others():
+def test_the_constellation_chips_offer_the_meo_systems_after_the_others_beidou_beside_beidou():
     from ui.shell import CONSTELLATIONS
 
-    assert CONSTELLATIONS == ("NavIC", "QZSS", "BeiDou-3", "GPS", "GLONASS", "Galileo")
+    assert CONSTELLATIONS == ("NavIC", "QZSS", "BeiDou-3", "BeiDou-3 MEO", "GPS", "GLONASS", "Galileo")
 
 
 def test_galileo_shows_its_planes_and_says_what_is_missing():

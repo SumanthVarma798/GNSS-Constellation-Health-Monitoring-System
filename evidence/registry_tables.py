@@ -9,7 +9,7 @@ from datetime import date, timedelta
 
 from evidence.settings import (REGISTRY_CONSTELLATIONS_FILE, REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_DIR,
                                REGISTRY_DASHBOARD_TRACKED_SYSTEMS, REGISTRY_SATELLITES_FILE, REGISTRY_SIGHTINGS_FILE,
-                               NEW_ON_DASHBOARD_DAYS)
+                               NEW_ON_DASHBOARD_DAYS, DASHBOARD_SYSTEMS_BY_BLOCK)
 
 
 def read_table(name):
@@ -35,11 +35,20 @@ def _tracked(constellation):
     """(dashboard name, registry row or None) for each satellite the dashboard tracks in
     one constellation, in display order. The constellation is read from the SVN's letter,
     so it is known even for a satellite the registry does not list. A satellite CelesTrak lists before
-    the IGS file does is found in sightings.csv."""
+    the IGS file does is found in sightings.csv. A system in DASHBOARD_SYSTEMS_BY_BLOCK takes its constellation's
+    satellites of that block, which its constellation then leaves out; a satellite the registry does not list
+    has no block, so it stays with the constellation."""
     registry = {row["svn"]: row for row in read_table(REGISTRY_SATELLITES_FILE) + read_table(REGISTRY_SIGHTINGS_FILE)}
     letters = constellation_names()
+    name, block = DASHBOARD_SYSTEMS_BY_BLOCK.get(constellation, (constellation, None))
+    split_off = tuple(start for parent, start in DASHBOARD_SYSTEMS_BY_BLOCK.values() if parent == constellation)
+
+    def in_system(found):
+        held = (found or {}).get("block", "")
+        return bool(found) and held.startswith(block) if block else not (held and held.startswith(split_off))
+
     return [(row["dashboard_name"], registry.get(row["svn"])) for row in read_table(REGISTRY_DASHBOARD_SATELLITES_FILE)
-            if letters.get(row["svn"][:1]) == constellation]
+            if letters.get(row["svn"][:1]) == name and in_system(registry.get(row["svn"]))]
 
 
 def dashboard_satellites(constellation):

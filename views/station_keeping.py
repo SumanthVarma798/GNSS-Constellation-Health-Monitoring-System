@@ -138,7 +138,7 @@ except ValueError as error:
 
 kept = {name: result for name, result in results.items()
         if "history_note" not in result or not result["burns"].empty}
-for name, result in results.items():   # GPS, GLONASS and Galileo: how much history the burns are looked for in
+for name, result in results.items():   # the MEO systems: how much history the burns are looked for in
     if "history_note" in result:   # in the page when nothing else is left to show, else in the inbox
         surfaces.show(surfaces.notice(
             f"{name}. {result['history_note']} Burns show here once weeks of it have built up.", "idle",

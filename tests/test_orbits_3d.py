@@ -101,7 +101,7 @@ def test_the_payload_holds_both_sets_with_plane_and_slot_words(history):
     payload = orbit_view_payload(rows, history, None, fleet, live)
     sats = {s["name"]: s for s in payload["satellites"]}
 
-    assert list(sats) == ["BeiDou-3 G4", "BeiDou-3 I1", "Beidou-3 M3-S", "Beidou-3 M7"]
+    assert list(sats) == ["BeiDou-3 G4", "BeiDou-3 I1", "Beidou-3 M3-S", "BeiDou-3 M7"]
     g4, i1, m3s, m7 = sats.values()
     assert g4["tracked"] and g4["service"] and g4["group"] == "GEO" and g4["note"] == ""
     assert i1["tracked"] and not i1["service"] and i1["note"] == "not listed by CelesTrak"   # hidden under In service

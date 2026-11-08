@@ -1,6 +1,6 @@
 """Where each medium Earth orbit (MEO) satellite is against where its system says it should be.
 
-GPS, GLONASS and Galileo are judged by orbital plane, not by longitude slot. From each satellite's
+BeiDou-3 MEO, GPS, GLONASS and Galileo are judged by orbital plane, not by longitude slot. From each satellite's
 newest mean elements, all moved to one common time (the newest epoch among them):
 
   plane         Which plane its orbit is in, from its node (right ascension of the ascending node, RAAN).
@@ -141,7 +141,7 @@ def _slot_positions(rows, working, now, slot_of, slots):
 
 
 def assess(system, elements, registry):
-    """One row per satellite of `system` ("GPS", "GLONASS" or "Galileo"), in the order of `elements`.
+    """One row per satellite of `system` ("BeiDou-3 MEO", "GPS", "GLONASS" or "Galileo"), in the order of `elements`.
 
     elements: {name: newest element row, with EPOCH a datetime}. registry: {name: registry row (plane,
     slot, signal_id_now)}. Each row: name, signal_id, plane (from the orbit), registry_plane, plane_agrees,

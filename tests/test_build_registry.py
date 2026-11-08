@@ -100,7 +100,7 @@ def test_every_tracked_satellite_is_in_the_committed_registry():
     # Strict where a person approves: a proposal that would leave a tracked satellite out fails here.
     import config.config
 
-    assert config.config.TRACKED_NOT_IN_REGISTRY == {"NavIC": [], "QZSS": [], "BeiDou-3": [],
+    assert config.config.TRACKED_NOT_IN_REGISTRY == {"NavIC": [], "QZSS": [], "BeiDou-3": [], "BeiDou-3 MEO": [],
                                                      "GPS": [], "GLONASS": [], "Galileo": []}
 
 

@@ -1,4 +1,4 @@
-"""GPS, GLONASS and Galileo: which satellites are tracked, and how their orbits reach the pages. No network."""
+"""The MEO systems: which satellites are tracked, and how their orbits reach the pages. No network."""
 from datetime import datetime, timedelta, timezone
 
 import pandas as pd
@@ -7,7 +7,7 @@ import pytest
 from analysis.bundled_run import load_bundled_gp_as_dataframes
 from analysis.meo_geometry import NO_PLANE
 from analysis.meo_run import assess_meo
-from config.config import MEO_SATS
+from config.config import BEIDOU3_SATS, MEO_SATS
 from data import celestrak
 from evidence.registry_tables import constellation_names, read_table
 from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_SATELLITES_FILE
@@ -41,6 +41,19 @@ def test_the_tracked_list_is_every_registry_satellite_with_a_signal_id_today(sys
 
     assert tracked == with_signal
     assert len(MEO_SATS[system]) == len(with_signal)
+
+
+def test_beidou_3_meo_tracks_every_bds_3_meo_satellite_with_a_signal_id_and_beidou_3_keeps_the_rest():
+    # BeiDou's rows are kept by a person, not in step with the registry: this fails when a MEO satellite gains or
+    # loses a signal ID, until registry/dashboard_satellites.csv is changed to match.
+    registry = read_table(REGISTRY_SATELLITES_FILE)
+    with_signal = {row["catalogue_no"] for row in registry
+                   if row["block"].startswith("BDS-3M") and row["signal_id_now"]}
+    geo_igso = {row["catalogue_no"] for row in registry if row["block"].startswith(("BDS-3G", "BDS-3I"))}
+
+    assert {str(n) for n in MEO_SATS["BeiDou-3 MEO"].values()} == with_signal
+    assert {str(n) for n in BEIDOU3_SATS.values()} <= geo_igso   # the split leaves no MEO satellite in BeiDou-3
+    assert len(BEIDOU3_SATS) == 7
 
 
 def test_celestrak_rows_alone_make_a_history_when_there_is_no_bundled_file():
