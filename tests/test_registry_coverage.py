@@ -46,3 +46,18 @@ def test_the_pages_say_who_is_left_out_and_why():
     assert "NVS-02" in left_out_notice("NavIC")
     assert "QZS-1 (Michibiki-1)" in left_out_notice("QZSS")
     assert left_out_notice("BeiDou-3") == "" and left_out_notice("GPS") == ""
+
+
+def test_every_tracked_regional_satellite_with_a_slot_has_its_targets():
+    """A satellite added to the tracked list but not to the targets is scored with no longitude or inclination target
+    (QZS-7 and the three BeiDou IGSO satellites were, for a day). One the registry gives no slot for yet (NVS-03,
+    still a sighting) cannot have a target and is let through."""
+    from config.config import (BEIDOU3_SATS, BEIDOU3_SERVICE_REQUIREMENTS, NAVIK_SATS, NAVIK_SERVICE_REQUIREMENTS,
+                               QZSS_SATS, QZSS_SERVICE_REQUIREMENTS)
+    from evidence.registry_tables import dashboard_registry_rows
+
+    for page, sats, targets in (("NavIC", NAVIK_SATS, NAVIK_SERVICE_REQUIREMENTS), ("QZSS", QZSS_SATS, QZSS_SERVICE_REQUIREMENTS),
+                                ("BeiDou", BEIDOU3_SATS, BEIDOU3_SERVICE_REQUIREMENTS)):
+        rows = dashboard_registry_rows(page)
+        missing = [name for name in sats if name not in targets and rows.get(name, {}).get("slot")]
+        assert missing == [], page

@@ -43,6 +43,7 @@ def test_the_tracked_list_is_every_registry_satellite_with_a_signal_id_today(sys
     assert len(MEO_SATS[system]) == len(with_signal)
 
 
+@pytest.mark.coverage_gate   # a new BeiDou MEO signal ID must open a registry proposal, then block only its merge
 def test_beidou_3_meo_tracks_every_bds_3_meo_satellite_with_a_signal_id_and_beidou_3_keeps_the_rest():
     # BeiDou's rows are kept by a person, not in step with the registry: this fails when a MEO satellite gains or
     # loses a signal ID, until registry/dashboard_satellites.csv is changed to match.

@@ -138,7 +138,16 @@ QZSS_SERVICE_REQUIREMENTS = {
         "inclination_target_deg": 0.0, "inclination_tol_deg": 0.5,
         "sma_km": 42164.0, "sma_tol_km": 10.0,
         "ecc_max": 0.099
-    }
+    },
+    # QZS-6's tolerances around the IGS file's slot (175W, registry/satellites.csv). On 8 Nov 2026 it sat at 174.8W
+    # with 2.9 degrees inclination, so it may still be in check-out: its inclination score shows that.
+    "QZS-7 (Michibiki-7)": {
+        "type": "GEO",
+        "central_longitude_deg": -175.0, "longitude_tol_deg": 0.5,
+        "inclination_target_deg": 0.0, "inclination_tol_deg": 0.5,
+        "sma_km": 42164.0, "sma_tol_km": 10.0,
+        "ecc_max": 0.099
+    },
 }
 
 # Typical maintenance cadence for QZSS (about once every six months)
@@ -218,7 +227,19 @@ QZSS_MAINTENANCE_NOTE = "Orbit correction maneuvers occur roughly once every six
 
 BEIDOU3_SATS = dashboard_satellites("BeiDou")
 
+def _igso(central_longitude_deg):
+    """A BeiDou IGSO satellite's targets: the BeiDou-3 IGSO tolerances below, around its own crossing longitude."""
+    return {"type": "IGSO", "central_longitude_deg": central_longitude_deg, "longitude_tol_deg": 5.0,
+            "inclination_target_deg": 55.0, "inclination_target_deg_range": (52.0, 58.0), "inclination_tol_deg": 3.0,
+            "sma_km": 42164.0, "sma_tol_km": 10.0, "ecc_max": 0.05}
+
+
 BEIDOU3_SERVICE_REQUIREMENTS = {
+    # The BeiDou-2 and BeiDou-3 test IGSO satellites still broadcasting (added 8 Nov 2026); each central longitude
+    # is its slot in the IGS file (registry/satellites.csv: 094E, 112E, 096E).
+    "BeiDou-2 IGSO-6": _igso(94.0),
+    "BeiDou-2 IGSO-7": _igso(112.0),
+    "BeiDou-3S IGSO-2S": _igso(96.0),
     "BeiDou-3 I1": {
         "type": "IGSO",
         "central_longitude_deg": 118.0,
