@@ -358,7 +358,9 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
                 date_counter[d] += 1
         except Exception:
             continue
-    min_required = max(1, int(0.75 * len(sat_dict)))
+    # Expected = the tracked satellites the data has observations of: one just added, with no history yet,
+    # would otherwise raise the bar and move every other satellite's score (QZS-7, 8 Nov 2026).
+    min_required = max(1, int(0.75 * sum(pdata is not None for pdata in pattern_data.values())))
     deployed_dates = {d for d, cnt in date_counter.items() if cnt >= min_required} or None
 
     health_assessments = []
