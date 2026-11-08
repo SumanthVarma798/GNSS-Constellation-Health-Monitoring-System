@@ -44,8 +44,8 @@ def latest_copy(archive):
 def tracked_catalogue_numbers():
     """The catalogue number of every satellite the dashboard tracks that the registry lists."""
     registry = {row["svn"]: row for row in read_table(REGISTRY_SATELLITES_FILE) + read_table(REGISTRY_SIGHTINGS_FILE)}
-    return {int(registry[row["svn"]]["catalogue_no"])
-            for row in read_table(REGISTRY_DASHBOARD_SATELLITES_FILE) if row["svn"] in registry}
+    return {int(registry[row["svn"]]["catalogue_no"]) for row in read_table(REGISTRY_DASHBOARD_SATELLITES_FILE)
+            if registry.get(row["svn"], {}).get("catalogue_no", "").strip().isdigit()}
 
 
 def outside_group(rows, tracked, get=requests.get):
@@ -78,7 +78,10 @@ def main():
     except (OSError, ValueError) as problem:
         sys.exit(f"No orbit copy written: {problem}")
     if args.outside_group:
-        copy["outside_group"] = outside_group(copy["rows"], tracked_catalogue_numbers())
+        try:
+            copy["outside_group"] = outside_group(copy["rows"], tracked_catalogue_numbers())
+        except (OSError, ValueError, KeyError) as problem:   # an unreadable registry never costs the group's copy
+            print(f"No satellites outside the group added: {problem}", file=sys.stderr)
     Path(args.out).write_text(json.dumps(copy, separators=(",", ":")) + "\n", encoding="utf-8")
     print(f"Wrote {len(copy['rows'])} orbit records fetched {copy['fetched_at']} to {args.out}")
 
