@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-07T22:23:05Z",
+ "generated_at": "2026-11-08T06:45:46Z",
  "items": [
   {
    "address": "https://x.com/RussianSpaceWeb/status/2119090480558506095",
@@ -1351,6 +1351,22 @@
    "source_id": "urbanacres.in",
    "summary": "",
    "title": "NVS-03 Launch Restores India’s NavIC Navigation System",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiggFBVV95cUxNbzJrYlFuZ19SeGR3OU1SQ3o5Rk4wZGZ3emQ0V1lfODZnaW03TGtPQTNJdXl0Q3N0YmoxdUpsT0V3UWowODlUU0FybmJoLVdCNU1obWxGRTdjQmM0UGwxR2RYMS0tb0cyVVBuODZzOHlULXExUTFIQ2hDTVlvM0txU1B3?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-08T06:45:04Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Sprouts News",
+   "published_at": "2026-10-31T10:51:53Z",
+   "source_id": "sproutsnews.com",
+   "summary": "",
+   "title": "ISRO NVS-03 Satellite Launch: Why It Matters for Defence",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -2766,22 +2782,6 @@
    "source_id": "thenewsmill.com",
    "summary": "",
    "title": "ISRO places NVS-03 satellite in orbit, restores NavIC operation",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMi4gFBVV95cUxPXzVsZ19Wc3p0dGJYTDBTUDIxQzV1NTlEaXdRU1NidUNwN1NFd2dOX1F4NVZHZF9GWFViUTRJWjZXdnZwRjFjQXg0X3RwbzBrcWROdnUzRWRiREI0Y2x1NlpZaFN4MGs5M1pFaS0wdy1kaTBhN2xjU0QxMVlZY1J0MEFpbDluUlVKSzBkY21yQ1pWd1poZUktYkVfbENPMm5XbnlwbWxMekV2VlBMRDgwOEZkN2pLeVlmVC1vUzZmRy1QVGFoSTdMRmI3cVhTcDhTQ2dnZ2d3c29NRWdfSl82a2tR0gHnAUFVX3lxTE5VcVJuQkJCZVpyODJiQVhXenZFZlAzZlpoRGhhSnJoYlFCRzhBMlBLeW1JcTJYd2lDUXFka0l0NUlBXy1FZmw1R0t4XzlHdGhoLTZDSzM1N05QQ3FscGpIVUJfRDFrUFFsMFo0Q3NJMnlwUFNieVRXaFNwM1paelBLNklDNVg4T25pVmJycHQ0WDRTQ1BYeVRyRngyaVFFV05YNDF4MjVFSkZtZjhPU2tFRHF3aGd2c0VSNXlHSFZfVEFGdnFRX1ZCc0liZ1lWcEdUR3lOSm85WnZ0ZGs0eWljMkJaMV9YOA?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-30T20:10:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Organiser",
-   "published_at": "2026-10-30T19:50:54Z",
-   "source_id": "organiser.org",
-   "summary": "",
-   "title": "ISRO NVS-03 Launch News: GSLV-F18 places Next-Gen Navigation satellite in orbit, strengthening NavIC",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -7763,6 +7763,22 @@
    "via": "https://news.google.com/rss/search?q=site%3Agpsworld.com&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMipgFBVV95cUxNYURYSm1rR1pMVDlwQnFWblBHS0VZQWNWSEFEelFtd1VyN0ItMkdNZmFCZmJ0dDJQQ1pIQkozWVFwTnkwT2pqZGJmNzV4US0ydkZkNHZrS2xkOGFGRXZobXZOTnEwc2NnemdMdmRNV2o2YlRqdldEYXExM2pxamg3U1ZpRmN1eVczampLVEVOX0k0OE1seUpseFpEYlExM2RlMkZBZDN3?oc=5",
+   "category": "other",
+   "constellations": [
+    "BeiDou-3"
+   ],
+   "fetched_at": "2026-11-08T06:45:25Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "ShiftDelete.Net",
+   "published_at": "2025-12-08T08:00:00Z",
+   "source_id": "shiftdelete.net",
+   "summary": "",
+   "title": "Sky EV01, China’s first BeiDou-only car ditches GPS for fully local navigation",
+   "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE1Gck12VTloekFKbWtRMDUzQThvY0pOSTMzT2RxWTZxM2p1M2J5a3dBb0dZTHI4a2g1Y3pvZXR2dG5mM2Zyc3JIN0RSRE5EUjBRS1B2YzFPYVBpOXk5UEtwcVo5bGU?oc=5",
    "category": "launch",
    "constellations": [
@@ -9419,15 +9435,6 @@
    "note": "",
    "reason": ""
   },
-  "organiser.org": {
-   "grade": "",
-   "grade_standing": "not graded",
-   "graded_by": "",
-   "kind": "",
-   "name": "organiser.org",
-   "note": "",
-   "reason": ""
-  },
   "ourchinastory.com": {
    "grade": "",
    "grade_standing": "not graded",
@@ -9641,6 +9648,15 @@
    "graded_by": "",
    "kind": "",
    "name": "shattered.io",
+   "note": "",
+   "reason": ""
+  },
+  "shiftdelete.net": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "shiftdelete.net",
    "note": "",
    "reason": ""
   },
