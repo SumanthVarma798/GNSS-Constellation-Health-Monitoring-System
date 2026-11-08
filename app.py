@@ -23,7 +23,7 @@ from analysis.health_assessment import assess_satellite_health_with_drift
 from analysis.dop_calculations import parse_tle_data, calculate_dop_for_location, get_dop_quality
 from analysis.raan_analysis import analyze_raan_spacing
 from data.tle_cache import (
-    load_bundled_tles, load_bundled_gp_history, get_tle_metadata, 
+    bundle_key, load_bundled_tles, load_bundled_gp_history, get_tle_metadata, 
     get_gp_history_metadata, format_timestamp_for_display
 )
 from ui import orbit_section, theme
@@ -469,7 +469,7 @@ use_bundled_data = st.sidebar.checkbox(
 
 # Show bundled data metadata if available
 if use_bundled_data:
-    constellation_key = constellation.lower().replace('-', '')
+    constellation_key = bundle_key(constellation)
     gp_meta = get_gp_history_metadata(constellation_key)
     tle_meta = get_tle_metadata(constellation_key)
     
@@ -646,7 +646,7 @@ with col2:
 
 if run_analysis:
     # Check if bundled data mode is enabled
-    constellation_key = constellation.lower().replace('-', '')
+    constellation_key = bundle_key(constellation)
     
     if use_bundled_data:
         # Try to load from bundled data first
@@ -1098,7 +1098,7 @@ if st.session_state.get('analysis_complete', False):
             norad_ids = [nid for nid in SAT_DICT.values() if nid is not None]
 
             # Use constellation-specific key to avoid cross-constellation cache pollution
-            constellation_key = constellation.lower().replace('-', '')
+            constellation_key = bundle_key(constellation)
             sat_dop_key = f"satellites_dop_{constellation_key}"
 
             # Use existing satellites_dop if available, otherwise try bundled, then API
@@ -1710,7 +1710,7 @@ if st.session_state.get('analysis_complete', False):
             norad_ids = [nid for nid in SAT_DICT.values() if nid is not None]
             tle_data = None
             tle_source = "none"
-            constellation_key = constellation.lower().replace('-', '')
+            constellation_key = bundle_key(constellation)
             sat_dop_key = f"satellites_dop_{constellation_key}"
 
             # Try bundled TLEs first if in offline mode
@@ -2071,7 +2071,7 @@ if st.session_state.get('analysis_complete', False):
             raan_reqs = BEIDOU3_SERVICE_REQUIREMENTS
 
         try:
-            raan_constellation_key = constellation.lower().replace('-', '')
+            raan_constellation_key = bundle_key(constellation)
             raan_sat_dop_key = f"satellites_dop_{raan_constellation_key}"
             satellites_for_raan = st.session_state.get(raan_sat_dop_key)
 

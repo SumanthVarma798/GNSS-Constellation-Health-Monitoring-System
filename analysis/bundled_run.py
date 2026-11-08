@@ -27,7 +27,7 @@ from config.config import (
     BEIDOU3_SATS, BEIDOU3_SERVICE_REQUIREMENTS, DEFAULT_PARAMS, GRAVEYARD_ORBIT_MIN,
     NAVIK_SATS, QZSS_SATS, QZSS_SERVICE_REQUIREMENTS, R_EARTH,
 )
-from data.tle_cache import get_gp_history_metadata, load_bundled_gp_history, load_bundled_tles
+from data.tle_cache import bundle_key, get_gp_history_metadata, load_bundled_gp_history, load_bundled_tles
 
 # constellation -> (satellites it tracks, service requirements), as app.py picks them.
 _CONSTELLATIONS = {
@@ -305,7 +305,7 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
         p["inclination_tolerance"] = 4.0
     warnings = []
 
-    key = constellation.lower().replace('-', '')
+    key = bundle_key(constellation)
     gp_meta = get_gp_history_metadata(key)
     if not gp_meta['available']:
         raise ValueError(f"No bundled data for {constellation}")

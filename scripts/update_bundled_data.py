@@ -15,8 +15,9 @@ Or set environment variables:
 Or keep them in the git-ignored .env (see .env.example) and load it first:
     set -a; . ./.env; set +a
 
-GPS, GLONASS and Galileo are fetched only when named (--constellation gps, glonass or galileo), never
-by "all": about 30 satellites each, a year apiece, is a large request to Space-Track and a large file in data/.
+BeiDou-3 MEO, GPS, GLONASS and Galileo are fetched in full only when named (--constellation beidou3_meo, gps,
+glonass or galileo): about 30 satellites each, a year apiece, is a large request to Space-Track and a large file in
+data/. "all" fetches only their tracked satellites outside CelesTrak's GNSS group, which have no other history.
 
 Or the script will automatically read from .streamlit/secrets.toml if available.
 """
@@ -36,10 +37,16 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config.config import BEIDOU3_SATS, MEO_SATS, NAVIK_SATS, QZSS_SATS
 from api.celestrak_api import fetch_tles_from_celestrak
 from data.tle_cache import (
+    bundle_key,
     load_bundled_gp_history,
     save_gp_history_to_bundle,
     save_tles_to_bundle,
 )
+
+# The archive job's newest copy of CelesTrak's GNSS group (as data/celestrak.py COPY_URL; not imported, as that
+# module needs sgp4). Read from GitHub, so it costs CelesTrak nothing.
+GNSS_GROUP_COPY_URL = ("https://raw.githubusercontent.com/SumanthVarma798/"
+                       "GNSS-Constellation-Health-Monitoring-System/orbit-data/latest_gnss.json")
 
 # Space-Track login endpoint for one session per run.
 SPACETRACK_LOGIN_URL = "https://www.space-track.org/ajaxauth/login"
@@ -316,17 +323,35 @@ def update_constellation_gp_history(
     }
 
 
+def outside_gnss_group(systems: dict) -> dict:
+    """{key: {name: norad}} of each system's tracked satellites CelesTrak's GNSS group leaves out, read from the
+    archive job's copy of the group. CelesTrak publishes no orbit for some of these (COSMOS 2460 and 2619 in
+    Nov 2026), so Space-Track is their only history. Empty when the copy cannot be read."""
+    try:
+        reply = requests.get(GNSS_GROUP_COPY_URL, timeout=30)
+        reply.raise_for_status()
+        listed = {int(row["NORAD_CAT_ID"]) for row in reply.json()["rows"]}
+    except (requests.RequestException, ValueError, KeyError, TypeError) as problem:
+        print(f"⚠️  No copy of CelesTrak's GNSS group ({problem}); MEO satellites outside it not fetched")
+        return {}
+    outside = {key: {name: norad for name, norad in sats.items() if norad is not None and int(norad) not in listed}
+               for key, sats in systems.items()}
+    return {key: sats for key, sats in outside.items() if sats}
+
+
 def resolve_targets(constellation_arg: str) -> dict:
-    """Resolve the selected constellation argument into target satellite groups."""
+    """Resolve the selected constellation argument into target satellite groups. "all" is the three regional
+    systems in full plus, of the MEO systems, only the tracked satellites outside CelesTrak's GNSS group: a few
+    satellites, where the full systems would be about 30 each."""
     constellations = {
         "navic": NAVIK_SATS,
         "qzss": QZSS_SATS,
         "beidou3": BEIDOU3_SATS,
     }
-    meo = {system.lower(): sats for system, sats in MEO_SATS.items()}
+    meo = {bundle_key(system): sats for system, sats in MEO_SATS.items()}
     all_constellations = {**constellations, **meo}
     if constellation_arg == "all":
-        return constellations
+        return {**constellations, **(outside_gnss_group(meo) if meo else {})}
     return {constellation_arg: all_constellations[constellation_arg]}
 
 
@@ -343,7 +368,7 @@ def main():
     parser.add_argument('--days', '-d', type=int, default=365,
                         help='Days of GP history to fetch (default: 365 for full year)')
     parser.add_argument('--constellation', '-c', 
-                        choices=['navic', 'qzss', 'beidou3', 'gps', 'glonass', 'galileo', 'all'],
+                        choices=['navic', 'qzss', 'beidou3', 'beidou3_meo', 'gps', 'glonass', 'galileo', 'all'],
                         default='all',
                         help='Constellation to update (default: all)')
     parser.add_argument('--tles-only', action='store_true',

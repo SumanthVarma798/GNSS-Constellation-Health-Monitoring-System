@@ -13,7 +13,7 @@ import pandas as pd
 from analysis.bundled_run import _burns, load_bundled_gp_as_dataframes
 from analysis.meo_geometry import assess
 from config.config import DEFAULT_PARAMS, MEO_SATS
-from data.tle_cache import get_gp_history_metadata
+from data.tle_cache import bundle_key, get_gp_history_metadata
 from evidence.registry_tables import dashboard_registry_rows
 
 STALE_DAYS = 7          # elements this much older than the newest are named in a warning
@@ -42,7 +42,7 @@ def assess_meo(constellation, now, window_days=90, params=None, fresh=None):
     if now.tzinfo is None:
         raise ValueError("`now` must be timezone-aware")
     sats = MEO_SATS[constellation]
-    key = constellation.lower()
+    key = bundle_key(constellation)
     frames = load_bundled_gp_as_dataframes(key, sats, fresh)
     if not frames:
         raise ValueError(f"No orbit data for {constellation} yet: it comes with the next CelesTrak refresh")

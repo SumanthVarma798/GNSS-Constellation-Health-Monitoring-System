@@ -13,6 +13,12 @@ from pathlib import Path
 DATA_DIR = Path(os.environ.get("BUNDLED_DATA_DIR") or Path(__file__).parent)
 
 
+def bundle_key(constellation: str) -> str:
+    """The bundled files' name for a system, the one spelling every reader and writer uses:
+    'BeiDou-3' -> 'beidou3', 'BeiDou-3 MEO' -> 'beidou3_meo', 'GLONASS' -> 'glonass'."""
+    return constellation.lower().replace("-", "").replace(" ", "_")
+
+
 def get_data_file_path(constellation: str, data_type: str) -> Path:
     """
     Get the path to a bundled data file.

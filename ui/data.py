@@ -9,7 +9,7 @@ from analysis.bundled_run import assess_constellation
 from analysis.meo_run import assess_meo
 from config.config import BEIDOU3_SATS, GENERATIONS, MEO_SATS, NAVIK_SATS, QZSS_SATS
 from data import celestrak, spacetrack
-from data.tle_cache import load_bundled_gp_history
+from data.tle_cache import bundle_key, load_bundled_gp_history
 from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS
 from evidence.registry_tables import dashboard_registry_rows, generation_satellites
 
@@ -79,7 +79,7 @@ def _bundled_newest():
     and Streamlit copies a cached result on every run."""
     newest = {}
     for constellation, satellites in SATELLITES.items():
-        bundled = (load_bundled_gp_history(constellation.lower().replace("-", "")) or {}).get("satellites") or {}
+        bundled = (load_bundled_gp_history(bundle_key(constellation)) or {}).get("satellites") or {}
         for name, norad in satellites.items():
             if norad is not None and bundled.get(name):
                 newest[int(norad)] = max(row["EPOCH"] for row in bundled[name] if row.get("EPOCH"))
