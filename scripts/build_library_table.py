@@ -2,14 +2,12 @@
 has launched, lost at launch, lost early in orbit, retired and still operating, as the General Catalog of
 Artificial Space Objects (GCAT) states them. Read by the dashboard's Library page.
 
-Download the three GCAT files once into a folder OUTSIDE the repository, then build from them:
-
-    curl -O https://planet4589.org/space/gcat/tsv/cat/satcat.tsv     # and psatcat.tsv, ftocat.tsv
-    python scripts/build_library_table.py --objects satcat.tsv --payloads psatcat.tsv --failed ftocat.tsv
+    python scripts/build_library_table.py --archive FOLDER      # newest archived copies (the weekly registry job)
+    python scripts/build_library_table.py --objects satcat.tsv --payloads psatcat.tsv --failed ftocat.tsv   # local copies
 
 Like the other registry tables, the output has a fixed order and no build date (GCAT's own update date is a column),
-so `git diff registry/` shows exactly what the catalogue changed. The ftocat.tsv address is
-GCAT_FAILED_LAUNCHES_URL in evidence/sources.py; it is not fetched on a schedule.
+so `git diff registry/` shows exactly what the catalogue changed. The archive job fetches all three GCAT files daily
+(the "catalogues" group in evidence/sources.py).
 """
 import argparse
 import sys
@@ -22,13 +20,21 @@ from evidence.library_settings import (LIBRARY_COUNTS_COLUMNS, LIBRARY_COUNTS_FI
                                        LIBRARY_MATCHING_FILE)
 from evidence.registry_tables import read_table, write_table
 from evidence.settings import REGISTRY_SATELLITES_FILE
+from evidence.sources import GCAT_FAILED_LAUNCHES_URL, GCAT_OBJECTS_URL, GCAT_PAYLOADS_URL
+from build_catalogue_table import archived_copy
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--archive", help="archive folder: build from its newest copies of the three GCAT files")
     for name in ("objects", "payloads", "failed"):
-        parser.add_argument(f"--{name}", required=True, help=f"local copy of the {name} catalogue file")
+        parser.add_argument(f"--{name}", help=f"local copy of the {name} catalogue file")
     args = parser.parse_args()
+    if args.archive:
+        args.objects, args.payloads, args.failed = (archived_copy(args.archive, address)[0] for address in
+                                                    (GCAT_OBJECTS_URL, GCAT_PAYLOADS_URL, GCAT_FAILED_LAUNCHES_URL))
+    if not (args.objects and args.payloads and args.failed):
+        parser.error("give --archive, or all of --objects, --payloads and --failed")
 
     counts, matching = library_tables(read_table(REGISTRY_SATELLITES_FILE),
                                       *(Path(path).read_text(encoding="utf-8") for path in (args.objects, args.payloads, args.failed)))

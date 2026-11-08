@@ -152,8 +152,8 @@ def test_the_scoreboard_shows_its_sources_and_cites_gcat():
     assert html.count('class="tt-card"') == 10              # each counted column opens what it means
     assert "not known" in html                                                   # BeiDou has no stated cost
     rows = {row["system"]: row for row in library.system_rows(counts)}
-    assert rows["GPS"]["launched"] == 82
-    assert library.launch_success(rows["GPS"]) == 80 / 82
+    assert rows["GPS"]["launched"] >= 82   # GCAT is rebuilt weekly: only ever more launches
+    assert library.launch_success({"launched": 82, "failed_at_launch": 2}) == 80 / 82
     assert library.orbit_success({"launched": 0, "failed_at_launch": 0, "failed_in_orbit": 0}) is None
 
 
@@ -182,5 +182,6 @@ def test_each_generation_bar_carries_its_counts_for_hover_and_no_zero_part():
     assert html.count('class="gen-row"') == len(counts)
     iif = html[html.index("<b>GPS IIF</b>"):]
     bar = iif[:iif.index("</div></div>")]
-    assert "<b>12</b>" in bar and 'aria-label="12 launched: 12 operating"' in bar   # IIF: 12 launched, all operating
+    launched = next(row["launched"] for row in counts if row["programme"] == "GPS IIF")   # 12 in Oct 2026
+    assert f"<b>{launched}</b>" in bar and f'aria-label="{launched} launched: ' in bar
     assert "retired" not in bar.split("aria-label")[1].split('"')[1]               # a zero part is not drawn

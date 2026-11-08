@@ -46,6 +46,21 @@ jobs:
         id: build
         run: python scripts/build_registry.py --archive archive --report "$RUNNER_TEMP/registry-changes.md"
 
+      - name: Rebuild the catalogue and library tables from GCAT
+        id: gcat
+        # After the registry, which they are matched against. A GCAT problem must never stop the registry proposal, nor
+        # leave one table rebuilt and the others not: on any failure all three go back as they were, and the run log says so.
+        continue-on-error: true
+        run: |
+          if python scripts/build_catalogue_table.py --archive archive --report "$RUNNER_TEMP/catalogue-changes.md" \
+             && python scripts/build_library_table.py --archive archive; then
+            { echo; cat "$RUNNER_TEMP/catalogue-changes.md"; } >> "$RUNNER_TEMP/registry-changes.md"
+          else
+            git checkout -- registry/catalogue.csv registry/library_counts.csv registry/library_matching.csv
+            echo "::warning::GCAT tables not rebuilt this week; kept as they were. See the step above."
+            exit 1
+          fi
+
       - name: Did anything change?
         id: tables
         run: |
@@ -100,9 +115,10 @@ jobs:
             || steps.propose.outcome == 'success' && 'tables changed, proposal opened or updated'
             || steps.tables.outputs.changed == 'true' && 'tables changed, no proposal made'
             || 'nothing' }}
+          GCAT: ${{ steps.gcat.outcome == 'failure' && 'GCAT tables not rebuilt, kept as they were' || '' }}
         run: |
           python ../scripts/log_run.py --archive . --log registry-update --job "registry update" \
-            --started "$STARTED" --result "$RESULT" --changed "$CHANGED"
+            --started "$STARTED" --result "$RESULT" --changed "$CHANGED${GCAT:+; $GCAT}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add runs/registry-update.csv

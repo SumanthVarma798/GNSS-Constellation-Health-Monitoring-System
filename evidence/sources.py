@@ -17,8 +17,8 @@ IGS_SATELLITE_METADATA_URL = "https://files.igs.org/pub/station/general/igs_sate
 # Released under CC-BY; cite it (see GCAT_CITATION in evidence/settings.py).
 GCAT_OBJECTS_URL = "https://planet4589.org/space/gcat/tsv/cat/satcat.tsv"     # about 19 MB
 GCAT_PAYLOADS_URL = "https://planet4589.org/space/gcat/tsv/cat/psatcat.tsv"   # about 5 MB
-# GCAT's catalogue of launches that never reached orbit. Read by hand for the Library page's counts
-# (scripts/build_library_table.py); NOT in ARCHIVED_SOURCES, so no scheduled request goes to it.
+# GCAT's catalogue of launches that never reached orbit, for the Library page's counts (scripts/build_library_table.py).
+# Archived daily with the other two GCAT files; the weekly registry job builds from the archived copies.
 GCAT_FAILED_LAUNCHES_URL = "https://planet4589.org/space/gcat/tsv/cat/ftocat.tsv"   # about 0.5 MB
 
 # CelesTrak: current orbits of every catalogued BeiDou object.
@@ -73,6 +73,7 @@ ARCHIVED_SOURCES = {
     "catalogues": [
         GCAT_OBJECTS_URL,
         GCAT_PAYLOADS_URL,
+        GCAT_FAILED_LAUNCHES_URL,   # about 0.5 MB more a day; the Library page counts launch failures from it
     ],
     # Orbit records. They change several times a day, so nearly every fetch is a new
     # copy: about 130 KB a day (guess, from 170 objects). Kept so the age of each

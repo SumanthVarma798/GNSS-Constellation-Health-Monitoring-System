@@ -368,7 +368,9 @@ STAGES = {
         "what_happens": [
             "Once a week, a program rebuilds satellite tables from the latest archived IGS file.",
             "If the tables changed, it opens or updates one GitHub proposal page (pull request).",
-            "It runs the full test suite before opening or updating that proposal.",
+            "It also rebuilds the catalogue and library tables from the archived GCAT files, in the same proposal.",
+            "It runs the test suite before opening or updating that proposal; the check that every broadcasting "
+            "satellite is tracked or explained runs on the proposal itself, so it blocks the merge, not the proposal.",
         ],
         "why_it_matters": "This updates satellite identity data through review instead of direct edits to main.",
         "technical": {
@@ -377,16 +379,20 @@ STAGES = {
             "schedule_group": "",
             "commands": [
                 "python scripts/build_registry.py --archive archive --report \"$RUNNER_TEMP/registry-changes.md\"",
-                "python -m pytest -q",
+                "python scripts/build_catalogue_table.py --archive archive --report \"$RUNNER_TEMP/catalogue-changes.md\"",
+                "python scripts/build_library_table.py --archive archive",
+                "python -m pytest -q -m \"not coverage_gate\" (the coverage gate runs in the proposal's own Tests job)",
                 "gh pr edit registry-update --add-label \"decision: registry update\" --body-file \"$RUNNER_TEMP/registry-changes.md\" (when an open PR already exists)",
                 "gh pr create --base main --head registry-update --title \"Registry update from the IGS satellite metadata file\" --label \"decision: registry update\" --body-file \"$RUNNER_TEMP/registry-changes.md\" (when no open PR exists)",
             ],
             "inputs": [
                 "Latest archived IGS metadata copy in the archive repository",
+                "Latest archived GCAT copies (satcat.tsv, psatcat.tsv, ftocat.tsv) in the archive repository",
                 "Current registry tables in registry/",
             ],
             "outputs": [
                 "registry/satellites.csv and registry/signal_ids.csv",
+                "registry/catalogue.csv, registry/library_counts.csv and registry/library_matching.csv (from GCAT)",
                 "Pull request from branch registry-update to main",
                 "Run log line in archive/runs/registry-update.csv",
             ],
