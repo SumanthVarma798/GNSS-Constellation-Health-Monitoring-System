@@ -96,6 +96,7 @@ def test_a_tracked_satellite_missing_from_the_registry_is_left_out_and_named(mon
     assert registry_tables.dashboard_satellites_not_in_registry("QZSS") == []
 
 
+@pytest.mark.coverage_gate   # a registry change that drops a tracked satellite must open a proposal, then block its merge
 def test_every_tracked_satellite_is_in_the_committed_registry():
     # Strict where a person approves: a proposal that would leave a tracked satellite out fails here.
     import config.config
