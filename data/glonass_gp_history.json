@@ -1,6 +1,6 @@
 {
   "constellation": "glonass",
-  "timestamp": "2026-11-08T14:03:52.242189+00:00",
+  "timestamp": "2026-11-08T14:46:11.284098+00:00",
   "start_date": "2025-11-08",
   "end_date": "2026-11-08",
   "satellites": {
@@ -260,7 +260,7 @@
       {
         "CCSDS_OMM_VERS": "3.0",
         "COMMENT": "GENERATED VIA SPACE-TRACK.ORG API",
-        "CREATION_DATE": "2026-09-30T18:23:42",
+        "CREATION_DATE": "2026-09-30T10:32:28",
         "ORIGINATOR": "18 SPCS",
         "OBJECT_NAME": "COSMOS 2619",
         "OBJECT_ID": "2026-194A",
@@ -293,8 +293,8 @@
         "LAUNCH_DATE": "2026-08-24",
         "SITE": "PKMTR",
         "DECAY_DATE": null,
-        "FILE": "5382108",
-        "GP_ID": "350651099",
+        "FILE": "5382033",
+        "GP_ID": "350614876",
         "TLE_LINE0": "0 COSMOS 2619",
         "TLE_LINE1": "1 A0460U 26194A   26271.90724098 -.00000009  00000-0  00000-0 0  9999",
         "TLE_LINE2": "2 A0460  64.7260 311.1616 0061046 288.9834  70.4300  2.12703137   779"
