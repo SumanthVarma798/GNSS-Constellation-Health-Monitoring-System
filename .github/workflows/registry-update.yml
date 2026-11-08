@@ -59,7 +59,9 @@ jobs:
       - name: Run the tests on the new tables
         id: tests
         if: steps.tables.outputs.changed == 'true'
-        run: python -m pytest -q
+        # A new signal ID that is neither tracked nor explained (tests/test_registry_coverage.py) must show up in a
+        # proposal, not stop one: that test runs in the proposal's own Tests job below and blocks only its merge.
+        run: python -m pytest -q -m "not coverage_gate"
 
       - name: Open or update the proposal
         id: propose

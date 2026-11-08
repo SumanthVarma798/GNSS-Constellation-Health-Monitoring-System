@@ -9,7 +9,7 @@ from datetime import date, timedelta
 
 from evidence.settings import (REGISTRY_CONSTELLATIONS_FILE, REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_DIR,
                                REGISTRY_DASHBOARD_TRACKED_SYSTEMS, REGISTRY_SATELLITES_FILE, REGISTRY_SIGHTINGS_FILE,
-                               NEW_ON_DASHBOARD_DAYS, DASHBOARD_SYSTEMS_BY_BLOCK)
+                               NEW_ON_DASHBOARD_DAYS, DASHBOARD_SYSTEMS_BY_BLOCK, REGISTRY_LEFT_OUT_FILE)
 
 
 def read_table(name):
@@ -37,24 +37,48 @@ def _tracked(constellation):
     return [(row["dashboard_name"], found) for row, found in _system_rows(constellation)]
 
 
-def _system_rows(constellation):
-    """(dashboard_satellites.csv row, registry row or None) for each satellite the dashboard tracks in
-    one constellation, in display order. The constellation is read from the SVN's letter,
-    so it is known even for a satellite the registry does not list. A satellite CelesTrak lists before
+def _membership(constellation):
+    """(whether an SVN belongs to one dashboard system, {svn: registry row}). The constellation is read from the SVN's
+    letter, so it is known even for a satellite the registry does not list. A satellite CelesTrak lists before
     the IGS file does is found in sightings.csv. A system in DASHBOARD_SYSTEMS_BY_BLOCK takes its constellation's
-    satellites of that block, which its constellation then leaves out; a satellite the registry does not list
+    satellites of those blocks, which its constellation then leaves out; a satellite the registry does not list
     has no block, so it stays with the constellation."""
     registry = {row["svn"]: row for row in read_table(REGISTRY_SATELLITES_FILE) + read_table(REGISTRY_SIGHTINGS_FILE)}
     letters = constellation_names()
-    name, block = DASHBOARD_SYSTEMS_BY_BLOCK.get(constellation, (constellation, None))
-    split_off = tuple(start for parent, start in DASHBOARD_SYSTEMS_BY_BLOCK.values() if parent == constellation)
+    name, blocks = DASHBOARD_SYSTEMS_BY_BLOCK.get(constellation, (constellation, None))
+    split_off = tuple(start for parent, starts in DASHBOARD_SYSTEMS_BY_BLOCK.values() if parent == constellation
+                      for start in starts)
 
-    def in_system(found):
+    def member(svn):
+        found = registry.get(svn)
         held = (found or {}).get("block", "")
-        return bool(found) and held.startswith(block) if block else not (held and held.startswith(split_off))
+        if letters.get(svn[:1]) != name:
+            return False
+        return bool(found) and held.startswith(blocks) if blocks else not (held and held.startswith(split_off))
 
+    return member, registry
+
+
+def _system_rows(constellation):
+    """(dashboard_satellites.csv row, registry row or None) for each satellite the dashboard tracks in
+    one constellation, in display order; see _membership()."""
+    member, registry = _membership(constellation)
     return [(row, registry.get(row["svn"])) for row in read_table(REGISTRY_DASHBOARD_SATELLITES_FILE)
-            if letters.get(row["svn"][:1]) == name and in_system(registry.get(row["svn"]))]
+            if member(row["svn"])]
+
+
+def left_out(constellation):
+    """[(name, reason, source)] for the satellites with a signal ID today that one system's page leaves out on purpose."""
+    member, _ = _membership(constellation)
+    return [(row["name"], row["reason"], row["source"]) for row in read_table(REGISTRY_LEFT_OUT_FILE)
+            if member(row["svn"])]
+
+
+def left_out_notice(constellation):
+    """The page's line on satellites left out on purpose, or "". The pages call BeiDou "BeiDou-3"."""
+    named = "; ".join(f"{name}: {reason}" for name, reason, _ in left_out(
+        "BeiDou" if constellation == "BeiDou-3" else constellation))
+    return f"Broadcasting but not shown, on purpose: {named}." if named else ""
 
 
 def dashboard_satellites(constellation):

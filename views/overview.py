@@ -12,7 +12,7 @@ import pandas as pd
 import streamlit as st
 
 from config.config import MEO_SATS, TRACKED_NOT_IN_REGISTRY
-from evidence.registry_tables import new_on_dashboard
+from evidence.registry_tables import left_out_notice, new_on_dashboard
 from ui import (checks, data, limits, measures, meo_overview, official_status, orbit_age, orbit_section,
                 palette, reveal, shell, surfaces, time_range, tooltip)
 from ui.data import SATELLITES
@@ -74,6 +74,8 @@ def _gaps(constellation, result, today):
     """Notices for what is missing, so that nothing is left out in silence."""
     if new := new_on_dashboard(constellation, today):
         surfaces.show(surfaces.notice(new, "accent"))
+    if left := left_out_notice(constellation):
+        surfaces.show(surfaces.notice(left, "accent"))
     moving = result.get("moving", {})
     if moving:
         named = ", ".join(f"{name} (first orbit record {_day(since)})" for name, since in moving.items())
