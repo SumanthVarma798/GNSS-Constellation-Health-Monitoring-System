@@ -215,7 +215,7 @@ jobs:
             git checkout --quiet --orphan orbit-data
             git rm -rf --quiet . >/dev/null 2>&1 || true
           fi
-          python "$GITHUB_WORKSPACE/scripts/latest_orbits.py" --archive "$GITHUB_WORKSPACE/archive" --out latest_gnss.json
+          python "$GITHUB_WORKSPACE/scripts/latest_orbits.py" --archive "$GITHUB_WORKSPACE/archive" --out latest_gnss.json --outside-group
           git add latest_gnss.json
           if git diff --cached --quiet; then
             echo "No orbit copy change."

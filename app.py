@@ -999,7 +999,9 @@ if st.session_state.get('analysis_complete', False):
                     except Exception:
                         continue
 
-                expected_constellation_size = len(SAT_DICT)
+                # the tracked satellites the data has observations of: one just added, with no history yet,
+                # would otherwise raise the bar and move every other satellite's score (analysis/bundled_run.py)
+                expected_constellation_size = sum(pdata is not None for pdata in pattern_data.values())
                 # require at least 75% of expected satellites present to consider the day 'deployed'
                 min_required = max(1, int(0.75 * expected_constellation_size))
                 deployed_dates = {d for d, cnt in date_counter.items() if cnt >= min_required}

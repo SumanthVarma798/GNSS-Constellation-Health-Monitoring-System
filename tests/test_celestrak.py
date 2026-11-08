@@ -224,6 +224,17 @@ def test_when_celestrak_refuses_the_archive_jobs_copy_fills_in_and_says_when_it_
     assert celestrak.refresh([39635], NOW + timedelta(minutes=5))["copy_at"] == taken
 
 
+def test_the_copy_carries_tracked_satellites_outside_the_group_without_listing_them(monkeypatch):
+    qzs7 = {**IRNSS_1B, "NORAD_CAT_ID": 100270}
+    copy = {"fetched_at": "2026-11-08T08:15:00Z", "rows": [IRNSS_1B], "outside_group": [qzs7]}
+    monkeypatch.setattr(requests, "get", lambda url, timeout, **kwargs: Reply(copy))
+
+    found, listed, _ = FETCH_COPY([39635, 100270])
+
+    assert set(found) == {39635, 100270}   # the hosted dashboard gets QZS-7's orbit as a direct fetch would
+    assert listed == {39635}               # but only the group counts as listed by CelesTrak
+
+
 def test_with_no_copy_either_a_refusal_keeps_what_is_held(monkeypatch):
     monkeypatch.setattr(celestrak, "fetch", refused)
     after = celestrak.refresh([39635], NOW)   # conftest's copy fails too

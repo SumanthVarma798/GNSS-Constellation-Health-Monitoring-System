@@ -89,7 +89,8 @@ def fetch(norad_ids):
 def fetch_copy(norad_ids):
     """fetch()'s result from the archive job's copy of the GNSS group, plus when the job took it (aware UTC).
 
-    Only satellites in the group: no request per satellite. Raises as fetch() does.
+    The group, plus the tracked satellites it leaves out that the job asked for one by one (outside_group), as fetch()
+    does; only the group counts as listed. No request per satellite from here. Raises as fetch() does.
     """
     reply = requests.get(COPY_URL, timeout=TIMEOUT)
     reply.raise_for_status()
@@ -97,7 +98,8 @@ def fetch_copy(norad_ids):
     taken = datetime.fromisoformat(copy["fetched_at"].replace("Z", "+00:00"))
     wanted, group = set(norad_ids), copy["rows"]
     listed = {int(row["NORAD_CAT_ID"]) for row in group}
-    found = {int(row["NORAD_CAT_ID"]): as_history_row(row) for row in group if int(row["NORAD_CAT_ID"]) in wanted}
+    found = {int(row["NORAD_CAT_ID"]): as_history_row(row) for row in [*copy.get("outside_group", []), *group]
+             if int(row["NORAD_CAT_ID"]) in wanted}
     return found, listed, taken if taken.tzinfo else taken.replace(tzinfo=timezone.utc)
 
 
