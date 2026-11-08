@@ -6,7 +6,7 @@ satellites set aside are all judged as of now, so a range closing before today w
 
 Bounds, worked out from the data held each time the bar is drawn:
   earliest  the oldest orbit record held for the constellations in view. NavIC, QZSS and BeiDou-3 carry a
-            bundled year (data/*_gp_history.json); GPS, GLONASS and Galileo hold only what CelesTrak has
+            bundled year (data/*_gp_history.json); BeiDou-3 MEO, GPS, GLONASS and Galileo hold only what CelesTrak has
             given since the server first ran (data/celestrak.py), so theirs is days or weeks.
   latest    now: there are no records from the future, so the range always ends today.
   shortest  MIN_DAYS, below.

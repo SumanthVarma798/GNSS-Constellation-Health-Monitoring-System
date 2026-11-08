@@ -1,4 +1,4 @@
-"""The health of one medium Earth orbit (MEO) system: GPS, GLONASS or Galileo.
+"""The health of one medium Earth orbit (MEO) system: BeiDou-3 MEO, GPS, GLONASS or Galileo.
 
 The same shape of result as analysis/bundled_run.assess_constellation, so the pages read both alike.
 The orbits are the CelesTrak rows held (data/celestrak.py) on top of any bundled history file

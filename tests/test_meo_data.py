@@ -1,4 +1,4 @@
-"""GPS, GLONASS and Galileo: which satellites are tracked, and how their orbits reach the pages. No network."""
+"""The MEO systems: which satellites are tracked, and how their orbits reach the pages. No network."""
 from datetime import datetime, timedelta, timezone
 
 import pandas as pd
@@ -7,7 +7,7 @@ import pytest
 from analysis.bundled_run import load_bundled_gp_as_dataframes
 from analysis.meo_geometry import NO_PLANE
 from analysis.meo_run import assess_meo
-from config.config import MEO_SATS
+from config.config import BEIDOU3_SATS, MEO_SATS
 from data import celestrak
 from evidence.registry_tables import constellation_names, read_table
 from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_SATELLITES_FILE
@@ -41,6 +41,19 @@ def test_the_tracked_list_is_every_registry_satellite_with_a_signal_id_today(sys
 
     assert tracked == with_signal
     assert len(MEO_SATS[system]) == len(with_signal)
+
+
+def test_beidou_3_meo_tracks_every_bds_3_meo_satellite_with_a_signal_id_and_beidou_3_keeps_the_rest():
+    # BeiDou's rows are kept by a person, not in step with the registry: this fails when a MEO satellite gains or
+    # loses a signal ID, until registry/dashboard_satellites.csv is changed to match.
+    registry = read_table(REGISTRY_SATELLITES_FILE)
+    with_signal = {row["catalogue_no"] for row in registry
+                   if row["block"].startswith("BDS-3M") and row["signal_id_now"]}
+    geo_igso = {row["catalogue_no"] for row in registry if row["block"].startswith(("BDS-3G", "BDS-3I"))}
+
+    assert {str(n) for n in MEO_SATS["BeiDou-3 MEO"].values()} == with_signal
+    assert {str(n) for n in BEIDOU3_SATS.values()} <= geo_igso   # the split leaves no MEO satellite in BeiDou-3
+    assert len(BEIDOU3_SATS) == 7
 
 
 def test_celestrak_rows_alone_make_a_history_when_there_is_no_bundled_file():
@@ -116,3 +129,25 @@ def test_a_satellite_the_registry_gives_no_plane_is_kept_with_no_score():
     assert list(result["health"]["Satellite"]) == ["COSMOS 2620"]
     assert pd.isna(result["health"]["Overall Score"].iloc[0])
 
+
+
+def test_a_new_beidou_satellite_is_announced_on_its_own_page_only(monkeypatch):
+    from datetime import date
+
+    from evidence import registry_tables
+
+    real = registry_tables.read_table
+    added = {"C215": "2026-11-07", "C217": "2026-11-07"}   # BeiDou-3 M16 (MEO) and BeiDou-3 G1 (GEO)
+
+    def read_table(name):
+        rows = real(name)
+        if name == REGISTRY_DASHBOARD_SATELLITES_FILE:
+            rows = [{**row, "added": added.get(row["svn"], row["added"])} for row in rows]
+        return rows
+
+    monkeypatch.setattr(registry_tables, "read_table", read_table)
+    meo = registry_tables.new_on_dashboard("BeiDou-3 MEO", date(2026, 11, 8))
+    geo_igso = registry_tables.new_on_dashboard("BeiDou-3", date(2026, 11, 8))
+
+    assert "BeiDou-3 M16" in meo and "BeiDou-3 G1" not in meo
+    assert "BeiDou-3 G1" in geo_igso and "BeiDou-3 M16" not in geo_igso

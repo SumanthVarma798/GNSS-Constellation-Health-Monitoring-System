@@ -5,7 +5,7 @@ view; then the details, each in one of these sections. Notices (warnings) go to 
 (ui/notices.py). Every table sits in a section. Tables open closed, except each page's one most important table,
 which opens by default:
   Overview         the "Measured against limits" table: one per orbit type for NavIC, QZSS and BeiDou-3, one for every
-                   satellite for GPS, GLONASS and Galileo, one for the satellites picked under Compare
+                   satellite for BeiDou-3 MEO, GPS, GLONASS and Galileo, one for the satellites picked under Compare
   Station-keeping  burns per satellite
   Geometry         position quality by place; in "Sky and ground", when each satellite is in view (the question asked)
   Library          the count per system, and the lifecycles (a picture, not a table)
