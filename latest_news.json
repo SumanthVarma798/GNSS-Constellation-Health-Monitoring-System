@@ -1,6 +1,38 @@
 {
- "generated_at": "2026-11-08T20:00:35Z",
+ "generated_at": "2026-11-08T22:33:00Z",
  "items": [
+  {
+   "address": "https://x.com/Stellarixorine/status/2119478167580860887",
+   "category": "launch",
+   "constellations": [
+    "GLONASS"
+   ],
+   "fetched_at": "2026-11-08T22:33:00Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "Stellarix (@Stellarixorine)",
+   "published_at": "2026-11-08T17:12:27Z",
+   "source_id": "x.com/Stellarixorine",
+   "summary": "🚀 Russia adds another satellite to its GLONASS navigation network! On November 7, a Soyuz-2.1b rocket lifted off from the Plesetsk Cosmodrome carrying a new navigation satellite into space. According to Russia’s Ministry of Defense, the deployment was successful, marking another step in expanding…",
+   "title": "🚀 Russia adds another satellite to its GLONASS navigation network! On November 7, a Soyuz-2.1b rocket lifted off from…",
+   "via": "https://x.com/Stellarixorine"
+  },
+  {
+   "address": "https://x.com/Stellarixorine/status/2119474765387940048",
+   "category": "launch",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-08T22:33:00Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "Stellarix (@Stellarixorine)",
+   "published_at": "2026-11-08T16:58:56Z",
+   "source_id": "x.com/Stellarixorine",
+   "summary": "ONE DAY, ONE SPACE AGENCY — Day 15 / 70+ 🚀✨ 🇫🇷 CNES — Centre National d'Études Spatiales / French Space Agency The Ariane Empire Builder 🚀👑 🇫🇷------------🇫🇷 📅 FORMED: December 19, 1961 📍 HEADQUARTERS: Paris, France — with Toulouse Space Centre & Guiana Space Centre, Kourou 👨‍🔬 FATHER: General…",
+   "title": "ONE DAY, ONE SPACE AGENCY — Day 15 / 70+ 🚀✨ 🇫🇷 CNES — Centre National d'Études Spatiales / French Space Agency The…",
+   "via": "https://x.com/Stellarixorine"
+  },
   {
    "address": "https://x.com/RussianSpaceWeb/status/2119090480558506095",
    "category": "other",
