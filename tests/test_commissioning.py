@@ -37,11 +37,22 @@ def test_a_new_satellite_still_drifting_is_on_its_way():
     assert commissioning.commissioned_on(frame, "NEW") is None   # not parked yet
 
 
-def test_once_parked_it_is_scored_from_the_first_parked_record():
+def test_once_parked_it_settles_for_a_while_then_is_scored_from_the_first_parked_record():
     frame = history("NEW", ("2026-10-30", TRANSFER), ("2026-11-02", DRIFTING), ("2026-11-04", PARKED))
+    settled = dt.datetime(2026, 12, 5, tzinfo=dt.timezone.utc)   # 31 days after it parked
 
-    assert commissioning.moving_to_slot(frame, NOW) == {}
+    assert list(commissioning.moving_to_slot(frame, NOW)) == ["NEW"]   # parked two days ago: no cadence to judge yet
+    assert commissioning.moving_to_slot(frame, settled) == {}
     assert commissioning.commissioned_on(frame, "NEW") == pd.Timestamp("2026-11-04")
+
+
+def test_a_satellite_parked_after_the_allowed_days_still_settles_before_it_is_scored():
+    """QZS-7: first record 10 Aug 2026, parked 3 Nov, so past COMMISSIONING_DAYS while only days settled."""
+    frame = history("QZS-7", ("2026-10-30", DRIFTING), ("2026-11-03", PARKED))
+    first_plus_95 = dt.datetime(2027, 2, 2, tzinfo=dt.timezone.utc)   # 95 days after its first record, 91 after parking
+
+    assert list(commissioning.moving_to_slot(frame, dt.datetime(2026, 11, 8, tzinfo=dt.timezone.utc))) == ["QZS-7"]
+    assert commissioning.moving_to_slot(frame, first_plus_95) == {}
 
 
 def test_a_satellite_that_was_parked_from_its_first_record_has_nothing_to_skip():
