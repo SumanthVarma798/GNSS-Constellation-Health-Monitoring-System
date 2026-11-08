@@ -212,3 +212,18 @@ def test_a_glonass_satellite_is_compared_at_the_moments_its_own_records_give(mon
 
     assert seen == [[at_0015, at_0045]]   # that day's records only, in time order
     assert row["typical_km"] == 2.0 and "not compared" not in row["note"] and row["note"] == ""
+
+
+def test_every_tracked_satellite_the_registry_lists_is_checked_including_one_still_a_sighting():
+    """NVS-03 joined the tracked list as a sighting (I-101228, in sightings.csv). Reading satellites.csv alone made
+    the daily check fail on it with a KeyError from 6 Nov 2026, so the broadcast checks stopped updating."""
+    from datetime import date
+
+    from evidence.registry_tables import read_table
+
+    names = {name for _, name, _, _ in orbit_record_gap.tracked(date(2026, 11, 8))}
+    listed = {row["svn"] for row in read_table("satellites.csv") + read_table("sightings.csv")}
+    expected = {row["dashboard_name"] for row in read_table("dashboard_satellites.csv") if row["svn"] in listed}
+
+    assert names == expected and "NVS-03" in names
+    assert orbit_record_gap.cospar_ids()["I-101228"] == "2026-245A"
