@@ -1,7 +1,10 @@
 """One orbital plane drawn flat: its slots as rings and its satellites as dots, by argument of latitude.
 
-The line is the plane opened out, 0 to 360 degrees along the orbit from the ascending node. Each
-satellite is tied to ITS OWN slot (the registry's), never the nearest. Colour is never the only
+The line is the plane opened out, 360 degrees along the orbit. It is opened in the middle of the widest stretch with
+no satellite and no slot, not at the ascending node: opened at a fixed point, a satellite just past it and its slot just
+before it are drawn at opposite ends, with an empty ring between (C30 in BeiDou-3 MEO plane A, 8 Nov 2026). The line
+carries no degree scale, so where it opens shows nowhere else. Each satellite is tied to ITS OWN slot (the registry's),
+never the nearest. Colour is never the only
 signal: the dots carry hover text and the picture has a spoken description.
 """
 from html import escape
@@ -13,12 +16,23 @@ WIDTH, LEFT, RIGHT = 1000, 20, 980
 LINE_Y, ROW_PX = 26, 15
 
 
-def _x(u):
-    return LEFT + u / 360 * (RIGHT - LEFT)
+def opening(angles):
+    """Where to open the circle: the middle of the widest stretch between neighbouring angles (degrees)."""
+    points = sorted(a % 360 for a in angles)
+    if not points:
+        return 0.0
+    gaps = [((points[(i + 1) % len(points)] - a) % 360 or 360, a) for i, a in enumerate(points)]
+    width, after = max(gaps)
+    return (after + width / 2) % 360
 
 
 def plane_strip(satellites):
     """HTML with one SVG. satellites: [{label, u, slot_at (or None), state (palette.SLOT_*), title}]."""
+    start = opening([sat["u"] for sat in satellites] + [sat["slot_at"] for sat in satellites if sat["slot_at"] is not None])
+
+    def _x(u):
+        return LEFT + (u - start) % 360 / 360 * (RIGHT - LEFT)
+
     out = [f'<line x1="{LEFT}" y1="{LINE_Y}" x2="{RIGHT}" y2="{LINE_Y}" stroke="{palette.TRACK}" stroke-width="2"/>']
     for sat in satellites:
         if sat["slot_at"] is not None:

@@ -316,3 +316,19 @@ def test_every_colour_comes_from_the_palette(navic):
         assert {c.lower() for c in re.findall(r"#[0-9a-fA-F]{6}\b", html_text)} <= allowed
     figure_text = json.dumps([t.to_plotly_json() for t in constellation_3d(navic).data], default=str)
     assert {c.lower() for c in re.findall(r"#[0-9a-fA-F]{6}\b", figure_text)} <= allowed
+
+
+def test_slots_either_side_of_the_date_line_are_drawn_as_one_stretch():
+    """QZS-7's slot at 175° W is 37 degrees east of QZS-1R's at 148° E. Drawn by plain longitude it sat at the far west
+    end, with Japan's slots squeezed into the other corner and every tick from 180° W to 160° E in between."""
+    rows = slot_rows([health("QZS-6", 90.5, 90.53, 0.03, 100), health("QZS-3", 127, 127.1, 0.1, 100),
+                      health("QZS-1R", 148, 147.8, -0.2, 100), health("QZS-7", -175, -174.8, 0.2, 100)])
+    svg = drawn(rows)
+    ring_x = {e.get("data-owner"): float(e.get("cx")) for e in svg.iter("circle") if e.get("data-owner")}
+    dot_x = {e.get("data-sat"): float(e.get("cx")) for e in svg.iter("circle") if e.get("data-sat")}
+
+    assert ring_x["QZS-6"] < ring_x["QZS-3"] < ring_x["QZS-1R"] < ring_x["QZS-7"]   # west to east, across 180
+    assert abs(dot_x["QZS-7"] - ring_x["QZS-7"]) < 10                                 # beside its own slot
+    ticks = [e.text for e in svg.iter("text") if e.text and e.text.endswith(("E", "W")) and "°" in e.text]
+    assert "160° W" in ticks and "180° W" not in ticks[:1]                           # east of 180 reads as west
+    assert {e.get("data-slot-lon") for e in svg.iter("circle") if e.get("data-owner") == "QZS-7"} == {"-175"}

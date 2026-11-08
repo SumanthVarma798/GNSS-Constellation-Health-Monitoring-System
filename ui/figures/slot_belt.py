@@ -28,9 +28,29 @@ EDGE_PX = 4
 EMPTY_STATES = (palette.SLOT_OFF, palette.SLOT_LEFT)   # the satellite is known not to be on its slot
 
 
+def _east(lon):
+    """A longitude of any number of turns as degrees east, -180 to 180: the belt draws 185 for 175° W (see _unwrapped)."""
+    lon = (lon + 180) % 360 - 180 or 0.0
+    return 180.0 if lon == -180 else lon
+
+
 def _lon_text(lon):
     """'25.1° W' for a longitude in degrees east."""
+    lon = _east(lon)
     return f"{abs(round(lon, 2)):g}° {'E' if lon >= 0 else 'W'}"
+
+
+def _unwrapped(rows):
+    """The rows with every longitude moved by whole turns to within 180 degrees of the slots' circular mean, so slots
+    either side of the date line are drawn as one stretch: QZS-7's slot at 175° W lies 37 degrees east of QZS-1R's at
+    148° E, not 323 degrees west of it."""
+    slots = [math.radians(row["slot_lon"]) for row in rows if row["slot_lon"] is not None]
+    middle = math.degrees(math.atan2(sum(map(math.sin, slots)), sum(map(math.cos, slots))))
+
+    def near(lon):
+        return None if lon is None else middle + (lon - middle + 180) % 360 - 180
+
+    return [{**row, "slot_lon": near(row["slot_lon"]), "actual_lon": near(row["actual_lon"])} for row in rows]
 
 
 def _range_and_step(slot_lons):
@@ -132,7 +152,7 @@ def _ring(cx, cy, radius, state, group_lon, owner, title):
     colour = palette.SLOT_EMPTY if empty else palette.SLOT_COLOURS[state] if unknown else palette.ACCENT
     dashes = ' stroke-dasharray="4 3"' if empty else ""
     return (f'<circle cx="{cx:.1f}" cy="{cy}" r="{radius}" fill="none" stroke="{colour}" stroke-width="2.5"{dashes} '
-            f'data-slot-lon="{group_lon:g}" data-owner="{escape(owner)}" data-empty="{str(empty).lower()}" '
+            f'data-slot-lon="{_east(group_lon):g}" data-owner="{escape(owner)}" data-empty="{str(empty).lower()}" '
             f'data-unknown="{str(unknown).lower()}"><title>{escape(title)}</title></circle>')
 
 
@@ -155,6 +175,7 @@ def slot_belt(rows, caption=""):
     """HTML with one SVG: slots above, satellites below, each tied to its own slot."""
     if not any(row["slot_lon"] is not None for row in rows):
         return '<p class="sbelt-empty">No slots to draw.</p>'
+    rows = _unwrapped(rows)
     groups = _slot_groups(rows)
     low, high, step = _range_and_step([g["lon"] for g in groups])
 
@@ -215,7 +236,7 @@ def _tie(row, x_of, ring_radius, ideal_y, actual_y):
     colour = palette.TRACK if in_slot else palette.SLOT_COLOURS[row["state"]]
     return (f'<line class="sbelt-tie" x1="{slot_x:.1f}" y1="{ideal_y + ring_radius.get(row["name"], RING_RADIUS) + 1}" '
             f'x2="{sat_x:.1f}" y2="{actual_y - DOT_RADIUS - 1}" stroke="{colour}" stroke-width="1.8" '
-            f'stroke-dasharray="3 4" data-sat="{escape(row["name"])}" data-slot-lon="{row["slot_lon"]:g}"/>')
+            f'stroke-dasharray="3 4" data-sat="{escape(row["name"])}" data-slot-lon="{_east(row["slot_lon"]):g}"/>')
 
 
 def _dot(row, x, actual_y):
