@@ -6,7 +6,7 @@ from pathlib import Path
 
 from evidence.archive import min_gap, site
 from evidence.settings import NEVER_FETCH, RUN_WAIT_BUDGET
-from evidence.sources import (ARCHIVED_SOURCES, CELESTRAK_GNSS_URL, GALMON_SATELLITES_URL, GCAT_OBJECTS_URL,
+from evidence.sources import (ARCHIVED_SOURCES, CELESTRAK_GNSS_URL, GALMON_SATELLITES_URL, GCAT_FAILED_LAUNCHES_URL, GCAT_OBJECTS_URL,
                               GCAT_PAYLOADS_URL, IGS_SATELLITE_METADATA_URL, archived_addresses, working_candidates)
 
 JOB = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "archive.yml").read_text()
@@ -14,7 +14,7 @@ JOB = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "archi
 
 def test_addresses_by_group():
     assert archived_addresses("documents") == [IGS_SATELLITE_METADATA_URL]
-    assert archived_addresses("catalogues") == [GCAT_OBJECTS_URL, GCAT_PAYLOADS_URL]
+    assert archived_addresses("catalogues") == [GCAT_OBJECTS_URL, GCAT_PAYLOADS_URL, GCAT_FAILED_LAUNCHES_URL]
     assert archived_addresses("orbital") == [CELESTRAK_GNSS_URL]
     assert archived_addresses("news") and archived_addresses("social") == [
         f"https://www.reddit.com/r/{name}/.rss" for name in ("ISRO", "gnss", "nasa", "ESA", "roscosmos", "JAXA")]

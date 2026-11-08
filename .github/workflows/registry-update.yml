@@ -46,6 +46,15 @@ jobs:
         id: build
         run: python scripts/build_registry.py --archive archive --report "$RUNNER_TEMP/registry-changes.md"
 
+      - name: Rebuild the catalogue and library tables from GCAT
+        # After the registry, which they are matched against. A GCAT layout change must never stop the registry
+        # proposal: the scripts then write nothing and exit non-zero, and the tables stay as they were.
+        continue-on-error: true
+        run: |
+          python scripts/build_catalogue_table.py --archive archive --report "$RUNNER_TEMP/catalogue-changes.md"
+          python scripts/build_library_table.py --archive archive
+          { echo; cat "$RUNNER_TEMP/catalogue-changes.md"; } >> "$RUNNER_TEMP/registry-changes.md"
+
       - name: Did anything change?
         id: tables
         run: |

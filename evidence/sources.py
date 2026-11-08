@@ -73,6 +73,7 @@ ARCHIVED_SOURCES = {
     "catalogues": [
         GCAT_OBJECTS_URL,
         GCAT_PAYLOADS_URL,
+        GCAT_FAILED_LAUNCHES_URL,   # about 0.5 MB more a day; the Library page counts launch failures from it
     ],
     # Orbit records. They change several times a day, so nearly every fetch is a new
     # copy: about 130 KB a day (guess, from 170 objects). Kept so the age of each
