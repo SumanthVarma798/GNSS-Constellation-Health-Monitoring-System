@@ -272,7 +272,9 @@ def update_constellation_gp_history(
 
     bundled = load_bundled_gp_history(constellation_name)
     existing_data = bundled.get("satellites", {}) if isinstance(bundled, dict) else {}
-    satellite_data = {}
+    # Satellites not asked about this run keep their rows: an MEO file is written both from the few satellites outside
+    # CelesTrak's group (every "all" run) and in full (--constellation glonass), and neither may drop the other's.
+    satellite_data = {name: list(rows) for name, rows in existing_data.items()}
 
     sat_items = [(sat_name, norad_id) for sat_name, norad_id in sat_dict.items() if norad_id is not None]
     total_satellites = len(sat_items)

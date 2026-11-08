@@ -404,3 +404,19 @@ def test_every_reader_and_writer_names_a_system_s_bundle_the_same_way():
     assert [bundle_key(s) for s in ("BeiDou-3", "BeiDou-3 MEO", "GLONASS", "NavIC")] == \
         ["beidou3", "beidou3_meo", "glonass", "navic"]
     assert set(updater.resolve_targets("beidou3_meo")) == {"beidou3_meo"}
+
+
+def test_a_run_over_some_satellites_keeps_the_history_of_the_others(monkeypatch):
+    monkeypatch.setattr(updater, "datetime", FrozenDateTime)
+    held = {"COSMOS 2460": [{"EPOCH": "2026-09-22T09:38:57"}], "COSMOS 2600": [{"EPOCH": "2026-10-01T00:00:00"}]}
+    monkeypatch.setattr(updater, "load_bundled_gp_history", lambda constellation: {"satellites": held})
+    monkeypatch.setattr(updater, "fetch_gp_history_for_satellite", lambda *args, **kwargs: [])
+    monkeypatch.setattr(updater.time, "sleep", lambda seconds: None)
+    saved = {}
+    monkeypatch.setattr(updater, "save_gp_history_to_bundle",
+                        lambda constellation, satellite_data, start, end: saved.update(satellite_data) or True)
+
+    updater.update_constellation_gp_history("glonass", {"COSMOS 2460": 36402}, object(), days=365,
+                                            query_state={"queries_made": 0}, verbose=False)
+
+    assert set(saved) == {"COSMOS 2460", "COSMOS 2600"}   # the satellite not asked about keeps its year
