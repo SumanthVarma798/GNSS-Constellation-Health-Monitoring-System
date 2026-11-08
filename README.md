@@ -375,9 +375,13 @@ Main Streamlit application providing:
 
 | Constellation | Satellites | Coverage | Status |
 |---------------|------------|----------|--------|
-| **NavIC (IRNSS)** | 7 (3 GEO, 4 IGSO) | India & surrounding | ✅ Fully configured |
-| **QZSS (Michibiki)** | 5 (3 IGSO, 2 GEO) | Japan & Asia-Pacific | ✅ Fully configured |
-| **BeiDou-3** | 7 (3 IGSO, 4 GEO) | Asia-Pacific | ✅ Fully configured |
+| **NavIC (IRNSS)** | 9 tracked; IRNSS-1A and NVS-02 left out on purpose (`registry/left_out.csv`) | India & surrounding | ✅ Fully configured |
+| **QZSS (Michibiki)** | 6 (3 IGSO, 3 GEO incl. QZS-7); QZS-1 left out on purpose | Japan & Asia-Pacific | ✅ Fully configured |
+| **BeiDou GEO/IGSO** (page "BeiDou-3") | 10 (4 GEO, 3 BeiDou-3 IGSO, 2 BeiDou-2 IGSO, 1 BeiDou-3 test IGSO) | Asia-Pacific | ✅ Fully configured |
+| **BeiDou-3 MEO** | 30 (28 MEO, 2 test MEO) | Global | ✅ Judged by orbital plane |
+
+`registry/dashboard_satellites.csv` is the list itself; `tests/test_registry_coverage.py` keeps every broadcasting
+satellite tracked or explained.
 
 ### NavIC Orbital Slots
 - **GEO**: 32.5°E, 83°E, 131.5°E (inclination ~5°)
