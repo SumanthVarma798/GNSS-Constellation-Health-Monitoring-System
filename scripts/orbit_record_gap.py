@@ -87,23 +87,32 @@ def leap_seconds(text):
     return int(line[:6])
 
 
+def _registry_rows():
+    """satellites.csv and sightings.csv rows: a satellite CelesTrak lists before the IGS file does is in the second
+    (NVS-03 as I-101228 from 6 Nov 2026), as evidence/registry_tables.py reads them."""
+    rows = []
+    for name in ("satellites.csv", "sightings.csv"):
+        with open(ROOT / "registry" / name, newline="") as handle:
+            rows += list(csv.DictReader(handle))
+    return rows
+
+
 def tracked(day):
-    """[(svn, dashboard name, catalogue number, signal ID that day)] from the registry tables."""
-    with open(ROOT / "registry" / "satellites.csv", newline="") as handle:
-        catalogue = {row["svn"]: int(row["catalogue_no"]) for row in csv.DictReader(handle)}
+    """[(svn, dashboard name, catalogue number, signal ID that day)] from the registry tables. A tracked satellite
+    the registry does not list yet is left out, as the dashboard leaves it out (it names it in a notice)."""
+    catalogue = {row["svn"]: int(row["catalogue_no"]) for row in _registry_rows() if row["catalogue_no"]}
     noon = f"{day.isoformat()}T12:00:00Z"
     with open(ROOT / "registry" / "signal_ids.csv", newline="") as handle:
         held = {row["svn"]: row["signal_id"] for row in csv.DictReader(handle)
                 if row["valid_from"] <= noon and (not row["valid_to"] or row["valid_to"] > noon)}
     with open(ROOT / "registry" / "dashboard_satellites.csv", newline="") as handle:
         return [(row["svn"], row["dashboard_name"], catalogue[row["svn"]], held.get(row["svn"]))
-                for row in csv.DictReader(handle)]
+                for row in csv.DictReader(handle) if row["svn"] in catalogue]
 
 
 def cospar_ids():
     """{svn: COSPAR launch designator} from the registry."""
-    with open(ROOT / "registry" / "satellites.csv", newline="") as handle:
-        return {row["svn"]: row["cospar_id"] for row in csv.DictReader(handle)}
+    return {row["svn"]: row["cospar_id"] for row in _registry_rows()}
 
 
 def orbit_records(catalogue_numbers, now):
