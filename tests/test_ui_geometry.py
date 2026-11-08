@@ -450,7 +450,12 @@ def test_sky_and_ground_starts_at_the_capital_and_says_when_each_satellite_is_in
     at = run(_sky_and_ground)
 
     assert _heads(at)[0] == '<div class="geo-head">The sky above Capital (Beijing)</div>'
-    assert any(body.count('<div class="nr"><b>') == len(BEIDOU3_SATS) for body in htmls(at))
+    # Every tracked satellite is either a row or named as having no orbit data (the three added on 8 Nov 2026 have
+    # none in the frozen test data).
+    no_data = [n for body in htmls(at) if "No orbit data, so not drawn: " in body
+               for n in body.split("No orbit data, so not drawn: ")[1].split("<")[0].split(", ")]
+    assert any(body.count('<div class="nr"><b>') == len(BEIDOU3_SATS) - len(no_data) for body in htmls(at))
+    assert set(no_data) <= {"BeiDou-2 IGSO-6", "BeiDou-2 IGSO-7", "BeiDou-3S IGSO-2S"}
     assert any("always in view: geostationary" in body for body in htmls(at))
 
 

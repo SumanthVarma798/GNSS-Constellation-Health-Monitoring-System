@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 
 from analysis.meo_geometry import EXTENDED, NO_PLANE, part_score, plane_drift
 from config.config import TRACKED_NOT_IN_REGISTRY
-from evidence.registry_tables import new_on_dashboard
+from evidence.registry_tables import left_out_notice, new_on_dashboard
 from config.meo_nominal import MEANINGS, NOMINAL, PLANE_MEANINGS
 from ui import official_status, orbit_age, orbit_section, palette, reveal, shell, surfaces, tooltip
 from ui.data import SATELLITES
@@ -106,6 +106,8 @@ def _sources(system):
 def _gaps(name, result, today):
     if new := new_on_dashboard(name, today):
         surfaces.show(surfaces.notice(new, "accent"))
+    if left := left_out_notice(name):
+        surfaces.show(surfaces.notice(left, "accent"))
     shown = set(result["health"]["Satellite"])
     missing = [s for s in SATELLITES[name] if s not in shown]
     for text in (*result["warnings"], *([f"No orbit data: {', '.join(missing)}"] if missing else []),

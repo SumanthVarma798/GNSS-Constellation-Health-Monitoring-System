@@ -212,6 +212,8 @@ def constellation(name, picks, section, choice, mask, window, now):
     left_out = [n for n in every if n not in counted]
     if left_out:
         surfaces.show(surfaces.notice(f"Left out as not in service: {', '.join(left_out)}", "idle"))
+    if no_data := [n for n, norad in data.SATELLITES[name].items() if norad is not None and n not in every]:
+        surfaces.show(surfaces.notice(f"No orbit data, so not drawn: {', '.join(no_data)}", "warn"))
     satellites = gd.satellites_from_history(result["history"], counted)
     types = gd.orbit_types(result["health"], result["history"])
     own = [n for n in counted if picks is None or n in picks]

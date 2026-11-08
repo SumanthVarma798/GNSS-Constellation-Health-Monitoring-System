@@ -16,6 +16,7 @@ International GNSS Service (IGS) satellite metadata file by `scripts/build_regis
 | `constellations.csv` | a person | Which system each SVN letter stands for |
 | `catalogue.csv` | its own build script | Owner and status of each satellite, as a second source states them |
 | `dashboard_satellites.csv` | a person | Which satellites the dashboard tracks, and its name for each |
+| `left_out.csv` | a person | Satellites with a signal ID today that the dashboard leaves out on purpose, each with why and a source; every other one must be tracked (`tests/test_registry_coverage.py`) |
 
 Code reads and writes these tables through `evidence/registry_tables.py`; file names
 and column names are written down once, in `evidence/settings.py`.

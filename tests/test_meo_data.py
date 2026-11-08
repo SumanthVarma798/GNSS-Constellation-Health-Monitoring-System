@@ -48,12 +48,13 @@ def test_beidou_3_meo_tracks_every_bds_3_meo_satellite_with_a_signal_id_and_beid
     # loses a signal ID, until registry/dashboard_satellites.csv is changed to match.
     registry = read_table(REGISTRY_SATELLITES_FILE)
     with_signal = {row["catalogue_no"] for row in registry
-                   if row["block"].startswith("BDS-3M") and row["signal_id_now"]}
-    geo_igso = {row["catalogue_no"] for row in registry if row["block"].startswith(("BDS-3G", "BDS-3I"))}
+                   if row["block"].startswith(("BDS-3M", "BDS-3SM")) and row["signal_id_now"]}
+    geo_igso = {row["catalogue_no"] for row in registry
+                if row["block"].startswith(("BDS-3G", "BDS-3I", "BDS-2I", "BDS-3SI"))}
 
-    assert {str(n) for n in MEO_SATS["BeiDou-3 MEO"].values()} == with_signal
+    assert {str(n) for n in MEO_SATS["BeiDou-3 MEO"].values()} == with_signal   # 28 BDS-3M and the two test MEOs
     assert {str(n) for n in BEIDOU3_SATS.values()} <= geo_igso   # the split leaves no MEO satellite in BeiDou-3
-    assert len(BEIDOU3_SATS) == 7
+    assert len(BEIDOU3_SATS) == 10   # 4 GEO and 3 IGSO of BeiDou-3, BeiDou-2 IGSO-6 and -7, the test IGSO-2S
 
 
 def test_celestrak_rows_alone_make_a_history_when_there_is_no_bundled_file():
