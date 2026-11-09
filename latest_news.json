@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-09T12:13:14Z",
+ "generated_at": "2026-11-09T22:45:23Z",
  "items": [
   {
    "address": "https://news.google.com/rss/articles/CBMi5wFBVV95cUxQWUpZRHVOR3RGWkl1bnBTY2FybVhlcC0waUpYRTZFRVdlRV9FVk1XVko5ZnFLaW5jMFg2Q0Y5SG5aSmZnM0JhcWtETnFqMW1ObjYteXRoLU5qN2FjaDdoclg2em01Tm84SndPWUpUbEl5Mk16S2JKSktoVnBIMldXZ080aW5xMWRXTFdNMkJGeEJWdmJaYUI2WmU5aE5jMkVXenpzQURsYk5pdHhObmxmbGwwb2xWbHUtRFFMaHlYbkFSXzg2UG5SeWlNdXI4cmppNXJMY20xWjlzVDNRbjBFXzZFdVZUajA?oc=5",
@@ -1835,6 +1835,22 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMi6wFBVV95cUxQWVNVc2l2NGlZR3RrMURaZm9CQTZmYWNpR3BIN282WXNUSk84VEJicktlZ1pNRlZoeW1fakFaTGJ1RHdNckw0Njc3UlZ2SHRXYkc5Ul9ObC1DRGF5MmlCVkFZaW1qbnBnS3NiZWoycjhrbmJQenRfS0E1ckdoWF8zRUFkc0xLakdlZjVVLXdYeUdnQVZ0X1lmNU9XSmdHMVZkUVBDRGxtWkI4aG8tLWJkXzFlMTAtc2l6dnQxSFZBVVRPMDlmc0pyNHZDOUhXSXAzdURMRkVHR3ppZlpzQXN2UktZOHBDemhMakZJ?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-09T22:44:31Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "The Economic Times",
+   "published_at": "2026-10-31T07:00:00Z",
+   "source_id": "m.economictimes.com",
+   "summary": "",
+   "title": "ISRO launches GSLV-F18 with NVS-03, boosts NavIC & make-in-india navigation capabilities",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMijwFBVV95cUxNOV9MOWhweTd1clh4STRlZDJ5ZHJoQnRBZnlDN3ZCR3JEVS1tTTF0UEs1QnhlbGlTdHh3aGxKNUtrdkljaUlCX19nQlRkRkFxVlN6SGFpQXdmRVBWMXNkRS10cWdMUlNaeTgtY3oxcDVkd1c4amR4THhqU1l3dTNPQkFjMzJ6UjZGZ1FBNE5VMA?oc=5",
    "category": "launch",
    "constellations": [
@@ -2783,22 +2799,6 @@
    "source_id": "indiatoday.in",
    "summary": "",
    "title": "Our space scientists make nation proud: PM after Isro launches NVS-03",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMi6wFBVV95cUxQWVNVc2l2NGlZR3RrMURaZm9CQTZmYWNpR3BIN282WXNUSk84VEJicktlZ1pNRlZoeW1fakFaTGJ1RHdNckw0Njc3UlZ2SHRXYkc5Ul9ObC1DRGF5MmlCVkFZaW1qbnBnS3NiZWoycjhrbmJQenRfS0E1ckdoWF8zRUFkc0xLakdlZjVVLXdYeUdnQVZ0X1lmNU9XSmdHMVZkUVBDRGxtWkI4aG8tLWJkXzFlMTAtc2l6dnQxSFZBVVRPMDlmc0pyNHZDOUhXSXAzdURMRkVHR3ppZlpzQXN2UktZOHBDemhMakZJ0gHwAUFVX3lxTFBjV0ZWcGdibkp4WWkxWkZka3pkaVc5b3JETG05UlZocTVMTlAzTEh1R09PNnRpdVFJUkstSDVGWlMyQ01uMlluZG8xU0VCaUE2RUt2cE93UkpzWXhVczJ3RTM2MjZZRmtHazhHb1dWMTc4bHpFb2dDbUd1RUgzSW5MazlSczBoYVJSZnpRNW5VUEdPX0YyRHdEaHdndVBqUlp2TW14WWw5WVFvVWpubmEtZTk2SHNOX3p1OTFvNzlOUHRSVUpoVUZocTNhQ05nUVJOTjJGV3E5UkdvR1FVZ01WN214SUxvYUJtMkFjaVJVSw?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-11-07T22:20:52Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "The Economic Times",
-   "published_at": "2026-10-31T01:36:51Z",
-   "source_id": "m.economictimes.com",
-   "summary": "",
-   "title": "ISRO launches GSLV-F18 with NVS-03, boosts NavIC & make-in-india navigation capabilities",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
