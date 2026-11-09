@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-09T01:16:22Z",
+ "generated_at": "2026-11-09T12:13:14Z",
  "items": [
   {
    "address": "https://news.google.com/rss/articles/CBMi5wFBVV95cUxQWUpZRHVOR3RGWkl1bnBTY2FybVhlcC0waUpYRTZFRVdlRV9FVk1XVko5ZnFLaW5jMFg2Q0Y5SG5aSmZnM0JhcWtETnFqMW1ObjYteXRoLU5qN2FjaDdoclg2em01Tm84SndPWUpUbEl5Mk16S2JKSktoVnBIMldXZ080aW5xMWRXTFdNMkJGeEJWdmJaYUI2WmU5aE5jMkVXenpzQURsYk5pdHhObmxmbGwwb2xWbHUtRFFMaHlYbkFSXzg2UG5SeWlNdXI4cmppNXJMY20xWjlzVDNRbjBFXzZFdVZUajA?oc=5",
@@ -5824,6 +5824,23 @@
    "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMi6AFBVV95cUxNdHZQbmVqajV3Y3ZncDFlM3lia1VrRUk1TVpkejBCVWM3SDNKVXJjYklfWExIcU45RmI0ZWtJSlNKVFhSM1VjMWpKV0hNbDdhcGhxMUU1ZzIwaWZZRmw4bE9BejhuMFRnVkZNOVp6NGlTelNNbFlQVWFWZnRyM2pfV3J5NUkwUHNRdWJkVDRTTG9QUU4zVVpuUjhacW1LV3JWOVItNUNwOVdObVlXOFNKSzRNenM3REw2WWtNQ2pPTWJKdjdGMzYyTnBzWk51d1AtWHYxVE14a3pNak9CLXZCOWR0VHQ2cnYy?oc=5",
+   "category": "other",
+   "constellations": [
+    "GPS",
+    "BeiDou-3"
+   ],
+   "fetched_at": "2026-11-09T12:12:22Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "South China Morning Post",
+   "published_at": "2026-06-04T07:00:00Z",
+   "source_id": "scmp.com",
+   "summary": "",
+   "title": "‘BeiDou Goddess’: key figure in China GPS-equivalent satellite system, earns PhD by 26",
+   "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://lsc-pagepro.mydigitalpublication.com/publication/?i=865273&p=62&view=issueViewer",
    "category": "other",
    "constellations": [
@@ -7286,7 +7303,6 @@
    "address": "https://news.google.com/rss/articles/CBMivgFBVV95cUxQRGRFeExiVll1bXpFbkN4SDhoRFJHVjFkVkVwMVNJbFp5Yk5yREI5RWRZSEtCQ0RQM0tIR1ZrMjMtZFZIVHc1Xy1iS2FQbjc1MjVjWjZhb1ZzRFBXbFVJN2RHTnFpZVJnVHlWWWtFeV9JM0VFZl9CQUZBNldQS3BrV0hxVGlLWUtKalJFeUIxWkVMSE4zM2hmc2o0ZENMM0lfWi1aZGRtbTVDTXJNR2dhejRIZ0hBYVgzcnBBY21B?oc=5",
    "category": "other",
    "constellations": [
-    "GPS",
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
