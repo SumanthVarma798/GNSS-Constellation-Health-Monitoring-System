@@ -1,6 +1,22 @@
 {
- "generated_at": "2026-11-09T22:45:23Z",
+ "generated_at": "2026-11-09T22:46:46Z",
  "items": [
+  {
+   "address": "https://x.com/Septentrio/status/2119777088068550848",
+   "category": "signal and service",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-09T22:46:46Z",
+   "grade": "E",
+   "grade_standing": "confirmed",
+   "outlet": "Septentrio (@Septentrio)",
+   "published_at": "2026-11-09T13:00:16Z",
+   "source_id": "x.com/Septentrio",
+   "summary": "Meet moTi : Open-source hardware for precise GNSS timing >> View the GitHub repository: https://t.co/cWTRDtvei1 >> mosaic-G5 T : newest timing receiver module: https://t.co/MR5TpmSoia #Galileo #GNSS #Timing #OpenSource #STARGATE #Innovation https://t.co/s7iDkSs62W",
+   "title": "Meet moTi : Open-source hardware for precise GNSS timing &gt;&gt; View the GitHub repository: https://t.co/cWTRDtvei1…",
+   "via": "https://x.com/Septentrio"
+  },
   {
    "address": "https://news.google.com/rss/articles/CBMi5wFBVV95cUxQWUpZRHVOR3RGWkl1bnBTY2FybVhlcC0waUpYRTZFRVdlRV9FVk1XVko5ZnFLaW5jMFg2Q0Y5SG5aSmZnM0JhcWtETnFqMW1ObjYteXRoLU5qN2FjaDdoclg2em01Tm84SndPWUpUbEl5Mk16S2JKSktoVnBIMldXZ080aW5xMWRXTFdNMkJGeEJWdmJaYUI2WmU5aE5jMkVXenpzQURsYk5pdHhObmxmbGwwb2xWbHUtRFFMaHlYbkFSXzg2UG5SeWlNdXI4cmppNXJMY20xWjlzVDNRbjBFXzZFdVZUajA?oc=5",
    "category": "launch",
