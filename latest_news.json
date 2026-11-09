@@ -1,6 +1,22 @@
 {
- "generated_at": "2026-11-08T22:33:00Z",
+ "generated_at": "2026-11-09T01:16:22Z",
  "items": [
+  {
+   "address": "https://news.google.com/rss/articles/CBMi5wFBVV95cUxQWUpZRHVOR3RGWkl1bnBTY2FybVhlcC0waUpYRTZFRVdlRV9FVk1XVko5ZnFLaW5jMFg2Q0Y5SG5aSmZnM0JhcWtETnFqMW1ObjYteXRoLU5qN2FjaDdoclg2em01Tm84SndPWUpUbEl5Mk16S2JKSktoVnBIMldXZ080aW5xMWRXTFdNMkJGeEJWdmJaYUI2WmU5aE5jMkVXenpzQURsYk5pdHhObmxmbGwwb2xWbHUtRFFMaHlYbkFSXzg2UG5SeWlNdXI4cmppNXJMY20xWjlzVDNRbjBFXzZFdVZUajA?oc=5",
+   "category": "launch",
+   "constellations": [
+    "GLONASS"
+   ],
+   "fetched_at": "2026-11-09T01:16:22Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Tech Times",
+   "published_at": "2026-11-08T21:46:11Z",
+   "source_id": "techtimes.com",
+   "summary": "",
+   "title": "Russia Launches GLONASS Satellite From Drone-Targeted Base; New Generation May Carry NATO Ship-Tracking Sensors",
+   "via": "https://news.google.com/rss/search?q=GLONASS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
   {
    "address": "https://x.com/Stellarixorine/status/2119478167580860887",
    "category": "launch",
@@ -32,6 +48,22 @@
    "summary": "ONE DAY, ONE SPACE AGENCY — Day 15 / 70+ 🚀✨ 🇫🇷 CNES — Centre National d'Études Spatiales / French Space Agency The Ariane Empire Builder 🚀👑 🇫🇷------------🇫🇷 📅 FORMED: December 19, 1961 📍 HEADQUARTERS: Paris, France — with Toulouse Space Centre & Guiana Space Centre, Kourou 👨‍🔬 FATHER: General…",
    "title": "ONE DAY, ONE SPACE AGENCY — Day 15 / 70+ 🚀✨ 🇫🇷 CNES — Centre National d'Études Spatiales / French Space Agency The…",
    "via": "https://x.com/Stellarixorine"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiowFBVV95cUxQcHc4bFRxV3FSZFdGdkRwcXZzTFAwZ29ESXl1QnEwSmVrTVNidXg3X3haV3gxMDV2emRWd21zSjdwSk1kemg2VklCRGVoLTExejd6dXI5VUp3NHNyZGRPOERaUU9SSENmVnVNRXVqb3duUzJqRUNQbzJ5c0Y2dVVudS0xM2pJdkZnQ3VKUFNkMjkwckR0Rl9GMnQ0SjNETnVGRnVz?oc=5",
+   "category": "other",
+   "constellations": [
+    "GLONASS"
+   ],
+   "fetched_at": "2026-11-09T01:16:22Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Frontier India",
+   "published_at": "2026-11-08T14:23:00Z",
+   "source_id": "frontierindia.com",
+   "summary": "",
+   "title": "Russia’s GLONASS-K2 vs K1: What Has Changed in Its New Navigation Satellites?",
+   "via": "https://news.google.com/rss/search?q=GLONASS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://x.com/RussianSpaceWeb/status/2119090480558506095",
@@ -1594,6 +1626,23 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMie0FVX3lxTE5zWEx2SEJobDJ3QTR6VG5CbzBGcF9LdWcxbjdLbFlRSU9kRHU5UVE5eFpLNkNLeWpSOVFOamtJSW5Rek5PVXBoMWFuS2lpT0tZZFRlOXdWcEFZV1YwN0hodDZwV1BKMVVJOWlNTmx6WmhBVVZqUWhCdm84Zw?oc=5",
+   "category": "other",
+   "constellations": [
+    "GPS",
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-09T01:15:29Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Indian Masterminds",
+   "published_at": "2026-10-31T08:37:09Z",
+   "source_id": "indianmasterminds.com",
+   "summary": "",
+   "title": "ISRO NVS-03 Mission: How ISRO Is Strengthening India’s GPS Alternative",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMi_AFBVV95cUxOc0ZLcEgxMXNmWVppVXJackx3cjZ4alJBc0xrX1NPdmhHV3FaamFCaFJ5V1FaX0E3eWw3dmZ3clZMSkdFbkRDd1BEeF9fS1BYUXFNS005SWFNT3ctVGJacEl4X3lWWkFscEhwUC1TOWI2S04yNllhYjBOZE9icG5VT193WnpiQnAxU1BaeFNpVEpUcmJoMklobG5Xc0k5XzZ5TUZCSzRiaGM1NVRwbUgxaDlFVXg4T2IweV9kZUk0WTNPaENmMlZlM3p2R1h6ZkZrRVRKNlF5WjB3eTBFRDBoVnVVWGl2UWhBaDVBSXVfZzlNXy1ZYmtlaVduOUU?oc=5",
    "category": "launch",
    "constellations": [
@@ -1767,6 +1816,22 @@
    "source_id": "ukrmedia.news",
    "summary": "",
    "title": "India has launched the NVS-03: what is known about the new satellite",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMi1wFBVV95cUxQdDFPWVRzSnFERldUb1FSamFqOWJXMC04WG5XSU1TT0FTX1FXMnNrV2dkRnhkdkdUdlY3cXpuS3kxdnVpcXRtVmR0bnlVUUJ2RVNOa3BhUzZyMkpOSEs5VEhYd3dWcGkxUEM2VkluMFZ3M0pHNjdqRl9jQ3dobTV1ZlpwcnhlYzc1Q05mbmxUbjJfQnBFeXBKZ2RVVm11cno3cnptVmZ1ZUJYaHJ6aFVWa0YweUpNQ0pCajV5aVlLeGUyV29DRFprcHJQdkpIaFM0b3dNeHBkTQ?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-09T01:15:29Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "The Economic Times",
+   "published_at": "2026-10-31T07:00:00Z",
+   "source_id": "m.economictimes.com",
+   "summary": "",
+   "title": "NVS-03 ‘Eye In The Sky’ enters orbit: ISRO Chief announces GSLV-F18 mission success",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -2543,22 +2608,6 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMi1wFBVV95cUxQdDFPWVRzSnFERldUb1FSamFqOWJXMC04WG5XSU1TT0FTX1FXMnNrV2dkRnhkdkdUdlY3cXpuS3kxdnVpcXRtVmR0bnlVUUJ2RVNOa3BhUzZyMkpOSEs5VEhYd3dWcGkxUEM2VkluMFZ3M0pHNjdqRl9jQ3dobTV1ZlpwcnhlYzc1Q05mbmxUbjJfQnBFeXBKZ2RVVm11cno3cnptVmZ1ZUJYaHJ6aFVWa0YweUpNQ0pCajV5aVlLeGUyV29DRFprcHJQdkpIaFM0b3dNeHBkTdIB3AFBVV95cUxPYXNIajJIanVjWDk4ZXlrN2YzY2JWOEx6N2hSV2lWcHdjM0V3ZWpxd0lQdVV6Y0lzRWRDWnNYQUdKQVMwSkoxTWdrZF8tZXA1dGFRY1drTnhfZFlib0Q1eklKSnpEa3NCbG9MMGZiNFVmWkFmSjlWeXdoSnEwWTNvWktPZUNlczJNQWUxOWNOVEhOMXVoNmZxWURMR2xLa0hGRmlycGRROUtRUGg2UXhWd0VKd0dWdHhpY3dkMGJwTVpsRG1EXzFBLS1zUGNyMGJDU096dFFMbGNEMV9Q?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-31T09:59:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "The Economic Times",
-   "published_at": "2026-10-31T02:36:54Z",
-   "source_id": "m.economictimes.com",
-   "summary": "",
-   "title": "NVS-03 ‘Eye In The Sky’ enters orbit: ISRO Chief announces GSLV-F18 mission success",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMi5AFBVV95cUxNUEg2b0dkSE1LdDkwYkJ0YVJpVEpsclhhclpCdDZ6c3RES1NmNUVWWmk1Tmc4MWZpbkdfNnE3cmljMXhQbWFhN2N1Vmp1ZDFOOGNkdEVvMTdxSk9XZ2ctRmJkTzF6VHY1NTllaHVFRGhqTGFDZnY1eWZGT3RjT1dGVnBKYmZRMEVmRzc3XzRyaVR3b1ZjM19semU2M1hMakxrNGp6YVJZQS1NbEtYc2x5MU5ib0p3UEItZHhhYlVlQ2daS2hXMVlnM01sYkFPWmE5MDZ2bXhVd1FNajVkSkxBQW9pTy0?oc=5",
    "category": "launch",
    "constellations": [
@@ -2799,22 +2848,6 @@
    "source_id": "bhaskarenglish.in",
    "summary": "",
    "title": "ISRO launches navigation satellite: NVS-03 will give the Army location data up to 1,500 km beyond the border",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMickFVX3lxTE1xQmI5STJfUjVJcjZHN3pBNHBKUnNLbEtWTGZiY3pXMVJ5RldKcjRtMlRIWG82V0FmSWVxTGFZNE5LQWZ3VHU5YkYxTk92LXY2Uk5WWVZvWHBmTU03M3dJYzZWRU1JeGluRUt3Z0Y2MEJ0dw?oc=5",
-   "category": "other",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-31T01:06:36Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Hindustan Herald",
-   "published_at": "2026-10-30T21:46:43Z",
-   "source_id": "hindustanherald.in",
-   "summary": "",
-   "title": "ISRO: NavIC Scores Massive Win With Third Atomic Clock",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -7267,22 +7300,6 @@
    "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMisgFBVV95cUxOQjYxM1QxelNJX2VCcmUyTGE1ZkE4aFBJWVB1NnJjcGNBN3ptRGxuTGY4UXE1RlhhcTRERGxFdVRtYm1PY0dKVFFXRWxfWjhmenczR2ZwUHBWbzI1VXVVT1VLaVkwb3hIWHhjRFZKSmM0bFZFMmNleGw2YXdhTVFoN25YNVNSY2ZhVEZpb0wtd2EzZTBDTlBlYjlvTlVHeUN6cmZ6OXFtX2JWbE50SVhTQ3hR?oc=5",
-   "category": "other",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:40:50Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "WION",
-   "published_at": "2026-03-07T08:00:00Z",
-   "source_id": "wionews.com",
-   "summary": "",
-   "title": "Which GPS technology does the Iranian Shahed-136 kamikaze drone use?",
-   "via": "https://news.google.com/rss/search?q=GLONASS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE1ENU84bGQtbXNZM00tQWxyeFp5Z0l6ZS0zZHlvUXFVQU53UV9pZjdlUk1pU09tODkzSWY5c19BaGZrVVltYTlHLWQ2cGYzeXdLNFBXdGpfb2tVVGVD?oc=5",
    "category": "signal and service",
    "constellations": [
@@ -8702,6 +8719,15 @@
    "note": "",
    "reason": ""
   },
+  "frontierindia.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "frontierindia.com",
+   "note": "",
+   "reason": ""
+  },
   "frontiersin.org": {
    "grade": "",
    "grade_standing": "not graded",
@@ -8816,15 +8842,6 @@
    "graded_by": "",
    "kind": "",
    "name": "hindupost.in",
-   "note": "",
-   "reason": ""
-  },
-  "hindustanherald.in": {
-   "grade": "",
-   "grade_standing": "not graded",
-   "graded_by": "",
-   "kind": "",
-   "name": "hindustanherald.in",
    "note": "",
    "reason": ""
   },
