@@ -172,3 +172,17 @@ def test_one_story_lists_each_source_with_what_it_said_and_what_was_taken():
     assert "2 sources · B Times, A News" in html and "1 new" in html
     assert "<mark>QZS-7</mark>" in html                        # the word the reports share
     assert "What the dashboard took from it" in html and "launch claim for QZSS" in html
+
+
+def test_an_old_article_found_late_is_not_new_but_a_fresh_one_is():
+    """Google News re-listed the 31 Oct NVS-03 launch stories on 9 Nov: fetched after the visit, published long before."""
+    now = datetime(2026, 11, 10, 9, 0, tzinfo=timezone.utc)
+    seen = datetime(2026, 11, 9, 9, 0, tzinfo=timezone.utc)
+    late = _item(published_at="2026-10-31T07:00:00Z", fetched_at="2026-11-09T22:44:00Z")
+    fresh = _item(published_at="2026-11-09T21:00:00Z", fetched_at="2026-11-09T22:44:00Z")
+    lagged = _item(published_at="2026-11-09T05:00:00Z", fetched_at="2026-11-09T10:00:00Z")   # 4 h before the visit
+    undated = _item(published_at="", fetched_at="2026-11-09T22:44:00Z")
+
+    assert not news_ui.is_new(late, seen, now)
+    assert news_ui.is_new(fresh, seen, now) and news_ui.is_new(lagged, seen, now) and news_ui.is_new(undated, seen, now)
+    assert not news_ui.is_new(late, None, now) and news_ui.is_new(fresh, None, now)   # no visit stored: last 24 hours

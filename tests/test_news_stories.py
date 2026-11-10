@@ -60,3 +60,9 @@ def test_many_identical_headlines_are_one_story_though_their_words_are_common():
 def test_a_time_without_a_zone_is_read_as_utc():
     shown = [item("ISRO launches NVS-03"), {**item("NVS-03 lifts off"), "published_at": "2026-11-01T09:00:00"}]
     assert len(news_stories.stories(shown)) == 1
+
+
+def test_a_post_in_styled_letters_reads_as_plain_words():
+    from evidence.news_stories import words
+
+    assert words("𝐍𝐚𝐯𝐈𝐂 𝐈𝐒 𝐁𝐀𝐂𝐊 with 𝐍𝐕𝐒-𝟎𝟑") == words("NavIC is back with NVS-03")

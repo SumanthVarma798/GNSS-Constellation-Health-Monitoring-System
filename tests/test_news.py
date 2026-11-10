@@ -566,3 +566,21 @@ def test_newsletter_text_is_matched_on_its_words_not_its_markup(monkeypatch):
             "via": "https://substack.example/feed", "social": False, "kind": "Substack feed"}
 
     assert latest_news([item])["items"] == []
+
+
+def test_one_article_under_several_titles_is_kept_once_but_another_outlets_shorter_headline_is_not():
+    from evidence.news import _title_key, same_title
+
+    same = [("Watch: How India fixes its 'GPS' tonight", 'Watch: How India fixes its "GPS" tonight'),
+            ("ISRO’s ‘Smart Boy’ Rocket To Launch Key GPS Satellite", "ISRO's 'Smart Boy' Rocket To Launch Key GPS Satellite"),
+            ("ISRO's GSLV rocket successfully places NVS-03 satellite into 'designated' orbit, NavIC constellation...",
+             "ISROs GSLV rocket successfully places NVS-03 satellite into designated orbit, NavIC constellation restored"),
+            ("Canada Opens Formal Talks on Galileo Access as Arctic GPS Accuracy Degrades to 1 Kilometer – Tech Times",
+             "Canada Opens Formal Talks on Galileo Access as Arctic GPS Accuracy Degrades to 1 Kilometer"),
+            ("𝐍𝐚𝐯𝐈𝐂 𝐈𝐒 𝐁𝐀𝐂𝐊 after eight months", "NavIC is back after eight months")]
+    apart = [("ISRO Successfully Launches NVS-03 Satellite",
+              "ISRO Successfully Launches NVS-03 Satellite; India’s NavIC Navigation System Restored After Months"),
+             ("GPS outage", "GPS outage over the Baltic")]   # too short to be one article by its start alone
+
+    assert all(same_title(_title_key(a), _title_key(b)) for a, b in same)
+    assert not any(same_title(_title_key(a), _title_key(b)) for a, b in apart)

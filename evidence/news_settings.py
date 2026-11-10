@@ -20,6 +20,15 @@ NEWS_TEXT_MATCH_KINDS = ("Substack feed", "newsletter feed", "X account")
 
 # News collection runs on this cadence.
 NEWS_CYCLE_HOURS = 3
+# Two titles are one article when, written plainly (quotes, punctuation, case and letter styles set aside), they are the
+# same or one is the start of the other and at least this long: a headline cut short ("...") or with the outlet's name
+# added ("– Tech Times") is still the same article. The start must also be most of the longer title: "ISRO successfully
+# launches NVS-03 satellite" is another outlet's shorter headline, not a cut-off copy of "...; India's NavIC system restored".
+NEWS_SAME_TITLE_PREFIX = 40
+NEWS_SAME_TITLE_SHARE = 0.7
+# An item is new when it was published after the reader's last visit, less this many hours: a feed can carry an article
+# a few hours after it went out. One published days earlier and found late (Google News re-lists old articles) is not new.
+NEWS_NEW_GRACE_HOURS = 2 * NEWS_CYCLE_HOURS
 # News older than this is shown as late.
 NEWS_LATE_HOURS = 7
 
