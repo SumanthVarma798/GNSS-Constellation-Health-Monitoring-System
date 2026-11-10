@@ -1,6 +1,22 @@
 {
- "generated_at": "2026-11-10T17:21:32Z",
+ "generated_at": "2026-11-10T20:04:50Z",
  "items": [
+  {
+   "address": "https://x.com/ispaceflight_in/status/2120131634179850590",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-10T20:04:49Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "indianspaceflight.in (@iSpaceFlight_in)",
+   "published_at": "2026-11-10T12:29:06Z",
+   "source_id": "x.com/iSpaceFlight_in",
+   "summary": "@isro: ISRO successfully conducted the flight acceptance test on November 05, 2026 for the cryogenic engine identified for the next GSLV Mission (GSLV-F19) at the test facility at ISRO Propulsion Complex, Mahendragiri.The ignition of both the Main Engine (ME) and the Gas Generator (GG) occurred as…",
+   "title": "@isro: ISRO successfully conducted the flight acceptance test on November 05, 2026 for the cryogenic engine identified…",
+   "via": "https://x.com/iSpaceFlight_in"
+  },
   {
    "address": "https://www.gsc-europa.eu/news/galileo-user-satisfaction-survey-2025-results-now-available",
    "category": "signal and service",
@@ -2880,22 +2896,6 @@
    "source_id": "etvbharat.com",
    "summary": "",
    "title": "ISRO Successfully Places NVS-03 Satellite Into 'Designated' Orbit, NavIC Constellation Restored",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMivwFBVV95cUxPLXl1VzlpNGVUNnZVazdZVGo5bjlUNW5XMzBtZ25mUXhrdGE3c0JjMFRvV2VydjlKMHRHUXlYNmt3enpkNzJmbkdhZ3lVdjNsLWc4M0JqZkdDVlhlNHRIX3hJT3E2am1HV3ZFeWE2aDliTkZ1TWpneFlhb0xBVW5wTF9CRWQxX2VSZDB0NXloM1JlanBNTVA0TnB5dDd4SlhzWDFWZlBral91blhqMDBFWXo3N1JUWUtIdEdLZjQ4ONIBxAFBVV95cUxNOS1ySDdnQjFzdURFeWl1ckstM0NzODRvTEVtVjhmZUh0SGkxX21VbU0zdEJzRXJzOGcxRm1IOW5uRU1ySFlWeDQycENHemVzT3NXMURaODhIWTBWWl84WGFHekw1Z0ZWWjBiOXF0TDZQUFRJcFZiX1A4SVcyWEotVmJTX2RhaTZ0UVR6MlB0RUJfeENWYkJ1emFpbWxWVTRiVjVteU5EZ2NFOVJnZEloOEJSSU9uWVhkUngwVHdzY2FvaXZ6?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-31T17:24:13Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Bhaskar English",
-   "published_at": "2026-10-31T00:44:22Z",
-   "source_id": "bhaskarenglish.in",
-   "summary": "",
-   "title": "ISRO launches navigation satellite: NVS-03 will give the Army location data up to 1,500 km beyond the border",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -8108,15 +8108,6 @@
    "graded_by": "",
    "kind": "",
    "name": "bgr.com",
-   "note": "",
-   "reason": ""
-  },
-  "bhaskarenglish.in": {
-   "grade": "",
-   "grade_standing": "not graded",
-   "graded_by": "",
-   "kind": "",
-   "name": "bhaskarenglish.in",
    "note": "",
    "reason": ""
   },
