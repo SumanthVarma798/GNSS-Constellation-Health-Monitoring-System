@@ -333,8 +333,10 @@ def screen_reader_heading(label):
 def seen_note(seen_at):
     """Help words for the new-only toggle."""
     if seen_at is None:
-        return "No visit is stored yet, so 'new' means published and fetched in the last 24 hours."
-    return f"New means published and fetched after your last visit on {_time_words(seen_at, timezone.utc)}."
+        return ("No visit is stored yet, so 'new' means fetched in the last 24 hours and published then, "
+                f"allowing {NEWS_NEW_GRACE_HOURS} hours for slow feeds.")
+    return (f"New means fetched after your last visit on {_time_words(seen_at, timezone.utc)} and published then, "
+            f"allowing {NEWS_NEW_GRACE_HOURS} hours for slow feeds.")
 
 
 def as_of_line(generated_at, now, zone=timezone.utc):

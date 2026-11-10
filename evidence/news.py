@@ -282,10 +282,13 @@ def _source_grade(source_id, confirmed, provisional, record_rows, today):
 
 def _title_key(title):
     """A title written plainly: entities and letter styles (𝐍𝐚𝐯𝐈𝐂) undone, apostrophes dropped, quotes, dashes and other
-    punctuation made spaces, lower case, single spaces. Google News lists one article under titles that differ only so."""
+    punctuation made spaces, lower case, single spaces. Google News lists one article under titles that differ only so.
+    Letters, digits and combining marks are kept by Unicode category, not by \\w, which drops the vowel signs of Hindi
+    (काम and कामा would read alike)."""
     text = unicodedata.normalize("NFKC", html.unescape(title or "")).casefold()
     text = re.sub(r"['’‘`]", "", text)   # ISRO's and ISROs are one word
-    return " ".join(re.sub(r"[^\w\s]", " ", text).split())
+    kept = "".join(c if unicodedata.category(c)[0] in "LMN" else " " for c in text)
+    return " ".join(kept.split())
 
 
 def same_title(a, b):

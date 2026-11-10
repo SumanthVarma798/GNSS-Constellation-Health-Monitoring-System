@@ -580,7 +580,11 @@ def test_one_article_under_several_titles_is_kept_once_but_another_outlets_short
             ("𝐍𝐚𝐯𝐈𝐂 𝐈𝐒 𝐁𝐀𝐂𝐊 after eight months", "NavIC is back after eight months")]
     apart = [("ISRO Successfully Launches NVS-03 Satellite",
               "ISRO Successfully Launches NVS-03 Satellite; India’s NavIC Navigation System Restored After Months"),
-             ("GPS outage", "GPS outage over the Baltic")]   # too short to be one article by its start alone
+             ("GPS outage", "GPS outage over the Baltic"),   # too short to be one article by its start alone
+             ("Lockheed Martin ships GPS III SV10 to Cape Canaveral for launch",
+              "Lockheed Martin ships GPS III SV11 to Cape Canaveral for launch"),
+             ("इसरो ने नेविगेशन उपग्रह का काम पूरा किया", "इसरो ने नेविगेशन उपग्रह का कामा पूरा किया"),   # vowel signs differ
+             ("", "Japan launches QZS-7")]
 
     assert all(same_title(_title_key(a), _title_key(b)) for a, b in same)
     assert not any(same_title(_title_key(a), _title_key(b)) for a, b in apart)
