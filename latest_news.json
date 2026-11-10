@@ -1,6 +1,54 @@
 {
- "generated_at": "2026-11-10T07:50:46Z",
+ "generated_at": "2026-11-10T17:21:32Z",
  "items": [
+  {
+   "address": "https://www.gsc-europa.eu/news/galileo-user-satisfaction-survey-2025-results-now-available",
+   "category": "signal and service",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-10T17:19:42Z",
+   "grade": "A",
+   "grade_standing": "confirmed",
+   "outlet": "European GNSS Service Centre: news",
+   "published_at": "2026-11-10T11:07:16Z",
+   "source_id": "gsc-europa.eu",
+   "summary": "Galileo User Satisfaction Survey 2025: Results Now Available! garcial 10 November 2026 Tue, 11/10/2026 - 11:07 EUSPA´s 2025 Galileo User Satisfaction Survey confirms positive satisfaction levels with Galileo and GSC services, while identifying opportunities for further improvements. The European…",
+   "title": "Galileo User Satisfaction Survey 2025: Results Now Available!",
+   "via": "https://www.gsc-europa.eu/rss.xml"
+  },
+  {
+   "address": "https://www.euspa.europa.eu/publications-multimedia/publications/outlook-galileo-differentiators",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-10T17:19:42Z",
+   "grade": "A",
+   "grade_standing": "confirmed",
+   "outlet": "EU Agency for the Space Programme (EUSPA): news",
+   "published_at": "2026-11-10T10:01:38Z",
+   "source_id": "euspa.europa.eu",
+   "summary": "",
+   "title": "Outlook on Galileo differentiators",
+   "via": "https://www.euspa.europa.eu/rss.xml"
+  },
+  {
+   "address": "https://www.euspa.europa.eu/newsroom-events/news/why-galileo-stands-out-market-outlook-european-unions-unique-gnss-capabilities",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-10T17:19:42Z",
+   "grade": "A",
+   "grade_standing": "confirmed",
+   "outlet": "EU Agency for the Space Programme (EUSPA): news",
+   "published_at": "2026-11-10T09:21:08Z",
+   "source_id": "euspa.europa.eu",
+   "summary": "This new publication highlights the growing market relevance of Galileo’s unique capabilities, identifying adoption opportunities, future trends and emerging applications that will drive innovation across sectors.",
+   "title": "Why Galileo Stands Out: Market Outlook for the European Union’s Unique GNSS Capabilities",
+   "via": "https://www.euspa.europa.eu/rss.xml"
+  },
   {
    "address": "https://x.com/ispaceflight_in/status/2120005793470935079",
    "category": "other",
