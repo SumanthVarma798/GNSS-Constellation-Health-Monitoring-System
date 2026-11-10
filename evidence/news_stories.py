@@ -4,6 +4,7 @@ A story is built afresh from the shown items on every visit, so a source that re
 The rules and their numbers are in evidence/news_settings.py (STORY_*).
 """
 import re
+import unicodedata
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 
@@ -33,7 +34,7 @@ def _stem(word):
 
 def words(text):
     """The words of a headline that can tie it to another: lower case, stop words dropped, endings cut."""
-    found = WORD.findall((text or "").casefold().replace("’", "'"))
+    found = WORD.findall(unicodedata.normalize("NFKC", text or "").casefold().replace("’", "'"))   # 𝐍𝐚𝐯𝐈𝐂 reads as navic
     return {_stem(word) for word in found if word not in STORY_STOP_WORDS and (len(word) > 2 or ID.match(word))}
 
 

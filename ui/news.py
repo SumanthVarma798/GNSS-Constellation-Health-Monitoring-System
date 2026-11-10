@@ -11,7 +11,7 @@ import streamlit as st
 from evidence import news_stories
 from evidence.news import host_id
 from evidence.news_settings import (CATEGORY_RULE_WORDS, GRADE_BARS, GRADE_E_MIN_CLAIMS, NEWS_CATEGORIES, NEWS_CYCLE_HOURS,
-                                    NEWS_LATE_HOURS, NEWS_URL, RECORD_WINDOW_DAYS, STORY_DAYS, STORY_SHARE,
+                                    NEWS_LATE_HOURS, NEWS_NEW_GRACE_HOURS, NEWS_URL, RECORD_WINDOW_DAYS, STORY_DAYS, STORY_SHARE,
                                     STORY_SHARED_WORDS)
 from evidence.settings import RELIABILITY_GRADES
 from ui import reveal, surfaces, tooltip
@@ -136,13 +136,15 @@ def cookie_seen():
 
 
 def is_new(item, seen_at, now):
-    """True when this item is new for the visit."""
+    """True when this item is new for the visit: fetched after the last visit (or in the last 24 hours with no visit
+    stored) and published then too, less NEWS_NEW_GRACE_HOURS. An article published days earlier and only found now
+    (Google News re-lists old ones: the NVS-03 launch stories reappeared on 9 Nov) is not news to the reader."""
     fetched = _time(item.get("fetched_at"))
     if fetched is None:
         return False
-    if seen_at is not None:
-        return fetched > seen_at
-    return fetched >= now - timedelta(hours=24)
+    since = seen_at if seen_at is not None else now - timedelta(hours=24)
+    published = _time(item.get("published_at")) or fetched
+    return fetched > since and published > since - timedelta(hours=NEWS_NEW_GRACE_HOURS)
 
 
 def filter_items(items, constellation, categories, standings, date_window, only_new, seen_at, now):
@@ -331,8 +333,10 @@ def screen_reader_heading(label):
 def seen_note(seen_at):
     """Help words for the new-only toggle."""
     if seen_at is None:
-        return "No visit is stored yet, so 'new' means fetched in the last 24 hours."
-    return f"New means fetched after your last visit on {_time_words(seen_at, timezone.utc)}."
+        return ("No visit is stored yet, so 'new' means fetched in the last 24 hours and published then, "
+                f"allowing {NEWS_NEW_GRACE_HOURS} hours for slow feeds.")
+    return (f"New means fetched after your last visit on {_time_words(seen_at, timezone.utc)} and published then, "
+            f"allowing {NEWS_NEW_GRACE_HOURS} hours for slow feeds.")
 
 
 def as_of_line(generated_at, now, zone=timezone.utc):

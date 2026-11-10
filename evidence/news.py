@@ -9,6 +9,7 @@ outside entities, and its expat (2.4.1 or later) refuses runaway entity expansio
 """
 import html
 import re
+import unicodedata
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from urllib.parse import urlsplit
@@ -17,8 +18,8 @@ from xml.etree import ElementTree
 from evidence.archive import object_path, read_runs, read_versions
 from evidence.confidence import read_source_grades
 from evidence import source_record
-from evidence.news_settings import (NEWS_CATEGORIES, NEWS_ITEMS_PER_SYSTEM, NEWS_MAX_AGE_DAYS,
-                                    NEWS_TEXT_MATCH_KINDS, SUMMARY_CHARACTERS)
+from evidence.news_settings import (NEWS_CATEGORIES, NEWS_ITEMS_PER_SYSTEM, NEWS_MAX_AGE_DAYS, NEWS_SAME_TITLE_PREFIX,
+                                    NEWS_SAME_TITLE_SHARE, NEWS_TEXT_MATCH_KINDS, SUMMARY_CHARACTERS)
 from evidence.settings import (CANDIDATE_FEED_TYPE, CANDIDATE_SOCIAL_KIND, FEED_REPORT_COLUMNS, LABELLING_SHEET_SIZE,
                                NOT_AN_ARTICLE_HOSTS, SOCIAL_PLATFORM_HOSTS, SYSTEM_WORDS)
 from evidence.sources import ARCHIVED_SOURCES, PROVISIONAL_GROUPS, candidate_rows, working_candidates
@@ -280,7 +281,21 @@ def _source_grade(source_id, confirmed, provisional, record_rows, today):
 
 
 def _title_key(title):
-    return " ".join((title or "").split()).casefold()
+    """A title written plainly: entities and letter styles (𝐍𝐚𝐯𝐈𝐂) undone, apostrophes dropped, quotes, dashes and other
+    punctuation made spaces, lower case, single spaces. Google News lists one article under titles that differ only so.
+    Letters, digits and combining marks are kept by Unicode category, not by \\w, which drops the vowel signs of Hindi
+    (काम and कामा would read alike)."""
+    text = unicodedata.normalize("NFKC", html.unescape(title or "")).casefold()
+    text = re.sub(r"['’‘`]", "", text)   # ISRO's and ISROs are one word
+    kept = "".join(c if unicodedata.category(c)[0] in "LMN" else " " for c in text)
+    return " ".join(kept.split())
+
+
+def same_title(a, b):
+    """True when two plain titles (_title_key) are one article: equal, or one the start of the other and long enough."""
+    shorter, longer = sorted((a, b), key=len)
+    return shorter == longer or (len(shorter) >= max(NEWS_SAME_TITLE_PREFIX, NEWS_SAME_TITLE_SHARE * len(longer))
+                                 and longer.startswith(shorter))
 
 
 def latest_news(items):
@@ -299,12 +314,13 @@ def latest_news(items):
     # Old items go before the duplicate check, so an old copy never takes a recent one's place.
     recent = [item for item in items if not _too_old(item, newest_fetched)]
     newest_first = sorted(recent, key=lambda item: item["published_at"] or item["fetched_at"], reverse=True)
-    deduped, seen_titles = [], {}
+    deduped, keys = [], []
     for item in newest_first:
         key = _title_key(item.get("title", ""))
-        at = seen_titles.get(key)
+        # ponytail: compares with every kept title (a few hundred); index by first words if the feed grows to thousands
+        at = next((i for i, held in enumerate(keys) if same_title(key, held)), None)
         if at is None:
-            seen_titles[key] = len(deduped)
+            keys.append(key)
             deduped.append(item)
             continue
         if deduped[at].get("social") and not item.get("social"):
