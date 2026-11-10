@@ -1,6 +1,23 @@
 {
- "generated_at": "2026-11-10T07:49:28Z",
+ "generated_at": "2026-11-10T07:50:46Z",
  "items": [
+  {
+   "address": "https://x.com/ispaceflight_in/status/2120005793470935079",
+   "category": "other",
+   "constellations": [
+    "GPS",
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-10T07:50:46Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "indianspaceflight.in (@iSpaceFlight_in)",
+   "published_at": "2026-11-10T04:09:03Z",
+   "source_id": "x.com/iSpaceFlight_in",
+   "summary": "Good morning, folks! Now that we are back from the Diwali break though definitely still carrying a bit of that festive hangover it is time to plug back in. The Indian space ecosystem hasn’t slowed down one bit over the holiday week. 1/ Skyroot Aerospace | Raman-1 Flight 2 Qualification >@SkyrootA…",
+   "title": "Good morning, folks! Now that we are back from the Diwali break though definitely still carrying a bit of that festive…",
+   "via": "https://x.com/iSpaceFlight_in"
+  },
   {
    "address": "https://x.com/Septentrio/status/2119777088068550848",
    "category": "signal and service",
@@ -2831,22 +2848,6 @@
    "source_id": "bhaskarenglish.in",
    "summary": "",
    "title": "ISRO launches navigation satellite: NVS-03 will give the Army location data up to 1,500 km beyond the border",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMickFVX3lxTE1xQmI5STJfUjVJcjZHN3pBNHBKUnNLbEtWTGZiY3pXMVJ5RldKcjRtMlRIWG82V0FmSWVxTGFZNE5LQWZ3VHU5YkYxTk92LXY2Uk5WWVZvWHBmTU03M3dJYzZWRU1JeGluRUt3Z0Y2MEJ0dw?oc=5",
-   "category": "other",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-31T01:06:36Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Hindustan Herald",
-   "published_at": "2026-10-30T21:46:43Z",
-   "source_id": "hindustanherald.in",
-   "summary": "",
-   "title": "ISRO: NavIC Scores Massive Win With Third Atomic Clock",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -7272,7 +7273,6 @@
    "address": "https://news.google.com/rss/articles/CBMirgFBVV95cUxPT2NWWmM0UTlEdmFhdHV1cS1meURhWmRQbGxZZkdrTFVyeUhZX1ZGY3ZQVzNsajA4ZFJ6dkoyUlAwTE1Kd0tpOEQ1WnA1NGlxT0lVX3huT3pJeTRHWkVUaVV1c1FRVUdlMmp3UUttcHNPZE1ON2JPU2xyR0JjMkpVMF9ENDd3N3lobldPSU14VXFlMEpXRk5GSGhQbG9oMVZfRHNVdWh5dDZ4eXBILVE?oc=5",
    "category": "signal and service",
    "constellations": [
-    "GPS",
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:40:40Z",
@@ -8771,15 +8771,6 @@
    "graded_by": "",
    "kind": "",
    "name": "hindupost.in",
-   "note": "",
-   "reason": ""
-  },
-  "hindustanherald.in": {
-   "grade": "",
-   "grade_standing": "not graded",
-   "graded_by": "",
-   "kind": "",
-   "name": "hindustanherald.in",
    "note": "",
    "reason": ""
   },
