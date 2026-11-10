@@ -1,6 +1,22 @@
 {
- "generated_at": "2026-11-10T20:04:50Z",
+ "generated_at": "2026-11-10T23:45:30Z",
  "items": [
+  {
+   "address": "https://rntfnd.org/2026/11/10/xona-is-in-orbit-its-ceo-says-u-s-gps-backup-leans-on-china-satnews/",
+   "category": "other",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-11-10T23:45:30Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "Resilient Navigation and Timing Foundation",
+   "published_at": "2026-11-10T17:43:13Z",
+   "source_id": "rntfnd.org",
+   "summary": "Image: Xona Space Systems What’s new: Interesting not-quite accurate headline about comments from Brian Manning, CEO at Xona. Why it’s important: From the text of the article, it’s clear Brian didn’t actually say exactly what the headline says. So it’s an object lesson to go beyond the headlines…",
+   "title": "Xona Is in Orbit. Its CEO Says U.S. GPS Backup Leans on China – Satnews",
+   "via": "https://rntfnd.org/feed/"
+  },
   {
    "address": "https://x.com/ispaceflight_in/status/2120131634179850590",
    "category": "launch",
@@ -7304,7 +7320,6 @@
    "address": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE1ENU84bGQtbXNZM00tQWxyeFp5Z0l6ZS0zZHlvUXFVQU53UV9pZjdlUk1pU09tODkzSWY5c19BaGZrVVltYTlHLWQ2cGYzeXdLNFBXdGpfb2tVVGVD?oc=5",
    "category": "signal and service",
    "constellations": [
-    "GPS",
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
