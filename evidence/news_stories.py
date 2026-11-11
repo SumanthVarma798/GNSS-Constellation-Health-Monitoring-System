@@ -7,15 +7,19 @@ import re
 import unicodedata
 from collections import Counter
 from datetime import datetime, timedelta, timezone
+from functools import cache
 
 from evidence.news_settings import (CORROBORATION_DAYS, NEWS_CATEGORIES, STORY_COMMON_SHARE, STORY_DAYS,
                                     STORY_HEADLINE_CHARACTERS, STORY_NEAR_SAME, STORY_SHARE, STORY_SHARED_WORDS, STORY_STOP_WORDS,
                                     STORY_TOLD_SHARE)
+from evidence.registry_tables import read_table
+from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_SATELLITES_FILE, REGISTRY_SIGHTINGS_FILE
 from evidence.source_record import CLAIM_CATEGORIES
 
 WORD = re.compile(r"[a-z0-9][a-z0-9\-]*")
-# A mission or satellite ID (nvs-03, gslv-f18, qzs-7, sv10) or a notice number (2026047); not a year, not L5 or E6.
-ID = re.compile(r"(?=.{4,}$)(?:[a-z]{2,}-?[a-z]?\d+|\d{5,})$")
+# A mission or satellite ID (nvs-03, gslv-f18, qzs-7, sv10, irnss-1l) or a notice number (2026047); not a year, not
+# L5 or E6.
+ID = re.compile(r"(?=.{4,}$)(?:[a-z]{2,}-?(?:[a-z]?\d+|\d+[a-z])|\d{5,})$")
 GRADE_ORDER = ("A", "B", "C", "D", "E", "F")
 
 
@@ -32,10 +36,34 @@ def _stem(word):
     return word[:-1] if len(word) > 4 and word.endswith("e") else word
 
 
-def words(text):
-    """The words of a headline that can tie it to another: lower case, stop words dropped, endings cut."""
+def words(text, aliased=True):
+    """The words of a headline that can tie it to another: lower case, stop words dropped, endings cut, and a satellite's
+    other name (IRNSS-1L) read as the one the registry pairs it with (NVS-03)."""
     found = WORD.findall(unicodedata.normalize("NFKC", text or "").casefold().replace("’", "'"))   # 𝐍𝐚𝐯𝐈𝐂 reads as navic
-    return {_stem(word) for word in found if word not in STORY_STOP_WORDS and (len(word) > 2 or ID.match(word))}
+    kept = {_stem(word) for word in found if word not in STORY_STOP_WORDS and (len(word) > 2 or ID.match(word))}
+    return {_aliases().get(word, word) for word in kept} if aliased else kept
+
+
+@cache
+def _aliases():
+    """{ID: the one it stands for}: a satellite's other names, from the registry's notes and dashboard names, so a
+    headline saying IRNSS-1L tells the same story as one saying NVS-03 ("NVS-03 (IRNSS-1L)"). An ID on more than one
+    registry row (BeiDou-3, BeiDou-2) names a family, not a satellite, and stands for nothing."""
+    names = {row["svn"]: row["dashboard_name"] for row in read_table(REGISTRY_DASHBOARD_SATELLITES_FILE)}
+    per_row = [list(dict.fromkeys(_ids_in_order(f'{names.get(row["svn"], "")} {row["note"]}')))
+               for row in read_table(REGISTRY_SATELLITES_FILE) + read_table(REGISTRY_SIGHTINGS_FILE)]
+    rows_naming = Counter(word for ids in per_row for word in ids)
+    aliases = {}
+    for ids in per_row:
+        own = [word for word in ids if rows_naming[word] == 1]   # the dashboard's name first, then the note's order
+        aliases.update({word: own[0] for word in own[1:]})
+    return aliases
+
+
+def _ids_in_order(text):
+    """The IDs a text names, in the order it names them."""
+    found = WORD.findall(unicodedata.normalize("NFKC", text or "").casefold())
+    return [_stem(word) for word in found if ID.match(word)]
 
 
 def _ids(word_set):
@@ -71,10 +99,17 @@ def _grade_rank(item):
     return GRADE_ORDER.index(grade) if grade in GRADE_ORDER else len(GRADE_ORDER)
 
 
+def _story_words(item):
+    """The headline's words, and, when the headline names no mission or satellite, the IDs its text names: a social post
+    cut short ("𝐍𝐚𝐯𝐈𝐂 𝐈𝐒 𝐁𝐀𝐂𝐊 8 months ago...") names NVS-03 only further on."""
+    found = words(item.get("title", ""))
+    return found if _ids(found) else found | _ids(words(item.get("summary", "")))
+
+
 def stories(items):
     """[{"headline", "summary", "category", "items" (best grade first, then newest), "words" (the story's own, marked on the page)}],
     the story with the newest item first. items are one constellation's shown items."""
-    keyed = [(item, words(item.get("title", ""))) for item in sorted(items, key=_when, reverse=True)]
+    keyed = [(item, _story_words(item)) for item in sorted(items, key=_when, reverse=True)]
     counts = Counter(word for _, word_set in keyed for word in word_set)
     common = {word for word, n in counts.items() if n > max(3, STORY_COMMON_SHARE * len(keyed))}
     groups = []
