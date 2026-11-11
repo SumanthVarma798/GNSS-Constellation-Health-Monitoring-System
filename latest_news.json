@@ -1,6 +1,54 @@
 {
- "generated_at": "2026-11-11T07:19:31Z",
+ "generated_at": "2026-11-11T17:30:59Z",
  "items": [
+  {
+   "address": "https://www.euspa.europa.eu/opportunities/procurement-grants/procurements/call_to_join-galileo_campaign",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-11T17:29:10Z",
+   "grade": "A",
+   "grade_standing": "confirmed",
+   "outlet": "EU Agency for the Space Programme (EUSPA): news",
+   "published_at": "2026-11-11T16:17:47Z",
+   "source_id": "euspa.europa.eu",
+   "summary": "",
+   "title": "Call for Expression of Interest to join the online EUSPA’s Galileo users’ testimonial campaign",
+   "via": "https://www.euspa.europa.eu/rss.xml"
+  },
+  {
+   "address": "https://rntfnd.org/2026/11/11/gps-innovation-alliance-on-us-government-jamming-spoofing-defense-scoop/",
+   "category": "signal and service",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-11-11T17:29:19Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "Resilient Navigation and Timing Foundation",
+   "published_at": "2026-11-11T13:51:43Z",
+   "source_id": "rntfnd.org",
+   "summary": "Image: Jamming equipment – 266th Range Squadron, Mountain Home Air Force Base What’s new: In a presentation to the National Defense Transportation Association, the Executive Director of the GPS Innovation Alliance (GPSIA) warned that military testing of jamming and spoofing technologies was…",
+   "title": "GPS Innovation Alliance on US Government Jamming & Spoofing (Defense Scoop)",
+   "via": "https://rntfnd.org/feed/"
+  },
+  {
+   "address": "https://www.gsc-europa.eu/news/why-galileo-stands-out-market-outlook-for-the-european-unions-unique-gnss-capabilities",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-11T17:29:09Z",
+   "grade": "A",
+   "grade_standing": "confirmed",
+   "outlet": "European GNSS Service Centre: news",
+   "published_at": "2026-11-11T08:39:58Z",
+   "source_id": "gsc-europa.eu",
+   "summary": "Why Galileo Stands Out: Market Outlook for the European Union’s Unique GNSS Capabilities navaral 11 November 2026 Wed, 11/11/2026 - 08:39 This new publication highlights the growing market relevance of Galileo’s unique capabilities, identifying adoption opportunities, future trends and emerging…",
+   "title": "Why Galileo Stands Out: Market Outlook for the European Union’s Unique GNSS Capabilities",
+   "via": "https://www.gsc-europa.eu/rss.xml"
+  },
   {
    "address": "https://rntfnd.org/2026/11/10/xona-is-in-orbit-its-ceo-says-u-s-gps-backup-leans-on-china-satnews/",
    "category": "other",
@@ -63,22 +111,6 @@
    "source_id": "euspa.europa.eu",
    "summary": "",
    "title": "Outlook on Galileo differentiators",
-   "via": "https://www.euspa.europa.eu/rss.xml"
-  },
-  {
-   "address": "https://www.euspa.europa.eu/newsroom-events/news/why-galileo-stands-out-market-outlook-european-unions-unique-gnss-capabilities",
-   "category": "other",
-   "constellations": [
-    "Galileo"
-   ],
-   "fetched_at": "2026-11-10T17:19:42Z",
-   "grade": "A",
-   "grade_standing": "confirmed",
-   "outlet": "EU Agency for the Space Programme (EUSPA): news",
-   "published_at": "2026-11-10T09:21:08Z",
-   "source_id": "euspa.europa.eu",
-   "summary": "This new publication highlights the growing market relevance of Galileo’s unique capabilities, identifying adoption opportunities, future trends and emerging applications that will drive innovation across sectors.",
-   "title": "Why Galileo Stands Out: Market Outlook for the European Union’s Unique GNSS Capabilities",
    "via": "https://www.euspa.europa.eu/rss.xml"
   },
   {
@@ -7303,7 +7335,6 @@
    "address": "https://news.google.com/rss/articles/CBMivgFBVV95cUxQRGRFeExiVll1bXpFbkN4SDhoRFJHVjFkVkVwMVNJbFp5Yk5yREI5RWRZSEtCQ0RQM0tIR1ZrMjMtZFZIVHc1Xy1iS2FQbjc1MjVjWjZhb1ZzRFBXbFVJN2RHTnFpZVJnVHlWWWtFeV9JM0VFZl9CQUZBNldQS3BrV0hxVGlLWUtKalJFeUIxWkVMSE4zM2hmc2o0ZENMM0lfWi1aZGRtbTVDTXJNR2dhejRIZ0hBYVgzcnBBY21B?oc=5",
    "category": "other",
    "constellations": [
-    "GPS",
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
