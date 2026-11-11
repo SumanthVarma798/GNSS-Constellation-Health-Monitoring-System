@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-10T23:45:30Z",
+ "generated_at": "2026-11-11T07:19:31Z",
  "items": [
   {
    "address": "https://rntfnd.org/2026/11/10/xona-is-in-orbit-its-ceo-says-u-s-gps-backup-leans-on-china-satnews/",
@@ -530,6 +530,22 @@
    "summary": "",
    "title": "ISRO Successfully Places NVS-03 Navigation Satellite In Geosynchronous Orbit",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiV0FVX3lxTE9FX2VSdGtqMS13bHlTZklWWFFmYTFHRlpkQ0ROalJwREgzVmhHUUp3WTBuX2w4MkdwV3RqU0gyWHhkcklQc3Y1dGEwT1FfLWNPTkd6SzdZaw?oc=5",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-11T07:19:31Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "indianspaceflight.in",
+   "published_at": "2026-11-04T17:01:25Z",
+   "source_id": "indianspaceflight.in",
+   "summary": "",
+   "title": "Learn GNSS, how NavIC navigation works",
+   "via": "https://news.google.com/rss/search?q=site%3Aindianspaceflight.in&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://www.space.com/space-exploration/launches-spacecraft/nasas-artemis-ii-moon-launch-tore-a-hole-in-earths-upper-atmosphere-so-huge-it-disrupted-gps-signals",
@@ -1496,6 +1512,22 @@
    "source_id": "indianexpress.com",
    "summary": "",
    "title": "NavIC system to be operational again after NVS-03’s successful launch",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMijwFBVV95cUxPTFpQbFg4SDRFYktCWGtFNkEzdVplYndzNjQydDZPX2d2SkZnXzI1cjZ4OU9pMFQ1dkdkYWhpaEN2WGJWeUZJa0Q4NUdsVzRPcHl5eG9iWFR5SU1XNXBzc2VoVFpuR0xjUHVMb3dXbktOXzRwZjBrODFEeWYwUXhmQzc0VVhQQnByVl9VVmd6MA?oc=5",
+   "category": "other",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-11-11T07:18:19Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Oneindia",
+   "published_at": "2026-10-31T13:25:07Z",
+   "source_id": "oneindia.com",
+   "summary": "",
+   "title": "A rubidium heartbeat for India's own GPS",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -2896,22 +2928,6 @@
    "source_id": "voiceofsikkim.com",
    "summary": "",
    "title": "ISRO Launches NVS-03 Satellite to Strengthen India’s Indigenous GPS System NavIC",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMilAJBVV95cUxQOWlYQWY4d3MxQlh2YjY3d3VNQVlJNHA0LWdfMjZqQVZIX2NxYnZEbnlTSEFHZHRIcFFVVW42TVY3bnlsbDdYQmFMM2pTVFRRNFZGY2E5T0VqTXNkdXlLWTdRREZHTWlmV1c1eVdKUVJpdkt2Q3V4aXR2cjVIalNjY3lkRHh2aTJ2X3VIcjBzdGxNVWlRZ1pvRTFfRlExTy03UkJHa2JKS19fUFhpNTUxZzhndXBlQlFlNklXSTRiRkdtc2oxczRkSDJYN0VkeFlzX3lNOWdLQlNpYWRsRGthaGRMSkVkUl9kZm1uejBhQVZfdGJnZUFoT0s0SWExVVpwa1dQQWx4c3o0Qlp6TGFnSFlrWnTSAZoCQVVfeXFMT1lQekl2QUNZcW1OS01GYTRhY1ZhTDd6RVVEZzh0NkVMWkNFYmhRT2Mtc3lkd3RGWDB0SWo1bndDeFY3c2VwTXpZYWU5NmZsOElDUEtoWnpjOFVEa29CVDlKeHBaVzh1cXlDZld0U3NLa2d3b1NheXZoZXFLenZaS1YtNzJCUU9GNmpSaGxZT18zV1VURkFmU2I4V1FBWVdQdmQyLWZacEJ6eWxZdlJpSW15SkRWQUttLVhMV3pWaW1JR3lldXZrTkEwb0lMVUVkREpnWURuN3p2SUhaaDNodzV1TDVYQWUtOXNNX2dzNi1tVVhCWUw5RThBZW1zeFZvY3RUUkhla3dkZVpnaU1POVZQTnJwVk84WXZn?oc=5",
-   "category": "other",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-31T09:59:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "ETV Bharat",
-   "published_at": "2026-10-31T01:08:15Z",
-   "source_id": "etvbharat.com",
-   "summary": "",
-   "title": "ISRO Successfully Places NVS-03 Satellite Into 'Designated' Orbit, NavIC Constellation Restored",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -7301,22 +7317,6 @@
    "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMisgFBVV95cUxOQjYxM1QxelNJX2VCcmUyTGE1ZkE4aFBJWVB1NnJjcGNBN3ptRGxuTGY4UXE1RlhhcTRERGxFdVRtYm1PY0dKVFFXRWxfWjhmenczR2ZwUHBWbzI1VXVVT1VLaVkwb3hIWHhjRFZKSmM0bFZFMmNleGw2YXdhTVFoN25YNVNSY2ZhVEZpb0wtd2EzZTBDTlBlYjlvTlVHeUN6cmZ6OXFtX2JWbE50SVhTQ3hR?oc=5",
-   "category": "other",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:40:50Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "WION",
-   "published_at": "2026-03-07T08:00:00Z",
-   "source_id": "wionews.com",
-   "summary": "",
-   "title": "Which GPS technology does the Iranian Shahed-136 kamikaze drone use?",
-   "via": "https://news.google.com/rss/search?q=GLONASS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE1ENU84bGQtbXNZM00tQWxyeFp5Z0l6ZS0zZHlvUXFVQU53UV9pZjdlUk1pU09tODkzSWY5c19BaGZrVVltYTlHLWQ2cGYzeXdLNFBXdGpfb2tVVGVD?oc=5",
    "category": "signal and service",
    "constellations": [
@@ -9446,6 +9446,15 @@
    "graded_by": "",
    "kind": "",
    "name": "nordicdefencesector.com",
+   "note": "",
+   "reason": ""
+  },
+  "oneindia.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "oneindia.com",
    "note": "",
    "reason": ""
   },
