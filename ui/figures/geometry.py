@@ -337,20 +337,21 @@ def outside(values, band):
     return (values < band[0]) | (values > band[1])
 
 
-def satellite_trends(series, name, orbit, bands, start, end):
+def satellite_trends(series, name, orbit, bands, start, end, measures=gs.TRENDS):
     """One satellite's measures (TRENDS), one strip each over one shared time axis, to be read at a glance: the line
     in ink, what it should be as a quiet pressed-in band, readings outside the band marked in the bad colour, and the
     latest reading written at the line's end (in the bad colour, and named under the title, when outside). Each
     strip's name and unit sit above it. Hovering any strip reads all of them at that time, with a line down through
     every strip. Fixed side margins keep every satellite's strips on the same time scale, side by side.
 
-    series: {history column: table with satellite, EPOCH and that column}. bands: {column: (low, high)}."""
+    series: {history column: table with satellite, EPOCH and that column}. bands: {column: (low, high)}. measures: the
+    strips drawn (gs.MEO_TRENDS for a MEO system)."""
     fig = go.Figure()
-    count, gap = len(gs.TRENDS), 0.1
+    count, gap = len(measures), 0.1
     tall = (1 - gap * (count - 1)) / count
     small = {"size": type_scale.LEVELS["small"][1], "color": palette.MUTED}
     now_outside = []
-    for i, (column, label, unit, _) in enumerate(gs.TRENDS):
+    for i, (column, label, unit, _) in enumerate(measures):
         yaxis = "y" if i == 0 else f"y{i + 1}"
         top = 1 - i * (tall + gap)
         fig.update_layout({f"yaxis{'' if i == 0 else i + 1}": {
@@ -402,7 +403,9 @@ def trends_key():
     """What each trend column means, and how the picture marks a reading out of bounds."""
     lines = "".join(f'<li><b>{escape(name)}</b> <span>{escape(meaning)}.</span></li>' for _, name, _, meaning in gs.TRENDS)
     return (f'<ul class="geo-key">{lines}</ul><p class="muted">Pressed-in band: what it should be, where a target is set. '
-            "A reading outside it is marked red; each line's latest reading is written at its end.</p>")
+            "A reading outside it is marked red; each line's latest reading is written at its end.</p>"
+            '<p class="muted">MEO systems show tilt and height only: drift and centre are measured against one turn '
+            "a day over one longitude, and a MEO satellite circles the globe.</p>")
 
 
 # ---- orbit plane spacing ----
