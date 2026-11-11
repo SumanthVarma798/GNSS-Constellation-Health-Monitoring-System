@@ -27,6 +27,12 @@ times the tolerance. The overall score is the weighted mean of the parts that co
 with WEIGHTS (spacing counts most: it is what keeps coverage even). Manoeuvres are not part of the
 score: they need history, which these systems mostly lack (see analysis/meo_run.py).
 
+Two diagnostics, not scored, as the team's static MEO app (ElectricPlant19/Static_MEO_GNSS_Monitor) shows them:
+  along_track_km_day   2 pi a0 (n - n0): how fast it gains (+) or loses (-) its place along the orbit against a
+                       satellite at the nominal height, from its mean motion. A circular-orbit approximation.
+  tilt_vs_peers_deg    The angle between its orbit's normal and the mean normal of the OTHER satellites in its fitted
+                       plane: node and inclination differences in one number. None with no peer.
+
 Two-body motion only, with the Earth's flattening (J2) for the node's drift. Over the day or two
 between epochs that is well inside the tolerances. The argument of latitude from mean elements uses
 the first-order correction for eccentricity.
@@ -84,6 +90,27 @@ def at_common_time(elements):
         moved[name] = {"raan": (float(row["RA_OF_ASC_NODE"]) + _node_rate_deg_day(a, e, i, n) * days) % 360,
                        "u": u % 360, "i": i, "a": a, "e": e}
     return moved
+
+
+def _normal(raan_deg, inclination_deg):
+    """The unit normal of an orbit plane (its angular momentum's direction) in the inertial frame."""
+    node, tilt = math.radians(raan_deg), math.radians(inclination_deg)
+    return np.array([math.sin(node) * math.sin(tilt), -math.cos(node) * math.sin(tilt), math.cos(tilt)])
+
+
+def _diagnostics(rows, now, elements, nominal):
+    """Adds along_track_km_day and tilt_vs_peers_deg to each row (see the module's notes). Scores are not touched."""
+    for name, row in rows.items():
+        a0 = nominal["extended"]["semi_major_axis_km"] if row["plane"] == EXTENDED else nominal["semi_major_axis_km"]
+        n0 = math.sqrt(MU / a0 ** 3) * 86400 / (2 * math.pi)   # rev/day at the nominal height
+        row["along_track_km_day"] = 2 * math.pi * a0 * (float(elements[name]["MEAN_MOTION"]) - n0)
+        peers = [_normal(now[other]["raan"], now[other]["i"]) for other in rows
+                 if other != name and rows[other]["plane"] == row["plane"] and row["plane"] not in (EXTENDED, NO_PLANE)]
+        row["tilt_vs_peers_deg"] = None
+        if peers:
+            mean, own = np.sum(peers, axis=0), _normal(now[name]["raan"], now[name]["i"])
+            mean /= np.linalg.norm(mean)
+            row["tilt_vs_peers_deg"] = math.degrees(math.atan2(np.linalg.norm(np.cross(own, mean)), float(own @ mean)))
 
 
 def fit_planes(raans, spacing):
@@ -201,6 +228,7 @@ def assess(system, elements, registry):
         weight = sum(WEIGHTS[m] for m in row["parts"])
         row["score"] = sum(WEIGHTS[m] * s for m, s in row["parts"].items()) / weight if weight else None
         row["status"] = status_of(row["score"]) if row["score"] is not None else ""
+    _diagnostics(rows, now, elements, nominal)
     return [rows[name] for name in names]
 
 
