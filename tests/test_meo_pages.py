@@ -147,7 +147,18 @@ def test_a_listed_slot_without_a_spacing_check_says_why_not_that_the_slot_is_unl
     assert meo_overview.state_of(row(100, None)) == (palette.SLOT_UNKNOWN, "slot B2 not listed", None)
 
 
-def test_the_geometry_page_says_it_does_not_cover_a_global_system_yet():
-    bodies = htmls(run(scope("Galileo", "Geometry")))
+@pytest.mark.parametrize("section", ["Position quality", "Sky and ground", "Orbit trends"])
+def test_geometry_covers_a_meo_system_at_the_global_places(section):
+    """Their static MEO app (ElectricPlant19/Static_MEO_GNSS_Monitor) works out DOP for the MEO systems; the Geometry
+    page now does too, at places already on the regional lists, instead of saying it covers the regional systems only."""
+    def setup(at):
+        at.session_state["scope"], at.session_state["page"] = "Galileo", "Geometry"
+        at.session_state["geo_section"] = section
 
-    assert any("Geometry covers NavIC, QZSS and BeiDou-3 only, not yet Galileo" in body for body in bodies)
+    at = run(setup)
+    bodies = htmls(at)
+
+    assert not at.exception, [e.value for e in at.exception]
+    assert not any("Geometry covers" in body for body in bodies)
+    if section == "Position quality":
+        assert any("Capital (Delhi)" in body for body in bodies) and any("Capital (Tokyo)" in body for body in bodies)

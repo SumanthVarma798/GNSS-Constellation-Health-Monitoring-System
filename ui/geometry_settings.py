@@ -4,14 +4,21 @@ time is stepped, and what each measure means and should be.
 The places and the quality bands are the team's, from config/config.py (as app.py used them).
 """
 from config.config import (CHINA_KEY_POINTS, DEFAULT_PARAMS, DOP_QUALITY_THRESHOLDS, INACTIVE_SATELLITES,
-                           INDIA_EXTREME_POINTS, JAPAN_KEY_POINTS)
+                           INDIA_EXTREME_POINTS, JAPAN_KEY_POINTS, MEO_SYSTEMS)
 from ui import palette
 
 # The page's sections, in the order offered.
 SECTIONS = ["Position quality", "Sky and ground", "Orbit trends"]
 
 # The places each constellation's position quality is worked out for: {name: (latitude, longitude)}.
-PLACES = {"NavIC": INDIA_EXTREME_POINTS, "QZSS": JAPAN_KEY_POINTS, "BeiDou-3": CHINA_KEY_POINTS}
+# The global systems (MEO) have no service area of their own to bound, so they take places already on the regional
+# lists, spread from 7° N to 54° N and 77° E to 141° E. Our choice; any other place can be typed or clicked.
+GLOBAL_PLACES = {name: places[name] for places, name in (
+    (INDIA_EXTREME_POINTS, "Capital (Delhi)"), (INDIA_EXTREME_POINTS, "Southernmost (Indira Point)"),
+    (CHINA_KEY_POINTS, "Capital (Beijing)"), (CHINA_KEY_POINTS, "Northernmost (Mohe, Heilongjiang)"),
+    (JAPAN_KEY_POINTS, "Capital (Tokyo)"))}
+PLACES = {"NavIC": INDIA_EXTREME_POINTS, "QZSS": JAPAN_KEY_POINTS, "BeiDou-3": CHINA_KEY_POINTS,
+          **{system: GLOBAL_PLACES for system in MEO_SYSTEMS}}
 
 # Satellites the team marks as not in service. "In service" leaves them out, as app.py did by default.
 NOT_IN_SERVICE = tuple(INACTIVE_SATELLITES)

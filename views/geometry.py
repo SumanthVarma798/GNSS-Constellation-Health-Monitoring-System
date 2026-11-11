@@ -202,7 +202,7 @@ def _spacing(constellation, satellites):
 
 def constellation(name, picks, section, choice, mask, window, now):
     """One constellation's part of the page. `picks` limits the satellite-by-satellite pictures (None: all)."""
-    if name not in gs.PLACES:   # worked out for the regional systems' key places; GPS, GLONASS, Galileo have none yet
+    if name not in gs.PLACES:   # every system on the chips has places (gs.GLOBAL_PLACES for the MEO ones); a new one may not
         regional = ", ".join(list(gs.PLACES)[:-1]) + " and " + list(gs.PLACES)[-1]
         surfaces.show(surfaces.notice(f"Geometry covers {regional} only, not yet {name}.", "idle", inline=True))
         return
