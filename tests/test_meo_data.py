@@ -153,3 +153,24 @@ def test_a_new_beidou_satellite_is_announced_on_its_own_page_only(monkeypatch):
 
     assert "BeiDou-3 M16" in meo and "BeiDou-3 G1" not in meo
     assert "BeiDou-3 G1" in geo_igso and "BeiDou-3 M16" not in geo_igso
+
+
+def test_along_track_and_tilt_follow_from_the_elements():
+    """2 pi a0 (n - n0): a satellite at the nominal mean motion has none; two satellites in one plane tilt alike."""
+    import math
+
+    from analysis.meo_geometry import MU, assess
+    from config.meo_nominal import NOMINAL
+    from evidence.registry_tables import dashboard_registry_rows
+
+    a0 = NOMINAL["Galileo"]["semi_major_axis_km"].value
+    n0 = math.sqrt(MU / a0 ** 3) * 86400 / (2 * math.pi)
+    registry = dashboard_registry_rows("Galileo")
+    elements = {name: {**celestrak.as_history_row(row), "EPOCH": NOW} for name, row in
+                (("GSAT0101", {**GSAT0101, "MEAN_MOTION": n0}), ("GSAT0102", GSAT0102))}
+    rows = {row["name"]: row for row in assess("Galileo", elements, {n: registry[n] for n in elements})}
+
+    assert abs(rows["GSAT0101"]["along_track_km_day"]) < 1e-6
+    expected = 2 * math.pi * a0 * (float(GSAT0102["MEAN_MOTION"]) - n0)
+    assert rows["GSAT0102"]["along_track_km_day"] == pytest.approx(expected)
+    assert rows["GSAT0101"]["tilt_vs_peers_deg"] == pytest.approx(rows["GSAT0102"]["tilt_vs_peers_deg"])

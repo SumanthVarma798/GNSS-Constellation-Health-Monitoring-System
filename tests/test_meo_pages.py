@@ -166,3 +166,15 @@ def test_geometry_covers_a_meo_system_at_the_global_places(section):
         specs = [chart.proto.spec for chart in at.get("plotly_chart")]
         assert specs and all("Tilt" in spec and "Height" in spec for spec in specs)
         assert not any("Drift" in spec or "Centre" in spec for spec in specs)
+
+
+def test_the_meo_page_shows_along_track_and_tilt_diagnostics_without_scoring_them():
+    from analysis.meo_geometry import WEIGHTS
+
+    at = run(scope("Galileo"))
+    bodies = htmls(at)
+
+    labels = [str(e.label) for e in at.checkbox]
+    assert any("and tilt, every satellite" in label and "not scored" in label for label in labels)   # labels escape "-"
+    assert any("km/day</td>" in body and "GSAT0101" in body for body in bodies)
+    assert "along_track" not in WEIGHTS and "tilt" not in " ".join(WEIGHTS)   # shown, never scored
