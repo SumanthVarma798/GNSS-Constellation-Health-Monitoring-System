@@ -107,3 +107,14 @@ def test_a_post_cut_short_joins_its_story_by_the_satellite_its_text_names(monkey
     nvs_03 = next(story for story in grouped if any(i["title"] == "ISRO launches NVS-03" for i in story["items"]))
     assert post in nvs_03["items"]   # its headline names nothing; its text names NVS-03
     stories_module._aliases.cache_clear()
+
+
+def test_a_satellites_other_name_is_marked_like_its_story_word(monkeypatch):
+    from ui import news as news_ui
+
+    stories_module = _registry(monkeypatch, [{"svn": "I-101228", "note": "Launched 2026-10-30; NVS-03 (IRNSS-1L)"}],
+                               tracked=[{"svn": "I-101228", "dashboard_name": "NVS-03"}])
+    html = news_ui.marked_html("LAUNCH of IRNSS-1L on GSLV", {"nvs-03"})
+
+    assert "<mark>IRNSS-1L</mark>" in html and "<mark>GSLV</mark>" not in html
+    stories_module._aliases.cache_clear()

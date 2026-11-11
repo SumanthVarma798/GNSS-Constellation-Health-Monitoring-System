@@ -196,7 +196,8 @@ def marked_html(text, words, rule_word=""):
     for found in re.finditer(r"[A-Za-z0-9][A-Za-z0-9\-]*", text or ""):
         token = found.group(0)
         parts.append(escape(text[last:found.start()]))
-        hit = news_stories._stem(token.casefold()) in words or token.casefold() == rule
+        stem = news_stories._stem(token.casefold())
+        hit = news_stories._aliases().get(stem, stem) in words or token.casefold() == rule   # IRNSS-1L marks as NVS-03
         parts.append(f"<mark>{escape(token)}</mark>" if hit else escape(token))
         last = found.end()
     parts.append(escape((text or "")[last:]))
