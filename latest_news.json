@@ -1,6 +1,22 @@
 {
- "generated_at": "2026-11-11T17:30:59Z",
+ "generated_at": "2026-11-11T19:54:02Z",
  "items": [
+  {
+   "address": "https://x.com/Stellarixorine/status/2120560806312239516",
+   "category": "signal and service",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-11-11T19:54:02Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "Stellarix (@Stellarixorine)",
+   "published_at": "2026-11-11T16:54:28Z",
+   "source_id": "x.com/Stellarixorine",
+   "summary": "High above the clouds, a silent constellation of GPS satellites keeps our modern world on track. 🌍🛰️ Orbiting roughly 20,200 kilometers above Earth, these invisible guides use atomic clocks and radio signals to pinpoint your exact location in seconds. From daily commutes and global aviation to…",
+   "title": "High above the clouds, a silent constellation of GPS satellites keeps our modern world on track. 🌍🛰️ Orbiting roughly…",
+   "via": "https://x.com/Stellarixorine"
+  },
   {
    "address": "https://www.euspa.europa.eu/opportunities/procurement-grants/procurements/call_to_join-galileo_campaign",
    "category": "other",
@@ -7153,22 +7169,6 @@
    "source_id": "opindia.com",
    "summary": "",
    "title": "India’s GPS alternative NavIC suffers major setback as last atomic clock on IRNSS-1F satellite fails",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMitgFBVV95cUxQa0daT2YyRTdNT0VvaEFlUGR4X3ItSmcyc1dEbl9WT1BPSzY0TS1YcDdCNEVlUnNOLUV2dnY2aDEzTkZLRnBFS3JQdzlvcXhSdTFvdDNkeFU0UFBpLXFPa2FoRk9mcWhFUF9mUlRBSWFhcEhGMlZCZVV2X2ZCWm43SW5CVGtMcXFXXzRZRmp1RkVPa0t0QkY0UHhIODZKZUtrcE9VNlotX1kwSlZGdThxdnhxYzM4d9IBuwFBVV95cUxPdnhwdElYeGN5NEhmdFU3Um9TQWxmM0N0dEd3TGdHNGs3Vk41bXNxQVd2bXJONFFDUGF1UlVQQzg4SlVBSVpVWWdkTXU5UHFsOVNNa3hDLW9YeDBVX0s5YWpyc2hHN29ZanRUZ0l4am1hdEhmVTBFRm8yMUFYWFNxY3llVUpwZUp2Vkg4OGctSEFtRFl1RWdkc1ZUTWZrbXltMUg3UXhiVlBEZlpTTUlCbG5NdFN1dkcwMDR3?oc=5",
-   "category": "satellite status and outages",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "WION",
-   "published_at": "2026-03-14T07:00:00Z",
-   "source_id": "wionews.com",
-   "summary": "",
-   "title": "Explained: India's desi-GPS NAVIC is defunct; strategic capability lost",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
