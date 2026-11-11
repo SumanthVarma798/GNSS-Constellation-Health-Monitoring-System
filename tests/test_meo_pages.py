@@ -162,3 +162,7 @@ def test_geometry_covers_a_meo_system_at_the_global_places(section):
     assert not any("Geometry covers" in body for body in bodies)
     if section == "Position quality":
         assert any("Capital (Delhi)" in body for body in bodies) and any("Capital (Tokyo)" in body for body in bodies)
+    if section == "Orbit trends":   # drift and centre mean nothing for a satellite that circles the globe
+        specs = [chart.proto.spec for chart in at.get("plotly_chart")]
+        assert specs and all("Tilt" in spec and "Height" in spec for spec in specs)
+        assert not any("Drift" in spec or "Centre" in spec for spec in specs)

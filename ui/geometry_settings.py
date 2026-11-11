@@ -12,7 +12,7 @@ SECTIONS = ["Position quality", "Sky and ground", "Orbit trends"]
 
 # The places each constellation's position quality is worked out for: {name: (latitude, longitude)}.
 # The global systems (MEO) have no service area of their own to bound, so they take places already on the regional
-# lists, spread from 7° N to 54° N and 77° E to 141° E. Our choice; any other place can be typed or clicked.
+# lists, spread from 7° N to 54° N and 77° E to 140° E. Our choice; any other place can be typed or clicked.
 GLOBAL_PLACES = {name: places[name] for places, name in (
     (INDIA_EXTREME_POINTS, "Capital (Delhi)"), (INDIA_EXTREME_POINTS, "Southernmost (Indira Point)"),
     (CHINA_KEY_POINTS, "Capital (Beijing)"), (CHINA_KEY_POINTS, "Northernmost (Mohe, Heilongjiang)"),
@@ -84,6 +84,10 @@ TRENDS = [
     ("LonDrift_deg_per_day", "Drift", "degrees a day", "how fast the satellite slides east or west"),
     ("central_lon", "Centre", "degrees east", "central longitude: the middle of its ground track over a day"),
 ]
+# Drift and centre are measured against one turn a day over one longitude: they say nothing about a MEO satellite,
+# which circles the globe (GPS drifts about 360 degrees a day by that measure). MEO systems get tilt and height only.
+GEOSYNCHRONOUS_ONLY = ("LonDrift_deg_per_day", "central_lon")
+MEO_TRENDS = [trend for trend in TRENDS if trend[0] not in GEOSYNCHRONOUS_ONLY]
 DRIFT_TOLERANCE_IGSO = 2.0   # degrees a day: analysis.health_assessment's default for inclined orbits
 
 # How each orbit type is drawn. Colour is backed by the shape and the name, never alone.
