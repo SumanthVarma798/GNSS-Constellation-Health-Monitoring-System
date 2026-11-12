@@ -31,7 +31,7 @@ minutes without a visitor and takes about a minute to wake.
 ### Install
 
 You need Python 3.11, the version the hosted sites and the test job use ([runtime.txt](runtime.txt)).
-The tests also pass on 3.12.
+The tests also pass on 3.12 locally; the test job runs 3.11 only.
 
 ```bash
 python3.11 -m venv .venv
@@ -135,8 +135,8 @@ All four are JSON. Times are ISO 8601 in UTC. The script that writes each file i
 
 | Path | What | Updated | Whose data |
 |---|---|---|---|
-| `registry/*.csv` | Which satellite is which: one row per satellite, signal-ID periods, sightings, the tracked list and why some are left out ([registry/README.md](registry/README.md)) | Proposed weekly by `registry-update.yml`; a person approves each change | Ours, built from the IGS satellite metadata file, except the GCAT tables below |
-| `registry/catalogue.csv`, `library_counts.csv`, `library_matching.csv` | Owner and status of each satellite as GCAT states them, and counts made from GCAT | Weekly, with the registry | GCAT's (and ours, for the counts) |
+| `registry/*.csv` | Which satellite is which: one row per satellite, signal-ID periods, sightings, the tracked list and why some are left out ([registry/README.md](registry/README.md)) | The built tables (`satellites.csv`, `signal_ids.csv`, `sightings.csv`, `unidentified.csv`) are proposed weekly by `registry-update.yml`; the rest (`constellations.csv`, `dashboard_satellites.csv`, `left_out.csv`, `lifecycle_events.csv`, `library_figures.csv`) are kept by a person. A person approves every change | Ours, built from the IGS satellite metadata file, except `catalogue.csv` below |
+| `registry/catalogue.csv`, `library_counts.csv`, `library_matching.csv` | Owner and status of each satellite as GCAT states them, and counts made from GCAT | Weekly, with the registry | `catalogue.csv`: GCAT's. The two library tables: ours, counted from GCAT, so they carry GCAT's credit as well as ours ([NOTICE](NOTICE)) |
 | `evidence/*.csv` | Source candidates, grades and the checked-claims record | Proposed weekly by `source-record.yml`, or by hand | Ours |
 | `data/*_tles.json`, `data/*_gp_history.json` | Latest orbit records and orbit history per system, as `{constellation, timestamp, ..., satellites}` | Weekly by `update-tle-data.yml` | CelesTrak's and Space-Track.org's |
 | `ui/figures/land.json` | Land outlines for the maps | A fixed file | Natural Earth (public domain) |
@@ -166,11 +166,13 @@ the wording is an open question for the team.
 | Source | Used for | What the source states | Credit given today |
 |---|---|---|---|
 | [Space-Track.org](https://www.space-track.org/documentation#/user_agree) (US Space Command) | Orbit history in `data/*_gp_history.json`; recent launches | Its user agreement bars passing on data received from the site, including analysis of it, without prior express approval. A later section gives blanket approval to redistribute basic data (TLE and OMM orbit records, the satellite catalogue, decay data) on condition of "appropriate citation", and says published analysis also needs citation. It gives no citation wording. | "Orbits from CelesTrak and Space-Track" |
-| [CelesTrak](https://celestrak.org/usage-policy.php) | Orbit records: `latest_gnss.json`, `data/*_tles.json` | Its pages make the data freely available. Its usage policy limits how often to download. It states no licence, redistribution limit or credit requirement. | "Orbits from CelesTrak and Space-Track"; on the dashboard, "CelesTrak via the archive job" |
+| [CelesTrak](https://celestrak.org/usage-policy.php) | Orbit records: `latest_gnss.json`, `data/*_tles.json` | Its pages make the data freely available. Its usage policy limits how often to download. It states no licence, redistribution limit or credit requirement. | "Orbits from CelesTrak and Space-Track"; on the dashboard, "Orbits from CelesTrak, fetched (time)" |
 | [International GNSS Service (IGS)](https://igs.org/wp-content/uploads/2020/09/IGS-Data-and-Product-Disclaimer-and-Terms-of-Use-200805.pdf) | The satellite metadata file behind `registry/satellites.csv` and `signal_ids.csv`; the daily broadcast navigation files | Its Data and Product Disclaimer and Terms of Use (5 Aug 2020) says users agree to cite and attribute IGS resources to their providers and sponsors and acknowledge the IGS and its contributing organisations. It also says IGS data and products should not be used for life-critical functions. The metadata file cites its own format description: Steigenberger P, Montenbruck O (2024), IGS Satellite Metadata File Description, version 1.10, doi:[10.57677/metadata-sinex](https://doi.org/10.57677/metadata-sinex). | "Navigation messages from the IGS, via BKG" |
 | [BKG GNSS Data Center](https://igs.bkg.bund.de/) | Where the broadcast navigation files are downloaded from | Its site states no licence or credit request of its own. It serves the files as an IGS data centre. | Named in "via BKG" |
 | [GCAT](https://planet4589.org/space/gcat/), Jonathan McDowell | `registry/catalogue.csv` and the library tables | Released under CC BY 4.0, free to reproduce as long as it is cited. Short form: "data from GCAT (J. McDowell, planet4589.org/space/gcat)". Full form: McDowell, Jonathan C., 2020. General Catalog of Artificial Space Objects, Release (the release used), https://planet4589.org/space/gcat | "Catalogue from GCAT (J. McDowell, planet4589.org/space/gcat)" |
 | [Natural Earth](https://www.naturalearthdata.com/about/terms-of-use/) | Land outlines on the maps | Public domain. No permission needed and crediting is unnecessary. It offers "Made with Natural Earth." for anyone who wants to credit it. | "Land from Natural Earth" |
+| Wikimedia Commons (ISRO pictures) | Pictures on the satellite lifecycle timelines | Shown from Wikimedia Commons, not stored here. Each row of `registry/lifecycle_events.csv` names its picture's credit and licence: five say GODL-India, two say "licence review pending". | The credit in that row, under each picture |
+| NASA, via Wikimedia Commons | The console's sign-in picture, `ui/assets/signin-gps-satellite.jpg` | An artist's conception of a GPS Block IIF satellite, `GPS_Satellite_NASA_art-iif.jpg`, described as public domain in pull request 166. Not re-checked against its Commons page. | "Artist's conception of a GPS Block II-F satellite. NASA, public domain.", on the sign-in card |
 | News publishers, and posts on X and Reddit | `latest_news.json` | Each headline and excerpt belongs to its publisher. Each item keeps its outlet and address. | The outlet and a link, on every item |
 | The team's MEO app, `ElectricPlant19/Static_MEO_GNSS_Monitor` | Two diagnostics on the MEO pages, not scored: along-track rate, and tilt against the other satellites in its plane | That app has no licence, so nothing is copied from it. The two diagnostics follow how that app shows them, written afresh in `analysis/meo_geometry.py` and `ui/meo_overview.py`, which credit it. | "as the team's static MEO app (ElectricPlant19/Static_MEO_GNSS_Monitor) shows them", on the MEO pages |
 
@@ -179,7 +181,7 @@ the wording is an open question for the team.
 | What | Licence | File |
 |---|---|---|
 | The source code | Apache License 2.0 | [LICENSE](LICENSE) |
-| The data the project makes itself: `registry/*.csv` (except the GCAT tables), `evidence/*.csv`, and the files our own jobs publish (`orbit_gap.json`, `fitted_orbits.json`) | Creative Commons Attribution 4.0 International (CC BY 4.0) | [LICENSE-DATA](LICENSE-DATA) |
+| The data the project makes itself: `registry/*.csv` except `registry/catalogue.csv` (the two library tables, counted from GCAT, also carry GCAT's credit), `evidence/*.csv`, and the files our own jobs publish (`orbit_gap.json`, `fitted_orbits.json`) | Creative Commons Attribution 4.0 International (CC BY 4.0) | [LICENSE-DATA](LICENSE-DATA) |
 | Everything from others (the table above) | Its owner's terms. Neither licence above applies to it | [NOTICE](NOTICE) lists which files are which |
 
 Copyright 2026 Adithya Kothandhapani, Aditya Jhunjhunwala, Krishi Tiwari, Sumanth Varma Vitrouthu and
@@ -219,6 +221,7 @@ to decide together. The licence question itself is in
 | CelesTrak | It states no credit terms. Is "CelesTrak" enough, or should the credit also name where CelesTrak's records come from? |
 | IGS | Its terms ask users to cite and attribute to providers and sponsors, but give no wording in the parts we could read. Its documents page has a Citation tab we could not read. Which wording do we use? Should it name BKG as the data centre? |
 | News | `latest_news.json` is public and carries each item's headline and an excerpt of up to about 300 characters. Is that the right amount to publish? |
+| Pictures | `NOTICE` lists neither the lifecycle pictures nor the console's sign-in picture. Should it? And may the two lifecycle pictures marked "licence review pending" be shown before Commons settles their licence? |
 | Citing the project | Which author order, and which address: the team's repository, this copy or `opengnss.org`? Once the licences are agreed, should we add a `CITATION.cff` (so GitHub shows "Cite this repository") and a DOI, for example from Zenodo? |
 
 ## Working in this copy
