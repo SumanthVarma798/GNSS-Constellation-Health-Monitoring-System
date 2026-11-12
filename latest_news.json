@@ -1,6 +1,22 @@
 {
- "generated_at": "2026-11-12T01:03:58Z",
+ "generated_at": "2026-11-12T11:55:38Z",
  "items": [
+  {
+   "address": "https://www.euspa.europa.eu/newsroom-events/news/share-your-galileo-story-euspa-launches-call-user-testimonials",
+   "category": "launch",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-12T11:53:57Z",
+   "grade": "A",
+   "grade_standing": "confirmed",
+   "outlet": "EU Agency for the Space Programme (EUSPA): news",
+   "published_at": "2026-11-12T09:26:54Z",
+   "source_id": "euspa.europa.eu",
+   "summary": "EUSPA is inviting Galileo users to share short video testimonials showcasing how the European Union’s satellite navigation system supports their daily lives, operations, innovation and services, helping connect space to user needs.",
+   "title": "Share Your Galileo Story: EUSPA Launches Call for User Testimonials",
+   "via": "https://www.euspa.europa.eu/rss.xml"
+  },
   {
    "address": "https://x.com/Stellarixorine/status/2120560806312239516",
    "category": "signal and service",
