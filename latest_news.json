@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-12T11:55:38Z",
+ "generated_at": "2026-11-12T20:30:52Z",
  "items": [
   {
    "address": "https://www.euspa.europa.eu/newsroom-events/news/share-your-galileo-story-euspa-launches-call-user-testimonials",
@@ -2558,6 +2558,22 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMigAJBVV95cUxOYmVyczVPaEtUX3B0MjNoc3ltVEdEeHBuUEdIalg1X2dhQ3FUd292MjhwSlZPclBaSzZkcVlHNHVuMkwzT0VveHF0NEJzV0dXaUpLbnducVlYTGxWaGtlM0tfNDV3U0tRRXJ3bW1Yb0g2X3FSVGpWczBJV0RfWklEZlhrUVgwcV9IdXNXUjBsVTduUkpMVnN0SXdBc05HVU1zS1JzcXBsMEt3T1Y0aVljUkdaUzRDRDJicU5fYjNqaXZuemZpMUFiYkpJWV9GZHRfRkxkeEVTZmdpRkhYSW1MRkhyckxGYTlNY1c3STAtREpDWWw2VW4yWUZLRm9PSjFY0gGGAkFVX3lxTE1FMllkMDNwdmQwN3BkSWUwLXMwTlVlUlNOc20xWGxzSmdkay12bjNkbWdIc2ZuaGNKamNPSUNsOUVrU3pXb0NRbFJiLXlvMW80M3I4MFgwTHE0THdZR0FvY3VadzNGNFRXTWN0WTlERmxHZ2lpSzA3dk5zVlB3RHdpc0V1YlI1cW9Cem53aXo4a05VR0JjSXJMMU5GRDJtd0IzaU0tR1hYdUZRbzVJWkVNSXZZR0ZTUi1XUF8ySDFzQy1rd1B0bHJSVFNaODR0OFBMTzRqTTdnUDFOOXZMQl9OUWVMY0Z1bUN3SS02YnVkaEpnVGs4Y3YySUR0MVNJV3htUlpCQ2c?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-12T20:29:49Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "India.com",
+   "published_at": "2026-10-31T03:27:16Z",
+   "source_id": "india.com",
+   "summary": "",
+   "title": "PM Modi hails ISRO scientists after successful NVS-03 launch, says mission will boost 'our pursuit of self-re",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMizAFBVV95cUxONUpyNTl0cVFlNVotVndYVm93RURCakRPSWhoTUk0RUt0Y0NvMWFBZW1VSW9RZHN5NGdiVFZoSlpFZkExNkpmcXdaeTM2b0VDOVVwMWxXNmFYaUpRcFdPMmVTT0pqaWtCQXEwZ1VZNEU4TGg2RDZMWGNNSjhIUWxqaXB4WDhWbUM0ZWhXVUNMZ1RVUi1SYVJvbnA1cGZGYmJwMG56eWpBdUxMVjhMcjZhYU1VWXhlU050cU8ybUVoa2lkbXB6SXY3RnpEak8?oc=5",
    "category": "launch",
    "constellations": [
@@ -2981,8 +2997,7 @@
    "address": "https://news.google.com/rss/articles/CBMirwFBVV95cUxOOU9qX0ZTOFkyS3Rub1JWZkc3bjk3T2hVTlV3NnozUnN2XzJ5dVRxMndLcmVQbERfaEk2VW9rZkVoejZEWUt5Rl9lM1NXbXBVNFU1VVBuU1FRY0hLd0ZGdFNEMEROc2JabXdaRzlOVzR4UUVHNkFTSVdDd0U5S1hTRVFTbF9UaGhKYUJ4cnM3MndBcEVXZWpyLWtMdXVqRGI4T1pkZGtLdHpUSWNKakIw?oc=5",
    "category": "launch",
    "constellations": [
-    "GPS",
-    "NavIC"
+    "GPS"
    ],
    "fetched_at": "2026-10-31T09:59:34Z",
    "grade": "",
@@ -8890,6 +8905,15 @@
    "graded_by": "",
    "kind": "",
    "name": "indexbox.io",
+   "note": "",
+   "reason": ""
+  },
+  "india.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "india.com",
    "note": "",
    "reason": ""
   },
