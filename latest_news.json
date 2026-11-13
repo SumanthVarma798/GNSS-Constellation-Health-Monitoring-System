@@ -1,6 +1,22 @@
 {
- "generated_at": "2026-11-13T02:12:02Z",
+ "generated_at": "2026-11-13T11:39:07Z",
  "items": [
+  {
+   "address": "https://news.google.com/rss/articles/CBMisAFBVV95cUxOUTRsZFMxUkp6dVRDUkdxZEwwdHFESEZPV1VnT0hUeGhGeFlRZ2xYcGFqSjRYc2dYWm14WHNTMDFubmJBLUIwQmoxQ0FGRk5SYnB4dHRmQURjQUNrd05FeURfblJ5MVpnSVNhLWhqa1Z1TWxXTEJyMUk1cFV2MGtaX1A4V2U2QW9NekZBakJsUjY5dFlIdkZ3MWtGNk5fNTdhbXRhWnRqV1hDMjEzc2RIQg?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-13T11:38:05Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "theopenpress.in",
+   "published_at": "2026-11-13T10:16:18Z",
+   "source_id": "theopenpress.in",
+   "summary": "",
+   "title": "ISRO Clears 200-Second Cryogenic Engine Test for GSLV-F19 Mission to Launch NavIC Satellite NVS-04",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
   {
    "address": "https://www.euspa.europa.eu/newsroom-events/news/share-your-galileo-story-euspa-launches-call-user-testimonials",
    "category": "launch",
@@ -2975,22 +2991,6 @@
    "source_id": "livemint.com",
    "summary": "",
    "title": "NVS-03 satellite launch: ISRO places third next-gen satellite in orbit, PM Modi congratulates; 10 things to know",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMi9AFBVV95cUxNbGtoRUxrNnp2ZF9ZdHdsZUZRWlI4ME50ZHI3b3pKa3N3cmF4V2FKNlRPbVlXMjM5Um9VRXR5b3MyVTFJZGpVRm44N2x3aVo1R3FXMW1tUmE1eGdjSVFaaF91c0F2QVg0dFRIb3NLcWxfOXUxZXVzMnJPeklGeE0zOTN2U093cGZ1WU5nMmhTcXFFMHh0SVlPeS1EZVoxVkJYbTBYaS0wTWVsbTlMRDZTLWJ6NjBTczVuckk3S1hTQ0dYbEs5Qmx1czkwOWw4QmpQSmZQRlV3V24wT0UwN3lpeVVnaTBick1DZGNOWG4zTzhMaXdP0gH6AUFVX3lxTE82VnB4dFNaZVpteXgtdkM1UWdUdVpFNWZVTzRRS3ZYR0NCU2U1bHZTeVZsdGRpVzJTLU1GYVhyWWZENDNwUkt5VlhyQVJTS1FSRW11eVVGNHBKa0RPelVuVDlZR0RiRGFSVG5hTW5mMFRPZWppRVdONmhsa050TXhLMlh5V25aQ1B3cGFSMjRWMkstNFM4TUgzNU85eVFwWGk0ZnZKRFhNdzNGX2FsdGV2QlVzZEJiZVBGby1Sd3JTVW5kcExFVU9nRFdINDFpU3d6M2ppcXl3RzNmemQ0WlZRdV9DNGpUV2tTXzlYNmtpVGFIaUxVZ3NZWVE?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-11-03T03:07:13Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "India Today",
-   "published_at": "2026-10-31T01:42:44Z",
-   "source_id": "indiatoday.in",
-   "summary": "",
-   "title": "Our space scientists make nation proud: PM after Isro launches NVS-03",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -10075,6 +10075,15 @@
    "graded_by": "",
    "kind": "",
    "name": "thenewsmill.com",
+   "note": "",
+   "reason": ""
+  },
+  "theopenpress.in": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "theopenpress.in",
    "note": "",
    "reason": ""
   },
