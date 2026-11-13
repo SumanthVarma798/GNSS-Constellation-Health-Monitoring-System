@@ -1,6 +1,39 @@
 {
- "generated_at": "2026-11-13T11:39:07Z",
+ "generated_at": "2026-11-13T20:06:39Z",
  "items": [
+  {
+   "address": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxPRHV6akMxaF8xRlhPZXJTcy1mSS1ZSEV2UC10Nzl4RkhtSkNtZ3Jua2dLalBqa2hIbWRDRVJEeXBiNkp2VWh1T25XSU9OYTdBUUJzMV9rN0p1VHlJRGJHQW1RaDNnX0U1Rkl6SUowSm5CbjFtTUNvQXBXWTFJZDh4R3Z2X2NwdHl0X3dYTUdQVFlGZVctd2Z4N3R5My1CU0lLT1ZFU1l4WlFEdw?oc=5",
+   "category": "other",
+   "constellations": [
+    "GPS",
+    "BeiDou-3"
+   ],
+   "fetched_at": "2026-11-13T20:05:57Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Bioengineer.org",
+   "published_at": "2026-11-13T16:52:30Z",
+   "source_id": "bioengineer.org",
+   "summary": "",
+   "title": "Hybrid GPS and BeiDou Tracking Boosts Low Cost Positioning Performance in Nigeria",
+   "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://rntfnd.org/2026/11/13/this-defense-makes-drones-and-gps-think-theyre-in-peru-ny-times/",
+   "category": "other",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-11-13T20:05:01Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "Resilient Navigation and Timing Foundation",
+   "published_at": "2026-11-13T12:08:28Z",
+   "source_id": "rntfnd.org",
+   "summary": "Image: Shutterstock AI What’s new: An interesting article about Ukraine’s Lima system that jams and spoofs GNSS and apparently countering many of Russia’s best weapons including Oreshnik missiles. It also seems to indicate that many Russian weapons still rely on GNSS despite the availability of much…",
+   "title": "This Defense Makes Drones (and GPS) Think They’re in Peru – NY Times",
+   "via": "https://rntfnd.org/feed/"
+  },
   {
    "address": "https://news.google.com/rss/articles/CBMisAFBVV95cUxOUTRsZFMxUkp6dVRDUkdxZEwwdHFESEZPV1VnT0hUeGhGeFlRZ2xYcGFqSjRYc2dYWm14WHNTMDFubmJBLUIwQmoxQ0FGRk5SYnB4dHRmQURjQUNrd05FeURfblJ5MVpnSVNhLWhqa1Z1TWxXTEJyMUk1cFV2MGtaX1A4V2U2QW9NekZBakJsUjY5dFlIdkZ3MWtGNk5fNTdhbXRhWnRqV1hDMjEzc2RIQg?oc=5",
    "category": "launch",
@@ -7171,38 +7204,6 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMitgFBVV95cUxObm1aUXRIU1FybXlienJSd2dwel9lRmRaNmZvRTJ5THZVd3Nkem9DcVQwZzlxY3lqN2VDbEVmNWd0Yy04NzIzWXhRQWI5cDBkMzR2S1VaWklHNXdPRGNZZ1dhSHNXT2M5aXgxQU9yb052VDNRc0J6bkQ5aHFjdVEyYW53OFBZeElGVXo1X1FRSWRtekNBWXUyLThqMldsM3JERHgyQjloS0Vwbno0bWNQYi1TdFNaZ9IBuwFBVV95cUxPU0tlTk5GbFd2ako0OHV3TzIxbHYta3NncUdPY2VKS0ZSbUF1Z0lFblZUTzNiM0ZwX1lTMERqUnRCb0FkcC1MdFp0YWRjTlVhUG01a3FybVREMXdxbHZ4b0pKVl9zYlZxQVpRaTVMUk1pUTREd0Q0TkUwbGJSY05OdUxMMGJvQnA1YzRNVGo1cjFJeGl6QVduM2xGcFJuOWhocEhKS3JqYWpnMEtPbDBIZ05LNC1ISHZUVmtr?oc=5",
-   "category": "other",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "India Today",
-   "published_at": "2026-03-15T07:00:00Z",
-   "source_id": "indiatoday.in",
-   "summary": "",
-   "title": "India's GPS is dying: Isro's NavIC satellite network is down to three satellites",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMi0wFBVV95cUxORFZBQWZvY1ktcXdicWtZU1YxQ2JjTVpYOVdVMEZfSzd2YU96QXBWV1BwTlJJY2kzbU5yRXBFN29LcHYtYTBodFhFOFVhVHJTOGhZaDBJUnRxUEJWOGotZGZEVzFYWWdqVjNlV3pZNDd2ZFdOWmVHSE9sSjZFXzZjQTdzYzNDNGNsTDFjenlJQ0hsdmRGcVdwblNXN3dhM0VuTGdsUXdJcnRkS2FkbnBoclRYSlU2QURxRDdNeHRwSmtqejVSVWlUR1ZkYjFSZHQ0d1dN?oc=5",
-   "category": "satellite status and outages",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "OpIndia",
-   "published_at": "2026-03-14T07:00:00Z",
-   "source_id": "opindia.com",
-   "summary": "",
-   "title": "India’s GPS alternative NavIC suffers major setback as last atomic clock on IRNSS-1F satellite fails",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMivAFBVV95cUxPZEd2RWZUa1NUNG54X2xrVXQ0UjVMcHVRMWxPbHVCbGdvdXZpdklhYldXcDBTbUFUdEEybHZYQnhyMzR2cVJVLUQ5YVlwWmJlR2RkZzhiZ0dUdk1WdFFfNG5lSVoxUGZQUXJuYlJDQjFqRmpNT2MyM3RoZS1BamhPcFNQcXJEaVhTU3pEcEVxckJ6R0RhdU5tUzVja2c3SFcwc3J3VHh5aGlyRFBVR2NHckRvTG5WQTZ4QXRWVA?oc=5",
    "category": "other",
    "constellations": [
@@ -8185,6 +8186,15 @@
    "graded_by": "",
    "kind": "",
    "name": "bgr.com",
+   "note": "",
+   "reason": ""
+  },
+  "bioengineer.org": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "bioengineer.org",
    "note": "",
    "reason": ""
   },
