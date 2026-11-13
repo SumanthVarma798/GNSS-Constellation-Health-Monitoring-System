@@ -1,6 +1,38 @@
 {
- "generated_at": "2026-11-13T20:06:39Z",
+ "generated_at": "2026-11-13T20:08:04Z",
  "items": [
+  {
+   "address": "https://x.com/Arianespace/status/2121309103259517290",
+   "category": "launch",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-13T20:07:55Z",
+   "grade": "B",
+   "grade_standing": "confirmed",
+   "outlet": "Arianespace (@Arianespace)",
+   "published_at": "2026-11-13T18:27:56Z",
+   "source_id": "x.com/Arianespace",
+   "summary": "🛰️ Helping us find our way. From everyday navigation to transport and critical infrastructure, satellite positioning and timing services have become part of our daily lives. Ariane 6 contributes to these services by launching Galileo satellites, supporting the continued deployment of Europe's global…",
+   "title": "🛰️ Helping us find our way. From everyday navigation to transport and critical infrastructure, satellite positioning…",
+   "via": "https://x.com/Arianespace"
+  },
+  {
+   "address": "https://x.com/Stellarixorine/status/2121287774049607831",
+   "category": "programme and policy",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-13T20:07:44Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "Stellarix (@Stellarixorine)",
+   "published_at": "2026-11-13T17:03:11Z",
+   "source_id": "x.com/Stellarixorine",
+   "summary": "ONE DAY, ONE SPACE AGENCY — Day 20 / 70+ 🚀✨ 🇫🇮 Finland — Business Finland / Finnish Space Office The New Space Startup King 💻🛰️ 🇫🇮-------------🇫🇮 📅 FORMED: Finnish space since 1960s, modern Finnish Space Office under Business Finland, National Space Strategy 2018 📍 HEADQUARTERS: Helsinki, Finland…",
+   "title": "ONE DAY, ONE SPACE AGENCY — Day 20 / 70+ 🚀✨ 🇫🇮 Finland — Business Finland / Finnish Space Office The New Space Startup…",
+   "via": "https://x.com/Stellarixorine"
+  },
   {
    "address": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxPRHV6akMxaF8xRlhPZXJTcy1mSS1ZSEV2UC10Nzl4RkhtSkNtZ3Jua2dLalBqa2hIbWRDRVJEeXBiNkp2VWh1T25XSU9OYTdBUUJzMV9rN0p1VHlJRGJHQW1RaDNnX0U1Rkl6SUowSm5CbjFtTUNvQXBXWTFJZDh4R3Z2X2NwdHl0X3dYTUdQVFlGZVctd2Z4N3R5My1CU0lLT1ZFU1l4WlFEdw?oc=5",
    "category": "other",
@@ -17,6 +49,22 @@
    "summary": "",
    "title": "Hybrid GPS and BeiDou Tracking Boosts Low Cost Positioning Performance in Nigeria",
    "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://x.com/ispaceflight_in/status/2121258172216410269",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-13T20:08:04Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "indianspaceflight.in (@iSpaceFlight_in)",
+   "published_at": "2026-11-13T15:05:33Z",
+   "source_id": "x.com/iSpaceFlight_in",
+   "summary": "🇮🇳🛰️ ISRO hosts 20th International Committee on GNSS (ICG-20) in Goa ISRO/DoS, together with the UN Office for Outer Space Affairs (UNOOSA), hosted the 20th annual meeting of the International Committee on Global Navigation Satellite Systems from 25–30 October 2026 in Goa. 📊 Participation • 263…",
+   "title": "🇮🇳🛰️ ISRO hosts 20th International Committee on GNSS (ICG-20) in Goa ISRO/DoS, together with the UN Office for Outer…",
+   "via": "https://x.com/iSpaceFlight_in"
   },
   {
    "address": "https://rntfnd.org/2026/11/13/this-defense-makes-drones-and-gps-think-theyre-in-peru-ny-times/",
@@ -3008,22 +3056,6 @@
    "source_id": "indiatoday.in",
    "summary": "",
    "title": "ISRO Launches NVS-03 via GSLV-F18 to Boost NavIC Regional Navigation - India Today",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMi_gFBVV95cUxOSlZ1c19JX0JsRm5Kdjc2NUJ5aEJBRmJpcURyWDU2bk5sTTVmM2R2X2pORXA0TGFQM3NuWmVWbk8ycmprU1l5dzEzaEVxVWw5cVRhQVBNLVFxZHNyRWdxYnp4SXVmSG9sT3YwS2F2TUJVamUybVRjdVp5NzIzN1N6R2RTWjNlQzlPdlhKMGRIUlBuWFI2cl9iWFY5S2l5clAyV2s0Yl9USUFrSlgwYVh4RjVyUmw4MjJUVWZmLUo5dkNNYlI1MWZXMW5xamFGdnF5bXdfekRvZmIzQzQ0Qm02MUprTzdSUGNycE1BWllkVXdoTElYSnVMa3V2eUxyQdIBgwJBVV95cUxOazlCbzJfeGdNLTVZVVZVV0dBVmpYUFFYVUhTaTRRX1BHTUk4a0t0OFRod2tSNDByTGQ1MkwzZkhvS01US3UtLVRTSHBSaDhZM1ppTzMwaEFjV2sxcVhIeUYyTWZqdWU4WjFDaXBpdzVwSkFab1A1WUNEd0tqMFpfZjcwckh5YnU1eTJTV2RvcHhuNk52aXZSRVZlMjBhdkEwRFhKMWl4R0pMX1ZVUG5ZX2hCUE4xa0VFWFZvOGlzbzlBa1JKOHVmclJZWTl4Y0tmX1RmdEg4Q19BM293Y0JYTThrN195c190WU1YVWpMY1hfZnZhb0dIeDV5YVA3SnYtYzBJ?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-11-07T22:20:52Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Livemint",
-   "published_at": "2026-10-31T02:00:13Z",
-   "source_id": "livemint.com",
-   "summary": "",
-   "title": "NVS-03 satellite launch: ISRO places third next-gen satellite in orbit, PM Modi congratulates; 10 things to know",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
