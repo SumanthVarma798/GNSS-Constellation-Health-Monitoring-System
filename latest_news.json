@@ -1,6 +1,22 @@
 {
- "generated_at": "2026-11-14T11:02:37Z",
+ "generated_at": "2026-11-14T18:32:52Z",
  "items": [
+  {
+   "address": "https://news.google.com/rss/articles/CBMivAFBVV95cUxNMGVnOFpqVHgxTHE3OGR2SzY2dDNodWlVOGVJa251TVI3bXhHOUhRSHM3YXM1RFlHVHBBcXZDV0hHNmtCWjRzZ0FVS0xGa3NwWkEzaXg3NnUtRnY1X0RqRmI3NHFRcFk3alVWRE5KYXNzcWhERFFFSHZMYUN0QTA2VnNjb0lXUUZwVFlBclFGQktnWjZLa1VsM0w2clBNUHNZYjhpTUYtOG01NmQxWFpfNmtHRHhIQ05TMzhNQw?oc=5",
+   "category": "signal and service",
+   "constellations": [
+    "BeiDou-3"
+   ],
+   "fetched_at": "2026-11-14T18:32:52Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Bioengineer.org",
+   "published_at": "2026-11-14T11:05:49Z",
+   "source_id": "bioengineer.org",
+   "summary": "",
+   "title": "Dual-Stage Algorithm Boosts BeiDou Signal Interference Detection and Suppression in Simulations",
+   "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
   {
    "address": "https://x.com/Arianespace/status/2121309103259517290",
    "category": "launch",
