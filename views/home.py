@@ -16,7 +16,7 @@ from ui.systems import SYSTEMS as SYSTEMS_PARTS, part_name
 # One dot per satellite: (class, what it means, its shape), in the order the legend lists them. Each has its own
 # shape (ui/theme.css), so the colour only backs it up.
 DOTS = [("ok", "healthy and in place", "round"), ("warn", "needs a look", "diamond"), ("bad", "set aside", "square"),
-        ("accent", "settling in", "ring")]
+        ("accent", "new, not scored yet", "ring")]
 DOT_COLOURS = {"ok": palette.OK, "warn": palette.WARN, "bad": palette.BAD, "accent": palette.ACCENT}
 
 
@@ -25,7 +25,7 @@ def _dot(sat):
 
 
 def _dots(system):
-    """The system's satellites as dots, a small gap between its planes or orbit types, those settling in last."""
+    """The system's satellites as dots, a small gap between its planes or orbit types, the new ones not scored yet last."""
     groups = {}
     for sat in system["sats"]:
         groups.setdefault(sat["group"], []).append(_dot(sat))
@@ -58,7 +58,7 @@ def _row(system, unread=None):
     name = system["name"]
     who, where = SYSTEMS.get(name, ("", ""))
     share = 100 * system["healthy"] / system["total"] if system["total"] else 0
-    notes = [f"{reveal.count(len(system['settling']), 'satellite')} settling in, not counted yet"] * bool(system["settling"])
+    notes = [f"{new} is new ({stage}) and is not scored yet" for new, stage in system["settling"].items()]
     notes += [CAVEATS[name]] if name in CAVEATS else []
     notes = ([" · ".join(f"{label} {count} of {of}" for label, count, of in system["parts"])] * bool(system["parts"])
              + [f"{label} could not be read just now: {_why(error)}" for label, error in (unread or {}).items()] + notes)
@@ -127,7 +127,7 @@ def page():
     surfaces.show(f'<div class="head"><span class="big num">{healthy} of {total}</span>'
                   f'<span class="muted">navigation satellites healthy and in place, across '
                   f'{reveal.count(len(wholes), "constellation")}</span>'
-                  f'<span class="right">{tooltip.legend([(DOT_COLOURS[kind], f"{shape}: {meaning}") for kind, meaning, shape in DOTS], "What a dot means")}</span></div>'
+                  f'<span class="right">{tooltip.legend([(DOT_COLOURS[kind], meaning, shape) for kind, meaning, shape in DOTS], "What a dot means")}</span></div>'
                   '<p class="lede small">One row per constellation, one dot per satellite. A row opens that constellation, where every '
                   'satellite and every number behind these counts is shown.</p>')
     with st.container(key="home_systems"):

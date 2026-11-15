@@ -60,7 +60,7 @@ def test_a_system_of_two_parts_offers_them_one_step_deeper_and_a_system_of_one_p
     at = run(medium_orbit)
 
     assert at.session_state["scope"] == "BeiDou-3 MEO" and group(at, "nav_system").value == "BeiDou-3"
-    assert options(at, "nav_part") == ["High orbit", "Medium orbit"]
+    assert options(at, "nav_part") == ["IGSO & GEO", "MEO"]
     assert "nav_part" not in keys(run(on("NavIC", "Overview")))
 
 
@@ -88,5 +88,5 @@ def test_another_system_chosen_on_a_systems_page_keeps_the_page():
 
 def test_every_part_belongs_to_one_system_in_the_top_bars_order():
     assert [part for parts in systems.SYSTEMS.values() for part in parts] == list(shell.CONSTELLATIONS)
-    assert systems.system_of("BeiDou-3 MEO") == "BeiDou-3" and systems.part_name("BeiDou-3 MEO") == "Medium orbit"
+    assert systems.system_of("BeiDou-3 MEO") == "BeiDou-3" and systems.part_name("BeiDou-3 MEO") == "MEO"
     assert systems.system_of("GPS") == "GPS" and systems.part_name("GPS") == ""

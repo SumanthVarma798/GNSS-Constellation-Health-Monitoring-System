@@ -22,7 +22,7 @@ from ui.figures.constellation_3d import slot_legend
 from ui.figures.slot_rows import as_number, slot_words
 from ui.orbit_section import CHIP_STATUS, PARTS
 from ui.picker import picker
-from ui.system_summary import in_slot_and_healthy, summary, whole
+from ui.system_summary import _stage, in_slot_and_healthy, summary, whole
 STATUS_CHIP = {"Healthy": "ok", "Fair": "warn", "Degraded": "bad", "Critical": "bad"}
 CLASS_COLUMNS = [("Satellite", ""), ("Type", "From the mean tilt"), ("Mean inclination", "In the window"),
                  ("Mean height", "In the window"), ("Drift now", "Per day")]
@@ -62,7 +62,7 @@ def _tiles(result, tags=None):
                              age_html=tags.get(name, ""))
         tiles[name] = (html, False, None)
     for name in result.get("moving", {}):
-        html = surfaces.tile(name, slot="on its way or just parked", slot_status="accent", unscored="settling",
+        html = surfaces.tile(name, slot=_stage(result, name), slot_status="accent", unscored="new, not scored yet",
                              age_html=tags.get(name, ""))
         tiles[name] = (html, False, None)
     return tiles, rows
@@ -80,9 +80,9 @@ def _gaps(constellation, result, today):
         surfaces.show(surfaces.notice(left, "accent"))
     moving = result.get("moving", {})
     if moving:
-        named = ", ".join(f"{name} (first orbit record {_day(since)})" for name, since in moving.items())
+        named = ", ".join(f"{name} ({_stage(result, name)}, first orbit record {_day(since)})" for name, since in moving.items())
         surfaces.show(surfaces.notice(
-            f"New, on its way to its slot or parked there under {SETTLING_DAYS} days ago: {named}. A new satellite is raised "
+            f"New and not scored yet: {named}. A new satellite is raised "
             "and drifted along the belt for weeks, so its drift and burns are expected. It is left out of the scores until "
             f"it has been parked {SETTLING_DAYS} days.", "accent"))
     shown = set(result["health"]["Satellite"]) | set(result["set_aside"]) | set(moving)

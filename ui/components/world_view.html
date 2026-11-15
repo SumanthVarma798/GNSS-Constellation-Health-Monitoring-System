@@ -37,6 +37,10 @@ button { font: inherit; color: inherit; }
 .system { border: 1px solid var(--edge); border-radius: 999px; background: var(--platform); box-shadow: var(--raised-sm);
   color: var(--muted); padding: 6px 12px; cursor: pointer; }
 .system[aria-pressed="true"] { color: var(--ink); box-shadow: var(--pressed); background: var(--well); }
+.system:hover { color: var(--accent); }
+.system[aria-pressed="false"] { text-decoration: line-through; text-decoration-color: var(--muted); }
+.system[aria-pressed="false"] .dot { opacity: .35; }
+.hint { color: var(--fc-small); font-size: var(--fs-small); align-self: center; }
 .system .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; }
 
 .stage { position: relative; width: 100%; border-radius: var(--r); background: var(--well); border: 1px solid var(--edge);
@@ -75,7 +79,8 @@ __TIP__
   </div>
   <button type="button" class="switch" id="tracks" role="switch" aria-checked="false"><span class="knob" aria-hidden="true"></span>All tracks</button>
   <button type="button" class="switch" id="labels" role="switch" aria-checked="false"><span class="knob" aria-hidden="true"></span>Names</button>
-  <div class="systems" id="systems" role="group" aria-label="Show and hide systems"></div>
+  <div class="systems" id="systems" role="group" aria-label="Show and hide constellations"></div>
+  <span class="hint">Click a constellation to hide or show it</span>
 </div>
 <div class="stage flat" id="stage">
   <canvas id="map" role="img" aria-label="World map of tracked satellites"></canvas>
@@ -86,6 +91,7 @@ __TIP__
 <script>
 const DATA = __DATA__;
 const LAND = __LAND__;
+const LAND_DOTS = __LAND_DOTS__;
 const $ = id => document.getElementById(id);
 const css = getComputedStyle(document.documentElement), C = name => css.getPropertyValue("--" + name).trim();
 const RAD = Math.PI / 180, DEG = 180 / Math.PI;
@@ -115,7 +121,7 @@ function projectGlobe(lat, lon) {
   const z = sinLat0 * sinLat + cosLat0 * cosLat * Math.cos(dLon);
   const x = r * cosLat * Math.sin(dLon);
   const y = r * (cosLat0 * sinLat - sinLat0 * cosLat * Math.cos(dLon));
-  return { x: box.w / 2 + x, y: box.h / 2 - y, visible: z >= -0.05 };   // canvas y grows downward
+  return { x: box.w / 2 + x, y: box.h / 2 - y, z, visible: z >= -0.05 };   // canvas y grows downward
 }
 const project = (lat, lon) => viewMode === "flat" ? projectFlat(lat, lon) : projectGlobe(lat, lon);
 
@@ -139,22 +145,16 @@ function strokeLand() {
   const r = Math.min(box.w, box.h) / 2 - 24;
   ctx.beginPath(); ctx.arc(box.w / 2, box.h / 2, r, 0, Math.PI * 2);
   ctx.fillStyle = C("fill"); ctx.globalAlpha = 0.12; ctx.fill(); ctx.globalAlpha = 1; ctx.stroke();
+  // Land is a matrix of dots, as in the Overview's 3D view: every dot on the near side is drawn, fainter toward the
+  // edge, so no land mass is left unshaded where its outline runs over the horizon.
   ctx.fillStyle = C("fill");
-  for (const ring of LAND) {
-    const points = [];
-    for (let i = 0; i < ring.length; i += 2) points.push(projectGlobe(ring[i + 1], ring[i]));
-    if (points.every(p => p.visible)) {   // wholly on the near side: filled, as on the flat map
-      ctx.beginPath(); points.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
-      ctx.closePath(); ctx.globalAlpha = 0.45; ctx.fill(); ctx.globalAlpha = 1; ctx.stroke();
-      continue;
-    }
-    ctx.beginPath(); let open = false;
-    for (const p of points) {
-      if (!p.visible) { open = false; continue; }
-      if (open) ctx.lineTo(p.x, p.y); else { ctx.moveTo(p.x, p.y); open = true; }
-    }
-    ctx.stroke();
+  const size = Math.max(1.6, r / 70);
+  for (let i = 0; i < LAND_DOTS.length; i += 2) {
+    const p = projectGlobe(LAND_DOTS[i], LAND_DOTS[i + 1]);
+    if (p.z <= 0) continue;
+    ctx.globalAlpha = 0.3 + 0.6 * p.z; ctx.fillRect(p.x - size / 2, p.y - size / 2, size, size);
   }
+  ctx.globalAlpha = 1;
 }
 // A regional system's service area, only while it is the one system shown: with others on the map it is clutter.
 const areaFor = shown => shown.length === 1 ? DATA.areas[shown[0]] || null : null;
@@ -286,11 +286,15 @@ function buildSystems() {
     const b = el("button", "system"); b.type = "button";
     const dot = el("span", "dot"); dot.style.background = sys.colour;
     b.append(dot, document.createTextNode(`${sys.name} (${sys.satellites.length})`));
-    b.setAttribute("aria-pressed", "true");
+    const say = () => {   // the tip and the screen reader's words say what a click does next
+      const on = visible.has(sys.name);
+      b.setAttribute("aria-pressed", String(on));
+      b.title = on ? `${sys.name}: shown on the map. Click to hide it.` : `${sys.name}: hidden. Click to show it.`;
+    };
+    say();
     b.addEventListener("click", () => {
       if (visible.has(sys.name)) visible.delete(sys.name); else visible.add(sys.name);
-      b.setAttribute("aria-pressed", String(visible.has(sys.name)));
-      paint();
+      say(); paint();
     });
     host.append(b);
   }

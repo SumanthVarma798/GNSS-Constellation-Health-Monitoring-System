@@ -91,13 +91,21 @@ def glance(lead, items, note=""):
             + (f'<span class="tt-note">{escape(note)}</span>' if note else ""))
 
 
+LEGEND_SHAPES = ("round", "diamond", "square", "ring")   # drawn by .swatch in ui/theme.css
+
+
 def legend(entries, label="Legend"):
-    """A pill that opens a list of colours and what each means. entries: (colour, meaning) pairs."""
+    """A pill that opens a list of colours and what each means. entries: (colour, meaning) pairs, or
+    (colour, meaning, shape) where the mark on the page is not round: "diamond", "square" or "ring" (LEGEND_SHAPES),
+    so the legend shows the mark as the page draws it."""
     rows = ""
-    for colour, text in entries:
+    for colour, text, *shape in entries:
         if not _SWATCH.fullmatch(colour):
             raise ValueError(f"legend colour {colour!r} must be a hex colour or a var(--name)")
-        rows += f'<li><span class="swatch" style="background:{colour}"></span>{escape(text)}</li>'
+        if shape and shape[0] not in LEGEND_SHAPES:
+            raise ValueError(f"legend shape {shape[0]!r} must be one of {', '.join(LEGEND_SHAPES)}")
+        cls = f"swatch {shape[0]}" if shape else "swatch"
+        rows += f'<li><span class="{cls}" style="--c:{colour};background:{colour}"></span>{escape(text)}</li>'
     return tip_html(escape(label), f'<ul class="tt-list">{rows}</ul>', pill=True)
 
 

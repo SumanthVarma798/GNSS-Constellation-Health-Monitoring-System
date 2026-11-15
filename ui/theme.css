@@ -180,6 +180,10 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
   drop-shadow(5px 5px 10px var(--sink)); }
 .swatch { margin-top: 4px; }
 .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 999px; box-shadow: var(--raised-sm); border: 1px solid var(--edge); flex: none; }
+/* a legend mark in the shape the page draws it (ui/tooltip.py legend) */
+.swatch.diamond { border-radius: 3px; transform: rotate(45deg) scale(.8); }
+.swatch.square { border-radius: 3px; }
+.swatch.ring { background: transparent !important; border: 2.5px solid var(--c); box-shadow: none; }
 
 /* ---- the dashboard frame: no side panel, one top bar ---- */
 /* only where the top bar is drawn, so app.py keeps its side panel */

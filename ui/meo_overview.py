@@ -26,7 +26,7 @@ LABELS = {"plane": "Plane", "spacing": "Spacing", "inclination": "Inclination", 
 PARTS = [("Plane", "_plane_score"), ("Spacing", "_spacing_score"), ("Height", "_height_score"),
          ("Eccentricity", "_ecc_score")]
 # The groups that are not a plane of slots, by their title; any other group is "Plane <name>".
-NOT_PLANES = {EXTENDED: "Eccentric orbit", NO_PLANE: "No plane in the registry"}
+NOT_PLANES = {EXTENDED: "Eccentric orbit", NO_PLANE: "No plane in the IGS satellite file"}
 
 
 def state_of(row):
@@ -44,7 +44,7 @@ def state_of(row):
     if row["plane"] == EXTENDED:
         return palette.SLOT_UNKNOWN, "own eccentric orbit", None
     if row["plane"] == NO_PLANE:
-        return palette.SLOT_UNKNOWN, "no plane in the registry", None
+        return palette.SLOT_UNKNOWN, "no plane in the IGS satellite file", None
     # left out of the gaps (analysis/meo_geometry.py): passing through at another height, or alone in its plane
     if "height" in checks and checks["height"][4] < 100:
         return palette.SLOT_UNKNOWN, "away from its working height", None

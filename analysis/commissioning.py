@@ -66,3 +66,14 @@ def commissioned_on(history, name):
     flags = [under_way(row) for _, row in sat.iterrows()]
     last_moving = max(i for i, moving in enumerate(flags) if moving)
     return sat["EPOCH"].iloc[last_moving + 1]
+
+
+ON_ITS_WAY = "on its way to its slot"
+NEWLY_PARKED = f"at its slot for under {SETTLING_DAYS} days"
+
+
+def stage(history, name):
+    """Which of the two a satellite left out by moving_to_slot is: still on its way (its newest record is in a transfer
+    orbit or drifting), or parked too lately for its records to be scored."""
+    sat = _records(history, name)
+    return ON_ITS_WAY if sat.empty or under_way(sat.iloc[-1]) else NEWLY_PARKED

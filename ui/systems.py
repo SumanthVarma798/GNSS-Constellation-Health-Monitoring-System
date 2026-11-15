@@ -7,7 +7,7 @@ The reader chooses a system first; a system with parts then offers them, one ste
 from ui import data
 
 # {system: {part: what the part is called beside the system's name}}. A system not listed is its own one part.
-PARTS = {"BeiDou-3": {"BeiDou-3": "High orbit", "BeiDou-3 MEO": "Medium orbit"}}
+PARTS = {"BeiDou-3": {"BeiDou-3": "IGSO & GEO", "BeiDou-3 MEO": "MEO"}}
 
 
 def _systems():
@@ -28,5 +28,5 @@ def system_of(part):
 
 
 def part_name(part):
-    """'Medium orbit' for a part of a system with several; '' for a system that is one part."""
+    """'MEO' for a part of a system with several; '' for a system that is one part."""
     return PARTS.get(system_of(part), {}).get(part, "")

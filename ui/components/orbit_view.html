@@ -20,6 +20,8 @@ canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: 
 .seg { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); }
 .seg button { padding: 4px 13px; border-radius: 999px; border: 1px solid transparent; background: transparent; color: var(--muted); font-size: var(--fs-small); white-space: nowrap; cursor: pointer; }
 .seg button:hover { color: var(--accent); }
+.seg.same { opacity: .55; } .seg.same button { cursor: default; } .seg.same button:hover { color: var(--muted); }
+.seg.same button[aria-pressed="true"]:hover { color: var(--accent); }
 .seg button[aria-pressed="true"] { background: var(--platform); color: var(--accent); border-color: var(--edge); box-shadow: var(--raised-sm); }
 .note { color: var(--fc-small); font-size: var(--fs-small); }
 .note.named { color: var(--ink); font-weight: 600; font-size: var(--fs-small); }   /* the clicked orbit or plane */
@@ -561,6 +563,15 @@ function choose(next) {
 }
 $("mode").addEventListener("click", e => { const b = e.target.closest("button"); if (b && b.dataset.mode !== mode) choose(b.dataset.mode); });
 choose("all");   // the whole generation first: every satellite is followed, the ones not operational shown as such
+// When every satellite launched is in service the two choices show the same thing: the switch is greyed out and the
+// note says so, instead of offering a choice that changes nothing.
+if (SATS.length && DATA.notes.service === "" && SATS.every(s => s.service)) {   // "": the listing of who is in service was read
+  $("mode").classList.add("same"); $("mode").setAttribute("aria-label", "Which satellites: every one launched is in service");
+  $("mode").querySelectorAll("button").forEach(b => { b.disabled = true; });
+  const same = `All ${SATS.length} satellites launched are in service`;
+  DATA.notes.service = same; DATA.notes.all = [same, DATA.notes.all].filter(Boolean).join(" · ");
+  $("note").textContent = DATA.notes[mode];
+}
 
 new ResizeObserver(resize).observe(canvas);
 </script>

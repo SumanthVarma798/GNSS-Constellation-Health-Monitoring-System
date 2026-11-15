@@ -41,13 +41,15 @@ def test_a_satellites_state_is_told_by_the_dots_shape_and_in_words_not_by_colour
     navic = next(row for row in rows_of(bodies) if "<b>NavIC</b>" in row)
     assert re.search(r'role="img" aria-label="\d+ healthy and in place, \d+ needs a look, 1 set aside"', navic)
     legend = next(body for body in bodies if "What a dot means" in body)
-    for words in ("round: healthy and in place", "diamond: needs a look", "square: set aside", "ring: settling in"):
+    for words in ("healthy and in place", "needs a look", "set aside", "new, not scored yet"):
         assert words in legend
+    for shape in ("diamond", "square", "ring"):   # the legend draws each mark as the rows do
+        assert f'class="swatch {shape}"' in legend
 
 
 def test_a_system_with_no_satellites_draws_no_unnamed_picture(monkeypatch):
     monkeypatch.setattr(system_summary, "summary", lambda name, result, gap=None: {
-        "name": name, "sats": [], "healthy": 0, "total": 0, "settling": [], "planes": {}, "in_file": None,
+        "name": name, "sats": [], "healthy": 0, "total": 0, "settling": {}, "planes": {}, "in_file": None,
         "flagged_healthy": None, "checked": 0, "broadcast_day": None})
 
     counted = [row for row in rows(run()) if COUNT.search(row)]
@@ -76,14 +78,14 @@ def test_a_system_of_two_parts_is_one_row_with_each_part_under_it():
     beidou = [row for row in rows(run()) if "BeiDou-3" in row]
 
     assert len(beidou) == 1 and "<b>BeiDou-3</b>" in beidou[0] and "China · global" in beidou[0]
-    assert re.search(r"High orbit \d+ of \d+", beidou[0])
-    assert "Medium orbit could not be read just now: No orbit data for BeiDou-3 MEO yet" in beidou[0]
+    assert re.search(r"IGSO &amp; GEO \d+ of \d+", beidou[0])
+    assert "MEO could not be read just now: No orbit data for BeiDou-3 MEO yet" in beidou[0]
 
 
 def test_a_part_of_a_system_shows_the_whole_systems_count_over_its_own(monkeypatch):
     lines = [body for body in htmls(run(scope("BeiDou-3"))) if 'class="sysline"' in body]
 
-    assert len(lines) == 1 and "<b>BeiDou-3</b>" in lines[0] and "High orbit" in lines[0]
+    assert len(lines) == 1 and "<b>BeiDou-3</b>" in lines[0] and "IGSO &amp; GEO" in lines[0]
     assert not any('class="sysline"' in body for body in htmls(run(scope("NavIC"))))   # one part: no line
 
 

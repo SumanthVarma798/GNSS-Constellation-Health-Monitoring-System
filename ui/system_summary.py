@@ -2,6 +2,7 @@
 broadcast themselves as healthy. The counts are the ones the system's own Overview shows as its headline, made by
 the same rules (in_slot_and_healthy here, meo_overview.healthy for the systems judged by plane).
 """
+from analysis import commissioning
 from analysis.meo_geometry import plane_drift
 from config.config import MEO_SATS
 from ui import meo_overview, orbit_age, orbit_section, palette, systems
@@ -37,12 +38,20 @@ def _plane_satellites(result):
             for members in meo_overview.by_plane(result["rows"]).values() for row in members]
 
 
+def _stage(result, name):
+    """A new satellite's stage in words (analysis/commissioning.py), or "new" when its records cannot say."""
+    try:
+        return commissioning.stage(result["history"], name)
+    except (KeyError, TypeError, ValueError):
+        return "new"
+
+
 def summary(name, result, gap=None):
     """{name, sats, healthy, total, settling, planes, in_file, flagged_healthy, broadcast_day} for one system.
 
     sats: {name, group, score, state, ok, broadcast} per satellite counted, where broadcast is "ok" (flagged
     healthy), "bad" (flagged unhealthy), "silent" (not in the day's file) or None (no broadcast check to read).
-    settling: the satellites still moving to their slot, which are not counted. planes: plane_drift's rows for a
+    settling: {satellite: which stage it is at} for the new satellites not scored yet, which are not counted. planes: plane_drift's rows for a
     system judged by plane, else {}. `gap` is ui.data.orbit_gap()'s payload.
     """
     by_plane = name in MEO_SATS
@@ -58,7 +67,7 @@ def summary(name, result, gap=None):
             sat["broadcast"] = "ok" if orbit_age.health_words(status)[1] == "ok" else "bad"
     checked = [sat for sat in sats if sat["broadcast"] is not None]
     return {"name": name, "sats": sats, "healthy": sum(sat["ok"] for sat in sats), "total": len(sats),
-            "settling": list(result.get("moving") or {}),
+            "settling": {new: _stage(result, new) for new in result.get("moving") or {}},
             "planes": plane_drift(name, result["rows"]) if by_plane else {},
             "in_file": sum(sat["broadcast"] != "silent" for sat in checked) if checked else None,
             "flagged_healthy": sum(sat["broadcast"] == "ok" for sat in checked) if checked else None,
@@ -72,7 +81,7 @@ def whole(system, parts):
     checked = sum(part["checked"] for part in parts)
     return {"name": system, "sats": [sat for part in parts for sat in part["sats"]],
             "healthy": sum(part["healthy"] for part in parts), "total": sum(part["total"] for part in parts),
-            "settling": [name for part in parts for name in part["settling"]], "checked": checked,
+            "settling": {name: stage for part in parts for name, stage in part["settling"].items()}, "checked": checked,
             "flagged_healthy": sum(part["flagged_healthy"] or 0 for part in parts) if checked else None,
             "parts": [(systems.part_name(part["name"]), part["healthy"], part["total"]) for part in parts]
             if len(systems.SYSTEMS[system]) > 1 else []}

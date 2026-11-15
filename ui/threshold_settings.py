@@ -15,7 +15,7 @@ GROUPS = {
            "and how large a step must be. They change the burns listed on Station-keeping and, through upkeep and "
            "regularity, the scores of the constellations judged by slot.",
     SCORING: "How strictly a satellite is marked for leaving its target orbit. These three apply to the constellations "
-             "judged by longitude slot: NavIC, QZSS and BeiDou-3's high orbit.",
+             "judged by longitude slot: NavIC, QZSS and BeiDou-3's IGSO and GEO satellites.",
 }
 # Said in place of the scoring group for a system judged by orbital plane, whose limits are not moved here.
 BY_PLANE = ("{name} is judged by orbital plane. Its scoring limits come from its orbit design and are listed under "

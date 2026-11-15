@@ -45,7 +45,7 @@ def silent(summary):
     return _each("silent", summary["name"], missing, lambda names: _finding(
         "silent", summary["name"],
         f"{reveal.count(len(names), 'tracked satellite')} not in the IGS daily broadcast file",
-        f"{_names(names)} · {len(counted) - len(missing)} of {len(counted)} tracked are in the file for "
+        f"{_names(names)} · {len(counted) - len(missing)} of {len(counted)} tracked are in the IGS file for "
         f"{_day(summary['broadcast_day'])}, which holds the navigation messages IGS ground stations received that day",
         (("tracked here", len(counted)), ("in the IGS file", len(counted) - len(missing))),
         len(names) / len(counted), names))
