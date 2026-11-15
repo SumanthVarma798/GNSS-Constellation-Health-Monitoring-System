@@ -12,8 +12,10 @@ from ui import data, findings, palette, reveal, shell, surfaces, time_range, too
 from ui.home_settings import CAVEATS, FINDINGS_SHOWN, HOW, RULES, SYSTEMS
 from ui.system_summary import summary
 
-# One dot per satellite: (class, what it means), in the order the legend lists them.
-DOTS = [("ok", "healthy and in place"), ("warn", "needs a look"), ("bad", "set aside"), ("accent", "settling in")]
+# One dot per satellite: (class, what it means, its shape), in the order the legend lists them. Each has its own
+# shape (ui/theme.css), so the colour only backs it up.
+DOTS = [("ok", "healthy and in place", "round"), ("warn", "needs a look", "diamond"), ("bad", "set aside", "square"),
+        ("accent", "settling in", "ring")]
 DOT_COLOURS = {"ok": palette.OK, "warn": palette.WARN, "bad": palette.BAD, "accent": palette.ACCENT}
 
 
@@ -28,8 +30,10 @@ def _dots(system):
         groups.setdefault(sat["group"], []).append(_dot(sat))
     if system["settling"]:
         groups["settling"] = ["accent"] * len(system["settling"])
-    counts = {kind: sum(dot == kind for dots in groups.values() for dot in dots) for kind, _ in DOTS}
-    words = ", ".join(f"{counts[kind]} {meaning}" for kind, meaning in DOTS if counts[kind])
+    if not groups:
+        return ""   # nothing to draw, so no picture without a name
+    counts = {kind: sum(dot == kind for dots in groups.values() for dot in dots) for kind, _, _ in DOTS}
+    words = ", ".join(f"{counts[kind]} {meaning}" for kind, meaning, _ in DOTS if counts[kind])
     spans = "".join(f'<span class="dg">{"".join(f"<i class={kind}></i>" for kind in dots)}</span>'
                     for dots in groups.values())
     return f'<div class="dots" role="img" aria-label="{escape(words)}">{spans}</div>'
@@ -113,7 +117,7 @@ def page():
     surfaces.show(f'<div class="head"><span class="big num">{healthy} of {total}</span>'
                   f'<span class="muted">navigation satellites healthy and in place, across '
                   f'{reveal.count(len(systems), "system")}</span>'
-                  f'<span class="right">{tooltip.legend([(DOT_COLOURS[kind], meaning) for kind, meaning in DOTS], "What a dot means")}</span></div>'
+                  f'<span class="right">{tooltip.legend([(DOT_COLOURS[kind], f"{shape}: {meaning}") for kind, meaning, shape in DOTS], "What a dot means")}</span></div>'
                   '<p class="lede small">One row per system, one dot per satellite. A row opens that system, where every '
                   'satellite and every number behind these counts is shown.</p>')
     by_name = {system["name"]: system for system in systems}

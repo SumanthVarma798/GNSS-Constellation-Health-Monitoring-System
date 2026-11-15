@@ -624,7 +624,8 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
 .dots { display: flex; flex-wrap: wrap; gap: 5px 12px; }
 .dots .dg { display: inline-flex; flex-wrap: wrap; gap: 4px; }
 .dots i { width: 11px; height: 11px; border-radius: 50%; background: var(--idle); }
-.dots i.ok { background: var(--ok); } .dots i.warn { background: var(--warn); } .dots i.bad { background: var(--bad); } .dots i.accent { background: transparent; border: 2px solid var(--accent); }
+/* each state has its own shape, so colour is never the only sign: round, diamond, square, ring */
+.dots i.ok { background: var(--ok); } .dots i.warn { background: var(--warn); border-radius: 2px; transform: rotate(45deg) scale(.82); } .dots i.bad { background: var(--bad); border-radius: 2px; } .dots i.accent { background: transparent; border: 2px solid var(--accent); }
 .sys-m { flex: 1 0 130px; max-width: 180px; display: flex; flex-direction: column; gap: 4px; }
 .sys-m .s { font-size: var(--fs-section); font-weight: var(--fw-num); line-height: 1.1; }
 .sys-m .s.ok { color: var(--ok); } .sys-m .s.warn { color: var(--warn); } .sys-m .s.bad { color: var(--bad); } .sys-m .s.idle { color: var(--idle); }

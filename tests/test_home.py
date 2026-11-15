@@ -16,8 +16,12 @@ def the_dashboard_opens_on_home(monkeypatch):
     monkeypatch.setattr(shell, "DEFAULT_PAGE", shell.HOME)
 
 
+def rows_of(bodies):
+    return [body for body in bodies if body.startswith('<div class="sys ')]
+
+
 def rows(at):
-    return [body for body in htmls(at) if body.startswith('<div class="sys ')]
+    return rows_of(htmls(at))
 
 
 def test_home_is_the_first_page_and_shows_a_row_per_system_in_the_top_bars_order():
@@ -25,7 +29,30 @@ def test_home_is_the_first_page_and_shows_a_row_per_system_in_the_top_bars_order
 
     assert shell.PAGES[0][0] == shell.HOME
     assert [re.search(r"<b>([^<]+)</b>", row).group(1) for row in rows(at)] == list(shell.CONSTELLATIONS)
-    assert set(home_settings.SYSTEMS) == set(shell.CONSTELLATIONS)   # each says who runs it and where it serves
+    assert set(home_settings.SYSTEMS) == set(shell.CONSTELLATIONS)
+    for row in rows(at):   # each row that was read says who runs the system and where it serves
+        who, where = home_settings.SYSTEMS[re.search(r"<b>([^<]+)</b>", row).group(1)]
+        assert who and where and (f"{who} · {where}" in row or "Could not be read" in row)
+
+
+def test_a_satellites_state_is_told_by_the_dots_shape_and_in_words_not_by_colour_alone():
+    bodies = htmls(run())
+
+    navic = next(row for row in rows_of(bodies) if "<b>NavIC</b>" in row)
+    assert re.search(r'role="img" aria-label="\d+ healthy and in place, \d+ needs a look, 1 set aside"', navic)
+    legend = next(body for body in bodies if "What a dot means" in body)
+    for words in ("round: healthy and in place", "diamond: needs a look", "square: set aside", "ring: settling in"):
+        assert words in legend
+
+
+def test_a_system_with_no_satellites_draws_no_unnamed_picture(monkeypatch):
+    monkeypatch.setattr(system_summary, "summary", lambda name, result, gap=None: {
+        "name": name, "sats": [], "healthy": 0, "total": 0, "settling": [], "planes": {}, "in_file": None,
+        "flagged_healthy": None, "checked": 0, "broadcast_day": None})
+
+    counted = [row for row in rows(run()) if COUNT.search(row)]
+
+    assert counted and not any('role="img"' in row for row in counted)
 
 
 def test_each_rows_count_is_the_headline_of_that_systems_overview():
