@@ -595,6 +595,7 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
    any width; the button after it is laid over the whole row, so a click or Enter anywhere on it opens the system. */
 .head .right { margin-left: auto; }
 .head .big { white-space: nowrap; }
+.head [role="status"] { display: flex; flex: 1 1 auto; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; min-width: 0; }   /* Home: the count and its words, one status */
 .head:has(.right) { flex-wrap: wrap; } .head:has(.right) .muted { flex: 1 1 14ch; }   /* Home: the legend drops under the count on a phone */
 .lede { margin: -6px 0 16px; max-width: 70ch; }
 .sys, .find { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 26px; background: var(--platform); border: 1px solid var(--edge); border-left: 4px solid var(--idle); border-radius: 18px; box-shadow: var(--raised-sm); padding: 11px 18px; }

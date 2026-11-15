@@ -66,6 +66,10 @@ def test_the_map_is_flat_only_and_the_chips_say_they_can_be_clicked():
     # one flat map: each satellite is drawn where it is over the ground, which a globe would only repeat
     assert "Globe" not in page and "projectGlobe" not in page and 'id="viewseg"' not in page
     assert "Click a constellation to hide or show it" in page and "Click to hide it." in page
+    # and the flat map is still all there: its canvas, its projection, the land outlines and the satellites' marks
+    for part in ('<canvas id="map"', "const project = projectFlat;", "function strokeLand()", "function drawMarks()",
+                 "const LAND = [["):
+        assert part in page, part
 
 
 def test_the_parts_of_one_constellation_are_one_entry_on_the_map():

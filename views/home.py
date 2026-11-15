@@ -100,7 +100,7 @@ def _waiting(name):
     who, where = SYSTEMS.get(name, ("", ""))
     return (f'<div class="sys idle"><div class="sys-id"><b>{marks.mark(name)}{escape(name)}</b>'
             f'<span class="small">{escape(" · ".join(filter(None, [who, where])))}</span></div>'
-            '<div class="sys-mid small" role="status">counting its satellites</div></div>')
+            '<div class="sys-mid small">counting its satellites</div></div>')
 
 
 def _headline(wholes=None):
@@ -113,7 +113,10 @@ def _headline(wholes=None):
         count = f"{healthy} of {total}"
         words = f"navigation satellites healthy and in place, across {reveal.count(len(wholes), 'constellation')}"
     legend = tooltip.legend([(DOT_COLOURS[kind], meaning, shape) for kind, meaning, shape in DOTS], "What a dot means")
-    return (f'<div class="head"><span class="big num">{count}</span><span class="muted">{words}</span>'
+    # One status for the whole page, in both states, so a screen reader hears "counting" and then the count, not six
+    # rows each saying so.
+    return (f'<div class="head"><span role="status"><span class="big num">{count}</span> '
+            f'<span class="muted">{words}</span></span>'
             f'<span class="right">{legend}</span></div>'
             '<p class="lede small">One row per constellation, one dot per satellite. A row opens that constellation, '
             'where every satellite and every number behind these counts is shown.</p>')
