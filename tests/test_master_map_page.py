@@ -119,3 +119,14 @@ def test_the_map_opens_filtered_to_the_chosen_constellation_and_fits_its_frame()
     assert payload["focus"] == "QZSS"
     # the canvas's height follows the width within bounds, and the frame then takes its content's height
     assert "function fitFrame" in page and "html, body { margin: 0; }" in page and "height: clamp(" in page
+
+
+def test_a_plain_wheel_scrolls_the_page_and_never_zooms_the_map():
+    """The map sits inside a page: a reader scrolling past it must not zoom it out to a speck (it did, 15 Nov)."""
+    page = master_map_html(load_master_map_data())
+    wheel = page[page.index('canvas.addEventListener("wheel"'):]
+    wheel = wheel[:wheel.index("}, { passive: false });")]
+
+    plain = wheel.index("if (!(e.ctrlKey || e.metaKey))")
+    assert plain < wheel.index("preventDefault") and "return;" in wheel[plain:wheel.index("preventDefault")]
+    assert 'id="hint"' in page and "scroll to zoom" in page   # and it says how to zoom

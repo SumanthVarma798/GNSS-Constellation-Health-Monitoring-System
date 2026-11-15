@@ -49,6 +49,8 @@ button { font: inherit; color: inherit; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .totals { position: absolute; left: 14px; bottom: 14px; margin: 0; padding: 5px 14px; border-radius: 999px; border: 1px solid var(--edge); background: var(--platform); box-shadow: var(--raised-sm); color: var(--fc-small); font-size: var(--fs-small); pointer-events: none; }
 .totals b { color: var(--ink); font-family: var(--mono); font-weight: 600; }
+.hint { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); margin: 0; padding: 6px 16px; border-radius: 999px; border: 1px solid var(--edge); background: var(--platform); box-shadow: var(--raised-sm); color: var(--ink); font-size: var(--fs-small); pointer-events: none; opacity: 0; transition: opacity 150ms ease; white-space: nowrap; max-width: calc(100% - 28px); overflow: hidden; text-overflow: ellipsis; }
+.hint.on { opacity: 1; }
 .mark { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--warn); color: var(--platform); font-size: 11px; font-weight: 700; vertical-align: -3px; }
 
 /* ---- the side panel: one spacecraft's signal IDs over time ---- */
@@ -90,9 +92,10 @@ __TIP__
 <body>
 <div class="bar" id="bar"><button type="button" class="clear" id="clear" hidden>Clear</button></div>
 <div class="stage" id="stage">
-  <canvas id="map" role="img" aria-label="Spacecraft identity cards. Drag to move, scroll or pinch to zoom; zoom in to read each card."></canvas>
+  <canvas id="map" role="img" aria-label="Spacecraft identity cards. Drag to move; hold Ctrl and scroll, or pinch, to zoom; zoom in to read each card."></canvas>
   <div class="sr" id="cards" role="list" aria-label="Spacecraft"></div>
   <p class="totals" id="totals" aria-live="polite"></p>
+  <p class="hint" id="hint" aria-hidden="true">Hold Ctrl (⌘ on a Mac) and scroll to zoom, or pinch</p>
   <div class="tip tt-card" id="tip" aria-hidden="true"></div>
   <aside class="side" id="side" role="dialog" aria-label="Spacecraft detail"><button type="button" class="close" id="close" aria-label="Close">&times;</button><div id="side-body"></div></aside>
 </div>
@@ -381,8 +384,15 @@ const lift = e => {
   if (!pointers.size) { canvas.classList.remove("drag"); if (e.type === "pointerup" && downOn && travelled < 6) select(downOn); downOn = null; }
 };
 canvas.addEventListener("pointerup", lift); canvas.addEventListener("pointercancel", lift); canvas.addEventListener("pointerleave", hideTip);
+// The map sits inside a page: a plain wheel scrolls the page (it passes on to it), and only Ctrl or ⌘ with the wheel,
+// or a trackpad pinch (which the browser sends as Ctrl + wheel), zooms the map. A plain wheel shows how to zoom.
+let hintTimer = 0;
 canvas.addEventListener("wheel", e => {
-  e.preventDefault(); touched = true; cancelAnimationFrame(flight); hideTip();
+  if (!(e.ctrlKey || e.metaKey)) {
+    $("hint").classList.add("on"); clearTimeout(hintTimer); hintTimer = setTimeout(() => $("hint").classList.remove("on"), 1400);
+    return;
+  }
+  e.preventDefault(); touched = true; cancelAnimationFrame(flight); hideTip(); $("hint").classList.remove("on");
   const b = rect(), dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
   zoomAt(e.clientX - b.left, e.clientY - b.top, Math.exp(-dy * (e.ctrlKey ? .01 : .0015)));
 }, { passive: false });

@@ -56,7 +56,7 @@ def page():
     shown = mm.page_name(focus) if focus else ""
     surfaces.show(surfaces.group_head(
         "Every spacecraft under every name",
-        (f"showing {shown}" if focus else "every constellation") + " · drag to move, pinch or scroll to zoom, "
+        (f"showing {shown}" if focus else "every constellation") + " · drag to move, pinch or Ctrl and scroll to zoom, "
         "tap a card for its signal IDs over time"))
     if focus:
         st.button("Show every constellation", key="mm_all", icon=":material/zoom_out_map:", on_click=_focus, args=(None,))
