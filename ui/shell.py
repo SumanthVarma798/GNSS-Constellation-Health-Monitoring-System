@@ -24,12 +24,14 @@ from ui import changes, data, surfaces, time_range
 from ui.components.clock import clock_frame
 
 # Pages with their own filters: the bar shows no constellation, window or thresholds there.
-OWN_FILTERS = {"Master map", "World map", "Library"}
+HOME = "Home"   # every system side by side: where a first-time reader starts
+OWN_FILTERS = {HOME, "Master map", "World map", "Library"}
 # Pages that use only the constellation choice in the bar.
 SCOPE_ONLY = {"News"}
 
 # The pages, in one place. Add a page by adding a line: (title, file).
 PAGES = [
+    (HOME, "views/home.py"),
     ("Overview", "views/overview.py"),
     ("Station-keeping", "views/station_keeping.py"),
     ("Geometry", "views/geometry.py"),
@@ -40,6 +42,7 @@ PAGES = [
     # ("How it works", "views/how_it_works.py"),
 ]
 CONSTELLATIONS = tuple(data.SATELLITES)
+DEFAULT_PAGE = HOME   # the page the dashboard opens on
 # The clock and "next update" are redrawn this often, alone: never a page redraw, at most this far behind.
 CLOCK_TICK_SECONDS = 15
 
@@ -73,7 +76,7 @@ def footer():
 
 def pages():
     """PAGES as st.Page objects."""
-    return [st.Page(path, title=title, default=i == 0) for i, (title, path) in enumerate(PAGES)]
+    return [st.Page(path, title=title, default=title == DEFAULT_PAGE) for title, path in PAGES]
 
 
 def segment(key, options, labels=None, label="Choose"):
@@ -360,20 +363,28 @@ def top_bar(current):
 
 
 def _page_tabs(current):
-    """The pages under the bar, in two groups: those that look at one constellation at a time, and those that look
-    across every system (OWN_FILTERS). One page is chosen across both groups."""
+    """The pages under the bar, in three groups: Home, those that look at one constellation at a time, and those that
+    look across every system (OWN_FILTERS). One page is chosen across the groups."""
     with st.container(key="pagetabs"):
         if st.session_state.get("shown_page") != current.title:   # arrived by address or switch: tabs follow the page
             st.session_state["page"] = current.title
         st.session_state["shown_page"] = current.title
         page = st.session_state["page"]
-        for key, label, titles in (("page_one", "Page", [t for t, _ in PAGES if t not in OWN_FILTERS]),
-                                   ("page_all", "Across all systems", [t for t, _ in PAGES if t in OWN_FILTERS])):
+        for key, label, titles in (("page_home", "Start", [HOME]),
+                                   ("page_one", "Page", [t for t, _ in PAGES if t not in OWN_FILTERS]),
+                                   ("page_all", "Across all systems",
+                                    [t for t, _ in PAGES if t in OWN_FILTERS and t != HOME])):
             st.session_state[key] = page if page in titles else None
             with st.container(key=f"{key}_group"):
                 st.segmented_control(label, titles, key=key, label_visibility="collapsed", on_change=_pick_page, args=(key,))
         if st.session_state["page"] != current.title:
             st.switch_page(next(p for p in pages() if p.title == st.session_state["page"]))
+
+
+def open_system(name):
+    """A button's on_click: go to `name`'s Overview. The chip's earlier choice is set too, as a page without the
+    chips drops their state."""
+    st.session_state.update({"scope": name, "_scope_was": name, "compare": False, "page": "Overview"})
 
 
 def _pick_page(key):

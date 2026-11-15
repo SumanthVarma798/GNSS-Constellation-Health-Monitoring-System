@@ -53,6 +53,11 @@ def state_of(row):
     return palette.SLOT_UNKNOWN, f"slot {row['slot']} not listed" if row["slot"] else "no slot given", None
 
 
+def healthy(row):
+    """A satellite judged by plane counts when its score is in the top band and it is not off its plane or out of step."""
+    return row["score"] is not None and row["score"] >= HEALTHY_FROM and state_of(row)[0] != palette.SLOT_OFF
+
+
 def tiles(result, tags=None):
     """{name: (tile html, counts as healthy, health row)}, in the order of result["rows"]."""
     tags = tags or {}
@@ -64,8 +69,7 @@ def tiles(result, tags=None):
         html = surfaces.tile(row["name"], row["signal_id"], row["score"], row["status"].split(" ", 1)[-1], words,
                              orbit_section.CHIP_STATUS[state], weakest if weakest and weakest[1] < 100 else None,
                              age_html=tags.get(row["name"], ""), unscored="no score")
-        healthy = row["score"] is not None and row["score"] >= HEALTHY_FROM and state != palette.SLOT_OFF
-        out[row["name"]] = (html, healthy, health[row["name"]])
+        out[row["name"]] = (html, healthy(row), health[row["name"]])
     return out
 
 
@@ -132,7 +136,7 @@ def _gaps(name, result, today):
         surfaces.show(surfaces.notice(text, "warn"))
 
 
-def _planes(rows):
+def by_plane(rows):
     """{plane name: rows in orbit order}, the nominal planes by name, then the eccentric pair and those with no plane."""
     planes = {}
     for row in sorted(rows, key=lambda r: r["u"]):
@@ -205,7 +209,7 @@ def page(name, result):
     surfaces.show(surfaces.notice(result["history_note"], "idle"))
     orbit_age.show(name, result)
     _gaps(name, result, today)
-    planes = _planes(result["rows"])
+    planes = by_plane(result["rows"])
     if shell.segment("meo_view", VIEWS, label="Show planes or satellites") == "Planes":
         drift = plane_drift(name, result["rows"])
         for plane, members in planes.items():

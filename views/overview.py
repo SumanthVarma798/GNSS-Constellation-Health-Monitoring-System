@@ -21,7 +21,7 @@ from ui.figures.constellation_3d import slot_legend
 from ui.figures.slot_rows import as_number, slot_words
 from ui.orbit_section import CHIP_STATUS, PARTS
 from ui.picker import picker
-HEALTHY_FROM = 80
+from ui.system_summary import HEALTHY_FROM, in_slot_and_healthy
 STATUS_CHIP = {"Healthy": "ok", "Fair": "warn", "Degraded": "bad", "Critical": "bad"}
 CLASS_COLUMNS = [("Satellite", ""), ("Type", "From the mean tilt"), ("Mean inclination", "In the window"),
                  ("Mean height", "In the window"), ("Drift now", "Per day")]
@@ -38,7 +38,7 @@ def _tile(health, slot, age_html=""):
         re.sub(r"^[^A-Za-z]+", "", str(health.get("Health Status", ""))),
         slot_words(slot), CHIP_STATUS[state], min(scored, key=lambda part: part[1]) if scored else None,
         age_html=age_html)
-    return html, score is not None and score >= HEALTHY_FROM and state == palette.SLOT_IN
+    return html, in_slot_and_healthy(score, state)
 
 
 def _tiles(result, tags=None):

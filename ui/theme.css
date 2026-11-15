@@ -610,3 +610,38 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
   .st-key-topbar [data-testid="stHorizontalBlock"]::before { content: ""; order: 3; flex-basis: 100%; margin-top: -10px; }
   [class*="st-key-ntread_"] button { width: 40px; height: 40px; }
 }
+
+/* Home (views/home.py): one row per system. The row is a wrapping line of parts, so it takes its content's size at
+   any width; the button after it is laid over the whole row, so a click or Enter anywhere on it opens the system. */
+.head .right { margin-left: auto; }
+.head .big { white-space: nowrap; }
+.lede { margin: -6px 0 16px; max-width: 70ch; }
+.sys, .find { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 26px; background: var(--platform); border: 1px solid var(--edge); border-left: 4px solid var(--idle); border-radius: 18px; box-shadow: var(--raised-sm); padding: 11px 18px; }
+.sys.ok { border-left-color: var(--ok); } .sys.warn { border-left-color: var(--warn); } .sys.bad { border-left-color: var(--bad); }
+.sys-id { flex: 0 0 270px; display: flex; flex-direction: column; gap: 2px; }
+.sys-id b { font-size: var(--fs-section); font-weight: var(--fw-section); }
+.sys-mid { flex: 1 1 240px; display: flex; flex-direction: column; gap: 6px; }
+.dots { display: flex; flex-wrap: wrap; gap: 5px 12px; }
+.dots .dg { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.dots i { width: 11px; height: 11px; border-radius: 50%; background: var(--idle); }
+.dots i.ok { background: var(--ok); } .dots i.warn { background: var(--warn); } .dots i.bad { background: var(--bad); } .dots i.accent { background: transparent; border: 2px solid var(--accent); }
+.sys-m { flex: 1 0 130px; max-width: 180px; display: flex; flex-direction: column; gap: 4px; }
+.sys-m .s { font-size: var(--fs-section); font-weight: var(--fw-num); line-height: 1.1; }
+.sys-m .s.ok { color: var(--ok); } .sys-m .s.warn { color: var(--warn); } .sys-m .s.bad { color: var(--bad); } .sys-m .s.idle { color: var(--idle); }
+.bar { display: block; height: 6px; border-radius: 3px; background: var(--well); box-shadow: var(--pressed); overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 3px; background: var(--idle); }
+.bar i.ok { background: var(--ok); } .bar i.warn { background: var(--warn); } .bar i.bad { background: var(--bad); } .bar i.accent { background: var(--accent); }
+.sys-go { font-size: var(--fs-section); color: var(--muted); }
+.find { border-left-color: var(--warn); }
+.find-w { flex: 1 1 320px; } .find-w .chip { margin-right: 10px; } .find-w .small { margin-top: 4px; }
+.pair { flex: 0 1 300px; display: grid; grid-template-columns: auto minmax(60px, 1fr) auto; gap: 4px 10px; align-items: center; }
+.how { margin-bottom: 6px; }
+[class*="st-key-home_row_"] { position: relative; gap: 0; }
+.st-key-home_systems, .st-key-home_findings { gap: 12px; margin-bottom: 14px; }
+[class*="st-key-home_row_"] :is([data-testid="stElementContainer"], [data-testid="stButton"]) { position: static; }
+[class*="st-key-home_row_"] [data-testid="stElementContainer"]:has([data-testid="stButton"]) { height: 0; }
+[class*="st-key-home_row_"] [data-testid="stButton"] button { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; background: transparent; border: 0; box-shadow: none; border-radius: 18px; color: transparent; }
+[class*="st-key-home_row_"] [data-testid="stButton"] button :is(p, span) { color: transparent; }
+[class*="st-key-home_row_"] [data-testid="stButton"] button:hover { box-shadow: 0 0 0 1px var(--accent); }
+[class*="st-key-home_row_"] [data-testid="stButton"] button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[class*="st-key-home_row_"]:has(button:hover) .sys-go { color: var(--accent); }

@@ -11,7 +11,7 @@ import pytest
 import requests
 
 from data import celestrak, spacetrack
-from ui import data
+from ui import data, shell
 
 
 @pytest.fixture(autouse=True)
@@ -23,6 +23,9 @@ def private_celestrak_copy(monkeypatch, tmp_path):
     monkeypatch.setattr(data, "orbit_gap", lambda: {})
     monkeypatch.setattr(data, "fitted_orbits", lambda: {})
     monkeypatch.setattr(celestrak, "fetch_copy", _no_copy)
+    # The tests written before the Home page open on the Overview, as the dashboard then did; tests/test_home.py
+    # sets the default back.
+    monkeypatch.setattr(shell, "DEFAULT_PAGE", "Overview")
 
 
 def _no_copy(norads):
