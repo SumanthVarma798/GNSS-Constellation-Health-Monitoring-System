@@ -108,6 +108,18 @@ PLOTLY_HOVER = {"bgcolor": palette.PLATFORM, "bordercolor": palette.PLATFORM, "a
                 "font": {"color": palette.INK, "family": palette.FONT, "size": type_scale.LEVELS["small"][1]}}
 
 
+# A word drawn over a chart gets the page's surface colour behind it, three-quarters solid: a line passing under the
+# word dims instead of cutting through it, and can still be seen and hovered.
+_BACKING_ALPHA = 0.75
+
+
+def plotly_label_backing(prefix=""):
+    """The keyword arguments that put the surface colour behind a label drawn over data. prefix "annotation_" gives
+    the names add_hline and add_vline take for their label; without it they suit add_annotation."""
+    red, green, blue = (int(palette.PLATFORM[i:i + 2], 16) for i in (1, 3, 5))
+    return {f"{prefix}bgcolor": f"rgba({red},{green},{blue},{_BACKING_ALPHA})", f"{prefix}borderpad": 3}
+
+
 def plotly_line(label, value):
     """One "label value" line of a Plotly hover, the label muted. Escaped, as Plotly reads it as markup; Plotly's own
     placeholders (%{y:.2f}) pass through untouched."""
