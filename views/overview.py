@@ -16,7 +16,7 @@ from analysis.commissioning import SETTLING_DAYS
 from config.config import MEO_SATS, TRACKED_NOT_IN_REGISTRY
 from evidence.registry_tables import left_out_notice, new_on_dashboard
 from ui import (checks, data, limits, measures, meo_overview, official_status, orbit_age, orbit_section,
-                marks, palette, reveal, shell, surfaces, systems, time_range, tooltip)
+                marks, palette, reveal, shell, surfaces, systems, three_measures, time_range, tooltip)
 from ui.data import SATELLITES
 from ui.figures.constellation_3d import slot_legend
 from ui.figures.slot_rows import as_number, slot_words
@@ -190,8 +190,11 @@ def constellation(name, window_days, params):
     table, what the checks found, how each satellite was classed."""
     result = data.load(name, window_days, params)
     surfaces.show(_system_line(name, window_days, params))
+    measured = summary(name, result, data.orbit_gap())
+    surfaces.show(three_measures.strip(measured))   # the three measures, declared before the count
     if name in MEO_SATS:   # judged by orbital plane, not longitude slot
         meo_overview.page(name, result)
+        three_measures.section(measured)
         return
     today = pd.Timestamp(datetime.now(timezone.utc).date())
     window = measures.in_window(result["history"], window_days, today)
@@ -224,6 +227,7 @@ def constellation(name, window_days, params):
     kinds = measures.grouped({c["satellite"]: c["type"] for c in classes})
     reveal.section("overview_classes", "How each satellite was classed",
                    " · ".join(f"{len(n)} {kind}" for kind, n in kinds.items()), _classes_table(classes))
+    three_measures.section(measured)
 
 
 def compare(window_days, params):

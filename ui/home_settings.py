@@ -22,6 +22,7 @@ CAVEATS = {
 RULES = {
     "silent": ("Tracked but silent", "the satellites we track against the IGS daily broadcast file"),
     "disagree": ("Two sources disagree", "the operator's own health flag against our orbit check"),
+    "clock": ("Clock stepped", "each new clock message against what the one before it predicted"),
     "plane": ("Plane out of step", "one orbital plane against its sister planes"),
     "odd": ("Odd one out", "one satellite's score against the others in its constellation"),
 }
@@ -45,23 +46,30 @@ HOW = [
         ("Healthy and in place", "The satellite's orbit, from public tracking records, scores 80 or more out of 100, "
          "and it sits in its slot or keeps step in its orbital plane. The constellation's own page shows every part of "
          "that score."),
-        ("Broadcasting healthy", "The health flag each satellite sends about itself. It is read once a day from the "
-         "International GNSS Service's daily broadcast file, which holds the navigation messages its ground "
-         "stations received."),
+        ("Orbit kept", "The satellite is on the orbit it should be on. For one held over a longitude that is its "
+         "tilt; for one in a medium orbit, its plane, tilt, height and shape. Each must score 80 or more."),
+        ("Station held", "It is being held there: it is in its slot and not drifting, or in step with the others in "
+         "its plane. How often and how evenly it burns to stay there is on the constellation's own page."),
+        ("Clock steady", "Through the day, each new clock message landed within 30 ns of what the one before it "
+         "predicted. A clock that was reset or is failing steps by far more. 1 ns of clock is 0.3 m of range."),
+        ("Says healthy", "The health flag each satellite sends about itself. It is read once a day, with the clock "
+         "messages, from the International GNSS Service's daily broadcast file, which holds the navigation "
+         "messages its ground stations received."),
     ]),
     ("calculator", "How", [
-        ("Two counts, never mixed", "They come from different sources. Where they disagree, the page says so under "
-         "Worth a look."),
+        ("Two sources, never mixed", "Orbit and station come from public tracking records; clock and flag from the "
+         "satellites' own broadcast. Where the two disagree, the page says so under Worth a look."),
         ("Default limits", "The counts use the default limits. Limits you move on a constellation's page apply on that "
          "page only."),
         ("Findings by rule", "A finding is raised by a named rule, never picked by hand. The largest finding of "
          "each rule is listed first, then the rest by rule and by size."),
     ]),
     ("alert-triangle", "What is left out", [
-        ("Measured accuracy", "How accurate each constellation's signal actually is. That needs precise orbit and clock "
-         "products we do not read yet. The broadcast flag is what the operator states, not a measurement."),
-        ("Our choices", "The colours (green from 80 in 100, amber from 60) and the odd-one-out line (3 spreads "
-         "under the median) are our choices, not a standard."),
+        ("Measured accuracy", "How accurate each constellation's signal and clock actually are. That needs precise "
+         "orbit and clock products we do not read yet. The flag and the clock messages are what the operator "
+         "broadcasts, not a measurement against a reference."),
+        ("Our choices", "The colours (green from 80 in 100, amber from 60), the 30 ns line for a steady clock and "
+         "the odd-one-out line (3 spreads under the median) are our choices, not a standard."),
         ("New satellites", "A satellite on its way to its slot, or at its slot for under 30 days, is not scored or "
          "counted yet. Its row names it."),
     ]),
@@ -75,6 +83,9 @@ HOW = [
 # them}. On the row they are a link to that card.
 HOW_LINKS = {
     "healthy and in place": "What is measured",
-    "broadcasting healthy": "What is measured",
+    "orbit kept": "What is measured",
+    "station held": "What is measured",
+    "clock steady": "What is measured",
+    "says healthy": "What is measured",
     "not scored yet": "What is left out",
 }

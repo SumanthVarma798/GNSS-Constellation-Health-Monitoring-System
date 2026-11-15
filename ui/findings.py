@@ -9,6 +9,7 @@ from statistics import median
 
 from ui import reveal
 from ui.home_settings import EXPLAINED, ODD_NEEDS, ODD_SPREAD_FLOOR, ODD_SPREADS, RULES
+from ui.limits import CLOCK_STEADY_NS
 
 
 def _day(iso):
@@ -74,6 +75,22 @@ def disagree(summary):
         len(names) / len(sats), names))
 
 
+def clock(summary):
+    """A clock whose broadcast offset stepped further in the day than a steady clock's does."""
+    def step(name):
+        return next(sat["clock"]["largest_step_ns"] for sat in summary["sats"] if sat["name"] == name)
+
+    heard = [sat for sat in summary["sats"] if sat.get("clock_steady") is not None]
+    stepped = sorted((sat["name"] for sat in heard if not sat["clock_steady"]), key=step, reverse=True)
+    return _each("clock", summary["name"], stepped, lambda names: _finding(
+        "clock", summary["name"],
+        f"{reveal.count(len(names), 'clock')} stepped more than {CLOCK_STEADY_NS:g} ns in the day",
+        f"{_names(names)} · largest step {step(names[0]):,.0f} ns, which is {step(names[0]) * 0.3:,.0f} m of range · "
+        f"{len(heard) - len(stepped)} of {len(heard)} clocks heard were steady on {_day(summary['broadcast_day'])}",
+        (("largest step, ns", round(step(names[0]))), ("steady under, ns", CLOCK_STEADY_NS)),
+        step(names[0]) / CLOCK_STEADY_NS, names))
+
+
 def plane(summary):
     """A plane whose node or spacing is past its limit while a sister plane is within both."""
     def past(row):   # how many times its limit the worse of the two measures is
@@ -114,7 +131,7 @@ def odd(summary):
         (middle - min(sat["score"] for sat in low if sat["name"] in names)) / (ODD_SPREADS * spread), names))
 
 
-FINDERS = {"silent": silent, "disagree": disagree, "plane": plane, "odd": odd}
+FINDERS = {"silent": silent, "disagree": disagree, "clock": clock, "plane": plane, "odd": odd}
 assert list(FINDERS) == list(RULES)
 
 
