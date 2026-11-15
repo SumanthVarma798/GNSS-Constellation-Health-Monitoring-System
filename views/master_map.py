@@ -2,7 +2,7 @@
 
 The page reads in the order the whole dashboard follows: all the spacecraft (the count), each constellation (the
 rows, each leading to its Overview, its News, the Library and its part of the map), every spacecraft under every name
-(the map), where each thing comes from and how fresh it is, what our sources disagree about, then how to read it.
+(the map), where each thing comes from and how fresh it is, what the IGS satellite metadata file, GCAT and CelesTrak disagree about, then how to read it.
 """
 from datetime import datetime, timezone
 
@@ -21,6 +21,12 @@ def _go(page, scope=None):
     st.session_state.update({"page": page, **({"scope": scope, "compare": False} if scope else {})})
 
 
+def _lifecycles(name):
+    """A button's on_click: open the Library on one constellation's satellite lifecycles (the Library reads
+    library_jump: {shelf, constellation as ui/systems.py SYSTEMS names it})."""
+    st.session_state.update({"library_jump": {"shelf": "satellites", "constellation": name}, "page": "Library"})
+
+
 def _focus(name):
     st.session_state[FOCUS] = name
 
@@ -33,10 +39,10 @@ def _links(index, summary):
                   args=(mm.registry_name(name),))
         for part in parts:
             words = systems.part_name(part)
-            st.button(f"{name} {words.lower()} overview" if words else f"{name} overview", key=f"mm_ov_{part}",
-                      on_click=shell.open_system, args=(part,))
+            st.button(f"{name} {words} overview" if words else f"{name} overview", key=f"mm_ov_{part}",
+                      on_click=shell.open_system, args=(part,))   # the part's name as ui/systems.py PARTS spells it
         st.button(f"{name} news", key=f"mm_news_{index}", on_click=_go, args=("News", parts[0]))
-        st.button("Lifecycles in the Library", key=f"mm_lib_{index}", on_click=_go, args=("Library",))
+        st.button(f"{name} lifecycles in the Library", key=f"mm_lib_{index}", on_click=_lifecycles, args=(name,))
 
 
 def page():
@@ -66,8 +72,9 @@ def page():
     surfaces.show(mm.sources(mm.freshness(tables, celestrak.state, now)))
 
     look = sum(summary["look"] for summary in rows)
-    reveal.section("mm_look", "Where our sources disagree",
-                   f"{mm.spacecraft(look)} marked on the map, each with what is off", mm.disagreements(records))
+    reveal.section("mm_look", "Where the IGS satellite metadata file, GCAT and CelesTrak's orbit feed disagree",
+                   f"{mm.spacecraft(look)} marked on the map, each with the two sources and what each says",
+                   mm.disagreements(records))
     reveal.section("mm_how", "How to read this page", "what is shown, how, what is left out, what comes next", mm.how())
 
 

@@ -77,8 +77,9 @@ def head(rows):
             f'<span class="right">{legend()}</span></div>'
             '<p class="lede small">Everything up there that has ever been part of a navigation constellation, launched '
             'or retired, one dot per spacecraft. Each goes by several names: a launch designator, a catalogue number, '
-            'a signal ID that can pass to a newer satellite. The map below keeps them apart, and marks where two of '
-            'our sources disagree.</p>')
+            'a signal ID that can pass to a newer satellite. The map below keeps them apart, and marks where the IGS '
+            'satellite metadata file, GCAT (J. McDowell\'s catalogue of space objects) and CelesTrak\'s orbit feed '
+            'disagree.</p>')
 
 
 def _dots(row):
@@ -105,9 +106,9 @@ def row(summary):
     who, where = WHO.get(name, ("", ""))
     colour = palette.CONSTELLATION_COLOURS.get(registry_name(name), palette.FILL)
     notes = ([NOTES[name]] if name in NOTES else []) + (
-        [f"{spacecraft(summary['seen'])} seen in orbit, not yet in the IGS file"] if summary["seen"] else [])
-    look = (_figure(summary["look"], "worth a look: sources disagree", "warn") if summary["look"]
-            else _figure(0, "worth a look: sources agree", "ok"))
+        [f"{spacecraft(summary['seen'])} seen in CelesTrak's GNSS group, not yet in the IGS satellite metadata file"] if summary["seen"] else [])
+    look = (_figure(summary["look"], "worth a look: the IGS metadata file, GCAT or CelesTrak disagree", "warn") if summary["look"]
+            else _figure(0, "worth a look: the IGS metadata file, GCAT and CelesTrak agree", "ok"))
     return (f'<div class="sys mm-sys" style="border-left-color:{colour}">'
             f'<div class="sys-id"><b>{escape(name)}</b>'
             f'<span class="small">{escape(" · ".join(filter(None, [who, where])))}</span>'
@@ -146,31 +147,32 @@ def freshness(data, live, now):
     the page reads. live is data.celestrak.state; now is an aware UTC datetime."""
     schedule, upcoming = _registry_schedule(now)
     approval = "A change waits for a person's approval."
-    weekly = f"Checked {schedule}" + (f", {upcoming}" if upcoming else "") + f". {approval}"
+    weekly = f"The registry-update job checks it {schedule}" + (f", {upcoming}" if upcoming else "") + f". {approval}"
     changes = [row[key][:10] for row in data["signal_ids"] for key in ("valid_from", "valid_to") if row[key]]
     added = [row["added"] for row in data["tracked"] if row.get("added")]
     taken = live_feed_time(live)
     if taken:
         age = (now - taken).total_seconds() / 86400
         feed = {"when": f"copy taken {_day(taken.isoformat())} {taken:%H:%M} UTC",
-                "how": "Read every two hours from the archive job's copy of CelesTrak's GNSS group.",
+                "how": "Read every two hours from the copy of CelesTrak's GNSS group that this project's archive job saves.",
                 "status": "bad" if age >= ORBIT_STALE_DAYS else "warn" if age >= ORBIT_ALERT_DAYS else "ok"}
     else:
         feed = {"when": f"weekly copy of {_day(max(data['feed_checked'].values(), default=''))}",
-                "how": "The live copy could not be read, so the weekly bundled files stand in. They hold NavIC, QZSS and "
-                       "the high-orbit BeiDou-3 satellites only.", "status": "warn"}
+                "how": "The two-hourly copy of CelesTrak's orbit feed could not be read, so this dashboard's weekly copy of "
+                       "CelesTrak's orbit feed stands in. It holds NavIC, QZSS and BeiDou-3's IGSO and GEO "
+                       "satellites only.", "status": "warn"}
     seen = [row["note"].split(";")[-1].strip() for row in data["sightings"]]
     return [
-        {"what": "Which spacecraft exist, and each one's signal ID", "source": "IGS satellite file",
-         "when": f"newest change it records: {_day(max(changes, default=''))}", "how": weekly, "status": "idle"},
-        {"what": "Owner, and whether it still works", "source": "GCAT catalogue",
-         "when": f"catalogue dated {_day(data.get('gcat_updated', ''))}",
-         "how": f"Rebuilt in the same weekly run. {approval}", "status": "idle"},
-        {"what": "The name its orbit is published under", "source": "CelesTrak orbit feed", **feed},
-        {"what": "The name the dashboard uses", "source": "our dashboard registry",
+        {"what": "Which spacecraft exist, and each one's signal ID", "source": "IGS satellite metadata file",
+         "when": f"newest signal-ID change in it: {_day(max(changes, default=''))}", "how": weekly, "status": "idle"},
+        {"what": "Owner, and whether it still works", "source": "GCAT, J. McDowell's catalogue of space objects",
+         "when": f"GCAT dated {_day(data.get('gcat_updated', ''))}",
+         "how": f"Rebuilt from GCAT in the same weekly registry-update job. {approval}", "status": "idle"},
+        {"what": "The name its orbit is published under", "source": "CelesTrak's orbit feed", **feed},
+        {"what": "The name the dashboard uses", "source": "this dashboard's list of the satellites it follows",
          "when": f"last satellite added {_day(max(added, default=''))}",
-         "how": "Chosen by the team; adding or removing one is approved by pull request.", "status": "idle"},
-        {"what": "Spacecraft seen before the IGS file lists them", "source": "CelesTrak GNSS group",
+         "how": "Chosen by the team (registry/dashboard_satellites.csv); adding or removing one is approved by pull request.", "status": "idle"},
+        {"what": "Spacecraft seen before the IGS satellite metadata file lists them", "source": "CelesTrak's GNSS group",
          "when": spacecraft(len(seen)) + (": " + ", ".join(seen) if seen else ""), "how": weekly, "status": "idle"},
     ]
 
@@ -196,7 +198,8 @@ def disagreements(records):
         lines += (f'<li><b class="num">{escape(record["svn"])}</b> {escape(record["name"])} '
                   f'<span class="muted">{escape(page_name(record["constellation"]))}</span>'
                   f'<div class="small">{escape("; ".join(off))}</div></li>')
-    return f'<ul class="mm-look">{lines}</ul>' if lines else '<p class="small">Our sources agree about every spacecraft.</p>'
+    return f'<ul class="mm-look">{lines}</ul>' if lines else ('<p class="small">The IGS satellite metadata file, GCAT and CelesTrak\'s orbit feed agree about every '
+                                                                     'spacecraft.</p>')
 
 
 def how():

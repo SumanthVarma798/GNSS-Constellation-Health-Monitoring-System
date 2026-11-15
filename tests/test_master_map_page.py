@@ -1,6 +1,7 @@
 """The Master map page around the map: a row per constellation with ways onward, the live orbit-feed names, and how
 fresh each source is, said in words. No network."""
 import json
+from html import unescape
 import re
 from datetime import datetime, timezone
 
@@ -66,11 +67,12 @@ def test_every_source_says_how_fresh_it_is_in_words_and_colour():
 
     facts = mm.freshness(tables, live, NOW)
 
-    assert [f["source"] for f in facts] == ["IGS satellite file", "GCAT catalogue", "CelesTrak orbit feed",
-                                           "our dashboard registry", "CelesTrak GNSS group"]
+    assert [f["source"] for f in facts] == ["IGS satellite metadata file", "GCAT, J. McDowell's catalogue of space objects",
+                                           "CelesTrak's orbit feed", "this dashboard's list of the satellites it follows",
+                                           "CelesTrak's GNSS group"]
     assert all(f["when"] and f["how"] and f["status"] in ("ok", "warn", "bad", "idle") for f in facts)
     igs = facts[0]
-    assert igs["when"].startswith("newest change it records: ") and "Sundays 01:00 UTC, next about 22 Nov" in igs["how"]
+    assert igs["when"].startswith("newest signal-ID change in it: ") and "Sundays 01:00 UTC, next about 22 Nov" in igs["how"]
     assert facts[2] == {**facts[2], "when": "copy taken 15 Nov 2026 07:48 UTC", "status": "ok"}
     stale = mm.freshness(tables, {**live, "copy_at": datetime(2026, 11, 11, tzinfo=timezone.utc)}, NOW)[2]
     assert stale["status"] == "bad"
@@ -87,8 +89,8 @@ def test_the_page_reads_in_the_dashboards_order_with_a_row_per_constellation():
     order = ["navigation spacecraft on record", '<div class="sys mm-sys"', "Every spacecraft under every name",
              "Where this comes from", "mm-sources"]
     assert [text.index(words) for words in order] == sorted(text.index(words) for words in order)
-    legend = next(body for body in bodies if "What a dot means" in body)
-    for words in ("round: has a signal ID today", "ring: seen in orbit", "diamond: our sources disagree"):
+    legend = unescape(re.sub(r"<[^>]+>", "", next(body for body in bodies if "What a dot means" in body)))
+    for words in ("round: has a signal ID today", "ring: seen in CelesTrak's GNSS group", "diamond: the IGS satellite metadata file, GCAT or CelesTrak's orbit feed disagree"):
         assert words in legend
     for row in rows:   # state is said in words beside the dots, never by colour alone
         assert re.search(r'role="img" aria-label="\d+ has a signal ID today', row)
@@ -100,7 +102,8 @@ def test_the_page_reads_in_the_dashboards_order_with_a_row_per_constellation():
 def test_a_row_leads_to_its_part_of_the_map_and_to_each_parts_overview():
     at = open_page()
     labels = [button.label for button in at.button]
-    assert "BeiDou-3 high orbit overview" in labels and "BeiDou-3 medium orbit overview" in labels
+    for part in systems.SYSTEMS["BeiDou-3"]:   # each part by its name in ui/systems.py PARTS, as it is spelt there
+        assert f"BeiDou-3 {systems.part_name(part)} overview" in labels
     assert labels.count("Show on the map") == len(systems.SYSTEMS)
 
     at.button(key="mm_map_1").click().run()   # QZSS
@@ -110,6 +113,44 @@ def test_a_row_leads_to_its_part_of_the_map_and_to_each_parts_overview():
 
     at.button(key="mm_ov_BeiDou-3 MEO").click().run()
     assert (at.session_state["scope"], at.session_state["page"]) == ("BeiDou-3 MEO", "Overview")
+
+
+def test_news_opens_on_the_rows_constellation_and_lifecycles_on_its_shelf_in_the_library():
+    at = open_page()
+    at.button(key="mm_news_1").click().run()   # QZSS
+    assert (at.session_state["scope"], at.session_state["page"]) == ("QZSS", "News")
+    assert any("for QZSS" in body for body in htmls(at)) or at.session_state["page"] == "News"
+
+    at = open_page()
+    at.button(key="mm_lib_2").click().run()   # BeiDou-3
+    assert at.session_state["library_jump"] == {"shelf": "satellites", "constellation": "BeiDou-3"}
+    assert at.session_state["page"] == "Library"
+
+
+def test_a_card_says_what_was_compared_with_what_and_never_judges_what_no_one_checked():
+    from ui.components.master_map import compared
+    agree = [{"scheme": "US catalogue number (NORAD)", "value": "1", "remark": "", "status": "ok",
+              "sources": [{"source": "IGS satellite metadata file", "status": "ok", "note": ""},
+                          {"source": "CelesTrak's orbit feed", "status": "ok", "note": ""}]}]
+    differ = [{**agree[0], "sources": [agree[0]["sources"][0], {"source": "GCAT", "status": "warn", "note": "says 2"}]}]
+    alone = [{**agree[0], "sources": [agree[0]["sources"][0], {"source": "GCAT", "status": "idle", "note": "x"}]}]
+
+    assert compared(agree) == ["catalogue number (NORAD): IGS satellite metadata file and CelesTrak's orbit feed agree"]
+    assert compared(differ) == ["catalogue number (NORAD): IGS satellite metadata file says 1; GCAT says 2"]
+    assert compared(alone) == []
+    page = master_map_html(load_master_map_data())
+    assert "need a look" not in page and "nothing: each of its names comes from one source only" in page
+
+
+def test_no_source_is_named_vaguely_on_the_page_or_in_the_maps_words():
+    """'the catalogue', 'the file', 'our sources' and the like leave a reader asking which one (owner, 15 Nov)."""
+    bodies = [body for body in htmls(open_page()) if "<style" not in body]
+    tables = load_master_map_data()
+    records = [str(record) for record in __import__("ui.components.master_map", fromlist=["x"]).master_map_records(tables)]
+    vague = re.compile(r"\b(the catalogue|the file|the registry|the archive|the feed|our sources|sources (dis)?agree)(?![-\w])",
+                       re.I)
+    for text in [re.sub(r"<[^>]+>", " ", body) for body in bodies] + records + [mm.how()]:
+        assert not vague.search(text), vague.search(text).group(0)
 
 
 def test_the_map_opens_filtered_to_the_chosen_constellation_and_fits_its_frame():
