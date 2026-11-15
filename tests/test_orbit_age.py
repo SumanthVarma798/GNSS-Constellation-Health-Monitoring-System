@@ -215,13 +215,13 @@ def test_broadcast_health_accuracy_and_system_times_show_and_unhealthy_satellite
     _, body, _ = orbit_age.section_markup(BROADCAST_ROWS, gap=BROADCAST_GAP)
 
     assert "Broadcast health" in body and "Signal accuracy" in body
-    assert "healthy</b>" in body and "unhealthy (code 130)" in body and "not in the day" in body
+    assert "healthy</b>" in body and "unhealthy (code 130)" in body and "not in the IGS broadcast file" in body
     assert "2.0 m" in body and "3.1 m" in body
-    assert "System times from the broadcast file: GPS−UTC -1.86 ns · Galileo−GPS -0.32 ns · 18 leap seconds" in body
+    assert "System times from the IGS daily broadcast file: GPS−UTC -1.86 ns · Galileo−GPS -0.32 ns · 18 leap seconds" in body
     assert orbit_age._unhealthy_notice(BROADCAST_GAP, BROADCAST_ROWS) == (
         "Broadcasting unhealthy: IRNSS-1C (I03). From the IGS broadcast file of 25 Oct; "
         "work in progress, not yet part of the score.")
-    assert orbit_age._missing_notice(BROADCAST_GAP, BROADCAST_ROWS) == "Not in the day's broadcast file: IRNSS-1D (I04)."
+    assert orbit_age._missing_notice(BROADCAST_GAP, BROADCAST_ROWS) == "Not in the IGS daily broadcast file: IRNSS-1D (I04)."
     assert "Broadcast health: unhealthy (code 130) · accuracy 3.1 m" in orbit_age.tag(
         BROADCAST_ROWS[1], status=orbit_age._status_by_satellite(BROADCAST_GAP)["IRNSS-1C"])
 

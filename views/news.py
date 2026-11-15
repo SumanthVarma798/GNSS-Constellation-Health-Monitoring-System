@@ -20,7 +20,7 @@ else:
     surfaces.show(as_of)
     if data.get("invalid_items", 0):
         surfaces.show(surfaces.notice(
-            f'{data["invalid_items"]} news items in the file were not in the expected shape and are not shown', "idle"))
+            f'{data["invalid_items"]} news items in the news file (latest_news.json) were not in the expected shape and are not shown', "idle"))
 
     def keep(key, default):
         """A single-choice filter always keeps one choice: clicking the chosen pill puts it back."""

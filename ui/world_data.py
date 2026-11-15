@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 
 import streamlit as st
 
-from ui import data, geometry_data as gd, geometry_settings as gs
+from ui import data, geometry_data as gd, geometry_settings as gs, systems
 
 
 @st.cache_data(show_spinner=False, max_entries=4)   # a new key every hour: keep only the last few
@@ -45,3 +45,15 @@ def load(hour_key, fetched_key, window_days, params):
         if records:
             entries.append({"name": constellation, "satellites": records, "tracks": tracks})
     return entries, notices, gap, now
+
+
+def by_constellation(entries):
+    """load()'s entries with the parts of one constellation (ui/systems.py) joined: BeiDou-3's IGSO, GEO and MEO
+    satellites are one entry on the map, as they are one constellation everywhere else."""
+    joined = {}
+    for entry in entries:
+        name = systems.system_of(entry["name"])
+        whole = joined.setdefault(name, {"name": name, "satellites": [], "tracks": {}})
+        whole["satellites"] = whole["satellites"] + entry["satellites"]
+        whole["tracks"] = {**whole["tracks"], **entry["tracks"]}
+    return list(joined.values())

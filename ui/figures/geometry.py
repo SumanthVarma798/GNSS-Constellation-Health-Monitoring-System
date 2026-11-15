@@ -16,7 +16,7 @@ from analysis.dop_calculations import assess_dop_quality
 from ui import geometry_settings as gs
 from ui import palette, surfaces, type_scale
 from ui.figures.orbits_3d import LAND_FILE
-from ui.tooltip import PLOTLY_HOVER, plotly_line, plotly_template
+from ui.tooltip import PLOTLY_HOVER, plotly_label_backing, plotly_line, plotly_template
 
 CLEAR = "rgba(0,0,0,0)"
 AXIS = {"linecolor": palette.TRACK, "tickcolor": palette.TRACK, "gridcolor": palette.WELL, "zeroline": False}
@@ -130,8 +130,9 @@ def dop_trend(series, place):
     for band, colour in BAND_LINES:
         edge = gs.DOP_BANDS["GDOP"][band][1]
         fig.add_hline(y=edge, row=1, col=1, line={"color": colour, "width": 1, "dash": "dot"}, opacity=0.7,
-                      annotation_text=f"{band.lower()} below {edge:g}", annotation_position="top right",
-                      annotation_font={"color": colour, "size": 11})
+                      layer="above", annotation_text=f"{band.lower()} below {edge:g}",
+                      annotation_position="top right", annotation_font={"color": colour, "size": 11},
+                      **plotly_label_backing("annotation_"))
     fig.add_trace(go.Bar(x=series["time"], y=series["seen"], name="In view", marker={"color": palette.FILL},
                          hovertemplate=plotly_line("In view", "%{y}") + "<extra></extra>", showlegend=False), row=2, col=1)
     fig.update_xaxes(type="date", showgrid=False, hoverformat="<b>%d %b %Y %H:%M UTC</b>",

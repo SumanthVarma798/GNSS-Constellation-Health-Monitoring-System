@@ -210,6 +210,11 @@ def test_3d_has_no_legend_and_no_axes(navic):
     assert figure.layout.paper_bgcolor == "rgba(0,0,0,0)"
 
 
+def test_3d_caption_has_a_backing_so_the_scene_does_not_cut_through_it(navic):
+    note = constellation_3d(navic, caption="Positions as of last night").layout.annotations[0]
+    assert note.text == "Positions as of last night" and note.bgcolor and note.borderpad > 0
+
+
 def test_3d_colours_satellites_by_state(navic):
     markers = [t for t in traces_by_mode(constellation_3d(navic)) if t.mode == "markers+text"][0]
     by_hover = dict(zip(markers.hovertext, markers.marker.color))

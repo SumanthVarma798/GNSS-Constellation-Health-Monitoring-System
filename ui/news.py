@@ -14,7 +14,7 @@ from evidence.news_settings import (CATEGORY_RULE_WORDS, GRADE_BARS, GRADE_E_MIN
                                     NEWS_LATE_HOURS, NEWS_NEW_GRACE_HOURS, NEWS_URL, RECORD_WINDOW_DAYS, STORY_DAYS, STORY_SHARE,
                                     STORY_SHARED_WORDS)
 from evidence.settings import RELIABILITY_GRADES
-from ui import reveal, surfaces, tooltip
+from ui import marks, reveal, surfaces, tooltip
 
 DATE_FILTERS = ["7 days", "30 days", "90 days", "1 year", "all"]
 SHOW_FILTERS = ["all", "new only"]
@@ -54,6 +54,7 @@ CSS = """
 .news-item.new .news-mark i { background: var(--accent); }
 .news-item .news-head { min-width: 0; word-break: break-word; color: var(--ink); }
 .news-item .news-meta { color: var(--fc-small); font-size: var(--fs-small); margin-top: 3px; display: block; }
+.news-about { display: inline-flex; flex-wrap: wrap; gap: 2px 12px; margin-right: 12px; color: var(--ink); }
 .news-item .news-new { font-size: var(--fs-small); color: var(--accent); text-transform: lowercase; align-self: center; }
 .news-item .news-body { padding: 0 12px 12px 30px; font-size: var(--fs-body); max-width: 100%; }
 .news-item .news-body p { margin: 0 0 8px; max-width: none; }
@@ -247,6 +248,8 @@ def story_html(story, sources, zone=timezone.utc):
     named = ", ".join(outlets[:3]) + (f" and {len(outlets) - 3} more" if len(outlets) > 3 else "")
     newest = max(items, key=news_stories._when)
     meta = f"{reveal.count(len(items), 'source')} · {named} · latest {date_label(newest, zone)}"
+    about = list(dict.fromkeys(name for item in items for name in item.get("constellations", [])))   # which it names
+    about_html = "".join(marks.named(name) for name in about)
     if story["summary"]:
         summary = escape(story["summary"])
     else:
@@ -260,7 +263,8 @@ def story_html(story, sources, zone=timezone.utc):
     return (
         f'<details class="news-item{" new" if fresh else ""}"><summary><span class="news-mark"><i aria-hidden="true"></i></span>'
         f'<span><span class="news-head">{escape(story["headline"])}</span>'
-        f'<span class="news-meta">{escape(meta)}</span></span>{new_words}</summary>'
+        f'<span class="news-meta">{f"""<span class="news-about">{about_html}</span>""" if about else ""}'
+        f'{escape(meta)}</span></span>{new_words}</summary>'
         f'<div class="news-body"><p>{summary}</p><div class="news-story-sources"><b>Who reported it</b>{rows}</div>'
         f'</div></details>'
     )
@@ -344,7 +348,7 @@ def as_of_line(generated_at, now, zone=timezone.utc):
     """A notice when news is late, else a quiet as-of line."""
     generated = _time(generated_at)
     if generated is None:
-        return surfaces.notice("News time is not in the file. Collection runs every 3 hours.", "warn")
+        return surfaces.notice("The news file (latest_news.json) gives no collection time. Collection runs every 3 hours.", "warn")
     if now - generated > timedelta(hours=NEWS_LATE_HOURS):
         return surfaces.notice(f"News was last seen {_time_words(generated, timezone.utc)}. Collection runs every "
                                f"{NEWS_CYCLE_HOURS} hours.", "warn")

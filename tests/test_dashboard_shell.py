@@ -337,8 +337,10 @@ def test_a_preset_button_sets_the_range():
     assert any("6 months: " in body for body in htmls(at))
 
 
-def test_the_pages_across_all_systems_are_set_apart_without_words():
-    assert not any("Across all systems" in body for body in htmls(run()))
+def test_the_constellations_are_set_apart_from_the_pages_across_all_of_them_by_one_word():
+    labels = [body for body in htmls(run()) if 'class="nav-label"' in body]
+
+    assert len(labels) == 1 and ">Constellations<" in labels[0]
 
 
 def test_a_failed_copy_read_keeps_the_archive_and_says_so(monkeypatch):
@@ -457,14 +459,15 @@ def test_every_burn_is_grouped_under_its_satellite_in_the_timelines_order():
         assert group.count('<div class="bl-row">') == said
 
 
-def test_the_master_map_draws_its_canvas_and_hides_the_constellation_controls():
+def test_the_master_map_draws_its_canvas_and_shows_nothing_that_filters_one_systems_page():
     with time_machine.travel(FROZEN, tick=False):
         at = AppTest.from_file(str(ROOT / "dashboard.py"), default_timeout=600).run()
         at.switch_page("views/master_map.py").run()
     assert not at.exception, [e.value for e in at.exception]
 
     labels = [getattr(w, "label", None) for w in at.get("button_group")]
-    assert "Constellation" not in labels and "Page" in labels
+    assert "Across all constellations" in labels and "Choose a constellation" in labels   # the first row is always there
+    assert not [b for b in at.button if b.key == "compare_toggle"] and "Constellations" not in labels
 
 
 def test_under_compare_the_range_fits_the_constellation_with_least_history(monkeypatch):
@@ -472,3 +475,43 @@ def test_under_compare_the_range_fits_the_constellation_with_least_history(monke
     from ui import time_range
     monkeypatch.setattr(time_range, "firsts", lambda names, w, p: {"NavIC": date(2025, 10, 4), "GPS": date(2026, 9, 22)})
     assert time_range.oldest(["NavIC", "GPS"], 90, {}) == date(2026, 9, 22)
+
+
+# --- the gear's settings: what to know before moving one ---
+
+def test_every_setting_says_what_it_does_what_raising_and_lowering_does_and_when_to_change_it():
+    from config.config import DEFAULT_PARAMS
+    from ui import threshold_settings
+
+    for setting in threshold_settings.SETTINGS:
+        assert setting["key"] in DEFAULT_PARAMS and setting["group"] in threshold_settings.GROUPS
+        assert setting["low"] <= DEFAULT_PARAMS[setting["key"]] <= setting["high"]
+        for part in ("label", "also", "what", "raise", "lower", "when"):
+            assert setting[part].strip(), (setting["key"], part)
+
+    panel = [body for body in htmls(run()) if 'class="th-what"' in body]
+    assert len(panel) == len(threshold_settings.SETTINGS)   # NavIC, judged by slot, shows every setting
+    assert all("Raise it" in body and "Lower it" in body and "Change it when" in body and "Default " in body
+               for body in panel)
+
+
+def test_a_constellation_judged_by_plane_shows_only_the_settings_that_find_burns():
+    from ui import threshold_settings
+
+    at = run(lambda at: at.session_state.__setitem__("scope", "GPS"))
+
+    burns = [s["key"] for s in threshold_settings.SETTINGS if s["group"] == threshold_settings.BURNS]
+    assert [w.key for w in at.number_input if w.key.startswith("th_")] == [f"th_{key}_GPS" for key in burns]
+    assert any("GPS is judged by orbital plane" in body for body in htmls(at))
+
+
+def test_back_to_the_defaults_undoes_every_setting_moved():
+    def move_then_reset(at):
+        at.number_input(key="th_z_threshold_NavIC").set_value(5.0).run()
+        assert at.session_state["params"] == {"z_threshold": 5.0} and not at.button(key="th_reset_NavIC").disabled
+        at.button(key="th_reset_NavIC").click()
+
+    at = run(move_then_reset)
+
+    assert at.session_state["params"] == {} and at.number_input(key="th_z_threshold_NavIC").value == 3.5
+    assert at.button(key="th_reset_NavIC").disabled   # nothing left to undo

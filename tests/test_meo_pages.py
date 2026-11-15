@@ -93,12 +93,12 @@ def test_a_satellite_with_no_plane_in_the_registry_is_shown_with_no_score(monkey
 
     at = run(scope("GLONASS"))
     assert not at.exception
-    assert any('<div class="part-title">No plane in the registry · 1</div>' in body for body in htmls(at))
+    assert any('<div class="part-title">No plane in the IGS satellite file · 1</div>' in body for body in htmls(at))
     assert any("0 of 1</span>" in body for body in htmls(at))
 
     at.button_group(key="meo_view").set_value("Satellites").run()
     tile = next(tile for tile in tiles(at) if "COSMOS 2620" in tile)
-    assert "no score" in tile and "no plane in the registry" in tile and "set aside" not in tile
+    assert "no score" in tile and "no plane in the IGS satellite file" in tile and "set aside" not in tile
 
 
 def test_a_plane_card_says_which_way_its_node_drifts():

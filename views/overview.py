@@ -6,6 +6,7 @@ found (ui/checks.py) and how each satellite was classed, closed. What is missing
 inbox (ui/notices.py), not the page.
 """
 import re
+from html import escape
 from datetime import datetime, timezone
 
 import pandas as pd
@@ -15,13 +16,13 @@ from analysis.commissioning import SETTLING_DAYS
 from config.config import MEO_SATS, TRACKED_NOT_IN_REGISTRY
 from evidence.registry_tables import left_out_notice, new_on_dashboard
 from ui import (checks, data, limits, measures, meo_overview, official_status, orbit_age, orbit_section,
-                palette, reveal, shell, surfaces, time_range, tooltip)
+                marks, palette, reveal, shell, surfaces, systems, time_range, tooltip)
 from ui.data import SATELLITES
 from ui.figures.constellation_3d import slot_legend
 from ui.figures.slot_rows import as_number, slot_words
 from ui.orbit_section import CHIP_STATUS, PARTS
 from ui.picker import picker
-HEALTHY_FROM = 80
+from ui.system_summary import _stage, in_slot_and_healthy, summary, whole
 STATUS_CHIP = {"Healthy": "ok", "Fair": "warn", "Degraded": "bad", "Critical": "bad"}
 CLASS_COLUMNS = [("Satellite", ""), ("Type", "From the mean tilt"), ("Mean inclination", "In the window"),
                  ("Mean height", "In the window"), ("Drift now", "Per day")]
@@ -38,7 +39,7 @@ def _tile(health, slot, age_html=""):
         re.sub(r"^[^A-Za-z]+", "", str(health.get("Health Status", ""))),
         slot_words(slot), CHIP_STATUS[state], min(scored, key=lambda part: part[1]) if scored else None,
         age_html=age_html)
-    return html, score is not None and score >= HEALTHY_FROM and state == palette.SLOT_IN
+    return html, in_slot_and_healthy(score, state)
 
 
 def _tiles(result, tags=None):
@@ -61,7 +62,7 @@ def _tiles(result, tags=None):
                              age_html=tags.get(name, ""))
         tiles[name] = (html, False, None)
     for name in result.get("moving", {}):
-        html = surfaces.tile(name, slot="on its way or just parked", slot_status="accent", unscored="settling",
+        html = surfaces.tile(name, slot=_stage(result, name), slot_status="accent", unscored="new, not scored yet",
                              age_html=tags.get(name, ""))
         tiles[name] = (html, False, None)
     return tiles, rows
@@ -79,9 +80,9 @@ def _gaps(constellation, result, today):
         surfaces.show(surfaces.notice(left, "accent"))
     moving = result.get("moving", {})
     if moving:
-        named = ", ".join(f"{name} (first orbit record {_day(since)})" for name, since in moving.items())
+        named = ", ".join(f"{name} ({_stage(result, name)}, first orbit record {_day(since)})" for name, since in moving.items())
         surfaces.show(surfaces.notice(
-            f"New, on its way to its slot or parked there under {SETTLING_DAYS} days ago: {named}. A new satellite is raised "
+            f"New and not scored yet: {named}. A new satellite is raised "
             "and drifted along the belt for weeks, so its drift and burns are expected. It is left out of the scores until "
             f"it has been parked {SETTLING_DAYS} days.", "accent"))
     shown = set(result["health"]["Satellite"]) | set(result["set_aside"]) | set(moving)
@@ -165,10 +166,30 @@ def _slot_picture(rows, result, name):
     orbit_section.render_belt(rows, view, result["history"], result["health"], name)
 
 
+def _system_line(name, window_days, params):
+    """For one part of a system with several (ui/systems.py): the whole system's count, then each part's, so the part
+    below is read as a part. "" for a system that is one part. The other parts are counted at the default limits."""
+    system = systems.system_of(name)
+    if len(systems.SYSTEMS[system]) == 1:
+        return ""
+    read = []
+    for part in systems.SYSTEMS[system]:
+        try:
+            read.append(summary(part, data.load(part, window_days, params if part == name else None)))
+        except Exception:   # that part's own page says why it cannot be read
+            pass
+    both = whole(system, read)
+    chips = "".join(surfaces.chip(f"{label} {count} of {of}", "accent" if label == systems.part_name(name) else "idle")
+                    for label, count, of in both["parts"])
+    return (f'<div class="sysline"><b>{marks.mark(system)}{escape(system)}</b><span class="num">{both["healthy"]} of {both["total"]}</span>'
+            f'<span class="muted">healthy and in place, across its parts</span>{chips}</div>')
+
+
 def constellation(name, window_days, params):
     """One constellation: the count, the tiles per orbit type, the slot picture, then the details: each orbit type's
     table, what the checks found, how each satellite was classed."""
     result = data.load(name, window_days, params)
+    surfaces.show(_system_line(name, window_days, params))
     if name in MEO_SATS:   # judged by orbital plane, not longitude slot
         meo_overview.page(name, result)
         return

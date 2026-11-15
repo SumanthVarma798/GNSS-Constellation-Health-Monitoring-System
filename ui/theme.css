@@ -180,6 +180,10 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
   drop-shadow(5px 5px 10px var(--sink)); }
 .swatch { margin-top: 4px; }
 .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 999px; box-shadow: var(--raised-sm); border: 1px solid var(--edge); flex: none; }
+/* a legend mark in the shape the page draws it (ui/tooltip.py legend) */
+.swatch.diamond { border-radius: 3px; transform: rotate(45deg) scale(.8); }
+.swatch.square { border-radius: 3px; }
+.swatch.ring { background: transparent !important; border: 2.5px solid var(--c); box-shadow: none; }
 
 /* ---- the dashboard frame: no side panel, one top bar ---- */
 /* only where the top bar is drawn, so app.py keeps its side panel */
@@ -195,12 +199,7 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .st-key-topbar [data-testid="stColumn"]:first-child { order: 1; }
 .st-key-topbar [data-testid="stColumn"]:last-child { order: 2; margin-left: auto; }
 .st-key-topbar [data-testid="stColumn"]:nth-child(2) { order: 3; flex-basis: 100% !important; }
-.st-key-topbar [data-testid="stColumn"]:nth-child(2):not(:has(.st-key-filters)) { display: none; }   /* Master map, Library */
-.st-key-filters { flex-direction: row; align-items: center; gap: 10px; flex-wrap: nowrap; padding-top: 10px; border-top: 1px solid var(--edge); }
-.st-key-filters > div { width: auto !important; flex: none; min-width: 0; }
-.st-key-filters > div:first-child { flex: 0 1 auto; }
-.st-key-filters > div:has(.st-key-scope_menu) { display: none; }   /* the phone's menu */
-.st-key-filters > div:has(.st-key-range) { margin-left: auto; }
+.st-key-topbar [data-testid="stColumn"]:nth-child(2) { display: none; }   /* empty: what filters a page sits in the navigation under the bar */
 @media (max-width: 639.98px) {   /* the data group opens up so its buttons can sit by the name and the rest below */
   .st-key-topbar :is([data-testid="stColumn"], [data-testid="stVerticalBlockBorderWrapper"], [data-testid="stVerticalBlock"]):has(.st-key-refresh),
   .st-key-refresh { display: contents; }
@@ -212,11 +211,7 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
   .st-key-topbar [data-testid="stColumn"]:nth-child(2) { order: 6; }
   .st-key-topbar [data-testid="stHorizontalBlock"] { column-gap: 10px; }   /* the clock and the data chip share a row */
   .st-key-topbar .st-key-clock, .st-key-topbar .st-key-clock [data-testid="stHtml"] { align-items: flex-start; }
-  .st-key-filters { flex-wrap: wrap; gap: 8px; }
   .st-key-range button span:has(> [data-testid="stIconMaterial"]) { display: none; }   /* room for the menu, Compare and the range in one row */
-  .st-key-filters > div:first-child { display: none; }               /* the chips give way to... */
-  .st-key-filters > div:has(.st-key-scope_menu) { display: block; }  /* ...the menu */
-  .st-key-filters > div:has(.st-key-range) { margin-left: 0; }
 }
 .brand { display: block; font-size: var(--fs-section); font-weight: var(--fw-section); line-height: 1.2; letter-spacing: -.01em; color: var(--fc-section); white-space: nowrap; }
 .right { display: flex; justify-content: flex-end; }
@@ -376,28 +371,6 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
   .bl-row .t { display: block; }
 }
 
-/* ---- major changes: a strip of notices under the top bar; each opens on click, each can be dismissed ---- */
-.st-key-changes { gap: 10px; margin: -8px 0 20px; }
-.st-key-changes [data-testid="stHorizontalBlock"] { flex-wrap: nowrap; gap: 12px; align-items: flex-start; }
-.st-key-changes [data-testid="stColumn"] { min-width: 0; }
-.st-key-changes [data-testid="stColumn"]:last-child { flex: 0 0 auto !important; width: auto !important; }
-.st-key-changes [data-testid="stColumn"]:last-child button { min-height: 0; padding: 4px 14px; font-size: var(--fs-small); margin-top: 8px; white-space: nowrap; }
-.change { padding: 0; }
-.change summary { display: flex; align-items: center; gap: 12px; padding: 10px 18px; cursor: pointer; list-style: none; border-radius: var(--r); }
-.change summary::-webkit-details-marker { display: none; }
-.change summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.change .when { flex: 0 0 5.6em; font-size: var(--fs-small); color: var(--fc-small); white-space: nowrap; }   /* one width, so the headlines line up */
-.change .headline { flex: 1 1 auto; min-width: 0; font-weight: 600; }
-.change .more { font-size: var(--fs-small); color: var(--accent); white-space: nowrap; }
-.change .more { display: inline-flex; align-items: center; gap: 10px; }
-.change p { margin: 0; padding: 0 18px 12px; }
-.change a { color: var(--accent); }
-@media (max-width: 760px) { .change summary { flex-wrap: wrap; row-gap: 4px; } .change .headline { flex-basis: 100%; order: 3; } .change .more { margin-left: auto; } }
-@media (max-width: 639.98px) {   /* phones: the note the full width, Dismiss under it on the right */
-  .st-key-changes [data-testid="stHorizontalBlock"] { flex-wrap: wrap; row-gap: 0; }
-  .st-key-changes [data-testid="stColumn"]:first-child { flex-basis: 100% !important; }
-  .st-key-changes [data-testid="stColumn"]:last-child { margin-left: auto; }
-}
 /* groups of satellites by orbit type, and the "Measured against limits" tables */
 .group { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 8px 0 12px; }
 .group .gt { font-size: var(--fs-section); font-weight: var(--fw-section); color: var(--fc-section); letter-spacing: .02em; }
@@ -453,14 +426,23 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
   [data-testid="stMain"] [class*="st-key-rv_"] iframe[data-testid="stIFrame"] { max-height: none; }
   [data-testid="stButtonGroup"] button, [data-testid="stButtonGroup"] button[data-testid^="stBaseButton-segmented"],
   [data-testid="stMain"] :is([data-testid="stButton"], [data-testid="stDownloadButton"]) button,
-  .st-key-compare_toggle button, .st-key-picker [data-testid="stButton"] button,
-  .st-key-changes [data-testid="stColumn"]:last-child button { min-height: 40px; }
+  .st-key-compare_toggle button, .st-key-picker [data-testid="stButton"] button { min-height: 40px; }
   [data-testid="stPopover"] button { min-height: 40px; }
   .st-key-refresh [data-testid="stPopover"] button, .st-key-refresh_button button { width: 40px; height: 40px; }
   [data-testid="stNumberInput"] [data-baseweb="input"] { min-height: 40px; }
   [data-testid="stNumberInput"] button { min-width: 40px; min-height: 40px; }
   .tt-trigger.pill { padding-block: 10px; }
   [data-testid="stExpander"] summary { min-height: 44px; }
+}
+/* a touch screen of any width (a tablet): the same 40px controls for a finger */
+@media (pointer: coarse) {
+  [data-testid="stButtonGroup"] button, [data-testid="stButtonGroup"] button[data-testid^="stBaseButton-segmented"],
+  [data-testid="stMain"] :is([data-testid="stButton"], [data-testid="stDownloadButton"]) button,
+  .st-key-compare_toggle button, [data-testid="stPopover"] button { min-height: 40px; }
+  .st-key-refresh [data-testid="stPopover"] button, .st-key-refresh_button button { width: 40px; height: 40px; }
+  [data-testid="stNumberInput"] [data-baseweb="input"] { min-height: 40px; }
+  [data-testid="stNumberInput"] button { min-width: 40px; min-height: 40px; }
+  .th-more summary { min-height: 40px; }
 }
 
 /* ---- expandable sections (ui/reveal.py): a raised card, a header row, the details sliding open under it ---- */
@@ -474,13 +456,13 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
 [class*="st-key-rvx_"] label strong { color: var(--fc-side); font-size: var(--fs-side); font-weight: var(--fw-side); margin-right: 10px; }
 [class*="st-key-rvx_"] label:hover strong { color: var(--accent); }
 [class*="st-key-rvx_"] label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
-/* one chevron for every section and for the changes strip: down when closed, up when open, turning in 200 ms */
-[class*="st-key-rvx_"] label::after, .change .more::after {
+/* one chevron for every section: down when closed, up when open, turning in 200 ms */
+[class*="st-key-rvx_"] label::after {
   content: ""; flex: none; width: 8px; height: 8px; margin: -3px 4px 0; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
   transform: rotate(45deg); transition: transform 200ms ease;
 }
 [class*="st-key-rvx_"] label::after { color: var(--muted); }
-[class*="st-key-rvx_"] label:has(input:checked)::after, .change[open] .more::after { transform: translateY(4px) rotate(225deg); }
+[class*="st-key-rvx_"] label:has(input:checked)::after { transform: translateY(4px) rotate(225deg); }
 /* the body: always on the page, closed to no height; it opens and closes in 200 ms */
 [class*="st-key-rv_"] > [data-testid="stElementContainer"]:has(.rv-body, iframe) {
   display: grid; grid-template-rows: 0fr; visibility: hidden; transition: grid-template-rows 200ms ease, visibility 0s linear 200ms;
@@ -499,18 +481,6 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
   [class*="st-key-rvx_"] label strong { display: block; margin: 0 0 2px; }
   .rv-body { padding: 0 16px 14px; }
 }
-/* the changes strip opens with the same motion, where the browser can animate a details element */
-.change { interpolate-size: allow-keywords; }
-.change::details-content { block-size: 0; overflow: hidden; transition: block-size 200ms ease, content-visibility 200ms allow-discrete; }
-.change[open]::details-content { block-size: auto; }
-@media (prefers-reduced-motion: reduce) { .change::details-content { transition: none; } }
-
-/* the page tabs: one constellation's pages, then the pages across every system, set apart by a rule */
-.st-key-pagetabs { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
-.st-key-pagetabs > div { width: auto !important; flex: 0 1 auto; min-width: 0; max-width: 100%; }
-.st-key-page_all_group { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px; padding-left: 22px; border-left: 1px solid var(--edge); }
-.st-key-page_all_group > div { width: auto !important; }
-@media (max-width: 639.98px) { .st-key-page_all_group { padding: 10px 0 0; border-left: 0; border-top: 1px solid var(--edge); } }   /* still set apart when it wraps under */
 
 /* the time range's panel: the presets in a pressed track, the chosen one raised in the accent colour; a greyed preset
    is longer than the orbit records held. Then a date of the reader's own to now, and what bounds the range. */
@@ -537,13 +507,20 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
 [data-baseweb="calendar"] button, [data-baseweb="calendar"] [role="gridcell"] div { color: var(--ink); }
 [data-baseweb="calendar"] [role="gridcell"][aria-disabled="true"] div { color: var(--track); }
 /* the phone's constellation menu: the chips as a list */
-[data-testid="stPopoverBody"]:has(:is([class*="st-key-_scope_menu"], [class*="st-key-_compare_constellations_menu"])) { min-width: 0; width: 220px; }
-[data-testid="stPopoverBody"] :is([class*="st-key-_scope_menu"], [class*="st-key-_compare_constellations_menu"]) [data-baseweb="button-group"] { display: flex; width: 100%; max-width: none; flex-direction: column; align-items: stretch; border-radius: 18px; }
-[data-testid="stPopoverBody"] :is([class*="st-key-_scope_menu"], [class*="st-key-_compare_constellations_menu"]) button { justify-content: flex-start; min-height: 40px; }
+[data-testid="stPopoverBody"]:has(:is([class*="st-key-nav_system_menu"])) { min-width: 0; width: 220px; }
+[data-testid="stPopoverBody"] :is([class*="st-key-nav_system_menu"]) [data-baseweb="button-group"] { display: flex; width: 100%; max-width: none; flex-direction: column; align-items: stretch; border-radius: 18px; }
+[data-testid="stPopoverBody"] :is([class*="st-key-nav_system_menu"]) button { justify-content: flex-start; min-height: 40px; }
 
 /* ---- icons (ui/icons.py): a Tabler icon drawn as a mask, in its status colour ---- */
 .ic { display: inline-block; flex: none; width: 18px; height: 18px; background: currentColor;
   -webkit-mask: var(--ic) center / contain no-repeat; mask: var(--ic) center / contain no-repeat; }
+/* a constellation's mark (ui/marks.py): its orbital signature in its own colour, beside its name */
+.mk { display: inline-block; flex: none; width: 1.3em; height: 1.3em; vertical-align: -.25em; margin-right: .4em; background: currentColor;
+  -webkit-mask: var(--mk) center / contain no-repeat; mask: var(--mk) center / contain no-repeat; }
+.mk-name { white-space: nowrap; }
+/* the same marks on the constellation chips (ui/shell.py _chip_marks says which chip takes which) */
+:is(.st-key-nav_system, .st-key-nav_system_menu) button::before { content: ""; flex: none; width: 1.2em; height: 1.2em; margin-right: .45em; background: currentColor;
+  -webkit-mask: var(--mk) center / contain no-repeat; mask: var(--mk) center / contain no-repeat; }
 .ic.ok { color: var(--ok); } .ic.warn { color: var(--warn); } .ic.bad { color: var(--bad); }
 .ic.idle { color: var(--idle); } .ic.accent { color: var(--accent); }
 
@@ -555,7 +532,10 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
    (11px) plus half its first row (18px). */
 :root { --bell: 36px; }   /* the size of the bar's other round controls (40px on phones, below) */
 [data-testid="stMainBlockContainer"] > div > [data-testid="stVerticalBlock"] > :has(.st-key-notices) {
-  order: -1; position: sticky; top: 22px; z-index: 100; height: 0; margin-bottom: -16px; }
+  order: -1; position: relative; z-index: 100; height: 0; margin-bottom: -16px; }
+/* with anything unread the bell stays in view while the page scrolls; with nothing unread it keeps its place in the bar */
+[data-testid="stMainBlockContainer"] > div > [data-testid="stVerticalBlock"] > :has(.st-key-notices):has(.nt-count) {
+  position: sticky; top: 22px; }
 .st-key-notices { position: absolute; top: calc(29px - var(--bell) / 2); right: 17px; width: auto !important; gap: 0; }
 .st-key-notices > div { width: auto !important; }
 /* From 1280px the data's state shares the first row with the name and never wraps away from the bell's room: its
@@ -610,3 +590,104 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
   .st-key-topbar [data-testid="stHorizontalBlock"]::before { content: ""; order: 3; flex-basis: 100%; margin-top: -10px; }
   [class*="st-key-ntread_"] button { width: 40px; height: 40px; }
 }
+
+/* Home (views/home.py): one row per system. The row is a wrapping line of parts, so it takes its content's size at
+   any width; the button after it is laid over the whole row, so a click or Enter anywhere on it opens the system. */
+.head .right { margin-left: auto; }
+.head .big { white-space: nowrap; }
+.head:has(.right) { flex-wrap: wrap; } .head:has(.right) .muted { flex: 1 1 14ch; }   /* Home: the legend drops under the count on a phone */
+.lede { margin: -6px 0 16px; max-width: 70ch; }
+.sys, .find { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 26px; background: var(--platform); border: 1px solid var(--edge); border-left: 4px solid var(--idle); border-radius: 18px; box-shadow: var(--raised-sm); padding: 11px 18px; }
+.sys.ok { border-left-color: var(--ok); } .sys.warn { border-left-color: var(--warn); } .sys.bad { border-left-color: var(--bad); }
+.sys-id { flex: 0 0 270px; display: flex; flex-direction: column; gap: 2px; }
+.sys-id b { font-size: var(--fs-section); font-weight: var(--fw-section); }
+.sys-mid { flex: 1 1 240px; display: flex; flex-direction: column; gap: 6px; }
+.dots { display: flex; flex-wrap: wrap; gap: 5px 12px; }
+.dots .dg { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.dots i { width: 11px; height: 11px; border-radius: 50%; background: var(--idle); }
+/* each state has its own shape, so colour is never the only sign: round, diamond, square, ring */
+.dots i.ok { background: var(--ok); } .dots i.warn { background: var(--warn); border-radius: 2px; transform: rotate(45deg) scale(.82); } .dots i.bad { background: var(--bad); border-radius: 2px; } .dots i.accent { background: transparent; border: 2px solid var(--accent); }
+.sys-m { flex: 1 0 130px; max-width: 180px; display: flex; flex-direction: column; gap: 4px; }
+.sys-m .s { font-size: var(--fs-section); font-weight: var(--fw-num); line-height: 1.1; }
+.sys-m .s.ok { color: var(--ok); } .sys-m .s.warn { color: var(--warn); } .sys-m .s.bad { color: var(--bad); } .sys-m .s.idle { color: var(--idle); }
+.hbar { display: block; height: 6px; border-radius: 3px; background: var(--well); box-shadow: var(--pressed); overflow: hidden; }
+.hbar i { display: block; height: 100%; border-radius: 3px; background: var(--idle); }
+.hbar i.ok { background: var(--ok); } .hbar i.warn { background: var(--warn); } .hbar i.bad { background: var(--bad); } .hbar i.accent { background: var(--accent); }
+.sys-go { font-size: var(--fs-section); color: var(--muted); }
+.find { border-left-color: var(--warn); }
+.find-w { flex: 1 1 320px; } .find-w .chip { margin-right: 10px; } .find-w .small { margin-top: 4px; }
+.pair { flex: 0 1 300px; display: grid; grid-template-columns: auto minmax(60px, 1fr) auto; gap: 4px 10px; align-items: center; }
+.how-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 14px; }
+.how { font-size: var(--fs-body); line-height: 1.55; }
+.how-h { display: flex; align-items: center; gap: 10px; font-size: var(--fs-section); font-weight: var(--fw-section); margin-bottom: 10px; }
+.how-h .ic { width: 1.25em; height: 1.25em; color: var(--accent); }
+/* words on a row that "How to read this page" explains: a link to its card, dotted under like every word that opens
+   an explanation, and above the button laid over the row so it can be clicked on its own */
+.how-link { position: relative; z-index: 2; color: inherit; text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; }
+.how-link:hover, .how-link:focus-visible { color: var(--accent); }
+.how { scroll-margin-top: 96px; transition: box-shadow 300ms ease; }
+.how.lit, .how:target { box-shadow: var(--pressed), 0 0 0 2px var(--accent); }   /* the card a link has just brought the reader to */
+.how p { margin: 0 0 10px; color: var(--muted); } .how p:last-child { margin-bottom: 0; } .how p b { color: var(--ink); font-weight: 600; }
+[class*="st-key-home_row_"] { position: relative; gap: 0; }
+.st-key-home_systems, .st-key-home_findings { gap: 12px; margin-bottom: 14px; }
+[class*="st-key-home_row_"] :is([data-testid="stElementContainer"], [data-testid="stButton"]) { position: static; }
+[class*="st-key-home_row_"] [data-testid="stElementContainer"]:has([data-testid="stButton"]) { height: 0; }
+[class*="st-key-home_row_"] [data-testid="stButton"] button { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; background: transparent; border: 0; box-shadow: none; border-radius: 18px; color: transparent; }
+[class*="st-key-home_row_"] [data-testid="stButton"] button :is(p, span) { color: transparent; }
+[class*="st-key-home_row_"] [data-testid="stButton"] button:hover { box-shadow: 0 0 0 1px var(--accent); }
+[class*="st-key-home_row_"] [data-testid="stButton"] button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[class*="st-key-home_row_"]:has(button:hover) .sys-go { color: var(--accent); }
+
+/* ---- navigation (ui/shell.py _nav): two steps under the top bar ----
+   First row, always there: the pages across every system, then the systems. Choosing a system opens the second row:
+   a tray pressed into the page, holding that system's pages and what filters them. The tray stays on the page and
+   closes to no height (a grid row from 1fr to 0fr), so it opens and closes with a motion; it is open while one of
+   its pages is the chosen one. */
+.st-key-nav { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.st-key-nav > div { width: auto !important; flex: 0 1 auto; min-width: 0; max-width: 100%; }
+.nav-label { display: block; padding-left: 16px; border-left: 1px solid var(--edge); font-size: var(--fs-small); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.st-key-nav > div:has(.st-key-system_menu) { display: none; }   /* the phone's menu */
+.st-key-subnav { display: grid; grid-template-rows: 0fr; gap: 0; opacity: 0; visibility: hidden; margin: -1rem 0 0; transform: translateY(-8px);
+  transition: grid-template-rows 280ms cubic-bezier(.2, .8, .2, 1), margin 280ms cubic-bezier(.2, .8, .2, 1), opacity 200ms ease, transform 280ms ease, visibility 0s linear 280ms; }
+.st-key-subnav:has(.st-key-nav_page [data-testid="stBaseButton-segmented_controlActive"]) { grid-template-rows: 1fr; opacity: 1; visibility: visible; margin: 0 0 6px; transform: none; transition-delay: 0s; }
+.st-key-subnav > * { min-height: 0; overflow: hidden; }
+.st-key-subnav_in { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 10px 14px; border-radius: 22px; background: var(--well); box-shadow: var(--pressed); }
+.st-key-subnav_in > div { width: auto !important; flex: none; min-width: 0; max-width: 100%; }
+.st-key-subnav_in > div:has(.st-key-range) { margin-left: auto; }
+@media (prefers-reduced-motion: reduce) { .st-key-subnav { transition: none; } }
+@media (max-width: 639.98px) {
+  .nav-label { display: none; }
+  .st-key-nav > .st-key-nav_system, .st-key-nav > div:has(.st-key-nav_system) { display: none; }   /* the chips give way to... */
+  .st-key-nav > div:has(.st-key-system_menu) { display: block; }     /* ...the menu */
+  .st-key-subnav_in > div:has(.st-key-range) { margin-left: 0; }
+  /* the pills of a row wrap onto a second line instead of scrolling sideways inside their track */
+  :is(.st-key-nav, .st-key-subnav_in) [data-testid="stButtonGroup"] { overflow: visible; }
+  :is(.st-key-nav, .st-key-subnav_in) [data-baseweb="button-group"] { flex-wrap: wrap; border-radius: 20px; }
+  .st-key-subnav_in { padding: 8px; gap: 8px; }
+  .st-key-topbar .chip { white-space: normal; text-align: right; border-radius: 14px; }   /* a long data chip wraps inside the bar */
+}
+/* a part of a system with several: the whole system's count over the part's own page (views/overview.py) */
+.sysline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; margin: 0 0 14px; }
+.sysline b { font-size: var(--fs-section); font-weight: var(--fw-section); }
+.sysline .num { font-size: var(--fs-section); font-weight: var(--fw-num); color: var(--accent); }
+
+/* ---- the gear's settings (ui/shell.py _thresholds): each setting with what to know before moving it ---- */
+[data-testid="stPopoverBody"]:has(.th-head) { width: min(560px, calc(100vw - 32px)); min-width: 0; }
+.th-head, .th-group { display: flex; flex-direction: column; gap: 4px; }
+.th-head b { font-size: var(--fs-section); font-weight: var(--fw-section); }
+.th-group { margin-top: 6px; padding-top: 12px; border-top: 1px solid var(--edge); }
+.th-group b { font-size: var(--fs-side); font-weight: var(--fw-side); color: var(--accent); }
+[class*="st-key-thset_"] { gap: 6px; padding: 12px 14px; border-radius: 16px; background: var(--well); box-shadow: var(--pressed); }
+.th-help { margin: 0; display: grid; gap: 4px; font-size: var(--fs-small); line-height: 1.45; }
+.th-help > div { display: grid; grid-template-columns: 7.2em 1fr; gap: 10px; }
+.th-help dt { color: var(--muted); } .th-help dd { margin: 0; color: var(--ink); }
+.th-what { margin: 0; font-size: var(--fs-small); line-height: 1.45; color: var(--ink); }
+.th-more { margin-top: 6px; }
+.th-more summary { display: inline-flex; align-items: center; gap: 8px; min-height: 32px; cursor: pointer; list-style: none; font-size: var(--fs-small); color: var(--accent); }
+.th-more summary::-webkit-details-marker { display: none; }
+.th-more summary::after { content: ""; width: 7px; height: 7px; margin-top: -3px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform 200ms ease; }
+.th-more[open] summary::after { transform: translateY(3px) rotate(225deg); }
+.th-more summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.th-more .th-help { margin-top: 6px; }
+.th-also { margin: 6px 0 0; }
+@media (max-width: 479.98px) { .th-help > div { grid-template-columns: 1fr; gap: 0; } }

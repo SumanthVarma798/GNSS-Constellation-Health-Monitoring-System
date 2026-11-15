@@ -267,6 +267,17 @@ def test_the_trend_draws_four_dop_lines_and_the_count(beidou):
     assert [t.name for t in fig.data] == ["GDOP", "PDOP", "HDOP", "VDOP", "In view"]
 
 
+def test_the_limit_lines_sit_above_the_data_and_their_words_have_a_backing(beidou):
+    fig = gf.dop_trend(gd.dop_series(beidou, 39.9, 116.4, WHEN, MASK), "Beijing")
+    limits = [s for s in fig.layout.shapes if s.line.dash == "dot"]
+    words = [a for a in fig.layout.annotations if "below" in a.text]
+
+    assert len(limits) == len(words) == len(gf.BAND_LINES)
+    assert all(s.layer == "above" for s in limits)
+    assert all(a.bgcolor.startswith("rgba(32, 36, 43") or a.bgcolor.startswith("rgba(32,36,43") for a in words)
+    assert all(a.borderpad > 0 for a in words)
+
+
 def test_the_sky_page_gets_every_step_and_every_satellite_with_its_path(beidou):
     from ui.components.sky_view import sky_payload, sky_view_html
 

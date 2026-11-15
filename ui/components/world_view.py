@@ -11,6 +11,7 @@ from pathlib import Path
 
 from ui import orbit_age, palette, world_settings
 from ui.components.master_map import embed
+from ui.figures.orbits_3d import land_dots
 from ui.theme import root_block
 from ui.tooltip import CARD_CSS
 
@@ -168,7 +169,7 @@ def payload(systems, gap=None, now=None):
             {"words": "healthy", "status": "ok", "colour": world_settings.HEALTH_COLOURS["ok"]},
             {"words": "unhealthy", "status": "bad", "colour": world_settings.HEALTH_COLOURS["bad"]},
             {"words": "some signals off", "status": "warn", "colour": world_settings.HEALTH_COLOURS["warn"]},
-            {"words": "not in the day's file or unknown", "status": "idle", "colour": world_settings.HEALTH_COLOURS["idle"]},
+            {"words": "not in the IGS daily broadcast file, or unknown", "status": "idle", "colour": world_settings.HEALTH_COLOURS["idle"]},
         ],
         "system_key": [{"name": system, "colour": world_settings.SYSTEM_COLOURS.get(system, palette.FILL)}
                        for system in world_settings.SYSTEM_COLOURS],
@@ -189,6 +190,8 @@ def world_view_html(systems, gap=None, now=None):
         page = page.replace(placeholder, text)
     land = json.loads(LAND_FILE.read_text(encoding="utf-8"))["rings"]
     page = page.replace("const LAND = __LAND__;", f"const LAND = {embed(land)};", 1)
+    dots = [number for dot in land_dots() for number in dot]   # lat, lon, lat, lon, ...: the globe's land
+    page = page.replace("const LAND_DOTS = __LAND_DOTS__;", f"const LAND_DOTS = {embed(dots)};", 1)
     return page.replace("const DATA = __DATA__;", f"const DATA = {embed(payload(systems, gap, now))};", 1)
 
 
