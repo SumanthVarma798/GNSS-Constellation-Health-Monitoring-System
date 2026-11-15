@@ -145,18 +145,18 @@ def test_a_none_line_lists_no_sources():
 
 def test_catalogue_line_agrees_when_the_launch_designators_match():
     line = lines_of()[2]
-    assert (line["value"], line["status"], line["remark"]) == ("Beidou-3 G1Q", MAP_OK, "agrees")
+    assert (line["value"], line["status"], line["remark"]) == ("Beidou-3 G1Q", MAP_OK, "launch designator matches the IGS satellite metadata file")
 
 
 def test_catalogue_line_warns_when_the_launch_designators_differ():
     line = lines_of(catalogue=[entry("X1", cospar_id="2018-085B")])[2]
-    assert (line["status"], line["remark"]) == (MAP_WARN, "launch designator differs")
+    assert (line["status"], line["remark"]) == (MAP_WARN, "launch designator differs from the IGS satellite metadata file")
 
 
 @pytest.mark.parametrize("catalogue_rows", [[blank_entry("X1")], []])
 def test_catalogue_line_is_idle_when_the_catalogue_does_not_list_it_yet(catalogue_rows):
     line = lines_of(catalogue=catalogue_rows)[2]
-    assert (line["value"], line["status"], line["remark"]) == ("none", MAP_IDLE, "not in the catalogue yet")
+    assert (line["value"], line["status"], line["remark"]) == ("none", MAP_IDLE, "GCAT does not list it yet")
 
 
 def test_signal_id_line_says_since_when():
@@ -186,12 +186,14 @@ def test_no_orbit_feed_line_without_feed_names_or_without_this_catalogue_number(
 
 
 @pytest.mark.parametrize("feed_name, status, remark", [
-    ("BEIDOU-3 G1 (C04)", MAP_OK, "current"),
-    ("BEIDOU-3 G1 (C62)", MAP_WARN, "one signal ID out of date"),
-    ("BEIDOU-3 G1 (C59)", MAP_WARN, "two signal IDs out of date"),
-    ("BEIDOU-3 G1 (C99)", MAP_WARN, "the signal ID in the name is not in this spacecraft's history"),
-    ("BEIDOU-3 G1", MAP_IDLE, "the name carries no signal ID to compare"),
-    ("BEIDOU-3 G1 (C59) extra", MAP_IDLE, "the name carries no signal ID to compare"),
+    ("BEIDOU-3 G1 (C04)", MAP_OK, "matches the signal ID the IGS satellite metadata file gives today"),
+    ("BEIDOU-3 G1 (C62)", MAP_WARN, "one signal ID behind the IGS satellite metadata file"),
+    ("BEIDOU-3 G1 (C59)", MAP_WARN, "two signal IDs behind the IGS satellite metadata file"),
+    ("BEIDOU-3 G1 (C99)", MAP_WARN, "the signal ID in CelesTrak's name is not one the IGS satellite metadata file ever gave it"),
+    ("BEIDOU-3 G1", MAP_IDLE, "CelesTrak's name carries no signal ID to compare with the IGS satellite metadata file"),
+    ("BEIDOU-3 G1 (C59) extra", MAP_IDLE, "CelesTrak's name carries no signal ID to compare with the IGS satellite metadata file"),
+    ("COSMOS 2433 (720)", MAP_IDLE, "CelesTrak's name carries no signal ID to compare with the IGS satellite metadata file"),
+    ("GSAT0101 (GALILEO-PFM)", MAP_IDLE, "CelesTrak's name carries no signal ID to compare with the IGS satellite metadata file"),
 ])
 def test_orbit_feed_line_is_judged_by_the_signal_id_in_brackets(feed_name, status, remark):
     line = feed_line(feed_name)
@@ -200,14 +202,14 @@ def test_orbit_feed_line_is_judged_by_the_signal_id_in_brackets(feed_name, statu
 
 def test_orbit_feed_name_with_a_signal_id_that_has_since_ended_is_one_change_out_of_date():
     ended = HISTORY[:1]
-    assert feed_line("X (C59)", history=ended, signal_id_now="")["remark"] == "one signal ID out of date"
+    assert feed_line("X (C59)", history=ended, signal_id_now="")["remark"] == "one signal ID behind the IGS satellite metadata file"
 
 
 def test_orbit_feed_counts_from_the_latest_time_a_signal_id_was_held():
     returned = [period("X1", "C19", "2017-01-01", "2018-01-01"), period("X1", "C47", "2018-01-01", "2018-06-01"),
                 period("X1", "C19", "2018-06-01")]
-    assert feed_line("X (C19)", history=returned, signal_id_now="C19")["remark"] == "current"
-    assert feed_line("X (C47)", history=returned, signal_id_now="C19")["remark"] == "one signal ID out of date"
+    assert feed_line("X (C19)", history=returned, signal_id_now="C19")["remark"] == "matches the signal ID the IGS satellite metadata file gives today"
+    assert feed_line("X (C47)", history=returned, signal_id_now="C19")["remark"] == "one signal ID behind the IGS satellite metadata file"
 
 
 def test_unknown_svn_has_no_identifiers():
@@ -266,35 +268,35 @@ def test_a_failed_mission_with_no_signal_id_also_agrees_it_is_not_in_service():
 
 def test_igs_in_service_but_catalogue_gives_an_end_date():
     line = line_for(satellite("X1"), entry("X1", operations_ended="2025 Jul 10"))
-    assert (line["service"], line["remark"]) == ("disagree", "the catalogue says regular operations ended 2025 Jul 10")
+    assert (line["service"], line["remark"]) == ("disagree", "GCAT says regular operations ended 2025 Jul 10; the IGS satellite metadata file gives it a signal ID today")
 
 
 def test_igs_in_service_but_catalogue_gives_no_end_date():
     line = line_for(satellite("X1"), entry("X1", operations_ended=""))
-    assert line["remark"] == "the catalogue says regular operations ended at a date it does not give"
+    assert line["remark"] == "GCAT says regular operations ended at a date it does not give; the IGS satellite metadata file gives it a signal ID today"
 
 
 def test_igs_in_service_but_catalogue_records_a_failed_mission():
     line = line_for(satellite("X1"), entry("X1", mission_result="F", operations_ended="2025 Feb?"))
-    assert (line["service"], line["remark"]) == ("disagree", "the catalogue records the mission as failed")
+    assert (line["service"], line["remark"]) == ("disagree", "GCAT records the mission as failed; the IGS satellite metadata file gives it a signal ID today")
 
 
 def test_igs_gives_no_signal_id_but_catalogue_believes_it_is_operating():
     line = line_for(satellite("X1", signal_id_now=""), entry("X1"))
-    assert (line["service"], line["remark"]) == ("disagree", "the catalogue believes it is still operating")
+    assert (line["service"], line["remark"]) == ("disagree", "GCAT believes it is still operating; the IGS satellite metadata file gives it no signal ID today")
 
 
 def test_launch_designators_that_differ_are_reported_with_both():
     line = line_for(satellite("X1"), entry("X1", cospar_id="2018-085B"))
     assert line["identity"] == "sources differ"
-    assert line["remark"] == "the IGS file says 2018-085A, the catalogue says 2018-085B"
+    assert line["remark"] == "launch designator: the IGS satellite metadata file says 2018-085A, GCAT says 2018-085B"
 
 
 @pytest.mark.parametrize("catalogue_row", [blank_entry("X1"), None])
 def test_a_spacecraft_the_catalogue_does_not_list_yet_has_one_source_only(catalogue_row):
     line = line_for(satellite("X1"), catalogue_row)
     assert (line["identity"], line["service"], line["remark"]) == (
-        "one source only", "not in the catalogue yet", "not in the catalogue yet")
+        "one source only", "not in the catalogue yet", "GCAT does not list it yet")
 
 
 def test_agreement_keeps_registry_order_and_names_the_constellation():
@@ -418,7 +420,7 @@ def test_real_c217_orbit_feed_name_is_two_signal_ids_out_of_date(real):
     lines = identifiers("C217", real["satellites"], real["catalogue"], real["tracked"], real["signal_ids"], real["feeds"])
     feed = next(line for line in lines if line["scheme"] == "Orbit feed name (CelesTrak)")
     assert (feed["value"], feed["status"], feed["remark"]) == ("BEIDOU-3 G1 (C59)", MAP_WARN,
-                                                               "two signal IDs out of date")
+                                                               "two signal IDs behind the IGS satellite metadata file")
 
 
 def test_real_c217_signal_id_is_confirmed_by_the_igs_file_and_contradicted_by_the_orbit_feed(real):

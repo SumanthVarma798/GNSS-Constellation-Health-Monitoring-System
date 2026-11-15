@@ -691,3 +691,31 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
 .th-more .th-help { margin-top: 6px; }
 .th-also { margin: 6px 0 0; }
 @media (max-width: 479.98px) { .th-help > div { grid-template-columns: 1fr; gap: 0; } }
+
+/* ==== Master map (views/master_map.py, ui/master_map_page.py) ====
+   The rows reuse Home's .sys; their edge is the constellation's own colour. Each dot state has its own shape, as on
+   Home: a filled circle (signal ID today, in the constellation's colour), a small grey circle (none today), a ring
+   (seen, not yet listed) and a diamond (worth a look). The buttons under a row wrap as one line of pills. */
+.mm-dots { gap: 4px; }
+.mm-dots i { width: 11px; height: 11px; }
+.mm-dots i.mm-past { width: 7px; height: 7px; margin: 2px; background: var(--track); }
+.mm-dots i.mm-seen { background: transparent; border: 2px solid var(--accent); }
+.mm-dots i.mm-look { background: var(--warn); border-radius: 2px; transform: rotate(45deg) scale(.82); }
+.st-key-mm_rows { gap: 14px; margin-bottom: 18px; }
+[class*="st-key-mm_row_"] { gap: 8px; }
+[class*="st-key-mm_links_"] { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; padding-left: 6px; }
+[class*="st-key-mm_links_"] > div { width: auto !important; flex: 0 1 auto; min-width: 0; max-width: 100%; }
+[class*="st-key-mm_links_"] button, .st-key-mm_all button { min-height: 40px; }
+.mm-sources { display: flex; flex-direction: column; gap: 0; padding: 6px 20px; margin-bottom: 18px; }
+.mm-src { display: grid; grid-template-columns: minmax(200px, 1.2fr) minmax(0, 1fr) minmax(0, 1.4fr); gap: 6px 18px; align-items: center; padding: 12px 0; }
+.mm-src + .mm-src { border-top: 1px solid var(--edge); }
+.mm-src-what { display: flex; flex-direction: column; gap: 2px; }
+.mm-src-when .chip { white-space: normal; }
+.mm-look { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.mm-look li .muted { margin-left: 6px; }
+@media (max-width: 767.98px) {
+  .mm-src { grid-template-columns: 1fr; }
+  .mm-sys .sys-id { flex-basis: 100%; }
+  .head.mm-head:has(.right) .muted { flex-basis: 100%; order: 3; }
+}
+/* ==== end Master map ==== */

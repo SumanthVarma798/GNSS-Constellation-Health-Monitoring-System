@@ -23,7 +23,9 @@ from evidence.settings import (GCAT_MISSION_FAILED, GCAT_STILL_OPERATING, IDENTI
                                SOURCE_SIGHTING, SOURCE_SILENT)
 
 NUMBER_WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
-SIGNAL_ID_IN_BRACKETS = re.compile(r"\(([^()\s]+)\)\s*$")  # "BEIDOU-3 G1 (C59)" -> "C59"
+# "BEIDOU-3 G1 (C59)" -> "C59": a system letter and two digits. Other brackets in CelesTrak's names are other names
+# ("COSMOS 2433 (720)", "GSAT0101 (GALILEO-PFM)", "NVS-01 (IRNSS-1J)"), never a signal ID to compare.
+SIGNAL_ID_IN_BRACKETS = re.compile(r"\(([A-Z]\d{2})\)\s*$")
 
 
 def _by_svn(rows):
@@ -96,29 +98,30 @@ def _feed_remark(feed_name, periods):
     """
     found = SIGNAL_ID_IN_BRACKETS.search(feed_name)
     if not found:
-        return MAP_IDLE, "the name carries no signal ID to compare"
+        return MAP_IDLE, "CelesTrak's name carries no signal ID to compare with the IGS satellite metadata file"
     shown = found.group(1)
     history = [period["label"] for period in periods]
     if not (periods and periods[-1]["current"]):
         history.append("none")
     if shown not in history:
-        return MAP_WARN, "the signal ID in the name is not in this spacecraft's history"
+        return MAP_WARN, "the signal ID in CelesTrak's name is not one the IGS satellite metadata file ever gave it"
     behind = len(history) - 1 - max(i for i, label in enumerate(history) if label == shown)
     if behind == 0:
-        return MAP_OK, "current"
-    return MAP_WARN, f"{_words(behind)} signal ID{'' if behind == 1 else 's'} out of date"
+        return MAP_OK, "matches the signal ID the IGS satellite metadata file gives today"
+    return MAP_WARN, (f"{_words(behind)} signal ID{'' if behind == 1 else 's'} behind the IGS satellite metadata "
+                      "file")
 
 
 def _catalogue_identifier(satellite, entry):
     """The catalogue's name for the spacecraft, and whether its launch designator agrees."""
     if not _in_catalogue(entry):
-        return {"scheme": SCHEME_GCAT, "value": "none", "status": MAP_IDLE, "remark": "not in the catalogue yet"}
+        return {"scheme": SCHEME_GCAT, "value": "none", "status": MAP_IDLE, "remark": "GCAT does not list it yet"}
     value = entry["name"] or "no name given"
     if not satellite["cospar_id"]:
-        return {"scheme": SCHEME_GCAT, "value": value, "status": MAP_OK, "remark": "nothing to compare with"}
+        return {"scheme": SCHEME_GCAT, "value": value, "status": MAP_OK, "remark": "the IGS satellite metadata file gives no launch designator to compare"}
     if entry["cospar_id"] == satellite["cospar_id"]:
-        return {"scheme": SCHEME_GCAT, "value": value, "status": MAP_OK, "remark": "agrees"}
-    return {"scheme": SCHEME_GCAT, "value": value, "status": MAP_WARN, "remark": "launch designator differs"}
+        return {"scheme": SCHEME_GCAT, "value": value, "status": MAP_OK, "remark": "launch designator matches the IGS satellite metadata file"}
+    return {"scheme": SCHEME_GCAT, "value": value, "status": MAP_WARN, "remark": "launch designator differs from the IGS satellite metadata file"}
 
 
 def _signal_id_identifier(satellite, periods, sighting):
@@ -197,10 +200,10 @@ def identifiers(svn, satellites, catalogue, tracked, signal_ids, feed_names=None
 def _identity(satellite, entry):
     """(how the two sources stand on who this is, a remark)."""
     if not _in_catalogue(entry):
-        return IDENTITY_ONE_SOURCE, "not in the catalogue yet"
+        return IDENTITY_ONE_SOURCE, "GCAT does not list it yet"
     if entry["cospar_id"] != satellite["cospar_id"]:
-        return IDENTITY_DIFFER, (f"the IGS file says {satellite['cospar_id'] or 'nothing'}, "
-                                 f"the catalogue says {entry['cospar_id']}")
+        return IDENTITY_DIFFER, (f"launch designator: the IGS satellite metadata file says "
+                                 f"{satellite['cospar_id'] or 'nothing'}, GCAT says {entry['cospar_id']}")
     return IDENTITY_AGREE, ""
 
 
@@ -214,10 +217,11 @@ def _service(satellite, entry):
     if igs_says_in_service == catalogue_says_operating:
         return (SERVICE_AGREE_OPERATING if igs_says_in_service else SERVICE_AGREE_NOT_IN_SERVICE), ""
     if not igs_says_in_service:
-        return SERVICE_DISAGREE, "the catalogue believes it is still operating"
+        return SERVICE_DISAGREE, "GCAT believes it is still operating; the IGS satellite metadata file gives it no signal ID today"
     if failed:
-        return SERVICE_DISAGREE, "the catalogue records the mission as failed"
-    return SERVICE_DISAGREE, f"the catalogue says regular operations ended {ended or 'at a date it does not give'}"
+        return SERVICE_DISAGREE, "GCAT records the mission as failed; the IGS satellite metadata file gives it a signal ID today"
+    return SERVICE_DISAGREE, (f"GCAT says regular operations ended {ended or 'at a date it does not give'}; "
+                             "the IGS satellite metadata file gives it a signal ID today")
 
 
 def agreement(satellites, catalogue):
