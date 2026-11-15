@@ -11,7 +11,6 @@ from pathlib import Path
 
 from ui import orbit_age, palette, world_settings
 from ui.components.master_map import embed
-from ui.figures.orbits_3d import land_dots
 from ui.theme import root_block
 from ui.tooltip import CARD_CSS
 
@@ -161,7 +160,6 @@ def payload(systems, gap=None, now=None):
         shown_systems.append({"name": system, "colour": world_settings.SYSTEM_COLOURS.get(system, palette.FILL),
                               "satellites": records})
     return {
-        "home": {"lat": world_settings.HOME_LAT, "lon": world_settings.HOME_LON},
         "areas": world_settings.SERVICE_AREAS,
         "as_of": as_of,
         "day": day or "no IGS file",
@@ -190,8 +188,6 @@ def world_view_html(systems, gap=None, now=None):
         page = page.replace(placeholder, text)
     land = json.loads(LAND_FILE.read_text(encoding="utf-8"))["rings"]
     page = page.replace("const LAND = __LAND__;", f"const LAND = {embed(land)};", 1)
-    dots = [number for dot in land_dots() for number in dot]   # lat, lon, lat, lon, ...: the globe's land
-    page = page.replace("const LAND_DOTS = __LAND_DOTS__;", f"const LAND_DOTS = {embed(dots)};", 1)
     return page.replace("const DATA = __DATA__;", f"const DATA = {embed(payload(systems, gap, now))};", 1)
 
 

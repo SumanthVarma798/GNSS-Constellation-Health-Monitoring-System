@@ -9,9 +9,9 @@ from html import escape
 import streamlit as st
 import streamlit.components.v1 as components
 
-from ui import data, findings, icons, marks, palette, reveal, shell, surfaces, time_range, tooltip
+from ui import data, findings, home_data, icons, marks, palette, reveal, shell, surfaces, time_range, tooltip
 from ui.home_settings import CAVEATS, FINDINGS_SHOWN, HOW, HOW_LINKS, RULES, SYSTEMS
-from ui.system_summary import summary, whole
+from ui.system_summary import whole
 from ui.systems import SYSTEMS as SYSTEMS_PARTS, part_name
 
 # One dot per satellite: (class, what it means, its shape), in the order the legend lists them. Each has its own
@@ -95,6 +95,30 @@ def _failed(name, error):
             'The other constellations are not affected.</div></div>')
 
 
+def _waiting(name):
+    """A row before its constellation has been counted: its name is there at once, the counts follow."""
+    who, where = SYSTEMS.get(name, ("", ""))
+    return (f'<div class="sys idle"><div class="sys-id"><b>{marks.mark(name)}{escape(name)}</b>'
+            f'<span class="small">{escape(" · ".join(filter(None, [who, where])))}</span></div>'
+            '<div class="sys-mid small" role="status">counting its satellites</div></div>')
+
+
+def _headline(wholes=None):
+    """The count across every constellation, the legend, and what a row is. Before the counting is done (wholes is
+    None) the count's place says so."""
+    if wholes is None:
+        count, words = "…", "counting every constellation"
+    else:
+        healthy, total = sum(s["healthy"] for s in wholes.values()), sum(s["total"] for s in wholes.values())
+        count = f"{healthy} of {total}"
+        words = f"navigation satellites healthy and in place, across {reveal.count(len(wholes), 'constellation')}"
+    legend = tooltip.legend([(DOT_COLOURS[kind], meaning, shape) for kind, meaning, shape in DOTS], "What a dot means")
+    return (f'<div class="head"><span class="big num">{count}</span><span class="muted">{words}</span>'
+            f'<span class="right">{legend}</span></div>'
+            '<p class="lede small">One row per constellation, one dot per satellite. A row opens that constellation, '
+            'where every satellite and every number behind these counts is shown.</p>')
+
+
 def _why(error):
     """A ValueError is the assessment saying in plain words what is missing; anything else is named by its kind."""
     return str(error) if isinstance(error, ValueError) else f"{type(error).__name__}: {error}"
@@ -155,29 +179,30 @@ if (!page.getElementById("how-links")) {
 
 
 def page():
+    """The rows are drawn as each constellation is counted, so a first visit (when nothing is kept yet and the
+    counting takes a while) shows every name at once and fills in row by row; the count across all of them comes last."""
     window_days = st.session_state.get("window_days", time_range.DEFAULT_DAYS)
-    gap = data.orbit_gap()
-    parts, failed = {}, {}
-    for name in shell.CONSTELLATIONS:   # one that fails says why in its row; the others still show (issue 39)
-        try:
-            parts[name] = summary(name, data.load(name, window_days), gap)
-        except Exception as error:
-            failed[name] = error
-    wholes = {system: whole(system, [parts[name] for name in names if name in parts])
-              for system, names in SYSTEMS_PARTS.items() if any(name in parts for name in names)}
-    healthy, total = sum(s["healthy"] for s in wholes.values()), sum(s["total"] for s in wholes.values())
-    surfaces.show(f'<div class="head"><span class="big num">{healthy} of {total}</span>'
-                  f'<span class="muted">navigation satellites healthy and in place, across '
-                  f'{reveal.count(len(wholes), "constellation")}</span>'
-                  f'<span class="right">{tooltip.legend([(DOT_COLOURS[kind], meaning, shape) for kind, meaning, shape in DOTS], "What a dot means")}</span></div>'
-                  '<p class="lede small">One row per constellation, one dot per satellite. A row opens that constellation, where every '
-                  'satellite and every number behind these counts is shown.</p>')
+    kept = home_data.keys(data.orbit_gap())
+    head = st.empty()
+    head.html(_headline())
+    parts, failed, wholes = {}, {}, {}
     with st.container(key="home_systems"):
+        slots = [st.empty() for _ in SYSTEMS_PARTS]
+        for slot, system in zip(slots, SYSTEMS_PARTS):
+            slot.html(_waiting(system))
         for index, (system, names) in enumerate(SYSTEMS_PARTS.items()):
-            with st.container(key=f"home_row_{index}"):
+            for name in names:   # one that fails says why in its row; the others still show (issue 39)
+                try:
+                    parts[name] = home_data.part_summary(name, window_days, *kept)
+                except Exception as error:
+                    failed[name] = error
+            if any(name in parts for name in names):
+                wholes[system] = whole(system, [parts[name] for name in names if name in parts])
+            with slots[index].container(key=f"home_row_{index}"):
                 unread = {part_name(name) or name: failed[name] for name in names if name in failed}
                 st.html(_row(wholes[system], unread) if system in wholes else _failed(system, failed[names[0]]))
                 _open(f"home_open_{index}", next((name for name in names if name in parts), names[0]), system)
+    head.html(_headline(wholes))
 
     listed, explained = findings.find(list(parts.values()))
     line = (f"{reveal.count(len(listed), 'thing')} stand{'s' if len(listed) == 1 else ''} out today" if listed

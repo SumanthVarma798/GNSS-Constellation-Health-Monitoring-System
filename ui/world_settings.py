@@ -1,11 +1,7 @@
-"""The World map page's settings, in one place: where the globe starts, the NavIC service area, and the colours
+"""The World map page's settings, in one place: the NavIC service area, and the colours
 for each system and broadcast-health state.
 """
 from ui import palette
-
-# The globe's home view: centred on India, so the systems whose service areas matter most are in the middle.
-HOME_LAT = 15.0
-HOME_LON = 80.0
 
 # The service area of each regional system, drawn as a dashed outline while that system is the only one shown.
 # NavIC's extended service area: 30°S-50°N, 30°E-130°E.

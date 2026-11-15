@@ -111,7 +111,7 @@ def _land_mask():
 @cache
 def land_dots():
     """Land as a matrix of dots: (latitude, longitude) in degrees of every LAND_STEP-th grid point on land, with fewer
-    per row toward the poles so the dots lie evenly. The Overview's 3D view and the World map's globe both draw these."""
+    per row toward the poles so the dots lie evenly. The Overview's 3D view draws these."""
     mask, dots = _land_mask(), []
     for i in range(0, mask.shape[0], LAND_STEP):
         lat = -90 + i * GRID_DEG
