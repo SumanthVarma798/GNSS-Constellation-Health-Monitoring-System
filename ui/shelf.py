@@ -14,7 +14,7 @@ import streamlit as st
 
 from evidence import jobs
 from evidence.console_settings import JOBS, WORKFLOWS_DIR
-from ui import icons, surfaces
+from ui import icons, marks, surfaces
 from ui.shelf_settings import FITTED, JOB_NAMES, ORBIT_GAP, OUR_CREDIT, OUR_LICENCE, OURS, SHELVES
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -62,6 +62,7 @@ CSS = """<style>
 .obj details dd { margin: 0 0 4px; }
 .obj details p { margin: 0; }
 .story-obj .lbl b { font-size: var(--fs-body); }
+.story-about { display: flex; flex-wrap: wrap; gap: 2px 12px; }
 .people h4 { margin: 14px 0 6px; }
 .people ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
 [class*="st-key-item_"] [data-testid="stDownloadButton"] button,
@@ -189,7 +190,7 @@ def others_html(others):
 
 def colleagues_html(colleagues):
     """The people already doing this work, per constellation, each with a link."""
-    groups = "".join(f'<h4>{escape(where)}</h4><ul>' + "".join(
+    groups = "".join(f'<h4>{marks.named(where)}</h4><ul>' + "".join(
         f'<li>{_link(link, who)}: {escape(what)}</li>' for who, what, link in people) + "</ul>"
         for where, people in colleagues)
     return f'<div class="people">{groups}</div>'
@@ -209,7 +210,7 @@ def story_html(story):
     head = _link(link, story["headline"]) if link else escape(story["headline"])
     told = f'{len(items)} source{"" if len(items) == 1 else "s"}'
     return (f'<div class="obj story-obj"><span class="plinth">{icons.mask("broadcast")}</span>'
-            f'<span class="lbl"><b>{head}</b><p class="small">{escape(" · ".join(constellations))}</p></span>'
+            f'<span class="lbl"><b>{head}</b><p class="small story-about">{"".join(marks.named(name) for name in constellations)}</p></span>'
             f'<span class="facts"><span><i>Kind</i>{escape(story["category"])}</span><span><i>Told by</i>{told}</span>'
             f'<span><i>Latest</i>{escape(_day_words(newest) or "date not given")}</span></span></div>')
 
