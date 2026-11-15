@@ -67,8 +67,29 @@ def _measure(count, total, words):
             f'<span class="small">{_explained(words)}</span></div>')
 
 
+def _measures(system):
+    """The three measures of a constellation's health and its own flag, one line each: the words, a bar, the count.
+    The lines sit in the same place in every row, so the constellations compare down the page."""
+    lines = [("orbit kept", *system["orbit"]), ("station held", *system["station"]),
+             ("clock steady", *system["clock"]), ("says healthy", system["flagged_healthy"], system["checked"])]
+    return '<div class="ms">' + "".join(_measure_line(*line) for line in lines) + "</div>"
+
+
+def _measure_line(words, count, of):
+    """One line of _measures. With nothing to judge (no broadcast check read, or no part scored) it says so."""
+    if not of:
+        return (f'<span class="small">{_explained(words)}</span><i class="hbar"></i>'
+                '<b class="idle">not read</b>')
+    share = 100 * count / of
+    band = surfaces.band(share)
+    return (f'<span class="small">{_explained(words)}</span>'
+            f'<i class="hbar"><i class="{band}" style="width:{share:.0f}%"></i></i>'
+            f'<b class="num {band}">{count} of {of}</b>')
+
+
 def _row(system, unread=None):
-    """One system: who runs it, its satellites as dots, the two counts, and what the page leaves out for it.
+    """One system: who runs it, its satellites as dots, the count in place, the three measures and its own flag,
+    and what the page leaves out for it.
     For a system of several parts, each part's count is a line under the dots, and a part in `unread`
     ({part's name: the error}) says why it is missing."""
     name = system["name"]
@@ -85,7 +106,7 @@ def _row(system, unread=None):
             f'<div class="sys-mid">{_dots(system)}'
             + "".join(f'<div class="small">{note}</div>' for note in notes) + '</div>'
             f'{_measure(system["healthy"], system["total"], "healthy and in place")}'
-            f'{_measure(system["flagged_healthy"], system["checked"], "broadcasting healthy")}'
+            f'{_measures(system)}'
             '<span class="sys-go" aria-hidden="true">&rsaquo;</span></div>')
 
 

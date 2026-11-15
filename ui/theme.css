@@ -614,6 +614,10 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
 .hbar { display: block; height: 6px; border-radius: 3px; background: var(--well); box-shadow: var(--pressed); overflow: hidden; }
 .hbar i { display: block; height: 100%; border-radius: 3px; background: var(--idle); }
 .hbar i.ok { background: var(--ok); } .hbar i.warn { background: var(--warn); } .hbar i.bad { background: var(--bad); } .hbar i.accent { background: var(--accent); }
+/* the three measures and the constellation's own flag: words, a bar and a count per line, in the same columns in every row */
+.ms { flex: 1 1 250px; max-width: 330px; display: grid; grid-template-columns: max-content minmax(40px, 1fr) max-content; gap: 5px 10px; align-items: center; }
+.ms b { font-size: var(--fs-small); font-weight: 600; white-space: nowrap; text-align: right; }
+.ms b.ok { color: var(--ok); } .ms b.warn { color: var(--warn); } .ms b.bad { color: var(--bad); } .ms b.idle { color: var(--idle); font-weight: 400; }
 .sys-go { font-size: var(--fs-section); color: var(--muted); }
 .find { border-left-color: var(--warn); }
 .find-w { flex: 1 1 320px; } .find-w .chip { margin-right: 10px; } .find-w .small { margin-top: 4px; }
@@ -667,6 +671,8 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
   .st-key-subnav_in { padding: 8px; gap: 8px; }
   .st-key-topbar .chip { white-space: normal; text-align: right; border-radius: 14px; }   /* a long data chip wraps inside the bar */
 }
+/* the three measures and the flag, as chips over a constellation's own page (ui/three_measures.py) */
+.measures { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
 /* a part of a system with several: the whole system's count over the part's own page (views/overview.py) */
 .sysline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; margin: 0 0 14px; }
 .sysline b { font-size: var(--fs-section); font-weight: var(--fw-section); }

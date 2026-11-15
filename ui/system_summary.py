@@ -5,7 +5,9 @@ the same rules (in_slot_and_healthy here, meo_overview.healthy for the systems j
 from analysis import commissioning
 from analysis.meo_geometry import plane_drift
 from config.config import MEO_SATS
-from ui import meo_overview, orbit_age, orbit_section, palette, systems
+from statistics import median
+
+from ui import limits, meo_overview, orbit_age, orbit_section, palette, systems
 from ui.figures.slot_rows import as_number
 
 HEALTHY_FROM = meo_overview.HEALTHY_FROM   # one top band for both kinds of system
@@ -14,6 +16,20 @@ HEALTHY_FROM = meo_overview.HEALTHY_FROM   # one top band for both kinds of syst
 def in_slot_and_healthy(score, state):
     """A satellite judged by longitude slot counts when its score is in the top band and it is in its slot."""
     return score is not None and score >= HEALTHY_FROM and state == palette.SLOT_IN
+
+
+def _passes(scores):
+    """Whether every part that has a score is in the top band; None when none has a score, so nothing is judged."""
+    known = [score for score in scores if score is not None]
+    return all(score >= HEALTHY_FROM for score in known) if known else None
+
+
+def _measured(parts, kind, state_ok):
+    """(orbit kept, station held) for one satellite from its parts' scores: each True, False, or None when the
+    parts that show it have no score. kind is "slot" or "plane"; state_ok is whether it is where it should be."""
+    orbit = _passes(parts.get(part) for part in limits.MEASURES["orbit"][kind])
+    held = _passes(parts.get(part) for part in limits.MEASURES["station"][kind])
+    return orbit, None if held is None else held and state_ok
 
 
 def _slot_satellites(result):
@@ -25,17 +41,37 @@ def _slot_satellites(result):
     for health in result["health"].to_dict("records"):
         name, score = str(health["Satellite"]), as_number(health.get("Overall Score"))
         state = slots[name]["state"] if name in slots else palette.SLOT_UNKNOWN
+        parts = {label: as_number(health.get(column)) for label, column in orbit_section.PARTS}
+        orbit, station = _measured(parts, "slot", state == palette.SLOT_IN)
         sats.append({"name": name, "group": str(health.get("Type", "")), "score": score, "state": state,
-                     "ok": in_slot_and_healthy(score, state)})
-    return sats + [{"name": name, "group": "set aside", "score": None, "state": palette.SLOT_LEFT, "ok": False}
-                   for name in result["set_aside"]]
+                     "ok": in_slot_and_healthy(score, state), "parts": parts, "orbit": orbit, "station": station})
+    return sats + [{"name": name, "group": "set aside", "score": None, "state": palette.SLOT_LEFT, "ok": False,
+                    "parts": {}, "orbit": None, "station": None} for name in result["set_aside"]]
 
 
 def _plane_satellites(result):
     """One row per satellite of a system judged by orbital plane, plane by plane."""
-    return [{"name": row["name"], "group": str(row["plane"]), "score": row["score"],
-             "state": meo_overview.state_of(row)[0], "ok": meo_overview.healthy(row)}
-            for members in meo_overview.by_plane(result["rows"]).values() for row in members]
+    sats = []
+    for members in meo_overview.by_plane(result["rows"]).values():
+        for row in members:
+            state = meo_overview.state_of(row)[0]
+            orbit, station = _measured(row["parts"], "plane", state != palette.SLOT_OFF)
+            sats.append({"name": row["name"], "group": str(row["plane"]), "score": row["score"], "state": state,
+                         "ok": meo_overview.healthy(row), "parts": dict(row["parts"]), "orbit": orbit, "station": station})
+    return sats
+
+
+def _measures(sats):
+    """{"orbit", "station", "clock": (how many pass, how many were judged), "clock_typical_ns"} over `sats`: the three
+    measures counted, and the middle of the satellites' typical clock steps (None when no clock was heard)."""
+    def count(key):
+        judged = [sat[key] for sat in sats if sat.get(key) is not None]
+        return sum(judged), len(judged)
+
+    typical = [sat["clock"]["typical_step_ns"] for sat in sats
+               if sat.get("clock") and sat["clock"].get("typical_step_ns") is not None]
+    return {"orbit": count("orbit"), "station": count("station"), "clock": count("clock_steady"),
+            "clock_typical_ns": median(typical) if typical else None}
 
 
 def _stage(result, name):
@@ -49,7 +85,9 @@ def _stage(result, name):
 def summary(name, result, gap=None):
     """{name, sats, healthy, total, settling, planes, in_file, flagged_healthy, broadcast_day} for one system.
 
-    sats: {name, group, score, state, ok, broadcast} per satellite counted, where broadcast is "ok" (flagged
+    Also the three measures counted (_measures). sats: {name, group, score, state, ok, parts, orbit, station,
+    broadcast, clock, clock_steady} per satellite counted, where orbit, station and clock_steady are True, False or
+    None (not judged: ui/limits.py MEASURES), clock is the day's clock figures, and broadcast is "ok" (flagged
     healthy), "bad" (flagged unhealthy), "silent" (not in the day's file) or None (no broadcast check to read).
     settling: {satellite: which stage it is at} for the new satellites not scored yet, which are not counted. planes: plane_drift's rows for a
     system judged by plane, else {}. `gap` is ui.data.orbit_gap()'s payload.
@@ -65,13 +103,17 @@ def summary(name, result, gap=None):
             sat["broadcast"] = "silent"
         else:
             sat["broadcast"] = "ok" if orbit_age.health_words(status)[1] == "ok" else "bad"
+        sat["clock"] = clock = (status or {}).get("clock") or None   # analysis/broadcast_clock.py's figures for the day
+        step = (clock or {}).get("largest_step_ns")
+        sat["clock_steady"] = None if step is None else step <= limits.CLOCK_STEADY_NS
     checked = [sat for sat in sats if sat["broadcast"] is not None]
     return {"name": name, "sats": sats, "healthy": sum(sat["ok"] for sat in sats), "total": len(sats),
             "settling": {new: _stage(result, new) for new in result.get("moving") or {}},
             "planes": plane_drift(name, result["rows"]) if by_plane else {},
             "in_file": sum(sat["broadcast"] != "silent" for sat in checked) if checked else None,
             "flagged_healthy": sum(sat["broadcast"] == "ok" for sat in checked) if checked else None,
-            "checked": len(checked), "broadcast_day": (gap or {}).get("day") if checked else None}
+            "checked": len(checked), "broadcast_day": (gap or {}).get("day") if checked else None,
+            **_measures(sats)}
 
 
 def whole(system, parts):
@@ -84,4 +126,5 @@ def whole(system, parts):
             "settling": {name: stage for part in parts for name, stage in part["settling"].items()}, "checked": checked,
             "flagged_healthy": sum(part["flagged_healthy"] or 0 for part in parts) if checked else None,
             "parts": [(systems.part_name(part["name"]), part["healthy"], part["total"]) for part in parts]
-            if len(systems.SYSTEMS[system]) > 1 else []}
+            if len(systems.SYSTEMS[system]) > 1 else [],
+            **_measures([sat for part in parts for sat in part["sats"]])}

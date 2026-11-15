@@ -29,3 +29,15 @@ ORBIT_TYPES = {
     "MEO": "Medium Earth orbit: about 20,000 km up, goes round about twice a day",
 }
 TILT_GEO_BELOW = 10.0
+
+# The three things that keep a navigation satellite useful, and what shows each (ui/system_summary.py).
+#   orbit    it is on the orbit it should be on: every part listed scores in the top band (80 or more)
+#   station  it is being held there: it is in its slot or in step in its plane, and the part listed is in the top band
+#   clock    no clock message that day landed further than CLOCK_STEADY_NS from what the one before predicted
+# "slot" is a satellite held over one longitude (the parts are ui.orbit_section.PARTS' labels); "plane" is one in a
+# medium orbit (the parts are analysis.meo_geometry's). How often and how evenly a satellite burns (Upkeep,
+# Regularity) is how station is kept, not whether it is: it is shown beside the measure, not counted in it.
+MEASURES = {"orbit": {"slot": ("Inclination",), "plane": ("plane", "inclination", "height", "eccentricity")},
+            "station": {"slot": ("Drift",), "plane": ("spacing",)}}
+BURN_PARTS = ("Upkeep", "Regularity")   # a slot satellite's burns: on time, and evenly spaced
+CLOCK_STEADY_NS = 30.0   # our choice: 30 ns is 9 m of range, far past a steady clock's steps (about 1 ns)

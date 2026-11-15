@@ -224,7 +224,8 @@ def test_the_words_a_row_explains_are_links_to_the_card_in_how_to_read_that_expl
         assert heading in {title for _, title, _ in home_settings.HOW}   # each points at a card that exists
     navic = next(row for row in rows_of(bodies) if "NavIC</b>" in row)
     links = re.findall(r'<a class="how-link" href="#([^"]+)"[^>]*>([^<]+)</a>', navic)
-    assert links == [("how-what-is-measured", "healthy and in place"), ("how-what-is-measured", "broadcasting healthy")]
+    assert links == [("how-what-is-measured", words) for words in (
+        "healthy and in place", "orbit kept", "station held", "clock steady", "says healthy")]
     assert {card for card, _ in links} <= cards
 
 
@@ -238,3 +239,64 @@ def test_a_second_visit_in_the_same_hour_does_not_count_a_constellation_again(mo
     run()
 
     assert first and counted == first and len(set(first)) == len(first)   # each part counted once, then kept
+
+
+# --- the three measures: orbit kept, station held, clock steady ---
+
+def test_a_satellite_is_judged_on_orbit_station_and_clock_and_not_judged_where_nothing_shows_it():
+    result = data.load("NavIC", 90)
+    names = [str(name) for name in result["health"]["Satellite"]][:2]
+    steady = {"records": 14, "drift_ns_per_day": 800.0, "typical_step_ns": 0.4, "largest_step_ns": 30.0}   # on the line: still steady
+    stepped = {**steady, "typical_step_ns": 1.2, "largest_step_ns": 30.1}
+    gap = {"day": "2026-11-13", "satellites": [
+        {"satellite": names[0], "signal_id": "I01", "health": 0, "clock": steady},
+        {"satellite": names[1], "signal_id": "I02", "health": 0, "clock": stepped}]}
+
+    system = system_summary.summary("NavIC", result, gap)
+
+    by_name = {sat["name"]: sat for sat in system["sats"]}
+    assert [by_name[name]["clock_steady"] for name in names] == [True, False]
+    assert system["clock"] == (1, 2) and system["clock_typical_ns"] == 0.8   # the middle of 0.4 and 1.2
+    for sat in system["sats"]:
+        if sat["group"] == "set aside":
+            assert sat["orbit"] is None and sat["station"] is None   # nothing scored: not judged, not failed
+            continue
+        tilt, drift = sat["parts"]["Inclination"], sat["parts"]["Drift"]
+        assert sat["orbit"] == (tilt >= 80) and sat["station"] == (drift >= 80 and sat["state"] == palette.SLOT_IN)
+    judged = [sat for sat in system["sats"] if sat["orbit"] is not None]
+    assert system["orbit"] == (sum(sat["orbit"] for sat in judged), len(judged)) and len(judged) == 7
+    assert system_summary.summary("NavIC", result)["clock"] == (0, 0)   # no broadcast check: no clock judged
+
+
+def test_a_row_compares_the_three_measures_and_the_flag_in_that_order():
+    navic = next(row for row in rows(run()) if "NavIC</b>" in row)
+
+    said = re.findall(r'class="how-link"[^>]*>([^<]+)</a></span>(?:<i class="hbar">.*?</i>)?<b class="[^"]*">([^<]+)</b>', navic)
+    assert [words for words, _ in said] == ["orbit kept", "station held", "clock steady", "says healthy"]
+    assert re.fullmatch(r"\d of 7", said[0][1]) and said[2][1] == "not read"   # 7 scored; no broadcast check in tests
+
+
+def test_clock_stepped_fires_for_a_step_past_the_line_and_not_for_steady_clocks():
+    def heard(name, step):
+        return {**sat(name), "clock_steady": step <= 30, "clock": {"largest_step_ns": step}}
+
+    fired = findings.clock(system([heard("A1", 2.0), heard("A2", 42009.3), heard("A3", 35.0), sat("A4")]))
+    quiet = findings.clock(system([heard("A1", 2.0), heard("A2", 29.9), sat("A3")]))
+
+    assert [f["about"] for f in fired] == [["A2", "A3"]] and fired[0]["pair"] == (("largest step, ns", 42009), ("steady up to, ns", 30.0))
+    assert "2 clocks stepped more than 30 ns" in fired[0]["line"] and "1 of 3 clocks heard were steady" in fired[0]["numbers"]
+    assert quiet == []
+
+
+def test_a_constellations_own_page_declares_the_three_measures_and_lists_every_satellite_against_them():
+    for name, station_words in (("NavIC", "in its slot and not drifting"), ("Galileo", "in step with its plane")):
+        bodies = htmls(run(scope(name)))
+
+        strip = next(body for body in bodies if 'class="measures"' in body)
+        assert re.search(r"Orbit kept \d+ of \d+", strip) and re.search(r"Station held \d+ of \d+", strip)
+        assert "Clock steady: not read" in strip and "Says healthy: not read" in strip   # no broadcast check in tests
+        table = next(body for body in bodies if "Orbit kept<small>" in body)
+        assert station_words in table and "Clock steady<small>no step past 30 ns in the day" in table
+        headline = next(body for body in bodies if 'class="head"' in body)
+        counted = int(COUNT.search(headline).group(1).split(" of ")[1])
+        assert table.count("<tr>") - 1 == counted   # a line per satellite the page counts
