@@ -192,6 +192,8 @@ def test_no_orbit_feed_line_without_feed_names_or_without_this_catalogue_number(
     ("BEIDOU-3 G1 (C99)", MAP_WARN, "the signal ID in the name is not in this spacecraft's history"),
     ("BEIDOU-3 G1", MAP_IDLE, "the name carries no signal ID to compare"),
     ("BEIDOU-3 G1 (C59) extra", MAP_IDLE, "the name carries no signal ID to compare"),
+    ("COSMOS 2433 (720)", MAP_IDLE, "the name carries no signal ID to compare"),
+    ("GSAT0101 (GALILEO-PFM)", MAP_IDLE, "the name carries no signal ID to compare"),
 ])
 def test_orbit_feed_line_is_judged_by_the_signal_id_in_brackets(feed_name, status, remark):
     line = feed_line(feed_name)

@@ -7,7 +7,7 @@
 <style>
 __ROOT__
 *, *::before, *::after { box-sizing: border-box; }
-html, body { height: 100%; margin: 0; }
+html, body { margin: 0; }
 body { --mono: __FONT_NUMBERS__; background: var(--platform); color: var(--ink); font: var(--fs-body)/1.4 __FONT__; padding: 14px;
   display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
 button { font: inherit; color: inherit; }
@@ -41,7 +41,8 @@ button { font: inherit; color: inherit; }
 .clear[hidden] { display: none; }
 
 /* ---- the canvas ---- */
-.stage { position: relative; flex: 1; min-height: 0; border-radius: var(--r); background: var(--well); box-shadow: var(--pressed); overflow: hidden; }
+/* The canvas grows with the frame's width, within bounds; the frame then fits the page (fitFrame), so no gap is left. */
+.stage { position: relative; flex: none; height: clamp(380px, 60vw, 720px); border-radius: var(--r); background: var(--well); box-shadow: var(--pressed); overflow: hidden; }
 #map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
 #map.over { cursor: pointer; }
 #map.drag { cursor: grabbing; }
@@ -211,7 +212,7 @@ fields.forEach(f => {
 });
 
 /* ---------- drawing: far is a chip, middle lists the identifiers, close adds who issued each and when we last checked ---------- */
-const KMIN = .04, KMAX = 5;
+const KMIN = .015, KMAX = 5;   // far enough out that every field fits a phone-wide canvas
 let view = { x: 0, y: 0, k: 1 }, flight = 0, queued = 0, dpr = 1;
 let state = new Map();   // svn -> "dim" | "hit"; absent means normal
 let current = null, focused = null, returning = false;   // returning: focus coming back from the side panel, so the view stays put
@@ -355,9 +356,9 @@ function showTip(e) {
   const x = px + 16 + w > b.width - 8 ? px - 16 - w : px + 16;   // flip to the pointer's left near the right edge
   tip.style.left = clamp(x, 8, b.width - w - 8) + "px"; tip.style.top = clamp(py + 16, 8, b.height - h - 8) + "px";
 }
-const pointers = new Map(); let travelled = 0, downOn = null;
+const pointers = new Map(); let travelled = 0, downOn = null, touched = false;   // touched: the reader has moved the view
 canvas.addEventListener("pointerdown", e => {
-  cancelAnimationFrame(flight); canvas.setPointerCapture(e.pointerId); hideTip();
+  touched = true; cancelAnimationFrame(flight); canvas.setPointerCapture(e.pointerId); hideTip();
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (pointers.size === 1) { travelled = 0; downOn = cardAt(e); canvas.classList.add("drag"); } else downOn = null;
 });
@@ -381,7 +382,7 @@ const lift = e => {
 };
 canvas.addEventListener("pointerup", lift); canvas.addEventListener("pointercancel", lift); canvas.addEventListener("pointerleave", hideTip);
 canvas.addEventListener("wheel", e => {
-  e.preventDefault(); cancelAnimationFrame(flight); hideTip();
+  e.preventDefault(); touched = true; cancelAnimationFrame(flight); hideTip();
   const b = rect(), dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
   zoomAt(e.clientX - b.left, e.clientY - b.top, Math.exp(-dy * (e.ctrlKey ? .01 : .0015)));
 }, { passive: false });
@@ -511,14 +512,27 @@ function deselect() {
 $("close").addEventListener("click", deselect);
 document.addEventListener("keydown", e => { if (e.key === "Escape" && current) { e.preventDefault(); deselect(); } });
 
-/* ---------- start ---------- */
+/* ---------- start: a system chosen on the page around the map (DATA.focus) opens filtered to it ---------- */
+function fitFrame() {   // the frame takes the page's own height, so nothing scrolls inside it and no gap is left
+  if (!window.frameElement) return;
+  const parts = [...document.body.children].filter(e => e.tagName !== "SCRIPT");
+  window.frameElement.style.height = Math.ceil(Math.max(0, ...parts.map(e => e.getBoundingClientRect().bottom + window.scrollY))) + 14 + "px";
+}
+if (DATA.focus && RECS.some(r => r.constellation === DATA.focus)) {   // chosen from a row above: bring the map into view
+  chosen.constellation.add(DATA.focus);
+  const back = window.frameElement && (parent.document.querySelector(".st-key-mm_all") || window.frameElement);   // its "Show every constellation" button first
+  if (back) back.scrollIntoView({ behavior: reduce.matches ? "auto" : "smooth", block: "start" });
+}
 let started = false;
 new ResizeObserver(() => {
   resize();
-  if (!started || !(current || FILTERS.some(([key]) => chosen[key].size))) view = home();
-  started = true; draw();
+  const filtered = FILTERS.some(([key]) => chosen[key].size), hits = RECS.filter(r => matches(r));
+  // the frame's width settles after the first draw: until the reader moves the view, it keeps fitting everything in view
+  if (!started || !touched && !current) view = filtered && hits.length ? fitTo(hits) : home();
+  started = true; draw(); fitFrame();
 }).observe(stage);
 refresh(false);
+fitFrame();
 })();
 </script>
 </body>

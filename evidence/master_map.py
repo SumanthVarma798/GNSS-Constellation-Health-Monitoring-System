@@ -23,7 +23,9 @@ from evidence.settings import (GCAT_MISSION_FAILED, GCAT_STILL_OPERATING, IDENTI
                                SOURCE_SIGHTING, SOURCE_SILENT)
 
 NUMBER_WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
-SIGNAL_ID_IN_BRACKETS = re.compile(r"\(([^()\s]+)\)\s*$")  # "BEIDOU-3 G1 (C59)" -> "C59"
+# "BEIDOU-3 G1 (C59)" -> "C59": a system letter and two digits. Other brackets in CelesTrak's names are other names
+# ("COSMOS 2433 (720)", "GSAT0101 (GALILEO-PFM)", "NVS-01 (IRNSS-1J)"), never a signal ID to compare.
+SIGNAL_ID_IN_BRACKETS = re.compile(r"\(([A-Z]\d{2})\)\s*$")
 
 
 def _by_svn(rows):

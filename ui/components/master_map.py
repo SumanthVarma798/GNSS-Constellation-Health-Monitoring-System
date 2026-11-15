@@ -60,18 +60,23 @@ def embed(value):
     return text
 
 
-def master_map_html(data):
-    """The finished page: colours and fonts first, the data last so it is never searched for placeholders."""
+def master_map_html(data, focus=None, records=None):
+    """The finished page: colours and fonts first, the data last so it is never searched for placeholders.
+
+    focus names a constellation the map opens filtered to (chosen on the page around it), or None for every one.
+    records is master_map_records(data) when the caller has made it already."""
     page = PAGE_FILE.read_text(encoding="utf-8")
     fills = {"__ROOT__": root_block(), "__FONT__": palette.FONT, "__FONT_NUMBERS__": palette.FONT_NUMBERS, "__TIP__": CARD_CSS}
     for placeholder, text in fills.items():
         page = page.replace(placeholder, text)
-    payload = {"records": master_map_records(data), "colours": palette.CONSTELLATION_COLOURS}
+    payload = {"records": records if records is not None else master_map_records(data),
+               "colours": palette.CONSTELLATION_COLOURS, "focus": focus}
     return page.replace("__DATA__", embed(payload))
 
 
-def master_map_canvas(data, height=720):
-    """Show the map. data is ui.pages_data.load_master_map_data()."""
+def master_map_canvas(data, focus=None, records=None, height=560):
+    """Show the map. data is ui.pages_data.load_master_map_data(), with the live feed laid over it. height is only a
+    first guess: the frame then fits the page it holds."""
     from streamlit.components.v1 import html
 
-    html(master_map_html(data), height=height, scrolling=False)
+    html(master_map_html(data, focus, records), height=height, scrolling=False)
