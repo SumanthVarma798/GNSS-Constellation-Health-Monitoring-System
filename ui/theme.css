@@ -430,6 +430,16 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
   .tt-trigger.pill { padding-block: 10px; }
   [data-testid="stExpander"] summary { min-height: 44px; }
 }
+/* a touch screen of any width (a tablet): the same 40px controls for a finger */
+@media (pointer: coarse) {
+  [data-testid="stButtonGroup"] button, [data-testid="stButtonGroup"] button[data-testid^="stBaseButton-segmented"],
+  [data-testid="stMain"] :is([data-testid="stButton"], [data-testid="stDownloadButton"]) button,
+  .st-key-compare_toggle button, [data-testid="stPopover"] button { min-height: 40px; }
+  .st-key-refresh [data-testid="stPopover"] button, .st-key-refresh_button button { width: 40px; height: 40px; }
+  [data-testid="stNumberInput"] [data-baseweb="input"] { min-height: 40px; }
+  [data-testid="stNumberInput"] button { min-width: 40px; min-height: 40px; }
+  .th-more summary { min-height: 40px; }
+}
 
 /* ---- expandable sections (ui/reveal.py): a raised card, a header row, the details sliding open under it ---- */
 [class*="st-key-rv_"] { gap: 0; background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised-sm); }
@@ -633,6 +643,11 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
   .st-key-nav > .st-key-nav_system, .st-key-nav > div:has(.st-key-nav_system) { display: none; }   /* the chips give way to... */
   .st-key-nav > div:has(.st-key-system_menu) { display: block; }     /* ...the menu */
   .st-key-subnav_in > div:has(.st-key-range) { margin-left: 0; }
+  /* the pills of a row wrap onto a second line instead of scrolling sideways inside their track */
+  :is(.st-key-nav, .st-key-subnav_in) [data-testid="stButtonGroup"] { overflow: visible; }
+  :is(.st-key-nav, .st-key-subnav_in) [data-baseweb="button-group"] { flex-wrap: wrap; border-radius: 20px; }
+  .st-key-subnav_in { padding: 8px; gap: 8px; }
+  .st-key-topbar .chip { white-space: normal; text-align: right; border-radius: 14px; }   /* a long data chip wraps inside the bar */
 }
 /* a part of a system with several: the whole system's count over the part's own page (views/overview.py) */
 .sysline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; margin: 0 0 14px; }
@@ -649,5 +664,13 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
 .th-help { margin: 0; display: grid; gap: 4px; font-size: var(--fs-small); line-height: 1.45; }
 .th-help > div { display: grid; grid-template-columns: 7.2em 1fr; gap: 10px; }
 .th-help dt { color: var(--muted); } .th-help dd { margin: 0; color: var(--ink); }
+.th-what { margin: 0; font-size: var(--fs-small); line-height: 1.45; color: var(--ink); }
+.th-more { margin-top: 6px; }
+.th-more summary { display: inline-flex; align-items: center; gap: 8px; min-height: 32px; cursor: pointer; list-style: none; font-size: var(--fs-small); color: var(--accent); }
+.th-more summary::-webkit-details-marker { display: none; }
+.th-more summary::after { content: ""; width: 7px; height: 7px; margin-top: -3px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform 200ms ease; }
+.th-more[open] summary::after { transform: translateY(3px) rotate(225deg); }
+.th-more summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.th-more .th-help { margin-top: 6px; }
 .th-also { margin: 6px 0 0; }
 @media (max-width: 479.98px) { .th-help > div { grid-template-columns: 1fr; gap: 0; } }

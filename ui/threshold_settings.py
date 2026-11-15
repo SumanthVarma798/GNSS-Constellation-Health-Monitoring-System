@@ -13,8 +13,8 @@ SCORING = "Scoring"
 GROUPS = {
     BURNS: "A burn is found where a satellite's orbit steps suddenly and stays stepped. These four decide how sudden "
            "and how large a step must be. They change the burns listed on Station-keeping and, through upkeep and "
-           "regularity, the scores of the systems judged by slot.",
-    SCORING: "How strictly a satellite is marked for leaving its target orbit. These three apply to the systems "
+           "regularity, the scores of the constellations judged by slot.",
+    SCORING: "How strictly a satellite is marked for leaving its target orbit. These three apply to the constellations "
              "judged by longitude slot: NavIC, QZSS and BeiDou-3's high orbit.",
 }
 # Said in place of the scoring group for a system judged by orbital plane, whose limits are not moved here.
@@ -58,7 +58,7 @@ SETTINGS = [
      "what": "How far a satellite's tilt may sit from its target before the tilt part of its score falls.",
      "raise": "More forgiving: a satellite whose tilt has wandered still scores well.",
      "lower": "Stricter: a small departure costs points.",
-     "when": "Raise it for a system that lets tilt wander by design (QZSS starts at 4°). Lower it to see which "
+     "when": "Raise it for a constellation that lets tilt wander by design (QZSS starts at 4°). Lower it to see which "
              "satellites are held most tightly."},
     {"key": "drift_tolerance_gso", "group": SCORING, "label": "Drift allowed for a geostationary satellite (°/day)",
      "also": "GEO drift tolerance", "low": 0.01, "high": 0.5, "step": 0.01, "format": "%.2f",

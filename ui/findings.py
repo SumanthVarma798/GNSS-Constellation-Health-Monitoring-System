@@ -107,10 +107,10 @@ def odd(summary):
     low = sorted((sat for sat in scored if sat["score"] < floor), key=lambda sat: sat["score"])
     return _each("odd", summary["name"], [sat["name"] for sat in low], lambda names: _finding(
         "odd", summary["name"],
-        f"{_names(names)} score{'s' if len(names) == 1 else ''} well under the rest of the system",
-        f"lowest {min(sat['score'] for sat in low if sat['name'] in names):.0f} · the system's median is "
+        f"{_names(names)} score{'s' if len(names) == 1 else ''} well under the rest of the constellation",
+        f"lowest {min(sat['score'] for sat in low if sat['name'] in names):.0f} · the constellation's median is "
         f"{middle:.0f} · the line is {floor:.0f} ({ODD_SPREADS:g} spreads of {spread:.1f} under it)",
-        (("system median", round(middle)), ("lowest", round(min(sat["score"] for sat in low if sat["name"] in names)))),
+        (("constellation median", round(middle)), ("lowest", round(min(sat["score"] for sat in low if sat["name"] in names)))),
         (middle - min(sat["score"] for sat in low if sat["name"] in names)) / (ODD_SPREADS * spread), names))
 
 

@@ -71,7 +71,7 @@ __TIP__
   <button type="button" class="home" id="home">Home</button>
   <div class="seg" id="colourseg" role="group" aria-label="Colour by">
     <button type="button" data-colour="health" aria-pressed="true">Broadcast health</button>
-    <button type="button" data-colour="system" aria-pressed="false">System</button>
+    <button type="button" data-colour="system" aria-pressed="false">Constellation</button>
   </div>
   <button type="button" class="switch" id="tracks" role="switch" aria-checked="false"><span class="knob" aria-hidden="true"></span>All tracks</button>
   <button type="button" class="switch" id="labels" role="switch" aria-checked="false"><span class="knob" aria-hidden="true"></span>Names</button>
@@ -236,7 +236,7 @@ function updateTip() {
   const sat = hovered;
   const dl = el("dl");
   const row = (k, v) => { dl.append(el("dt", null, k), el("dd", null, v)); };
-  row("System", sat.system);
+  row("Constellation", sat.system);
   if (sat.signal_id) row("Signal ID", sat.signal_id);
   row("Broadcast health", sat.health_words);
   row("Signal accuracy", sat.accuracy_words);

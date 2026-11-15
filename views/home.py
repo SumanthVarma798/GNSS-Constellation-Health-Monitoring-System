@@ -74,7 +74,7 @@ def _row(system, unread=None):
 def _failed(name, error):
     return (f'<div class="sys idle"><div class="sys-id"><b>{escape(name)}</b></div>'
             f'<div class="sys-mid small">Could not be read just now: {escape(_why(error))}. '
-            'The other systems are not affected.</div></div>')
+            'The other constellations are not affected.</div></div>')
 
 
 def _why(error):
@@ -126,9 +126,9 @@ def page():
     healthy, total = sum(s["healthy"] for s in wholes.values()), sum(s["total"] for s in wholes.values())
     surfaces.show(f'<div class="head"><span class="big num">{healthy} of {total}</span>'
                   f'<span class="muted">navigation satellites healthy and in place, across '
-                  f'{reveal.count(len(wholes), "system")}</span>'
+                  f'{reveal.count(len(wholes), "constellation")}</span>'
                   f'<span class="right">{tooltip.legend([(DOT_COLOURS[kind], f"{shape}: {meaning}") for kind, meaning, shape in DOTS], "What a dot means")}</span></div>'
-                  '<p class="lede small">One row per system, one dot per satellite. A row opens that system, where every '
+                  '<p class="lede small">One row per constellation, one dot per satellite. A row opens that constellation, where every '
                   'satellite and every number behind these counts is shown.</p>')
     with st.container(key="home_systems"):
         for index, (system, names) in enumerate(SYSTEMS_PARTS.items()):

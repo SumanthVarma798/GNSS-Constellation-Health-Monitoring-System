@@ -23,7 +23,7 @@ RULES = {
     "silent": ("Tracked but silent", "the satellites we track against the IGS daily broadcast file"),
     "disagree": ("Two sources disagree", "the operator's own health flag against our orbit check"),
     "plane": ("Plane out of step", "one orbital plane against its sister planes"),
-    "odd": ("Odd one out", "one satellite's score against the others in its system"),
+    "odd": ("Odd one out", "one satellite's score against the others in its constellation"),
 }
 ODD_SPREADS = 3.0        # a score this many spreads under its system's median is the odd one out. Our choice.
 ODD_SPREAD_FLOOR = 5.0   # the spread is never taken as less than this many points, so a system of all 100s does
@@ -43,7 +43,7 @@ EXPLAINED = {
 HOW = [
     ("radar", "What is measured", [
         ("Healthy and in place", "The satellite's orbit, from public tracking records, scores 80 or more out of 100, "
-         "and it sits in its slot or keeps step in its orbital plane. The system's own page shows every part of "
+         "and it sits in its slot or keeps step in its orbital plane. The constellation's own page shows every part of "
          "that score."),
         ("Broadcasting healthy", "The health flag each satellite sends about itself. It is read once a day from the "
          "International GNSS Service's daily broadcast file, which holds the navigation messages its ground "
@@ -52,20 +52,20 @@ HOW = [
     ("calculator", "How", [
         ("Two counts, never mixed", "They come from different sources. Where they disagree, the page says so under "
          "Worth a look."),
-        ("Default limits", "The counts use the default limits. Limits you move on a system's page apply on that "
+        ("Default limits", "The counts use the default limits. Limits you move on a constellation's page apply on that "
          "page only."),
         ("Findings by rule", "A finding is raised by a named rule, never picked by hand. The largest finding of "
          "each rule is listed first, then the rest by rule and by size."),
     ]),
     ("alert-triangle", "What is left out", [
-        ("Measured accuracy", "How accurate each system's signal actually is. That needs precise orbit and clock "
+        ("Measured accuracy", "How accurate each constellation's signal actually is. That needs precise orbit and clock "
          "products we do not read yet. The broadcast flag is what the operator states, not a measurement."),
         ("Our choices", "The colours (green from 80 in 100, amber from 60) and the odd-one-out line (3 spreads "
          "under the median) are our choices, not a standard."),
         ("Settling in", "A satellite still moving to its slot is not counted until it arrives."),
     ]),
     ("rocket", "What comes next", [
-        ("More counts per system", "Stated accuracy per system, then measured signal error, each as its own count "
+        ("More counts per constellation", "Stated accuracy per constellation, then measured signal error, each as its own count "
          "beside these two."),
     ]),
 ]

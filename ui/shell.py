@@ -150,11 +150,14 @@ def _reset(scope, shown):
 
 
 def _setting_help(setting, default):
-    """What to know before moving one setting: what it does, what raising and lowering it does, when to change it."""
+    """What to know before moving one setting. What it does is always in view; what raising and lowering it does,
+    and when to change it, open one step deeper."""
     rows = "".join(f"<div><dt>{escape(term)}</dt><dd>{escape(setting[field])}</dd></div>" for term, field in (
-        ("What it does", "what"), ("Raise it", "raise"), ("Lower it", "lower"), ("Change it when", "when")))
-    return (f'<dl class="th-help">{rows}</dl><p class="th-also small">Default {setting["format"] % default} · '
-            f'also called {escape(setting["also"])}</p>')
+        ("Raise it", "raise"), ("Lower it", "lower"), ("Change it when", "when")))
+    return (f'<p class="th-what">{escape(setting["what"])}</p>'
+            f'<details class="th-more"><summary>Raising it, lowering it, and when to change it</summary>'
+            f'<dl class="th-help">{rows}</dl></details>'
+            f'<p class="th-also small">Default {setting["format"] % default} · also called {escape(setting["also"])}</p>')
 
 
 def _thresholds(scope):
@@ -164,7 +167,7 @@ def _thresholds(scope):
     by_plane = scope in MEO_SATS
     shown = [s for s in threshold_settings.SETTINGS if not (by_plane and s["group"] == threshold_settings.SCORING)]
     st.html(f'<div class="th-head"><b>Settings for {escape(scope)}</b><span class="small">They apply on this '
-            "system's pages for this visit. The Home page always uses the defaults.</span></div>")
+            "constellation's pages for this visit. The Home page always uses the defaults.</span></div>")
     moved = {}
     for group, words in threshold_settings.GROUPS.items():
         if by_plane and group == threshold_settings.SCORING:
@@ -388,15 +391,15 @@ def _nav(current, names, on_system, filtered, comparing):
         st.session_state["system_page"] = current.title
     with st.container(key="nav"):
         st.session_state["nav_all"] = None if on_system else current.title
-        st.segmented_control("Across all systems", ALL_PAGES, key="nav_all", label_visibility="collapsed",
+        st.segmented_control("Across all constellations", ALL_PAGES, key="nav_all", label_visibility="collapsed",
                              on_change=_pick_page, args=("nav_all",))
-        st.html('<span class="nav-label">Systems</span>')
+        st.html('<span class="nav-label">Constellations</span>')
         st.session_state["nav_system"] = st.session_state["nav_system_menu"] = system if on_system else None
-        st.segmented_control("System", list(systems.SYSTEMS), key="nav_system", label_visibility="collapsed",
+        st.segmented_control("Choose a constellation", list(systems.SYSTEMS), key="nav_system", label_visibility="collapsed",
                              on_change=_pick_system, args=("nav_system",))
-        with st.container(key="system_menu"), st.popover(system if on_system else "Choose a system",
-                                                         help="Choose the system"):   # the phone's menu
-            st.segmented_control("System menu", list(systems.SYSTEMS), key="nav_system_menu",
+        with st.container(key="system_menu"), st.popover(system if on_system else "Choose a constellation",
+                                                         help="Choose the constellation"):   # the phone's menu
+            st.segmented_control("Constellation menu", list(systems.SYSTEMS), key="nav_system_menu",
                                  label_visibility="collapsed", on_change=_pick_system, args=("nav_system_menu",))
     with st.container(key="subnav"), st.container(key="subnav_in"):
         st.session_state["nav_page"] = current.title if on_system else None
