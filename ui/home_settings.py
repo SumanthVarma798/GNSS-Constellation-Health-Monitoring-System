@@ -62,10 +62,19 @@ HOW = [
          "products we do not read yet. The broadcast flag is what the operator states, not a measurement."),
         ("Our choices", "The colours (green from 80 in 100, amber from 60) and the odd-one-out line (3 spreads "
          "under the median) are our choices, not a standard."),
-        ("Settling in", "A satellite still moving to its slot is not counted until it arrives."),
+        ("New satellites", "A satellite on its way to its slot, or at its slot for under 30 days, is not scored or "
+         "counted yet. Its row names it."),
     ]),
     ("rocket", "What comes next", [
         ("More counts per constellation", "Stated accuracy per constellation, then measured signal error, each as its own count "
          "beside these two."),
     ]),
 ]
+
+# The words on a row that "How to read this page" explains: {words on the row: the heading of the card that explains
+# them}. On the row they are a link to that card.
+HOW_LINKS = {
+    "healthy and in place": "What is measured",
+    "broadcasting healthy": "What is measured",
+    "not scored yet": "What is left out",
+}

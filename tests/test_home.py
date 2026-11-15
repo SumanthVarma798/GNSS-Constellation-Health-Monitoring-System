@@ -213,3 +213,16 @@ def test_the_largest_finding_of_each_rule_is_listed_first():
 
     assert [(f["rule"], f["system"]) for f in listed] == [("silent", "Large"), ("disagree", "Large"),
                                                           ("silent", "Small"), ("disagree", "Small")]
+
+
+def test_the_words_a_row_explains_are_links_to_the_card_in_how_to_read_that_explains_them():
+    bodies = htmls(run())
+
+    cards = set(re.findall(r'<div class="how well" id="([^"]+)"', next(b for b in bodies if 'class="how-grid"' in b)))
+    assert cards == {"how-what-is-measured", "how-how", "how-what-is-left-out", "how-what-comes-next"}
+    for words, heading in home_settings.HOW_LINKS.items():
+        assert heading in {title for _, title, _ in home_settings.HOW}   # each points at a card that exists
+    navic = next(row for row in rows_of(bodies) if "NavIC</b>" in row)
+    links = re.findall(r'<a class="how-link" href="#([^"]+)"[^>]*>([^<]+)</a>', navic)
+    assert links == [("how-what-is-measured", "healthy and in place"), ("how-what-is-measured", "broadcasting healthy")]
+    assert {card for card, _ in links} <= cards

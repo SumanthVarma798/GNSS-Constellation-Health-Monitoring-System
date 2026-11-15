@@ -621,6 +621,12 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
 .how { font-size: var(--fs-body); line-height: 1.55; }
 .how-h { display: flex; align-items: center; gap: 10px; font-size: var(--fs-section); font-weight: var(--fw-section); margin-bottom: 10px; }
 .how-h .ic { width: 1.25em; height: 1.25em; color: var(--accent); }
+/* words on a row that "How to read this page" explains: a link to its card, dotted under like every word that opens
+   an explanation, and above the button laid over the row so it can be clicked on its own */
+.how-link { position: relative; z-index: 2; color: inherit; text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; }
+.how-link:hover, .how-link:focus-visible { color: var(--accent); }
+.how { scroll-margin-top: 96px; transition: box-shadow 300ms ease; }
+.how.lit, .how:target { box-shadow: var(--pressed), 0 0 0 2px var(--accent); }   /* the card a link has just brought the reader to */
 .how p { margin: 0 0 10px; color: var(--muted); } .how p:last-child { margin-bottom: 0; } .how p b { color: var(--ink); font-weight: 600; }
 [class*="st-key-home_row_"] { position: relative; gap: 0; }
 .st-key-home_systems, .st-key-home_findings { gap: 12px; margin-bottom: 14px; }
