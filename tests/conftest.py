@@ -11,7 +11,7 @@ import pytest
 import requests
 
 from data import celestrak, spacetrack
-from ui import data, shell
+from ui import data, home_data, shell
 
 
 @pytest.fixture(autouse=True)
@@ -26,6 +26,7 @@ def private_celestrak_copy(monkeypatch, tmp_path):
     # The tests written before the Home page open on the Overview, as the dashboard then did; tests/test_home.py
     # sets the default back.
     monkeypatch.setattr(shell, "DEFAULT_PAGE", "Overview")
+    home_data.part_summary.clear()   # Home keeps its counts; a test must not read another test's
 
 
 def _no_copy(norads):

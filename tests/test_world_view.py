@@ -58,16 +58,18 @@ def test_a_service_area_is_drawn_only_while_its_system_is_the_only_one_shown():
     assert labels == [world_settings.SERVICE_AREAS["NavIC"]["label"], None, None, None]
 
 
-def test_the_globes_land_is_a_matrix_of_dots_and_the_chips_say_they_can_be_clicked():
+def test_the_map_is_flat_only_and_the_chips_say_they_can_be_clicked():
     from ui.components.world_view import world_view_html
-    from ui.figures.orbits_3d import land_dots
 
     page = world_view_html([])
 
-    dots = land_dots()
-    assert len(dots) > 500 and all(-90 <= lat <= 90 and -180 <= lon < 180 for lat, lon in dots)
-    assert "__LAND_DOTS__" not in page and f"const LAND_DOTS = [{dots[0][0]}, {dots[0][1]}," in page
+    # one flat map: each satellite is drawn where it is over the ground, which a globe would only repeat
+    assert "Globe" not in page and "projectGlobe" not in page and 'id="viewseg"' not in page
     assert "Click a constellation to hide or show it" in page and "Click to hide it." in page
+    # and the flat map is still all there: its canvas, its projection, the land outlines and the satellites' marks
+    for part in ('<canvas id="map"', "const project = projectFlat;", "function strokeLand()", "function drawMarks()",
+                 "const LAND = [["):
+        assert part in page, part
 
 
 def test_the_parts_of_one_constellation_are_one_entry_on_the_map():

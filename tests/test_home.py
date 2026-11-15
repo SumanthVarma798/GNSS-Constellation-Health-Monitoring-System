@@ -226,3 +226,15 @@ def test_the_words_a_row_explains_are_links_to_the_card_in_how_to_read_that_expl
     links = re.findall(r'<a class="how-link" href="#([^"]+)"[^>]*>([^<]+)</a>', navic)
     assert links == [("how-what-is-measured", "healthy and in place"), ("how-what-is-measured", "broadcasting healthy")]
     assert {card for card, _ in links} <= cards
+
+
+def test_a_second_visit_in_the_same_hour_does_not_count_a_constellation_again(monkeypatch):
+    counted, real = [], system_summary.summary
+    monkeypatch.setattr(system_summary, "summary",
+                        lambda name, result, gap=None: counted.append(name) or real(name, result, gap))
+
+    run()   # opens the page and runs it again: two visits already
+    first = list(counted)
+    run()
+
+    assert first and counted == first and len(set(first)) == len(first)   # each part counted once, then kept
