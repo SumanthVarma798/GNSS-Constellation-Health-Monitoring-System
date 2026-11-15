@@ -33,6 +33,7 @@ from skyfield.framelib import itrs
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from analysis.broadcast_orbit import (FIT, nearest, position, read_glonass, read_navigation,  # noqa: E402
                                       read_status, seconds_from_toe, system_time, time_corrections)
+from analysis.broadcast_clock import clocks as broadcast_clocks  # noqa: E402
 from analysis.orbit_fit import fit as fit_orbit  # noqa: E402
 from data import celestrak  # noqa: E402
 from evidence.settings import ORBIT_FIT_MAX_KM, ORBIT_FIT_MIN_SAMPLES  # noqa: E402
@@ -217,6 +218,7 @@ def rows_for_day(day, file=None, now=None, previous_fitted_dir=None):
     statuses = read_status(text)
     glonass = read_glonass(text)
     corrections = time_corrections(text)
+    clocks = broadcast_clocks(text)
     satellites = tracked(day)
     records = orbit_records([norad for _, _, norad, _ in satellites], now)
     fitted = previous_fitted(previous_fitted_dir, day)
@@ -230,6 +232,7 @@ def rows_for_day(day, file=None, now=None, previous_fitted_dir=None):
             row["health"] = status["health"]
             row["accuracy_m"] = status["accuracy_m"]
             row["broadcast_newest"] = status["newest"].strftime("%Y-%m-%dT%H:%M:%S")
+            row["clock"] = clocks.get(signal_id)   # how steadily its clock ran that day (analysis/broadcast_clock.py)
         if signal_id not in statuses:
             row["note"] = "not in the day's broadcast file"
             rows.append(row)
@@ -312,7 +315,7 @@ def summary(rows):
 def _row_payload(row):
     keys = ("satellite", "signal_id", "record_epoch", "typical_km", "largest_km", "mostly", "note", "fitted_km")
     payload = {key: row.get(key) for key in keys}
-    for key in ("health", "accuracy_m", "broadcast_newest"):
+    for key in ("health", "accuracy_m", "broadcast_newest", "clock"):
         if key in row:
             payload[key] = row[key]
     return payload

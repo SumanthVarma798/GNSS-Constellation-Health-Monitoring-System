@@ -227,3 +227,10 @@ def test_every_tracked_satellite_the_registry_lists_is_checked_including_one_sti
 
     assert names == expected and "NVS-03" in names
     assert orbit_record_gap.cospar_ids()["I-101228"] == "2026-245A"
+
+
+def test_a_rows_clock_is_published_and_a_row_without_one_has_no_clock_key():
+    clock = {"records": 14, "drift_ns_per_day": 864.0, "typical_step_ns": 0.2, "largest_step_ns": 1.1}
+    payload = orbit_record_gap.json_payload(date(2026, 10, 17), "2026-10-18T06:00:00Z", [{**ROWS[0], "clock": clock}, ROWS[1]])
+
+    assert payload["satellites"][0]["clock"] == clock and "clock" not in payload["satellites"][1]
