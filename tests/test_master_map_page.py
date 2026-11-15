@@ -85,7 +85,7 @@ def test_the_page_reads_in_the_dashboards_order_with_a_row_per_constellation():
     text = "\n".join(bodies)
 
     rows = [body for body in bodies if body.startswith('<div class="sys mm-sys"')]
-    assert [re.search(r"<b>([^<]+)</b>", row).group(1) for row in rows] == list(systems.SYSTEMS)
+    assert [re.search(r"<b>(?:<span[^>]*></span>)?([^<]+)</b>", row).group(1) for row in rows] == list(systems.SYSTEMS)   # after its mark
     order = ["navigation spacecraft on record", '<div class="sys mm-sys"', "Every spacecraft under every name",
              "Where this comes from", "mm-sources"]
     assert [text.index(words) for words in order] == sorted(text.index(words) for words in order)
@@ -123,8 +123,9 @@ def test_news_opens_on_the_rows_constellation_and_lifecycles_on_its_shelf_in_the
 
     at = open_page()
     at.button(key="mm_lib_2").click().run()   # BeiDou-3
-    assert at.session_state["library_jump"] == {"shelf": "satellites", "constellation": "BeiDou-3"}
     assert at.session_state["page"] == "Library"
+    # the Library took the jump in the same run: it is used up, and one scroll to a shelf was asked for
+    assert "library_jump" not in at.session_state and at.session_state["_library_jumps"] == 1
 
 
 def test_a_card_says_what_was_compared_with_what_and_never_judges_what_no_one_checked():

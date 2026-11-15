@@ -10,7 +10,7 @@ from html import escape
 from evidence import jobs
 from evidence.console_settings import WORKFLOWS_DIR
 from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS, SCHEME_SIGNAL_ID
-from ui import icons, palette, surfaces, tooltip
+from ui import icons, marks, palette, surfaces, tooltip
 from ui.master_map_settings import DOTS, HOW, NOTES, REGISTRY_NAMES, REGISTRY_WORKFLOW, WHO
 from ui.pages_data import live_feed_time
 
@@ -110,7 +110,7 @@ def row(summary):
     look = (_figure(summary["look"], "worth a look: the IGS metadata file, GCAT or CelesTrak disagree", "warn") if summary["look"]
             else _figure(0, "worth a look: the IGS metadata file, GCAT and CelesTrak agree", "ok"))
     return (f'<div class="sys mm-sys" style="border-left-color:{colour}">'
-            f'<div class="sys-id"><b>{escape(name)}</b>'
+            f'<div class="sys-id"><b>{marks.mark(name)}{escape(name)}</b>'
             f'<span class="small">{escape(" · ".join(filter(None, [who, where])))}</span>'
             f'<span class="small">{spacecraft(summary["total"])} on record</span></div>'
             f'<div class="sys-mid">{_dots(summary)}'
