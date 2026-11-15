@@ -38,15 +38,17 @@ def _each(rule, system, names, make):
 
 
 def silent(summary):
-    """Tracked and in orbit, but missing from the day's broadcast file."""
+    """Tracked and in orbit, but missing from the day's broadcast file: the International GNSS Service's merged file
+    of the navigation messages its ground stations received that day."""
     counted = [sat for sat in summary["sats"] if sat["broadcast"] is not None and sat["group"] != "set aside"]
     missing = [sat["name"] for sat in counted if sat["broadcast"] == "silent"]
     return _each("silent", summary["name"], missing, lambda names: _finding(
         "silent", summary["name"],
-        f"{reveal.count(len(names), 'tracked satellite')} not in the day's broadcast file",
-        f"{_names(names)} · {len(counted) - len(missing)} of {len(counted)} tracked are in the file of "
-        f"{_day(summary['broadcast_day'])}",
-        (("tracked", len(counted)), ("in the file", len(counted) - len(missing))), len(names) / len(counted), names))
+        f"{reveal.count(len(names), 'tracked satellite')} not in the IGS daily broadcast file",
+        f"{_names(names)} · {len(counted) - len(missing)} of {len(counted)} tracked are in the file for "
+        f"{_day(summary['broadcast_day'])}, which holds the navigation messages IGS ground stations received that day",
+        (("tracked here", len(counted)), ("in the IGS file", len(counted) - len(missing))),
+        len(names) / len(counted), names))
 
 
 def disagree(summary):
@@ -67,7 +69,7 @@ def disagree(summary):
         "disagree", name,
         f"{len(names)} flagged unhealthy by {'its' if len(names) == 1 else 'their'} own broadcast, though healthy "
         "and in place by our orbit check",
-        f"{_names(names)} · {len(flagged_bad)} flagged unhealthy in the file of {_day(summary['broadcast_day'])}",
+        f"{_names(names)} · {len(flagged_bad)} flagged unhealthy in the IGS daily broadcast file for {_day(summary['broadcast_day'])}",
         (("healthy and in place", sum(sat["ok"] for sat in sats)), ("also flagged healthy", sum(sat["ok"] for sat in flagged_ok))),
         len(names) / len(sats), names))
 

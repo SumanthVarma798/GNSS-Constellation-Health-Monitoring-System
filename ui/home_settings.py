@@ -3,12 +3,11 @@
 The numbers marked "our choice" are not from a standard: they are named on the page, in "How to read this page".
 """
 
-# Who runs each system and where it serves, for a reader new to them: {name as the top bar spells it: (who, where)}.
+# Who runs each system and where it serves, for a reader new to them: {system (ui/systems.py): (who, where)}.
 SYSTEMS = {
     "NavIC": ("India", "regional: India and 1,500 km around"),
     "QZSS": ("Japan", "regional: Japan and Asia-Oceania"),
-    "BeiDou-3": ("China", "its high-orbit satellites, over Asia-Pacific"),
-    "BeiDou-3 MEO": ("China", "its medium-orbit satellites, global"),
+    "BeiDou-3": ("China", "global"),
     "GPS": ("United States", "global"),
     "GLONASS": ("Russia", "global"),
     "Galileo": ("European Union", "global"),
@@ -21,7 +20,7 @@ CAVEATS = {
 
 # "Worth a look": the rules, in the order their findings are listed. {rule: (name, what it compares)}.
 RULES = {
-    "silent": ("Tracked but silent", "the satellites we track against the day's broadcast file"),
+    "silent": ("Tracked but silent", "the satellites we track against the IGS daily broadcast file"),
     "disagree": ("Two sources disagree", "the operator's own health flag against our orbit check"),
     "plane": ("Plane out of step", "one orbital plane against its sister planes"),
     "odd": ("Odd one out", "one satellite's score against the others in its system"),
@@ -39,28 +38,34 @@ EXPLAINED = {
     ("disagree", "Galileo", "GSAT0202"): "launched into a wrong, eccentric orbit in 2014; flagged by Galileo itself",
 }
 
-# "How to read this page": the same order the whole dashboard follows. (heading, lines).
+# "How to read this page": the same order the whole dashboard follows. (icon in ui/icons.py MASKED, heading,
+# [(the term in bold, what to know about it)]).
 HOW = [
-    ("What is measured", [
-        "In place: the satellite's orbit, from public tracking records, scores 80 or more out of 100 and it sits in "
-        "its slot (or keeps step in its orbital plane). The system's own page shows every part of that score.",
-        "Broadcasting healthy: the health flag each satellite sends about itself, read once a day from the "
-        "navigation messages collected by the International GNSS Service.",
+    ("radar", "What is measured", [
+        ("Healthy and in place", "The satellite's orbit, from public tracking records, scores 80 or more out of 100, "
+         "and it sits in its slot or keeps step in its orbital plane. The system's own page shows every part of "
+         "that score."),
+        ("Broadcasting healthy", "The health flag each satellite sends about itself. It is read once a day from the "
+         "International GNSS Service's daily broadcast file, which holds the navigation messages its ground "
+         "stations received."),
     ]),
-    ("How", [
-        "The two lines come from different sources and are never mixed into one number. Where they disagree, the "
-        "page says so under \"Worth a look\".",
-        "The counts use the default limits. Limits a reader moves on a system's page apply on that page only.",
-        "A finding is raised by a named rule, never picked by hand. The largest finding of each rule is listed first, "
-        "then the rest by rule and by size.",
+    ("calculator", "How", [
+        ("Two counts, never mixed", "They come from different sources. Where they disagree, the page says so under "
+         "Worth a look."),
+        ("Default limits", "The counts use the default limits. Limits you move on a system's page apply on that "
+         "page only."),
+        ("Findings by rule", "A finding is raised by a named rule, never picked by hand. The largest finding of "
+         "each rule is listed first, then the rest by rule and by size."),
     ]),
-    ("What is left out", [
-        "How accurate each system's signal actually is. That needs precise orbit and clock products we do not read "
-        "yet; the broadcast flag is what the operator states, not a measurement.",
-        "The colours (green from 80 in 100, amber from 60) and the odd-one-out threshold (3 spreads) are our choices, not a standard.",
-        "A satellite still settling into its slot is not counted until it arrives.",
+    ("alert-triangle", "What is left out", [
+        ("Measured accuracy", "How accurate each system's signal actually is. That needs precise orbit and clock "
+         "products we do not read yet. The broadcast flag is what the operator states, not a measurement."),
+        ("Our choices", "The colours (green from 80 in 100, amber from 60) and the odd-one-out line (3 spreads "
+         "under the median) are our choices, not a standard."),
+        ("Settling in", "A satellite still moving to its slot is not counted until it arrives."),
     ]),
-    ("What comes next", [
-        "Stated accuracy per system, then measured signal error, each as its own line beside these two.",
+    ("rocket", "What comes next", [
+        ("More counts per system", "Stated accuracy per system, then measured signal error, each as its own count "
+         "beside these two."),
     ]),
 ]

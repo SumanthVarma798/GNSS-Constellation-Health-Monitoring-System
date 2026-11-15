@@ -1,14 +1,14 @@
 """The frame every page sits in: one top bar, no side panel.
 
-The choices live in st.session_state: `scope` (one constellation), `compare` (on or off),
+The choices live in st.session_state: `scope` (one constellation: a system, or one part of it, ui/systems.py),
+`page` (the page wanted), `compare` (on or off),
 `compare_constellations` (the constellations Compare draws from; none means all), `compare_picks`
 ({constellation: [satellite, ...]}, set with ui.picker), `window_days` (the time range, ui/time_range.py) and
 `params` (only the detection thresholds moved off their defaults). Pages read them.
 
-The bar: the product name, then the filters as their own group (constellations, Compare, time range), then the
-data's state (the UTC clock, when the next update is, the data chip, refresh and the gear). Two arrangements in
-ui/theme.css: from 640px the filters as a strip of their own under the rest, and on a phone the constellations as
-a menu.
+The bar: the product name, then the data's state (the UTC clock, when the next update is, the data chip, refresh
+and the gear). Under it, the navigation in two steps (_nav): the pages across every system and the systems, then,
+once a system is chosen, that system's pages with what filters them. On a phone the systems are a menu.
 """
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
@@ -20,7 +20,7 @@ from data import celestrak
 from evidence import jobs
 from evidence.console_settings import WORKFLOWS_DIR
 from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS
-from ui import changes, data, surfaces, time_range
+from ui import changes, data, surfaces, systems, time_range
 from ui.components.clock import clock_frame
 
 # Pages with their own filters: the bar shows no constellation, window or thresholds there.
@@ -291,103 +291,109 @@ def _keep(plain, widget):
     st.session_state[plain] = st.session_state[widget]
 
 
-def _from_menu(plain, widget):
-    """A choice in the phone's menu; clicking the chosen constellation again keeps it."""
-    if st.session_state[widget] is not None:
-        st.session_state[plain] = st.session_state[widget]
-
-
-def _menu(plain, multi):
-    """On a phone the chips are a menu: a button naming the choice that opens the same chips as a list. The same
-    choice as the chips, under its own key; ui/theme.css shows one or the other by screen width."""
-    chosen = st.session_state.get(plain, [] if multi else CONSTELLATIONS[0])
-    title = (chosen if not multi else "All constellations" if not chosen else
-             chosen[0] if len(chosen) == 1 else f"{len(chosen)} constellations")
-    st.session_state[f"_{plain}_menu"] = chosen
-    with st.container(key="scope_menu"), st.popover(title, help="Choose the constellation"):
-        st.segmented_control("Constellations menu" if multi else "Constellation menu", CONSTELLATIONS,
-                             selection_mode="multi" if multi else "single", key=f"_{plain}_menu",
-                             label_visibility="collapsed", on_change=_from_menu, args=(plain, f"_{plain}_menu"))
-
-
-def _scope(force_single=False):
-    """Constellation chips: one chosen, or under Compare any number (none means all). Returns the names in view."""
-    if force_single or not st.session_state.get("compare"):
-        name = segment("scope", list(CONSTELLATIONS), label="Constellation")
-        _menu("scope", multi=False)
-        return [name]
-    st.session_state["_compare_constellations"] = st.session_state.get("compare_constellations", [])
-    st.segmented_control("Constellations", CONSTELLATIONS, selection_mode="multi", key="_compare_constellations",
-                         label_visibility="collapsed", on_change=_keep,
-                         args=("compare_constellations", "_compare_constellations"))
-    _menu("compare_constellations", multi=True)
+def offered_parts():
+    """The constellations in view under Compare, with the picks of those no longer offered dropped."""
     names = offered()
     st.session_state["compare_picks"] = {c: picks for c, picks in st.session_state.get("compare_picks", {}).items()
                                          if c in names and picks}
     return names
 
 
-def top_bar(current):
-    """Draw the bar and store the choices. `current` is the st.Page that is running."""
-    st.session_state.setdefault("compare", False)
-    with st.container(key="topbar"):
-        brand, filters, refresh_box = st.columns(3, vertical_alignment="center")
-        brand.html('<span class="brand">GNSS Health Monitor</span>')
-        st.session_state.setdefault("params", {})
-        window_days = st.session_state.setdefault("window_days", time_range.DEFAULT_DAYS)
-        if current.title in OWN_FILTERS:
-            names = [st.session_state.get("scope", CONSTELLATIONS[0])]
-            gear_scope = None
-        elif current.title in SCOPE_ONLY:
-            with filters:
-                with st.container(key="filters"):
-                    names = _scope(force_single=True)
-            gear_scope = None
-        else:
-            with filters:
-                filter_box = st.container(key="filters")
-            with filter_box:
-                names = _scope()
-                on = st.session_state["compare"]
-                st.button("Compare", key="compare_toggle", icon=":material/check:" if on else None,
-                          type="primary" if on else "secondary", on_click=_toggle_compare,
-                          help="Compare satellites across constellations")
-            gear_scope = "Compare" if on else names[0]
-        with refresh_box:
-            _refresh(names, window_days, gear_scope)
-        if current.title not in OWN_FILTERS | SCOPE_ONLY:   # after the gear, so the range's bounds read this run's thresholds
-            with filter_box:
-                time_range.control(names, st.session_state["params"])
-    _page_tabs(current)
-    changes.show(CONSTELLATIONS if current.title in OWN_FILTERS else names)   # the master map shows every constellation
+def _pick_system(widget):
+    """A system chosen in the bar or in the phone's menu: its pages open, on the page last read for a system.
+    Clicking the chosen system again keeps it."""
+    system = st.session_state[widget]
+    if system is None:
+        return
+    if st.session_state["scope"] not in systems.SYSTEMS[system]:
+        st.session_state["scope"] = systems.SYSTEMS[system][0]
+    if st.session_state["page"] in OWN_FILTERS:
+        st.session_state["page"] = st.session_state.get("system_page", SYSTEM_PAGES[0])
 
 
-def _page_tabs(current):
-    """The pages under the bar, in three groups: Home, those that look at one constellation at a time, and those that
-    look across every system (OWN_FILTERS). One page is chosen across the groups."""
-    with st.container(key="pagetabs"):
-        if st.session_state.get("shown_page") != current.title:   # arrived by address or switch: tabs follow the page
-            st.session_state["page"] = current.title
-        st.session_state["shown_page"] = current.title
-        page = st.session_state["page"]
-        for key, label, titles in (("page_home", "Start", [HOME]),
-                                   ("page_one", "Page", [t for t, _ in PAGES if t not in OWN_FILTERS]),
-                                   ("page_all", "Across all systems",
-                                    [t for t, _ in PAGES if t in OWN_FILTERS and t != HOME])):
-            st.session_state[key] = page if page in titles else None
-            with st.container(key=f"{key}_group"):
-                st.segmented_control(label, titles, key=key, label_visibility="collapsed", on_change=_pick_page, args=(key,))
-        if st.session_state["page"] != current.title:
-            st.switch_page(next(p for p in pages() if p.title == st.session_state["page"]))
-
-
-def open_system(name):
-    """A button's on_click: go to `name`'s Overview. The chip's earlier choice is set too, as a page without the
-    chips drops their state."""
-    st.session_state.update({"scope": name, "_scope_was": name, "compare": False, "page": "Overview"})
+def _pick_part(widget):
+    """A part of the system chosen; clicking the chosen part again keeps it."""
+    if st.session_state[widget] is not None:
+        st.session_state["scope"] = st.session_state[widget]
 
 
 def _pick_page(key):
-    """A tab in either group chooses the page; clicking the chosen tab again keeps it chosen."""
+    """A page chosen in either row; clicking the chosen page again keeps it chosen."""
     if st.session_state[key] is not None:
         st.session_state["page"] = st.session_state[key]
+
+
+def open_system(name):
+    """A button's on_click: go to the Overview of `name`, a system's part as ui.data.SATELLITES names it."""
+    st.session_state.update({"scope": name, "compare": False, "page": "Overview"})
+
+
+def top_bar(current):
+    """Draw the bar and the navigation under it, and store the choices. `current` is the st.Page that is running."""
+    st.session_state.setdefault("compare", False)
+    st.session_state.setdefault("params", {})
+    st.session_state.setdefault("scope", CONSTELLATIONS[0])
+    window_days = st.session_state.setdefault("window_days", time_range.DEFAULT_DAYS)
+    on_system = current.title not in OWN_FILTERS
+    filtered = on_system and current.title not in SCOPE_ONLY   # the page takes Compare, the range and the thresholds
+    comparing = filtered and st.session_state["compare"]
+    names = offered_parts() if comparing else [st.session_state["scope"]]
+    with st.container(key="topbar"):
+        brand, _, refresh_box = st.columns(3, vertical_alignment="center")   # the middle one is empty: ui/theme.css
+        brand.html('<span class="brand">GNSS Health Monitor</span>')
+        with refresh_box:
+            _refresh(names, window_days, ("Compare" if comparing else names[0]) if filtered else None)
+    _nav(current, names, on_system, filtered, comparing)
+    changes.post(CONSTELLATIONS if current.title in OWN_FILTERS else names)   # the pages across all systems show every one
+
+
+# The pages across every system, and the pages of one system, each in the order of PAGES.
+ALL_PAGES = [title for title, _ in PAGES if title in OWN_FILTERS]
+SYSTEM_PAGES = [title for title, _ in PAGES if title not in OWN_FILTERS]
+
+
+def _nav(current, names, on_system, filtered, comparing):
+    """The navigation under the bar, in two steps. First row, always there: the pages across every system, then the
+    systems. Choosing a system opens the second row: that system's pages, its parts when it has several, and what
+    filters them (Compare, the time range). On a page across every system the second row is closed. One page is
+    chosen across both rows. The second row stays on the page, closed to no height, so it opens and closes with a
+    motion (ui/theme.css, "navigation")."""
+    if st.session_state.get("shown_page") != current.title:   # arrived by address or switch: the rows follow the page
+        st.session_state["page"] = current.title
+    st.session_state["shown_page"] = current.title
+    system = systems.system_of(st.session_state["scope"])
+    if on_system:
+        st.session_state["system_page"] = current.title
+    with st.container(key="nav"):
+        st.session_state["nav_all"] = None if on_system else current.title
+        st.segmented_control("Across all systems", ALL_PAGES, key="nav_all", label_visibility="collapsed",
+                             on_change=_pick_page, args=("nav_all",))
+        st.html('<span class="nav-label">Systems</span>')
+        st.session_state["nav_system"] = st.session_state["nav_system_menu"] = system if on_system else None
+        st.segmented_control("System", list(systems.SYSTEMS), key="nav_system", label_visibility="collapsed",
+                             on_change=_pick_system, args=("nav_system",))
+        with st.container(key="system_menu"), st.popover(system if on_system else "Choose a system",
+                                                         help="Choose the system"):   # the phone's menu
+            st.segmented_control("System menu", list(systems.SYSTEMS), key="nav_system_menu",
+                                 label_visibility="collapsed", on_change=_pick_system, args=("nav_system_menu",))
+    with st.container(key="subnav"), st.container(key="subnav_in"):
+        st.session_state["nav_page"] = current.title if on_system else None
+        st.segmented_control(f"{system} pages", SYSTEM_PAGES, key="nav_page", label_visibility="collapsed",
+                             on_change=_pick_page, args=("nav_page",))
+        parts = systems.SYSTEMS[system]
+        if on_system and len(parts) > 1 and not comparing:
+            st.session_state["nav_part"] = st.session_state["scope"]
+            st.segmented_control(f"Part of {system}", parts, key="nav_part", format_func=systems.part_name,
+                                 label_visibility="collapsed", on_change=_pick_part, args=("nav_part",))
+        if filtered:
+            st.button("Compare", key="compare_toggle", icon=":material/check:" if comparing else None,
+                      type="primary" if comparing else "secondary", on_click=_toggle_compare,
+                      help="Compare satellites across constellations")
+            if comparing:
+                st.session_state["_compare_constellations"] = st.session_state.get("compare_constellations", [])
+                st.segmented_control("Constellations", CONSTELLATIONS, selection_mode="multi",
+                                     key="_compare_constellations", label_visibility="collapsed", on_change=_keep,
+                                     args=("compare_constellations", "_compare_constellations"))
+            time_range.control(names, st.session_state["params"])   # after the gear: its bounds read this run's thresholds
+    if st.session_state["page"] != current.title:
+        st.switch_page(next(p for p in pages() if p.title == st.session_state["page"]))

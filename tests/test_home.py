@@ -6,7 +6,7 @@ import pytest
 from test_dashboard_shell import (celestrak_answers_with_nothing_new, htmls, run,  # noqa: F401 (fixtures)
                                   segmented_controls_rerun)
 from test_meo_pages import celestrak_answers_with_two_galileo_satellites, scope  # noqa: F401 (a fixture)
-from ui import data, findings, home_settings, palette, shell, system_summary
+from ui import data, findings, home_settings, palette, shell, system_summary, systems
 
 COUNT = re.compile(r"(\d+ of \d+)</span>")
 
@@ -28,8 +28,8 @@ def test_home_is_the_first_page_and_shows_a_row_per_system_in_the_top_bars_order
     at = run()
 
     assert shell.PAGES[0][0] == shell.HOME
-    assert [re.search(r"<b>([^<]+)</b>", row).group(1) for row in rows(at)] == list(shell.CONSTELLATIONS)
-    assert set(home_settings.SYSTEMS) == set(shell.CONSTELLATIONS)
+    assert [re.search(r"<b>([^<]+)</b>", row).group(1) for row in rows(at)] == list(systems.SYSTEMS)
+    assert set(home_settings.SYSTEMS) == set(systems.SYSTEMS)
     for row in rows(at):   # each row that was read says who runs the system and where it serves
         who, where = home_settings.SYSTEMS[re.search(r"<b>([^<]+)</b>", row).group(1)]
         assert who and where and (f"{who} · {where}" in row or "Could not be read" in row)
@@ -55,21 +55,40 @@ def test_a_system_with_no_satellites_draws_no_unnamed_picture(monkeypatch):
     assert counted and not any('role="img"' in row for row in counted)
 
 
-def test_each_rows_count_is_the_headline_of_that_systems_overview():
-    home = {name: COUNT.search(row) for name, row in zip(shell.CONSTELLATIONS, rows(run()))}
+def test_each_rows_count_is_the_headline_of_that_systems_overview_added_up_over_its_parts():
+    home = {system: COUNT.search(row) for system, row in zip(systems.SYSTEMS, rows(run()))}
 
-    assert home["NavIC"] and home["Galileo"]   # one judged by slot and one by plane are compared
-    for name in shell.CONSTELLATIONS:
-        bodies = htmls(run(scope(name)))
-        if home[name] is None:   # no orbit data in the test's copy: both pages say so
-            assert any(f"No orbit data for {name} yet" in body for body in bodies), name
-            continue
-        headline = next(body for body in bodies if 'class="head"' in body)
-        assert COUNT.search(headline).group(1) == home[name].group(1), name
+    assert home["NavIC"] and home["Galileo"] and home["BeiDou-3"]   # judged by slot, by plane, and one with two parts
+    for system, parts in systems.SYSTEMS.items():
+        healthy = total = 0
+        for part in parts:
+            bodies = htmls(run(scope(part)))
+            headline = next((COUNT.search(body) for body in bodies if 'class="head"' in body), None)
+            if headline is None:   # no orbit data in the test's copy: the part's own page says so
+                assert any(f"No orbit data for {part} yet" in body for body in bodies), part
+                continue
+            count, of = headline.group(1).split(" of ")
+            healthy, total = healthy + int(count), total + int(of)
+        assert (home[system].group(1) if home[system] else None) == (f"{healthy} of {total}" if total else None), system
+
+
+def test_a_system_of_two_parts_is_one_row_with_each_part_under_it():
+    beidou = [row for row in rows(run()) if "BeiDou-3" in row]
+
+    assert len(beidou) == 1 and "<b>BeiDou-3</b>" in beidou[0] and "China · global" in beidou[0]
+    assert re.search(r"High orbit \d+ of \d+", beidou[0])
+    assert "Medium orbit could not be read just now: No orbit data for BeiDou-3 MEO yet" in beidou[0]
+
+
+def test_a_part_of_a_system_shows_the_whole_systems_count_over_its_own(monkeypatch):
+    lines = [body for body in htmls(run(scope("BeiDou-3"))) if 'class="sysline"' in body]
+
+    assert len(lines) == 1 and "<b>BeiDou-3</b>" in lines[0] and "High orbit" in lines[0]
+    assert not any('class="sysline"' in body for body in htmls(run(scope("NavIC"))))   # one part: no line
 
 
 def test_a_row_opens_that_systems_overview():
-    index = shell.CONSTELLATIONS.index("Galileo")
+    index = list(systems.SYSTEMS).index("Galileo")
 
     at = run(lambda at: at.button(key=f"home_open_{index}").click())
 
@@ -91,7 +110,7 @@ def test_a_system_that_cannot_be_read_says_why_and_the_others_still_show(monkeyp
     said = [row for row in rows(at) if "<b>QZSS</b>" in row]
     assert len(said) == 1 and "Could not be read just now: no orbit data for QZSS" in said[0]
     assert sum(1 for row in rows(at) if COUNT.search(row)) >= 3   # NavIC, BeiDou-3 and Galileo still counted
-    assert len(rows(at)) == len(shell.CONSTELLATIONS)
+    assert len(rows(at)) == len(systems.SYSTEMS)
 
 
 def test_without_a_broadcast_check_the_second_count_says_not_read():
@@ -138,8 +157,8 @@ def test_tracked_but_silent_fires_for_a_satellite_missing_from_the_file_and_not_
     fired = findings.silent(system([sat("A1"), sat("A2", broadcast="silent")]))
     quiet = findings.silent(system([sat("A1"), sat("A2", broadcast="silent", group="set aside")]))
 
-    assert [f["about"] for f in fired] == [["A2"]] and fired[0]["pair"] == (("tracked", 2), ("in the file", 1))
-    assert "13 Nov" in fired[0]["numbers"]
+    assert [f["about"] for f in fired] == [["A2"]] and fired[0]["pair"] == (("tracked here", 2), ("in the IGS file", 1))
+    assert "13 Nov" in fired[0]["numbers"] and "IGS daily broadcast file" in fired[0]["line"]
     assert quiet == []
 
 

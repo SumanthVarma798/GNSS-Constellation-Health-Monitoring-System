@@ -4,7 +4,7 @@ the same rules (in_slot_and_healthy here, meo_overview.healthy for the systems j
 """
 from analysis.meo_geometry import plane_drift
 from config.config import MEO_SATS
-from ui import meo_overview, orbit_age, orbit_section, palette
+from ui import meo_overview, orbit_age, orbit_section, palette, systems
 from ui.figures.slot_rows import as_number
 
 HEALTHY_FROM = meo_overview.HEALTHY_FROM   # one top band for both kinds of system
@@ -63,3 +63,16 @@ def summary(name, result, gap=None):
             "in_file": sum(sat["broadcast"] != "silent" for sat in checked) if checked else None,
             "flagged_healthy": sum(sat["broadcast"] == "ok" for sat in checked) if checked else None,
             "checked": len(checked), "broadcast_day": (gap or {}).get("day") if checked else None}
+
+
+def whole(system, parts):
+    """A system's parts as one: each part's satellites in turn, and the counts added up. `parts` are summary()'s
+    rows for the parts that could be read, in the system's order. "parts" holds (the part's name beside the
+    system's, healthy, total) for a system with several parts, so a reader can go one step deeper."""
+    checked = sum(part["checked"] for part in parts)
+    return {"name": system, "sats": [sat for part in parts for sat in part["sats"]],
+            "healthy": sum(part["healthy"] for part in parts), "total": sum(part["total"] for part in parts),
+            "settling": [name for part in parts for name in part["settling"]], "checked": checked,
+            "flagged_healthy": sum(part["flagged_healthy"] or 0 for part in parts) if checked else None,
+            "parts": [(systems.part_name(part["name"]), part["healthy"], part["total"]) for part in parts]
+            if len(systems.SYSTEMS[system]) > 1 else []}

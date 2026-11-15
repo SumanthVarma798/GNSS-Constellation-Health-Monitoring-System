@@ -6,6 +6,7 @@ found (ui/checks.py) and how each satellite was classed, closed. What is missing
 inbox (ui/notices.py), not the page.
 """
 import re
+from html import escape
 from datetime import datetime, timezone
 
 import pandas as pd
@@ -15,13 +16,13 @@ from analysis.commissioning import SETTLING_DAYS
 from config.config import MEO_SATS, TRACKED_NOT_IN_REGISTRY
 from evidence.registry_tables import left_out_notice, new_on_dashboard
 from ui import (checks, data, limits, measures, meo_overview, official_status, orbit_age, orbit_section,
-                palette, reveal, shell, surfaces, time_range, tooltip)
+                palette, reveal, shell, surfaces, systems, time_range, tooltip)
 from ui.data import SATELLITES
 from ui.figures.constellation_3d import slot_legend
 from ui.figures.slot_rows import as_number, slot_words
 from ui.orbit_section import CHIP_STATUS, PARTS
 from ui.picker import picker
-from ui.system_summary import HEALTHY_FROM, in_slot_and_healthy
+from ui.system_summary import in_slot_and_healthy, summary, whole
 STATUS_CHIP = {"Healthy": "ok", "Fair": "warn", "Degraded": "bad", "Critical": "bad"}
 CLASS_COLUMNS = [("Satellite", ""), ("Type", "From the mean tilt"), ("Mean inclination", "In the window"),
                  ("Mean height", "In the window"), ("Drift now", "Per day")]
@@ -165,10 +166,30 @@ def _slot_picture(rows, result, name):
     orbit_section.render_belt(rows, view, result["history"], result["health"], name)
 
 
+def _system_line(name, window_days, params):
+    """For one part of a system with several (ui/systems.py): the whole system's count, then each part's, so the part
+    below is read as a part. "" for a system that is one part. The other parts are counted at the default limits."""
+    system = systems.system_of(name)
+    if len(systems.SYSTEMS[system]) == 1:
+        return ""
+    read = []
+    for part in systems.SYSTEMS[system]:
+        try:
+            read.append(summary(part, data.load(part, window_days, params if part == name else None)))
+        except Exception:   # that part's own page says why it cannot be read
+            pass
+    both = whole(system, read)
+    chips = "".join(surfaces.chip(f"{label} {count} of {of}", "accent" if label == systems.part_name(name) else "idle")
+                    for label, count, of in both["parts"])
+    return (f'<div class="sysline"><b>{escape(system)}</b><span class="num">{both["healthy"]} of {both["total"]}</span>'
+            f'<span class="muted">healthy and in place, across its parts</span>{chips}</div>')
+
+
 def constellation(name, window_days, params):
     """One constellation: the count, the tiles per orbit type, the slot picture, then the details: each orbit type's
     table, what the checks found, how each satellite was classed."""
     result = data.load(name, window_days, params)
+    surfaces.show(_system_line(name, window_days, params))
     if name in MEO_SATS:   # judged by orbital plane, not longitude slot
         meo_overview.page(name, result)
         return

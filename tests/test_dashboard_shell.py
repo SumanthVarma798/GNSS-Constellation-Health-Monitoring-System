@@ -457,14 +457,15 @@ def test_every_burn_is_grouped_under_its_satellite_in_the_timelines_order():
         assert group.count('<div class="bl-row">') == said
 
 
-def test_the_master_map_draws_its_canvas_and_hides_the_constellation_controls():
+def test_the_master_map_draws_its_canvas_and_shows_nothing_that_filters_one_systems_page():
     with time_machine.travel(FROZEN, tick=False):
         at = AppTest.from_file(str(ROOT / "dashboard.py"), default_timeout=600).run()
         at.switch_page("views/master_map.py").run()
     assert not at.exception, [e.value for e in at.exception]
 
     labels = [getattr(w, "label", None) for w in at.get("button_group")]
-    assert "Constellation" not in labels and "Page" in labels
+    assert "Across all systems" in labels and "System" in labels   # the first row is always there
+    assert not [b for b in at.button if b.key == "compare_toggle"] and "Constellations" not in labels
 
 
 def test_under_compare_the_range_fits_the_constellation_with_least_history(monkeypatch):

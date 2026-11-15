@@ -8,9 +8,10 @@ from html import escape
 
 import streamlit as st
 
-from ui import data, findings, palette, reveal, shell, surfaces, time_range, tooltip
+from ui import data, findings, icons, palette, reveal, shell, surfaces, time_range, tooltip
 from ui.home_settings import CAVEATS, FINDINGS_SHOWN, HOW, RULES, SYSTEMS
-from ui.system_summary import summary
+from ui.system_summary import summary, whole
+from ui.systems import SYSTEMS as SYSTEMS_PARTS, part_name
 
 # One dot per satellite: (class, what it means, its shape), in the order the legend lists them. Each has its own
 # shape (ui/theme.css), so the colour only backs it up.
@@ -50,13 +51,17 @@ def _measure(count, total, words):
             f'<span class="small">{escape(words)}</span></div>')
 
 
-def _row(system):
-    """One system: who runs it, its satellites as dots, the two counts, and what the page leaves out for it."""
+def _row(system, unread=None):
+    """One system: who runs it, its satellites as dots, the two counts, and what the page leaves out for it.
+    For a system of several parts, each part's count is a line under the dots, and a part in `unread`
+    ({part's name: the error}) says why it is missing."""
     name = system["name"]
     who, where = SYSTEMS.get(name, ("", ""))
     share = 100 * system["healthy"] / system["total"] if system["total"] else 0
     notes = [f"{reveal.count(len(system['settling']), 'satellite')} settling in, not counted yet"] * bool(system["settling"])
     notes += [CAVEATS[name]] if name in CAVEATS else []
+    notes = ([" · ".join(f"{label} {count} of {of}" for label, count, of in system["parts"])] * bool(system["parts"])
+             + [f"{label} could not be read just now: {_why(error)}" for label, error in (unread or {}).items()] + notes)
     return (f'<div class="sys {surfaces.band(share)}">'
             f'<div class="sys-id"><b>{escape(name)}</b><span class="small">{escape(" · ".join(filter(None, [who, where])))}</span></div>'
             f'<div class="sys-mid">{_dots(system)}'
@@ -93,41 +98,46 @@ def _finding(finding):
             f'<div class="small">{escape(finding["numbers"])}</div>{why}</div>{_pair(finding["pair"])}</div>')
 
 
-def _open(key, name):
-    """The button laid over a row (ui/theme.css): the whole row opens that system's Overview."""
-    st.button(f"Open {name}'s overview", key=key, on_click=shell.open_system, args=(name,))
+def _open(key, part, name=""):
+    """The button laid over a row (ui/theme.css): the whole row opens the Overview of `part`, a system or one part
+    of it, said as `name` when that differs."""
+    st.button(f"Open {name or part}'s overview", key=key, on_click=shell.open_system, args=(part,))
 
 
 def _how():
-    return "".join(f'<div class="how"><div class="part-title">{escape(title)}</div>'
-                   f'<ul class="small meanings">{"".join(f"<li>{escape(line)}</li>" for line in lines)}</ul></div>'
-                   for title, lines in HOW)
+    """Four cards, in the order every page follows: an icon and a heading, then each point led by its term."""
+    return '<div class="how-grid">' + "".join(
+        f'<div class="how well"><div class="how-h">{icons.mask(icon)}<span>{escape(title)}</span></div>'
+        + "".join(f"<p><b>{escape(term)}.</b> {escape(words)}</p>" for term, words in points) + "</div>"
+        for icon, title, points in HOW) + "</div>"
 
 
 def page():
     window_days = st.session_state.get("window_days", time_range.DEFAULT_DAYS)
     gap = data.orbit_gap()
-    systems, failed = [], {}
+    parts, failed = {}, {}
     for name in shell.CONSTELLATIONS:   # one that fails says why in its row; the others still show (issue 39)
         try:
-            systems.append(summary(name, data.load(name, window_days), gap))
+            parts[name] = summary(name, data.load(name, window_days), gap)
         except Exception as error:
             failed[name] = error
-    healthy, total = sum(s["healthy"] for s in systems), sum(s["total"] for s in systems)
+    wholes = {system: whole(system, [parts[name] for name in names if name in parts])
+              for system, names in SYSTEMS_PARTS.items() if any(name in parts for name in names)}
+    healthy, total = sum(s["healthy"] for s in wholes.values()), sum(s["total"] for s in wholes.values())
     surfaces.show(f'<div class="head"><span class="big num">{healthy} of {total}</span>'
                   f'<span class="muted">navigation satellites healthy and in place, across '
-                  f'{reveal.count(len(systems), "system")}</span>'
+                  f'{reveal.count(len(wholes), "system")}</span>'
                   f'<span class="right">{tooltip.legend([(DOT_COLOURS[kind], f"{shape}: {meaning}") for kind, meaning, shape in DOTS], "What a dot means")}</span></div>'
                   '<p class="lede small">One row per system, one dot per satellite. A row opens that system, where every '
                   'satellite and every number behind these counts is shown.</p>')
-    by_name = {system["name"]: system for system in systems}
     with st.container(key="home_systems"):
-        for index, name in enumerate(shell.CONSTELLATIONS):
+        for index, (system, names) in enumerate(SYSTEMS_PARTS.items()):
             with st.container(key=f"home_row_{index}"):
-                st.html(_row(by_name[name]) if name in by_name else _failed(name, failed[name]))
-                _open(f"home_open_{index}", name)
+                unread = {part_name(name) or name: failed[name] for name in names if name in failed}
+                st.html(_row(wholes[system], unread) if system in wholes else _failed(system, failed[names[0]]))
+                _open(f"home_open_{index}", next((name for name in names if name in parts), names[0]), system)
 
-    listed, explained = findings.find(systems)
+    listed, explained = findings.find(list(parts.values()))
     line = (f"{reveal.count(len(listed), 'thing')} stand{'s' if len(listed) == 1 else ''} out today" if listed
             else "nothing stands out today") + (f" · {len(explained)} more expected" if explained else "")
     surfaces.show(surfaces.group_head("Worth a look", line, tooltip.tip_html(
@@ -137,7 +147,7 @@ def page():
         for index, finding in enumerate(listed[:FINDINGS_SHOWN]):
             with st.container(key=f"home_row_f{index}"):
                 st.html(_finding(finding))
-                _open(f"home_open_f{index}", finding["system"])
+                _open(f"home_open_f{index}", finding["system"])   # the part the finding is about
     rest = listed[FINDINGS_SHOWN:] + explained
     if rest:
         reveal.section("home_more", "The rest", " · ".join(filter(None, [
