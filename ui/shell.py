@@ -21,7 +21,7 @@ from data import celestrak
 from evidence import jobs
 from evidence.console_settings import WORKFLOWS_DIR
 from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS
-from ui import changes, data, surfaces, systems, threshold_settings, time_range
+from ui import changes, data, marks, palette, surfaces, systems, threshold_settings, time_range
 from ui.components.clock import clock_frame
 
 # Pages with their own filters: the bar shows no constellation, window or thresholds there.
@@ -377,6 +377,17 @@ ALL_PAGES = [title for title, _ in PAGES if title in OWN_FILTERS]
 SYSTEM_PAGES = [title for title, _ in PAGES if title not in OWN_FILTERS]
 
 
+def _chip_marks():
+    """A style rule that puts each constellation's mark (ui/marks.py) before its name on its chip, in the row and in
+    the phone's menu. The chips are a Streamlit control whose labels take no markup, so the marks are drawn by
+    position: the chips are in the order of ui.systems.SYSTEMS."""
+    rules = "".join(
+        f":is(.st-key-nav_system, .st-key-nav_system_menu) button:nth-of-type({place})::before "
+        f"{{ --mk: var(--mk-{marks.key(name).lower()}); color: {palette.CONSTELLATION_COLOURS[marks.key(name)]}; }}"
+        for place, name in enumerate(systems.SYSTEMS, 1) if marks.key(name))
+    return f"<style>{rules}</style>"
+
+
 def _nav(current, names, on_system, filtered, comparing):
     """The navigation under the bar, in two steps. First row, always there: the pages across every system, then the
     systems. Choosing a system opens the second row: that system's pages, its parts when it has several, and what
@@ -393,7 +404,7 @@ def _nav(current, names, on_system, filtered, comparing):
         st.session_state["nav_all"] = None if on_system else current.title
         st.segmented_control("Across all constellations", ALL_PAGES, key="nav_all", label_visibility="collapsed",
                              on_change=_pick_page, args=("nav_all",))
-        st.html('<span class="nav-label">Constellations</span>')
+        st.html(_chip_marks() + '<span class="nav-label">Constellations</span>')
         st.session_state["nav_system"] = st.session_state["nav_system_menu"] = system if on_system else None
         st.segmented_control("Choose a constellation", list(systems.SYSTEMS), key="nav_system", label_visibility="collapsed",
                              on_change=_pick_system, args=("nav_system",))

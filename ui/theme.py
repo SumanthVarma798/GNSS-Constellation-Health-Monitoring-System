@@ -4,7 +4,7 @@ Every colour comes from ui/palette.py, every text size from ui/type_scale.py. Th
 """
 from pathlib import Path
 
-from ui import icons, palette, type_scale
+from ui import icons, marks, palette, type_scale
 from ui.tooltip import CARD_CSS
 
 CSS_FILE = Path(__file__).with_name("theme.css")
@@ -35,6 +35,8 @@ VARIABLES = {
     **type_scale.variables(),
     # Icons for CSS masks (ui/icons.py): --ic-bell and the rest.
     **{f"ic-{name}": icons.mask_url(name) for name in icons.MASKED},
+    # Each constellation's mark for CSS masks (ui/marks.py): --mk-navic and the rest.
+    **{f"mk-{key.lower()}": marks.mask_url(key) for key in marks.SHAPES},
 }
 
 

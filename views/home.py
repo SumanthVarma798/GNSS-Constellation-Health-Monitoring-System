@@ -8,7 +8,7 @@ from html import escape
 
 import streamlit as st
 
-from ui import data, findings, icons, palette, reveal, shell, surfaces, time_range, tooltip
+from ui import data, findings, icons, marks, palette, reveal, shell, surfaces, time_range, tooltip
 from ui.home_settings import CAVEATS, FINDINGS_SHOWN, HOW, RULES, SYSTEMS
 from ui.system_summary import summary, whole
 from ui.systems import SYSTEMS as SYSTEMS_PARTS, part_name
@@ -63,7 +63,7 @@ def _row(system, unread=None):
     notes = ([" · ".join(f"{label} {count} of {of}" for label, count, of in system["parts"])] * bool(system["parts"])
              + [f"{label} could not be read just now: {_why(error)}" for label, error in (unread or {}).items()] + notes)
     return (f'<div class="sys {surfaces.band(share)}">'
-            f'<div class="sys-id"><b>{escape(name)}</b><span class="small">{escape(" · ".join(filter(None, [who, where])))}</span></div>'
+            f'<div class="sys-id"><b>{marks.mark(name)}{escape(name)}</b><span class="small">{escape(" · ".join(filter(None, [who, where])))}</span></div>'
             f'<div class="sys-mid">{_dots(system)}'
             + "".join(f'<div class="small">{escape(note)}</div>' for note in notes) + '</div>'
             f'{_measure(system["healthy"], system["total"], "healthy and in place")}'
@@ -72,7 +72,7 @@ def _row(system, unread=None):
 
 
 def _failed(name, error):
-    return (f'<div class="sys idle"><div class="sys-id"><b>{escape(name)}</b></div>'
+    return (f'<div class="sys idle"><div class="sys-id"><b>{marks.mark(name)}{escape(name)}</b></div>'
             f'<div class="sys-mid small">Could not be read just now: {escape(_why(error))}. '
             'The other constellations are not affected.</div></div>')
 
@@ -94,7 +94,7 @@ def _finding(finding):
     rule = RULES[finding["rule"]][0]
     why = f'<div class="small">Expected: {escape(finding["explained"])}</div>' if finding["explained"] else ""
     return (f'<div class="find"><div class="find-w">{surfaces.chip(rule, "idle" if finding["explained"] else "warn")}'
-            f'<b>{escape(finding["system"])}</b> <span>{escape(finding["line"])}</span>'
+            f'<b>{marks.mark(finding["system"])}{escape(finding["system"])}</b> <span>{escape(finding["line"])}</span>'
             f'<div class="small">{escape(finding["numbers"])}</div>{why}</div>{_pair(finding["pair"])}</div>')
 
 

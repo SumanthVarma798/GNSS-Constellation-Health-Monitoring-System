@@ -514,6 +514,13 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
 /* ---- icons (ui/icons.py): a Tabler icon drawn as a mask, in its status colour ---- */
 .ic { display: inline-block; flex: none; width: 18px; height: 18px; background: currentColor;
   -webkit-mask: var(--ic) center / contain no-repeat; mask: var(--ic) center / contain no-repeat; }
+/* a constellation's mark (ui/marks.py): its orbital signature in its own colour, beside its name */
+.mk { display: inline-block; flex: none; width: 1.3em; height: 1.3em; vertical-align: -.25em; margin-right: .4em; background: currentColor;
+  -webkit-mask: var(--mk) center / contain no-repeat; mask: var(--mk) center / contain no-repeat; }
+.mk-name { white-space: nowrap; }
+/* the same marks on the constellation chips (ui/shell.py _chip_marks says which chip takes which) */
+:is(.st-key-nav_system, .st-key-nav_system_menu) button::before { content: ""; flex: none; width: 1.2em; height: 1.2em; margin-right: .45em; background: currentColor;
+  -webkit-mask: var(--mk) center / contain no-repeat; mask: var(--mk) center / contain no-repeat; }
 .ic.ok { color: var(--ok); } .ic.warn { color: var(--warn); } .ic.bad { color: var(--bad); }
 .ic.idle { color: var(--idle); } .ic.accent { color: var(--accent); }
 

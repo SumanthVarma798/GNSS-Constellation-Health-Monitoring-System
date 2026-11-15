@@ -9,6 +9,7 @@ from test_meo_pages import celestrak_answers_with_two_galileo_satellites, scope 
 from ui import data, findings, home_settings, palette, shell, system_summary, systems
 
 COUNT = re.compile(r"(\d+ of \d+)</span>")
+NAME = re.compile(r"<b>(?:<span[^>]*></span>)?([^<]+)</b>")   # a row's name, after its mark
 
 
 @pytest.fixture(autouse=True)
@@ -28,17 +29,17 @@ def test_home_is_the_first_page_and_shows_a_row_per_system_in_the_top_bars_order
     at = run()
 
     assert shell.PAGES[0][0] == shell.HOME
-    assert [re.search(r"<b>([^<]+)</b>", row).group(1) for row in rows(at)] == list(systems.SYSTEMS)
+    assert [NAME.search(row).group(1) for row in rows(at)] == list(systems.SYSTEMS)
     assert set(home_settings.SYSTEMS) == set(systems.SYSTEMS)
     for row in rows(at):   # each row that was read says who runs the system and where it serves
-        who, where = home_settings.SYSTEMS[re.search(r"<b>([^<]+)</b>", row).group(1)]
+        who, where = home_settings.SYSTEMS[NAME.search(row).group(1)]
         assert who and where and (f"{who} · {where}" in row or "Could not be read" in row)
 
 
 def test_a_satellites_state_is_told_by_the_dots_shape_and_in_words_not_by_colour_alone():
     bodies = htmls(run())
 
-    navic = next(row for row in rows_of(bodies) if "<b>NavIC</b>" in row)
+    navic = next(row for row in rows_of(bodies) if "NavIC</b>" in row)
     assert re.search(r'role="img" aria-label="\d+ healthy and in place, \d+ needs a look, 1 set aside"', navic)
     legend = next(body for body in bodies if "What a dot means" in body)
     for words in ("healthy and in place", "needs a look", "set aside", "new, not scored yet"):
@@ -77,7 +78,7 @@ def test_each_rows_count_is_the_headline_of_that_systems_overview_added_up_over_
 def test_a_system_of_two_parts_is_one_row_with_each_part_under_it():
     beidou = [row for row in rows(run()) if "BeiDou-3" in row]
 
-    assert len(beidou) == 1 and "<b>BeiDou-3</b>" in beidou[0] and "China · global" in beidou[0]
+    assert len(beidou) == 1 and "BeiDou-3</b>" in beidou[0] and "China · global" in beidou[0]
     assert re.search(r"IGSO &amp; GEO \d+ of \d+", beidou[0])
     assert "MEO could not be read just now: No orbit data for BeiDou-3 MEO yet" in beidou[0]
 
@@ -85,7 +86,7 @@ def test_a_system_of_two_parts_is_one_row_with_each_part_under_it():
 def test_a_part_of_a_system_shows_the_whole_systems_count_over_its_own(monkeypatch):
     lines = [body for body in htmls(run(scope("BeiDou-3"))) if 'class="sysline"' in body]
 
-    assert len(lines) == 1 and "<b>BeiDou-3</b>" in lines[0] and "IGSO &amp; GEO" in lines[0]
+    assert len(lines) == 1 and "BeiDou-3</b>" in lines[0] and "IGSO &amp; GEO" in lines[0]
     assert not any('class="sysline"' in body for body in htmls(run(scope("NavIC"))))   # one part: no line
 
 
@@ -109,7 +110,7 @@ def test_a_system_that_cannot_be_read_says_why_and_the_others_still_show(monkeyp
 
     at = run()
 
-    said = [row for row in rows(at) if "<b>QZSS</b>" in row]
+    said = [row for row in rows(at) if "QZSS</b>" in row]
     assert len(said) == 1 and "Could not be read just now: no orbit data for QZSS" in said[0]
     assert sum(1 for row in rows(at) if COUNT.search(row)) >= 3   # NavIC, BeiDou-3 and Galileo still counted
     assert len(rows(at)) == len(systems.SYSTEMS)

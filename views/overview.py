@@ -16,7 +16,7 @@ from analysis.commissioning import SETTLING_DAYS
 from config.config import MEO_SATS, TRACKED_NOT_IN_REGISTRY
 from evidence.registry_tables import left_out_notice, new_on_dashboard
 from ui import (checks, data, limits, measures, meo_overview, official_status, orbit_age, orbit_section,
-                palette, reveal, shell, surfaces, systems, time_range, tooltip)
+                marks, palette, reveal, shell, surfaces, systems, time_range, tooltip)
 from ui.data import SATELLITES
 from ui.figures.constellation_3d import slot_legend
 from ui.figures.slot_rows import as_number, slot_words
@@ -181,7 +181,7 @@ def _system_line(name, window_days, params):
     both = whole(system, read)
     chips = "".join(surfaces.chip(f"{label} {count} of {of}", "accent" if label == systems.part_name(name) else "idle")
                     for label, count, of in both["parts"])
-    return (f'<div class="sysline"><b>{escape(system)}</b><span class="num">{both["healthy"]} of {both["total"]}</span>'
+    return (f'<div class="sysline"><b>{marks.mark(system)}{escape(system)}</b><span class="num">{both["healthy"]} of {both["total"]}</span>'
             f'<span class="muted">healthy and in place, across its parts</span>{chips}</div>')
 
 
