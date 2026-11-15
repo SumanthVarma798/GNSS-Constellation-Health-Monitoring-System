@@ -105,7 +105,7 @@ def summary(name, result, gap=None):
             sat["broadcast"] = "ok" if orbit_age.health_words(status)[1] == "ok" else "bad"
         sat["clock"] = clock = (status or {}).get("clock") or None   # analysis/broadcast_clock.py's figures for the day
         step = (clock or {}).get("largest_step_ns")
-        sat["clock_steady"] = None if step is None else step < limits.CLOCK_STEADY_NS
+        sat["clock_steady"] = None if step is None else step <= limits.CLOCK_STEADY_NS
     checked = [sat for sat in sats if sat["broadcast"] is not None]
     return {"name": name, "sats": sats, "healthy": sum(sat["ok"] for sat in sats), "total": len(sats),
             "settling": {new: _stage(result, new) for new in result.get("moving") or {}},

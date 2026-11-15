@@ -62,7 +62,7 @@ def _clock(sat):
     if not clock or sat["clock_steady"] is None:
         return _cell("not heard" if sat["broadcast"] in (None, "silent") else "too few messages", "idle")
     return _cell("steady" if sat["clock_steady"] else "stepped", "ok" if sat["clock_steady"] else "bad",
-                 should=f"under {limits.CLOCK_STEADY_NS:g} ns",
+                 should=f"up to {limits.CLOCK_STEADY_NS:g} ns",
                  note=f"largest step {clock['largest_step_ns']:,.1f} ns · typical {clock['typical_step_ns']:.2f} ns · "
                       f"drift {clock['drift_ns_per_day']:,.0f} ns a day")
 

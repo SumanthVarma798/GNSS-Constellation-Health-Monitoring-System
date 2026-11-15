@@ -87,7 +87,7 @@ def clock(summary):
         f"{reveal.count(len(names), 'clock')} stepped more than {CLOCK_STEADY_NS:g} ns in the day",
         f"{_names(names)} · largest step {step(names[0]):,.0f} ns, which is {step(names[0]) * 0.3:,.0f} m of range · "
         f"{len(heard) - len(stepped)} of {len(heard)} clocks heard were steady on {_day(summary['broadcast_day'])}",
-        (("largest step, ns", round(step(names[0]))), ("steady under, ns", CLOCK_STEADY_NS)),
+        (("largest step, ns", round(step(names[0]))), ("steady up to, ns", CLOCK_STEADY_NS)),
         step(names[0]) / CLOCK_STEADY_NS, names))
 
 

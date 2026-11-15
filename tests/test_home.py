@@ -246,8 +246,8 @@ def test_a_second_visit_in_the_same_hour_does_not_count_a_constellation_again(mo
 def test_a_satellite_is_judged_on_orbit_station_and_clock_and_not_judged_where_nothing_shows_it():
     result = data.load("NavIC", 90)
     names = [str(name) for name in result["health"]["Satellite"]][:2]
-    steady = {"records": 14, "drift_ns_per_day": 800.0, "typical_step_ns": 0.4, "largest_step_ns": 2.0}
-    stepped = {**steady, "typical_step_ns": 1.2, "largest_step_ns": 42009.3}
+    steady = {"records": 14, "drift_ns_per_day": 800.0, "typical_step_ns": 0.4, "largest_step_ns": 30.0}   # on the line: still steady
+    stepped = {**steady, "typical_step_ns": 1.2, "largest_step_ns": 30.1}
     gap = {"day": "2026-11-13", "satellites": [
         {"satellite": names[0], "signal_id": "I01", "health": 0, "clock": steady},
         {"satellite": names[1], "signal_id": "I02", "health": 0, "clock": stepped}]}
@@ -278,12 +278,12 @@ def test_a_row_compares_the_three_measures_and_the_flag_in_that_order():
 
 def test_clock_stepped_fires_for_a_step_past_the_line_and_not_for_steady_clocks():
     def heard(name, step):
-        return {**sat(name), "clock_steady": step < 30, "clock": {"largest_step_ns": step}}
+        return {**sat(name), "clock_steady": step <= 30, "clock": {"largest_step_ns": step}}
 
     fired = findings.clock(system([heard("A1", 2.0), heard("A2", 42009.3), heard("A3", 35.0), sat("A4")]))
     quiet = findings.clock(system([heard("A1", 2.0), heard("A2", 29.9), sat("A3")]))
 
-    assert [f["about"] for f in fired] == [["A2", "A3"]] and fired[0]["pair"] == (("largest step, ns", 42009), ("steady under, ns", 30.0))
+    assert [f["about"] for f in fired] == [["A2", "A3"]] and fired[0]["pair"] == (("largest step, ns", 42009), ("steady up to, ns", 30.0))
     assert "2 clocks stepped more than 30 ns" in fired[0]["line"] and "1 of 3 clocks heard were steady" in fired[0]["numbers"]
     assert quiet == []
 
