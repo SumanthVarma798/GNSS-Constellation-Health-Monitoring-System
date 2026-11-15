@@ -40,6 +40,9 @@ TABLER = {
     "hourglass": ['M6.5 7h11', 'M6.5 17h11', 'M6 20v-2a6 6 0 1 1 12 0v2a1 1 0 0 1 -1 1h-10a1 1 0 0 1 -1 -1z', 'M6 4v2a6 6 0 1 0 12 0v-2a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1z'],
     "coin": ['M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0', 'M14.8 9a2 2 0 0 0 -1.8 -1h-2a2 2 0 1 0 0 4h2a2 2 0 1 1 0 4h-2a2 2 0 0 1 -1.8 -1', 'M12 7v10'],
     "database": ['M12 6m-8 0a8 3 0 1 0 16 0a8 3 0 1 0 -16 0', 'M4 6v6a8 3 0 0 0 16 0v-6', 'M4 12v6a8 3 0 0 0 16 0v-6'],
+    "download": ['M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2', 'M7 11l5 5l5 -5', 'M12 4l0 12'],
+    "quote": ['M10 11h-4a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1h3a1 1 0 0 1 1 1v6c0 2.667 -1.333 4.333 -4 5',
+              'M19 11h-4a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1h3a1 1 0 0 1 1 1v6c0 2.667 -1.333 4.333 -4 5'],
 }
 
 # Each lifecycle step's icon (the Library's lifecycles); a step not listed has none.
@@ -55,7 +58,9 @@ STATUS_ICONS = {"ok": "circle-check", "warn": "alert-triangle", "bad": "alert-ci
 # Sky and ground card's (ui/geometry_settings.py SKY_GROUND_KEY), the Library's. An icon a page shows must be here.
 MASKED = ("bell", "check", *dict.fromkeys(STATUS_ICONS.values()), "map", "click", "radar", "player-play", "planet",
           # the Library's column help (evidence/library_settings.py LIBRARY_COLUMN_HELP)
-          "rocket", "power", "broadcast", "calculator", "hourglass", "coin", "database")
+          "rocket", "power", "broadcast", "calculator", "hourglass", "coin", "database",
+          # the Library's shelves (ui/shelf_settings.py)
+          "satellite", "search", "download", "quote", "tool")
 
 
 def mask_url(name):

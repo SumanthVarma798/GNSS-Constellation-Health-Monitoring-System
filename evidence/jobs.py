@@ -65,8 +65,8 @@ def schedule_words(cron):
     """'daily 00:30', 'every 3 hours from 00:50', 'Sundays 01:00'; anything else as the cron itself."""
     minute, hour, day, month, weekday = cron.split()
     if minute.isdigit() and day == month == "*":
-        if hour.isdigit() and weekday == "*":
-            return f"daily {int(hour):02d}:{int(minute):02d}"
+        if all(h.isdigit() for h in hour.split(",")) and weekday == "*":
+            return "daily " + ", ".join(f"{int(h):02d}:{int(minute):02d}" for h in hour.split(","))
         if hour.startswith("*/") and weekday == "*":
             return f"every {hour[2:]} hours from 00:{int(minute):02d}"
         if hour.isdigit() and weekday.isdigit():

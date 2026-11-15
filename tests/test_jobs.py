@@ -28,7 +28,7 @@ def test_every_job_in_the_settings_has_its_workflow_and_schedule_group():
 
 
 @pytest.mark.parametrize("cron, words", [
-    ("30 0 * * *", "daily 00:30"), ("50 */3 * * *", "every 3 hours from 00:50"), ("0 1 * * 0", "Sundays 01:00"),
+    ("30 0 * * *", "daily 00:30"), ("15 1,8,14,20 * * *", "daily 01:15, 08:15, 14:15, 20:15"), ("50 */3 * * *", "every 3 hours from 00:50"), ("0 1 * * 0", "Sundays 01:00"),
     ("15 4 1 * *", "15 4 1 * * (cron)")])
 def test_a_schedule_is_said_in_words(cron, words):
     assert jobs.schedule_words(cron) == words

@@ -56,6 +56,21 @@ CSS = """<style>
   .gen-name { grid-column: 1 / -1; }
 }
 .lib a { color: var(--accent); overflow-wrap: anywhere; }
+/* on a phone or a tablet each table is a card per row, each value beside its name: no inner scroll */
+@media (max-width: 900px) {
+  .lib.board table, .lib.board caption, .lib.board tbody { display: block; width: 100%; min-width: 0; }
+  .lib.board thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .lib.board tr { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(170px, 100%), 1fr)); gap: 2px 18px;
+    padding: 12px 0; border-top: 1px solid var(--edge); }
+  .lib.board td { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; min-width: 0; border: 0;
+    padding: 4px 0; text-align: right; }
+  .lib.board td .num { white-space: nowrap; }
+  .lib.board td::before { content: attr(data-label); color: var(--fc-small); font-size: var(--fs-small); font-weight: 400; text-align: left; }
+  .lib.board td.who, .lib.board td.words { grid-column: 1 / -1; display: block; position: static; text-align: left; min-width: 0; overflow-wrap: anywhere; }
+  .lib.board td.who::before { content: none; }
+  .lib.board td.words::before { display: block; }
+  .lib.board .bar { display: none; }
+}
 </style>"""
 
 
@@ -106,9 +121,10 @@ def _rate(value):
     return f'<span class="rate num">{100 * value:.1f}%</span><span class="bar"><i style="width:{100 * value:.1f}%"></i></span>'
 
 
-def _count(value, bad=False):
+def _count(value, bad=False, label=""):
     cls = ' class="bad-count"' if bad and value else ""
-    return f'<td{cls}><span class="num{" zero" if not value else ""}">{value}</span></td>'
+    said = f' data-label="{escape(label, quote=True)}"' if label else ""
+    return f'<td{cls}{said}><span class="num{" zero" if not value else ""}">{value}</span></td>'
 
 
 def _years(value):
@@ -150,20 +166,24 @@ def scoreboard(counts, figures):
         lines += (
             f'<tr><td class="who"><b><span class="dot" style="background:{palette.CONSTELLATION_COLOURS[row["system"]]}"></span>{system}</b>'
             f'<span class="small">{escape(SYSTEMS[row["system"]]["country"])}, launches {_span(row["first"], row["last"])}</span></td>'
-            + _count(row["launched"]) + _count(row["failed_at_launch"], bad=True) + _count(row["failed_in_orbit"], bad=True)
-            + _count(row["retired"]) + _count(row["operating"])
-            + f'<td>{_rate(launch_success(row))}</td><td>{_rate(orbit_success(row))}</td>'
-            f'<td>{_years(service)}</td><td>{_years(average_retired_years(row))}</td><td>{money}</td></tr>')
+            + _count(row["launched"], label="Launched") + _count(row["failed_at_launch"], bad=True, label="Failed at launch")
+            + _count(row["failed_in_orbit"], bad=True, label="Failed in orbit")
+            + _count(row["retired"], label="Retired") + _count(row["operating"], label="Operating")
+            + f'<td data-label="Launch success">{_rate(launch_success(row))}</td>'
+            f'<td data-label="Orbit success">{_rate(orbit_success(row))}</td>'
+            f'<td data-label="Satellite-years">{_years(service)}</td>'
+            f'<td data-label="Average service, retired">{_years(average_retired_years(row))}</td>'
+            f'<td data-label="Money">{money}</td></tr>')
     table = (
-        '<table><caption>Navigation satellites per system. Counts are not like for like: the systems began in different '
+        '<table><caption>Navigation satellites per constellation. Counts are not like for like: the constellations began in different '
         f'decades and early generations were tests. Hover a heading for what it counts. {_cited(updated)}</caption><thead><tr>'
-        + _heads(updated, "System, country", ("Launched", "launched"), ("Failed at launch", "failed_at_launch"),
+        + _heads(updated, "Constellation, country", ("Launched", "launched"), ("Failed at launch", "failed_at_launch"),
                  ("Failed in orbit", "failed_in_orbit"), ("Retired", "retired"), ("Operating", "operating"),
                  ("Launch success rate", "launch_success"), ("Orbit success rate", "orbit_success"),
                  ("Satellite-years in service", "satellite_years"), ("Average service, retired (years)", "average_retired"),
                  ("Money", "money"))
         + f"</tr></thead><tbody>{lines}</tbody></table>")
-    return f'<div class="lib">{table}</div>'
+    return f'<div class="lib board">{table}</div>'
 
 
 # What became of a generation's satellites, in bar order: the part of each bar, its words, its colour (the same
@@ -235,25 +255,27 @@ def costs(figures):
         value = (f'<span class="num"><b>{escape(_number(figure["value"]))}</b> {escape(figure["unit"])}</span>' if figure["value"] != NOT_KNOWN
                  else surfaces.chip(NOT_KNOWN, "idle"))
         lines += (f'<tr><td class="who"><b>{escape(figure["system"])}</b><span class="small">{escape(figure["programme"])}</span></td>'
-                  f'<td>{value}</td><td>{escape(figure["year_of_figure"]) or "&ndash;"}</td>'
-                  f'<td class="words">{escape(figure["covers"])}</td><td class="words">{link}</td>'
-                  f'<td class="words">{surfaces.chip(figure["status"], "idle")}</td></tr>')
+                  f'<td data-label="Figure">{value}</td><td data-label="Year">{escape(figure["year_of_figure"]) or "&ndash;"}</td>'
+                  f'<td class="words" data-label="What it covers">{escape(figure["covers"])}</td>'
+                  f'<td class="words" data-label="Source">{link}</td>'
+                  f'<td class="words" data-label="Status">{surfaces.chip(figure["status"], "idle")}</td></tr>')
     table = ('<table><caption>Figures a public source states, in the currency and year it states them. Nothing here is converted, '
              'averaged or estimated by us. Awaiting review by the owner.</caption><thead><tr>'
-             + _heads("", "System", ("Figure", "money"), "Year", "What it covers", "Source", "Status")
+             + _heads("", "Constellation", ("Figure", "money"), "Year", "What it covers", "Source", "Status")
              + f"</tr></thead><tbody>{lines}</tbody></table>")
-    return f'<div class="lib">{table}</div>'
+    return f'<div class="lib board">{table}</div>'
 
 
 def matching(rows):
     """How satellites were put in a system, in words, from registry/library_matching.csv."""
     n = {name: sum(int(row[name]) for row in rows) for name in rows[0] if name != "system"}
     gone = [f'{row["system"]} {row["registry_not_in_gcat"]}' for row in rows if int(row["registry_not_in_gcat"])]
-    return (f'A satellite is put in a system by our registry when the registry lists it (by catalogue number); otherwise by its '
-            f'GCAT programme. Of {n["registry_satellites"]} registry satellites, {n["registry_found_in_gcat"]} are in GCAT '
+    return (f'A satellite is put in a constellation by the IGS satellite metadata file when that file lists it (by catalogue '
+            f'number); otherwise by its programme in GCAT, J. McDowell\'s catalogue of space objects. Of '
+            f'{n["registry_satellites"]} satellites in the IGS satellite metadata file, {n["registry_found_in_gcat"]} are in GCAT '
             f'and {n["registry_not_in_gcat"]} are not ({", ".join(gone) or "none"}: GCAT does not list them yet, so they are not counted). '
             f'GCAT lists {n["found_by_programme_only"]} more by programme only, mostly early GLONASS and BeiDou-1 satellites that '
-            f'the registry (built from the IGS file) does not hold. Where both say, the registry and the GCAT programme '
+            f'the IGS satellite metadata file does not list. Where both say, the IGS satellite metadata file and the GCAT programme '
             + (f'disagree for {n["registry_and_programme_disagree"]}.' if n["registry_and_programme_disagree"]
                else 'agree on every satellite.'))
 
@@ -265,5 +287,6 @@ def registry_lag_note(matching_rows, registry_rows):
                for row in matching_rows if int(row["registry_satellites"]) < listed[row["system"]]]
     if not lagging:
         return ""
-    return " ".join(f"The library was counted when the registry listed {counted} {system} satellites; it now lists {now}."
+    return " ".join(f"These counts were made when the IGS satellite metadata file listed {counted} {system} satellites; "
+                    f"it now lists {now}."
                     for system, counted, now in lagging)
