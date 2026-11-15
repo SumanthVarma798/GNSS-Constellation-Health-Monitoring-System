@@ -493,9 +493,9 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
 [data-baseweb="calendar"] button, [data-baseweb="calendar"] [role="gridcell"] div { color: var(--ink); }
 [data-baseweb="calendar"] [role="gridcell"][aria-disabled="true"] div { color: var(--track); }
 /* the phone's constellation menu: the chips as a list */
-[data-testid="stPopoverBody"]:has(:is([class*="st-key-_scope_menu"], [class*="st-key-_compare_constellations_menu"])) { min-width: 0; width: 220px; }
-[data-testid="stPopoverBody"] :is([class*="st-key-_scope_menu"], [class*="st-key-_compare_constellations_menu"]) [data-baseweb="button-group"] { display: flex; width: 100%; max-width: none; flex-direction: column; align-items: stretch; border-radius: 18px; }
-[data-testid="stPopoverBody"] :is([class*="st-key-_scope_menu"], [class*="st-key-_compare_constellations_menu"]) button { justify-content: flex-start; min-height: 40px; }
+[data-testid="stPopoverBody"]:has(:is([class*="st-key-nav_system_menu"])) { min-width: 0; width: 220px; }
+[data-testid="stPopoverBody"] :is([class*="st-key-nav_system_menu"]) [data-baseweb="button-group"] { display: flex; width: 100%; max-width: none; flex-direction: column; align-items: stretch; border-radius: 18px; }
+[data-testid="stPopoverBody"] :is([class*="st-key-nav_system_menu"]) button { justify-content: flex-start; min-height: 40px; }
 
 /* ---- icons (ui/icons.py): a Tabler icon drawn as a mask, in its status colour ---- */
 .ic { display: inline-block; flex: none; width: 18px; height: 18px; background: currentColor;
@@ -638,3 +638,16 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
 .sysline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; margin: 0 0 14px; }
 .sysline b { font-size: var(--fs-section); font-weight: var(--fw-section); }
 .sysline .num { font-size: var(--fs-section); font-weight: var(--fw-num); color: var(--accent); }
+
+/* ---- the gear's settings (ui/shell.py _thresholds): each setting with what to know before moving it ---- */
+[data-testid="stPopoverBody"]:has(.th-head) { width: min(560px, calc(100vw - 32px)); min-width: 0; }
+.th-head, .th-group { display: flex; flex-direction: column; gap: 4px; }
+.th-head b { font-size: var(--fs-section); font-weight: var(--fw-section); }
+.th-group { margin-top: 6px; padding-top: 12px; border-top: 1px solid var(--edge); }
+.th-group b { font-size: var(--fs-side); font-weight: var(--fw-side); color: var(--accent); }
+[class*="st-key-thset_"] { gap: 6px; padding: 12px 14px; border-radius: 16px; background: var(--well); box-shadow: var(--pressed); }
+.th-help { margin: 0; display: grid; gap: 4px; font-size: var(--fs-small); line-height: 1.45; }
+.th-help > div { display: grid; grid-template-columns: 7.2em 1fr; gap: 10px; }
+.th-help dt { color: var(--muted); } .th-help dd { margin: 0; color: var(--ink); }
+.th-also { margin: 6px 0 0; }
+@media (max-width: 479.98px) { .th-help > div { grid-template-columns: 1fr; gap: 0; } }

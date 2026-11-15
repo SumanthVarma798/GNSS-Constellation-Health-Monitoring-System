@@ -17,7 +17,7 @@ from skyfield.api import EarthSatellite
 
 from analysis.raan_analysis import analyze_raan_spacing
 from config.config import MEO_SATS
-from ui import data, reveal, shell, surfaces, tooltip
+from ui import limits, data, reveal, shell, surfaces, tooltip
 from ui import geometry_data as gd
 from ui import geometry_settings as gs
 from ui.components.sky_view import sky_view
@@ -51,7 +51,7 @@ def _heading(text):
 def _params(constellation):
     params = dict(st.session_state["params"])
     if constellation == "QZSS":
-        params.setdefault("inclination_tolerance", shell.QZSS_INCLINATION_TOLERANCE)
+        params.setdefault("inclination_tolerance", limits.QZSS_INCLINATION_TOLERANCE)
     return params
 
 

@@ -11,16 +11,17 @@ and the gear). Under it, the navigation in two steps (_nav): the pages across ev
 once a system is chosen, that system's pages with what filters them. On a phone the systems are a menu.
 """
 from datetime import datetime, timezone
+from html import escape
 from zoneinfo import ZoneInfo
 
 import streamlit as st
 
-from config.config import DEFAULT_PARAMS
+from config.config import DEFAULT_PARAMS, MEO_SATS
 from data import celestrak
 from evidence import jobs
 from evidence.console_settings import WORKFLOWS_DIR
 from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS
-from ui import changes, data, surfaces, systems, time_range
+from ui import changes, data, surfaces, systems, threshold_settings, time_range
 from ui.components.clock import clock_frame
 
 # Pages with their own filters: the bar shows no constellation, window or thresholds there.
@@ -45,18 +46,6 @@ CONSTELLATIONS = tuple(data.SATELLITES)
 DEFAULT_PAGE = HOME   # the page the dashboard opens on
 # The clock and "next update" are redrawn this often, alone: never a page redraw, at most this far behind.
 CLOCK_TICK_SECONDS = 15
-
-# (key in params, label, smallest, largest, step, format): the seven detection thresholds app.py offers.
-THRESHOLDS = [
-    ("z_threshold", "Z-score threshold", 1.0, 10.0, 0.5, "%.1f"),
-    ("sma_threshold", "SMA change (km)", 0.1, 5.0, 0.1, "%.1f"),
-    ("inc_threshold", "Inclination change (°)", 0.001, 0.1, 0.001, "%.3f"),
-    ("persist_window", "Persistence window", 1, 10, 1, "%d"),
-    ("inclination_tolerance", "Inclination tolerance (°)", 0.1, 5.0, 0.1, "%.1f"),
-    ("drift_tolerance_gso", "GEO drift tolerance (°/day)", 0.01, 0.5, 0.01, "%.2f"),
-    ("maneuver_uniformity_threshold", "Manoeuvre uniformity CoV", 0.1, 2.0, 0.1, "%.1f"),
-]
-QZSS_INCLINATION_TOLERANCE = 4.0   # as app.py: QZSS's IGSO satellites have a wider tolerance
 
 # Under every page: the licences (LICENSE, LICENSE-DATA) and whose data the pages draw on, as NOTICE lists them.
 FOOTER_HTML = (
@@ -150,16 +139,49 @@ def offered():
     return [c for c in CONSTELLATIONS if c in chosen] or list(CONSTELLATIONS)
 
 
+def _default(setting, scope):
+    return threshold_settings.DEFAULTS_BY_SYSTEM.get(scope, {}).get(setting["key"], DEFAULT_PARAMS[setting["key"]])
+
+
+def _reset(scope, shown):
+    """Reset's on_click: every setting shown goes back to its default."""
+    for setting in shown:
+        st.session_state[f"th_{setting['key']}_{scope}"] = _default(setting, scope)
+
+
+def _setting_help(setting, default):
+    """What to know before moving one setting: what it does, what raising and lowering it does, when to change it."""
+    rows = "".join(f"<div><dt>{escape(term)}</dt><dd>{escape(setting[field])}</dd></div>" for term, field in (
+        ("What it does", "what"), ("Raise it", "raise"), ("Lower it", "lower"), ("Change it when", "when")))
+    return (f'<dl class="th-help">{rows}</dl><p class="th-also small">Default {setting["format"] % default} · '
+            f'also called {escape(setting["also"])}</p>')
+
+
 def _thresholds(scope):
-    """The gear's inputs, one per threshold. Returns only those moved off their defaults."""
+    """The gear's panel: each setting with what to know before moving it, in its group, and a way back to the
+    defaults. Returns only the settings moved off their defaults. A system judged by orbital plane shows the
+    settings that find burns; its scoring limits are not moved here."""
+    by_plane = scope in MEO_SATS
+    shown = [s for s in threshold_settings.SETTINGS if not (by_plane and s["group"] == threshold_settings.SCORING)]
+    st.html(f'<div class="th-head"><b>Settings for {escape(scope)}</b><span class="small">They apply on this '
+            "system's pages for this visit. The Home page always uses the defaults.</span></div>")
     moved = {}
-    for key, label, low, high, step, fmt in THRESHOLDS:
-        default = DEFAULT_PARAMS[key]
-        if key == "inclination_tolerance" and scope == "QZSS":
-            default = QZSS_INCLINATION_TOLERANCE
-        value = st.number_input(label, low, high, default, step, format=fmt, key=f"th_{key}_{scope}")
-        if value != default:
-            moved[key] = value
+    for group, words in threshold_settings.GROUPS.items():
+        if by_plane and group == threshold_settings.SCORING:
+            st.html(f'<div class="th-group"><b>{escape(group)}</b><span class="small">'
+                    f'{escape(threshold_settings.BY_PLANE.format(name=scope))}</span></div>')
+            continue
+        st.html(f'<div class="th-group"><b>{escape(group)}</b><span class="small">{escape(words)}</span></div>')
+        for setting in (s for s in shown if s["group"] == group):
+            default = _default(setting, scope)
+            with st.container(key=f"thset_{setting['key']}"):
+                value = st.number_input(setting["label"], setting["low"], setting["high"], default, setting["step"],
+                                        format=setting["format"], key=f"th_{setting['key']}_{scope}")
+                st.html(_setting_help(setting, default))
+            if value != default:
+                moved[setting["key"]] = value
+    st.button("Back to the defaults", key=f"th_reset_{scope}", on_click=_reset, args=(scope, shown),
+              disabled=not moved, help="Every setting above returns to its default")
     return moved
 
 
@@ -239,7 +261,7 @@ def _refresh(names, window_days, gear_scope):
         clicked = st.button("Refresh orbit data", key="refresh_button", icon=":material/refresh:",
                             help="Load the newest orbit data we have fetched")
         if gear_scope:
-            with st.popover("", icon=":material/settings:", help="Detection thresholds"):
+            with st.popover("", icon=":material/settings:", help="Settings: what counts as a burn, and how strictly satellites are scored"):
                 st.session_state["params"] = _thresholds(gear_scope)
         _own_login()
         live, now = data.refresh(clicked), datetime.now(timezone.utc)
