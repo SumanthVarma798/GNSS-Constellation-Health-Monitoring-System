@@ -71,6 +71,11 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Open the description with what changed, table by table
+        if: steps.tables.outputs.changed == 'true'
+        continue-on-error: true   # words only: the proposal goes ahead with the report as it was
+        run: python scripts/describe_table_changes.py --report "$RUNNER_TEMP/registry-changes.md"
+
       - name: Run the tests on the new tables
         id: tests
         if: steps.tables.outputs.changed == 'true'
