@@ -270,11 +270,12 @@ def matching(rows):
     """How satellites were put in a system, in words, from registry/library_matching.csv."""
     n = {name: sum(int(row[name]) for row in rows) for name in rows[0] if name != "system"}
     gone = [f'{row["system"]} {row["registry_not_in_gcat"]}' for row in rows if int(row["registry_not_in_gcat"])]
-    return (f'A satellite is put in a constellation by our registry when the registry lists it (by catalogue number); otherwise by its '
-            f'GCAT programme. Of {n["registry_satellites"]} registry satellites, {n["registry_found_in_gcat"]} are in GCAT '
+    return (f'A satellite is put in a constellation by the IGS satellite metadata file when that file lists it (by catalogue '
+            f'number); otherwise by its programme in GCAT, J. McDowell\'s catalogue of space objects. Of '
+            f'{n["registry_satellites"]} satellites in the IGS satellite metadata file, {n["registry_found_in_gcat"]} are in GCAT '
             f'and {n["registry_not_in_gcat"]} are not ({", ".join(gone) or "none"}: GCAT does not list them yet, so they are not counted). '
             f'GCAT lists {n["found_by_programme_only"]} more by programme only, mostly early GLONASS and BeiDou-1 satellites that '
-            f'the registry (built from the IGS file) does not hold. Where both say, the registry and the GCAT programme '
+            f'the IGS satellite metadata file does not list. Where both say, the IGS satellite metadata file and the GCAT programme '
             + (f'disagree for {n["registry_and_programme_disagree"]}.' if n["registry_and_programme_disagree"]
                else 'agree on every satellite.'))
 
@@ -286,5 +287,6 @@ def registry_lag_note(matching_rows, registry_rows):
                for row in matching_rows if int(row["registry_satellites"]) < listed[row["system"]]]
     if not lagging:
         return ""
-    return " ".join(f"The library was counted when the registry listed {counted} {system} satellites; it now lists {now}."
+    return " ".join(f"These counts were made when the IGS satellite metadata file listed {counted} {system} satellites; "
+                    f"it now lists {now}."
                     for system, counted, now in lagging)

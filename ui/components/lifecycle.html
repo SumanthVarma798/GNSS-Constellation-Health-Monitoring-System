@@ -214,6 +214,8 @@ const STATE_CLASS = { "done": "done", "done, date not published": "implied", fai
 const byName = Object.fromEntries(DATA.satellites.map((s) => [s.name, s]));
 const systems = [...new Set(DATA.satellites.map((s) => s.system))];
 let picked = DATA.first.filter((n) => byName[n]);
+// a constellation asked for by the page around (a jump from another page): its first satellite listed, the newest
+if (DATA.constellation && systems.includes(DATA.constellation)) picked = [DATA.satellites.find((s) => s.system === DATA.constellation).name];
 let system = byName[picked[0]].system;
 let scale = null;            // null: chosen for the satellites shown; set once the reader picks one
 let query = "", allChips = false;

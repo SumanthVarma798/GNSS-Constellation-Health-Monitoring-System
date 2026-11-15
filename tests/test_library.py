@@ -170,7 +170,7 @@ def test_the_library_note_says_when_the_registry_now_lists_more_satellites():
     registry = [{"constellation": "GLONASS"}] * 102
 
     note = library.registry_lag_note(matching, registry)
-    assert note == "The library was counted when the registry listed 101 GLONASS satellites; it now lists 102."
+    assert note == "These counts were made when the IGS satellite metadata file listed 101 GLONASS satellites; it now lists 102."
 
 
 

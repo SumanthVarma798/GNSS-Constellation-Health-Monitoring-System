@@ -1,187 +1,189 @@
-"""What the Library's shelves hold: every dataset the dashboard uses or scans, whose it is, whether a visitor may take
-it home, and how to cite it. The page is views/library.py; the cards and the take-home bundle are built in ui/shelf.py.
+"""What the Library's shelves hold: the data only this project makes (and how to get, use and cite it), the data
+others make that we use (and where to go for it), the people already doing this work, and the citations.
+The page is views/library.py; the cards are built in ui/shelf.py.
 
-Licences follow NOTICE and LICENSE-DATA exactly. A file is offered for download only when its owner's terms let it be
-passed on (offer=True); every other one links to its owner and says why it is not offered here.
-
-Each dataset: (key, {
-  "name", "icon" (ui/icons.py MASKED), "shelf" (a key of SHELVES),
-  "what"      one line: what it is, for a first-time reader,
-  "how"       how it is made or measured,
-  "left_out"  what it assumes or leaves out,
-  "file"      ("repo", path from the repository root) | ("published", ORBIT_GAP or FITTED or NEWS or LATEST_GNSS) | None,
-  "date"      where its date is: ("column", name) the newest value in that CSV column | ("json", key) | ("head", key)
-              the key near the top of a large JSON file, read without loading the file | None (the file has no date),
-  "job"       (workflow file, schedule group) of the job that keeps it, or "hand" for a table a person keeps,
-  "licence"   a key of LICENCES, "offer" True or False, "why_not" (when not offered), "link" (the owner's page)}).
+Licences follow NOTICE and LICENSE-DATA. Only the project's own data is offered for download; everything else is
+credited to its owner and linked.
 """
 
-# The shelves, in the page's order: (title, icon, one line under the title).
+# The shelves, in the page's order: (title, icon, the section a jump to it opens). views/library.py draws them.
 SHELVES = {
-    "stories": ("Stories", "broadcast", "What happened to the navigation satellites lately, grouped from the news."),
-    "satellites": ("Satellites and their lives", "rocket", "Every satellite launched, lost and kept, and each one's life from launch to end of service."),
-    "datasets": ("Datasets", "database", "Every table and file the dashboard reads or scans, with whose it is and how fresh."),
-    "takeaways": ("Take-aways", "download", "Files you may take home, free to reuse under their licence."),
-    "cite": ("How to cite", "quote", "The words to use when you reuse something from here."),
+    "stories": ("Stories", "broadcast", "library_stories"),
+    "satellites": ("Satellites and their lives", "rocket", "library_systems"),
+    "datasets": ("Datasets", "database", "library_ours"),
+    "cite": ("How to cite", "quote", "library_cite"),
 }
 STORIES_SHOWN = 6   # the newest stories on the shelf; the News page has them all
+# A constellation as ui.systems names it -> its name in the lifecycle timelines (registry/satellites.csv's), where
+# they differ.
+LIFECYCLE_CONSTELLATION = {"BeiDou-3": "BeiDou"}
 
-# Groups on the Datasets shelf: (title, one line), in order.
-DATASET_GROUPS = {
-    "tables": ("Tables we keep", "Satellites, their lifecycles, counts and sources, kept in the project's own files."),
-    "published": ("Files our jobs publish", "Written by the project's scheduled jobs to branches of its repository, read by this dashboard."),
-    "others": ("From other people", "Records the dashboard reads from their owners. Linked, not handed out here."),
-}
-
+RAW = "https://raw.githubusercontent.com/SumanthVarma798/GNSS-Constellation-Health-Monitoring-System/"
 CODE_LINK = "https://github.com/SumanthVarma798/GNSS-Constellation-Health-Monitoring-System"
+DASHBOARD_LINK = "https://dashboard.opengnss.org"
+OUR_LICENCE = ("CC BY 4.0", "https://creativecommons.org/licenses/by/4.0/")
 OUR_CREDIT = "data from OpenGNSS (opengnss.org)"   # NOTICE
-GCAT_CREDIT = "data from GCAT (J. McDowell, planet4589.org/space/gcat)"   # NOTICE; the same as evidence.settings.GCAT_CITATION
-IGS_CREDIT = "built from the International GNSS Service (IGS) satellite metadata file"
-
-# Licence key -> (name shown, link to its terms, how to credit). Whether a file is offered is each dataset's "offer".
-LICENCES = {
-    "ours": ("CC BY 4.0", "https://creativecommons.org/licenses/by/4.0/", OUR_CREDIT),
-    "ours_gcat": ("CC BY 4.0", "https://creativecommons.org/licenses/by/4.0/", f"{OUR_CREDIT}; {GCAT_CREDIT}"),
-    "gcat": ("CC BY (GCAT's own)", "https://planet4589.org/space/gcat/", GCAT_CREDIT),
-    "igs": ("IGS terms: free to use, acknowledge the IGS", "https://igs.org/", f"{OUR_CREDIT}, {IGS_CREDIT}"),
-    "spacetrack": ("Space-Track.org user agreement", "https://www.space-track.org/", "orbital data from Space-Track.org"),
-    "celestrak": ("CelesTrak's terms", "https://celestrak.org/", "orbital data from CelesTrak"),
-    "publishers": ("each publisher's own", "", "the publisher of each article"),
-    "naturalearth": ("public domain (CC0)", "https://www.naturalearthdata.com/about/terms-of-use/", "Made with Natural Earth"),
-    "code": ("Apache-2.0", "https://www.apache.org/licenses/LICENSE-2.0", "OpenGNSS contributors"),
-}
+GCAT_CREDIT = "data from GCAT (J. McDowell, planet4589.org/space/gcat)"   # NOTICE; evidence.settings.GCAT_CITATION
 
 # Jobs the administration console does not list (evidence/console_settings.py JOBS): workflow -> name.
 JOB_NAMES = {"source-record.yml": "Source record"}
+ORBIT_GAP, FITTED = "orbit_gap", "fitted"   # files read from the orbit-checks branch (ui/data.py)
 
-ORBIT_GAP, FITTED, NEWS, LATEST_GNSS = "orbit_gap", "fitted", "news", "latest_gnss"
-
-DATASETS = {
-    "lifecycles": {
-        "name": "Satellite lifecycles", "icon": "rocket", "shelf": "tables",
-        "what": "Each step of a satellite's life, from built and launched to service ended, with a source for every step.",
-        "how": "Kept by hand from operators' mission pages and updates; registry satellites also get launch and signal-ID steps from the IGS file.",
-        "left_out": "Only steps a public source states. Dates known only to the day or month are marked so.",
-        "file": ("repo", "registry/lifecycle_events.csv"), "date": ("column", "at_utc"), "job": "hand",
-        "licence": "ours", "offer": True, "link": ""},
-    "counts": {
-        "name": "Launched, lost and kept", "icon": "calculator", "shelf": "tables",
-        "what": "How many satellites each constellation and design generation launched, lost at launch or in orbit, retired, and still runs.",
-        "how": "Counted from GCAT's catalogues, matched to our registry by catalogue number.",
-        "left_out": "GCAT's word on 'operating' is its author's latest, not a live status.",
-        "file": ("repo", "registry/library_counts.csv"), "date": ("column", "gcat_updated"),
-        "job": ("registry-update.yml", ""), "licence": "ours_gcat", "offer": True, "link": ""},
-    "figures": {
-        "name": "Money stated by public sources", "icon": "coin", "shelf": "tables",
-        "what": "What public sources say each programme cost, in their own currency and year.",
-        "how": "Kept by hand; every row names its source and what the figure covers.",
-        "left_out": "Nothing is converted, averaged or estimated. A figure no source states reads 'not known'.",
-        "file": ("repo", "registry/library_figures.csv"), "date": None, "job": "hand",
-        "licence": "ours", "offer": True, "link": ""},
-    "satellites": {
-        "name": "Satellite registry", "icon": "satellite", "shelf": "tables",
-        "what": "Which satellite is which: one row per physical satellite, with its catalogue number and generation.",
-        "how": "Rebuilt from the IGS satellite metadata file; any change is proposed as a pull request a person reviews.",
-        "left_out": "A satellite the IGS file does not list yet is not here (see sightings in the repository).",
-        "file": ("repo", "registry/satellites.csv"), "date": None,
-        "job": ("registry-update.yml", ""), "licence": "igs", "offer": True, "link": "https://files.igs.org/pub/station/general/"},
-    "signal_ids": {
-        "name": "Signal IDs over time", "icon": "broadcast", "shelf": "tables",
-        "what": "Which signal ID (PRN) each satellite held, and when. An ID can pass from one satellite to another.",
-        "how": "Rebuilt from the IGS satellite metadata file with the registry.",
-        "left_out": "An assigned ID is not proof the satellite was broadcasting.",
-        "file": ("repo", "registry/signal_ids.csv"), "date": ("column", "valid_from"),
-        "job": ("registry-update.yml", ""), "licence": "igs", "offer": True, "link": "https://files.igs.org/pub/station/general/"},
-    "catalogue": {
-        "name": "Owner and status per satellite", "icon": "database", "shelf": "tables",
-        "what": "Each registry satellite's owner, status and end of operations, as a second source states them.",
-        "how": "Taken from GCAT's catalogues for the satellites in our registry.",
-        "left_out": "Only satellites our registry lists.",
-        "file": ("repo", "registry/catalogue.csv"), "date": None,
-        "job": ("registry-update.yml", ""), "licence": "gcat", "offer": True, "link": "https://planet4589.org/space/gcat/"},
-    "tracked": {
-        "name": "Satellites this dashboard tracks", "icon": "radar", "shelf": "tables",
-        "what": "The satellites drawn on the dashboard and its name for each; and the few left out on purpose, with why.",
-        "how": "Kept by a person; a test checks every satellite with a signal ID today is tracked or explained.",
-        "left_out": "Older generations are counted in the Library but not tracked.",
-        "file": ("repo", "registry/dashboard_satellites.csv"), "date": ("column", "added"), "job": "hand",
-        "licence": "ours", "offer": True, "link": ""},
-    "sources": {
-        "name": "News sources and their grades", "icon": "search", "shelf": "tables",
-        "what": "Every source the news reader scans, with a reliability grade from A (operator) to F (unattributed).",
-        "how": "Graded by a person, then checked weekly against the record of claims that held or failed.",
-        "left_out": "A grade says how often a source was right before, not whether one article is.",
-        "file": ("repo", "evidence/source_grades.csv"), "date": ("column", "graded_on"),
-        "job": ("source-record.yml", ""), "licence": "ours", "offer": True, "link": ""},
+# ---- Only here: the data this project makes that no one else publishes, most distinctive first.
+# file: ("repo", path in the repository) or ("published", ORBIT_GAP or FITTED). date: ("column", name) the newest value
+# in a CSV column, ("json", key), or None. job: (workflow, schedule group) or "hand". fields: (name, what it means).
+OURS = {
     "orbit_gap": {
-        "name": "Orbit record check", "icon": "map", "shelf": "published",
-        "what": "How far each satellite's public orbit record is from the orbit it broadcasts itself, checked every day.",
-        "how": "Each record is moved forward and compared with the broadcast orbit read from IGS files via BKG.",
-        "left_out": "A satellite with no broadcast file that day is not checked.",
-        "file": ("published", ORBIT_GAP), "date": ("json", "day"),
-        "job": ("rinex-check.yml", ""), "licence": "ours", "offer": True, "link": ""},
+        "name": "Orbit record check", "icon": "map", "file": ("published", ORBIT_GAP), "date": ("json", "day"),
+        "job": ("rinex-check.yml", ""), "address": RAW + "orbit-checks/orbit_gap.json",
+        "what": "Every day, how far each followed satellite's newest public orbit record is from the positions the "
+                "satellite broadcasts itself.",
+        "why": "Public orbit records (CelesTrak, Space-Track) and broadcast orbits (IGS broadcast navigation files, via "
+               "BKG) are each published; this daily comparison of the two is not.",
+        "fields": [("day", "the UTC day checked"),
+                   ("satellites[].satellite, signal_id", "the satellite and its signal ID that day"),
+                   ("record_epoch", "the time of the public orbit record compared"),
+                   ("typical_km, largest_km", "the median and the largest distance between the record and the broadcast "
+                                              "positions over the day, in km"),
+                   ("mostly", "which way the record is off: ahead of or behind the satellite on its path, or off its orbit plane"),
+                   ("note", "why a satellite was not compared, such as not in the day's broadcast file"),
+                   ("fitted_km", "how far yesterday's fitted orbit (the next card) is from today's broadcast positions")],
+        "example": "typical_km 3.2 for a satellite: its newest public record placed it about 3 km from where it said it "
+                   "was that day.",
+        "not_for": "Navigation or precise positioning. It checks public records; it is not a precise orbit."},
     "fitted": {
-        "name": "Fitted orbits", "icon": "planet", "shelf": "published",
-        "what": "An orbit fitted to each satellite's own broadcast positions, for satellites whose public record is late.",
-        "how": "Fitted to a day of broadcast positions from IGS files via BKG; each says how closely it fits.",
-        "left_out": "A fit is only as good as the day it was made from; it ages like any record.",
-        "file": ("published", FITTED), "date": ("json", "day"),
-        "job": ("rinex-check.yml", ""), "licence": "ours", "offer": True, "link": ""},
-    "news": {
-        "name": "Latest news file", "icon": "broadcast", "shelf": "published",
-        "what": "Headlines and short excerpts about each constellation, sorted into categories, with each source's grade.",
-        "how": "Collected from feeds and official pages every 3 hours.",
-        "left_out": "Only what feeds publish; paid articles show their opening only.",
-        "file": ("published", NEWS), "date": ("json", "generated_at"),
-        "job": ("archive.yml", "news"), "licence": "publishers", "offer": False,
-        "why_not": "Headlines and excerpts belong to their publishers. Read them on the News page, each linked to its article.",
-        "link": ""},
-    "latest_gnss": {
-        "name": "Newest orbit records", "icon": "satellite", "shelf": "others",
-        "what": "The newest public orbit record of every navigation satellite.",
-        "how": "Copied from CelesTrak four times a day by our archive job, because CelesTrak refuses this server.",
-        "left_out": "A record can be days old; the top bar says how old.",
-        "file": ("published", LATEST_GNSS), "date": None,
-        "job": ("archive.yml", "orbital"), "licence": "celestrak", "offer": False,
-        "why_not": "CelesTrak's records keep its terms; take them from CelesTrak itself.", "link": "https://celestrak.org/"},
-    "histories": {
-        "name": "A year of orbit records", "icon": "hourglass", "shelf": "others",
-        "what": "Every public orbit record of the last year for NavIC, QZSS, BeiDou-3 and GLONASS, which the scores are worked out from.",
-        "how": "Downloaded from Space-Track.org each week and bundled with the code.",
-        "left_out": "GPS and Galileo histories are not bundled; their newest records come from CelesTrak.",
-        "file": ("repo", "data/navic_gp_history.json"), "date": ("head", "timestamp"),
-        "job": ("update-tle-data.yml", ""), "licence": "spacetrack", "offer": False,
-        "why_not": "Space-Track's user agreement does not let us pass its records on. Sign up there for free to get them.",
-        "link": "https://www.space-track.org/"},
-    "gcat": {
-        "name": "GCAT, the catalogue of space objects", "icon": "database", "shelf": "others",
-        "what": "Jonathan McDowell's catalogue of every object launched into space, scanned daily by our archive job.",
-        "how": "The Library's counts and the status per satellite are made from it.",
-        "left_out": "We keep only the navigation satellites. The whole catalogue is on its own site.",
-        "file": None, "date": None, "job": ("archive.yml", "catalogues"), "licence": "gcat", "offer": False,
-        "why_not": "The full catalogue is its author's; the parts we use are on the Tables shelf.", "link": "https://planet4589.org/space/gcat/"},
-    "igs": {
-        "name": "IGS satellite file and broadcast orbits", "icon": "broadcast", "shelf": "others",
-        "what": "The International GNSS Service's list of every navigation satellite, and the orbits satellites broadcast.",
-        "how": "Scanned daily; the broadcast files are read from BKG for the orbit record check.",
-        "left_out": "The broadcast files are large; we keep only what the checks need.",
-        "file": None, "date": None, "job": ("archive.yml", "documents"), "licence": "igs", "offer": False,
-        "why_not": "Take them from the IGS and BKG, who publish them openly.", "link": "https://igs.org/"},
-    "land": {
-        "name": "Natural Earth land", "icon": "map", "shelf": "others",
-        "what": "The outline of the land drawn under the world maps.",
-        "how": "The 110 m land file, bundled with the code.",
-        "left_out": "A coarse outline: small islands are missing.",
-        "file": None, "date": None, "job": "hand", "licence": "naturalearth", "offer": False,
-        "why_not": "Free to everyone; take the original from Natural Earth.", "link": "https://www.naturalearthdata.com/"},
+        "name": "Orbits fitted to broadcast positions", "icon": "planet", "file": ("published", FITTED),
+        "date": ("json", "day"), "job": ("rinex-check.yml", ""), "address": RAW + "orbit-checks/fitted_orbits.json",
+        "what": "An orbit fitted to a day of each satellite's own broadcast positions, ready for the SGP4 propagator.",
+        "why": "Made here from IGS broadcast navigation files; it stands in when a satellite's public record is days old.",
+        "fields": [("day", "the UTC day the broadcast positions are from"),
+                   ("satellites[].satellite, signal_id, norad", "the satellite, its signal ID and catalogue number"),
+                   ("row", "the fitted orbit, in the same fields as CelesTrak's GP records (OMM), for SGP4"),
+                   ("fit_km", "how closely the orbit fits the day's broadcast positions (root mean square, km)"),
+                   ("note", "why no orbit was fitted, such as too few broadcast positions")],
+        "example": "Give a satellite's row to an SGP4 library that reads OMM records and propagate it a few hours ahead; "
+                   "check fit_km first.",
+        "not_for": "Anything that needs metre accuracy, or propagating days ahead: a one-day fit ages like any record."},
+    "lifecycles": {
+        "name": "Satellite lifecycles", "icon": "rocket", "file": ("repo", "registry/lifecycle_events.csv"),
+        "date": ("column", "at_utc"), "job": "hand", "address": RAW + "main/registry/lifecycle_events.csv",
+        "what": "Each step of a satellite's life, from built and launched to service ended, with a public source for "
+                "every step.",
+        "why": "Gathered by hand from the operators' mission pages and updates; no one publishes these steps in one table.",
+        "fields": [("satellite, step, title", "the satellite, which step of its life, and the step's name"),
+                   ("from_utc, at_utc, when", "when the step began and happened, and how exact that is (at, by, about, "
+                                               "on the day, in the month)"),
+                   ("evidence, result", "what kind of source states it (operator, orbit records, press), and the outcome"),
+                   ("detail", "what happened, in words"),
+                   ("source_name, source_link", "the public source for this step"),
+                   ("picture, picture_credit", "a Wikimedia Commons file and its credit, where there is one")],
+        "example": "The NVS-01 rows run from built and tested to in navigation service, each with its date and source.",
+        "not_for": "An official timeline: only steps a public source states are here."},
+    "sources": {
+        "name": "News sources and their grades", "icon": "search", "file": ("repo", "evidence/source_grades.csv"),
+        "date": ("column", "graded_on"), "job": ("source-record.yml", ""), "address": RAW + "main/evidence/source_grades.csv",
+        "what": "Every news source the dashboard reads, with a reliability grade from A (the operator) to F (unattributed).",
+        "why": "Graded by the team and checked each week against the record of claims that held or failed.",
+        "fields": [("source_id, name", "the source's address and name"),
+                   ("reliability", "A operator, B scientific body, C specialist press, D general news, E social media, "
+                                   "F unattributed"),
+                   ("graded_by, graded_on, reason", "who graded it, when, and why")],
+        "example": "Keep the rows with reliability A for the operators' own advisories.",
+        "not_for": "Judging one article: a grade says how often a source held before."},
+    "tracked": {
+        "name": "Satellites this dashboard follows", "icon": "radar", "file": ("repo", "registry/dashboard_satellites.csv"),
+        "date": ("column", "added"), "job": "hand", "address": RAW + "main/registry/dashboard_satellites.csv",
+        "what": "The satellites the dashboard scores, and its name for each.",
+        "why": "The team's choice, checked by a test against the IGS satellite metadata file so no satellite with a "
+               "signal ID today is missed without a reason.",
+        "fields": [("svn", "the space vehicle number, as the IGS satellite metadata file gives it"),
+                   ("dashboard_name", "the name the dashboard shows"),
+                   ("added", "the day it was added, where recorded")],
+        "example": "Join on svn to the IGS satellite metadata file for each satellite's generation and catalogue number.",
+        "not_for": "A list of every navigation satellite in orbit: older generations are not followed."},
+    "counts": {
+        "name": "Launched, lost and kept", "icon": "calculator", "file": ("repo", "registry/library_counts.csv"),
+        "date": ("column", "gcat_updated"), "job": ("registry-update.yml", ""), "address": RAW + "main/registry/library_counts.csv",
+        "what": "How many satellites each constellation and design generation launched, lost, retired and still runs.",
+        "why": "Counted here from GCAT, J. McDowell's catalogue of space objects, matched satellite by satellite to the "
+               "IGS satellite metadata file. Credit GCAT as well as us.",
+        "fields": [("system, programme", "the constellation and its design generation, as GCAT names them"),
+                   ("launched, failed_at_launch, failed_in_orbit, retired, operating", "counts of satellites"),
+                   ("years_retired, years_operating", "years in service added up over the satellites"),
+                   ("gcat_updated", "the day GCAT was last updated when counted")],
+        "example": "(launched - failed_at_launch) / launched is the share of launches that reached orbit.",
+        "not_for": "Ranking agencies: the constellations began in different decades."},
+    "figures": {
+        "name": "Money stated by public sources", "icon": "coin", "file": ("repo", "registry/library_figures.csv"),
+        "date": None, "job": "hand", "address": RAW + "main/registry/library_figures.csv",
+        "what": "What public sources say each programme cost, in their own currency and year, each with its source.",
+        "why": "Gathered by hand; nothing is converted or estimated.",
+        "fields": [("system, programme", "the constellation and the part of it the figure is for"),
+                   ("value, unit, year_of_figure", "the figure as the source states it"),
+                   ("covers", "what the figure includes and leaves out"),
+                   ("source_name, source_link, status", "where it comes from, and whether the team has reviewed it")],
+        "example": "Read covers before using a figure: some are two satellites, some a whole programme.",
+        "not_for": "Comparing constellations: the figures cover different things, years and currencies."},
 }
 
-# How to cite, in this order: (who, the words).
-CITATIONS = [
-    ("This dashboard and its own data", "OpenGNSS: GNSS Constellation Health Monitoring System, data from OpenGNSS (opengnss.org), "
-     "licensed CC BY 4.0. " + CODE_LINK),
-    ("The counts and status per satellite", GCAT_CREDIT + ", licensed CC BY."),
-    ("The registry and signal IDs", "International GNSS Service (IGS) satellite metadata file, via OpenGNSS (opengnss.org)."),
-    ("Orbit records", "Orbital data from Space-Track.org and CelesTrak (celestrak.org)."),
+# ---- Others' data we use: whose it is, what we use it for, where to go. Not offered here.
+OTHERS = [
+    ("GCAT, J. McDowell's catalogue of space objects", "database", "https://planet4589.org/space/gcat/",
+     "The counts per constellation and each satellite's end of operations.", ("archive.yml", "catalogues")),
+    ("IGS satellite metadata file", "satellite", "https://files.igs.org/pub/station/general/",
+     "Which satellite is which, signal IDs over time, and launch dates.", ("registry-update.yml", "")),
+    ("IGS broadcast navigation files, via BKG", "broadcast", "https://igs.bkg.bund.de/",
+     "The positions satellites broadcast, for the orbit record check.", ("rinex-check.yml", "")),
+    ("CelesTrak's orbit records", "satellite", "https://celestrak.org/",
+     "The newest public orbit record of each satellite.", ("archive.yml", "orbital")),
+    ("Space-Track.org's orbit records", "hourglass", "https://www.space-track.org/",
+     "A year of orbit records for NavIC, QZSS, BeiDou-3 and GLONASS, which the scores come from.", ("update-tle-data.yml", "")),
+    ("News publishers", "broadcast", "",
+     "Headlines and short excerpts on the News page, each linked to its article.", ("archive.yml", "news")),
+    ("Natural Earth", "map", "https://www.naturalearthdata.com/", "The land outline under the world maps.", "hand"),
 ]
-BUNDLE_NAME = "opengnss-library.zip"
+
+# ---- People already doing this work, per constellation, from the team's source list (evidence/source_grades.csv
+# and source_candidates.csv). Go to them; we credit them. (constellation, [(who, what they do, link)]).
+COLLEAGUES = [
+    ("Every constellation", [
+        ("Jonathan McDowell", "GCAT and Jonathan's Space Report: every launch and every object in orbit",
+         "https://planet4589.org/space/jsr/latest.html"),
+        ("International GNSS Service (IGS)", "the satellite metadata file and the broadcast and precise orbits",
+         "https://igs.org/"),
+        ("CelesTrak", "public orbit records, republished for everyone", "https://celestrak.org/"),
+        ("Inside GNSS", "specialist GNSS news", "https://insidegnss.com/"),
+        ("GPS World", "specialist GNSS news", "https://www.gpsworld.com/")]),
+    ("NavIC", [
+        ("IndianSpaceflight", "a NavIC page with each satellite's status, and ISRO's replies to information requests",
+         "https://www.indianspaceflight.in/navic"),
+        ("Indian Space Progress (Jatan Mehta)", "a monthly report on Indian space", "https://jatan.space/"),
+        ("ISRO", "the operator's NavIC programme page", "https://www.isro.gov.in/IRNSS_Programme.html")]),
+    ("QZSS", [("Cabinet Office of Japan", "the operator's notices to QZSS users", "https://sys.qzss.go.jp/dod/en/naqu/index.html")]),
+    ("GPS", [("US Coast Guard Navigation Center", "the official notices to GPS users", "https://navcen.uscg.gov/")]),
+    ("Galileo", [
+        ("European GNSS Service Centre", "the operator's notices to Galileo users",
+         "https://www.gsc-europa.eu/system-service-status/nagu-information"),
+        ("European Spaceflight (Andrew Parsonson)", "news of European launches", "https://europeanspaceflight.com/")]),
+    ("BeiDou-3", [
+        ("China Space Bulletin (Andrew Jones)", "a journalist's reports on China's space programme",
+         "https://chinaspacenewsroundup.substack.com/"),
+        ("China Space Monitor (Blaine Curcio)", "an analyst's monthly newsletter on China's space sector",
+         "https://chinaspacemonitor.substack.com/")]),
+    ("GLONASS", [("RussianSpaceWeb (Anatoly Zak)", "a journalist's history and news of GLONASS",
+                  "https://www.russianspaceweb.com/glonass.html")]),
+]
+
+# ---- How to cite: our own data and the dashboard, then each outside source with the credit its owner asks for
+# (as NOTICE records it).
+OUR_CITATIONS = [
+    ("Our data", "OpenGNSS, <dataset name>, data from OpenGNSS (opengnss.org), licensed CC BY 4.0, <its address>, "
+                 "retrieved <date>."),
+    ("The dashboard", f"OpenGNSS GNSS Health Monitor, {DASHBOARD_LINK}, retrieved <date>."),
+]
+OUTSIDE_CITATIONS = [
+    ("GCAT", GCAT_CREDIT + "."),
+    ("IGS", "Acknowledge the International GNSS Service (IGS) for its satellite metadata file and broadcast files."),
+    ("Space-Track.org and CelesTrak", "Credit Space-Track.org and CelesTrak for orbit records, under their terms of use."),
+    ("Natural Earth", "Made with Natural Earth."),
+]
