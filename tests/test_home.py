@@ -121,7 +121,7 @@ def test_two_sources_disagree_fires_both_ways_and_not_when_they_agree():
     quiet = findings.disagree(system([sat("A1"), sat("A2", ok=False, broadcast="bad"), sat("A3", broadcast="silent")]))
 
     assert [f["about"] for f in fired] == [["A2"], ["A3"]]
-    assert "out of place" in fired[0]["line"] and "flagged unhealthy" in fired[1]["line"]
+    assert "broadcast as healthy" in fired[0]["line"] and "flagged unhealthy" in fired[1]["line"]
     assert quiet == []
 
 

@@ -628,9 +628,9 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
 .sys-m { flex: 1 0 130px; max-width: 180px; display: flex; flex-direction: column; gap: 4px; }
 .sys-m .s { font-size: var(--fs-section); font-weight: var(--fw-num); line-height: 1.1; }
 .sys-m .s.ok { color: var(--ok); } .sys-m .s.warn { color: var(--warn); } .sys-m .s.bad { color: var(--bad); } .sys-m .s.idle { color: var(--idle); }
-.bar { display: block; height: 6px; border-radius: 3px; background: var(--well); box-shadow: var(--pressed); overflow: hidden; }
-.bar i { display: block; height: 100%; border-radius: 3px; background: var(--idle); }
-.bar i.ok { background: var(--ok); } .bar i.warn { background: var(--warn); } .bar i.bad { background: var(--bad); } .bar i.accent { background: var(--accent); }
+.hbar { display: block; height: 6px; border-radius: 3px; background: var(--well); box-shadow: var(--pressed); overflow: hidden; }
+.hbar i { display: block; height: 100%; border-radius: 3px; background: var(--idle); }
+.hbar i.ok { background: var(--ok); } .hbar i.warn { background: var(--warn); } .hbar i.bad { background: var(--bad); } .hbar i.accent { background: var(--accent); }
 .sys-go { font-size: var(--fs-section); color: var(--muted); }
 .find { border-left-color: var(--warn); }
 .find-w { flex: 1 1 320px; } .find-w .chip { margin-right: 10px; } .find-w .small { margin-top: 4px; }

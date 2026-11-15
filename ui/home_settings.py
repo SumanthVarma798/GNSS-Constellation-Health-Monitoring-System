@@ -50,6 +50,7 @@ HOW = [
     ("How", [
         "The two lines come from different sources and are never mixed into one number. Where they disagree, the "
         "page says so under \"Worth a look\".",
+        "The counts use the default limits. Limits a reader moves on a system's page apply on that page only.",
         "A finding is raised by a named rule, never picked by hand. The largest finding of each rule is listed first, "
         "then the rest by rule and by size.",
     ]),

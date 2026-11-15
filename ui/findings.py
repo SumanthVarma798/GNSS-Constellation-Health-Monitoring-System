@@ -50,7 +50,8 @@ def silent(summary):
 
 
 def disagree(summary):
-    """The broadcast says healthy but the orbit check does not, or the other way round."""
+    """The broadcast says healthy but the orbit check does not find the satellite healthy and in place (which
+    covers a low score, a satellite off its slot and a position not known), or the other way round."""
     name, sats = summary["name"], [sat for sat in summary["sats"] if sat["broadcast"] in ("ok", "bad")]
     flagged_ok = [sat for sat in sats if sat["broadcast"] == "ok"]
     out_of_place = [sat["name"] for sat in flagged_ok if not sat["ok"]]
@@ -58,16 +59,16 @@ def disagree(summary):
     in_place = [sat["name"] for sat in flagged_bad if sat["ok"]]
     found = _each("disagree", name, out_of_place, lambda names: _finding(
         "disagree", name,
-        f"{len(names)} broadcast as healthy, but our orbit check finds {'it' if len(names) == 1 else 'them'} out of place",
-        f"{_names(names)} · {len(flagged_ok)} flagged healthy, {len(flagged_ok) - len(out_of_place)} of them in place",
-        (("flagged healthy", len(flagged_ok)), ("also in place", len(flagged_ok) - len(out_of_place))),
+        f"{len(names)} broadcast as healthy, but not healthy and in place by our orbit check",
+        f"{_names(names)} · {len(flagged_ok)} flagged healthy, {len(flagged_ok) - len(out_of_place)} of them healthy and in place",
+        (("flagged healthy", len(flagged_ok)), ("also healthy and in place", len(flagged_ok) - len(out_of_place))),
         len(names) / len(sats), names))
     return found + _each("disagree", name, in_place, lambda names: _finding(
         "disagree", name,
-        f"{len(names)} flagged unhealthy by {'its' if len(names) == 1 else 'their'} own broadcast, though in place "
-        "by our orbit check",
+        f"{len(names)} flagged unhealthy by {'its' if len(names) == 1 else 'their'} own broadcast, though healthy "
+        "and in place by our orbit check",
         f"{_names(names)} · {len(flagged_bad)} flagged unhealthy in the file of {_day(summary['broadcast_day'])}",
-        (("in place", sum(sat["ok"] for sat in sats)), ("also flagged healthy", sum(sat["ok"] for sat in flagged_ok))),
+        (("healthy and in place", sum(sat["ok"] for sat in sats)), ("also flagged healthy", sum(sat["ok"] for sat in flagged_ok))),
         len(names) / len(sats), names))
 
 

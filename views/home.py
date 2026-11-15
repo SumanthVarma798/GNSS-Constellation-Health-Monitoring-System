@@ -42,7 +42,7 @@ def _measure(count, total, words):
     share = 100 * count / total if total else 0
     band = surfaces.band(share)
     return (f'<div class="sys-m"><span class="s num {band}">{count} of {total}</span>'
-            f'<i class="bar"><i class="{band}" style="width:{share:.0f}%"></i></i>'
+            f'<i class="hbar"><i class="{band}" style="width:{share:.0f}%"></i></i>'
             f'<span class="small">{escape(words)}</span></div>')
 
 
@@ -77,7 +77,7 @@ def _pair(pair):
     """The two things a finding compares, as two bars on one scale."""
     top = max(value for _, value in pair) or 1
     return '<div class="pair">' + "".join(
-        f'<span class="small">{escape(label)}</span><i class="bar"><i class="{kind}" style="width:{100 * value / top:.0f}%"></i></i>'
+        f'<span class="small">{escape(label)}</span><i class="hbar"><i class="{kind}" style="width:{100 * value / top:.0f}%"></i></i>'
         f'<b class="num">{value:g}</b>' for (label, value), kind in zip(pair, ("idle", "accent"))) + '</div>'
 
 
