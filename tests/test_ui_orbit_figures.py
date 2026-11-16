@@ -11,7 +11,7 @@ from ui import palette
 from ui.figures.constellation_3d import BELT_RADIUS, LEFT_RING_EXTRA, constellation_3d, slot_legend
 from ui.figures.score_parts import score_parts
 from ui.figures.slot_belt import slot_belt
-from ui.figures.slot_rows import empty_slots, last_known_position, slot_rows, unknown_slots
+from ui.figures.slot_rows import last_known_position, slot_rows, unknown_slots
 from ui.tooltip import plotly_card
 
 NAN = float("nan")
@@ -84,13 +84,7 @@ def test_a_missing_score_is_never_called_in_slot(score):
     assert rows[0]["state"] == palette.SLOT_UNKNOWN
 
 
-def test_empty_slots_name_their_owner(navic):
-    empties = {(e["owner"], e["slot_lon"]) for e in empty_slots(navic)}
-    assert empties == {("NVS-01", 131.5), ("IRNSS-1D", 111.75)}
-
-
-def test_a_slot_whose_satellite_has_no_position_is_unknown_not_empty(navic):
-    assert "IRNSS-1F" not in {e["owner"] for e in empty_slots(navic)}
+def test_a_slot_whose_satellite_has_no_position_is_unknown(navic):
     assert [(e["owner"], e["slot_lon"]) for e in unknown_slots(navic)] == [("IRNSS-1F", 32.5)]
 
 
@@ -134,7 +128,6 @@ def test_navic_nvs_01_is_warn_tied_to_131_5_and_that_slot_is_empty(navic):
     assert float(tie.get("x1")) == pytest.approx(float(ring.get("cx")))
     # IRNSS-1G sits almost on the 129.5 slot and that slot is its own, so it is not empty.
     assert find(svg, "circle", **{"data-slot-lon": "129.5"})[0].get("data-empty") == "false"
-    assert {e["owner"] for e in empty_slots(navic) if e["slot_lon"] == 131.5} == {"NVS-01"}
 
 
 MADE_UP = [
@@ -152,7 +145,6 @@ def test_a_satellite_on_anothers_slot_is_not_fine():
     assert find(svg, "line", **{"data-sat": "A"})[0].get("data-slot-lon") == "100"
     assert find(svg, "circle", **{"data-slot-lon": "100"})[0].get("data-empty") == "true"
     assert find(svg, "circle", **{"data-slot-lon": "120"})[0].get("data-empty") == "false"
-    assert [e["slot_lon"] for e in empty_slots(list(rows.values()))] == [100]
 
 
 # --- the belt ----------------------------------------------------------------

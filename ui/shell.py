@@ -40,7 +40,6 @@ PAGES = [
     ("Master map", "views/master_map.py"),
     ("World map", "views/world_map.py"),
     ("Library", "views/library.py"),
-    # ("How it works", "views/how_it_works.py"),
 ]
 CONSTELLATIONS = tuple(data.SATELLITES)
 DEFAULT_PAGE = HOME   # the page the dashboard opens on

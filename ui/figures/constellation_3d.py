@@ -16,7 +16,6 @@ from ui import palette
 from ui.figures.slot_rows import group_by_position, state_words
 from ui.tooltip import PLOTLY_HOVER, plotly_card, plotly_label_backing
 
-EARTH_RADIUS = 1.0
 BELT_RADIUS = 6.62   # the geostationary belt, in Earth radii
 # Satellites that left the belt ride a ring this much further out. The real gap is far
 # smaller than this: it is exaggerated on purpose so the eye can see them apart.

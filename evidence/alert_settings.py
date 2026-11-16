@@ -25,6 +25,3 @@ CHECKS = [
 FLIPS_DAYS = 14
 STREAK_GOAL_HOURS = 48
 STREAK_FULL_HOURS = 7 * 24
-
-# 48 h green before the demo is shared; 7 days for the full bar (~14 Nov).
-DEMO_SHARE = "Thu 29 Oct"

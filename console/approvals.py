@@ -224,7 +224,7 @@ def changes_by_kind(item, changes, look):
         st.html(console.section("Changes, by kind", console.list_view(["Kind", "Table", "Rows", "From"], rows),
                                 right=f"pull request {item['number']}", flush=True))
     if look:
-        st.html(console.section("Needs a look", console.attention([(tone, title, detail, None) for tone, title, detail in look]),
+        st.html(console.section("Needs a look", console.attention(look),
                                 right=f"pull request {item['number']}", flush=True))
 
 

@@ -159,9 +159,9 @@ def section(title, body_html, right="", flush=False):
 
 
 def attention(items):
-    """What needs a look: (tone, title, detail, page) items, each with a coloured edge and its icon."""
+    """What needs a look: (tone, title, detail) items, each with a coloured edge and its icon."""
     rows = "".join(f'<li class="{_tone(tone)}">{icon(tone)}<div><b>{escape(title)}</b><div>{escape(detail)}</div></div></li>'
-                   for tone, title, detail, _ in items)
+                   for tone, title, detail in items)
     return f'<ul class="c-attn">{rows}</ul>'
 
 
@@ -255,34 +255,6 @@ def reliability_grid(grid, names):
 
 def notice(text, tone):
     return f'<div class="c-notice {_tone(tone)}" role="status">{escape(text)}</div>'
-
-
-def pipeline_diagram(stages, next_stage_name=None, next_at=None):
-    """The pipeline as connected stage boxes, with each stage's state in words and colour."""
-    tones = {"running now": "info", "done": "ok", "failed": "bad", "waiting": "warn", "off": "idle"}
-    by_name = {stage["name"]: stage for stage in stages}
-    archive_names = [stage["name"] for stage in stages if stage["name"].startswith("Archive: ")]
-    chain_names = ["Archive", "Registry update", "Pull request waiting for a decision", "Decided on the Approvals page",
-                   "Merged to main", "Dashboard"]
-
-    def box(stage, order=None):
-        tone = tones.get(stage["state"], "idle")
-        badge = ""
-        if next_stage_name and stage["name"] == next_stage_name and next_at:
-            badge = f'<span class="next">{escape(f"Next {when(next_at)} UTC")}</span>'
-        order_badge = f'<span class="order" aria-hidden="true">{order}</span>' if order is not None else ""
-        running = " running" if stage["state"] == "running now" else ""
-        return (f'<div class="c-pipe-stage {tone}{running}"><h4>{order_badge}{escape(stage["name"])}{badge}</h4>'
-                f'<p>{status(tone, stage["state"])}</p></div>')
-
-    archives = "".join(box(by_name[name]) for name in archive_names if name in by_name)
-    chain_rows = [name for name in chain_names if name in by_name]
-    chain = [box(by_name[name], order=index + 1) for index, name in enumerate(chain_rows)]
-    return ('<div class="c-pipe">'
-            f'<div class="c-pipe-archives">{archives}</div>'
-            '<div class="c-pipe-arrow c-pipe-join" aria-hidden="true">→</div>'
-            f'<div class="c-pipe-chain">{"".join(chain)}</div>'
-            "</div>")
 
 
 def status_bar(parts_html, right):

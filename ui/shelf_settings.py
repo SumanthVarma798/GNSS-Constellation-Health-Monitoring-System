@@ -19,7 +19,6 @@ STORIES_SHOWN = 6   # the newest stories on the shelf; the News page has them al
 LIFECYCLE_CONSTELLATION = {"BeiDou-3": "BeiDou"}
 
 RAW = "https://raw.githubusercontent.com/SumanthVarma798/GNSS-Constellation-Health-Monitoring-System/"
-CODE_LINK = "https://github.com/SumanthVarma798/GNSS-Constellation-Health-Monitoring-System"
 DASHBOARD_LINK = "https://dashboard.opengnss.org"
 OUR_LICENCE = ("CC BY 4.0", "https://creativecommons.org/licenses/by/4.0/")
 OUR_CREDIT = "data from OpenGNSS (opengnss.org)"   # NOTICE

@@ -16,7 +16,7 @@ from evidence.decision_settings import AFTER_CHANGES, APPROVE, KINDS, LABEL_PREF
 from test_dashboard_shell import segmented_controls_rerun  # noqa: F401  (AppTest 1.45's segmented controls)
 from test_decisions import FINDINGS_STAND_IN, NOW, finding_comment, findings_body, pr
 from test_jobs import LOG, RUNS, WORKFLOWS, run as workflow_run
-from ui import admin, console as ui_console
+from ui import admin
 
 ROOT = Path(__file__).resolve().parent.parent
 SECRETS = {"auth": {field: "set" for field in common.SIGN_IN_FIELDS},
@@ -669,25 +669,6 @@ def test_the_live_pipeline_uses_clear_fallback_words_for_proof_links(monkeypatch
     page = text(run(monkeypatch, page="console/pipeline.py"))
 
     assert "GitHub run" in page and ">run</a>" not in page
-
-
-def test_the_pipeline_diagram_numbers_the_chain_without_dangling_right_arrows():
-    stage_rows = live_pipeline.stages(WORKFLOWS, RUNS, jobs.run_log(LOG), [], common.workflow_texts(), NOW)
-    picture = ui_console.pipeline_diagram(stage_rows)
-    chain_names = ["Archive", "Registry update", "Pull request waiting for a decision",
-                   "Decided on the Approvals page", "Merged to main", "Dashboard"]
-
-    assert picture.count("c-pipe-arrow") == 1
-    assert picture.count('class="order"') == len(chain_names)
-
-
-def test_the_pipeline_diagram_does_not_hide_stage_words_from_screen_readers():
-    stage_rows = live_pipeline.stages(WORKFLOWS, RUNS, jobs.run_log(LOG), [], common.workflow_texts(), NOW)
-    picture = ui_console.pipeline_diagram(stage_rows)
-
-    assert 'role="img"' not in picture
-    assert "Archive: documents" in picture
-    assert "Registry update" in picture
 
 
 def test_back_and_forward_follow_the_pages_visited_and_the_browser_own_buttons():

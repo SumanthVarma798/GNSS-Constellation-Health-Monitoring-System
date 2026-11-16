@@ -115,7 +115,7 @@ def test_the_reliability_grid_counts_scheduled_runs_per_day():
 def test_what_needs_attention_comes_worst_first():
     items = jobs.attention(list(rows().values()), not_answering={"refused (403)": 3, "timed out": 1}, waiting=0)
 
-    assert [(tone, title) for tone, title, _, _ in items] == [
+    assert [(tone, title) for tone, title, _ in items] == [
         ("bad", "Archive: news: failed: 6 of 44 sources"),
         ("warn", "Update orbit data is turned off on GitHub"),
         ("warn", "4 candidate sources do not answer"),

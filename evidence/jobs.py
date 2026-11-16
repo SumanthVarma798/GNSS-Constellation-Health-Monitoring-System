@@ -156,18 +156,18 @@ def reliability(runs, now, days=RELIABILITY_DAYS):
 
 
 def attention(rows, not_answering, waiting):
-    """What needs a look, worst first: (tone, title, detail, page to go to)."""
+    """What needs a look, worst first: (tone, title, detail)."""
     items = [("bad", f"{r['name']}: {r['result'][1]}",
-              f"Last run {r['last']:%d %b %H:%M} UTC. {r['what']}." if r["last"] else r["what"], "jobs")
+              f"Last run {r['last']:%d %b %H:%M} UTC. {r['what']}." if r["last"] else r["what"])
              for r in rows if r["result"][0] == "bad"]
-    items += [("warn", f"{r['name']} is turned off on GitHub", "It will not run until it is turned on again.", "jobs")
+    items += [("warn", f"{r['name']} is turned off on GitHub", "It will not run until it is turned on again.")
               for r in rows if r["state"] == "Turned off"]
     if not_answering:
         count = sum(not_answering.values())
         items.append(("warn", f"{count} candidate source{'' if count == 1 else 's'} do not answer",
-                      ", ".join(f"{n} {words}" for words, n in not_answering.items()) + ".", "sources"))
-    items.append(("warn", f"{waiting} decision{'' if waiting == 1 else 's'} waiting", "Each is a pull request.", "approvals")
-                 if waiting else ("ok", "No decisions waiting", "Nothing is labelled for a decision.", "approvals"))
+                      ", ".join(f"{n} {words}" for words, n in not_answering.items()) + "."))
+    items.append(("warn", f"{waiting} decision{'' if waiting == 1 else 's'} waiting", "Each is a pull request.")
+                 if waiting else ("ok", "No decisions waiting", "Nothing is labelled for a decision."))
     return items
 
 
