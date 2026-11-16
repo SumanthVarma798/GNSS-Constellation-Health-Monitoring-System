@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 import requests
 
 from evidence.alert_settings import CHECKS, HEALTHCHECKS_API
-from evidence.console_settings import JOBS, TESTS_WORKFLOW
+from evidence.console_settings import ARCHIVE_WORKFLOW, JOBS, TESTS_WORKFLOW
 from evidence.jobs import conclusion, parse_time
 
 _MIN_TIME = datetime.min.replace(tzinfo=timezone.utc)
@@ -78,8 +78,8 @@ def check_rows(checks, flips_by_slug):
 
 
 # The scheduled workflows by name; a run of archive.yml is one group, which GitHub does not name, so it reads "Archive".
-JOB_NAMES = {"archive.yml": "Archive",
-             **{w: name for w, _, name, *_ in JOBS if w not in (TESTS_WORKFLOW, "archive.yml")}}
+JOB_NAMES = {ARCHIVE_WORKFLOW: "Archive",
+             **{job.workflow: job.name for job in JOBS if job.workflow not in (TESTS_WORKFLOW, ARCHIVE_WORKFLOW)}}
 
 
 def job_name(run):
@@ -91,7 +91,7 @@ def _workflow_file(run):
 
 
 def _scheduled_workflows():
-    return {workflow for workflow, *_ in JOBS if workflow != TESTS_WORKFLOW}
+    return {job.workflow for job in JOBS if job.workflow != TESTS_WORKFLOW}
 
 
 def _run_time(run, field):

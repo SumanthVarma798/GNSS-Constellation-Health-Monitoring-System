@@ -6,10 +6,13 @@ from streamlit.components.v1 import html as component_html
 
 from console import common
 from evidence import pipeline
-from evidence.console_settings import PIPELINE_FEED_EVENTS, PIPELINE_LOOK_AHEAD_HOURS, PIPELINE_READ_EVERY_SECONDS
+from evidence.console_settings import (ARCHIVE_ALL_LOG, JOBS, PIPELINE_FEED_EVENTS, PIPELINE_LOOK_AHEAD_HOURS,
+                                       PIPELINE_READ_EVERY_SECONDS)
 from evidence.pipeline_words import PLAIN_STATES, STAGES
 from ui import console
 from ui.components.live_pipeline import (
+    _CHAIN,
+    _COLLECT,
     live_pipeline_html,
     overview_frame_height,
     panel_frame_height,
@@ -17,16 +20,9 @@ from ui.components.live_pipeline import (
 )
 
 _STATE_TONE = {"running now": "info", "done": "ok", "failed": "bad", "waiting": "warn", "off": "idle"}
-_EVENT_STAGE_KEY = {
-    "archive documents": "archive_documents",
-    "archive catalogues": "archive_catalogues",
-    "archive orbital": "archive_orbital",
-    "archive news": "archive_news",
-    "archive social": "archive_social",
-    "archive launches": "archive_launches",
-    "archive all": "archive",
-    "registry update": "registry_update",
-}
+# The run-log names of the stages the overview draws (archive groups and the registry job), to their stage keys.
+_EVENT_STAGE_KEY = {job.log_name: job.key for job in JOBS if job.log_name and job.key in (*_COLLECT, *_CHAIN)}
+_EVENT_STAGE_KEY[ARCHIVE_ALL_LOG] = "archive"
 
 
 def _link(url, words):

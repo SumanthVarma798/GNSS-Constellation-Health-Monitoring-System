@@ -92,7 +92,7 @@ def job_words(job):
     if job == "hand":
         return "kept by hand; each change is a reviewed pull request"
     workflow, group = job
-    name = next((row[2] for row in JOBS if row[0] == workflow and row[1] == group), JOB_NAMES.get(workflow, workflow))
+    name = next((row.name for row in JOBS if row.workflow == workflow and row.group == group), JOB_NAMES.get(workflow, workflow))
     try:
         crons = jobs.schedules((WORKFLOWS_DIR / workflow).read_text(encoding="utf-8")).get(group, [])
     except OSError:

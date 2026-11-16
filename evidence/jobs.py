@@ -115,26 +115,26 @@ def job_rows(workflows, runs, log, workflow_texts, now):
     state = {_file(w): w["state"] for w in workflows}
     running = {_file(r) for r in runs if r["status"] != "completed"}
     rows = []
-    for workflow, group, name, what, log_name in JOBS:
-        crons = schedules(workflow_texts.get(workflow, "")).get(group, [])
-        turned_off = state.get(workflow, "active").startswith("disabled")
-        done = sorted((r for r in runs if _file(r) == workflow and r["status"] == "completed"
-                       and (workflow != TESTS_WORKFLOW or _on_main(r))), key=lambda r: r["created_at"])
-        lines = sorted((line for line in log if line["job"] == log_name), key=lambda line: line["started"]) if log_name else []
+    for job in JOBS:
+        crons = schedules(workflow_texts.get(job.workflow, "")).get(job.group, [])
+        turned_off = state.get(job.workflow, "active").startswith("disabled")
+        done = sorted((r for r in runs if _file(r) == job.workflow and r["status"] == "completed"
+                       and (job.workflow != TESTS_WORKFLOW or _on_main(r))), key=lambda r: r["created_at"])
+        lines = sorted((line for line in log if line["job"] == job.log_name), key=lambda line: line["started"]) if job.log_name else []
         if lines:
             last, result = lines[-1]["started"], log_result(lines[-1])
-        elif log_name and log:
+        elif job.log_name and log:
             last, result = None, ("idle", "No run recorded yet")
         elif done:   # no run log to read: GitHub's own record (for an archive group, the whole archive job's last run)
             last, result = parse_time(done[-1]["created_at"]), conclusion(done[-1])
-            if workflow == TESTS_WORKFLOW and result[0] == "ok":
+            if job.workflow == TESTS_WORKFLOW and result[0] == "ok":
                 result = ("ok", "Passed")
         else:
             last, result = None, ("idle", "No run in GitHub's recent record")
-        rows.append({"name": name, "what": what, "workflow": workflow,
-                     "schedule": "on every change" if workflow == TESTS_WORKFLOW else
+        rows.append({"name": job.name, "what": job.what, "workflow": job.workflow,
+                     "schedule": "on every change" if job.workflow == TESTS_WORKFLOW else
                      ", ".join(schedule_words(c) for c in crons) or "only when started by hand",
-                     "state": "Turned off" if turned_off else "Running" if workflow in running else "Ready",
+                     "state": "Turned off" if turned_off else "Running" if job.workflow in running else "Ready",
                      "next": None if turned_off or not crons else next_run(crons, now),
                      "last": last, "result": result, "link": done[-1]["html_url"] if done else None})
     return rows
@@ -143,7 +143,7 @@ def job_rows(workflows, runs, log, workflow_texts, now):
 def reliability(runs, now, days=RELIABILITY_DAYS):
     """{'days': ['7 Oct', ...], 'rows': {workflow: [None or (succeeded, failed) per day]}} for scheduled workflows."""
     dates = [(now - timedelta(days=back)).date() for back in range(days - 1, -1, -1)]
-    scheduled = list(dict.fromkeys(w for w, *_ in JOBS if w != TESTS_WORKFLOW))
+    scheduled = list(dict.fromkeys(job.workflow for job in JOBS if job.workflow != TESTS_WORKFLOW))
     rows = {workflow: [None] * days for workflow in scheduled}
     for run in runs:
         workflow, day = _file(run), parse_time(run["created_at"]).date()

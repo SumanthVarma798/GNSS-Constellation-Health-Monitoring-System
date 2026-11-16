@@ -27,7 +27,7 @@ font = console.FONT
 def live_facts(seen):
     sources = overview()
     return [(f"{sources['graded'] + sources['candidates']}", f"sources known; {sources['graded']} graded"),
-            (str(sum(1 for w, *_ in JOBS if w != TESTS_WORKFLOW)), "scheduled jobs, all on GitHub Actions"),
+            (str(sum(1 for job in JOBS if job.workflow != TESTS_WORKFLOW)), "scheduled jobs, all on GitHub Actions"),
             ("0", "servers of our own"),
             (str(len(seen["prs"])), "pull requests open"), (str(len(seen["issues"])), "issues open")]
 

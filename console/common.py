@@ -55,7 +55,7 @@ def github(token):
             problems.append(f"The run log {path} could not be read from the archive repository: the token may not "
                             "have access to it. Jobs show GitHub's own record instead.")
     runs = []
-    for workflow in dict.fromkeys(w for w, *_ in JOBS):
+    for workflow in dict.fromkeys(job.workflow for job in JOBS):
         try:
             runs += _runs(token, workflow)
         except requests.HTTPError as error:
@@ -127,7 +127,8 @@ def _archive_commits(token):
 
 
 def workflow_texts():
-    return {workflow: (WORKFLOWS_DIR / workflow).read_text(encoding="utf-8") for workflow in dict.fromkeys(w for w, *_ in JOBS)}
+    return {workflow: (WORKFLOWS_DIR / workflow).read_text(encoding="utf-8")
+            for workflow in dict.fromkeys(job.workflow for job in JOBS)}
 
 
 def github_trouble(error, reading=False):

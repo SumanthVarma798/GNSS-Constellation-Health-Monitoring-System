@@ -3,7 +3,7 @@ from datetime import timedelta
 import re
 
 from evidence import decisions, jobs
-from evidence.console_settings import JOBS, TESTS_WORKFLOW
+from evidence.console_settings import (ARCHIVE_ALL_LOG, ARCHIVE_LOG_ALIASES, ARCHIVE_WORKFLOW, JOBS, TESTS_WORKFLOW)
 
 _OK_RESULTS = {"ok", "success"}
 _COMMIT_URL = re.compile(r"(https://github\.com/[^/\s]+/[^/\s]+/(?:commit|tree|blob)/([0-9a-fA-F]{7,40}))")
@@ -11,18 +11,10 @@ _SHA = re.compile(r"\b([0-9a-fA-F]{7,40})\b")
 _ARCHIVE_RUN = re.compile(r"^Archive run (\d+),")
 _RUN_NUMBER = re.compile(r"/actions/runs/(\d+)")
 _LABEL_WAITING = "decision: "
-_LOG_TO_WORKFLOW = {log_name: workflow for workflow, _, _, _, log_name in JOBS if log_name}
-_LOG_TO_WORKFLOW["archive all"] = "archive.yml"
-_STAGE_KEYS = {
-    "Archive: documents": "archive_documents",
-    "Archive: catalogues": "archive_catalogues",
-    "Archive: orbit records": "archive_orbital",
-    "Archive: news": "archive_news",
-    "Archive: social": "archive_social",
-    "Archive: recent launches": "archive_launches",
-    "Registry update": "registry_update",
-    "Orbit ages": "orbit_ages",
-    "Orbit record check": "rinex_check",
+_LOG_TO_WORKFLOW = {job.log_name: job.workflow for job in JOBS if job.log_name}
+_LOG_TO_WORKFLOW |= ARCHIVE_LOG_ALIASES
+_STAGE_KEYS = {job.name: job.key for job in JOBS if job.stage}
+_STAGE_KEYS |= {
     "Pull request waiting for a decision": "decision_waiting",
     "Decided on the Approvals page": "decision_made",
     "Merged to main": "merged_main",
@@ -158,10 +150,10 @@ def _job_stage(stage_key, name, what, workflow, group, log_name, runs_by_workflo
     running_run = _running_run(workflow_runs) if allow_running else None
     running = running_run is not None
     line = _line_for(log, log_name) if log_name else None
-    archive_group_without_log = workflow == "archive.yml" and bool(group) and line is None
+    archive_group_without_log = workflow == ARCHIVE_WORKFLOW and bool(group) and line is None
     run = None if archive_group_without_log else _run_for(workflow_runs, line["started"] if line else None)
     last = _last_from_line(line) if line else (None if archive_group_without_log else _last_from_run(run))
-    commit_rows = archive_commits_by_run if workflow == "archive.yml" else None
+    commit_rows = archive_commits_by_run if workflow == ARCHIVE_WORKFLOW else None
     return {"key": stage_key, "name": name, "what": what, "state": _state_from_last(last, running, turned_off), "last": last,
             "next": None if turned_off else _next_for(workflow, group, workflow_texts, now),
             "proof": _proof(run, (last or {}).get("changed", ""), commit_rows),
@@ -204,14 +196,15 @@ def stages(workflows, runs, log, prs, workflow_texts, now, archive_commits=None)
     runs_by_workflow = _workflow_rows(runs)
     workflow_states = _workflow_states(workflows)
     items = []
-    for workflow, group, name, what, log_name in JOBS:
-        if workflow == TESTS_WORKFLOW or workflow == "update-tle-data.yml":
+    for job in JOBS:
+        if not job.stage:
             continue
-        items.append(_job_stage(_STAGE_KEYS.get(name, ""), name, what, workflow, group, log_name, runs_by_workflow, workflow_states,
-                                workflow_texts, log, now, archive_commits_by_run, allow_running=(workflow != "archive.yml")))
+        items.append(_job_stage(job.key, job.name, job.what, job.workflow, job.group, job.log_name, runs_by_workflow,
+                                workflow_states, workflow_texts, log, now, archive_commits_by_run,
+                                allow_running=(job.workflow != ARCHIVE_WORKFLOW)))
 
     archive_stages = [stage for stage in items if stage["name"].startswith("Archive: ")]
-    archive_runs = runs_by_workflow.get("archive.yml", [])
+    archive_runs = runs_by_workflow.get(ARCHIVE_WORKFLOW, [])
     archive_running_row = _running_run(archive_runs)
     archive_running = archive_running_row is not None
     archive_off = all(stage["state"] == "off" for stage in archive_stages)
@@ -223,12 +216,14 @@ def stages(workflows, runs, log, prs, workflow_texts, now, archive_commits=None)
                          _proof(archive_running_row, ""))
     archive_with_log = max((stage for stage in archive_stages if stage["last"]),
                            key=lambda stage: stage["last"]["start"], default=None)
-    items.insert(5, {"key": "archive", "name": "Archive",
+    archive_indexes = [index for index, stage in enumerate(items) if stage["workflow"] == ARCHIVE_WORKFLOW and stage["group"]]
+    archive_insert_at = archive_indexes[-1] + 1 if archive_indexes else len(items)
+    items.insert(archive_insert_at, {"key": "archive", "name": "Archive",
                      "what": "The private archive repository that keeps each changed copy by fingerprint",
                      "state": ("off" if archive_off else "running now" if archive_running else "failed" if archive_failed else
                                "waiting" if archive_waiting else "done"),
-                     "last": archive_last, "next": None, "proof": archive_proof, "workflow": "archive.yml", "group": "",
-                     "log_job": "archive all", "log_line": archive_with_log["log_line"] if archive_with_log else None,
+                     "last": archive_last, "next": None, "proof": archive_proof, "workflow": ARCHIVE_WORKFLOW, "group": "",
+                     "log_job": ARCHIVE_ALL_LOG, "log_line": archive_with_log["log_line"] if archive_with_log else None,
                      "running_start": _run_time(archive_running_row, "run_started_at")
                      or _run_time(archive_running_row, "created_at")})
 
@@ -292,7 +287,7 @@ def proof_feed(runs, log, prs, limit=20):
     for line in log:
         workflow = _LOG_TO_WORKFLOW.get(line["job"])
         if workflow is None and line["job"].startswith("archive "):
-            workflow = "archive.yml"
+            workflow = ARCHIVE_WORKFLOW
         run = _run_for(runs_by_workflow.get(workflow, []), line["started"]) if workflow else None
         finished = jobs.parse_time(line["ended"])
         events.append({"time": finished, "words": f"{line['job']} finished: {line['result']}", "link": (run or {}).get("html_url"),
