@@ -101,12 +101,12 @@ def registry_events(satellite, periods, catalogue_row):
         signal_id, start = period["signal_id"], period["valid_from"]
         if i == 0:
             events.append(_made(SERVICE_STEP, f"Signal ID {signal_id} assigned", start, _when(start), "IGS file",
-                                f"The IGS file assigns it signal ID {signal_id} from this time. An assignment is not "
+                                f"The IGS satellite metadata file assigns it signal ID {signal_id} from this time. An assignment is not "
                                 "proof it was broadcasting.", IGS))
         else:
             again = signal_id == periods[i - 1]["signal_id"]
             events.append(_made(NOTE_STEP, f"Signal ID {signal_id}{' again' if again else ''}", start, _when(start),
-                                "IGS file", f"The IGS file assigns it signal ID {signal_id} from this time.", IGS))
+                                "IGS file", f"The IGS satellite metadata file assigns it signal ID {signal_id} from this time.", IGS))
     ended = periods[-1]["valid_to"] if periods and periods[-1]["valid_to"] else ""
     row = catalogue_row or {}
     gcat_end = _gcat_date(row.get("operations_ended", ""))
@@ -119,7 +119,7 @@ def registry_events(satellite, periods, catalogue_row):
                             "The date GCAT gives for the end of regular operations.", GCAT))
     if ended:
         withdrawn = _made(NOTE_STEP, f"Signal ID {periods[-1]['signal_id']} withdrawn", ended, _when(ended), "IGS file",
-                          "The IGS file ends its last signal-ID period here and gives it no other.", IGS)
+                          "The IGS satellite metadata file ends its last signal-ID period here and gives it no other.", IGS)
         if not any(e["step"] == END_STEP for e in events):
             withdrawn.update(step=END_STEP, title="Signal ID withdrawn")
         events.append(withdrawn)

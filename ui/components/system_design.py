@@ -13,7 +13,7 @@ from evidence import jobs, source_overview, sources
 from evidence.console_settings import ARCHIVE_WORKFLOW, REGISTRY_UPDATE_WORKFLOW, WORKFLOWS_DIR
 from evidence.settings import (BACKOFF_FIRST, BACKOFF_LONGEST, DOWNLOAD_TRIES, MAX_COPY_BYTES, MIN_GAP_BETWEEN_DOWNLOADS,
                                WAIT_BETWEEN_TRIES_SECONDS)
-from ui.components.master_map import embed
+from ui.components.frame import embed, fill
 
 PAGE_FILE = Path(__file__).with_name("system_design.html")
 
@@ -219,10 +219,9 @@ def payload():
 
 def system_design_html(tokens_css, font):
     """The finished page: the console's colours first, the data last so it is never searched for placeholders."""
-    page = PAGE_FILE.read_text(encoding="utf-8").replace("__TOKENS__", tokens_css).replace("__FONT__", font)
-    page = page.replace("__NEWS_READ__", f"{_NEWS_SOURCE_COUNT} read {_hourly_words(_NEWS_SCHEDULE)}".replace(" hours", " h"))
-    page = page.replace("__ARCHIVE_SCHEDULES__", f"{len(_ARCHIVE_GROUPS)} schedules")
-    return page.replace("const DATA = __DATA__;", f"const DATA = {embed(payload())};", 1)
+    return fill(PAGE_FILE.read_text(encoding="utf-8"), payload(), __TOKENS__=tokens_css, __FONT__=font,
+                __NEWS_READ__=f"{_NEWS_SOURCE_COUNT} read {_hourly_words(_NEWS_SCHEDULE)}".replace(" hours", " h"),
+                __ARCHIVE_SCHEDULES__=f"{len(_ARCHIVE_GROUPS)} schedules")
 
 
 def facts_strip_html(tokens_css, font, facts):
