@@ -14,6 +14,9 @@ from datetime import datetime, timezone
 from html import escape
 from zoneinfo import ZoneInfo
 
+import base64
+from pathlib import Path
+
 import streamlit as st
 
 from config.config import DEFAULT_PARAMS
@@ -44,6 +47,9 @@ PAGES = [
 ]
 CONSTELLATIONS = tuple(data.SATELLITES)
 DEFAULT_PAGE = HOME   # the page the dashboard opens on
+# The OpenGNSS mark (ui/opengnss_logo.svg), inline: st.html drops <svg>, but keeps an image from a data address.
+LOGO = "data:image/svg+xml;base64," + base64.b64encode(
+    (Path(__file__).with_name("opengnss_logo.svg")).read_bytes()).decode()
 # The clock and "next update" are redrawn this often, alone: never a page redraw, at most this far behind.
 CLOCK_TICK_SECONDS = 15
 
@@ -362,6 +368,11 @@ def _pick_page(key):
         st.session_state["page"] = st.session_state[key]
 
 
+def _go_home():
+    """The brand's on_click: back to Home from any page, keeping the reader's choices (no page reload)."""
+    st.session_state.update({"compare": False, "page": HOME})
+
+
 def open_system(name):
     """A button's on_click: go to the Overview of `name`, a system's part as ui.data.SATELLITES names it."""
     st.session_state.update({"scope": name, "compare": False, "page": "Overview"})
@@ -378,7 +389,10 @@ def top_bar(current):
     comparing = filtered and st.session_state["compare"]
     names = offered_parts() if comparing else [st.session_state["scope"]]
     with st.container(key="topbar"), st.container(key="bar_grid"):
-        st.html('<span class="brand">GNSS Health Monitor</span>')
+        with st.container(key="brand"):   # the OpenGNSS mark and the name; a click on either opens Home
+            st.html(f'<span class="brand"><img class="brand-mark" src="{LOGO}" alt="OpenGNSS">'
+                    '<span>GNSS Health Monitor</span></span>')
+            st.button("Home", key="brand_home", on_click=_go_home, help="Back to Home")
         _refresh(names, window_days, ("Compare" if comparing else names[0]) if filtered else None)
     _nav(current, names, on_system, filtered, comparing)
     changes.post(CONSTELLATIONS if current.title in OWN_FILTERS else names)   # the pages across all systems show every one

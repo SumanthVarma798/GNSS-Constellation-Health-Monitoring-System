@@ -1,0 +1,11 @@
+<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <title>OpenGNSS: two orbital planes crossing as an open O, a satellite riding one</title>
+  <!-- Drawn with Higgsfield (gpt_image_2_6, SVG) on 16 Nov 2026; strokes thickened to read at 28 px. -->
+  <g fill="none" stroke="#7fb0ff" stroke-width="84" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M205 620 C211 438 347 198 505 128 C644 66 734 132 758 270" />
+    <path d="M760 389 C754 588 603 838 438 905 C302 960 225 875 206 735" />
+    <path d="M193 370 C99 408 44 459 44 515 C44 631 254 725 512 725 C535 725 557 724 578 722" />
+    <path d="M735 699 C882 664 980 595 980 515 C980 399 770 305 512 305 C464 305 417 308 373 314" />
+  </g>
+  <circle cx="874" cy="366" r="64" fill="#7fb0ff" />
+</svg>

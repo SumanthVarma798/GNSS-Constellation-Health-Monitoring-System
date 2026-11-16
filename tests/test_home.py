@@ -227,8 +227,8 @@ def test_the_words_a_row_explains_are_links_to_the_point_in_how_to_read_that_exp
 
     how = next(b for b in bodies if 'class="how-grid"' in b)
     cards = set(re.findall(r'<div class="how well(?: wide)?" id="([^"]+)"', how))
-    assert cards == {"how-what-is-measured", "how-how", "how-what-is-left-out", "how-what-comes-next"}
-    targets = cards | set(re.findall(r'<p class="how-p" id="([^"]+)"', how))
+    assert cards == {"how-what-is-measured", "how-how", "how-what-we-are-working-towards"}
+    targets = cards | set(re.findall(r'<div class="how-p" id="([^"]+)"', how))
     for words, heading in home_settings.HOW_LINKS.items():
         assert heading in {title for _, title, _ in home_settings.HOW}   # each points at a card that exists
     navic = next(row for row in rows_of(bodies) if "NavIC</b>" in row)
@@ -240,13 +240,21 @@ def test_the_words_a_row_explains_are_links_to_the_point_in_how_to_read_that_exp
     assert {target for target, _ in links} <= targets
 
 
-def test_how_to_read_sets_its_long_card_in_groups_and_each_term_on_its_own_line():
+def test_how_to_read_says_it_in_short_bullets_with_a_picture_for_each_term():
     how = next(b for b in htmls(run()) if 'class="how-grid"' in b)
 
-    measured = re.search(r'<div class="how well wide" id="how-what-is-measured">(.*?)</div></div></div>', how).group(1)
-    assert re.findall(r"<h4>([^<]+)</h4>", measured) == ["The score", "The states round the score", "In the score",
-                                                       "Also on each card"]
-    assert '<p class="how-p" id="how-needs-a-look"><b>Needs a look</b> Counted, but' in measured
+    measured = how.split('id="how-what-is-measured"')[1].split('id="how-how"')[0]
+    assert re.findall(r"<h4>([^<]+)</h4>", measured) == ["The score", "The states round the score",
+                                                       "Key health attributes", "Extra details"]
+    # each state beside its own mark, each attribute beside its icon, the score beside a small ring
+    assert re.search(r'id="how-needs-a-look"><span class="how-pic"><span class="dots"><i class="warn"></i>', measured)
+    assert re.search(r'id="how-clock-steady"><span class="how-pic"><span class="ic"', measured)
+    assert 'id="how-score"><span class="how-pic"><span class="gauge mini"' in measured
+    # the mission weights as bars, from ui/limits.py, and words in bullets rather than paragraphs
+    assert '<div class="wbars">' in measured and "Clock 50%" in measured and "Clock 40%" in measured
+    assert measured.count("<li>") >= 8
+    # what is not done yet is framed as what we are working towards, open to working together
+    assert "Working together" in how and "What is left out" not in how
     assert '<div class="how well" id="how-how">' in how   # a card of one group keeps its place in the row
 
 
@@ -435,8 +443,11 @@ def test_a_constellations_page_opens_up_its_score_into_its_sum():
     bodies = htmls(run(scope("NavIC")))
 
     strip = next(body for body in bodies if 'class="measures"' in body)
-    assert re.search(r"Score \d+ of 100</span><span class=\"small\">station held \d+% × 60% \+ orbit kept \d+% × 40%, "
-                     r"weighed for a regional constellation; 1 not read</span>", strip)   # clock not read: its 50% shared
+    # each attribute's pass rate × its weight = its points, adding to the score; clock not read, its 50% shared
+    assert re.search(r"Score \d+ of 100</span>", strip)
+    assert re.search(r"<b>Station held</b> \d+% × 60% = <b class=\"num\">[\d.]+</b>.*<b>Orbit kept</b> \d+% × 40% = ", strip)
+    assert re.search(r'<div class="ssum-bar" role="img" aria-label="Score \d+: Station held [\d.]+ \+ Orbit kept', strip)
+    assert "Weighed for a regional constellation; 1 not read today" in strip
 
 
 def test_burns_are_counted_over_the_last_90_days_and_a_flag_matches_where_it_says_what_we_count():

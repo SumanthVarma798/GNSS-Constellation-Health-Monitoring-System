@@ -2,6 +2,8 @@
 Home. A strip at the top declares the counts; a section lists every satellite with what each measure read and the
 figure behind it. What counts for each measure is in ui/limits.py (MEASURES, CLOCK_STEADY_NS).
 """
+from html import escape
+
 from evidence.registry_tables import judged_by_plane
 from ui import limits, meo_overview, palette, reveal, surfaces, systems
 
@@ -19,22 +21,39 @@ def _chip(words, count, of):
     return surfaces.chip(f"{words} {count} of {of}", surfaces.share_tone(100 * count / of))
 
 
-def strip(summary):
-    """The score with its sum, then the three counts and the constellation's own flag, as chips: declared before
-    anything else on the page. Home's score for this constellation is opened up here."""
+def score_sum(summary):
+    """The score opened into its parts, so it can be checked: one bar of 100 cut into each attribute's share (its
+    weight for the constellation's mission), each share filled as far as its pass rate, so the filled length is the
+    score; under it each attribute's pass rate × weight = its points, adding up to the score. Home's open card and the
+    constellation's own page show the same."""
     score, rates = summary["score"], summary["score_parts"]
     if score is None:
-        lead = surfaces.chip("Score: not read", "idle")
-    else:
-        sum_words = " + ".join(f"{dict(MEASURES)[key].lower()} {rate:.0f}% × {weight:.0%}" for key, rate, weight in rates)
-        lead = (surfaces.chip(f"Score {score} of 100", surfaces.band(score))
-                + f'<span class="small">{sum_words}, weighed for a '
-                  f'{limits.MISSION.get(systems.system_of(summary["name"]), "global")} constellation'
-                + ("" if len(rates) == 3 else f"; {3 - len(rates)} not read") + "</span>")
+        return '<p class="small">No score: none of the three attributes could be read today.</p>'
+    names = dict(MEASURES)
+    slots = "".join(f'<span class="ss-slot" style="flex:{weight:.4f}"><i class="{surfaces.share_tone(rate)}" '
+                    f'style="width:{rate:.1f}%"></i><em>{escape(names[key].split()[0].lower())}</em></span>'
+                    for key, rate, weight in rates)
+    terms = "".join(f'<span><b>{escape(names[key])}</b> {rate:.0f}% × {weight:.0%} = <b class="num">{rate * weight:.1f}</b></span>'
+                    for key, rate, weight in rates)
+    mission = limits.MISSION.get(systems.system_of(summary["name"]), "global")
+    words = " + ".join(f"{names[key]} {rate * weight:.1f}" for key, rate, weight in rates)
+    return (f'<div class="ssum"><div class="ssum-bar" role="img" aria-label="Score {score}: {escape(words)}">{slots}</div>'
+            f'<div class="ssum-key small">{terms}<span class="ssum-total">= <b class="num">{score}</b> / 100</span></div>'
+            f'<p class="small muted">Weighed for a {mission} constellation'
+            + ("" if len(rates) == 3 else f"; {3 - len(rates)} not read today, so the others count for its share")
+            + "</p></div>")
+
+
+def strip(summary):
+    """The score and its sum, then the three counts and the constellation's own flag, as chips: declared before
+    anything else on the page. Home's score for this constellation is opened up here; every satellite's result is in
+    the section under the page (section())."""
+    lead = (surfaces.chip(f"Score {summary['score']} of 100", surfaces.band(summary["score"]))
+            if summary["score"] is not None else surfaces.chip("Score: not read", "idle"))
     chips = [_chip(words, *summary[key]) for key, words in MEASURES]
     chips.append(_chip("Says healthy", summary["flagged_healthy"], summary["checked"]))
     return (f'<div class="measures" role="group" aria-label="Score, orbit, station-keeping and clock">{lead}'
-            f'{"".join(chips)}</div>')
+            f'{"".join(chips)}</div>{score_sum(summary) if summary["score"] is not None else ""}')
 
 
 def _cell(now, status, should="", note=""):
@@ -95,5 +114,5 @@ def section(summary):
     """The section under the page: every satellite, measure by measure."""
     said = " · ".join(f"{words.lower()} {count} of {of}" if of else f"{words.lower()} not read"
                       for (key, words) in MEASURES for count, of in [summary[key]])
-    reveal.section(f"three_measures_{summary['name']}", "Orbit, station-keeping and clock, satellite by satellite",
+    reveal.section(f"three_measures_{summary['name']}", "The score, satellite by satellite",
                    said, table(summary))

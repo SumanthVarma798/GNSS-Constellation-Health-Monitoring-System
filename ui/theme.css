@@ -216,11 +216,19 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 @media (max-width: 639.98px) {
   .st-key-range button span:has(> [data-testid="stIconMaterial"]) { display: none; }   /* room for the menu, Compare and the range in one row */
 }
-/* the name: big, on its own, no mark */
-.brand { display: block; font-size: 22px; font-weight: 800; line-height: 1.15; letter-spacing: -.01em; color: var(--fc-section); white-space: nowrap; }
-@media (max-width: 479.98px) {   /* a phone: the name takes two lines, so the buttons and the bell keep their row */
-  .brand { font-size: 16px; white-space: normal; }
-  .st-key-bar_buttons { width: max-content !important; }   /* only as wide as its buttons, so the name keeps its room */
+/* the OpenGNSS mark and the name, big; a transparent button over both opens Home from any page */
+.brand { display: inline-flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 800; line-height: 1.15;
+  letter-spacing: -.01em; color: var(--fc-section); white-space: nowrap; }
+.brand-mark { width: 32px; height: 32px; flex: none; }
+.st-key-brand { position: relative; gap: 0; width: max-content !important; }
+.st-key-brand [data-testid="stElementContainer"]:has([data-testid="stButton"]) { height: 0; }
+.st-key-brand [data-testid="stButton"] button { position: absolute; inset: -4px; width: auto; height: auto; min-height: 0; opacity: 0; cursor: pointer; }
+.st-key-brand:has(button:focus-visible) .brand { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 8px; }
+.st-key-brand:has(button:hover) .brand > span { color: var(--accent); }
+@media (max-width: 479.98px) {   /* a phone: only the mark, so the buttons and the bell keep their row */
+  .brand > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .brand-mark { width: 36px; height: 36px; }
+  .st-key-bar_buttons { width: max-content !important; }   /* only as wide as its buttons */
 }
 /* the gear where a page has no settings of its own: in its place, greyed, saying where the settings are */
 .st-key-gear_off button { width: 36px; height: 36px; min-height: 0; padding: 0; border-radius: 50%; }
@@ -686,7 +694,37 @@ details.sys.card { display: block; padding: 0; }
 .how.wide { grid-column: 1 / -1; }
 .how-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 6px 28px; }
 .how-g h4 { margin: 0 0 10px; font-size: var(--fs-small); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); }
-.how-p { scroll-margin-top: 96px; border-radius: 8px; transition: background-color 300ms ease; }
+.how-p { scroll-margin-top: 96px; border-radius: 8px; transition: background-color 300ms ease;
+  display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: start; margin: 0 0 14px; color: var(--muted); }
+.how-p:last-child { margin-bottom: 0; }
+.how-p b { display: block; color: var(--ink); font-weight: 600; margin-bottom: 2px; }
+.how-p ul { margin: 2px 0 0; padding-left: 16px; } .how-p li { margin: 1px 0; }
+.how-pic { display: grid; place-items: center; min-height: 22px; }
+.how-pic .ic { width: 22px; height: 22px; color: var(--accent); }
+.how-pic .dots i { width: 13px; height: 13px; }
+.gauge.mini { width: 34px; height: 34px; }
+.gauge.mini::before, .gauge.mini::after { -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), black calc(100% - 4px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 5px), black calc(100% - 4px)); }
+.gauge.mini b { font-size: 11px; }
+/* the mission weights as bars: one row per mission, each attribute's share in its own colour */
+.wbars { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.wrow { display: flex; flex-direction: column; gap: 3px; }
+.wbar { display: flex; gap: 2px; height: 20px; border-radius: 6px; overflow: hidden; font-size: 11px; font-weight: 700; color: var(--platform); }
+.wbar span { display: grid; place-items: center; white-space: nowrap; overflow: hidden; }
+.wbar .accent { background: var(--accent); } .wbar .ok { background: var(--ok); } .wbar .warn { background: var(--warn); }
+/* the score opened into its parts (ui/three_measures.py score_sum): one bar of 100, each attribute's share filled as
+   far as its pass rate, so the filled length is the score; under it the sum in words */
+.ssum { display: flex; flex-direction: column; gap: 6px; }
+.ssum-bar { display: flex; gap: 3px; height: 26px; }
+.ss-slot { position: relative; background: var(--well); box-shadow: var(--pressed); border-radius: 7px; overflow: hidden; min-width: 0; }
+.ss-slot i { position: absolute; inset: 0 auto 0 0; background: var(--idle); }
+.ss-slot i.ok { background: var(--ok); } .ss-slot i.warn { background: var(--warn); } .ss-slot i.bad { background: var(--bad); }
+.ss-slot em { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); font-style: normal; font-size: 11px; font-weight: 700;
+  color: var(--ink); text-shadow: 0 0 3px var(--platform); white-space: nowrap; }
+.ssum-key { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; }
+.ssum-key b { color: var(--ink); }
+.ssum-total { margin-left: auto; font-size: var(--fs-body); }
+.ssum p { margin: 0; }
 .how-p.lit, .how-p:target { background: var(--well); box-shadow: 0 0 0 6px var(--well); }   /* the point a link has just brought the reader to */
 [class*="st-key-home_row_"] { position: relative; gap: 0; }
 .st-key-home_systems, .st-key-home_findings { gap: 12px; margin-bottom: 14px; }

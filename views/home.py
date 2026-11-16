@@ -11,9 +11,10 @@ from html import escape
 import streamlit as st
 import streamlit.components.v1 as components
 
-from ui import data, findings, home_data, icons, marks, palette, reveal, shell, surfaces, time_range, tooltip
+from ui import (data, findings, home_data, icons, marks, palette, reveal, shell, surfaces, three_measures, time_range,
+                tooltip)
 from config.config import MEO_SATS
-from ui.home_settings import CAVEATS, FINDINGS_SHOWN, HOW, HOW_LINKS, RULES, SYSTEMS
+from ui.home_settings import CAVEATS, CONTACT_ADDRESS, FINDINGS_SHOWN, HOW, HOW_LINKS, RULES, SYSTEMS
 from ui.limits import BURN_DAYS, MEASURE_WEIGHTS, MISSION
 from ui.system_summary import whole
 from ui.systems import SYSTEMS as SYSTEMS_PARTS, part_name
@@ -151,7 +152,8 @@ def _row(system, unread=None, index=0):
             f'<div class="dots mixw small">{counted}</div>'
             f'<span class="small">{_how_scored(system, index)}</span></div>'
             f'{_gauge(system, split)}<span class="sys-go" aria-hidden="true">&rsaquo;</span></summary>'
-            f'<div class="card-more"><h4>In the score</h4><div class="tiles in">{in_score}</div>'
+            f'<div class="card-more"><h4>Key health attributes</h4>{three_measures.score_sum(system)}'
+            f'<div class="tiles in">{in_score}</div>'
             f'<div class="tiles seen">{seen}</div>'
             + (f'<div class="card-notes">' + "".join(f'<div class="small">{note}</div>' for note in notes)
                + "</div>" if notes else "")
@@ -186,9 +188,7 @@ def _headline(wholes=None, made=None):
     # One status for the whole page, in both states, so a screen reader hears "counting" and then the count, not six
     # rows each saying so.
     return (f'<div class="head"><span role="status"><span class="big num">{count}</span> '
-            f'<span class="muted">{words}</span></span></div>'
-            '<p class="lede small">One card per constellation, scored out of 100. Click a card to see what makes its '
-            'score, and to explore that constellation further.</p>')
+            f'<span class="muted">{words}</span></span></div>')
 
 
 def _why(error):
@@ -217,9 +217,50 @@ def _open(key, part):
     st.button(f"Open {part}'s overview", key=key, on_click=shell.open_system, args=(part,))
 
 
+WEIGHT_TONES = {"clock": "accent", "orbit": "ok", "station": "warn"}   # one colour per attribute in the weight bars
+
+
+def _picture(name):
+    """What stands before a term in How to read this page (see HOW): an icon, a state's mark, a small score ring, or
+    the mission weights as bars."""
+    if not name:
+        return ""
+    if name.startswith("mark:"):
+        return f'<span class="dots"><i class="{name[5:]}"></i></span>'
+    if name == "gauge":   # a sample ring: a score of 80, most satellites healthy, a few to look at, one set aside
+        return ('<span class="gauge mini" style="--ring: conic-gradient(from -135deg, var(--ok) 0deg 190deg, '
+                'transparent 190deg 193deg, var(--warn) 193deg 245deg, transparent 245deg 248deg, var(--bad) 248deg '
+                '270deg, transparent 270deg)" aria-hidden="true"><b class="num ok">80</b></span>')
+    if name == "weights":
+        rows = ""
+        for mission, weights in MEASURE_WEIGHTS.items():
+            members = ", ".join(sorted(m for m, kind in MISSION.items() if kind == mission)) or "the rest"
+            parts = "".join(f'<span class="{WEIGHT_TONES[key]}" style="flex:{weight}">{escape(MEASURE_WORDS[key][0].split()[0])} '
+                            f'{weight:.0%}</span>' for key, weight in sorted(weights.items(), key=lambda item: -item[1]))
+            rows += (f'<div class="wrow"><span class="small"><b>{escape(mission.title())}</b> '
+                     f'{escape(members if mission == "regional" else "GPS, Galileo, GLONASS, BeiDou-3")}</span>'
+                     f'<div class="wbar">{parts}</div></div>')
+        return f'<div class="wbars">{rows}</div>'
+    return icons.mask(name)
+
+
+def _point(term, words, picture=""):
+    """One point: its picture, its term, then its words as one line or short bullets; the mission weights' bars go
+    under the words."""
+    lines = (f"<span>{escape(words)}</span>" if isinstance(words, str)
+             else "<ul>" + "".join(f"<li>{escape(line)}</li>" for line in words) + "</ul>")
+    if term == "Working together" and CONTACT_ADDRESS:
+        lines += f' <a href="mailto:{escape(CONTACT_ADDRESS)}">{escape(CONTACT_ADDRESS)}</a>'
+    below = _picture(picture) if picture == "weights" else ""
+    side = "" if picture == "weights" else _picture(picture)
+    return (f'<div class="how-p" id="{_anchor(term)}"><span class="how-pic">{side}</span>'
+            f'<div><b>{escape(term)}</b>{lines}{below}</div></div>')
+
+
 def _how():
-    """Four cards, in the order every page follows: an icon and a heading, then each point, its term on a line of its
-    own. A card with groups (HOW's plain strings) takes the full width and sets them side by side."""
+    """Four cards, in the order every page follows: an icon and a heading, then each point with a picture, its term
+    and its words in short bullets. A card with groups (HOW's plain strings) takes the full width and sets them side
+    by side."""
     cards = []
     for icon, title, points in HOW:
         groups = []
@@ -229,8 +270,7 @@ def _how():
             if not isinstance(point, str):
                 groups[-1][1].append(point)
         body = "".join('<div class="how-g">' + (f"<h4>{escape(name)}</h4>" if name else "")
-                       + "".join(f'<p class="how-p" id="{_anchor(term)}"><b>{escape(term)}</b> {escape(words)}</p>'
-                                 for term, words in group) + "</div>" for name, group in groups)
+                       + "".join(_point(*point) for point in group) + "</div>" for name, group in groups)
         cards.append(f'<div class="how well{" wide" if len(groups) > 1 else ""}" id="{_anchor(title)}">'
                      f'<div class="how-h">{icons.mask(icon)}<span>{escape(title)}</span></div>'
                      f'<div class="how-groups">{body}</div></div>')
@@ -351,7 +391,7 @@ def page():
             f"{len(listed) - FINDINGS_SHOWN} more" if len(listed) > FINDINGS_SHOWN else "",
             f"{len(explained)} expected" if explained else ""])), "".join(_finding(finding) for finding in rest))
     reveal.section("home_how", "How to read this page",
-                   "what is measured, how, what is left out, what comes next", _how())
+                   "what is measured, how, and what we are working towards", _how())
     components.html(_HOW_LINKS_SCRIPT + _CARDS_SCRIPT, height=0)
 
 
