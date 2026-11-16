@@ -34,7 +34,7 @@ def _mix(system):
     if not shown:
         return ""   # nothing to draw
     bar = "".join(f'<i class="{kind}" style="flex:{count}"></i>' for kind, _, count in shown)
-    words = "".join(f'<span><i class="{kind}"></i>{count} {escape(meaning)}</span>' for kind, meaning, count in shown)
+    words = "".join(f'<span><i class="{kind}"></i>{count} {_explained(meaning)}</span>' for kind, meaning, count in shown)
     return f'<div class="mix"><i class="mixbar" aria-hidden="true">{bar}</i><div class="dots mixw small">{words}</div></div>'
 
 

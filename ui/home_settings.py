@@ -52,6 +52,10 @@ HOW = [
         ("Healthy and in place", "The satellite's orbit, from public tracking records, scores 80 or more out of 100, "
          "and it sits in its slot or keeps step in its orbital plane. The constellation's own page shows every part of "
          "that score."),
+        ("Needs a look", "Counted, but not healthy and in place: its orbit scores under 80, or it is out of its slot, "
+         "out of step with its plane or off its plane. Its constellation's page says which."),
+        ("Set aside", "Moved to a graveyard orbit, away from the working orbit, after its service ended. It is in the "
+         "total but not judged."),
         ("Orbit kept", "The satellite is on the orbit it should be on. For one held over a longitude that is its "
          "tilt; for one in a medium orbit, its plane, tilt, height and shape. Each must score 80 or more."),
         ("Station held", "It is being held there: it is in its slot and not drifting, or in step with the others in "
@@ -89,6 +93,9 @@ HOW = [
 # them}. On the row they are a link to that card.
 HOW_LINKS = {
     "healthy and in place": "What is measured",
+    "needs a look": "What is measured",
+    "set aside": "What is measured",
+    "new, not scored yet": "What is left out",
     "orbit kept": "What is measured",
     "station held": "What is measured",
     "clock steady": "What is measured",

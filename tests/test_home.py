@@ -41,8 +41,12 @@ def test_a_rows_split_is_counted_in_words_beside_each_mark_not_by_colour_alone()
 
     # one bar in proportion, hidden from screen readers, then the counts they read
     assert re.search(r'<i class="mixbar" aria-hidden="true"><i class="ok" style="flex:\d+"></i>', navic)
-    assert re.search(r'<span><i class="ok"></i>\d+ healthy and in place</span>', navic)
-    assert '<span><i class="bad"></i>1 set aside</span>' in navic
+    assert re.search(r'<span><i class="ok"></i>\d+ <a class="how-link" href="#how-what-is-measured"[^>]*>healthy and in place</a></span>', navic)
+    # each state's words open their explanation in "How to read this page", as "orbit kept" does
+    assert '<i class="bad"></i>1 <a class="how-link" href="#how-what-is-measured"' in navic
+    assert re.search(r'<a class="how-link" href="#how-what-is-measured"[^>]*>needs a look</a>', navic)
+    how = home_settings.HOW[0][2]
+    assert any(term == "Needs a look" for term, _ in how) and any(term == "Set aside" for term, _ in how)
     assert "<i class=ok>" not in navic and "What a dot means" not in navic   # no mark per satellite, so no legend for one
 
 
@@ -222,7 +226,9 @@ def test_the_words_a_row_explains_are_links_to_the_card_in_how_to_read_that_expl
         assert heading in {title for _, title, _ in home_settings.HOW}   # each points at a card that exists
     navic = next(row for row in rows_of(bodies) if "NavIC</b>" in row)
     links = re.findall(r'<a class="how-link" href="#([^"]+)"[^>]*>([^<]+)</a>', navic)
-    assert links == [("how-what-is-measured", words) for words in (
+    # the split's states first, then the count and the measures, each linked to the card that explains it
+    assert links[:3] == [("how-what-is-measured", words) for words in ("healthy and in place", "needs a look", "set aside")]
+    assert links[-5:] == [("how-what-is-measured", words) for words in (
         "healthy and in place", "orbit kept", "station held", "clock steady", "says healthy")]
     assert {card for card, _ in links} <= cards
 
