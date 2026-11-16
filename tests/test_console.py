@@ -277,7 +277,7 @@ def test_a_registry_update_reads_ask_changes_checks_unusual_then_the_decision(mo
     assert "Changed, routine" in page and "years in service and GCAT&#x27;s date only" in page
     assert at.radio(key="choice_5")   # the decision sits with the card, before what is one step deeper
     assert [e.label for e in at.expander] == ["Each change: old and new value, and its source",
-                                              "The pull request's description, by heading", "The raw diff, file by file"]
+                                              "The pull request's description, by heading"]   # the line-by-line diff is on GitHub
     assert "<td>registry satellites</td><td>101</td><td>102</td>" in page   # old beside new, one step deeper
 
 

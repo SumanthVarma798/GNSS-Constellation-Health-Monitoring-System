@@ -265,14 +265,13 @@ dl.c-kv dt { color: var(--muted); } dl.c-kv dd { margin: 0; color: var(--ink); }
 .pr-text a { color: var(--link); }
 .pr-text pre { white-space: pre-wrap; font: 12px var(--mono); background: var(--pane-alt); border: 1px solid var(--edge-soft); padding: 6px 10px; }
 
-/* ---- a part folded away inside a card (Approvals: routine rows, the description by heading, the raw diff) ---- */
+/* ---- a part folded away inside a card (Approvals: routine rows, the description by heading) ---- */
 .stApp details.c-more { border: 1px solid var(--edge); background: var(--pane); box-shadow: none; margin: 0 0 8px; }
 .stApp details.c-more > summary { min-height: 40px; display: flex; align-items: center; padding: 6px 10px; cursor: pointer;
   background: var(--pane-alt); color: var(--ink); box-shadow: none; font-weight: 700; overflow-wrap: anywhere; }
 .stApp details.c-more > summary:hover { background: var(--hover); }
 .stApp details.c-more[open] > summary { border-bottom: 1px solid var(--edge-soft); }
 .stApp details.c-more > :not(summary) { margin: 8px 10px; }
-pre.c-diff { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.4 var(--mono); color: var(--ink); background: var(--pane-alt); padding: 6px 10px; }
 
 /* ---- chat and other markdown: draw code and tables in the console's tokens, not Streamlit's dark base theme ---- */
 :is([data-testid="stMarkdownContainer"], [data-testid="stChatMessageContent"]) code {

@@ -155,7 +155,7 @@ def show_findings(items, comments, reviews, config, who):
         look = table_changes.needs_a_look(changes)
         review_summary(item, reviews.get(item["number"]), changes, look)
         changes_by_kind(item, changes, look)
-        deeper(item, reviews.get(item["number"]), changes)
+        deeper(item, changes)
     rows = []
     finish_rows = []
     for item in items:
@@ -248,8 +248,8 @@ def each_change_html(change):
     return html + f'<p class="c-legend">From {source_html(settings)}</p>'
 
 
-def deeper(item, reading, changes):
-    """One step deeper, on request: each change with its source, the description by its headings, the raw diff."""
+def deeper(item, changes):
+    """One step deeper, on request: each change with its source, and the description by its headings."""
     readable = [change for change in changes if change["readable"]]
     if readable:
         with st.expander("Each change: old and new value, and its source"):
@@ -257,11 +257,6 @@ def deeper(item, reading, changes):
                 st.html(console.section(change["settings"]["name"], each_change_html(change), right=change["path"]))
     with st.expander("The pull request's description, by heading"):
         st.html(admin.description_html(decisions.without_findings_block(item["body"])))
-    if reading and reading["files"]:
-        with st.expander("The raw diff, file by file"):
-            st.html("".join(f'<details class="c-more"><summary>{escape(f["path"])} (+{f["additions"]} −{f["deletions"]})'
-                            f'</summary><pre class="c-diff">{escape(f["patch"] or "GitHub gives no diff for a file this large.")}'
-                            "</pre></details>" for f in reading["files"]))
 
 
 def old_style_item(item, reading, config, who):
@@ -272,7 +267,7 @@ def old_style_item(item, reading, config, who):
     review_summary(item, reading, changes, look)
     changes_by_kind(item, changes, look)
     decide(item, config, who)
-    deeper(item, reading, changes)
+    deeper(item, changes)
 
 
 config = common.settings()
