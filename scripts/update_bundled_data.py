@@ -41,6 +41,7 @@ from data import celestrak, spacetrack
 from data.tle_cache import (
     bundle_key,
     load_bundled_gp_history,
+    load_bundled_tles,
     save_gp_history_to_bundle,
     save_tles_to_bundle,
 )
@@ -195,21 +196,30 @@ def update_constellation_tles(constellation_name: str, sat_dict: dict, verbose: 
 
     try:
         found = celestrak.fetch_copy(norad_ids)[0]
-    except (requests.RequestException, ValueError, KeyError, TypeError, AttributeError) as problem:
+    except (requests.RequestException, ValueError, KeyError, TypeError, AttributeError,
+            ZeroDivisionError) as problem:   # ZeroDivisionError: a row with MEAN_MOTION 0
         print(f"⚠️  No copy of CelesTrak's GNSS group ({problem})")
         found = {}
-    names = {int(norad): name for name, norad in sat_dict.items() if norad is not None}
-    tle_data = "\n".join(f"{row.get('OBJECT_NAME') or names[norad]}\n{row['TLE_LINE1']}\n{row['TLE_LINE2']}"
-                         for norad, row in sorted(found.items()))
-
-    if not tle_data:
+    if not found:
         print(f"⚠️  Failed to fetch TLEs for {constellation_name}")
         return False
-    
+
+    # A satellite the copy leaves out keeps the orbit record already bundled, so one missing row never drops it.
+    names = {int(norad): name for name, norad in sat_dict.items() if norad is not None}
+    blocks = {norad: f"{row.get('OBJECT_NAME') or names[norad]}\n{row['TLE_LINE1']}\n{row['TLE_LINE2']}"
+              for norad, row in found.items()}
+    held = (load_bundled_tles(constellation_name).get("tle_data") or "").splitlines()
+    for name, line1, line2 in zip(held[0::3], held[1::3], held[2::3]):
+        norad = int(line1[2:7])
+        if norad in names:
+            blocks.setdefault(norad, f"{name}\n{line1}\n{line2}")
+    tle_data = "\n".join(block for _, block in sorted(blocks.items()))
+
     success = save_tles_to_bundle(constellation_name, tle_data, sat_dict)
-    
+
     if success and verbose:
-        print(f"✅ Saved TLEs for {constellation_name} ({len(norad_ids)} satellites)")
+        print(f"✅ Saved TLEs for {constellation_name}: {len(found)} new from the copy, "
+              f"{len(blocks) - len(found)} kept from the bundle")
     
     return success
 
