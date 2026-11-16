@@ -16,7 +16,8 @@ from ui import data, system_summary, systems
 from ui.home_settings import SNAPSHOT_MAX_AGE, SNAPSHOT_URL
 
 # What Home reads from each part's summary; a published part missing any of them is counted here instead.
-NEEDED = {"name", "sats", "healthy", "total", "settling", "checked", "flagged_healthy", "orbit", "station", "clock"}
+NEEDED = {"name", "sats", "healthy", "total", "settling", "checked", "flagged_healthy", "orbit", "station", "clock",
+          "score", "score_parts"}
 # What each satellite in it must carry (ui/system_summary.py summary's sats).
 SAT_NEEDED = {"name", "group", "score", "state", "ok", "parts", "orbit", "station", "broadcast", "clock", "clock_steady"}
 PARTS = {name for names in systems.SYSTEMS.values() for name in names}

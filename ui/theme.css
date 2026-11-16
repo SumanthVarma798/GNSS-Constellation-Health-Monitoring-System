@@ -604,6 +604,11 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
 .dots i.ok { background: var(--ok); } .dots i.warn { background: var(--warn); border-radius: 2px; transform: rotate(45deg) scale(.82); } .dots i.bad { background: var(--bad); border-radius: 2px; } .dots i.accent { background: transparent; border: 2px solid var(--accent); }
 .sys-m { flex: 1 0 130px; max-width: 180px; display: flex; flex-direction: column; gap: 4px; }
 .sys-m .s { font-size: var(--fs-section); font-weight: var(--fw-num); line-height: 1.1; }
+.sys-m .s small { font-size: var(--fs-small); color: var(--muted); font-weight: 400; }   /* the score's "/ 100" */
+@media (max-width: 639.98px) {   /* a phone: the score comes right after the name, so it is still read at a glance */
+  .sys > .sys-id { order: 1; } .sys > .sys-m { order: 2; } .sys > .sys-mid { order: 3; } .sys > .ms { order: 4; }
+  .sys > .sys-go { order: 5; }
+}
 .sys-m .s.ok { color: var(--ok); } .sys-m .s.warn { color: var(--warn); } .sys-m .s.bad { color: var(--bad); } .sys-m .s.idle { color: var(--idle); }
 .hbar { display: block; height: 6px; border-radius: 3px; background: var(--well); box-shadow: var(--pressed); overflow: hidden; }
 .hbar i { display: block; height: 100%; border-radius: 3px; background: var(--idle); }

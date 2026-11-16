@@ -61,17 +61,29 @@ def _plane_satellites(result):
     return sats
 
 
+def score_of(counts):
+    """(the constellation's score out of 100, [(measure, its pass rate in %)]): the average of the pass rates of orbit
+    kept, station held and clock steady that could be read, each weighted the same (our choice: ui/home_settings.py
+    HOW names it). (None, []) when none could be read."""
+    rates = [(key, 100 * passed / judged) for key in ("orbit", "station", "clock") for passed, judged in [counts[key]]
+             if judged]
+    return (round(sum(rate for _, rate in rates) / len(rates)) if rates else None), rates
+
+
 def _measures(sats):
-    """{"orbit", "station", "clock": (how many pass, how many were judged), "clock_typical_ns"} over `sats`: the three
-    measures counted, and the middle of the satellites' typical clock steps (None when no clock was heard)."""
+    """{"orbit", "station", "clock": (how many pass, how many were judged), "clock_typical_ns", "score",
+    "score_parts"} over `sats`: the three measures counted, the middle of the satellites' typical clock steps (None
+    when no clock was heard), and the score made from them (score_of())."""
     def count(key):
         judged = [sat[key] for sat in sats if sat.get(key) is not None]
         return sum(judged), len(judged)
 
     typical = [sat["clock"]["typical_step_ns"] for sat in sats
                if sat.get("clock") and sat["clock"].get("typical_step_ns") is not None]
-    return {"orbit": count("orbit"), "station": count("station"), "clock": count("clock_steady"),
-            "clock_typical_ns": median(typical) if typical else None}
+    counts = {"orbit": count("orbit"), "station": count("station"), "clock": count("clock_steady"),
+              "clock_typical_ns": median(typical) if typical else None}
+    counts["score"], counts["score_parts"] = score_of(counts)
+    return counts
 
 
 def _stage(result, name):

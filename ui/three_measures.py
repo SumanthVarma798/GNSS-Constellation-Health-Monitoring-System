@@ -20,10 +20,20 @@ def _chip(words, count, of):
 
 
 def strip(summary):
-    """The three counts and the constellation's own flag, as chips: declared before anything else on the page."""
+    """The score with its sum, then the three counts and the constellation's own flag, as chips: declared before
+    anything else on the page. Home's score for this constellation is opened up here."""
+    score, rates = summary["score"], summary["score_parts"]
+    if score is None:
+        lead = surfaces.chip("Score: not read", "idle")
+    else:
+        sum_words = " + ".join(f"{dict(MEASURES)[key].lower()} {rate:.0f}%" for key, rate in rates)
+        lead = (surfaces.chip(f"Score {score} of 100", surfaces.band(score))
+                + f'<span class="small">the average of {sum_words}'
+                + ("" if len(rates) == 3 else f"; {3 - len(rates)} not read") + "</span>")
     chips = [_chip(words, *summary[key]) for key, words in MEASURES]
     chips.append(_chip("Says healthy", summary["flagged_healthy"], summary["checked"]))
-    return f'<div class="measures" role="group" aria-label="Orbit, station-keeping and clock">{"".join(chips)}</div>'
+    return (f'<div class="measures" role="group" aria-label="Score, orbit, station-keeping and clock">{lead}'
+            f'{"".join(chips)}</div>')
 
 
 def _cell(now, status, should="", note=""):

@@ -59,15 +59,18 @@ def _explained(words):
             f'title="What this means: opens How to read this page">{escape(words)}</a>')
 
 
-def _measure(count, total, words):
-    """One count out of a total with a bar under it, coloured by the share's band."""
-    if count is None:
-        return f'<div class="sys-m"><span class="s idle">not read</span><span class="small">{_explained(words)}</span></div>'
-    share = 100 * count / total if total else 0
-    band = surfaces.band(share)
-    return (f'<div class="sys-m"><span class="s num {band}">{count} of {total}</span>'
-            f'<i class="hbar"><i class="{band}" style="width:{share:.0f}%"></i></i>'
-            f'<span class="small">{_explained(words)}</span></div>')
+def _score(system):
+    """The constellation's score out of 100 with a bar in its band, the measures it was made from when not all three,
+    and under it how many satellites are healthy and in place. Its page shows the sum (ui/three_measures.py)."""
+    in_place = (f'<span class="small"><span class="num">{system["healthy"]} of {system["total"]}</span> '
+                f'{_explained("healthy and in place")}</span>')
+    if system["score"] is None:
+        return f'<div class="sys-m"><span class="s idle">no score</span>{in_place}</div>'
+    band, used = surfaces.band(system["score"]), len(system["score_parts"])
+    return (f'<div class="sys-m"><span class="s num {band}">{system["score"]}<small> / 100</small></span>'
+            f'<i class="hbar"><i class="{band}" style="width:{system["score"]}%"></i></i>'
+            f'<span class="small">{_explained("score")}{"" if used == 3 else f", from {used} of 3 measures"}</span>'
+            f'{in_place}</div>')
 
 
 def _measures(system):
@@ -91,24 +94,23 @@ def _measure_line(words, count, of):
 
 
 def _row(system, unread=None):
-    """One system: who runs it, how its satellites split, the count in place, the three measures and its own flag,
-    and what the page leaves out for it.
+    """One system: who runs it, how its satellites split, its score and the count in place, the three measures and
+    its own flag, and what the page leaves out for it.
     For a system of several parts, each part's count is a line under the split, and a part in `unread`
     ({part's name: the error}) says why it is missing."""
     name = system["name"]
     who, where = SYSTEMS.get(name, ("", ""))
-    share = 100 * system["healthy"] / system["total"] if system["total"] else 0
     notes = [f"{escape(new)} is new ({escape(stage)}) and is {_explained('not scored yet')}"   # each note is markup
              for new, stage in system["settling"].items()]
     notes += [escape(CAVEATS[name])] if name in CAVEATS else []
     notes = ([escape(" · ".join(f"{label} {count} of {of}" for label, count, of in system["parts"]))] * bool(system["parts"])
              + [escape(f"{label} could not be read just now: {_why(error)}") for label, error in (unread or {}).items()]
              + notes)
-    return (f'<div class="sys {surfaces.band(share)}">'
+    return (f'<div class="sys {surfaces.band(system["score"]) if system["score"] is not None else "idle"}">'
             f'<div class="sys-id"><b>{marks.mark(name)}{escape(name)}</b><span class="small">{escape(" · ".join(filter(None, [who, where])))}</span></div>'
             f'<div class="sys-mid">{_mix(system)}'
             + "".join(f'<div class="small">{note}</div>' for note in notes) + '</div>'
-            f'{_measure(system["healthy"], system["total"], "healthy and in place")}'
+            f'{_score(system)}'
             f'{_measures(system)}'
             '<span class="sys-go" aria-hidden="true">&rsaquo;</span></div>')
 

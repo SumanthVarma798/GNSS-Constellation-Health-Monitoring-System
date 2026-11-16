@@ -50,6 +50,10 @@ EXPLAINED = {
 # heading, so a long card reads in parts.
 HOW = [
     ("radar", "What is measured", [
+        "The score",
+        ("Score", "One number out of 100, to compare constellations at a glance: the average of orbit kept, station "
+         "held and clock steady, each as the share of the satellites judged on it. A measure that could not be read "
+         "that day is left out, and the row says the score is from 2 of 3. Open a constellation for the sum."),
         "The states on each row",
         ("Healthy and in place", "The satellite's orbit, from public tracking records, scores 80 or more out of 100, "
          "and it sits in its slot or keeps step in its orbital plane. The constellation's own page shows every part of "
@@ -82,7 +86,8 @@ HOW = [
         ("Measured accuracy", "How accurate each constellation's signal and clock actually are. That needs precise "
          "orbit and clock products we do not read yet. The flag and the clock messages are what the operator "
          "broadcasts, not a measurement against a reference."),
-        ("Our choices", "The colours (green from 80 in 100, amber from 60), the 30 ns line for a steady clock and "
+        ("Our choices", "The score's three measures counted the same, the colours (green from 80 in 100, amber from "
+         "60), the 30 ns line for a steady clock and "
          "the odd-one-out line (3 spreads under the median) are our choices, not a standard."),
         ("New satellites", "A satellite on its way to its slot, or at its slot for under 30 days, is not scored or "
          "counted yet. Its row names it."),
@@ -96,6 +101,7 @@ HOW = [
 # The words on a row that "How to read this page" explains: {words on the row: the heading of the card that explains
 # them}. On the row they are a link to that card, landing on the point itself when its term is the same words.
 HOW_LINKS = {
+    "score": "What is measured",
     "healthy and in place": "What is measured",
     "needs a look": "What is measured",
     "set aside": "What is measured",

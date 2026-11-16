@@ -238,7 +238,7 @@ def test_how_to_read_sets_its_long_card_in_groups_and_each_term_on_its_own_line(
     how = next(b for b in htmls(run()) if 'class="how-grid"' in b)
 
     measured = re.search(r'<div class="how well wide" id="how-what-is-measured">(.*?)</div></div></div>', how).group(1)
-    assert re.findall(r"<h4>([^<]+)</h4>", measured) == ["The states on each row", "The three measures",
+    assert re.findall(r"<h4>([^<]+)</h4>", measured) == ["The score", "The states on each row", "The three measures",
                                                        "What the satellite says"]
     assert '<p class="how-p" id="how-needs-a-look"><b>Needs a look</b> Counted, but' in measured
     assert '<div class="how well" id="how-how">' in how   # a card of one group keeps its place in the row
@@ -380,3 +380,32 @@ def test_the_job_writes_every_part_it_can_count_in_the_shape_home_reads(monkeypa
 
     made, parts = home_data.published(90, now=datetime(2026, 11, 16, 8, tzinfo=timezone.utc))
     assert payload["made"] == "2026-11-16T06:00:00Z" and made and set(parts) == set(payload["parts"]) >= {"NavIC", "Galileo"}
+
+
+# --- one score per constellation ---
+
+def test_the_score_is_the_average_of_the_three_measures_pass_rates_and_leaves_out_one_not_read():
+    full = system_summary.score_of({"orbit": (2, 7), "station": (6, 7), "clock": (3, 3)})
+    no_clock = system_summary.score_of({"orbit": (31, 32), "station": (18, 24), "clock": (0, 0)})
+
+    assert full == (round((200 / 7 + 600 / 7 + 100) / 3), [("orbit", 200 / 7), ("station", 600 / 7), ("clock", 100.0)])
+    assert no_clock[0] == round((100 * 31 / 32 + 75) / 2) and [key for key, _ in no_clock[1]] == ["orbit", "station"]
+    assert system_summary.score_of({"orbit": (0, 0), "station": (0, 0), "clock": (0, 0)}) == (None, [])
+
+
+def test_each_row_leads_with_its_score_and_says_when_it_is_from_fewer_measures():
+    navic = next(row for row in rows(run()) if "NavIC</b>" in row)
+
+    # no broadcast check in tests, so no clock: the score is from orbit and station alone, and says so
+    score = re.search(r'<span class="s num (ok|warn|bad)">(\d+)<small> / 100</small></span>', navic)
+    assert score and re.search(r'>score</a>, from 2 of 3 measures</span>', navic)
+    assert f'<div class="sys {score.group(1)}">' in navic   # the row's edge is in the score's colour
+    assert COUNT.search(navic)   # the count in place stays, under the score
+
+
+def test_a_constellations_page_opens_up_its_score_into_its_sum():
+    bodies = htmls(run(scope("NavIC")))
+
+    strip = next(body for body in bodies if 'class="measures"' in body)
+    assert re.search(r"Score \d+ of 100</span><span class=\"small\">the average of orbit kept \d+% \+ station held \d+%; "
+                     r"1 not read</span>", strip)
