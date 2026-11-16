@@ -40,4 +40,5 @@ TILT_GEO_BELOW = 10.0
 MEASURES = {"orbit": {"slot": ("Inclination",), "plane": ("plane", "inclination", "height", "eccentricity")},
             "station": {"slot": ("Drift",), "plane": ("spacing",)}}
 BURN_PARTS = ("Upkeep", "Regularity")   # a slot satellite's burns: on time, and evenly spaced
+BURN_DAYS = 90   # Home counts the burns found in this many days of orbit records, the default time range
 CLOCK_STEADY_NS = 30.0   # our choice: 30 ns is 9 m of range, far past a steady clock's steps (about 1 ns)
