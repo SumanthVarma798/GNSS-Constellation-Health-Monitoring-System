@@ -246,6 +246,7 @@ dl.c-kv dt { color: var(--muted); } dl.c-kv dd { margin: 0; color: var(--ink); }
 .stApp details.c-more > summary:hover { background: var(--hover); }
 .stApp details.c-more[open] > summary { border-bottom: 1px solid var(--edge-soft); }
 .stApp details.c-more > :not(summary) { margin: 8px 10px; }
+.stApp details.c-more > .c-mail { white-space: pre-wrap; overflow-wrap: anywhere; }   /* Contact inbox: a message's text */
 
 /* ---- chat and other markdown: draw code and tables in the console's tokens, not Streamlit's dark base theme ---- */
 :is([data-testid="stMarkdownContainer"], [data-testid="stChatMessageContent"]) code {

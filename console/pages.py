@@ -27,8 +27,9 @@ ALERTS = ConsolePage("Monitoring", "console/alerts.py", "Alerts", ":material/not
 
 WORK = ConsolePage("Work", "console/work.py", "Issues and pull requests", ":material/list_alt:", "work", "work")
 APPROVALS = ConsolePage("Work", "console/approvals.py", "Approvals", ":material/task_alt:", "approvals", "approvals")
+CONTACT = ConsolePage("Work", "console/contact.py", "Contact inbox", ":material/mail:", "contact", "contact")
 
-PAGES = (SUMMARY, DESIGN, ASK, SOURCES, JOBS, PIPELINE, ALERTS, WORK, APPROVALS)
+PAGES = (SUMMARY, DESIGN, ASK, SOURCES, JOBS, PIPELINE, ALERTS, WORK, APPROVALS, CONTACT)
 BY_PATH = {entry.path: entry for entry in PAGES}
 
 

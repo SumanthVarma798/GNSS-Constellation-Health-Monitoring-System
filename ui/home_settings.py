@@ -46,70 +46,60 @@ EXPLAINED = {
 }
 
 # "How to read this page": the same order the whole dashboard follows. (icon in ui/icons.py MASKED, heading,
-# [(the term in bold, what to know about it)]). A plain string among the points starts a group under that small
-# heading, so a long card reads in parts.
+# [(term, words, picture)]). A plain string among the points starts a group under that small heading. words is one
+# short line or a list of short bullets. picture, drawn before the term, is an icon name (ui/icons.py MASKED), a
+# state's mark ("mark:ok", "mark:warn", "mark:bad", "mark:accent"), "gauge" (a small score ring) or "weights" (the
+# mission weights as bars, from ui/limits.py), or "" for none.
 HOW = [
     ("radar", "What is measured", [
         "The score",
-        ("Score", "One number out of 100, to compare constellations at a glance: orbit kept, station held and clock "
-         "steady, each as the share of the satellites judged on it, added up with weights that suit the "
-         "constellation's mission. A measure that could not be read that day is left out and the others count for "
-         "its share. The ring round the score splits the constellation's satellites by state."),
-        ("Weights", "Regional (NavIC, QZSS): clock 50%, station 30%, orbit 20%. Seven or eight satellites, none spare, "
-         "every one in every user's sky: a bad clock corrupts every position fix in the service area with nothing to "
-         "stand in, and a satellite off its station moves coverage off the region. Global (GPS, Galileo, GLONASS, "
-         "BeiDou-3): clock 40%, orbit 35%, station 25%. Twenty-four to thirty-five satellites, eight to twelve in "
-         "view: a receiver can leave out one bad clock, a neighbour covers one satellite out of step, and the orbital "
-         "planes and spacing set the coverage everywhere."),
+        ("Score", ["One number out of 100, to compare constellations at a glance",
+                   "The weighted sum of the three key health attributes",
+                   "The ring round it: the constellation's satellites, by state"], "gauge"),
+        ("Weights", ["Set by mission: what a failure costs the constellation's users",
+                     "Regional: 7 or 8 satellites, none spare. A bad clock reaches every fix; off station, coverage "
+                     "leaves the region",
+                     "Global: 24 to 35, 8 to 12 in view. One bad clock can be left out; the planes set the coverage"],
+         "weights"),
         "The states round the score",
-        ("Healthy and in place", "The satellite's orbit, from public tracking records, scores 80 or more out of 100, "
-         "and it sits in its slot or keeps step in its orbital plane. The constellation's own page shows every part of "
-         "that score."),
-        ("Needs a look", "Counted, but not healthy and in place: its orbit scores under 80, or it is out of its slot, "
-         "out of step with its plane or off its plane. Its constellation's page says which."),
-        ("Set aside", "Moved to a graveyard orbit, away from the working orbit, after its service ended. It is in the "
-         "total but not judged."),
-        "In the score",
-        ("Orbit kept", "The satellite is on the orbit it should be on. For one held over a longitude that is its "
-         "tilt; for one in a medium orbit, its plane, tilt, height and shape. Each must score 80 or more."),
-        ("Station held", "It is being held there: it is in its slot and not drifting, or in step with the others in "
-         "its plane. How often and how evenly it burns to stay there is on the constellation's own page."),
-        ("Clock steady", "Through the day, each new clock message landed within 30 ns of what the one before it "
-         "predicted. A clock that was reset or is failing steps by far more. 1 ns of clock is 0.3 m of range."),
-        "Also on each card",
-        ("Says healthy", "The health flag each satellite sends about itself. It is read once a day, with the clock "
-         "messages, from the International GNSS Service's daily broadcast file, which holds the navigation "
-         "messages its ground stations received."),
-        ("Flag matches our check", "Where the operator's own flag says healthy exactly where our orbit check counts the "
-         "satellite healthy and in place, and unhealthy where it does not. A flag that is often wrong is worth "
-         "knowing before trusting it."),
-        ("Burns", "The engine burns found in the last 90 days of public tracking records: how the operator keeps its "
-         "satellites in place. Medium-orbit constellations rarely show any yet, because their records do not go back "
-         "far enough to find them."),
+        ("Healthy and in place", "orbit scores 80 or more, and it is in its slot or in step with its plane", "mark:ok"),
+        ("Needs a look", "counted, but its orbit scores under 80, or it is out of its slot or step", "mark:warn"),
+        ("Set aside", "moved to a graveyard orbit after its service ended: in the total, not judged", "mark:bad"),
+        "Key health attributes",
+        ("Orbit kept", ["on the orbit it should be on",
+                        "held over a longitude: its tilt; in a medium orbit: plane, tilt, height and shape"], "planet"),
+        ("Station held", ["held there: in its slot and not drifting, or in step with its plane",
+                          "how often it burns to stay there: on its own page"], "satellite"),
+        ("Clock steady", ["each clock message within 30 ns of what the one before predicted",
+                          "1 ns of clock is 0.3 m of range"], "hourglass"),
+        "Extra details",
+        ("Says healthy", "the flag each satellite sends about itself, read daily from the IGS daily broadcast file",
+         "broadcast"),
+        ("Flag matches our check", "the operator's flag says healthy exactly where our orbit check does",
+         "circle-check"),
+        ("Burns", ["engine burns found in the last 90 days of public tracking records",
+                   "medium orbits rarely show any yet: their records are too short"], "rocket"),
     ]),
     ("calculator", "How", [
-        ("Two sources, never mixed", "Orbit and station come from public tracking records; clock and flag from the "
-         "satellites' own broadcast. Where the two disagree, the page says so under Worth a look."),
-        ("Default limits", "The counts use the default limits. Limits you move on a constellation's page apply on that "
-         "page only."),
-        ("Findings by rule", "A finding is raised by a named rule, never picked by hand. The largest finding of "
-         "each rule is listed first, then the rest by rule and by size."),
+        ("Two sources, never mixed", "orbit and station from public tracking records; clock and flag from the "
+         "satellites' own broadcast. Where they disagree, Worth a look says so", ""),
+        ("Default limits", "Home uses the default limits; limits moved on a constellation's page apply there only", ""),
+        ("Findings by rule", "each finding comes from a named rule, never a hand pick", ""),
     ]),
-    ("alert-triangle", "What is left out", [
-        ("Measured accuracy", "How accurate each constellation's signal and clock actually are. That needs precise "
-         "orbit and clock products we do not read yet. The flag and the clock messages are what the operator "
-         "broadcasts, not a measurement against a reference."),
-        ("Our choices", "The score's weights for each mission, the colours (green from 80 in 100, amber from "
-         "60), the 30 ns line for a steady clock and "
-         "the odd-one-out line (3 spreads under the median) are our choices, not a standard."),
-        ("New satellites", "A satellite on its way to its slot, or at its slot for under 30 days, is not scored or "
-         "counted yet. Its row names it."),
-    ]),
-    ("rocket", "What comes next", [
-        ("More counts per constellation", "Stated accuracy per constellation, then measured signal error, each as its own count "
-         "beside these two."),
+    ("rocket", "What we are working towards", [
+        ("Measured accuracy", "how accurate each signal and clock really are, from precise orbit and clock products we "
+         "do not read yet", ""),
+        ("New satellites", "one on its way to its slot, or there under 30 days, is named but not yet scored", ""),
+        ("Our choices", "the mission weights, the colours (green from 80, amber from 60), the 30 ns clock line and "
+         "the odd-one-out line are ours, not a standard, and open to change", ""),
+        ("Working together", "we are open to working with anyone measuring these constellations: data, methods or "
+         "reviews of ours", ""),
     ]),
 ]
+
+# Where to write to us, shown under "Working together". Empty until its mail routing is live (cloudflare/newsletters),
+# so the page never shows an address that bounces.
+CONTACT_ADDRESS = ""
 
 # The words on a row that "How to read this page" explains: {words on the row: the heading of the card that explains
 # them}. On the row they are a link to that card, landing on the point itself when its term is the same words.
@@ -120,10 +110,10 @@ HOW_LINKS = {
     "healthy and in place": "What is measured",
     "needs a look": "What is measured",
     "set aside": "What is measured",
-    "new, not scored yet": "What is left out",
+    "new, not scored yet": "What we are working towards",
     "orbit kept": "What is measured",
     "station held": "What is measured",
     "clock steady": "What is measured",
     "says healthy": "What is measured",
-    "not scored yet": "What is left out",
+    "not scored yet": "What we are working towards",
 }

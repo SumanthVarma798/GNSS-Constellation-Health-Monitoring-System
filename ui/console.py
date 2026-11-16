@@ -76,7 +76,8 @@ ICONS = {
     "work": '<rect x="2" y="1.5" width="12" height="13" fill="#fff" stroke="#5f7da6"/><path d="M4.5 5h7M4.5 8h7M4.5 11h4.5" stroke="#1d3c66" stroke-width="1.4"/>',
     "pipeline": '<rect x="1.5" y="4.5" width="4" height="7" fill="#fff" stroke="#3a6db0"/><rect x="6.5" y="2.5" width="4" height="11" fill="#dff1e1" stroke="#217a2b"/><rect x="11.5" y="5.5" width="3" height="5" fill="#fff" stroke="#3a6db0"/><path d="M5.7 8h.6M10.7 8h.6" stroke="#1d3c66" stroke-width="1.2"/>',
     "ask": '<path d="M1.5 2.5h13v8.5H7l-3.5 3v-3h-2z" fill="#fff" stroke="#3a6db0"/><path d="M4.5 5.5h7M4.5 8h4.5" stroke="#1d3c66" stroke-width="1.4"/>',
-    "alerts": '<path d="M8 1.8a4.2 4.2 0 0 0-4.2 4.2v2.2l-1.5 2.5h11.4l-1.5-2.5V6A4.2 4.2 0 0 0 8 1.8z" fill="#fff" stroke="#3a6db0"/><circle cx="8" cy="12.8" r="1.2" fill="#f3b32a" stroke="#9a6a00"/>'
+    "alerts": '<path d="M8 1.8a4.2 4.2 0 0 0-4.2 4.2v2.2l-1.5 2.5h11.4l-1.5-2.5V6A4.2 4.2 0 0 0 8 1.8z" fill="#fff" stroke="#3a6db0"/><circle cx="8" cy="12.8" r="1.2" fill="#f3b32a" stroke="#9a6a00"/>',
+    "contact": '<rect x="1.5" y="3.5" width="13" height="9" fill="#fff" stroke="#3a6db0"/><path d="M1.5 3.5L8 9l6.5-5.5" fill="none" stroke="#1d3c66" stroke-width="1.3"/>',
 }
 
 

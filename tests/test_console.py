@@ -11,7 +11,7 @@ import streamlit
 from streamlit.testing.v1 import AppTest
 
 from console import common, pages
-from evidence import alerts, decisions, jobs, pipeline as live_pipeline
+from evidence import alerts, contact, decisions, jobs, pipeline as live_pipeline
 from evidence.decision_settings import AFTER_CHANGES, APPROVE, KINDS, LABEL_PREFIX, REJECT
 from test_dashboard_shell import segmented_controls_rerun  # noqa: F401  (AppTest 1.45's segmented controls)
 from test_decisions import FINDINGS_STAND_IN, NOW, finding_comment, findings_body, pr
@@ -237,6 +237,86 @@ def test_alerts_page_with_a_key_lists_checks_and_missing_slugs_without_showing_t
     assert "No check on Healthchecks.io for: archive-news." in page
     assert "extra-watch" in page
     assert "s3cr3t-key" not in page
+
+
+CONTACT_SECRETS = {**SECRETS, "admin": {**SECRETS["admin"], "contact_read_token": "c0ntact-t0ken"}}
+
+
+def test_without_its_token_the_contact_inbox_says_it_is_not_connected_and_which_secret_to_set(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    monkeypatch.setattr(contact, "read_messages", lambda token: pytest.fail("the inbox was read without a token"))
+
+    page = text(run(monkeypatch, page="console/contact.py"))
+
+    assert "The contact inbox is not connected" in page and "[admin] contact_read_token" in page
+    assert "CONTACT_READ_TOKEN" in page
+
+
+def test_the_contact_inbox_lists_messages_newest_first_with_the_text_folded_and_escaped(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    asked = []
+    messages = [
+        {"from": "Older <older@example.org>", "subject": "First", "at": "2026-11-10T09:00:00.000Z", "text": "Old note"},
+        {"from": "Newer <newer@example.org>", "subject": "Let's <b>work</b> together", "at": "2026-11-15T14:30:00.000Z",
+         "text": "We track a constellation too.\nCan we help?"},
+    ]
+    monkeypatch.setattr(contact, "read_messages", lambda token: asked.append(token) or messages)
+
+    page = text(run(monkeypatch, page="console/contact.py", secrets=CONTACT_SECRETS))
+
+    assert asked == ["c0ntact-t0ken"] and "c0ntact-t0ken" not in page
+    assert page.index("15 Nov 14:30") < page.index("10 Nov 09:00")
+    assert "Newer &lt;newer@example.org&gt;" in page and "Let&#x27;s &lt;b&gt;work&lt;/b&gt; together" in page
+    assert '<details class="c-more"><summary>' in page and "We track a constellation too.\nCan we help?" in page
+
+
+@pytest.mark.parametrize("trouble, words", [
+    (requests.HTTPError("401", response=SimpleNamespace(status_code=401)), "refused the console&#x27;s token"),
+    (requests.ConnectionError("down"), "did not answer"),
+    ({"not": "a list"}, "not in the shape the console expects"),
+    ([{"from": "a@example.org", "at": "not a time"}], "not in the shape the console expects"),
+])
+def test_when_the_contact_inbox_cannot_be_read_the_page_says_so_without_the_token(monkeypatch, trouble, words):
+    signed_in(monkeypatch, "member@example.com")
+
+    def read(token):
+        if isinstance(trouble, Exception):
+            raise trouble
+        return trouble
+
+    monkeypatch.setattr(contact, "read_messages", read)
+
+    page = text(run(monkeypatch, page="console/contact.py", secrets=CONTACT_SECRETS))
+
+    assert words in page and "c0ntact-t0ken" not in page
+
+
+def test_an_empty_contact_inbox_says_no_message_has_arrived(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    monkeypatch.setattr(contact, "read_messages", lambda token: [])
+
+    assert "No message has arrived yet." in text(run(monkeypatch, page="console/contact.py", secrets=CONTACT_SECRETS))
+
+
+def test_the_contact_inbox_is_read_with_the_bearer_token_and_kept_at_most_five_minutes(monkeypatch):
+    from evidence.console_settings import CONTACT_INBOX_URL, CONTACT_READ_EVERY_SECONDS
+    seen = {}
+
+    class Answer:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return []
+
+    def get(url, headers, timeout):
+        seen.update(url=url, headers=headers)
+        return Answer()
+
+    monkeypatch.setattr(contact.requests, "get", get)
+
+    assert contact.read_messages("t") == [] and seen == {"url": CONTACT_INBOX_URL, "headers": {"Authorization": "Bearer t"}}
+    assert CONTACT_READ_EVERY_SECONDS <= 300
 
 
 def test_when_github_cannot_be_read_the_page_says_why_without_the_token(monkeypatch):
