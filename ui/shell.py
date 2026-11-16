@@ -21,7 +21,7 @@ from data import celestrak
 from evidence import jobs
 from evidence.console_settings import WORKFLOWS_DIR
 from evidence.registry_tables import judged_by_plane
-from ui import changes, data, icons, marks, palette, surfaces, systems, threshold_settings, time_range, tooltip
+from ui import changes, data, marks, palette, surfaces, systems, threshold_settings, time_range, tooltip
 from ui.age_rule import orbit_age_status
 from ui.components.clock import clock_frame
 
@@ -378,7 +378,7 @@ def top_bar(current):
     comparing = filtered and st.session_state["compare"]
     names = offered_parts() if comparing else [st.session_state["scope"]]
     with st.container(key="topbar"), st.container(key="bar_grid"):
-        st.html(f'<span class="brand" title="GNSS Health Monitor">{icons.mask("radar")}<span>GNSS Health Monitor</span></span>')
+        st.html('<span class="brand">GNSS Health Monitor</span>')
         _refresh(names, window_days, ("Compare" if comparing else names[0]) if filtered else None)
     _nav(current, names, on_system, filtered, comparing)
     changes.post(CONSTELLATIONS if current.title in OWN_FILTERS else names)   # the pages across all systems show every one
