@@ -2,6 +2,14 @@
 
 The numbers marked "our choice" are not from a standard: they are named on the page, in "How to read this page".
 """
+from datetime import timedelta
+
+# Home's counts, made four times a day by the archive job (scripts/home_snapshot.py, .github/workflows/archive.yml).
+SNAPSHOT_URL = ("https://raw.githubusercontent.com/SumanthVarma798/"
+                "GNSS-Constellation-Health-Monitoring-System/orbit-data/home_snapshot.json")
+# Older than this and Home counts again itself. Our choice: the job runs every 6 to 7 hours, so one late run is
+# covered and two are not.
+SNAPSHOT_MAX_AGE = timedelta(hours=14)
 
 # Who runs each system and where it serves, for a reader new to them: {system (ui/systems.py): (who, where)}.
 SYSTEMS = {

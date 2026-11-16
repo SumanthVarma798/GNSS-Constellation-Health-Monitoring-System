@@ -6,7 +6,7 @@ import pytest
 from test_dashboard_shell import (celestrak_answers_with_nothing_new, htmls, run,  # noqa: F401 (fixtures)
                                   segmented_controls_rerun)
 from test_meo_pages import celestrak_answers_with_two_galileo_satellites, scope  # noqa: F401 (a fixture)
-from ui import data, findings, home_settings, palette, shell, system_summary, systems
+from ui import data, findings, home_data, home_settings, palette, shell, system_summary, systems
 
 COUNT = re.compile(r"(\d+ of \d+)</span>")
 NAME = re.compile(r"<b>(?:<span[^>]*></span>)?([^<]+)</b>")   # a row's name, after its mark
@@ -36,26 +36,24 @@ def test_home_is_the_first_page_and_shows_a_row_per_system_in_the_top_bars_order
         assert who and where and (f"{who} · {where}" in row or "Could not be read" in row)
 
 
-def test_a_satellites_state_is_told_by_the_dots_shape_and_in_words_not_by_colour_alone():
-    bodies = htmls(run())
+def test_a_rows_split_is_counted_in_words_beside_each_mark_not_by_colour_alone():
+    navic = next(row for row in rows(run()) if "NavIC</b>" in row)
 
-    navic = next(row for row in rows_of(bodies) if "NavIC</b>" in row)
-    assert re.search(r'role="img" aria-label="\d+ healthy and in place, \d+ needs a look, 1 set aside"', navic)
-    legend = next(body for body in bodies if "What a dot means" in body)
-    for words in ("healthy and in place", "needs a look", "set aside", "new, not scored yet"):
-        assert words in legend
-    for shape in ("diamond", "square", "ring"):   # the legend draws each mark as the rows do
-        assert f'class="swatch {shape}"' in legend
+    # one bar in proportion, hidden from screen readers, then the counts they read
+    assert re.search(r'<i class="mixbar" aria-hidden="true"><i class="ok" style="flex:\d+"></i>', navic)
+    assert re.search(r'<span><i class="ok"></i>\d+ healthy and in place</span>', navic)
+    assert '<span><i class="bad"></i>1 set aside</span>' in navic
+    assert "<i class=ok>" not in navic and "What a dot means" not in navic   # no mark per satellite, so no legend for one
 
 
-def test_a_system_with_no_satellites_draws_no_unnamed_picture(monkeypatch):
+def test_a_system_with_no_satellites_draws_no_empty_split(monkeypatch):
     monkeypatch.setattr(system_summary, "summary", lambda name, result, gap=None: {
         "name": name, "sats": [], "healthy": 0, "total": 0, "settling": {}, "planes": {}, "in_file": None,
         "flagged_healthy": None, "checked": 0, "broadcast_day": None})
 
     counted = [row for row in rows(run()) if COUNT.search(row)]
 
-    assert counted and not any('role="img"' in row for row in counted)
+    assert counted and not any('class="mix"' in row for row in counted)
 
 
 def test_each_rows_count_is_the_headline_of_that_systems_overview_added_up_over_its_parts():
@@ -300,3 +298,65 @@ def test_a_constellations_own_page_declares_the_three_measures_and_lists_every_s
         headline = next(body for body in bodies if 'class="head"' in body)
         counted = int(COUNT.search(headline).group(1).split(" of ")[1])
         assert table.count("<tr>") - 1 == counted   # a line per satellite the page counts
+
+
+def published_copy(made, window_days=90, **changes):
+    """Home's parts as the archive job would publish them, counted here from the test's data."""
+    from ui import time_range
+    parts = {}
+    for name in (name for names in systems.SYSTEMS.values() for name in names):
+        try:
+            parts[name] = home_data.part_summary(name, time_range.DEFAULT_DAYS, "h", "f", "c")
+        except ValueError:   # no orbit data for it in the test's copy: the job would leave it out too
+            pass
+    return {"made": made, "window_days": window_days, "parts": {**parts, **changes}}
+
+
+def test_home_reads_the_published_count_while_it_is_fresh_and_says_when_it_was_counted(monkeypatch):
+    from datetime import datetime, timedelta, timezone
+    made = (datetime.now(timezone.utc) - timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    copy = published_copy(made)
+    copy["parts"]["NavIC"] = {**copy["parts"]["NavIC"], "healthy": 1}   # so the page shows the copy's number
+    monkeypatch.setattr(home_data, "_snapshot", lambda: copy)
+    counted = []
+
+    def count_here(*args):   # as the real one does for a part with no orbit data in the test's copy
+        counted.append(args)
+        raise ValueError("no orbit data")
+    monkeypatch.setattr(home_data, "part_summary", count_here)
+
+    bodies = htmls(run())
+
+    assert {args[0] for args in counted} == {name for names in systems.SYSTEMS.values() for name in names} - set(copy["parts"])
+    assert "NavIC" in copy["parts"]   # only the parts the copy leaves out are counted on the server
+    navic = next(row for row in rows_of(bodies) if "NavIC</b>" in row)
+    assert re.search(r">1 of \d+</span>", navic)
+    assert any(f"counted {made[8:10]} " in body for body in bodies if 'class="head"' in body)
+
+
+def test_a_published_count_that_is_old_for_another_time_range_or_malformed_is_counted_here_instead(monkeypatch):
+    from datetime import datetime, timedelta, timezone
+    now = datetime.now(timezone.utc)
+    fresh = (now - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    old = (now - home_settings.SNAPSHOT_MAX_AGE - timedelta(minutes=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    for copy in (published_copy(old), published_copy(fresh, window_days=30), {"made": "yesterday"}, {}):
+        monkeypatch.setattr(home_data, "_snapshot", lambda copy=copy: copy)
+        assert home_data.published(90) == (None, {})
+    broken = published_copy(fresh, GPS={"healthy": 3})   # a part without what Home reads is left out, the rest kept
+    monkeypatch.setattr(home_data, "_snapshot", lambda: broken)
+    made, parts = home_data.published(90)
+    assert made and "GPS" not in parts and "NavIC" in parts
+
+
+def test_the_job_writes_every_part_it_can_count_in_the_shape_home_reads(monkeypatch):
+    import json
+    from datetime import datetime, timezone
+    from scripts import home_snapshot
+    monkeypatch.setattr(data, "refresh", lambda: None)   # no network in tests: count from the test's copy
+
+    payload = json.loads(json.dumps(home_snapshot.snapshot(datetime(2026, 11, 16, 6, tzinfo=timezone.utc)),
+                                    default=home_snapshot._plain))
+    monkeypatch.setattr(home_data, "_snapshot", lambda: payload)
+
+    made, parts = home_data.published(90, now=datetime(2026, 11, 16, 8, tzinfo=timezone.utc))
+    assert payload["made"] == "2026-11-16T06:00:00Z" and made and set(parts) == set(payload["parts"]) >= {"NavIC", "Galileo"}

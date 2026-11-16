@@ -1,4 +1,4 @@
-"""Home: every system side by side, for a reader new to them. One row per system, one dot per satellite.
+"""Home: every system side by side, for a reader new to them. One row per system: how its satellites split, and its counts.
 
 The page reads in the order the whole dashboard follows: all the satellites (the count), each system (the rows),
 what stands out (Worth a look), then what is measured, how, what is left out and what comes next (the section).
@@ -14,31 +14,28 @@ from ui.home_settings import CAVEATS, FINDINGS_SHOWN, HOW, HOW_LINKS, RULES, SYS
 from ui.system_summary import whole
 from ui.systems import SYSTEMS as SYSTEMS_PARTS, part_name
 
-# One dot per satellite: (class, what it means, its shape), in the order the legend lists them. Each has its own
-# shape (ui/theme.css), so the colour only backs it up.
-DOTS = [("ok", "healthy and in place", "round"), ("warn", "needs a look", "diamond"), ("bad", "set aside", "square"),
-        ("accent", "new, not scored yet", "ring")]
-DOT_COLOURS = {"ok": palette.OK, "warn": palette.WARN, "bad": palette.BAD, "accent": palette.ACCENT}
+# The states a satellite can be in: (class, what it means), in the order a row lists them. Each has its own mark
+# (ui/theme.css: round, diamond, square, ring), so the colour only backs it up.
+STATES = [("ok", "healthy and in place"), ("warn", "needs a look"), ("bad", "set aside"), ("accent", "new, not scored yet")]
 
 
 def _dot(sat):
     return "ok" if sat["ok"] else "bad" if sat["state"] == palette.SLOT_LEFT else "warn"
 
 
-def _dots(system):
-    """The system's satellites as dots, a small gap between its planes or orbit types, the new ones not scored yet last."""
-    groups = {}
+def _mix(system):
+    """How the system's satellites split across the states: one bar in proportion, then each count beside its mark.
+    A mark per satellite could not say which satellite it was, so only the counts are drawn."""
+    counts = {kind: 0 for kind, _ in STATES}
     for sat in system["sats"]:
-        groups.setdefault(sat["group"], []).append(_dot(sat))
-    if system["settling"]:
-        groups["settling"] = ["accent"] * len(system["settling"])
-    if not groups:
-        return ""   # nothing to draw, so no picture without a name
-    counts = {kind: sum(dot == kind for dots in groups.values() for dot in dots) for kind, _, _ in DOTS}
-    words = ", ".join(f"{counts[kind]} {meaning}" for kind, meaning, _ in DOTS if counts[kind])
-    spans = "".join(f'<span class="dg">{"".join(f"<i class={kind}></i>" for kind in dots)}</span>'
-                    for dots in groups.values())
-    return f'<div class="dots" role="img" aria-label="{escape(words)}">{spans}</div>'
+        counts[_dot(sat)] += 1
+    counts["accent"] = len(system["settling"])
+    shown = [(kind, meaning, counts[kind]) for kind, meaning in STATES if counts[kind]]
+    if not shown:
+        return ""   # nothing to draw
+    bar = "".join(f'<i class="{kind}" style="flex:{count}"></i>' for kind, _, count in shown)
+    words = "".join(f'<span><i class="{kind}"></i>{count} {escape(meaning)}</span>' for kind, meaning, count in shown)
+    return f'<div class="mix"><i class="mixbar" aria-hidden="true">{bar}</i><div class="dots mixw small">{words}</div></div>'
 
 
 def _anchor(heading):
@@ -88,9 +85,9 @@ def _measure_line(words, count, of):
 
 
 def _row(system, unread=None):
-    """One system: who runs it, its satellites as dots, the count in place, the three measures and its own flag,
+    """One system: who runs it, how its satellites split, the count in place, the three measures and its own flag,
     and what the page leaves out for it.
-    For a system of several parts, each part's count is a line under the dots, and a part in `unread`
+    For a system of several parts, each part's count is a line under the split, and a part in `unread`
     ({part's name: the error}) says why it is missing."""
     name = system["name"]
     who, where = SYSTEMS.get(name, ("", ""))
@@ -103,7 +100,7 @@ def _row(system, unread=None):
              + notes)
     return (f'<div class="sys {surfaces.band(share)}">'
             f'<div class="sys-id"><b>{marks.mark(name)}{escape(name)}</b><span class="small">{escape(" · ".join(filter(None, [who, where])))}</span></div>'
-            f'<div class="sys-mid">{_dots(system)}'
+            f'<div class="sys-mid">{_mix(system)}'
             + "".join(f'<div class="small">{note}</div>' for note in notes) + '</div>'
             f'{_measure(system["healthy"], system["total"], "healthy and in place")}'
             f'{_measures(system)}'
@@ -124,23 +121,22 @@ def _waiting(name):
             '<div class="sys-mid small">counting its satellites</div></div>')
 
 
-def _headline(wholes=None):
-    """The count across every constellation, the legend, and what a row is. Before the counting is done (wholes is
-    None) the count's place says so."""
+def _headline(wholes=None, made=None):
+    """The count across every constellation, when it was counted if that was not just now (`made`, the published
+    copy's time), and what a row is. Before the counting is done (wholes is None) the count's place says so."""
     if wholes is None:
         count, words = "…", "counting every constellation"
     else:
         healthy, total = sum(s["healthy"] for s in wholes.values()), sum(s["total"] for s in wholes.values())
         count = f"{healthy} of {total}"
         words = f"navigation satellites healthy and in place, across {reveal.count(len(wholes), 'constellation')}"
-    legend = tooltip.legend([(DOT_COLOURS[kind], meaning, shape) for kind, meaning, shape in DOTS], "What a dot means")
+        words += f" · counted {made:%d %b %H:%M} UTC" if made else ""
     # One status for the whole page, in both states, so a screen reader hears "counting" and then the count, not six
     # rows each saying so.
     return (f'<div class="head"><span role="status"><span class="big num">{count}</span> '
-            f'<span class="muted">{words}</span></span>'
-            f'<span class="right">{legend}</span></div>'
-            '<p class="lede small">One row per constellation, one dot per satellite. A row opens that constellation, '
-            'where every satellite and every number behind these counts is shown.</p>')
+            f'<span class="muted">{words}</span></span></div>'
+            '<p class="lede small">One row per constellation. A row opens that constellation, where every satellite '
+            'and every number behind these counts is shown.</p>')
 
 
 def _why(error):
@@ -206,7 +202,8 @@ def page():
     """The rows are drawn as each constellation is counted, so a first visit (when nothing is kept yet and the
     counting takes a while) shows every name at once and fills in row by row; the count across all of them comes last."""
     window_days = st.session_state.get("window_days", time_range.DEFAULT_DAYS)
-    kept = home_data.keys(data.orbit_gap())
+    made, ready = home_data.published(window_days)
+    kept = home_data.keys(data.orbit_gap()) if len(ready) < sum(map(len, SYSTEMS_PARTS.values())) else None
     head = st.empty()
     head.html(_headline())
     parts, failed, wholes = {}, {}, {}
@@ -217,7 +214,7 @@ def page():
         for index, (system, names) in enumerate(SYSTEMS_PARTS.items()):
             for name in names:   # one that fails says why in its row; the others still show (issue 39)
                 try:
-                    parts[name] = home_data.part_summary(name, window_days, *kept)
+                    parts[name] = ready[name] if name in ready else home_data.part_summary(name, window_days, *kept)
                 except Exception as error:
                     failed[name] = error
             if any(name in parts for name in names):
@@ -226,7 +223,7 @@ def page():
                 unread = {part_name(name) or name: failed[name] for name in names if name in failed}
                 st.html(_row(wholes[system], unread) if system in wholes else _failed(system, failed[names[0]]))
                 _open(f"home_open_{index}", next((name for name in names if name in parts), names[0]), system)
-    head.html(_headline(wholes))
+    head.html(_headline(wholes, made if set(parts) <= set(ready) else None))
 
     listed, explained = findings.find(list(parts.values()))
     line = (f"{reveal.count(len(listed), 'thing')} stand{'s' if len(listed) == 1 else ''} out today" if listed

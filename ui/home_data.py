@@ -1,15 +1,22 @@
-"""Home's counts, kept so a visit does not count again what has not changed.
+"""Home's counts: read from the copy the scheduled job publishes, else counted here and kept.
 
-Counting one part means assessing every satellite in it, which takes seconds on the dashboard's small server. A
-count is kept until something it reads changes: a new UTC hour (the assessment's own clock), a new orbit fetch, or a
-new broadcast check.
+Counting one part means assessing every satellite in it, which takes seconds on the dashboard's small server, and the
+server forgets everything it kept each time it sleeps. So the archive job counts every part four times a day and
+publishes the result on branch orbit-data (scripts/home_snapshot.py); Home reads that one file while it is fresh.
+When it is missing, too old, or the reader chose another time range, a part is counted here and kept until something
+it reads changes: a new UTC hour (the assessment's own clock), a new orbit fetch, or a new broadcast check.
 """
 from datetime import datetime, timezone
 
+import requests
 import streamlit as st
 
 from data import celestrak
 from ui import data, system_summary
+from ui.home_settings import SNAPSHOT_MAX_AGE, SNAPSHOT_URL
+
+# What Home reads from each part's summary; a published part missing any of them is counted here instead.
+NEEDED = {"name", "sats", "healthy", "total", "settling", "checked", "flagged_healthy", "orbit", "station", "clock"}
 
 
 def keys(gap):
@@ -22,3 +29,30 @@ def keys(gap):
 def part_summary(name, window_days, hour_key, fetched_key, checked_key):
     """ui.system_summary.summary() of one part at the default limits. The three keys are only the cache key (keys())."""
     return system_summary.summary(name, data.load(name, window_days), data.orbit_gap())
+
+
+@st.cache_data(ttl=600, show_spinner=False)   # the job publishes a new one every few hours
+def _snapshot():
+    """The published file as it is, or {} when it cannot be read."""
+    try:
+        payload = requests.get(SNAPSHOT_URL, timeout=8).json()
+    except (requests.RequestException, ValueError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def published(window_days, now=None):
+    """(the time it was counted, {part: summary}) from the published file, or (None, {}) when it cannot stand in for
+    counting here: missing, older than SNAPSHOT_MAX_AGE, or counted over another time range. The file comes from
+    outside the server, so a part not in the expected shape is left out and counted here."""
+    payload = _snapshot()
+    try:
+        made = datetime.strptime(payload["made"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except (KeyError, TypeError, ValueError):
+        return None, {}
+    if payload.get("window_days") != window_days or (now or datetime.now(timezone.utc)) - made > SNAPSHOT_MAX_AGE:
+        return None, {}
+    parts = payload.get("parts") if isinstance(payload.get("parts"), dict) else {}
+    kept = {name: part for name, part in parts.items()
+            if isinstance(part, dict) and NEEDED <= part.keys() and isinstance(part["sats"], list)}
+    return (made if kept else None), kept
