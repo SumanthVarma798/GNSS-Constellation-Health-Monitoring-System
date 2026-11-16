@@ -5,7 +5,7 @@ import streamlit as st
 
 from console import common
 from evidence import jobs
-from evidence.console_settings import JOBS, RELIABILITY_DAYS
+from evidence.console_settings import ARCHIVE_WORKFLOW, JOBS, RELIABILITY_DAYS
 from evidence.decision_settings import REPOSITORY
 from ui import console
 
@@ -30,7 +30,7 @@ with body:
           escape(console.when(r["last"])), console.status(*r["result"])] for r in rows]),
         right="GitHub often starts scheduled runs late", flush=True))
 
-    names = {"archive.yml": "Archive (all groups)", **{w: name for w, _, name, *_ in JOBS if w != "archive.yml"}}
+    names = {ARCHIVE_WORKFLOW: "Archive (all groups)", **{job.workflow: job.name for job in JOBS if job.workflow != ARCHIVE_WORKFLOW}}
     grid = jobs.reliability(seen["runs"], now)
     st.html(console.section("Reliability, day by day", console.reliability_grid(grid, names)
                             + '<div class="c-legend" style="margin-top:8px"><span><span class="m ok">✓</span> every run that day '
