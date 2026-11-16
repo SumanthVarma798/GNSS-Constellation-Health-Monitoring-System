@@ -6,7 +6,7 @@ with textContent, so it is never read as markup.
 """
 from pathlib import Path
 
-from ui.components.master_map import embed
+from ui.components.frame import fill
 
 PAGE_FILE = Path(__file__).with_name("hosting.html")
 
@@ -114,5 +114,4 @@ def payload():
 
 
 def hosting_html(tokens_css, font):
-    page = PAGE_FILE.read_text(encoding="utf-8").replace("__TOKENS__", tokens_css).replace("__FONT__", font)
-    return page.replace("const DATA = __DATA__;", f"const DATA = {embed(payload())};", 1)
+    return fill(PAGE_FILE.read_text(encoding="utf-8"), payload(), __TOKENS__=tokens_css, __FONT__=font)

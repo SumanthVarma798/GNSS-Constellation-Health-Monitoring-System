@@ -4,21 +4,18 @@ The page itself is ui/components/master_map.html (plain JavaScript, no network).
 module turns the registry tables into one record per spacecraft, puts them and the
 dashboard's colours into the page, and shows it with Streamlit.
 """
-import json
 from pathlib import Path
 
 from evidence.master_map import agreement, display_name, identifiers, signal_ids_of
 from evidence.settings import (COUNTRY_NAMES, COUNTRY_NOT_GIVEN, IDENTITY_AGREE, IDENTITY_DIFFER, IDENTITY_ONE_SOURCE,
                                SCHEME_ORBIT_FEED, SCHEME_SIGNAL_ID, SERVICE_DISAGREE)
 from ui import palette
+from ui.components.frame import embed, fill
 from ui.master_map_settings import IDENTITY_WORDS, ISSUER_NAMES, SCHEME_SHORT, SIGHTING_WORDS, SOURCE_NAMES
 from ui.theme import root_block
 from ui.tooltip import CARD_CSS
 
 PAGE_FILE = Path(__file__).with_name("master_map.html")
-
-# Characters that could end a <script> block early or start markup, written as JSON escapes.
-SCRIPT_UNSAFE = {"<": "\\u003c", ">": "\\u003e", "&": "\\u0026"}
 
 
 def _disagreement(line):
@@ -96,26 +93,21 @@ def master_map_records(data):
     return records
 
 
-def embed(value):
-    """JSON text that is safe inside a <script> block: no < > & can appear in it."""
-    text = json.dumps(value)
-    for char, escaped in SCRIPT_UNSAFE.items():
-        text = text.replace(char, escaped)
-    return text
-
-
 def master_map_html(data, focus=None, records=None):
     """The finished page: colours and fonts first, the data last so it is never searched for placeholders.
 
     focus names a constellation the map opens filtered to (chosen on the page around it), or None for every one.
     records is master_map_records(data) when the caller has made it already."""
-    page = PAGE_FILE.read_text(encoding="utf-8")
-    fills = {"__ROOT__": root_block(), "__FONT__": palette.FONT, "__FONT_NUMBERS__": palette.FONT_NUMBERS, "__TIP__": CARD_CSS}
-    for placeholder, text in fills.items():
-        page = page.replace(placeholder, text)
     payload = {"records": records if records is not None else master_map_records(data),
                "colours": palette.CONSTELLATION_COLOURS, "focus": focus}
-    return page.replace("__DATA__", embed(payload))
+    return fill(
+        PAGE_FILE.read_text(encoding="utf-8"),
+        payload,
+        __ROOT__=root_block(),
+        __FONT__=palette.FONT,
+        __FONT_NUMBERS__=palette.FONT_NUMBERS,
+        __TIP__=CARD_CSS,
+    )
 
 
 def master_map_canvas(data, focus=None, records=None, height=560):

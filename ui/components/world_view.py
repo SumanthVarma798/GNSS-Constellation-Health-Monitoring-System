@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 
 from ui import orbit_age, palette, world_settings
-from ui.components.master_map import embed
+from ui.components.frame import embed, fill
 from ui.theme import root_block
 from ui.tooltip import CARD_CSS
 
@@ -181,13 +181,10 @@ world_payload = payload
 
 def world_view_html(systems, gap=None, now=None):
     """The finished page: colours and fonts first, the land and data last so they are never searched for placeholders."""
-    page = PAGE_FILE.read_text(encoding="utf-8")
-    fills = {"__ROOT__": root_block(), "__FONT__": palette.FONT, "__TIP__": CARD_CSS}
-    for placeholder, text in fills.items():
-        page = page.replace(placeholder, text)
+    page = fill(PAGE_FILE.read_text(encoding="utf-8"), __ROOT__=root_block(), __FONT__=palette.FONT, __TIP__=CARD_CSS)
     land = json.loads(LAND_FILE.read_text(encoding="utf-8"))["rings"]
     page = page.replace("const LAND = __LAND__;", f"const LAND = {embed(land)};", 1)
-    return page.replace("const DATA = __DATA__;", f"const DATA = {embed(payload(systems, gap, now))};", 1)
+    return fill(page, payload(systems, gap, now))
 
 
 def world_view(systems, gap=None, now=None, height=760):
