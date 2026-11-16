@@ -1,19 +1,27 @@
 <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-  <title>OpenGNSS: a location pin on Earth, a satellite in orbit sending it a signal</title>
-  <!-- Drawn with Higgsfield (gpt_image_2_6, SVG) on 16 Nov 2026; the signal line thickened to read at 32 px. -->
-  <g fill="none" stroke="#74d6a0" stroke-width="32" stroke-linecap="round">
-    <path d="M126 608C31 702 16 782 77 828" />
-    <path d="M726 324C832 299 921 317 949 371C970 413 952 472 913 526" />
+  <title>OpenGNSS: Earth, a location pin on its surface, a satellite in orbit</title>
+  <!-- Drawn with Higgsfield (gpt_image_2_6, SVG) on 16 Nov 2026, one colour: the page draws it as a mask in the theme's
+       colour (ui/theme.css .brand-mark). The pin is enlarged to read at 34 px. -->
+  <defs>
+    <clipPath id="globe-clip">
+      <path clip-rule="evenodd" d="M0 0H1024V1024H0Z M102 643C120 758 356 737 572 623C718 546 832 447 878 361L918 384C862 487 740 590 594 667C357 792 92 813 57 657Z" />
+    </clipPath>
+  </defs>
+  <g fill="#000000">
+    <g clip-path="url(#globe-clip)">
+      <circle cx="470" cy="574" r="278" />
+    </g>
+    <path d="M176 398C105 476 57 567 68 635C81 719 219 734 392 675C581 611 781 468 862 347C890 305 898 272 879 254C857 232 810 234 764 244C826 219 883 216 909 244C942 280 912 345 871 401C773 534 586 665 400 727C213 790 66 770 49 672C35 593 92 481 176 398Z" />
+    <path d="M315 278C419 231 548 204 662 209C551 218 440 248 344 297Z" />
+    <g transform="translate(704 382) rotate(30) scale(1.3)">
+      <path fill-rule="evenodd" d="M0 0C-25-37-104-121-104-181A104 104 0 0 1 104-181C104-121 25-37 0 0ZM0-226A45 45 0 1 0 0-136A45 45 0 1 0 0-226Z" />
+    </g>
+    <g transform="translate(260 291) rotate(-32)">
+      <rect x="-30" y="-33" width="60" height="66" rx="8" />
+      <path d="M-113-43H-46V43H-113ZM46-43H113V43H46Z" />
+      <rect x="-49" y="-8" width="98" height="16" />
+      <path d="M-10-35V-57H10V-35ZM-8 33H8V59H-8Z" />
+      <path d="M-31 58Q0 88 31 58L19 47Q0 65-19 47Z" />
+    </g>
   </g>
-  <path fill="#7fb0ff" fill-rule="evenodd" d="M858 587A372 372 0 1 1 114 587A372 372 0 1 1 858 587ZM485 347C384 347 302 427 302 528C302 610 367 702 485 848C603 702 667 610 667 528C667 427 586 347 485 347ZM567 527A82 82 0 1 1 403 527A82 82 0 1 1 567 527Z" />
-  <g fill="#74d6a0" transform="rotate(32 808 160)">
-    <rect x="620" y="104" width="138" height="88" rx="12" />
-    <rect x="860" y="104" width="138" height="88" rx="12" />
-    <rect x="745" y="137" width="130" height="22" />
-    <rect x="762" y="94" width="94" height="110" rx="22" />
-    <path d="M799 197H819V225H799Z" />
-    <path d="M756 226Q809 201 862 226C855 260 763 260 756 226Z" />
-  </g>
-  <path d="M747 244L485 526" fill="none" stroke="#74d6a0" stroke-width="24" stroke-linecap="round" />
-  <path d="M126 608C50 691 44 762 90 803C173 879 403 834 605 729C816 620 955 471 949 383C1005 483 857 662 633 787C400 917 150 939 59 852C-7 788 32 685 126 608Z" fill="#74d6a0" />
 </svg>

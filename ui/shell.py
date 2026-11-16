@@ -47,7 +47,8 @@ PAGES = [
 ]
 CONSTELLATIONS = tuple(data.SATELLITES)
 DEFAULT_PAGE = HOME   # the page the dashboard opens on
-# The OpenGNSS mark (ui/opengnss_logo.svg), inline: st.html drops <svg>, but keeps an image from a data address.
+# The OpenGNSS mark (ui/opengnss_logo.svg), inline: st.html drops <svg>, but keeps a data address. It is drawn as a
+# mask (ui/theme.css .brand-mark), so it takes the theme's colour whatever colour the file is drawn in.
 LOGO = "data:image/svg+xml;base64," + base64.b64encode(
     (Path(__file__).with_name("opengnss_logo.svg")).read_bytes()).decode()
 # The clock and "next update" are redrawn this often, alone: never a page redraw, at most this far behind.
@@ -390,7 +391,8 @@ def top_bar(current):
     names = offered_parts() if comparing else [st.session_state["scope"]]
     with st.container(key="topbar"), st.container(key="bar_grid"):
         with st.container(key="brand"):   # the OpenGNSS mark and the name; a click on either opens Home
-            st.html(f'<span class="brand"><img class="brand-mark" src="{LOGO}" alt="OpenGNSS">'
+            st.html(f'<span class="brand"><span class="brand-mark" role="img" aria-label="OpenGNSS" '
+                    f'style="--logo: url({LOGO})"></span>'
                     '<span>GNSS Health Monitor</span></span>')
             st.button("Home", key="brand_home", on_click=_go_home, help="Back to Home")
         _refresh(names, window_days, ("Compare" if comparing else names[0]) if filtered else None)

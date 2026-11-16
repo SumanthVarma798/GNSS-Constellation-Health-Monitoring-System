@@ -219,14 +219,15 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 /* the OpenGNSS mark and the name, big; a transparent button over both opens Home from any page */
 .brand { display: inline-flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 800; line-height: 1.15;
   letter-spacing: -.01em; color: var(--fc-section); white-space: nowrap; }
-.brand-mark { width: 32px; height: 32px; flex: none; }
+.brand-mark { width: 34px; height: 34px; flex: none; background: var(--fc-section);   /* one colour, the name's */
+  -webkit-mask: var(--logo) center / contain no-repeat; mask: var(--logo) center / contain no-repeat; }
 .st-key-brand { position: relative; gap: 0; width: max-content !important; }
 .st-key-brand [data-testid="stElementContainer"]:has([data-testid="stButton"]) { height: 0; }
 .st-key-brand [data-testid="stButton"] button { position: absolute; inset: -4px; width: auto; height: auto; min-height: 0; opacity: 0; cursor: pointer; }
 .st-key-brand:has(button:focus-visible) .brand { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 8px; }
 .st-key-brand:has(button:hover) .brand > span { color: var(--accent); }
 @media (max-width: 479.98px) {   /* a phone: only the mark, so the buttons and the bell keep their row */
-  .brand > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .brand > span:not(.brand-mark) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .brand-mark { width: 36px; height: 36px; }
   .st-key-bar_buttons { width: max-content !important; }   /* only as wide as its buttons */
 }
