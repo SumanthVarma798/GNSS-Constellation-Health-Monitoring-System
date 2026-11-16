@@ -10,6 +10,7 @@ import requests
 from evidence import decisions
 from evidence.decision_settings import LABEL_PREFIX, REPOSITORY
 from evidence.github_api import ask as _ask
+from evidence.source_grade_notes import graded_by_console
 from evidence.settings import SOURCE_GRADE_COLUMNS
 
 GRADES_PATH = "evidence/source_grades.csv"
@@ -27,7 +28,7 @@ def new_grades_csv(text, source_id, name, grade, reason, who, today):
     """Replace one source's row in source_grades.csv, or add it at the end; columns and order unchanged."""
     rows = list(csv.DictReader(io.StringIO(text)))
     day = today if isinstance(today, str) else today.isoformat()
-    new_row = {"source_id": source_id, "name": name, "reliability": grade, "graded_by": f"{who} (from the console)",
+    new_row = {"source_id": source_id, "name": name, "reliability": grade, "graded_by": graded_by_console(who),
                "graded_on": day, "reason": reason}
     out, replaced = [], False
     for row in rows:

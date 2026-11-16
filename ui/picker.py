@@ -21,6 +21,14 @@ def _toggle_list():
     st.session_state["picker_open"] = not st.session_state.get("picker_open", False)
 
 
+def chosen_constellations():
+    """{constellation: [satellite, ...] or None for all} from the top bar choice, for compare-aware pages."""
+    if not st.session_state["compare"]:
+        return {st.session_state["scope"]: None}
+    picks = st.session_state.get("compare_picks", {})
+    return {name: picks[name] for name in shell.CONSTELLATIONS if picks.get(name)}
+
+
 def picker():
     """Draw the field. Clicking a chip removes it; Add opens the list and Done closes it (it stays open while
     picking). Returns the picks, in constellation order."""
