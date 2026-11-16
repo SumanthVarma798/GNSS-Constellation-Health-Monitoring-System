@@ -9,23 +9,14 @@ from html import escape
 
 from evidence import jobs
 from evidence.console_settings import WORKFLOWS_DIR
+from evidence.registry_tables import page_name, registry_name
 from evidence.settings import SCHEME_SIGNAL_ID
 from ui import icons, marks, palette, surfaces, tooltip
 from ui.age_rule import orbit_age_status
-from ui.master_map_settings import DOTS, HOW, NOTES, REGISTRY_NAMES, REGISTRY_WORKFLOW, WHO
+from ui.master_map_settings import DOTS, HOW, NOTES, REGISTRY_WORKFLOW, WHO
 from ui.pages_data import live_feed_time
 
 DOT_SWATCH = {"now": palette.MUTED, "past": palette.TRACK, "seen": palette.ACCENT, "look": palette.WARN}
-
-
-def registry_name(name):
-    """The registry's name for a constellation as the pages name it."""
-    return REGISTRY_NAMES.get(name, name)
-
-
-def page_name(registry):
-    """The pages' name for a constellation as the registry names it."""
-    return next((name for name, held in REGISTRY_NAMES.items() if held == registry), registry)
 
 
 def spacecraft(n):

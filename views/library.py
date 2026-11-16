@@ -21,11 +21,10 @@ from evidence.library_settings import (LIBRARY_COUNTS_FILE, LIBRARY_FIGURES_FILE
                                        LIFECYCLE_EVENTS_FILE)
 from evidence.settings import (REGISTRY_CATALOGUE_FILE, REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_SATELLITES_FILE,
                                REGISTRY_SIGNAL_IDS_FILE)
-from evidence.registry_tables import read_table
+from evidence.registry_tables import read_table, registry_name
 from ui import library, reveal, shelf, surfaces, systems
 from ui.components.lifecycle import lifecycle_frame
-from ui.shelf_settings import (COLLEAGUES, LIFECYCLE_CONSTELLATION, OTHERS, OUR_CITATIONS, OURS, OUTSIDE_CITATIONS,
-                               SHELVES, STORIES_SHOWN)
+from ui.shelf_settings import (COLLEAGUES, OTHERS, OUR_CITATIONS, OURS, OUTSIDE_CITATIONS, SHELVES, STORIES_SHOWN)
 
 JUMP = "library_jump"
 
@@ -101,7 +100,7 @@ reveal.section("library_systems", "Count per constellation",
                f"{reveal.count(len(constellations), 'constellation')} · {sum(r['launched'] for r in constellations)} launched · "
                f"{sum(r['operating'] for r in constellations)} operating", library.scoreboard(counts, figures))
 detailed = sorted({row["satellite"] for row in lifecycle_rows})
-lifecycle_constellation = LIFECYCLE_CONSTELLATION.get(jump_constellation, jump_constellation) if jump_section == "library_lifecycles" else None
+lifecycle_constellation = registry_name(jump_constellation) if jump_section == "library_lifecycles" else None
 reveal.section("library_lifecycles", "Lifecycles",
                f"every satellite in the IGS satellite metadata file, from launch to end of service · {' · '.join(detailed)} step by step",
                lambda: lifecycle_frame(lifecycle_rows, datetime.now(timezone.utc), registry, lifecycle_constellation))

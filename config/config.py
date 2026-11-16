@@ -3,7 +3,8 @@ Configuration file for NavIC Comprehensive Monitoring System
 Contains all constants, satellite data, and configuration parameters
 """
 
-from evidence.registry_tables import dashboard_satellites, dashboard_satellites_not_in_registry
+from evidence.registry_tables import (dashboard_satellites, dashboard_satellites_not_in_registry, dashboard_systems,
+                                       registry_name)
 
 # Constants
 MU = 398600.4418  # km^3/s^2
@@ -29,7 +30,7 @@ MEO_SYSTEMS = ("BeiDou-3 MEO", "GPS", "GLONASS", "Galileo")
 TRACKED_NOT_IN_REGISTRY = {
     "NavIC": dashboard_satellites_not_in_registry("NavIC"),
     "QZSS": dashboard_satellites_not_in_registry("QZSS"),
-    "BeiDou-3": dashboard_satellites_not_in_registry("BeiDou"),
+    "BeiDou-3": dashboard_satellites_not_in_registry(registry_name("BeiDou-3")),
     **{system: dashboard_satellites_not_in_registry(system) for system in MEO_SYSTEMS},
 }
 
@@ -38,10 +39,11 @@ TRACKED_NOT_IN_REGISTRY = {
 # registry satellite with a signal ID today; tests/test_meo_data.py keeps the list in step.
 MEO_SATS = {system: dashboard_satellites(system) for system in MEO_SYSTEMS}
 
-# Every satellite of the generation each dashboard constellation shows, for the 3D view's "All":
+# Every satellite of the generation each regional dashboard page shows, for the 3D view's "All":
 # (the registry's constellation name, how its block names start). The block is the design generation;
 # "" takes every block.
-GENERATIONS = {"NavIC": ("NavIC", ""), "QZSS": ("QZSS", ""), "BeiDou-3": ("BeiDou", "BDS-3")}
+GENERATIONS = {row["page_name"]: (row["registry_name"], row["generation_prefix"])
+               for row in dashboard_systems() if row["orbit_kind"] == "regional"}
 
 # The registry's plane letter -> the kind of orbit it names. A plane given as a number is a
 # MEO plane, named after its slots' letter (BeiDou-3 plane 1 holds slots A-1 to A-8).
@@ -225,7 +227,7 @@ QZSS_MAINTENANCE_NOTE = "Orbit correction maneuvers occur roughly once every six
 # }
 
 
-BEIDOU3_SATS = dashboard_satellites("BeiDou")
+BEIDOU3_SATS = dashboard_satellites(registry_name("BeiDou-3"))
 
 def _igso(central_longitude_deg):
     """A BeiDou IGSO satellite's targets: the BeiDou-3 IGSO tolerances below, around its own crossing longitude."""

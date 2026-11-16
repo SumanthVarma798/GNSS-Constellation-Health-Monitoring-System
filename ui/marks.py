@@ -19,6 +19,7 @@ import base64
 from html import escape
 
 from ui import palette
+from evidence.registry_tables import registry_name
 
 STROKE = 20   # in the 320-unit box each mark is drawn in: about 1.4px at text size
 DOT = 17
@@ -62,7 +63,8 @@ def mask_url(key):
 
 def key(name):
     """The mark for a name as any page spells it: 'BeiDou-3 MEO' and 'BeiDou' are both BeiDou's. None if it has none."""
-    return next((known for known in SHAPES if str(name).startswith(known)), None)
+    known = registry_name(str(name))
+    return known if known in SHAPES else None
 
 
 def mark(name):

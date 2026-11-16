@@ -16,6 +16,7 @@ International GNSS Service (IGS) satellite metadata file by `scripts/build_regis
 | `constellations.csv` | a person | Which system each SVN letter stands for |
 | `catalogue.csv` | its own build script | Owner and status of each satellite, as a second source states them |
 | `dashboard_satellites.csv` | a person | Which satellites the dashboard tracks, and its name for each |
+| `dashboard_systems.csv` | a person | Which dashboard page each system is, its registry name, block prefixes, orbit kind and order |
 | `left_out.csv` | a person | Satellites with a signal ID today that the dashboard leaves out on purpose, each with why and a source; every other one must be tracked (`tests/test_registry_coverage.py`) |
 
 Code reads and writes these tables through `evidence/registry_tables.py`; file names
@@ -122,6 +123,17 @@ to add or remove a satellite must say which scores move, and re-record them on a
 This table and `satellites.csv` are each approved by a person, at different times. If a
 row names an SVN that `satellites.csv` does not have, the dashboard runs without that
 satellite and shows a notice naming it. A test fails on any proposal that would cause it.
+
+## dashboard_systems.csv: one row per dashboard page
+
+| Column | Meaning |
+|---|---|
+| `page_name` | The system as the dashboard names it: NavIC, QZSS, BeiDou-3, BeiDou-3 MEO, GPS, GLONASS or Galileo. |
+| `registry_name` | The same system in `satellites.csv` and `constellations.csv`. BeiDou-3 and BeiDou-3 MEO are both `BeiDou`. |
+| `block_prefixes` | The registry `block` starts that pick out a part page's satellites. Blank means the page takes the whole constellation, except the blocks a part page takes. |
+| `orbit_kind` | `regional` for the GEO and IGSO pages, `global` for the MEO pages. |
+| `order` | The order the dashboard shows the systems in. |
+| `generation_prefix` | The registry `block` start for the 3D view's "All" generation; blank takes every block. |
 
 ## What these tables do not say
 
