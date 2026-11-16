@@ -23,8 +23,12 @@ import requests
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from evidence.igs_metadata import OPEN_END, block_rows, read_metadata, sinex_date
-from evidence.settings import DASHBOARD_BLOCKS, REQUEST_TIMEOUT_SECONDS
+from evidence.registry_tables import blocks, dashboard_systems
+from evidence.settings import REQUEST_TIMEOUT_SECONDS
 from evidence.sources import CELESTRAK_BEIDOU_URL, GALMON_SATELLITES_URL
+
+DASHBOARD_BLOCKS = tuple(prefix for row in dashboard_systems() if row["orbit_kind"] == "regional"
+                         for prefix in blocks(row["page_name"]))
 
 
 def parse_metadata(text):

@@ -1,11 +1,8 @@
 """The Master map page's words and mappings, in one place. Change a value here by pull request; nothing else needs editing.
 
-Rows follow the constellations as the other pages name them (ui/systems.py SYSTEMS). The registry names one of them
-differently: REGISTRY_NAMES maps the page's name to the registry's.
+Rows follow the constellations as the other pages name them (ui/systems.py SYSTEMS). The registry's name for a
+constellation is read from registry/dashboard_systems.csv (evidence/registry_tables.py).
 """
-
-# The registry's name for a constellation the pages name differently: {page name: registry name}.
-REGISTRY_NAMES = {"BeiDou-3": "BeiDou"}
 
 # Who runs each constellation and where it serves, in the Home page's words (ui/home_settings.py): {name: (who, where)}.
 WHO = {

@@ -1,0 +1,8 @@
+page_name,registry_name,block_prefixes,orbit_kind,order,generation_prefix
+NavIC,NavIC,IRS-,regional,1,
+QZSS,QZSS,QZS-,regional,2,
+BeiDou-3,BeiDou,"BDS-3G BDS-3I",regional,3,BDS-3
+BeiDou-3 MEO,BeiDou,"BDS-3M BDS-3SM",global,4,
+GPS,GPS,,global,5,
+GLONASS,GLONASS,,global,6,
+Galileo,Galileo,,global,7,

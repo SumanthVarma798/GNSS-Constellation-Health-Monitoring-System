@@ -133,12 +133,9 @@ REGISTRY_CONSTELLATIONS_FILE = "constellations.csv"  # kept by hand: system lett
 # Kept by hand: which satellites the dashboard tracks, in display order, and its name for each.
 REGISTRY_DASHBOARD_SATELLITES_FILE = "dashboard_satellites.csv"
 REGISTRY_DASHBOARD_SATELLITE_COLUMNS = ["svn", "dashboard_name", "added"]
+REGISTRY_DASHBOARD_SYSTEMS_FILE = "dashboard_systems.csv"  # kept by hand: one row per dashboard page system
 # The tracked list that must stay in step with today's signal IDs when the registry is rebuilt.
 REGISTRY_DASHBOARD_TRACKED_SYSTEMS = ("GPS", "GLONASS", "Galileo")
-# Dashboard systems that are one orbit family of a registry constellation: {name: (constellation, block starts)}.
-# Their satellites are left out of the constellation's own name, so "BeiDou" is its GEO and IGSO satellites: BeiDou-3's,
-# plus the BeiDou-2 and BeiDou-3 test IGSO satellites still broadcasting. BDS-3SM are the two BeiDou-3 test MEO satellites.
-DASHBOARD_SYSTEMS_BY_BLOCK = {"BeiDou-3 MEO": ("BeiDou", ("BDS-3M", "BDS-3SM"))}
 # Kept by hand: satellites with a signal ID today that the dashboard leaves out on purpose, each with why and a source.
 # Every satellite with a signal ID is either tracked or listed here (tests/test_registry_coverage.py).
 REGISTRY_LEFT_OUT_FILE = "left_out.csv"
@@ -264,11 +261,6 @@ LABEL_UNCONFIRMED = "unconfirmed"
 
 STORE_SCHEMA_FILE = Path(__file__).resolve().parent / "store_schema.sql"  # the evidence model, in one file
 STORE_FILE = Path(__file__).resolve().parent.parent / "data" / "evidence.sqlite3"  # rebuilt each run; git-ignored
-
-# --- The identity check ---
-
-# Satellite blocks the GEO/IGSO dashboard is meant to cover.
-DASHBOARD_BLOCKS = ("IRS-", "QZS-", "BDS-3G", "BDS-3I")
 
 # --- The master map: which spacecraft is which, under every identifier ---
 

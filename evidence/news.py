@@ -23,12 +23,12 @@ from evidence.news_settings import (NEWS_CATEGORIES, NEWS_ITEMS_PER_SYSTEM, NEWS
 from evidence.settings import (CANDIDATE_FEED_TYPE, CANDIDATE_SOCIAL_KIND, FEED_REPORT_COLUMNS, LABELLING_SHEET_SIZE,
                                NOT_AN_ARTICLE_HOSTS, SOCIAL_PLATFORM_HOSTS, SYSTEM_WORDS)
 from evidence.sources import ARCHIVED_SOURCES, PROVISIONAL_GROUPS, candidate_rows, working_candidates
+from evidence.registry_tables import page_name
 
 ATOM = "{http://www.w3.org/2005/Atom}"
 LINK = re.compile(r"""href=["'](https?://[^"']+)["']""")
 POST_LINK = re.compile(r"""href=["'](https?://[^"']+)["'][^>]*>\s*\[link\]""")  # a Reddit post's own link
 TAGS = re.compile(r"<[^>]+>")
-DASHBOARD_SYSTEMS = {"BeiDou": "BeiDou-3"}
 
 
 def host_id(address):
@@ -214,7 +214,7 @@ def category_of(title, summary):
 
 def _dashboard_systems(title):
     named = systems_named(title)
-    return [DASHBOARD_SYSTEMS.get(system, system) for system in named]
+    return [page_name(system) for system in named]
 
 
 def _moment(text):
@@ -306,7 +306,7 @@ def latest_news(items):
     for row in record:
         if row.get("source_id"):
             by_source.setdefault(row["source_id"], []).append(row)
-    counts = {DASHBOARD_SYSTEMS.get(system, system): 0 for system in SYSTEM_WORDS}
+    counts = {page_name(system): 0 for system in SYSTEM_WORDS}
     picked, used_sources = [], set()
     fetched = [_moment(item.get("fetched_at", "")) for item in items]
     newest_fetched = max((moment for moment in fetched if moment), default=None)
