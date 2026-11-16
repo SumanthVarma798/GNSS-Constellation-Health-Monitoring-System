@@ -91,3 +91,9 @@ LOOK_AHEAD_DAYS = 8     # a schedule with no run within this many days says "non
 PIPELINE_FEED_EVENTS = 20        # lines in the live pipeline's proof feed
 PIPELINE_LOOK_AHEAD_HOURS = 24   # how far ahead the live pipeline's Next up panel looks
 PIPELINE_READ_EVERY_SECONDS = 30   # how often the live pipeline page refreshes itself
+
+# The Contact inbox page: mail to contact@opengnss.org, kept by the newsletters Worker (cloudflare/newsletters/).
+CONTACT_ADDRESS = "contact@opengnss.org"
+CONTACT_INBOX_URL = "https://feeds.opengnss.org/contact"
+CONTACT_TOKEN_KEY = "contact_read_token"   # under [admin] in the secrets: the same value as the Worker's CONTACT_READ_TOKEN
+CONTACT_READ_EVERY_SECONDS = 300           # how long one reading of the inbox is kept, at most

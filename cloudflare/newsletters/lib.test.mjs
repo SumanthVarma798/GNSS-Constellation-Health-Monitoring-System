@@ -1,7 +1,44 @@
 // Run: node --test cloudflare/newsletters/
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { excerpt, fromSubstack, postLink, publicationOf, receiverResults, rss } from "./lib.js";
+import {
+  CONTACT_TEXT_CHARACTERS, authorized, contactRecord, excerpt, fromSubstack, isContact, newestFirst, postLink, publicationOf,
+  receiverResults, rss,
+} from "./lib.js";
+
+test("only mail to the contact address goes to the contact inbox", () => {
+  assert.equal(isContact("Contact@OpenGNSS.org", undefined), true);
+  assert.equal(isContact("newsletters@feeds.opengnss.org", undefined), false);
+  assert.equal(isContact("hello@opengnss.org", "hello@opengnss.org"), true);
+  assert.equal(isContact("contact@opengnss.org", "hello@opengnss.org"), false);
+  assert.equal(isContact(undefined, undefined), false);
+});
+
+test("a contact message keeps who wrote, the subject, when, and its plain text trimmed", () => {
+  const at = "2026-11-16T10:00:00.000Z";
+  const kept = contactRecord({ from: { name: "A Person", address: "a@example.org" }, subject: "Working together", text: "  Hello  " }, "bounce@x", at);
+  assert.deepEqual(kept, { from: "A Person <a@example.org>", subject: "Working together", at, text: "Hello" });
+  assert.equal(contactRecord({ text: "x".repeat(9000) }, "env@example.org", at).text.length, CONTACT_TEXT_CHARACTERS);
+  const htmlOnly = contactRecord({ html: "<p>Hi <b>there</b></p>" }, "env@example.org", at);
+  assert.equal(htmlOnly.from, "env@example.org");
+  assert.equal(htmlOnly.subject, "");
+  assert.equal(htmlOnly.text, "Hi there");
+});
+
+test("the contact inbox opens only for the right bearer token", () => {
+  assert.equal(authorized("Bearer s3cret", "s3cret"), true);
+  assert.equal(authorized("Bearer s3cres", "s3cret"), false);
+  assert.equal(authorized("Bearer s3cret-and-more", "s3cret"), false);
+  assert.equal(authorized("s3cret", "s3cret"), false);
+  assert.equal(authorized(null, "s3cret"), false);
+  assert.equal(authorized("Bearer ", ""), false);          // no token set: no one is let in
+  assert.equal(authorized("Bearer undefined", undefined), false);
+});
+
+test("the newest contact messages come first, at most the limit", () => {
+  const names = ["contact:2026-11-01T00:00:00.000Z:a", "contact:2026-11-03T00:00:00.000Z:c", "contact:2026-11-02T00:00:00.000Z:b"];
+  assert.deepEqual(newestFirst(names, 2), [names[1], names[2]]);
+});
 
 const SIGNED = "mx.cloudflare.net; dkim=pass header.d=substack.com header.s=s1; spf=pass";
 

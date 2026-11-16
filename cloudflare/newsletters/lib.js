@@ -64,3 +64,32 @@ export function rss(publication, posts) {
     + `<link>https://${escapeXml(publication)}.substack.com/</link><description>Posts received by email; each links to the original.</description>`
     + `${items}</channel></rss>`;
 }
+
+// The contact inbox: mail to contact@opengnss.org is kept privately for the team to read in the console, never published.
+export const CONTACT_TO = "contact@opengnss.org";   // the default; the Worker's CONTACT_TO var overrides it
+export const CONTACT_TEXT_CHARACTERS = 4000;
+export const CONTACT_READ_ITEMS = 200;             // the newest messages GET /contact returns
+
+export const isContact = (to, contactTo) => (to || "").trim().toLowerCase() === (contactTo || CONTACT_TO).trim().toLowerCase();
+
+// What is kept of one message: who wrote, the subject, when it arrived, and its plain text, trimmed.
+export function contactRecord(mail, envelopeFrom, at) {
+  const address = mail.from && mail.from.address;
+  const from = address ? (mail.from.name ? `${mail.from.name} <${address}>` : address) : envelopeFrom || "";
+  const text = mail.text || (mail.html || "").replace(/<[^>]*>/g, " ").replace(/[ \t]+/g, " ");
+  return { from, subject: mail.subject || "", at, text: text.trim().slice(0, CONTACT_TEXT_CHARACTERS) };
+}
+
+// True only for "Bearer <token>" with the configured token. Every byte is compared whatever the input, so the time taken
+// does not tell how much of a guess was right. No token configured means no one is let in.
+export function authorized(header, token) {
+  if (!token) return false;
+  const encoder = new TextEncoder();
+  const given = encoder.encode(header || ""), wanted = encoder.encode(`Bearer ${token}`);
+  let difference = given.length ^ wanted.length;
+  for (let i = 0; i < wanted.length; i++) difference |= (given[i] ?? 0) ^ wanted[i];
+  return difference === 0;
+}
+
+// The newest keys first: an ISO time sorts as text.
+export const newestFirst = (names, limit) => [...names].sort().reverse().slice(0, limit);

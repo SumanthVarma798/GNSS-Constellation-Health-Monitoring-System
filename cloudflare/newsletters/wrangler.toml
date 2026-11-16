@@ -5,14 +5,20 @@ main = "worker.js"
 compatibility_date = "2026-10-01"
 account_id = "16a8736db713b936302230f75fad84b2"   # the OpenGNSS account, not anyone's personal one
 
-# https://feeds.opengnss.org/substack/<publication>/feed
+# https://feeds.opengnss.org/substack/<publication>/feed, and https://feeds.opengnss.org/contact for the console
 routes = [{ pattern = "feeds.opengnss.org", custom_domain = true }]
 
 # Kept newsletters: raw:<key> (private), post:<key> (what the feed shows), notice:<time> (sign-in and welcome mail).
+# Kept contact mail: contact:<time>:<id> (private; read only through GET /contact with the token below).
 [[kv_namespaces]]
 binding = "NEWSLETTERS"
 id = "ebebf306d0a244baad87cd7136c9a708"
 
-# Optional: a verified address that receives Substack's sign-in and confirmation mail. Unset, those are only logged.
+# Optional vars. NOTICE_TO: a verified address that receives Substack's sign-in and confirmation mail; unset, those are
+# only logged. CONTACT_TO: the address whose mail goes to the contact inbox; unset, contact@opengnss.org.
 # [vars]
 # NOTICE_TO = "someone@example.org"
+# CONTACT_TO = "contact@opengnss.org"
+
+# Secret, never written here: CONTACT_READ_TOKEN, the token the console sends to read GET /contact
+# (npx wrangler secret put CONTACT_READ_TOKEN). Unset, GET /contact answers 401 to everyone.
