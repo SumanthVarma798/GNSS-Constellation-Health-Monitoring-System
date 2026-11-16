@@ -41,12 +41,10 @@ def test_a_rows_split_is_counted_in_words_beside_each_mark_not_by_colour_alone()
 
     # one bar in proportion, hidden from screen readers, then the counts they read
     assert re.search(r'<i class="mixbar" aria-hidden="true"><i class="ok" style="flex:\d+"></i>', navic)
-    assert re.search(r'<span><i class="ok"></i>\d+ <a class="how-link" href="#how-what-is-measured"[^>]*>healthy and in place</a></span>', navic)
-    # each state's words open their explanation in "How to read this page", as "orbit kept" does
-    assert '<i class="bad"></i>1 <a class="how-link" href="#how-what-is-measured"' in navic
-    assert re.search(r'<a class="how-link" href="#how-what-is-measured"[^>]*>needs a look</a>', navic)
-    how = home_settings.HOW[0][2]
-    assert any(term == "Needs a look" for term, _ in how) and any(term == "Set aside" for term, _ in how)
+    assert re.search(r'<span><i class="ok"></i>\d+ <a class="how-link" href="#how-healthy-and-in-place"[^>]*>healthy and in place</a></span>', navic)
+    # each state's words open their own explanation in "How to read this page", as "orbit kept" does
+    assert '<i class="bad"></i>1 <a class="how-link" href="#how-set-aside"' in navic
+    assert re.search(r'<a class="how-link" href="#how-needs-a-look"[^>]*>needs a look</a>', navic)
     assert "<i class=ok>" not in navic and "What a dot means" not in navic   # no mark per satellite, so no legend for one
 
 
@@ -217,20 +215,33 @@ def test_the_largest_finding_of_each_rule_is_listed_first():
                                                           ("silent", "Small"), ("disagree", "Small")]
 
 
-def test_the_words_a_row_explains_are_links_to_the_card_in_how_to_read_that_explains_them():
+def test_the_words_a_row_explains_are_links_to_the_point_in_how_to_read_that_explains_them():
     bodies = htmls(run())
 
-    cards = set(re.findall(r'<div class="how well" id="([^"]+)"', next(b for b in bodies if 'class="how-grid"' in b)))
+    how = next(b for b in bodies if 'class="how-grid"' in b)
+    cards = set(re.findall(r'<div class="how well(?: wide)?" id="([^"]+)"', how))
     assert cards == {"how-what-is-measured", "how-how", "how-what-is-left-out", "how-what-comes-next"}
+    targets = cards | set(re.findall(r'<p class="how-p" id="([^"]+)"', how))
     for words, heading in home_settings.HOW_LINKS.items():
         assert heading in {title for _, title, _ in home_settings.HOW}   # each points at a card that exists
     navic = next(row for row in rows_of(bodies) if "NavIC</b>" in row)
     links = re.findall(r'<a class="how-link" href="#([^"]+)"[^>]*>([^<]+)</a>', navic)
-    # the split's states first, then the count and the measures, each linked to the card that explains it
-    assert links[:3] == [("how-what-is-measured", words) for words in ("healthy and in place", "needs a look", "set aside")]
-    assert links[-5:] == [("how-what-is-measured", words) for words in (
+    # the split's states first, then the count and the measures, each landing on the point that explains it
+    assert links[:3] == [("how-healthy-and-in-place", "healthy and in place"), ("how-needs-a-look", "needs a look"),
+                         ("how-set-aside", "set aside")]
+    assert links[-5:] == [("how-" + words.replace(" ", "-"), words) for words in (
         "healthy and in place", "orbit kept", "station held", "clock steady", "says healthy")]
-    assert {card for card, _ in links} <= cards
+    assert {target for target, _ in links} <= targets
+
+
+def test_how_to_read_sets_its_long_card_in_groups_and_each_term_on_its_own_line():
+    how = next(b for b in htmls(run()) if 'class="how-grid"' in b)
+
+    measured = re.search(r'<div class="how well wide" id="how-what-is-measured">(.*?)</div></div></div>', how).group(1)
+    assert re.findall(r"<h4>([^<]+)</h4>", measured) == ["The states on each row", "The three measures",
+                                                       "What the satellite says"]
+    assert '<p class="how-p" id="how-needs-a-look"><b>Needs a look</b> Counted, but' in measured
+    assert '<div class="how well" id="how-how">' in how   # a card of one group keeps its place in the row
 
 
 def test_a_second_visit_in_the_same_hour_does_not_count_a_constellation_again(monkeypatch):

@@ -4,6 +4,7 @@ The page reads in the order the whole dashboard follows: all the satellites (the
 what stands out (Worth a look), then what is measured, how, what is left out and what comes next (the section).
 A row opens that system's Overview, where the same count is the headline.
 """
+import re
 from html import escape
 
 import streamlit as st
@@ -39,8 +40,12 @@ def _mix(system):
 
 
 def _anchor(heading):
-    """The id of one "How to read this page" card, from its heading: 'What is measured' -> 'how-what-is-measured'."""
-    return "how-" + heading.lower().replace(" ", "-")
+    """The id of one "How to read this page" card or point, from its heading: 'What is measured' ->
+    'how-what-is-measured'."""
+    return "how-" + re.sub(r"[^a-z0-9]+", "-", heading.lower()).strip("-")
+
+
+TERMS = {point[0].lower() for _, _, points in HOW for point in points if not isinstance(point, str)}
 
 
 def _explained(words):
@@ -49,7 +54,8 @@ def _explained(words):
     scrolls to the card (_how_links_script); without scripts it still jumps to the card."""
     if words not in HOW_LINKS:
         return escape(words)
-    return (f'<a class="how-link" href="#{_anchor(HOW_LINKS[words])}" '
+    target = _anchor(words if words.lower() in TERMS else HOW_LINKS[words])   # the point itself, else its card
+    return (f'<a class="how-link" href="#{target}" '
             f'title="What this means: opens How to read this page">{escape(words)}</a>')
 
 
@@ -167,11 +173,23 @@ def _open(key, part, name=""):
 
 
 def _how():
-    """Four cards, in the order every page follows: an icon and a heading, then each point led by its term."""
-    return '<div class="how-grid">' + "".join(
-        f'<div class="how well" id="{_anchor(title)}"><div class="how-h">{icons.mask(icon)}<span>{escape(title)}</span></div>'
-        + "".join(f"<p><b>{escape(term)}.</b> {escape(words)}</p>" for term, words in points) + "</div>"
-        for icon, title, points in HOW) + "</div>"
+    """Four cards, in the order every page follows: an icon and a heading, then each point, its term on a line of its
+    own. A card with groups (HOW's plain strings) takes the full width and sets them side by side."""
+    cards = []
+    for icon, title, points in HOW:
+        groups = []
+        for point in points:
+            if isinstance(point, str) or not groups:
+                groups.append((point if isinstance(point, str) else "", []))
+            if not isinstance(point, str):
+                groups[-1][1].append(point)
+        body = "".join('<div class="how-g">' + (f"<h4>{escape(name)}</h4>" if name else "")
+                       + "".join(f'<p class="how-p" id="{_anchor(term)}"><b>{escape(term)}</b> {escape(words)}</p>'
+                                 for term, words in group) + "</div>" for name, group in groups)
+        cards.append(f'<div class="how well{" wide" if len(groups) > 1 else ""}" id="{_anchor(title)}">'
+                     f'<div class="how-h">{icons.mask(icon)}<span>{escape(title)}</span></div>'
+                     f'<div class="how-groups">{body}</div></div>')
+    return '<div class="how-grid">' + "".join(cards) + "</div>"
 
 
 # Run once in the page itself: a click on a row's explained words opens "How to read this page" by its own header
