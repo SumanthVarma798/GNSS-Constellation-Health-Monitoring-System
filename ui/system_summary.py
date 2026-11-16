@@ -2,6 +2,8 @@
 broadcast themselves as healthy. The counts are the ones the system's own Overview shows as its headline, made by
 the same rules (in_slot_and_healthy here, meo_overview.healthy for the systems judged by plane).
 """
+from datetime import datetime, timedelta, timezone
+
 from analysis import commissioning
 from analysis.meo_geometry import plane_drift
 from config.config import MEO_SATS
@@ -94,6 +96,16 @@ def _stage(result, name):
         return "new"
 
 
+def _recent_burns(burns, now=None):
+    """(burns, satellites that made them) found in the last BURN_DAYS of orbit records, or None when none were found:
+    the systems judged by plane mostly have too little history to find any (analysis/meo_run.py)."""
+    if burns is None or not len(burns):
+        return None
+    since = (now or datetime.now(timezone.utc)).replace(tzinfo=None) - timedelta(days=limits.BURN_DAYS)
+    recent = burns[burns["window_end"] >= since]
+    return len(recent), int(recent["satellite"].nunique())
+
+
 def summary(name, result, gap=None):
     """{name, sats, healthy, total, settling, planes, in_file, flagged_healthy, broadcast_day} for one system.
 
@@ -119,7 +131,11 @@ def summary(name, result, gap=None):
         step = (clock or {}).get("largest_step_ns")
         sat["clock_steady"] = None if step is None else step <= limits.CLOCK_STEADY_NS
     checked = [sat for sat in sats if sat["broadcast"] is not None]
+    flagged = [sat for sat in checked if sat["broadcast"] in ("ok", "bad")]
     return {"name": name, "sats": sats, "healthy": sum(sat["ok"] for sat in sats), "total": len(sats),
+            # the operator's own word against our check: its flag says healthy exactly where we count it healthy
+            "flag_agrees": (sum((sat["broadcast"] == "ok") == sat["ok"] for sat in flagged), len(flagged)),
+            "burns": _recent_burns(result.get("burns")),
             "settling": {new: _stage(result, new) for new in result.get("moving") or {}},
             "planes": plane_drift(name, result["rows"]) if by_plane else {},
             "in_file": sum(sat["broadcast"] != "silent" for sat in checked) if checked else None,
@@ -133,7 +149,10 @@ def whole(system, parts):
     rows for the parts that could be read, in the system's order. "parts" holds (the part's name beside the
     system's, healthy, total) for a system with several parts, so a reader can go one step deeper."""
     checked = sum(part["checked"] for part in parts)
+    burns = [part["burns"] for part in parts if part["burns"]]
     return {"name": system, "sats": [sat for part in parts for sat in part["sats"]],
+            "flag_agrees": tuple(map(sum, zip(*(part["flag_agrees"] for part in parts)))) if parts else (0, 0),
+            "burns": tuple(map(sum, zip(*burns))) if burns else None,
             "healthy": sum(part["healthy"] for part in parts), "total": sum(part["total"] for part in parts),
             "settling": {name: stage for part in parts for name, stage in part["settling"].items()}, "checked": checked,
             "flagged_healthy": sum(part["flagged_healthy"] or 0 for part in parts) if checked else None,

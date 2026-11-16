@@ -53,8 +53,9 @@ HOW = [
         "The score",
         ("Score", "One number out of 100, to compare constellations at a glance: the average of orbit kept, station "
          "held and clock steady, each as the share of the satellites judged on it. A measure that could not be read "
-         "that day is left out, and the row says the score is from 2 of 3. Open a constellation for the sum."),
-        "The states on each row",
+         "that day is left out, and the card says the score is from 2 of 3. The ring round it splits the "
+         "constellation's satellites by state. Open a card for each measure."),
+        "The states round the score",
         ("Healthy and in place", "The satellite's orbit, from public tracking records, scores 80 or more out of 100, "
          "and it sits in its slot or keeps step in its orbital plane. The constellation's own page shows every part of "
          "that score."),
@@ -62,17 +63,23 @@ HOW = [
          "out of step with its plane or off its plane. Its constellation's page says which."),
         ("Set aside", "Moved to a graveyard orbit, away from the working orbit, after its service ended. It is in the "
          "total but not judged."),
-        "The three measures",
+        "In the score",
         ("Orbit kept", "The satellite is on the orbit it should be on. For one held over a longitude that is its "
          "tilt; for one in a medium orbit, its plane, tilt, height and shape. Each must score 80 or more."),
         ("Station held", "It is being held there: it is in its slot and not drifting, or in step with the others in "
          "its plane. How often and how evenly it burns to stay there is on the constellation's own page."),
         ("Clock steady", "Through the day, each new clock message landed within 30 ns of what the one before it "
          "predicted. A clock that was reset or is failing steps by far more. 1 ns of clock is 0.3 m of range."),
-        "What the satellite says",
+        "Shown beside, not in the score",
         ("Says healthy", "The health flag each satellite sends about itself. It is read once a day, with the clock "
          "messages, from the International GNSS Service's daily broadcast file, which holds the navigation "
          "messages its ground stations received."),
+        ("Flag matches our check", "Where the operator's own flag says healthy exactly where our orbit check counts the "
+         "satellite healthy and in place, and unhealthy where it does not. A flag that is often wrong is worth "
+         "knowing before trusting it."),
+        ("Burns", "The engine burns found in the last 90 days of public tracking records: how the operator keeps its "
+         "satellites in place. Medium-orbit constellations rarely show any yet, because their records do not go back "
+         "far enough to find them."),
     ]),
     ("calculator", "How", [
         ("Two sources, never mixed", "Orbit and station come from public tracking records; clock and flag from the "
@@ -102,6 +109,8 @@ HOW = [
 # them}. On the row they are a link to that card, landing on the point itself when its term is the same words.
 HOW_LINKS = {
     "score": "What is measured",
+    "flag matches our check": "What is measured",
+    "burns": "What is measured",
     "healthy and in place": "What is measured",
     "needs a look": "What is measured",
     "set aside": "What is measured",

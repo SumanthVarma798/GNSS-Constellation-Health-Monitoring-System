@@ -8,7 +8,8 @@ from test_dashboard_shell import (celestrak_answers_with_nothing_new, htmls, run
 from test_meo_pages import celestrak_answers_with_two_galileo_satellites, scope  # noqa: F401 (a fixture)
 from ui import data, findings, home_data, home_settings, palette, shell, system_summary, systems
 
-COUNT = re.compile(r"(\d+ of \d+)</span>")
+COUNT = re.compile(r"(\d+ of \d+) satellites healthy and in place")   # said with a card's score
+HEADLINE = re.compile(r"(\d+ of \d+)</span>")   # a constellation's own page leads with it
 NAME = re.compile(r"<b>(?:<span[^>]*></span>)?([^<]+)</b>")   # a row's name, after its mark
 
 
@@ -18,7 +19,7 @@ def the_dashboard_opens_on_home(monkeypatch):
 
 
 def rows_of(bodies):
-    return [body for body in bodies if body.startswith('<div class="sys ')]
+    return [body for body in bodies if body.startswith(('<div class="sys ', '<details class="sys '))]
 
 
 def rows(at):
@@ -36,26 +37,31 @@ def test_home_is_the_first_page_and_shows_a_row_per_system_in_the_top_bars_order
         assert who and where and (f"{who} · {where}" in row or "Could not be read" in row)
 
 
-def test_a_rows_split_is_counted_in_words_beside_each_mark_not_by_colour_alone():
+def test_a_cards_states_ring_its_score_and_are_counted_in_words_beside_each_mark():
     navic = next(row for row in rows(run()) if "NavIC</b>" in row)
+    head, body = navic.split("</summary>")
 
-    # one bar in proportion, hidden from screen readers, then the counts they read
-    assert re.search(r'<i class="mixbar" aria-hidden="true"><i class="ok" style="flex:\d+"></i>', navic)
-    assert re.search(r'<span><i class="ok"></i>\d+ <a class="how-link" href="#how-healthy-and-in-place"[^>]*>healthy and in place</a></span>', navic)
-    # each state's words open their own explanation in "How to read this page", as "orbit kept" does
-    assert '<i class="bad"></i>1 <a class="how-link" href="#how-set-aside"' in navic
-    assert re.search(r'<a class="how-link" href="#how-needs-a-look"[^>]*>needs a look</a>', navic)
-    assert "<i class=ok>" not in navic and "What a dot means" not in navic   # no mark per satellite, so no legend for one
+    # the ring: one part per state, in proportion, opening at the bottom like a speedometer
+    ring = re.search(r'--ring: conic-gradient\(from -135deg, ([^"]+)\)"', head).group(1)
+    assert ring.startswith("var(--ok) 0.0deg") and "var(--bad)" in ring and "var(--warn)" in ring
+    # the same counts in words, each beside its mark, so colour is never the only sign; none a link in the head
+    assert re.search(r'<span><i class="ok"></i>\d+ healthy and in place</span>', head)
+    assert '<span><i class="bad"></i>1 set aside</span>' in head and "how-link" not in head
+    # opened, each state's words open their own explanation in "How to read this page"
+    assert re.search(r'<a class="how-link" href="#how-needs-a-look"[^>]*>needs a look</a>', body)
+    assert '<a class="how-link" href="#how-set-aside"' in body
 
 
 def test_a_system_with_no_satellites_draws_no_empty_split(monkeypatch):
     monkeypatch.setattr(system_summary, "summary", lambda name, result, gap=None: {
         "name": name, "sats": [], "healthy": 0, "total": 0, "settling": {}, "planes": {}, "in_file": None,
-        "flagged_healthy": None, "checked": 0, "broadcast_day": None})
+        "flagged_healthy": None, "checked": 0, "broadcast_day": None, "orbit": (0, 0), "station": (0, 0),
+        "clock": (0, 0), "clock_typical_ns": None, "score": None, "score_parts": [], "flag_agrees": (0, 0),
+        "burns": None})
 
     counted = [row for row in rows(run()) if COUNT.search(row)]
 
-    assert counted and not any('class="mix"' in row for row in counted)
+    assert counted and all("--ring: none" in row and ">–</b>" in row and '<i class="ok">' not in row for row in counted)
 
 
 def test_each_rows_count_is_the_headline_of_that_systems_overview_added_up_over_its_parts():
@@ -66,7 +72,7 @@ def test_each_rows_count_is_the_headline_of_that_systems_overview_added_up_over_
         healthy = total = 0
         for part in parts:
             bodies = htmls(run(scope(part)))
-            headline = next((COUNT.search(body) for body in bodies if 'class="head"' in body), None)
+            headline = next((HEADLINE.search(body) for body in bodies if 'class="head"' in body), None)
             if headline is None:   # no orbit data in the test's copy: the part's own page says so
                 assert any(f"No orbit data for {part} yet" in body for body in bodies), part
                 continue
@@ -90,10 +96,11 @@ def test_a_part_of_a_system_shows_the_whole_systems_count_over_its_own(monkeypat
     assert not any('class="sysline"' in body for body in htmls(run(scope("NavIC"))))   # one part: no line
 
 
-def test_a_row_opens_that_systems_overview():
+def test_a_cards_button_opens_that_systems_overview():
     index = list(systems.SYSTEMS).index("Galileo")
+    assert run().button(key=f"home_explore_{index}").label == "Explore Galileo further"
 
-    at = run(lambda at: at.button(key=f"home_open_{index}").click())
+    at = run(lambda at: at.button(key=f"home_explore_{index}").click())
 
     assert at.session_state["scope"] == "Galileo" and at.session_state["page"] == "Overview"
     assert any("healthy and in step" in body for body in htmls(at))
@@ -226,11 +233,10 @@ def test_the_words_a_row_explains_are_links_to_the_point_in_how_to_read_that_exp
         assert heading in {title for _, title, _ in home_settings.HOW}   # each points at a card that exists
     navic = next(row for row in rows_of(bodies) if "NavIC</b>" in row)
     links = re.findall(r'<a class="how-link" href="#([^"]+)"[^>]*>([^<]+)</a>', navic)
-    # the split's states first, then the count and the measures, each landing on the point that explains it
-    assert links[:3] == [("how-healthy-and-in-place", "healthy and in place"), ("how-needs-a-look", "needs a look"),
-                         ("how-set-aside", "set aside")]
-    assert links[-5:] == [("how-" + words.replace(" ", "-"), words) for words in (
-        "healthy and in place", "orbit kept", "station held", "clock steady", "says healthy")]
+    # opened: the measures in the score, then what is shown beside it, then the states, each landing on its point
+    assert links[:6] == [("how-" + words.replace(" ", "-"), words) for words in (
+        "orbit kept", "station held", "clock steady", "says healthy", "flag matches our check", "burns")]
+    assert ("how-needs-a-look", "needs a look") in links and ("how-set-aside", "set aside") in links
     assert {target for target, _ in links} <= targets
 
 
@@ -238,8 +244,8 @@ def test_how_to_read_sets_its_long_card_in_groups_and_each_term_on_its_own_line(
     how = next(b for b in htmls(run()) if 'class="how-grid"' in b)
 
     measured = re.search(r'<div class="how well wide" id="how-what-is-measured">(.*?)</div></div></div>', how).group(1)
-    assert re.findall(r"<h4>([^<]+)</h4>", measured) == ["The score", "The states on each row", "The three measures",
-                                                       "What the satellite says"]
+    assert re.findall(r"<h4>([^<]+)</h4>", measured) == ["The score", "The states round the score", "In the score",
+                                                       "Shown beside, not in the score"]
     assert '<p class="how-p" id="how-needs-a-look"><b>Needs a look</b> Counted, but' in measured
     assert '<div class="how well" id="how-how">' in how   # a card of one group keeps its place in the row
 
@@ -283,12 +289,14 @@ def test_a_satellite_is_judged_on_orbit_station_and_clock_and_not_judged_where_n
     assert system_summary.summary("NavIC", result)["clock"] == (0, 0)   # no broadcast check: no clock judged
 
 
-def test_a_row_compares_the_three_measures_and_the_flag_in_that_order():
+def test_an_open_card_compares_the_three_measures_then_what_is_beside_them_in_that_order():
     navic = next(row for row in rows(run()) if "NavIC</b>" in row)
 
-    said = re.findall(r'class="how-link"[^>]*>([^<]+)</a></span>(?:<i class="hbar">.*?</i>)?<b class="[^"]*">([^<]+)</b>', navic)
-    assert [words for words, _ in said] == ["orbit kept", "station held", "clock steady", "says healthy"]
+    said = re.findall(r'class="how-link"[^>]*>([^<]+)</a>[^<]*</span>(?:<i class="hbar">.*?</i>|<i></i>)?<b class="[^"]*">([^<]+)</b>', navic)
+    assert [words for words, _ in said] == ["orbit kept", "station held", "clock steady", "says healthy",
+                                            "flag matches our check", "burns"]
     assert re.fullmatch(r"\d of 7", said[0][1]) and said[2][1] == "not read"   # 7 scored; no broadcast check in tests
+    assert said[5][1] != "none found: too little history"   # NavIC is held by slot: its burns are found
 
 
 def test_clock_stepped_fires_for_a_step_past_the_line_and_not_for_steady_clocks():
@@ -313,7 +321,7 @@ def test_a_constellations_own_page_declares_the_three_measures_and_lists_every_s
         table = next(body for body in bodies if "Orbit kept<small>" in body)
         assert station_words in table and "Clock steady<small>no step past 30 ns in the day" in table
         headline = next(body for body in bodies if 'class="head"' in body)
-        counted = int(COUNT.search(headline).group(1).split(" of ")[1])
+        counted = int(HEADLINE.search(headline).group(1).split(" of ")[1])
         assert table.count("<tr>") - 1 == counted   # a line per satellite the page counts
 
 
@@ -347,7 +355,7 @@ def test_home_reads_the_published_count_while_it_is_fresh_and_says_when_it_was_c
     assert {args[0] for args in counted} == {name for names in systems.SYSTEMS.values() for name in names} - set(copy["parts"])
     assert "NavIC" in copy["parts"]   # only the parts the copy leaves out are counted on the server
     navic = next(row for row in rows_of(bodies) if "NavIC</b>" in row)
-    assert re.search(r">1 of \d+</span>", navic)
+    assert re.search(r"; 1 of \d+ satellites healthy and in place", navic)
     assert any(f"counted {made[8:10]} " in body for body in bodies if 'class="head"' in body)
 
 
@@ -393,14 +401,20 @@ def test_the_score_is_the_average_of_the_three_measures_pass_rates_and_leaves_ou
     assert system_summary.score_of({"orbit": (0, 0), "station": (0, 0), "clock": (0, 0)}) == (None, [])
 
 
-def test_each_row_leads_with_its_score_and_says_when_it_is_from_fewer_measures():
+def test_each_card_leads_with_its_score_and_its_how_scored_tip_says_when_it_is_from_fewer_measures():
     navic = next(row for row in rows(run()) if "NavIC</b>" in row)
+    head, body = navic.split("</summary>")
 
-    # no broadcast check in tests, so no clock: the score is from orbit and station alone, and says so
-    score = re.search(r'<span class="s num (ok|warn|bad)">(\d+)<small> / 100</small></span>', navic)
-    assert score and re.search(r'>score</a>, from 2 of 3 measures</span>', navic)
-    assert f'<div class="sys {score.group(1)}">' in navic   # the row's edge is in the score's colour
-    assert COUNT.search(navic)   # the count in place stays, under the score
+    # the score sits before the name, in the middle of its ring, with the count in place said with it
+    score = re.search(r'<div class="gauge" [^>]*aria-label="Score (\d+) out of 100; \d+ of \d+ satellites healthy and '
+                      r'in place"><b class="num (ok|warn|bad)">\1</b><small>/ 100</small></div><div class="sys-id">', head)
+    assert score and f'<details class="sys card {score.group(2)}">' in navic   # the card's edge in the score's colour
+    # no broadcast check in tests, so no clock: the tip on "how this is scored" says the score is from 2 of 3
+    assert 'tabindex="0" aria-describedby="tt-' in head and ">how this is scored</span>" in head
+    assert "From 2 of 3 today: 1 measure could not be read." in head
+    # opened: the three measures in the score, and what is shown beside it
+    assert re.search(r"<h4>In the score</h4>.*orbit kept.*station held.*clock steady", body)
+    assert re.search(r"<h4>Shown beside, not in the score</h4>.*says healthy.*flag matches our check.*burns", body)
 
 
 def test_a_constellations_page_opens_up_its_score_into_its_sum():
@@ -409,3 +423,19 @@ def test_a_constellations_page_opens_up_its_score_into_its_sum():
     strip = next(body for body in bodies if 'class="measures"' in body)
     assert re.search(r"Score \d+ of 100</span><span class=\"small\">the average of orbit kept \d+% \+ station held \d+%; "
                      r"1 not read</span>", strip)
+
+
+def test_burns_are_counted_over_the_last_90_days_and_a_flag_matches_where_it_says_what_we_count():
+    import pandas as pd
+    from datetime import datetime, timezone
+    now = datetime(2026, 11, 16, tzinfo=timezone.utc)
+    burns = pd.DataFrame({"satellite": ["A", "A", "B", "C"],
+                          "window_end": pd.to_datetime(["2026-11-10", "2026-09-01", "2026-08-01", "2026-05-01"])})
+
+    assert system_summary._recent_burns(burns, now) == (2, 1)   # 10 Nov and 1 Sep are inside 90 days; the rest not
+    assert system_summary._recent_burns(burns.iloc[0:0], now) is None and system_summary._recent_burns(None) is None
+
+    parts = [{"flag_agrees": (2, 3), "burns": (2, 1)}, {"flag_agrees": (5, 5), "burns": None}]
+    whole = system_summary.whole("BeiDou-3", [{**system_summary.summary("NavIC", data.load("NavIC", 90)), **part}
+                                              for part in parts])
+    assert whole["flag_agrees"] == (7, 8) and whole["burns"] == (2, 1)

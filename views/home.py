@@ -1,8 +1,9 @@
-"""Home: every system side by side, for a reader new to them. One row per system: how its satellites split, and its counts.
+"""Home: every system side by side, for a reader new to them. One card per system: its score out of 100 in a ring of its
+satellites' states.
 
-The page reads in the order the whole dashboard follows: all the satellites (the count), each system (the rows),
+The page reads in the order the whole dashboard follows: all the satellites (the count), each system (the cards),
 what stands out (Worth a look), then what is measured, how, what is left out and what comes next (the section).
-A row opens that system's Overview, where the same count is the headline.
+A card opens in place to what makes its score, with a button on to that system's Overview.
 """
 import re
 from html import escape
@@ -11,7 +12,9 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 from ui import data, findings, home_data, icons, marks, palette, reveal, shell, surfaces, time_range, tooltip
+from config.config import MEO_SATS
 from ui.home_settings import CAVEATS, FINDINGS_SHOWN, HOW, HOW_LINKS, RULES, SYSTEMS
+from ui.limits import BURN_DAYS
 from ui.system_summary import whole
 from ui.systems import SYSTEMS as SYSTEMS_PARTS, part_name
 
@@ -24,19 +27,47 @@ def _dot(sat):
     return "ok" if sat["ok"] else "bad" if sat["state"] == palette.SLOT_LEFT else "warn"
 
 
-def _mix(system):
-    """How the system's satellites split across the states: one bar in proportion, then each count beside its mark.
-    A mark per satellite could not say which satellite it was, so only the counts are drawn."""
+ARC, GAP = 270, 3   # the gauge's ring: degrees it spans (open at the bottom, like a speedometer), and between parts
+
+
+def _split(system):
+    """[(state, what it means, how many)] for the states that have any satellite, in STATES' order."""
     counts = {kind: 0 for kind, _ in STATES}
     for sat in system["sats"]:
         counts[_dot(sat)] += 1
     counts["accent"] = len(system["settling"])
-    shown = [(kind, meaning, counts[kind]) for kind, meaning in STATES if counts[kind]]
-    if not shown:
-        return ""   # nothing to draw
-    bar = "".join(f'<i class="{kind}" style="flex:{count}"></i>' for kind, _, count in shown)
-    words = "".join(f'<span><i class="{kind}"></i>{count} {_explained(meaning)}</span>' for kind, meaning, count in shown)
-    return f'<div class="mix"><i class="mixbar" aria-hidden="true">{bar}</i><div class="dots mixw small">{words}</div></div>'
+    return [(kind, meaning, counts[kind]) for kind, meaning in STATES if counts[kind]]
+
+
+def _gauge(system, split):
+    """The score in the middle of a ring, the ring cut into the states in proportion to their counts, like the
+    markings round a speedometer. The ring is a conic gradient: st.html keeps styles but drops SVG."""
+    total, at, stops = sum(count for _, _, count in split), 0.0, []
+    gaps = GAP * (len(split) > 1)
+    for kind, _, count in split:
+        end = at + (ARC - gaps * len(split)) * count / total
+        stops += [f"var(--{kind}) {at:.1f}deg {end:.1f}deg", f"transparent {end:.1f}deg {end + gaps:.1f}deg"]
+        at = end + gaps
+    ring = f"conic-gradient(from {-ARC / 2:g}deg, {', '.join(stops)}, transparent {at:.1f}deg)" if split else "none"
+    score = system["score"]
+    band = surfaces.band(score) if score is not None else "idle"
+    words = (f"Score {score} out of 100" if score is not None else "No score") + (
+        f"; {system['healthy']} of {system['total']} satellites healthy and in place")
+    return (f'<div class="gauge" style="--ring: {ring}" role="img" aria-label="{words}">'
+            f'<b class="num {band}">{score if score is not None else "–"}</b><small>/ 100</small></div>')
+
+
+def _how_scored(system, index):
+    """'how this is scored', dotted, with a card that says it in a few lines."""
+    used = len(system["score_parts"])
+    return tooltip.tip_html('how this is scored', tooltip.glance(
+        "The average of three measures, each the share of satellites that pass", [
+            ("", "Orbit kept", "on the orbit it should be on"),
+            ("", "Station held", "held in its slot, or in step with its plane"),
+            ("", "Clock steady", "no clock step past 30 ns in the day")],
+        note=("Counted the same: our choice. " if used == 3 else "None could be read today, so there is no score. "
+              if not used else f"From {used} of 3 today: {reveal.count(3 - used, 'measure')} could not be read. ")
+        + "Open the card for each one."), key=f"score_{index}")
 
 
 def _anchor(heading):
@@ -59,26 +90,17 @@ def _explained(words):
             f'title="What this means: opens How to read this page">{escape(words)}</a>')
 
 
-def _score(system):
-    """The constellation's score out of 100 with a bar in its band, the measures it was made from when not all three,
-    and under it how many satellites are healthy and in place. Its page shows the sum (ui/three_measures.py)."""
-    in_place = (f'<span class="small"><span class="num">{system["healthy"]} of {system["total"]}</span> '
-                f'{_explained("healthy and in place")}</span>')
-    if system["score"] is None:
-        return f'<div class="sys-m"><span class="s idle">no score</span>{in_place}</div>'
-    band, used = surfaces.band(system["score"]), len(system["score_parts"])
-    return (f'<div class="sys-m"><span class="s num {band}">{system["score"]}<small> / 100</small></span>'
-            f'<i class="hbar"><i class="{band}" style="width:{system["score"]}%"></i></i>'
-            f'<span class="small">{_explained("score")}{"" if used == 3 else f", from {used} of 3 measures"}</span>'
-            f'{in_place}</div>')
-
-
-def _measures(system):
-    """The three measures of a constellation's health and its own flag, one line each: the words, a bar, the count.
-    The lines sit in the same place in every row, so the constellations compare down the page."""
-    lines = [("orbit kept", *system["orbit"]), ("station held", *system["station"]),
-             ("clock steady", *system["clock"]), ("says healthy", system["flagged_healthy"], system["checked"])]
-    return '<div class="ms">' + "".join(_measure_line(*line) for line in lines) + "</div>"
+def _beside(system):
+    """What is shown beside the score and not counted in it: the operator's own flag, whether that flag matches our
+    check, and the burns found (none for most medium orbits: too little history to find them)."""
+    burns = system["burns"]
+    burn_words = (f"{burns[0]} by {reveal.count(burns[1], 'satellite')}" if burns
+                  else "none found: too little history" if system["name"] in MEO_SATS else "none found")
+    return ('<div class="ms">'
+            + _measure_line("says healthy", system["flagged_healthy"], system["checked"])
+            + _measure_line("flag matches our check", *system["flag_agrees"])
+            + f'<span class="small">{_explained("burns")} in {BURN_DAYS} days</span><i></i>'
+              f'<b class="{"num" if burns else "idle"}">{escape(burn_words)}</b></div>')
 
 
 def _measure_line(words, count, of):
@@ -93,26 +115,38 @@ def _measure_line(words, count, of):
             f'<b class="num {band}">{count} of {of}</b>')
 
 
-def _row(system, unread=None):
-    """One system: who runs it, how its satellites split, its score and the count in place, the three measures and
-    its own flag, and what the page leaves out for it.
-    For a system of several parts, each part's count is a line under the split, and a part in `unread`
-    ({part's name: the error}) says why it is missing."""
+def _row(system, unread=None, index=0):
+    """One constellation as a card. Closed: its score in a ring of its satellites' states, its name, who runs it,
+    the states counted in words, and how the score is made. Opened (a click anywhere on it, no page reload): the
+    three measures in the score, what is shown beside it, notes, and under it the button to its own pages (page()).
+    For a system of several parts each part's count is a note, and a part in `unread` ({part's name: the error})
+    says why it is missing."""
     name = system["name"]
     who, where = SYSTEMS.get(name, ("", ""))
+    split = _split(system)
     notes = [f"{escape(new)} is new ({escape(stage)}) and is {_explained('not scored yet')}"   # each note is markup
              for new, stage in system["settling"].items()]
     notes += [escape(CAVEATS[name])] if name in CAVEATS else []
     notes = ([escape(" · ".join(f"{label} {count} of {of}" for label, count, of in system["parts"]))] * bool(system["parts"])
              + [escape(f"{label} could not be read just now: {_why(error)}") for label, error in (unread or {}).items()]
              + notes)
-    return (f'<div class="sys {surfaces.band(system["score"]) if system["score"] is not None else "idle"}">'
-            f'<div class="sys-id"><b>{marks.mark(name)}{escape(name)}</b><span class="small">{escape(" · ".join(filter(None, [who, where])))}</span></div>'
-            f'<div class="sys-mid">{_mix(system)}'
-            + "".join(f'<div class="small">{note}</div>' for note in notes) + '</div>'
-            f'{_score(system)}'
-            f'{_measures(system)}'
-            '<span class="sys-go" aria-hidden="true">&rsaquo;</span></div>')
+    # in the card's head nothing is a link, so a click there always opens the card; the words link once it is open
+    counted = "".join(f'<span><i class="{kind}"></i>{count} {escape(meaning)}</span>' for kind, meaning, count in split)
+    key = "".join(f'<span><i class="{kind}"></i>{_explained(meaning)}</span>' for kind, meaning, _ in split)
+    in_score = '<div class="ms">' + "".join(_measure_line(*line) for line in [
+        ("orbit kept", *system["orbit"]), ("station held", *system["station"]), ("clock steady", *system["clock"])]) + "</div>"
+    return (f'<details class="sys card {surfaces.band(system["score"]) if system["score"] is not None else "idle"}">'
+            f'<summary>{_gauge(system, split)}<div class="sys-id"><b>{marks.mark(name)}{escape(name)}</b>'
+            f'<span class="small">{escape(" · ".join(filter(None, [who, where])))}</span>'
+            f'<div class="dots mixw small">{counted}</div>'
+            f'<span class="small">{_how_scored(system, index)}</span></div>'
+            '<span class="sys-go" aria-hidden="true">&rsaquo;</span></summary>'
+            f'<div class="card-more"><div class="card-g"><h4>In the score</h4>{in_score}</div>'
+            f'<div class="card-g"><h4>Shown beside, not in the score</h4>{_beside(system)}</div>'
+            + (f'<div class="card-g card-notes">' + "".join(f'<div class="small">{note}</div>' for note in notes)
+               + "</div>" if notes else "")
+            + (f'<div class="dots mixw small card-key">{key}</div>' if key else "")
+            + "</div></details>")
 
 
 def _failed(name, error):
@@ -143,8 +177,8 @@ def _headline(wholes=None, made=None):
     # rows each saying so.
     return (f'<div class="head"><span role="status"><span class="big num">{count}</span> '
             f'<span class="muted">{words}</span></span></div>'
-            '<p class="lede small">One row per constellation. A row opens that constellation, where every satellite '
-            'and every number behind these counts is shown.</p>')
+            '<p class="lede small">One card per constellation, scored out of 100. Click a card to see what makes its '
+            'score, and to explore that constellation further.</p>')
 
 
 def _why(error):
@@ -168,10 +202,9 @@ def _finding(finding):
             f'<div class="small">{escape(finding["numbers"])}</div>{why}</div>{_pair(finding["pair"])}</div>')
 
 
-def _open(key, part, name=""):
-    """The button laid over a row (ui/theme.css): the whole row opens the Overview of `part`, a system or one part
-    of it, said as `name` when that differs."""
-    st.button(f"Open {name or part}'s overview", key=key, on_click=shell.open_system, args=(part,))
+def _open(key, part):
+    """The button laid over a finding (ui/theme.css): the whole finding opens the Overview of `part`."""
+    st.button(f"Open {part}'s overview", key=key, on_click=shell.open_system, args=(part,))
 
 
 def _how():
@@ -239,10 +272,13 @@ def page():
                     failed[name] = error
             if any(name in parts for name in names):
                 wholes[system] = whole(system, [parts[name] for name in names if name in parts])
-            with slots[index].container(key=f"home_row_{index}"):
+            with slots[index].container(key=f"home_card_{index}"):
                 unread = {part_name(name) or name: failed[name] for name in names if name in failed}
-                st.html(_row(wholes[system], unread) if system in wholes else _failed(system, failed[names[0]]))
-                _open(f"home_open_{index}", next((name for name in names if name in parts), names[0]), system)
+                st.html(_row(wholes[system], unread, index) if system in wholes else _failed(system, failed[names[0]]))
+                # shown only while the card is open (ui/theme.css), as the way on to the constellation's own pages
+                st.button(f"Explore {system} further", key=f"home_explore_{index}", type="primary",
+                          icon=":material/arrow_forward:", on_click=shell.open_system,
+                          args=(next((name for name in names if name in parts), names[0]),))
     head.html(_headline(wholes, made if set(parts) <= set(ready) else None))
 
     listed, explained = findings.find(list(parts.values()))
