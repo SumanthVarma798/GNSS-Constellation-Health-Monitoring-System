@@ -72,11 +72,19 @@ export const CONTACT_READ_ITEMS = 200;             // the newest messages GET /c
 
 export const isContact = (to, contactTo) => (to || "").trim().toLowerCase() === (contactTo || CONTACT_TO).trim().toLowerCase();
 
+// An HTML-only message as plain words: no style or script text, the common entities read back.
+const ENTITIES = { amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'", apos: "'", nbsp: " " };
+export const plainText = (html) => html
+  .replace(/<(style|script)\b[^>]*>[\s\S]*?<\/\1>/gi, " ")
+  .replace(/<[^>]*>/g, " ")
+  .replace(/&(amp|lt|gt|quot|#39|apos|nbsp);/g, (_, name) => ENTITIES[name])
+  .replace(/[ \t]+/g, " ");
+
 // What is kept of one message: who wrote, the subject, when it arrived, and its plain text, trimmed.
 export function contactRecord(mail, envelopeFrom, at) {
   const address = mail.from && mail.from.address;
   const from = address ? (mail.from.name ? `${mail.from.name} <${address}>` : address) : envelopeFrom || "";
-  const text = mail.text || (mail.html || "").replace(/<[^>]*>/g, " ").replace(/[ \t]+/g, " ");
+  const text = mail.text || plainText(mail.html || "");
   return { from, subject: mail.subject || "", at, text: text.trim().slice(0, CONTACT_TEXT_CHARACTERS) };
 }
 

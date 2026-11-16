@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  CONTACT_TEXT_CHARACTERS, authorized, contactRecord, excerpt, fromSubstack, isContact, newestFirst, postLink, publicationOf,
+  CONTACT_TEXT_CHARACTERS, authorized, contactRecord, excerpt, fromSubstack, isContact, newestFirst, plainText, postLink, publicationOf,
   receiverResults, rss,
 } from "./lib.js";
 
@@ -80,4 +80,9 @@ test("the excerpt is short, has no links, and the feed escapes everything", () =
   const feed = rss("pub", [{ title: "A <b> & 'c'", link: "https://pub.substack.com/p/a", date: "2026-10-27T00:00:00Z", excerpt: "x" }]);
   assert.match(feed, /A &lt;b&gt; &amp; &apos;c&apos;/);
   assert.match(feed, /<pubDate>Tue, 27 Oct 2026 00:00:00 GMT<\/pubDate>/);
+});
+
+test("an HTML-only contact message keeps its words, not its style sheet, with entities read back", () => {
+  assert.equal(plainText("<style>.x{display:none}</style><p>AT&amp;T &lt;3</p>").trim(), "AT&T <3");
+  assert.equal(contactRecord({ html: "<script>x()</script><b>Hi</b>" }, "a@b", "t").text, "Hi");
 });
