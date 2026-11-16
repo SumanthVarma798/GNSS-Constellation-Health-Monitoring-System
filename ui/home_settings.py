@@ -46,9 +46,15 @@ EXPLAINED = {
 }
 
 # "How to read this page": the same order the whole dashboard follows. (icon in ui/icons.py MASKED, heading,
-# [(the term in bold, what to know about it)]).
+# [(the term in bold, what to know about it)]). A plain string among the points starts a group under that small
+# heading, so a long card reads in parts.
 HOW = [
     ("radar", "What is measured", [
+        "The score",
+        ("Score", "One number out of 100, to compare constellations at a glance: the average of orbit kept, station "
+         "held and clock steady, each as the share of the satellites judged on it. A measure that could not be read "
+         "that day is left out, and the row says the score is from 2 of 3. Open a constellation for the sum."),
+        "The states on each row",
         ("Healthy and in place", "The satellite's orbit, from public tracking records, scores 80 or more out of 100, "
          "and it sits in its slot or keeps step in its orbital plane. The constellation's own page shows every part of "
          "that score."),
@@ -56,12 +62,14 @@ HOW = [
          "out of step with its plane or off its plane. Its constellation's page says which."),
         ("Set aside", "Moved to a graveyard orbit, away from the working orbit, after its service ended. It is in the "
          "total but not judged."),
+        "The three measures",
         ("Orbit kept", "The satellite is on the orbit it should be on. For one held over a longitude that is its "
          "tilt; for one in a medium orbit, its plane, tilt, height and shape. Each must score 80 or more."),
         ("Station held", "It is being held there: it is in its slot and not drifting, or in step with the others in "
          "its plane. How often and how evenly it burns to stay there is on the constellation's own page."),
         ("Clock steady", "Through the day, each new clock message landed within 30 ns of what the one before it "
          "predicted. A clock that was reset or is failing steps by far more. 1 ns of clock is 0.3 m of range."),
+        "What the satellite says",
         ("Says healthy", "The health flag each satellite sends about itself. It is read once a day, with the clock "
          "messages, from the International GNSS Service's daily broadcast file, which holds the navigation "
          "messages its ground stations received."),
@@ -78,7 +86,8 @@ HOW = [
         ("Measured accuracy", "How accurate each constellation's signal and clock actually are. That needs precise "
          "orbit and clock products we do not read yet. The flag and the clock messages are what the operator "
          "broadcasts, not a measurement against a reference."),
-        ("Our choices", "The colours (green from 80 in 100, amber from 60), the 30 ns line for a steady clock and "
+        ("Our choices", "The score's three measures counted the same, the colours (green from 80 in 100, amber from "
+         "60), the 30 ns line for a steady clock and "
          "the odd-one-out line (3 spreads under the median) are our choices, not a standard."),
         ("New satellites", "A satellite on its way to its slot, or at its slot for under 30 days, is not scored or "
          "counted yet. Its row names it."),
@@ -90,8 +99,9 @@ HOW = [
 ]
 
 # The words on a row that "How to read this page" explains: {words on the row: the heading of the card that explains
-# them}. On the row they are a link to that card.
+# them}. On the row they are a link to that card, landing on the point itself when its term is the same words.
 HOW_LINKS = {
+    "score": "What is measured",
     "healthy and in place": "What is measured",
     "needs a look": "What is measured",
     "set aside": "What is measured",

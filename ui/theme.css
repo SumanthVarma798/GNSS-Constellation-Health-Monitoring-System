@@ -190,27 +190,28 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .stApp:has(.st-key-topbar) :is([data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"], [data-testid="collapsedControl"], [data-testid="stHeader"]) { display: none; }
 .stApp:has(.st-key-topbar) [data-testid="stMainBlockContainer"] { padding-top: 22px; }
 .st-key-topbar { background: var(--platform); border: 1px solid var(--edge); border-radius: 18px; box-shadow: var(--raised); padding: 10px 16px; margin-bottom: 22px; }
-/* The bar's three groups: the product name, the filters (constellations, Compare, time range) and the data's state
-   (clock, next update, data chip, refresh, gear). Two arrangements: from 640px the name and the data's state on one
-   row, the filters as their own strip under them; under 640px the name with refresh and the gear, then the clock and
-   the data chip, then the filters with the constellations as a menu. */
-.st-key-topbar [data-testid="stHorizontalBlock"] { flex-wrap: wrap; gap: 10px 16px; align-items: center; }
-.st-key-topbar [data-testid="stColumn"] { flex: 0 1 auto !important; width: auto !important; min-width: 0; }
-.st-key-topbar [data-testid="stColumn"]:first-child { order: 1; }
-.st-key-topbar [data-testid="stColumn"]:last-child { order: 2; margin-left: auto; }
-.st-key-topbar [data-testid="stColumn"]:nth-child(2) { order: 3; flex-basis: 100% !important; }
-.st-key-topbar [data-testid="stColumn"]:nth-child(2) { display: none; }   /* empty: what filters a page sits in the navigation under the bar */
-@media (max-width: 639.98px) {   /* the data group opens up so its buttons can sit by the name and the rest below */
-  .st-key-topbar :is([data-testid="stColumn"], [data-testid="stVerticalBlockBorderWrapper"], [data-testid="stVerticalBlock"]):has(.st-key-refresh),
-  .st-key-refresh { display: contents; }
-  .st-key-topbar [data-testid="stColumn"]:first-child { flex: 1 1 auto !important; }
-  .st-key-refresh_button { order: 2; }
-  .st-key-refresh [data-testid="stPopover"] { order: 3; }
-  .st-key-refresh > div:first-child { order: 4; }
-  .st-key-refresh > div:nth-child(2) { order: 5; }
-  .st-key-topbar [data-testid="stColumn"]:nth-child(2) { order: 6; }
-  .st-key-topbar [data-testid="stHorizontalBlock"] { column-gap: 10px; }   /* the clock and the data chip share a row */
-  .st-key-topbar .st-key-clock, .st-key-topbar .st-key-clock [data-testid="stHtml"] { align-items: flex-start; }
+/* The bar (ui/shell.py top_bar): three groups on a grid, so nothing moves when a piece arrives late or its words
+   change length. The name and the buttons (refresh, the gear, the key) always share the first row, the buttons keeping
+   the bell's room beside them; the data's state (the UTC clock and the wait, the data chip) sits between them from
+   1280px, and on a row of its own under them, clock left and chip right, below that. The grid's items are whatever
+   wraps each group, found by what they hold. */
+.st-key-bar_grid { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand buttons" "state state";
+  align-items: center; gap: 10px 16px; }
+.st-key-bar_grid > * { width: auto !important; min-width: 0; }
+.st-key-bar_grid > :has(.brand) { grid-area: brand; }
+.st-key-bar_grid > :is(.st-key-bar_state, :has(.st-key-bar_state)) { grid-area: state; }
+.st-key-bar_grid > :is(.st-key-bar_buttons, :has(.st-key-bar_buttons)) { grid-area: buttons; margin-right: calc(var(--bell) + 16px); }
+.st-key-bar_state { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; }
+.st-key-bar_buttons { flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 10px; min-height: var(--bell); }
+:is(.st-key-bar_state, .st-key-bar_buttons) > * { width: auto !important; flex: none; min-width: 0; }
+.st-key-bar_state > :last-child { flex: 0 1 auto; }   /* the data chip: its words wrap, the clock keeps its size */
+.st-key-bar_state .st-key-clock, .st-key-bar_state .st-key-clock [data-testid="stHtml"] { align-items: flex-start; }
+@media (min-width: 1280px) {
+  .st-key-bar_grid { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "brand state buttons"; }
+  .st-key-bar_state { justify-content: flex-end; flex-wrap: nowrap; }
+  .st-key-bar_state .st-key-clock, .st-key-bar_state .st-key-clock [data-testid="stHtml"] { align-items: flex-end; }
+}
+@media (max-width: 639.98px) {
   .st-key-range button span:has(> [data-testid="stIconMaterial"]) { display: none; }   /* room for the menu, Compare and the range in one row */
 }
 .brand { display: block; font-size: var(--fs-section); font-weight: var(--fw-section); line-height: 1.2; letter-spacing: -.01em; color: var(--fc-section); white-space: nowrap; }
@@ -233,8 +234,8 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 [data-testid="stPopover"] button:hover { color: var(--accent); border-color: var(--accent); }
 [data-testid="stPopover"] button[aria-expanded="true"] { box-shadow: var(--pressed); background: var(--well); color: var(--accent); }
 [data-testid="stPopover"] button :is(svg, span, p, [data-testid="stMarkdownContainer"]) { color: inherit; }
-.st-key-refresh [data-testid="stPopover"] button { width: 36px; height: 36px; padding: 0; border-radius: 50%; }
-.st-key-refresh [data-testid="stPopover"] button > :not(:first-child) { display: none; }   /* only the gear: no words, no arrow (its margins pushed the gear sideways) */
+.st-key-bar_buttons [data-testid="stPopover"] button { width: 36px; height: 36px; padding: 0; border-radius: 50%; }
+.st-key-bar_buttons [data-testid="stPopover"] button > :not(:first-child) { display: none; }   /* only the gear: no words, no arrow (its margins pushed the gear sideways) */
 [data-testid="stPopoverBody"] { background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); color: var(--ink); }
 [data-testid="stNumberInput"] [data-baseweb="input"] { background: var(--well); border: 1px solid var(--edge); border-radius: 14px; box-shadow: var(--pressed); }
 [data-testid="stNumberInput"] [data-baseweb="base-input"] { background: transparent; border: 0; box-shadow: none; }
@@ -258,11 +259,8 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 /* the data chip and the round refresh button; a thin ring round the button empties toward the next automatic refresh */
 /* the syntax is the percentage type, escaped: st.html drops a style block with a raw angle bracket in it */
 @property --left { syntax: "\3c percentage\3e"; inherits: false; initial-value: 0%; }
-.st-key-refresh { flex-direction: row; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: nowrap; }
-.st-key-refresh > div { width: auto !important; flex: 0 1 auto; min-width: 0; }
-.st-key-refresh > :is([data-testid="stPopover"], .st-key-refresh_button) { flex: none; }   /* the round buttons keep their size; the words wrap */
-.st-key-refresh .chip + .chip { margin-left: 6px; }
-.st-key-refresh [data-testid="stHtml"] { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; row-gap: 2px; }
+.st-key-bar_state .chip + .chip { margin-left: 6px; }
+.st-key-bar_state > :last-child [data-testid="stHtml"] { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; row-gap: 2px; }
 /* the UTC clock over the wait to the next automatic refresh */
 .st-key-clock { gap: 0; align-items: flex-end; }   /* the clock's own frame (ui/components/clock.py), then the wait */
 .st-key-clock > [data-testid="stElementContainer"] { width: auto !important; }
@@ -428,7 +426,7 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
   [data-testid="stMain"] :is([data-testid="stButton"], [data-testid="stDownloadButton"]) button,
   .st-key-compare_toggle button, .st-key-picker [data-testid="stButton"] button { min-height: 40px; }
   [data-testid="stPopover"] button { min-height: 40px; }
-  .st-key-refresh [data-testid="stPopover"] button, .st-key-refresh_button button { width: 40px; height: 40px; }
+  .st-key-bar_buttons [data-testid="stPopover"] button, .st-key-refresh_button button { width: 40px; height: 40px; }
   [data-testid="stNumberInput"] [data-baseweb="input"] { min-height: 40px; }
   [data-testid="stNumberInput"] button { min-width: 40px; min-height: 40px; }
   .tt-trigger.pill { padding-block: 10px; }
@@ -439,7 +437,7 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
   [data-testid="stButtonGroup"] button, [data-testid="stButtonGroup"] button[data-testid^="stBaseButton-segmented"],
   [data-testid="stMain"] :is([data-testid="stButton"], [data-testid="stDownloadButton"]) button,
   .st-key-compare_toggle button, [data-testid="stPopover"] button { min-height: 40px; }
-  .st-key-refresh [data-testid="stPopover"] button, .st-key-refresh_button button { width: 40px; height: 40px; }
+  .st-key-bar_buttons [data-testid="stPopover"] button, .st-key-refresh_button button { width: 40px; height: 40px; }
   [data-testid="stNumberInput"] [data-baseweb="input"] { min-height: 40px; }
   [data-testid="stNumberInput"] button { min-width: 40px; min-height: 40px; }
   .th-more summary { min-height: 40px; }
@@ -538,14 +536,6 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
   position: sticky; top: 22px; }
 .st-key-notices { position: absolute; top: calc(29px - var(--bell) / 2); right: 17px; width: auto !important; gap: 0; }
 .st-key-notices > div { width: auto !important; }
-/* From 1280px the data's state shares the first row with the name and never wraps away from the bell's room: its
-   words wrap inside it instead. Narrower, it takes a row of its own, flush right, and the bell sits beside the name. */
-.st-key-topbar [data-testid="stColumn"]:last-child { margin-right: calc(var(--bell) + 16px); flex: 1 1 0 !important; }
-@media (min-width: 640px) and (max-width: 1279.98px) {
-  .st-key-topbar [data-testid="stColumn"]:last-child { margin-right: 0; flex: 1 0 100% !important; }
-  .st-key-topbar [data-testid="stColumn"]:first-child {   /* the row the bell is level with */
-    display: flex; flex-direction: column; justify-content: center; min-height: 36px; }
-}
 /* a rounded square, not a circle: the same size as refresh, the gear and the key, but an inbox, not an action */
 .st-key-notices [data-testid="stPopover"] button { position: relative; width: var(--bell); height: var(--bell); padding: 0; border-radius: 30%; justify-content: center; }
 .st-key-notices [data-testid="stPopover"] button > :not(:first-child) { display: none; }   /* no arrow */
@@ -580,14 +570,12 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
   content: ""; width: 16px; height: 16px; background: currentColor;
   -webkit-mask: var(--ic-check) center / contain no-repeat; mask: var(--ic-check) center / contain no-repeat;
 }
-@media (max-width: 639.98px) {   /* phones: smaller page (16px) and bar (11px) paddings, controls 40px for a finger.
-  The first row is the name, refresh and the bell's room, then a break (an empty line, its -10px undoing the row gap),
-  so the gear and the key always start the next row and never slide under the bell. */
+@media (max-width: 639.98px) {   /* phones: smaller page (16px) and bar (11px) paddings, controls 40px for a finger */
   :root { --bell: 40px; }
   [data-testid="stMainBlockContainer"] > div > [data-testid="stVerticalBlock"] > :has(.st-key-notices) { top: 16px; }
   .st-key-notices { top: calc(31px - var(--bell) / 2); right: 13px; }
-  .st-key-refresh_button { margin-right: calc(var(--bell) + 15px); }
-  .st-key-topbar [data-testid="stHorizontalBlock"]::before { content: ""; order: 3; flex-basis: 100%; margin-top: -10px; }
+  .st-key-bar_grid > :is(.st-key-bar_buttons, :has(.st-key-bar_buttons)) { margin-right: calc(var(--bell) + 12px); }
+  .brand { white-space: normal; }   /* a narrow phone: the name wraps before it pushes the buttons under the bell */
   [class*="st-key-ntread_"] button { width: 40px; height: 40px; }
 }
 
@@ -616,6 +604,11 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
 .dots i.ok { background: var(--ok); } .dots i.warn { background: var(--warn); border-radius: 2px; transform: rotate(45deg) scale(.82); } .dots i.bad { background: var(--bad); border-radius: 2px; } .dots i.accent { background: transparent; border: 2px solid var(--accent); }
 .sys-m { flex: 1 0 130px; max-width: 180px; display: flex; flex-direction: column; gap: 4px; }
 .sys-m .s { font-size: var(--fs-section); font-weight: var(--fw-num); line-height: 1.1; }
+.sys-m .s small { font-size: var(--fs-small); color: var(--muted); font-weight: 400; }   /* the score's "/ 100" */
+@media (max-width: 639.98px) {   /* a phone: the score comes right after the name, so it is still read at a glance */
+  .sys > .sys-id { order: 1; } .sys > .sys-m { order: 2; } .sys > .sys-mid { order: 3; } .sys > .ms { order: 4; }
+  .sys > .sys-go { order: 5; }
+}
 .sys-m .s.ok { color: var(--ok); } .sys-m .s.warn { color: var(--warn); } .sys-m .s.bad { color: var(--bad); } .sys-m .s.idle { color: var(--idle); }
 .hbar { display: block; height: 6px; border-radius: 3px; background: var(--well); box-shadow: var(--pressed); overflow: hidden; }
 .hbar i { display: block; height: 100%; border-radius: 3px; background: var(--idle); }
@@ -638,7 +631,13 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
 .how-link:hover, .how-link:focus-visible { color: var(--accent); }
 .how { scroll-margin-top: 96px; transition: box-shadow 300ms ease; }
 .how.lit, .how:target { box-shadow: var(--pressed), 0 0 0 2px var(--accent); }   /* the card a link has just brought the reader to */
-.how p { margin: 0 0 10px; color: var(--muted); } .how p:last-child { margin-bottom: 0; } .how p b { color: var(--ink); font-weight: 600; }
+.how p { margin: 0 0 14px; color: var(--muted); } .how p:last-child { margin-bottom: 0; } .how p b { display: block; color: var(--ink); font-weight: 600; margin-bottom: 2px; }
+/* a long card reads in parts: its groups side by side, each under a small heading */
+.how.wide { grid-column: 1 / -1; }
+.how-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 6px 28px; }
+.how-g h4 { margin: 0 0 10px; font-size: var(--fs-small); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); }
+.how-p { scroll-margin-top: 96px; border-radius: 8px; transition: background-color 300ms ease; }
+.how-p.lit, .how-p:target { background: var(--well); box-shadow: 0 0 0 6px var(--well); }   /* the point a link has just brought the reader to */
 [class*="st-key-home_row_"] { position: relative; gap: 0; }
 .st-key-home_systems, .st-key-home_findings { gap: 12px; margin-bottom: 14px; }
 [class*="st-key-home_row_"] :is([data-testid="stElementContainer"], [data-testid="stButton"]) { position: static; }

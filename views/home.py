@@ -4,6 +4,7 @@ The page reads in the order the whole dashboard follows: all the satellites (the
 what stands out (Worth a look), then what is measured, how, what is left out and what comes next (the section).
 A row opens that system's Overview, where the same count is the headline.
 """
+import re
 from html import escape
 
 import streamlit as st
@@ -39,8 +40,12 @@ def _mix(system):
 
 
 def _anchor(heading):
-    """The id of one "How to read this page" card, from its heading: 'What is measured' -> 'how-what-is-measured'."""
-    return "how-" + heading.lower().replace(" ", "-")
+    """The id of one "How to read this page" card or point, from its heading: 'What is measured' ->
+    'how-what-is-measured'."""
+    return "how-" + re.sub(r"[^a-z0-9]+", "-", heading.lower()).strip("-")
+
+
+TERMS = {point[0].lower() for _, _, points in HOW for point in points if not isinstance(point, str)}
 
 
 def _explained(words):
@@ -49,19 +54,23 @@ def _explained(words):
     scrolls to the card (_how_links_script); without scripts it still jumps to the card."""
     if words not in HOW_LINKS:
         return escape(words)
-    return (f'<a class="how-link" href="#{_anchor(HOW_LINKS[words])}" '
+    target = _anchor(words if words.lower() in TERMS else HOW_LINKS[words])   # the point itself, else its card
+    return (f'<a class="how-link" href="#{target}" '
             f'title="What this means: opens How to read this page">{escape(words)}</a>')
 
 
-def _measure(count, total, words):
-    """One count out of a total with a bar under it, coloured by the share's band."""
-    if count is None:
-        return f'<div class="sys-m"><span class="s idle">not read</span><span class="small">{_explained(words)}</span></div>'
-    share = 100 * count / total if total else 0
-    band = surfaces.band(share)
-    return (f'<div class="sys-m"><span class="s num {band}">{count} of {total}</span>'
-            f'<i class="hbar"><i class="{band}" style="width:{share:.0f}%"></i></i>'
-            f'<span class="small">{_explained(words)}</span></div>')
+def _score(system):
+    """The constellation's score out of 100 with a bar in its band, the measures it was made from when not all three,
+    and under it how many satellites are healthy and in place. Its page shows the sum (ui/three_measures.py)."""
+    in_place = (f'<span class="small"><span class="num">{system["healthy"]} of {system["total"]}</span> '
+                f'{_explained("healthy and in place")}</span>')
+    if system["score"] is None:
+        return f'<div class="sys-m"><span class="s idle">no score</span>{in_place}</div>'
+    band, used = surfaces.band(system["score"]), len(system["score_parts"])
+    return (f'<div class="sys-m"><span class="s num {band}">{system["score"]}<small> / 100</small></span>'
+            f'<i class="hbar"><i class="{band}" style="width:{system["score"]}%"></i></i>'
+            f'<span class="small">{_explained("score")}{"" if used == 3 else f", from {used} of 3 measures"}</span>'
+            f'{in_place}</div>')
 
 
 def _measures(system):
@@ -85,24 +94,23 @@ def _measure_line(words, count, of):
 
 
 def _row(system, unread=None):
-    """One system: who runs it, how its satellites split, the count in place, the three measures and its own flag,
-    and what the page leaves out for it.
+    """One system: who runs it, how its satellites split, its score and the count in place, the three measures and
+    its own flag, and what the page leaves out for it.
     For a system of several parts, each part's count is a line under the split, and a part in `unread`
     ({part's name: the error}) says why it is missing."""
     name = system["name"]
     who, where = SYSTEMS.get(name, ("", ""))
-    share = 100 * system["healthy"] / system["total"] if system["total"] else 0
     notes = [f"{escape(new)} is new ({escape(stage)}) and is {_explained('not scored yet')}"   # each note is markup
              for new, stage in system["settling"].items()]
     notes += [escape(CAVEATS[name])] if name in CAVEATS else []
     notes = ([escape(" · ".join(f"{label} {count} of {of}" for label, count, of in system["parts"]))] * bool(system["parts"])
              + [escape(f"{label} could not be read just now: {_why(error)}") for label, error in (unread or {}).items()]
              + notes)
-    return (f'<div class="sys {surfaces.band(share)}">'
+    return (f'<div class="sys {surfaces.band(system["score"]) if system["score"] is not None else "idle"}">'
             f'<div class="sys-id"><b>{marks.mark(name)}{escape(name)}</b><span class="small">{escape(" · ".join(filter(None, [who, where])))}</span></div>'
             f'<div class="sys-mid">{_mix(system)}'
             + "".join(f'<div class="small">{note}</div>' for note in notes) + '</div>'
-            f'{_measure(system["healthy"], system["total"], "healthy and in place")}'
+            f'{_score(system)}'
             f'{_measures(system)}'
             '<span class="sys-go" aria-hidden="true">&rsaquo;</span></div>')
 
@@ -167,11 +175,23 @@ def _open(key, part, name=""):
 
 
 def _how():
-    """Four cards, in the order every page follows: an icon and a heading, then each point led by its term."""
-    return '<div class="how-grid">' + "".join(
-        f'<div class="how well" id="{_anchor(title)}"><div class="how-h">{icons.mask(icon)}<span>{escape(title)}</span></div>'
-        + "".join(f"<p><b>{escape(term)}.</b> {escape(words)}</p>" for term, words in points) + "</div>"
-        for icon, title, points in HOW) + "</div>"
+    """Four cards, in the order every page follows: an icon and a heading, then each point, its term on a line of its
+    own. A card with groups (HOW's plain strings) takes the full width and sets them side by side."""
+    cards = []
+    for icon, title, points in HOW:
+        groups = []
+        for point in points:
+            if isinstance(point, str) or not groups:
+                groups.append((point if isinstance(point, str) else "", []))
+            if not isinstance(point, str):
+                groups[-1][1].append(point)
+        body = "".join('<div class="how-g">' + (f"<h4>{escape(name)}</h4>" if name else "")
+                       + "".join(f'<p class="how-p" id="{_anchor(term)}"><b>{escape(term)}</b> {escape(words)}</p>'
+                                 for term, words in group) + "</div>" for name, group in groups)
+        cards.append(f'<div class="how well{" wide" if len(groups) > 1 else ""}" id="{_anchor(title)}">'
+                     f'<div class="how-h">{icons.mask(icon)}<span>{escape(title)}</span></div>'
+                     f'<div class="how-groups">{body}</div></div>')
+    return '<div class="how-grid">' + "".join(cards) + "</div>"
 
 
 # Run once in the page itself: a click on a row's explained words opens "How to read this page" by its own header
