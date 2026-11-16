@@ -34,8 +34,10 @@ import requests
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import tomllib
+
 from config.config import BEIDOU3_SATS, MEO_SATS, NAVIK_SATS, QZSS_SATS
-from api.celestrak_api import fetch_tles_from_celestrak
+from data import celestrak, spacetrack
 from data.tle_cache import (
     bundle_key,
     load_bundled_gp_history,
@@ -43,15 +45,11 @@ from data.tle_cache import (
     save_tles_to_bundle,
 )
 
-# The archive job's newest copy of CelesTrak's GNSS group (as data/celestrak.py COPY_URL; not imported, as that
-# module needs sgp4). Read from GitHub, so it costs CelesTrak nothing.
-GNSS_GROUP_COPY_URL = ("https://raw.githubusercontent.com/SumanthVarma798/"
-                       "GNSS-Constellation-Health-Monitoring-System/orbit-data/latest_gnss.json")
-
-# Space-Track login endpoint for one session per run.
-SPACETRACK_LOGIN_URL = "https://www.space-track.org/ajaxauth/login"
-# Space-Track logout endpoint to end the session after the run.
-SPACETRACK_LOGOUT_URL = "https://www.space-track.org/ajaxauth/logout"
+# The orbit records come from the archive job's newest copy of CelesTrak's GNSS group, read from GitHub, so this
+# job sends CelesTrak nothing: the archive job is the one fetcher that keeps to CelesTrak's 2-hour gap.
+GNSS_GROUP_COPY_URL = celestrak.COPY_URL
+SPACETRACK_LOGIN_URL = spacetrack.LOGIN
+SPACETRACK_LOGOUT_URL = spacetrack.LOGOUT
 # Pause between Space-Track queries to stay below the service limits.
 SPACETRACK_QUERY_DELAY_SECONDS = 3
 
@@ -75,35 +73,9 @@ def load_credentials_from_secrets():
         return None, None
     
     try:
-        # Try using tomllib (Python 3.11+)
-        try:
-            import tomllib
-            with open(secrets_path, 'rb') as f:
-                secrets = tomllib.load(f)
-        except ImportError:
-            # Fallback to toml package
-            try:
-                import toml
-                secrets = toml.load(secrets_path)
-            except ImportError:
-                # Simple manual parsing for nested TOML
-                secrets = {}
-                current_section = None
-                with open(secrets_path, 'r', encoding='utf-8') as f:
-                    for line in f:
-                        line = line.strip()
-                        if line.startswith('[') and line.endswith(']'):
-                            current_section = line[1:-1]
-                            secrets[current_section] = {}
-                        elif '=' in line and not line.startswith('#'):
-                            key, value = line.split('=', 1)
-                            key = key.strip()
-                            value = value.strip().strip('"').strip("'")
-                            if current_section:
-                                secrets[current_section][key] = value
-                            else:
-                                secrets[key] = value
-        
+        with open(secrets_path, 'rb') as f:
+            secrets = tomllib.load(f)
+
         # Check for nested [spacetrack] section first
         if 'spacetrack' in secrets:
             username = secrets['spacetrack'].get('username')
@@ -204,8 +176,8 @@ def is_busy_error(error: Exception) -> bool:
 
 def update_constellation_tles(constellation_name: str, sat_dict: dict, verbose: bool = True):
     """
-    Update bundled TLE data for a constellation using CelesTrak.
-    
+    Update bundled TLE data for a constellation from the archive job's copy of CelesTrak's GNSS group.
+
     Args:
         constellation_name: 'navic', 'qzss', or 'beidou3'
         sat_dict: Dictionary of satellite_name -> norad_id
@@ -215,14 +187,21 @@ def update_constellation_tles(constellation_name: str, sat_dict: dict, verbose: 
         print(f"\n{'='*60}")
         print(f"Updating TLEs for {constellation_name.upper()}")
         print(f"{'='*60}")
-    
+
     norad_ids = [nid for nid in sat_dict.values() if nid is not None]
-    
+
     if verbose:
-        print(f"Fetching TLEs for {len(norad_ids)} satellites from CelesTrak...")
-    
-    tle_data = fetch_tles_from_celestrak(norad_ids, timeout=30)
-    
+        print(f"Reading TLEs for {len(norad_ids)} satellites from the archive job's copy of CelesTrak...")
+
+    try:
+        found = celestrak.fetch_copy(norad_ids)[0]
+    except (requests.RequestException, ValueError, KeyError, TypeError, AttributeError) as problem:
+        print(f"⚠️  No copy of CelesTrak's GNSS group ({problem})")
+        found = {}
+    names = {int(norad): name for name, norad in sat_dict.items() if norad is not None}
+    tle_data = "\n".join(f"{row.get('OBJECT_NAME') or names[norad]}\n{row['TLE_LINE1']}\n{row['TLE_LINE2']}"
+                         for norad, row in sorted(found.items()))
+
     if not tle_data:
         print(f"⚠️  Failed to fetch TLEs for {constellation_name}")
         return False

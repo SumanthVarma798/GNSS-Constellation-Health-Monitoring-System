@@ -398,6 +398,30 @@ def test_all_without_the_group_copy_still_updates_the_regional_systems(monkeypat
     assert "MEO satellites outside it not fetched" in capsys.readouterr().out
 
 
+def test_orbit_records_come_from_the_archive_copy_and_never_from_celestrak(monkeypatch):
+    line1 = "1 41241U 16015A   26319.50000000  .00000000  00000-0  00000-0 0  9990"
+    line2 = "2 41241  29.0000 100.0000 0010000  90.0000 270.0000  1.00270000 30000"
+    asked = []
+    monkeypatch.setattr(updater.celestrak, "fetch_copy", lambda norads: asked.append(sorted(norads)) or (
+        {41241: {"OBJECT_NAME": "IRNSS-1F", "TLE_LINE1": line1, "TLE_LINE2": line2}}, {41241}, FROZEN_NOW))
+    monkeypatch.setattr(updater.requests, "get", lambda *args, **kwargs: pytest.fail("no direct request"))
+    saved = {}
+    monkeypatch.setattr(updater, "save_tles_to_bundle",
+                        lambda name, text, sats: saved.update(name=name, text=text, sats=sats) or True)
+
+    assert updater.update_constellation_tles("navic", {"IRNSS-1F": 41241, "IRNSS-1X": 99999}, verbose=False)
+    assert asked == [[41241, 99999]]
+    assert saved["text"] == f"IRNSS-1F\n{line1}\n{line2}"   # only what the copy holds, in TLE's three lines
+
+
+def test_no_archive_copy_saves_nothing(monkeypatch):
+    monkeypatch.setattr(updater.celestrak, "fetch_copy",
+                        lambda norads: (_ for _ in ()).throw(requests.ConnectionError("down")))
+    monkeypatch.setattr(updater, "save_tles_to_bundle", lambda *args: pytest.fail("nothing to save"))
+
+    assert updater.update_constellation_tles("navic", {"IRNSS-1F": 41241}, verbose=False) is False
+
+
 def test_every_reader_and_writer_names_a_system_s_bundle_the_same_way():
     from data.tle_cache import bundle_key
 
