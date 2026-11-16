@@ -5,7 +5,7 @@ The picture and its words are ui/components/system_design.{html,py}, a summary o
 import streamlit as st
 from streamlit.components.v1 import html
 
-from console import common
+from console import common, pages
 from evidence.console_settings import JOBS, TESTS_WORKFLOW
 from evidence.decision_settings import REPOSITORY
 from evidence.source_overview import overview
@@ -17,10 +17,11 @@ from ui.components.system_design import facts_strip_html, system_design_html
 HEIGHT = 960
 HOST_HEIGHT = 620
 FACTS_HEIGHT = 88
+PAGE = pages.DESIGN
 
-body, actions = common.layout("design", "System design", "How the system works, from the sources it reads to the change a "
-                                                         "person approves. Click any part for what it does and the details behind it.")
-tokens = console.token_css(st.session_state.get("console_scheme", "auto"))
+body, actions = common.layout(PAGE.path, "How the system works, from the sources it reads to the change a person approves. "
+                                         "Click any part for what it does and the details behind it.")
+tokens = console.token_css(st.session_state.get(common.CONSOLE_SCHEME_KEY, common.CONSOLE_SCHEME_DEFAULT))
 font = console.FONT
 
 
@@ -38,7 +39,7 @@ with body:
 
 @st.fragment
 def live_figures_from_github():
-    seen = common.read()
+    seen = common.read_page(PAGE.path)
     html(facts_strip_html(tokens, font, live_facts(seen)), height=FACTS_HEIGHT)   # fits itself; on a phone the figures wrap into rows
     st.caption(f"Live figures, read from GitHub at {seen['read_at']:%H:%M} UTC.")
 
@@ -51,8 +52,7 @@ with body:   # both pictures first: neither needs GitHub, so neither waits for i
 
 
 with body:   # the assistant has a page of its own
-    st.page_link("console/ask.py", label="Questions about the system: ask them on the Ask page",
-                 icon=":material/forum:")
+    pages.page_link(pages.ASK.path, label="Questions about the system: ask them on the Ask page")
 
 with actions:
     common.refresh_action()

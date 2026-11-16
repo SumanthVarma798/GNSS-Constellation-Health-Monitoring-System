@@ -1,6 +1,6 @@
 """The administration console (admin.py, console/*): who gets in, what each page shows, and deciding on a change.
 
-GitHub is never called: console.common.github is replaced by a stand-in that answers from the figures below.
+GitHub is never called: console.common.read_page/read_status are replaced by stand-ins that answer from the figures below.
 """
 from pathlib import Path
 from types import SimpleNamespace
@@ -10,13 +10,13 @@ import requests
 import streamlit
 from streamlit.testing.v1 import AppTest
 
-from console import common
+from console import common, pages
 from evidence import alerts, decisions, jobs, pipeline as live_pipeline
 from evidence.decision_settings import AFTER_CHANGES, APPROVE, KINDS, LABEL_PREFIX, REJECT
 from test_dashboard_shell import segmented_controls_rerun  # noqa: F401  (AppTest 1.45's segmented controls)
 from test_decisions import FINDINGS_STAND_IN, NOW, finding_comment, findings_body, pr
 from test_jobs import LOG, RUNS, WORKFLOWS, run as workflow_run
-from ui import admin
+from ui import admin, console as console_ui
 
 ROOT = Path(__file__).resolve().parent.parent
 SECRETS = {"auth": {field: "set" for field in common.SIGN_IN_FIELDS},
@@ -24,13 +24,13 @@ SECRETS = {"auth": {field: "set" for field in common.SIGN_IN_FIELDS},
 
 
 class GitHub:
-    """Stands in for console.common.github: the figures above, and any pull requests a test gives it."""
+    """Stands in for console.common page readers: the figures above, and any pull requests a test gives it."""
 
     def __init__(self, prs=(), fail=None, issues=(), comments=None, reviews=None):
         self.prs, self.fail, self.asked, self.issues = list(prs), fail, 0, list(issues)
         self.comments, self.reviews = comments or {}, reviews or {}
 
-    def __call__(self, token):
+    def _seen(self):
         self.asked += 1
         if self.fail:
             raise self.fail
@@ -38,6 +38,31 @@ class GitHub:
                 "comments": self.comments, "reviews": self.reviews,
                 "issues": self.issues, "archive_commits": {}, "archive_versions": [],
                 "problems": [], "read_at": NOW}
+
+    def read_page(self, _path):
+        return self._read()
+
+    def read_status(self):
+        seen = self._read()
+        if seen is None:
+            return None
+        rows = jobs.job_rows(seen["workflows"], seen["runs"], seen["log"], common.workflow_texts(), NOW)
+        seen["status"] = {
+            "failing": sum(r["result"][0] == "bad" for r in rows),
+            "off": sum(r["state"] == "Turned off" for r in rows),
+            "waiting": len(decisions.pending(seen["prs"], NOW)),
+        }
+        return seen
+
+    def _read(self):
+        try:
+            return self._seen()
+        except requests.RequestException as error:
+            streamlit.html(console_ui.notice(common.github_trouble(error, reading=True), "bad"))
+        except (KeyError, TypeError, ValueError):
+            streamlit.html(console_ui.notice("GitHub's answer was not in the shape the console expects, so it cannot be shown now. "
+                                             "Try Refresh; if it stays, the console needs updating.", "bad"))
+        streamlit.stop()
 
     def clear(self):
         pass
@@ -54,7 +79,10 @@ def signed_in(monkeypatch, email, name="A Member"):
 
 
 def run(monkeypatch, github=None, secrets=SECRETS, page=None, then=None):
-    monkeypatch.setattr(common, "github", github or GitHub())
+    fake = github or GitHub()
+    monkeypatch.setattr(common, "read_page", fake.read_page)
+    monkeypatch.setattr(common, "read_status", fake.read_status)
+    monkeypatch.setattr(common, "clear_reading", fake.clear)
     at = AppTest.from_file(str(ROOT / "admin.py"), default_timeout=60)
     at.secrets = secrets
     at.run()
@@ -150,6 +178,15 @@ def test_the_admin_console_lists_the_alerts_page(monkeypatch):
     assert "Alerts" in page and "Healthchecks.io checks" in page
 
 
+def test_every_console_page_file_is_in_the_pages_list_and_every_listed_path_exists():
+    listed = {entry.path for entry in pages.PAGES}
+    files = {f"console/{path.name}" for path in (ROOT / "console").glob("*.py")
+             if path.name not in {"__init__.py", "common.py", "pages.py"}}
+
+    assert listed == files
+    assert all((ROOT / path).exists() for path in listed)
+
+
 def test_alerts_page_handles_a_malformed_healthchecks_answer(monkeypatch):
     signed_in(monkeypatch, "member@example.com")
     monkeypatch.setattr(alerts, "read_checks", lambda key: {"oops": 1})
@@ -215,7 +252,7 @@ def test_light_and_dark_can_be_chosen_and_auto_follows_the_computer(monkeypatch,
     signed_in(monkeypatch, "member@example.com")
 
     def pick(at):
-        at.session_state["console_scheme"] = scheme
+        at.session_state[common.CONSOLE_SCHEME_KEY] = scheme
 
     style = text(run(monkeypatch, then=pick))
 
@@ -498,11 +535,7 @@ def test_a_workflow_missing_on_github_is_named_and_the_rest_still_shows(monkeypa
         return {"workflow_runs": [], "workflows": []}
 
     monkeypatch.setattr(common.github_api, "ask", ask)
-    monkeypatch.setattr(common.github_api, "file_text", lambda *args: "job,started,ended,result,changed\n")
-    monkeypatch.setattr(decisions, "fetch_open", lambda token: [])
-    monkeypatch.setattr(decisions, "fetch_recent_closed", lambda token: [])
-
-    seen = common.github.__wrapped__("t") if hasattr(common.github, "__wrapped__") else common.github("t")
+    seen = common._runs_reading.__wrapped__("t") if hasattr(common._runs_reading, "__wrapped__") else common._runs_reading("t")
 
     assert any("update-tle-data.yml" in problem for problem in seen["problems"])
 
@@ -515,12 +548,8 @@ def test_github_reads_comments_only_for_open_decision_pull_requests_with_finding
     monkeypatch.setattr(decisions, "fetch_comments", lambda token, number: called.append(number) or [{"id": number}])
     reviewed = []
     monkeypatch.setattr(decisions, "review_reading", lambda token, pr: reviewed.append(pr["number"]) or {"files": []})
-    monkeypatch.setattr(common.github_api, "ask", lambda *args, **kwargs: {"workflows": [], "workflow_runs": []})
-    monkeypatch.setattr(common.github_api, "file_text", lambda *args: "job,started,ended,result,changed\n")
-    monkeypatch.setattr(common.work, "fetch_open_issues", lambda token: [])
-    monkeypatch.setattr(common, "_archive_commits", lambda token: {})
-
-    seen = common.github.__wrapped__("t") if hasattr(common.github, "__wrapped__") else common.github("t")
+    seen = (common._approvals_reading.__wrapped__("t") if hasattr(common._approvals_reading, "__wrapped__")
+            else common._approvals_reading("t"))
 
     assert called == [8]
     assert seen["comments"] == {8: [{"id": 8}]}
@@ -531,12 +560,8 @@ def test_a_pull_request_whose_changes_github_will_not_give_is_named_and_the_rest
     monkeypatch.setattr(decisions, "fetch_open", lambda token: [REGISTRY_PR])
     monkeypatch.setattr(decisions, "fetch_recent_closed", lambda token: [])
     monkeypatch.setattr(decisions, "review_reading", lambda token, pr: (_ for _ in ()).throw(requests.ConnectionError()))
-    monkeypatch.setattr(common.github_api, "ask", lambda *args, **kwargs: {"workflows": [], "workflow_runs": []})
-    monkeypatch.setattr(common.github_api, "file_text", lambda *args: "job,started,ended,result,changed\n")
-    monkeypatch.setattr(common.work, "fetch_open_issues", lambda token: [])
-    monkeypatch.setattr(common, "_archive_commits", lambda token: {})
-
-    seen = common.github.__wrapped__("t") if hasattr(common.github, "__wrapped__") else common.github("t")
+    seen = (common._approvals_reading.__wrapped__("t") if hasattr(common._approvals_reading, "__wrapped__")
+            else common._approvals_reading("t"))
 
     assert seen["reviews"] == {} and any("pull request 5" in problem for problem in seen["problems"])
 

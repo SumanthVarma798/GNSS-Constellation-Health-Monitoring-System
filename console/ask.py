@@ -3,23 +3,21 @@ from the project's own material, each fact with its source. Which model answers 
 (evidence/assistant_settings.py)."""
 import streamlit as st
 
-from console import common
+from console import common, pages
 from evidence import assistant
 from evidence.assistant_settings import DEEPSEEK, DEEPSEEK_URL, EXAMPLES, OLLAMA, OLLAMA_URL, SECRETS_SECTION
 from ui.components.system_design import PARTS
 
 CHAT = "ask_chat"   # session_state: the conversation, [{role, content}]
+PAGE = pages.ASK
 
-body, actions = common.layout("ask", "Ask", "Questions about the system, answered in plain words from the project's "
-                                            "own documents.")
+body, actions = common.layout(PAGE.path, "Questions about the system, answered in plain words from the project's "
+                                         "own documents.")
 
 
 def where_the_model_is():
     """(provider, url, key) from the console's [assistant] secrets; without them, the Ollama on this computer."""
-    try:
-        place = st.secrets.get(SECRETS_SECTION, {})
-    except FileNotFoundError:
-        place = {}
+    place = common.secret_section(SECRETS_SECTION)
     provider = str(place.get("provider", OLLAMA)).strip().lower()
     url = place.get("url", DEEPSEEK_URL if provider == DEEPSEEK else OLLAMA_URL)
     return provider, url.rstrip("/"), place.get("key", "")
@@ -55,7 +53,7 @@ def note(provider, url):
 def ask(question, chat, url, key, provider):
     """Show the question and the answer as it is written; keep both in the conversation once it is whole."""
     st.chat_message("user").markdown(question)
-    seen = common.read()
+    seen = common.read_page(PAGE.path)
     text = assistant.material(seen["issues"], PARTS, seen["decision_prs"])
     with st.chat_message("assistant"):
         try:
@@ -99,4 +97,4 @@ with actions:   # after the conversation, so Start over shows as soon as there i
         st.button("Start over", key="ask_start_over", icon=":material/restart_alt:",
                   on_click=lambda: st.session_state.update({CHAT: []}))
     st.html('<p class="c-actions-sub">Go to</p>')
-    st.page_link("console/design.py", label="System design", icon=":material/account_tree:")
+    pages.page_link(pages.DESIGN.path)

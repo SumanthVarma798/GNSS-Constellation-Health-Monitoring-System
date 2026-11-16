@@ -13,6 +13,7 @@ CSS_FILE = Path(__file__).with_name("console.css")
 SCHEMES = {"auto": "Auto", "light": "Light", "dark": "Dark"}
 SCHEME_ICONS = {"auto": ":material/brightness_auto:", "light": ":material/light_mode:", "dark": ":material/dark_mode:"}
 TONES = ("ok", "warn", "bad", "info", "idle")
+PIPELINE_STATE_TONES = {"running now": "info", "done": "ok", "failed": "bad", "waiting": "warn", "off": "idle"}
 
 FONT = '"Segoe UI", Tahoma, "Helvetica Neue", Arial, sans-serif'
 _COMMON = {"font": FONT, "mono": 'Consolas, "SF Mono", Menlo, monospace'}

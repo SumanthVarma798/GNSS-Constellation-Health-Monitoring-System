@@ -3,18 +3,19 @@ from html import escape
 
 import streamlit as st
 
-from console import common
+from console import common, pages
 from evidence import work
 from evidence.decision_settings import REPOSITORY
 from ui import console
 
-seen = common.read()
+PAGE = pages.WORK
+seen = common.read_page(PAGE.path)
 now = common.now()
 pulls = work.pull_rows(seen["prs"], now)
 issues = seen["issues"]
 
-body, actions = common.layout("work", "Issues and pull requests", "The open work in the project's private mirror: "
-                                                                 "what is being built, and what is waiting.")
+body, actions = common.layout(PAGE.path, "The open work in the project's private mirror: what is being built, and what is "
+                                         "waiting.")
 
 
 def labels_html(found):
