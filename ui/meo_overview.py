@@ -45,6 +45,8 @@ def state_of(row):
         return palette.SLOT_UNKNOWN, "own eccentric orbit", None
     if row["plane"] == NO_PLANE:
         return palette.SLOT_UNKNOWN, "no plane in the IGS satellite file", None
+    if row.get("shares_slot"):
+        return palette.SLOT_UNKNOWN, f"shares slot {row['slot']}; the satellite nearer it is measured", None
     # left out of the gaps (analysis/meo_geometry.py): passing through at another height, or alone in its plane
     if "height" in checks and checks["height"][4] < 100:
         return palette.SLOT_UNKNOWN, "away from its working height", None

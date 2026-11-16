@@ -14,9 +14,7 @@ SYSTEMS = {
 }
 
 # What the page does not yet take into account for one system, said in its row: {name: one plain sentence}.
-CAVEATS = {
-    "GPS": "GPS flies more satellites than its 24 listed slots; the extra ones can read as out of step (issue 226).",
-}
+CAVEATS = {}
 
 # "Worth a look": the rules, in the order their findings are listed. {rule: (name, what it compares)}.
 RULES = {
