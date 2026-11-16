@@ -12,11 +12,14 @@ import requests
 import streamlit as st
 
 from data import celestrak
-from ui import data, system_summary
+from ui import data, system_summary, systems
 from ui.home_settings import SNAPSHOT_MAX_AGE, SNAPSHOT_URL
 
 # What Home reads from each part's summary; a published part missing any of them is counted here instead.
 NEEDED = {"name", "sats", "healthy", "total", "settling", "checked", "flagged_healthy", "orbit", "station", "clock"}
+# What each satellite in it must carry (ui/system_summary.py summary's sats).
+SAT_NEEDED = {"name", "group", "score", "state", "ok", "parts", "orbit", "station", "broadcast", "clock", "clock_steady"}
+PARTS = {name for names in systems.SYSTEMS.values() for name in names}
 
 
 def keys(gap):
@@ -54,5 +57,6 @@ def published(window_days, now=None):
         return None, {}
     parts = payload.get("parts") if isinstance(payload.get("parts"), dict) else {}
     kept = {name: part for name, part in parts.items()
-            if isinstance(part, dict) and NEEDED <= part.keys() and isinstance(part["sats"], list)}
+            if name in PARTS and isinstance(part, dict) and NEEDED <= part.keys() and isinstance(part["sats"], list)
+            and all(isinstance(sat, dict) and SAT_NEEDED <= sat.keys() for sat in part["sats"])}
     return (made if kept else None), kept

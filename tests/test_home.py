@@ -348,10 +348,13 @@ def test_a_published_count_that_is_old_for_another_time_range_or_malformed_is_co
     for copy in (published_copy(old), published_copy(fresh, window_days=30), {"made": "yesterday"}, {}):
         monkeypatch.setattr(home_data, "_snapshot", lambda copy=copy: copy)
         assert home_data.published(90) == (None, {})
-    broken = published_copy(fresh, GPS={"healthy": 3})   # a part without what Home reads is left out, the rest kept
+    good = published_copy(fresh)["parts"]["NavIC"]
+    broken = published_copy(fresh, GPS={"healthy": 3}, Galileo={**good, "sats": [None]}, Bogus=good)
     monkeypatch.setattr(home_data, "_snapshot", lambda: broken)
     made, parts = home_data.published(90)
-    assert made and "GPS" not in parts and "NavIC" in parts
+    # a part without what Home reads, with a satellite not in shape, or not a part at all is left out; the rest kept
+    assert made and "NavIC" in parts and not {"GPS", "Galileo", "Bogus"} & set(parts)
+    assert run().exception == []   # and Home counts what was left out itself
 
 
 def test_the_job_writes_every_part_it_can_count_in_the_shape_home_reads(monkeypatch):

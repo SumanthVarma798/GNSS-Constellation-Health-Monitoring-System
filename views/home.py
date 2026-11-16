@@ -203,7 +203,7 @@ def page():
     counting takes a while) shows every name at once and fills in row by row; the count across all of them comes last."""
     window_days = st.session_state.get("window_days", time_range.DEFAULT_DAYS)
     made, ready = home_data.published(window_days)
-    kept = home_data.keys(data.orbit_gap()) if len(ready) < sum(map(len, SYSTEMS_PARTS.values())) else None
+    kept = home_data.keys(data.orbit_gap()) if home_data.PARTS - set(ready) else None
     head = st.empty()
     head.html(_headline())
     parts, failed, wholes = {}, {}, {}
