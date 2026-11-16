@@ -6,8 +6,8 @@ The choices live in st.session_state: `scope` (one constellation: a system, or o
 ({constellation: [satellite, ...]}, set with ui.picker), `window_days` (the time range, ui/time_range.py) and
 `params` (only the detection thresholds moved off their defaults). Pages read them.
 
-The bar: the product name, then the data's state (the UTC clock, when the next update is, the data chip, refresh
-and the gear). Under it, the navigation in two steps (_nav): the pages across every system and the systems, then,
+The bar: the product name and its buttons (refresh, the gear, the key; the bell keeps its room beside them), and the
+data's state (the UTC clock, when the next update is, the data chip). Under it, the navigation in two steps (_nav): the pages across every system and the systems, then,
 once a system is chosen, that system's pages with what filters them. On a phone the systems are a menu.
 """
 from datetime import datetime, timezone
@@ -257,21 +257,23 @@ def _clock():
 
 
 def _refresh(names, window_days, gear_scope):
-    """The UTC clock and the wait to the next automatic refresh, the data chip, the round refresh button with its
-    ring, and the gear (on pages without their own filters, `gear_scope` names whose thresholds it shows)."""
-    with st.container(key="refresh"):
+    """Two groups, each with its own place on the bar's grid (ui/theme.css, "the bar"): the data's state (the UTC
+    clock and the wait to the next automatic refresh, the data chip) and the buttons (the round refresh button with
+    its ring, the gear on a constellation's pages, where `gear_scope` names whose thresholds it shows, and the key)."""
+    with st.container(key="bar_state"):
         clock, chip = st.container(key="clock"), st.empty()
+    with st.container(key="bar_buttons"):
         clicked = st.button("Refresh orbit data", key="refresh_button", icon=":material/refresh:",
                             help="Load the newest orbit data we have fetched")
         if gear_scope:
             with st.popover("", icon=":material/settings:", help="Settings: what counts as a burn, and how strictly satellites are scored"):
                 st.session_state["params"] = _thresholds(gear_scope)
         _own_login()
-        live, now = data.refresh(clicked), datetime.now(timezone.utc)
-        chip.html(_data_chip(names, window_days, st.session_state["params"], live, now) + _ring(live, now))
-        with clock:   # after the refresh, so it reads the try just made
-            clock_frame()
-            _clock()
+    live, now = data.refresh(clicked), datetime.now(timezone.utc)
+    chip.html(_data_chip(names, window_days, st.session_state["params"], live, now) + _ring(live, now))
+    with clock:   # after the refresh, so it reads the try just made
+        clock_frame()
+        _clock()
 
 
 _OWN_NOTE_WORDS = {"busy": "busy, will try again in an hour", "login refused": "login refused"}
@@ -363,11 +365,9 @@ def top_bar(current):
     filtered = on_system and current.title not in SCOPE_ONLY   # the page takes Compare, the range and the thresholds
     comparing = filtered and st.session_state["compare"]
     names = offered_parts() if comparing else [st.session_state["scope"]]
-    with st.container(key="topbar"):
-        brand, _, refresh_box = st.columns(3, vertical_alignment="center")   # the middle one is empty: ui/theme.css
-        brand.html('<span class="brand">GNSS Health Monitor</span>')
-        with refresh_box:
-            _refresh(names, window_days, ("Compare" if comparing else names[0]) if filtered else None)
+    with st.container(key="topbar"), st.container(key="bar_grid"):
+        st.html('<span class="brand">GNSS Health Monitor</span>')
+        _refresh(names, window_days, ("Compare" if comparing else names[0]) if filtered else None)
     _nav(current, names, on_system, filtered, comparing)
     changes.post(CONSTELLATIONS if current.title in OWN_FILTERS else names)   # the pages across all systems show every one
 
