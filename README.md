@@ -133,12 +133,7 @@ final__dash/
 │   └── visualization.py           # All plotting and visualization functions
 │
 └── tests/
-    ├── test_health_run.py
-    ├── test_qzs6_analysis.py
-    ├── test_qzs6_commission.py
-    ├── find_beidou_norad_ids.py
-    ├── run_qzs6_test.sh
-    └── TEST_QZS6_README.md
+    └── ...
 ```
 
 ## 🔧 Module Descriptions
@@ -419,7 +414,6 @@ Customizable through sidebar:
 
 **"No satellites parsed"**
 - Check NORAD IDs are set (not `None`)
-- For BeiDou-3, run `tests/find_beidou_norad_ids.py` first
 
 **"Module not found" errors**
 - Ensure all files are in correct directory structure

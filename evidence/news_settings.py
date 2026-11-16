@@ -62,10 +62,6 @@ DISAGREEMENT_MIN_CLAIMS = 5
 RECORD_GRADED_BY = "the source record (weekly job), approved on the Approvals page"
 # A rejected move is proposed again only after this many more checked claims for that source.
 REJECTED_WAIT_CLAIMS = 3
-# The weekly source-record proposal branch.
-SOURCE_RECORD_BRANCH = "source-record"
-# The decision label on source-record proposals.
-SOURCE_RECORD_LABEL = "decision: source grade"
 
 # Rules for category names by words in the headline, then the summary (first match wins).
 NEWS_CATEGORIES = OrderedDict([

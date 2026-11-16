@@ -37,22 +37,7 @@ def _link(url, words):
 
 
 def _proof_link_words(event):
-    words = (event.get("link_words") or "").strip()
-    if words:
-        lowered = words.lower()
-        if lowered == "run":
-            return "GitHub run"
-        if lowered == "commit":
-            return "GitHub commit"
-        if lowered in {"pull request", "pr"}:
-            return "GitHub pull request"
-        return words
-    happened = (event.get("words") or "").lower()
-    if "pull request" in happened:
-        return "GitHub pull request"
-    if "commit" in happened:
-        return "GitHub commit"
-    return "GitHub run"
+    return (event.get("link_words") or "").strip()
 
 
 def _plain_state(words):

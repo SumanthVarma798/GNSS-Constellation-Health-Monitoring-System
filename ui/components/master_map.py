@@ -5,7 +5,6 @@ module turns the registry tables into one record per spacecraft, puts them and t
 dashboard's colours into the page, and shows it with Streamlit.
 """
 import json
-import re
 from pathlib import Path
 
 from evidence.master_map import agreement, display_name, identifiers, signal_ids_of
@@ -20,7 +19,6 @@ PAGE_FILE = Path(__file__).with_name("master_map.html")
 
 # Characters that could end a <script> block early or start markup, written as JSON escapes.
 SCRIPT_UNSAFE = {"<": "\\u003c", ">": "\\u003e", "&": "\\u0026"}
-PLACEHOLDER = re.compile(r"__[A-Z_]+__")
 
 
 def _disagreement(line):

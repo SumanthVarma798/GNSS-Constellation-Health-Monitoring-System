@@ -25,7 +25,6 @@ GRADE_FILTER = ("A", "B", "C", "D", "E", "F", "none")
 config = common.settings()
 email = st.user.get("email")
 who = st.user.get("name") or email
-may_change = decisions.access(st.user.is_logged_in, email, config.get("allowed", [])) == "in"
 
 seen = common.read()
 rows = source_rows()
@@ -138,30 +137,29 @@ with body:
          for r in shown]) if shown else console.notice("No source matches." if narrowed else "None in this group.", "info"),
         right=f"{len(shown)} of {len(rows)}", flush=bool(shown)))
 
-    if may_change:
-        with st.expander("Change a source grade", expanded=False):
-            said = st.session_state.pop("sources_grade_result", None)
-            if said:
-                st.html(console.notice(said[1], said[0]))
-            options = sorted({r["source"] for r in shown}, key=lambda s: names.get(s, s))
-            if not options:
-                st.caption("Choose at least one source in the list above.")
-            else:
-                labels = {s: f"{names.get(s, s)} ({s})" for s in options}
-                source_id = st.selectbox("Source", options, format_func=lambda s: labels[s], key="sources_grade_pick")
-                new_grade = st.selectbox("New grade", list("ABCDEF"), key="sources_grade_new")
-                reason = st.text_area("Reason (required)", key="sources_grade_reason", height=80)
-                if st.button("Open a pull request for this grade", key="sources_grade_submit", type="primary"):
-                    problem = grade_change.validate(source_id, new_grade, reason, names, confirmed_grade.get(source_id))
-                    if problem:
-                        st.session_state["sources_grade_result"] = ("warn", problem)
-                    else:
-                        st.session_state["sources_grade_result"] = grade_change.submit(
-                            config["github_token"], source_id, names[source_id], confirmed_grade.get(source_id),
-                            new_grade, reason, who, common.now().date(), now=now)
-                        common.github.clear()
-                    st.rerun()
-            st.page_link("console/approvals.py", label="Decide under Approvals", icon=":material/task_alt:")
+    with st.expander("Change a source grade", expanded=False):
+        said = st.session_state.pop("sources_grade_result", None)
+        if said:
+            st.html(console.notice(said[1], said[0]))
+        options = sorted({r["source"] for r in shown}, key=lambda s: names.get(s, s))
+        if not options:
+            st.caption("Choose at least one source in the list above.")
+        else:
+            labels = {s: f"{names.get(s, s)} ({s})" for s in options}
+            source_id = st.selectbox("Source", options, format_func=lambda s: labels[s], key="sources_grade_pick")
+            new_grade = st.selectbox("New grade", list("ABCDEF"), key="sources_grade_new")
+            reason = st.text_area("Reason (required)", key="sources_grade_reason", height=80)
+            if st.button("Open a pull request for this grade", key="sources_grade_submit", type="primary"):
+                problem = grade_change.validate(source_id, new_grade, reason, names, confirmed_grade.get(source_id))
+                if problem:
+                    st.session_state["sources_grade_result"] = ("warn", problem)
+                else:
+                    st.session_state["sources_grade_result"] = grade_change.submit(
+                        config["github_token"], source_id, names[source_id], confirmed_grade.get(source_id),
+                        new_grade, reason, who, common.now().date(), now=now)
+                    common.github.clear()
+                st.rerun()
+        st.page_link("console/approvals.py", label="Decide under Approvals", icon=":material/task_alt:")
 
 with actions:
     common.refresh_action()

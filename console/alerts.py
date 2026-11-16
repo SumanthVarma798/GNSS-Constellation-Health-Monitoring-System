@@ -9,7 +9,6 @@ from console import common
 from evidence import alerts
 from evidence.alert_settings import (
     CHECKS,
-    DEMO_SHARE,
     FLIPS_DAYS,
     READ_EVERY_SECONDS,
     SECRETS_SECTION,
@@ -98,11 +97,9 @@ with body:
     left = max(0, math.ceil(STREAK_GOAL_HOURS - streak["hours"]))
     meter_words = f"{int(streak['hours'])} of {STREAK_FULL_HOURS} hours"
     goal_words = (
-        f"Goal: {STREAK_GOAL_HOURS} h green before the demo is shared {DEMO_SHARE} (met); "
-        "7 days for the full bar."
+        f"Goal: {STREAK_GOAL_HOURS} h green (met); 7 days for the full bar."
         if goal_met
-        else f"Goal: {STREAK_GOAL_HOURS} h green before the demo is shared {DEMO_SHARE} (not yet: {left} h to go); "
-        "7 days for the full bar."
+        else f"Goal: {STREAK_GOAL_HOURS} h green (not yet: {left} h to go); 7 days for the full bar."
     )
     broke = ""
     if streak["broke_on"] and streak["since"]:

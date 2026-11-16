@@ -326,8 +326,7 @@ SOURCE_ORBIT_FEED = "CelesTrak orbit feed"
 SOURCE_DASHBOARD = "our dashboard registry"
 SOURCE_SILENT = "does not carry it"
 SOURCE_SIGHTING = "CelesTrak GNSS group"  # where a sighting's (registry/sightings.csv) numbers come from
-# How a card marks a sighting, and what it says for a field only the IGS file gives.
-SIGHTING_NOTE = "Stand-in SVN: seen by CelesTrak, not yet in the IGS file"
+# What a card says for a field only the IGS file gives.
 NOT_YET_KNOWN = "not yet known"
 
 # The catalogue's state codes (who owns the spacecraft), said in full.

@@ -175,9 +175,8 @@ def payload(systems, gap=None, now=None):
     }
 
 
-# The page's name follows the existing picture pattern; keep both names for callers.
+# The page's name follows the existing picture pattern.
 world_payload = payload
-build_payload = payload
 
 
 def world_view_html(systems, gap=None, now=None):
