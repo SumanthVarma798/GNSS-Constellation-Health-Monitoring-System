@@ -20,7 +20,7 @@ from config.config import DEFAULT_PARAMS, MEO_SATS
 from data import celestrak
 from evidence import jobs
 from evidence.console_settings import WORKFLOWS_DIR
-from ui import changes, data, marks, palette, surfaces, systems, threshold_settings, time_range
+from ui import changes, data, icons, marks, palette, surfaces, systems, threshold_settings, time_range, tooltip
 from ui.age_rule import orbit_age_status
 from ui.components.clock import clock_frame
 
@@ -208,9 +208,12 @@ def _data_chip(names, window_days, params, live, now):
         taken = max(taken, live["fetched"].isoformat())
     text, status = age_words(taken, now, viewer_zone())
     # A copy in use means the last read worked: a failed read clears copy_at (a state saved by older code may still
-    # say ok False beside it, and is not failing).
+    # say ok False beside it, and is not failing). Where it came from and when the next comes is in the chip's tip,
+    # so the bar keeps one short chip; a failing fetch stays in view as its own chip.
     if live.get("copy_at"):
-        return surfaces.chip(text, status) + surfaces.chip(copy_words(live["copy_at"], now, viewer_zone()), "idle")
+        return tooltip.tip_html(surfaces.chip(text, status), tooltip.glance(text, [
+            ("", "Source", copy_words(live["copy_at"], now, viewer_zone())),
+            ("", "Refresh", "the round button loads the newest copy we have")]), key="data_chip")
     if live["ok"]:
         return surfaces.chip(text, status)
     # A copy saved before failing_since was kept has none: its last try stands in.
@@ -256,18 +259,27 @@ def _clock():
 
 
 def _refresh(names, window_days, gear_scope):
-    """Two groups, each with its own place on the bar's grid (ui/theme.css, "the bar"): the data's state (the UTC
-    clock and the wait to the next automatic refresh, the data chip) and the buttons (the round refresh button with
-    its ring, the gear on a constellation's pages, where `gear_scope` names whose thresholds it shows, and the key)."""
-    with st.container(key="bar_state"):
-        clock, chip = st.container(key="clock"), st.empty()
-    with st.container(key="bar_buttons"):
-        clicked = st.button("Refresh orbit data", key="refresh_button", icon=":material/refresh:",
-                            help="Load the newest orbit data we have fetched")
-        if gear_scope:
-            with st.popover("", icon=":material/settings:", help="Settings: what counts as a burn, and how strictly satellites are scored"):
-                st.session_state["params"] = _thresholds(gear_scope)
-        _own_login()
+    """The bar's groups, each with its own place on its grid (ui/theme.css, "the bar"): the UTC clock and the wait to
+    the next automatic refresh in the middle; on the right the data chip, then the buttons (the round refresh button
+    with its ring, the gear, and the key). The gear is always there, so the bar does not change from page to page: on
+    a constellation's pages it opens that constellation's settings (`gear_scope` names whose), elsewhere it is greyed
+    and says where they are."""
+    with st.container(key="bar_clock"):
+        clock = st.container(key="clock")
+    with st.container(key="bar_right"):
+        with st.container(key="bar_chip"):
+            chip = st.empty()
+        with st.container(key="bar_buttons"):
+            clicked = st.button("Refresh orbit data", key="refresh_button", icon=":material/refresh:",
+                                help="Load the newest orbit data we have fetched")
+            if gear_scope:
+                with st.popover("", icon=":material/settings:", help="Settings: what counts as a burn, and how strictly satellites are scored"):
+                    st.session_state["params"] = _thresholds(gear_scope)
+            else:
+                st.button("Settings", key="gear_off", icon=":material/settings:", disabled=True,
+                          help="Settings belong to one constellation: choose one to change its limits. This page "
+                               "uses the defaults.")
+            _own_login()
     live, now = data.refresh(clicked), datetime.now(timezone.utc)
     chip.html(_data_chip(names, window_days, st.session_state["params"], live, now) + _ring(live, now))
     with clock:   # after the refresh, so it reads the try just made
@@ -365,7 +377,7 @@ def top_bar(current):
     comparing = filtered and st.session_state["compare"]
     names = offered_parts() if comparing else [st.session_state["scope"]]
     with st.container(key="topbar"), st.container(key="bar_grid"):
-        st.html('<span class="brand">GNSS Health Monitor</span>')
+        st.html(f'<span class="brand" title="GNSS Health Monitor">{icons.mask("radar")}<span>GNSS Health Monitor</span></span>')
         _refresh(names, window_days, ("Compare" if comparing else names[0]) if filtered else None)
     _nav(current, names, on_system, filtered, comparing)
     changes.post(CONSTELLATIONS if current.title in OWN_FILTERS else names)   # the pages across all systems show every one

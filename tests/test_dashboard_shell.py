@@ -359,7 +359,7 @@ def test_while_the_archive_jobs_copy_stands_in_the_chip_says_so_not_failing(monk
     monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: ({}, set(), FROZEN - timedelta(hours=1)))
     chips = " ".join(htmls(run(lambda at: at.button(key="refresh_button").click())))
 
-    assert 'class="chip idle">Orbits from CelesTrak' in chips
+    assert "<b>Source</b> Orbits from " in chips   # in the data chip's tip, so the bar keeps one chip
     assert "CelesTrak failing" not in chips
     assert 'class="chip ok">Orbit data 6 Oct 11:00' in chips   # the copy's own age, not the bundled history's
 
@@ -368,7 +368,7 @@ def test_the_copy_chip_says_which_copy_and_when_the_next_orbital_run_is_due(monk
     monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: ({}, set(), FROZEN - timedelta(hours=1)))
     chips = " ".join(htmls(run(lambda at: at.button(key="refresh_button").click())))
 
-    assert 'class="chip idle">Orbits from CelesTrak, fetched 11:00 · next fetch about 14:15' in chips
+    assert "<b>Source</b> Orbits from " in chips and ", fetched 11:00 · next fetch about 14:15" in chips   # the chip's tip
 
 
 def test_when_the_copy_read_fails_the_chip_says_the_archive_copy_is_failing(monkeypatch):
@@ -376,7 +376,7 @@ def test_when_the_copy_read_fails_the_chip_says_the_archive_copy_is_failing(monk
     chips = " ".join(htmls(run()))
 
     assert 'class="chip warn">Orbit fetch failing since 12:00' in chips
-    assert 'class="chip idle">Orbits from CelesTrak' not in chips and "CelesTrak failing" not in chips
+    assert "<b>Source</b>" not in chips and "CelesTrak failing" not in chips
 
 
 def test_a_state_saved_by_the_old_code_with_a_copy_in_use_is_not_shown_as_failing(monkeypatch):
@@ -384,7 +384,7 @@ def test_a_state_saved_by_the_old_code_with_a_copy_in_use_is_not_shown_as_failin
                            copy_at=FROZEN - timedelta(hours=1), fetched=FROZEN - timedelta(hours=1))
     chips = " ".join(htmls(run()))
 
-    assert 'class="chip idle">Orbits from CelesTrak' in chips
+    assert "<b>Source</b> Orbits from " in chips
     assert "failing since" not in chips
 
 
