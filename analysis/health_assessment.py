@@ -6,6 +6,8 @@ Comprehensive health assessment for NavIC satellites including drift analysis
 import numpy as np
 import pandas as pd
 from datetime import timedelta
+
+from analysis import score_rules
 from config.config import NAVIK_SERVICE_REQUIREMENTS, QZSS_SERVICE_REQUIREMENTS, COMMISSION_DATES
 from analysis.drift_analysis import assess_drift_health, calculate_drift_trend
 from analysis.maneuver_detection import calculate_maneuver_uniformity
@@ -96,7 +98,7 @@ def analyze_maneuver_pattern(maneuver_events, observation_start, observation_end
         # Avoid comparing timedelta-like types with floats
         is_overdue = False
         try:
-            is_overdue = days_since > (expected_int * 1.5)
+            is_overdue = days_since > (expected_int * score_rules.OVERDUE_AFTER)
         except Exception:
             is_overdue = False
 
@@ -142,7 +144,7 @@ def analyze_maneuver_pattern(maneuver_events, observation_start, observation_end
     
     last_maneuver_date = maneuver_dates[-1]
     days_since_last = (observation_end - last_maneuver_date).days
-    is_overdue = days_since_last > (expected_interval_days * 1.5)
+    is_overdue = days_since_last > (expected_interval_days * score_rules.OVERDUE_AFTER)
     
     # Calculate combined maintenance score
     ew_score = 100
@@ -261,7 +263,8 @@ def analyze_maneuver_pattern(maneuver_events, observation_start, observation_end
 
 def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_tolerance,
                                        min_man_per_month, max_man_per_month, uniformity_threshold,
-                                       drift_tolerance_gso=0.05, drift_tolerance_igso=2.0,
+                                       drift_tolerance_gso=score_rules.DRIFT_TOLERANCE_GEO,
+                                       drift_tolerance_igso=score_rules.DRIFT_TOLERANCE_TILTED,
                                        service_requirements=None,
                                        constellation_name=None,
                                        pattern_maneuvers=None, pattern_df=None, commissioned=None):
@@ -299,15 +302,8 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
     current_inclination = sat_df['INCLINATION'].iloc[-1]
     std_inclination = sat_df['INCLINATION'].std()
 
-    # Determine satellite type
-    if 0.0 <= current_inclination < 10.0:
-        sat_type = 'GEO'
-    elif current_inclination >= 10.0:
-        # QZO is reserved for QZSS; NavIC and BeiDou IGSO satellites stay labeled IGSO.
-        is_qzss_system = constellation_name == 'QZSS' or service_requirements == QZSS_SERVICE_REQUIREMENTS
-        sat_type = 'QZO' if is_qzss_system else 'IGSO'
-    else:
-        sat_type = 'Unclassified'
+    is_qzss_system = constellation_name == 'QZSS' or service_requirements == QZSS_SERVICE_REQUIREMENTS
+    sat_type = score_rules.orbit_type(current_inclination, 'QZSS' if is_qzss_system else constellation_name)
 
     observation_start = sat_df['EPOCH'].min()
     observation_end = sat_df['EPOCH'].max()
@@ -497,13 +493,7 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
     
     # Calculate overall score with updated weighting to include longitude deviation
     # Define base weights (updated to include longitude)
-    weights = {
-        'inc': 0.30,           # Reduced from 0.35
-        'maintenance': 0.25,   # Same
-        'uniformity': 0.10,    # Reduced from 0.15
-        'drift': 0.20,         # Reduced from 0.25
-        'longitude': 0.15      # New component
-    }
+    weights = dict(score_rules.WEIGHTS)
 
     components = {}
     if inc_score is not None:
@@ -526,18 +516,8 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
         weighted_sum = sum(components[k] * weights[k] for k in components.keys())
         overall_score = weighted_sum / total_weight
     
-    if overall_score >= 80:
-        health_status = "Healthy"
-        status_color = "🟢"
-    elif overall_score >= 60:
-        health_status = "Fair"
-        status_color = "🟡"
-    elif overall_score >= 40:
-        health_status = "Degraded"
-        status_color = "🟠"
-    else:
-        health_status = "Critical"
-        status_color = "🔴"
+    health_status = score_rules.status_word(overall_score)
+    status_color = score_rules.status_emoji(overall_score)
     
     remarks = []
     
@@ -600,18 +580,7 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
     # Longitude slot deviation remarks
     if longitude_deviation is not None and designated_lon is not None:
         abs_dev = abs(longitude_deviation)
-        if sat_type == 'GEO':
-            if abs_dev <= 0.5:
-                remarks.append(f"✅ Excellent longitude slot position ({longitude_deviation:+.2f}° from {designated_lon}°)")
-            elif abs_dev <= 1.0:
-                remarks.append(f"✓ Good longitude position ({longitude_deviation:+.2f}° from {designated_lon}°)")
-            else:
-                remarks.append(f"⚠️ Longitude deviation from designated slot ({longitude_deviation:+.2f}° from {designated_lon}°)")
-        else:  # IGSO, QZO
-            if abs_dev <= 5.0:
-                remarks.append(f"✅ Within central longitude tolerance ({longitude_deviation:+.2f}° from {designated_lon}°)")
-            else:
-                remarks.append(f"⚠️ Central longitude deviation ({longitude_deviation:+.2f}° from {designated_lon}°)")
+        remarks.append(score_rules.longitude_remark(abs_dev, longitude_deviation, sat_type, designated_lon))
     
     # Dynamic maintenance remarks based on learned pattern (E-W and N-S separate)
     remarks.append(f"📊 {maintenance_status}")
