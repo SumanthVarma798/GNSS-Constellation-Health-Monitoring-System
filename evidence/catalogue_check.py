@@ -38,21 +38,22 @@ def disagreements(satellites, catalogue):
 
 def disagreement_report(found, copies_used=""):
     """The disagreements as a page a person can read."""
-    sections = "\n\n".join(f"## {heading} ({len(lines)})\n\n" + ("\n".join(f"- {line}" for line in lines) or "- None.")
+    sections = "\n\n".join(f"### {heading} ({len(lines)})\n\n" + ("\n".join(f"- {line}" for line in lines) or "- None.")
                            for heading, lines in found.items())
-    return f"""# The catalogue against the IGS satellite file
+    return f"""## Standing differences: GCAT against the IGS satellite metadata file
 
-Neither source is treated as right. Each line is something for a person to look at.
+Not changes in this pull request: where GCAT, J. McDowell's catalogue of space objects, and the IGS satellite metadata
+file disagree today. Neither source is treated as right. Each line is something for a person to look at.
 
 {sections}
 
-## How to read this
+### How to read this
 
 - The two sources are kept by different people and updated at different times. A line can mean only that one has not caught up.
 - The catalogue's author says its "last known active" and "operations ended" dates are loosely defined and updated patchily.
 - "Still operating" in the catalogue does not mean "providing a navigation service". A satellite can be operated without one.
 
-## Where this came from
+### Where this came from
 
 {copies_used or "Local copies of the two catalogue files."}
 

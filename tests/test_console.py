@@ -26,16 +26,16 @@ SECRETS = {"auth": {field: "set" for field in common.SIGN_IN_FIELDS},
 class GitHub:
     """Stands in for console.common.github: the figures above, and any pull requests a test gives it."""
 
-    def __init__(self, prs=(), fail=None, issues=(), comments=None):
+    def __init__(self, prs=(), fail=None, issues=(), comments=None, reviews=None):
         self.prs, self.fail, self.asked, self.issues = list(prs), fail, 0, list(issues)
-        self.comments = comments or {}
+        self.comments, self.reviews = comments or {}, reviews or {}
 
     def __call__(self, token):
         self.asked += 1
         if self.fail:
             raise self.fail
         return {"workflows": WORKFLOWS, "runs": RUNS, "log": jobs.run_log(LOG), "prs": self.prs, "decision_prs": self.prs,
-                "comments": self.comments,
+                "comments": self.comments, "reviews": self.reviews,
                 "issues": self.issues, "archive_commits": {}, "archive_versions": [],
                 "problems": [], "read_at": NOW}
 
@@ -256,6 +256,57 @@ def test_approvals_list_each_waiting_item_with_its_evidence(monkeypatch):
     assert "<li>G01: slot was blank, now A1.</li>" in page and "pull request 5" in page
 
 
+def registry_reading(tests="passed", mergeable=True):
+    from evidence.table_changes import split_diff
+    from test_table_changes import DIFF
+    return {"files": [{"path": path, "additions": 1, "deletions": 1, "patch": patch} for path, patch in split_diff(DIFF).items()],
+            "tests": tests, "mergeable": mergeable, "sha": "sha5"}
+
+
+def test_a_registry_update_reads_ask_changes_checks_unusual_then_the_decision(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+
+    at = run(monkeypatch, GitHub([REGISTRY_PR], reviews={5: registry_reading()}), page="console/approvals.py")
+
+    page = text(at)
+    ask = "The weekly job asks to change 5 registry tables: 3 rows added, 3 changed, 1 removed."
+    order = [ask, "On the dashboard: Master map", "tests passed", "no conflicts with main", "Changes, by kind",
+             "<h3>Needs a look", "2 payloads not identified"]
+    assert [page.index(words) for words in order] == sorted(page.index(words) for words in order)
+    assert "GCAT, J. McDowell&#x27;s catalogue of space objects" in page and "https://planet4589.org/space/gcat/" in page
+    assert "Changed, routine" in page and "years in service and GCAT&#x27;s date only" in page
+    assert at.radio(key="choice_5")   # the decision sits with the card, before what is one step deeper
+    assert [e.label for e in at.expander] == ["Each change: old and new value, and its source",
+                                              "The pull request's description, by heading", "The raw diff, file by file"]
+    assert "<td>registry satellites</td><td>101</td><td>102</td>" in page   # old beside new, one step deeper
+
+
+def test_checks_that_have_not_passed_are_said_in_words(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+
+    page = text(run(monkeypatch, GitHub([REGISTRY_PR], reviews={5: registry_reading("running", None)}),
+                    page="console/approvals.py"))
+
+    assert "tests still running" in page and "GitHub is still checking for conflicts" in page
+
+
+def test_without_a_reading_the_card_falls_back_to_the_description(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+
+    page = text(run(monkeypatch, GitHub([REGISTRY_PR]), page="console/approvals.py"))
+
+    assert "This is a proposed update." in page and "GitHub did not give its changes or checks" in page
+
+
+def test_the_description_folds_by_heading_and_leaves_out_the_findings_block():
+    html = admin.description_html(decisions.without_findings_block(
+        "Opening line.\n\n## What changed\n- G01\n\n<!-- findings\n{\"findings\": []}\n-->\n# Other\nText"))
+
+    assert html.startswith('<div class="pr-text"><p>Opening line.</p></div>')
+    assert '<summary>What changed</summary><div class="pr-text"><ul><li>G01</li></ul></div>' in html
+    assert "<summary>Other</summary>" in html and "findings" not in html
+
+
 def test_approvals_show_findings_by_category_before_old_style_items(monkeypatch):
     signed_in(monkeypatch, "member@example.com")
     findings = [{**FINDINGS_STAND_IN[0], "statement": "We saw <script>alert(1)</script> in one source."},
@@ -462,6 +513,8 @@ def test_github_reads_comments_only_for_open_decision_pull_requests_with_finding
     monkeypatch.setattr(decisions, "fetch_open", lambda token: [FINDINGS_PR, REGISTRY_PR, pr(9, ["enhancement"])])
     monkeypatch.setattr(decisions, "fetch_recent_closed", lambda token: [])
     monkeypatch.setattr(decisions, "fetch_comments", lambda token, number: called.append(number) or [{"id": number}])
+    reviewed = []
+    monkeypatch.setattr(decisions, "review_reading", lambda token, pr: reviewed.append(pr["number"]) or {"files": []})
     monkeypatch.setattr(common.github_api, "ask", lambda *args, **kwargs: {"workflows": [], "workflow_runs": []})
     monkeypatch.setattr(common.github_api, "file_text", lambda *args: "job,started,ended,result,changed\n")
     monkeypatch.setattr(common.work, "fetch_open_issues", lambda token: [])
@@ -471,6 +524,41 @@ def test_github_reads_comments_only_for_open_decision_pull_requests_with_finding
 
     assert called == [8]
     assert seen["comments"] == {8: [{"id": 8}]}
+    assert reviewed == [8, 5] and set(seen["reviews"]) == {8, 5}   # every decision pull request, no other
+
+
+def test_a_pull_request_whose_changes_github_will_not_give_is_named_and_the_rest_still_shows(monkeypatch):
+    monkeypatch.setattr(decisions, "fetch_open", lambda token: [REGISTRY_PR])
+    monkeypatch.setattr(decisions, "fetch_recent_closed", lambda token: [])
+    monkeypatch.setattr(decisions, "review_reading", lambda token, pr: (_ for _ in ()).throw(requests.ConnectionError()))
+    monkeypatch.setattr(common.github_api, "ask", lambda *args, **kwargs: {"workflows": [], "workflow_runs": []})
+    monkeypatch.setattr(common.github_api, "file_text", lambda *args: "job,started,ended,result,changed\n")
+    monkeypatch.setattr(common.work, "fetch_open_issues", lambda token: [])
+    monkeypatch.setattr(common, "_archive_commits", lambda token: {})
+
+    seen = common.github.__wrapped__("t") if hasattr(common.github, "__wrapped__") else common.github("t")
+
+    assert seen["reviews"] == {} and any("pull request 5" in problem for problem in seen["problems"])
+
+
+def test_a_review_reading_asks_for_files_tests_and_mergeable(monkeypatch):
+    asked = []
+
+    def ask(method, path, token, **request):
+        asked.append(path)
+        if path.endswith("/files"):
+            return [{"filename": "registry/unidentified.csv", "additions": 1, "deletions": 0, "patch": "+1,A"}]
+        if "check-runs" in path:
+            return {"check_runs": [{"id": 1, "status": "completed", "conclusion": "success"}]}
+        return {"mergeable": True}
+
+    monkeypatch.setattr(decisions, "_ask", ask)
+
+    reading = decisions.review_reading("t", REGISTRY_PR)
+
+    assert reading == {"files": [{"path": "registry/unidentified.csv", "additions": 1, "deletions": 0, "patch": "+1,A"}],
+                       "tests": "passed", "mergeable": True, "sha": "sha5"}
+    assert asked == ["/pulls/5/files", "/commits/sha5/check-runs", "/pulls/5"]
 
 
 def test_the_work_page_lists_open_pull_requests_and_issues_and_finds_by_title(monkeypatch):

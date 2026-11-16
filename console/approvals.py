@@ -9,9 +9,9 @@ import requests
 import streamlit as st
 
 from console import common
-from evidence import decisions
-from evidence.decision_settings import (ACTIONS, AFTER_CHANGES, APPROVE, CHOICES, FINDING_ACTIONS,
-                                        FINDING_CATEGORIES, OTHER_FINDINGS, REJECT, REPOSITORY)
+from evidence import decisions, table_changes
+from evidence.decision_settings import (ACTIONS, AFTER_CHANGES, APPROVE, CHOICES, FINDING_ACTIONS, FINDING_CATEGORIES,
+                                        MERGE_WORDS, OTHER_FINDINGS, REJECT, REPOSITORY, TESTS_WORDS)
 from ui import admin, console
 
 FINDING_CHOICES = {APPROVE: "Approve", REJECT: "Reject"}
@@ -149,7 +149,13 @@ def finding_finish(item, by_id, all_approved, config, who):
         st.rerun()
 
 
-def show_findings(items, comments, config, who):
+def show_findings(items, comments, reviews, config, who):
+    for item in items:   # what each pull request asks, as for any other; its findings are decided one by one below
+        changes = changes_of(reviews.get(item["number"]))
+        look = table_changes.needs_a_look(changes)
+        review_summary(item, reviews.get(item["number"]), changes, look)
+        changes_by_kind(item, changes, look)
+        deeper(item, reviews.get(item["number"]), changes)
     rows = []
     finish_rows = []
     for item in items:
@@ -180,20 +186,93 @@ def show_findings(items, comments, config, who):
             one_finding(row["item"], row["finding"], row["by_id"], row["stale"], row["decided_count"], config, who)
 
 
-def old_style_item(item, config, who):
-    opened = item["opened"]
+def source_html(settings):
+    name, link = settings["source"] if settings else ("–", "")
+    return finding_row(link, name) if link else escape(name)
+
+
+def changes_of(reading):
+    return [table_changes.table_change(f["path"], f["patch"], f["additions"], f["deletions"])
+            for f in (reading or {}).get("files", [])]
+
+
+def review_summary(item, reading, changes, look):
+    """What is asked and what it does, its checks, how much needs a look, then who raised it: one property sheet."""
+    opened, number = item["opened"], item["number"]
+    if reading:
+        asked = escape(table_changes.asked(item["raised_by"], changes))
+        checks = " ".join([console.status(*TESTS_WORDS.get(reading["tests"], TESTS_WORDS["not run"])),
+                           console.status(*MERGE_WORDS.get(reading["mergeable"], MERGE_WORDS[None]))])
+        unusual = (console.status("warn", f"{len(look)} thing{'' if len(look) == 1 else 's'}") if look
+                   else console.status("ok", "nothing unusual"))
+        rows = [("Asked", asked), ("If approved", escape(table_changes.shown_text(changes))), ("Checks", checks),
+                ("Needs a look", unusual)]
+    else:
+        rows = [("Asked", admin.text_html(item["summary"]) if item["summary"] else "<span class='muted'>no summary</span>"),
+                ("Checks", console.status("warn", "GitHub did not give its changes or checks: look on GitHub"))]
+    rows += [("Raised by", f"{escape(item['raised_by'])}, {opened.day} {opened:%b %Y}, {waiting(item['waited_days'])}"),
+             ("On GitHub", finding_row(item["link"], f"pull request {number}"))]
+    st.html(console.section(f"Pull request {number}: {item['title']}", console.key_values(rows)))
+
+
+def changes_by_kind(item, changes, look):
+    """The changes as a short list by kind, the routine ones apart, then what is unusual, separated from them."""
+    if changes:
+        rows = [[escape(kind), escape(change["settings"]["name"] if change["settings"] else change["path"]),
+                 escape(f"{count}: {said}" if count is not None else said), source_html(change["settings"])]
+                for kind, change, count, said in table_changes.by_kind(changes)]
+        st.html(console.section("Changes, by kind", console.list_view(["Kind", "Table", "Rows", "From"], rows),
+                                right=f"pull request {item['number']}", flush=True))
+    if look:
+        st.html(console.section("Needs a look", console.attention([(tone, title, detail, None) for tone, title, detail in look]),
+                                right=f"pull request {item['number']}", flush=True))
+
+
+def each_change_html(change):
+    """One table's rows, old value beside new, routine rows folded away, and where they come from."""
+    settings = change["settings"]
+    rows = [[escape(table_changes.label(row, settings)), "added", "–", escape(table_changes.details(row, settings))]
+            for row in change["added"]]
+    rows += [[escape(table_changes.label(row["row"], settings)), escape(table_changes.words(column)), escape(was or "blank"),
+              escape(now or "blank")] for row in change["changed"] for column, was, now in row["differs"]]
+    rows += [[escape(table_changes.label(row, settings)), "removed", escape(table_changes.details(row, settings)), "–"]
+             for row in change["removed"]]
+    columns = ["Row", "What", "Was", "Now"]
+    html = console.list_view(columns, rows) if rows else ""
+    if routine := change["routine"]:
+        html += (f'<details class="c-more"><summary>{len(routine)} routine: '
+                 f'{escape(table_changes.ROUTINE_WORDS.get(change["path"], "routine"))}</summary>'
+                 + console.list_view(columns, [[escape(table_changes.label(row["row"], settings)),
+                                                escape(table_changes.words(column)), escape(was), escape(now)]
+                                               for row in routine for column, was, now in row["differs"]]) + "</details>")
+    return html + f'<p class="c-legend">From {source_html(settings)}</p>'
+
+
+def deeper(item, reading, changes):
+    """One step deeper, on request: each change with its source, the description by its headings, the raw diff."""
+    readable = [change for change in changes if change["readable"]]
+    if readable:
+        with st.expander("Each change: old and new value, and its source"):
+            for change in readable:
+                st.html(console.section(change["settings"]["name"], each_change_html(change), right=change["path"]))
+    with st.expander("The pull request's description, by heading"):
+        st.html(admin.description_html(decisions.without_findings_block(item["body"])))
+    if reading and reading["files"]:
+        with st.expander("The raw diff, file by file"):
+            st.html("".join(f'<details class="c-more"><summary>{escape(f["path"])} (+{f["additions"]} −{f["deletions"]})'
+                            f'</summary><pre class="c-diff">{escape(f["patch"] or "GitHub gives no diff for a file this large.")}'
+                            "</pre></details>" for f in reading["files"]))
+
+
+def old_style_item(item, reading, config, who):
     if item["findings_unreadable"]:
         st.html(console.notice("Its findings block could not be read, so it is shown as one item.", "warn"))
-    st.html(console.section(f"Pull request {item['number']}: {item['title']}", console.key_values([
-        ("What it says", admin.text_html(item["summary"]) if item["summary"] else "<span class='muted'>no summary</span>"),
-        ("Kind", escape(item["kind"])),
-        ("Raised by", f"{escape(item['raised_by'])}, {opened.day} {opened:%b %Y}"),
-        ("Waiting", waiting(item["waited_days"])),
-        ("On GitHub", f'<a href="{escape(item["link"], quote=True)}" target="_blank" rel="noopener noreferrer">'
-                      f'pull request {item["number"]}</a>')])))
-    with st.expander("What the pull request says, in full"):
-        st.html(admin.text_html(item["body"]))
+    changes = changes_of(reading)
+    look = table_changes.needs_a_look(changes)
+    review_summary(item, reading, changes, look)
+    changes_by_kind(item, changes, look)
     decide(item, config, who)
+    deeper(item, reading, changes)
 
 
 config = common.settings()
@@ -219,14 +298,14 @@ with body:
         st.html(console.notice(f"Nothing is waiting for a decision. GitHub lists {len(seen['prs'])} open pull "
                                f"request{'' if len(seen['prs']) == 1 else 's'}, none labelled for a decision.", "ok"))
     if finding_items:
-        show_findings(finding_items, seen.get("comments", {}), config, who)
+        show_findings(finding_items, seen.get("comments", {}), seen.get("reviews", {}), config, who)
     for group, its in decisions.grouped(old_items):
         st.html(console.section(group, console.list_view(
             ["Item", "Kind", "Raised by", "Waiting"],
             [[escape(i["title"]), escape(i["kind"]), escape(i["raised_by"]), waiting(i["waited_days"])]
              for i in its]), right=f"{len(its)} waiting, the longest first", flush=True))
         for item in its:
-            old_style_item(item, config, who)
+            old_style_item(item, seen.get("reviews", {}).get(item["number"]), config, who)
 
 with actions:
     common.refresh_action()

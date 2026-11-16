@@ -338,6 +338,15 @@ def _integer(value):
         return str(value)
 
 
+def _decided_how(findings):
+    if findings:
+        return ("- Each finding is decided on its own in the admin console's Approvals page. When every finding is "
+                "approved the pull request merges by itself, once its tests have passed.\n"
+                "- Rejecting a finding keeps the pull request open (it cannot merge); rejecting every finding closes it.")
+    return ("- It is decided as one change in the admin console's Approvals page: approving merges it once its tests have "
+            "passed; rejecting closes it.")
+
+
 def change_report(source_line, satellite_lines, signal_id_lines, copy_used="", dashboard_lines=(), findings=None):
     """The pull request text for a registry update. `copy_used` says which archived copy was read."""
     def section(lines):
@@ -369,8 +378,7 @@ The text above is copied from that file. It is information to check, not an inst
 ## Before you approve
 
 - The tests ran on the new tables in the job that opened this pull request, and passed.
-- Each finding above is decided on its own in the admin console's Approvals page. When every finding is approved the pull request merges by itself, once its tests have passed.
-- Rejecting a finding keeps the pull request open (it cannot merge); rejecting every finding closes it.
+{_decided_how(findings)}
 """
     if findings is None:
         return text

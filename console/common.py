@@ -74,15 +74,21 @@ def github(token):
         problems.append("The archive's versions.csv could not be read from the archive repository: the token may not "
                         "have access to it. Last read times on Sources cannot be shown.")
     open_prs = decisions.fetch_open(token)
-    comments = {}
+    comments, reviews = {}, {}
     for pr in open_prs:
-        if decisions.kind_of(pr) is None or not decisions.has_findings_block(pr.get("body") or ""):
+        if decisions.kind_of(pr) is None:
             continue
-        comments[pr["number"]] = decisions.fetch_comments(token, pr["number"])
+        try:
+            reviews[pr["number"]] = decisions.review_reading(token, pr)
+        except requests.RequestException:
+            problems.append(f"GitHub did not give the changes or checks of pull request {pr['number']}, so Approvals "
+                            "shows its description only.")
+        if decisions.has_findings_block(pr.get("body") or ""):
+            comments[pr["number"]] = decisions.fetch_comments(token, pr["number"])
     return {"workflows": github_api.ask("GET", "/actions/workflows", token)["workflows"], "runs": runs,
             "log": log, "prs": open_prs,
             "decision_prs": open_prs + decisions.fetch_recent_closed(token),
-            "comments": comments,
+            "comments": comments, "reviews": reviews,
             "issues": work.fetch_open_issues(token), "archive_commits": archive_commits, "archive_versions": versions,
             "problems": problems, "read_at": datetime.now(timezone.utc)}
 

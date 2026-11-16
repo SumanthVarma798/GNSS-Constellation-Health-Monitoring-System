@@ -76,6 +76,11 @@ def has_findings_block(body):
     return bool(_FINDINGS_BLOCK.search(body or ""))
 
 
+def without_findings_block(body):
+    """A pull request body with its hidden findings block taken out, for reading."""
+    return _FINDINGS_BLOCK.sub("", body or "")
+
+
 def findings(body):
     """Findings from a pull request body, or [] if there is no readable block."""
     return _findings_read(body)[0]
@@ -178,6 +183,18 @@ def tests_state(token, sha):
         return "not run"
     newest = max(runs, key=lambda run: run["id"])
     return "running" if newest["status"] != "completed" else "passed" if newest["conclusion"] == "success" else "failed"
+
+
+def review_reading(token, pr):
+    """What a reviewer needs from GitHub beyond the pull request itself: its changed files with their diffs, whether its
+    tests passed on its newest commit, and whether it can merge. GitHub leaves out the diff of a very large file."""
+    number, sha = pr["number"], (pr.get("head") or {}).get("sha")
+    # ponytail: one page of files (100); a registry update changes at most ten. Page on if a proposal ever has more.
+    files = _ask("GET", f"/pulls/{number}/files", token, params={"per_page": PAGE_SIZE})
+    return {"files": [{"path": f["filename"], "additions": f.get("additions", 0), "deletions": f.get("deletions", 0),
+                       "patch": f.get("patch")} for f in files],
+            "tests": tests_state(token, sha) if sha else "not run",
+            "mergeable": _ask("GET", f"/pulls/{number}", token).get("mergeable"), "sha": sha}
 
 
 def blocker(choice, item, reason, changes, state="open", tests=None, mergeable=None, sha=None):
