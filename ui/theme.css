@@ -205,7 +205,7 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .st-key-bar_buttons { flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 10px; min-height: var(--bell); margin-right: calc(var(--bell) + 16px); }
 :is(.st-key-bar_right, .st-key-bar_buttons, .st-key-bar_chip) > * { width: auto !important; flex: none; min-width: 0; }
 .st-key-bar_clock .st-key-clock, .st-key-bar_clock .st-key-clock [data-testid="stHtml"] { align-items: center; text-align: center; }
-@media (max-width: 899.98px) {   /* not room for one row: the name and the buttons, then the clock and the chip */
+@media (max-width: 1023.98px) {   /* not room for one row (it needs about 1000px): the name and the buttons, then the clock and the chip */
   .st-key-bar_grid { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand buttons" "clock chip"; }
   .st-key-bar_grid :has(.st-key-bar_chip, .st-key-bar_buttons):not(.st-key-bar_chip *, .st-key-bar_buttons *) { display: contents; }
   .st-key-bar_chip { grid-area: chip; justify-self: end; }
