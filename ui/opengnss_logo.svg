@@ -1,20 +1,19 @@
 <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-  <title>OpenGNSS: a location pin ringed by an orbit, a satellite riding the ring</title>
-  <!-- Drawn with Higgsfield (gpt_image_2_6, SVG) on 16 Nov 2026. -->
-  <g fill="none" stroke="#74d6a0" stroke-width="58">
-    <path d="M 85,550 C -12,391 758,105 921,259 C 1084,413 182,709 85,550 Z" />
+  <title>OpenGNSS: a location pin on Earth, a satellite in orbit sending it a signal</title>
+  <!-- Drawn with Higgsfield (gpt_image_2_6, SVG) on 16 Nov 2026; the signal line thickened to read at 32 px. -->
+  <g fill="none" stroke="#74d6a0" stroke-width="32" stroke-linecap="round">
+    <path d="M126 608C31 702 16 782 77 828" />
+    <path d="M726 324C832 299 921 317 949 371C970 413 952 472 913 526" />
   </g>
-  <g fill="#7fb0ff">
-    <path fill-rule="evenodd" d="M 494,157 C 335,157 206,282 206,440 C 206,532 248,600 300,676 L 494,952 L 688,676 C 740,600 782,532 782,440 C 782,282 653,157 494,157 Z M 629,429 A 135,138 0 1,1 359,429 A 135,138 0 1,1 629,429 Z" />
+  <path fill="#7fb0ff" fill-rule="evenodd" d="M858 587A372 372 0 1 1 114 587A372 372 0 1 1 858 587ZM485 347C384 347 302 427 302 528C302 610 367 702 485 848C603 702 667 610 667 528C667 427 586 347 485 347ZM567 527A82 82 0 1 1 403 527A82 82 0 1 1 567 527Z" />
+  <g fill="#74d6a0" transform="rotate(32 808 160)">
+    <rect x="620" y="104" width="138" height="88" rx="12" />
+    <rect x="860" y="104" width="138" height="88" rx="12" />
+    <rect x="745" y="137" width="130" height="22" />
+    <rect x="762" y="94" width="94" height="110" rx="22" />
+    <path d="M799 197H819V225H799Z" />
+    <path d="M756 226Q809 201 862 226C855 260 763 260 756 226Z" />
   </g>
-  <g fill="none" stroke="#74d6a0" stroke-width="58" stroke-linecap="round">
-    <path d="M 85,550 C 182,709 1084,413 921,259" />
-  </g>
-  <g fill="#7fb0ff" transform="rotate(21 854 176)">
-    <rect x="809" y="123" width="90" height="108" rx="8" />
-    <rect x="716" y="142" width="78" height="54" rx="3" />
-    <rect x="914" y="142" width="78" height="54" rx="3" />
-    <rect x="787" y="161" width="29" height="16" />
-    <rect x="892" y="161" width="29" height="16" />
-  </g>
+  <path d="M747 244L485 526" fill="none" stroke="#74d6a0" stroke-width="24" stroke-linecap="round" />
+  <path d="M126 608C50 691 44 762 90 803C173 879 403 834 605 729C816 620 955 471 949 383C1005 483 857 662 633 787C400 917 150 939 59 852C-7 788 32 685 126 608Z" fill="#74d6a0" />
 </svg>
