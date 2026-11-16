@@ -44,13 +44,13 @@ import math
 
 import numpy as np
 
+from analysis import score_rules
 from config.meo_nominal import NOMINAL
 
 MU = 398600.4418      # km^3/s^2
 EARTH_KM = 6378.137
 J2 = 1.08262668e-3
 WEIGHTS = {"plane": 0.20, "spacing": 0.30, "inclination": 0.20, "height": 0.15, "eccentricity": 0.15}
-BANDS = ((80, "🟢 Healthy"), (60, "🟡 Fair"), (40, "🟠 Degraded"), (-math.inf, "🔴 Critical"))
 EXTENDED = "Extended"   # the plane name for Galileo's eccentric-orbit pair
 NO_PLANE = "No plane"   # the plane name for a GPS or GLONASS satellite the registry gives no plane yet: no score
 
@@ -67,7 +67,8 @@ def part_score(error, tolerance):
 
 
 def status_of(score):
-    return next(words for floor, words in BANDS if score >= floor)
+    word = score_rules.status_word(score)
+    return f"{score_rules.STATUS_EMOJI[word]} {word}"
 
 
 def semi_major_axis_km(mean_motion_rev_day):

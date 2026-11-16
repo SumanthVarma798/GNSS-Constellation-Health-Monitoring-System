@@ -4,11 +4,12 @@ app.py makes one call, render_slot_pictures. Everything drawn here comes from th
 modules and ui/surfaces.py; this file holds no colours, sizes or CSS. A picture that
 cannot be drawn becomes a short notice, so the rest of the page carries on.
 """
-import re
-
 import pandas as pd
 import streamlit as st
 
+import re
+
+from analysis.score_rules import SCORE_PARTS
 from config.config import (
     BEIDOU3_SERVICE_REQUIREMENTS, GEO_NOMINAL_ALTITUDE, NAVIK_SERVICE_REQUIREMENTS,
     QZSS_SERVICE_REQUIREMENTS,
@@ -26,9 +27,7 @@ SET_ASIDE_NOTE = "set aside, graveyard orbit"
 CHIP_STATUS = {palette.SLOT_IN: "ok", palette.SLOT_OFF: "warn",
                palette.SLOT_LEFT: "bad", palette.SLOT_UNKNOWN: "idle"}
 # The score parts in the order they are drawn: (label, column of the health table).
-PARTS = [("Inclination", "_inc_score"), ("Upkeep", "_maintenance_score"),
-         ("Regularity", "_uniformity_score"), ("Drift", "_drift_score"),
-         ("Longitude", "Lon Deviation Score")]
+PARTS = SCORE_PARTS
 
 
 def designated_longitude(name):

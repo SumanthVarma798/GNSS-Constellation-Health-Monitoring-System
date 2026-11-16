@@ -16,7 +16,7 @@ FLAG = {"ok": ("healthy", "ok"), "bad": ("unhealthy", "bad"), "silent": ("not in
 def _chip(words, count, of):
     if not of:
         return surfaces.chip(f"{words}: not read", "idle")
-    return surfaces.chip(f"{words} {count} of {of}", surfaces.band(100 * count / of))
+    return surfaces.chip(f"{words} {count} of {of}", surfaces.share_tone(100 * count / of))
 
 
 def strip(summary):

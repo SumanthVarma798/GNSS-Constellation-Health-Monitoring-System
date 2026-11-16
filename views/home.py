@@ -109,7 +109,7 @@ def _measure_line(words, count, of):
         return (f'<span class="small">{_explained(words)}</span><i class="hbar"></i>'
                 '<b class="idle">not read</b>')
     share = 100 * count / of
-    band = surfaces.band(share)
+    band = surfaces.share_tone(share)
     return (f'<span class="small">{_explained(words)}</span>'
             f'<i class="hbar"><i class="{band}" style="width:{share:.0f}%"></i></i>'
             f'<b class="num {band}">{count} of {of}</b>')

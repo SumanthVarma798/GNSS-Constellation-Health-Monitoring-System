@@ -20,8 +20,8 @@ from config.config import DEFAULT_PARAMS, MEO_SATS
 from data import celestrak
 from evidence import jobs
 from evidence.console_settings import WORKFLOWS_DIR
-from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS
 from ui import changes, data, marks, palette, surfaces, systems, threshold_settings, time_range
+from ui.age_rule import orbit_age_status
 from ui.components.clock import clock_frame
 
 # Pages with their own filters: the bar shows no constellation, window or thresholds there.
@@ -98,7 +98,7 @@ def age_words(data_time, now, tz=timezone.utc):
     days = (now.astimezone(tz).date() - taken.date()).days
     age = f" {taken:%H:%M}" if days <= 0 else ", 1 day old" if days == 1 else f", {days} days old"
     elapsed = (now - taken).total_seconds() / 86400   # coloured by time passed, as the orbit-age strip is
-    status = "bad" if elapsed >= ORBIT_STALE_DAYS else "warn" if elapsed >= ORBIT_ALERT_DAYS else "ok"
+    status = orbit_age_status(elapsed)
     return f"Orbit data {taken.day} {taken:%b}{age}", status
 
 

@@ -12,6 +12,7 @@ from data import celestrak, spacetrack
 from data.tle_cache import bundle_key, load_bundled_gp_history
 from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS
 from evidence.registry_tables import dashboard_registry_rows, generation_satellites
+from ui.age_rule import orbit_age_status
 
 SATELLITES = {"NavIC": NAVIK_SATS, "QZSS": QZSS_SATS, "BeiDou-3": BEIDOU3_SATS, **MEO_SATS}
 TRACKED = {name: [norad for norad in sats.values() if norad is not None] for name, sats in SATELLITES.items()}
@@ -123,13 +124,7 @@ def _newest(rows):
 
 
 def _status(age_days):
-    if age_days is None:
-        return "idle"
-    if age_days >= ORBIT_STALE_DAYS:
-        return "bad"
-    if age_days >= ORBIT_ALERT_DAYS:
-        return "warn"
-    return "ok"
+    return orbit_age_status(age_days)
 
 
 def _fitted_rule(fitted_at, other_ats, now):
