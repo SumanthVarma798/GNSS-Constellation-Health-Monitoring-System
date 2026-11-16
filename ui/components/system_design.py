@@ -7,50 +7,123 @@ system works changes this file too, as it changes that page. Text reaches the pa
 put in with textContent, so it is never read as markup.
 """
 from pathlib import Path
+import re
 
+from evidence import jobs, source_overview, sources
+from evidence.console_settings import ARCHIVE_WORKFLOW, REGISTRY_UPDATE_WORKFLOW, WORKFLOWS_DIR
+from evidence.settings import (BACKOFF_FIRST, BACKOFF_LONGEST, DOWNLOAD_TRIES, MAX_COPY_BYTES, MIN_GAP_BETWEEN_DOWNLOADS,
+                               WAIT_BETWEEN_TRIES_SECONDS)
 from ui.components.master_map import embed
 
 PAGE_FILE = Path(__file__).with_name("system_design.html")
+
+
+def _workflow_text(name):
+    return (WORKFLOWS_DIR / name).read_text(encoding="utf-8")
+
+
+def _schedule_word(workflow_text, group):
+    crons = jobs.schedules(workflow_text).get(group, [])
+    return jobs.schedule_words(crons[0]) if crons else ""
+
+
+def _daily_times(words):
+    found = re.fullmatch(r"daily (.+)", words or "")
+    return [part.strip() for part in found.group(1).split(",")] if found else []
+
+
+def _daily_time(words):
+    times = _daily_times(words)
+    return times[0] if times else words
+
+
+def _hourly_words(words):
+    found = re.fullmatch(r"every (\d+) hours from (\d{2}:\d{2})", words or "")
+    return f"every {found.group(1)} hours" if found else words
+
+
+def _duration_words(delta):
+    seconds = int(delta.total_seconds())
+    if seconds % 86400 == 0:
+        days = seconds // 86400
+        return f"{days} day{'s' if days != 1 else ''}"
+    if seconds % 3600 == 0:
+        hours = seconds // 3600
+        return f"{hours} hour{'s' if hours != 1 else ''}"
+    if seconds % 60 == 0:
+        minutes = seconds // 60
+        return f"{minutes} minute{'s' if minutes != 1 else ''}"
+    return f"{seconds} second{'s' if seconds != 1 else ''}"
+
+
+def _schedule_label(group):
+    return {"orbital": "orbits", "x": "X"}.get(group, group)
+
+
+_ARCHIVE_WORKFLOW_TEXT = _workflow_text(ARCHIVE_WORKFLOW)
+_REGISTRY_WORKFLOW_TEXT = _workflow_text(REGISTRY_UPDATE_WORKFLOW)
+_SCHEDULES = jobs.schedules(_ARCHIVE_WORKFLOW_TEXT)
+_ARCHIVE_GROUPS = list(_SCHEDULES)
+_CATALOGUES_SCHEDULE = _schedule_word(_ARCHIVE_WORKFLOW_TEXT, "catalogues")
+_ORBITAL_SCHEDULE = _schedule_word(_ARCHIVE_WORKFLOW_TEXT, "orbital")
+_NEWS_SCHEDULE = _schedule_word(_ARCHIVE_WORKFLOW_TEXT, "news")
+_SOCIAL_SCHEDULE = _schedule_word(_ARCHIVE_WORKFLOW_TEXT, "social")
+_X_SCHEDULE = _schedule_word(_ARCHIVE_WORKFLOW_TEXT, "x")
+_REGISTRY_SCHEDULE = _schedule_word(_REGISTRY_WORKFLOW_TEXT, "")
+_OVERVIEW = source_overview.overview()
+_CANDIDATE_COUNT = _OVERVIEW["candidates"]
+_PROPOSED_COUNT = sum(n for grade, n in _OVERVIEW["proposed"].items() if grade)
+_NEWS_SOURCE_COUNT = len(sources.ARCHIVED_SOURCES["news"])
+_X_ACCOUNT_COUNT = len(sources.ARCHIVED_SOURCES["x"])
+_ORBITAL_TIMES = _daily_times(_ORBITAL_SCHEDULE)
+_ORBITAL_FIRST_TIME = _ORBITAL_TIMES[0] if _ORBITAL_TIMES else _ORBITAL_SCHEDULE
+_X_ACCOUNT_WORD = "account" if _X_ACCOUNT_COUNT == 1 else "accounts"
+_CELESTRAK_GAP_WORDS = _duration_words(MIN_GAP_BETWEEN_DOWNLOADS["celestrak.org"])
+_REGISTRY_WEEKDAY_EACH = _REGISTRY_SCHEDULE.split()[0].removesuffix("s")   # "Sundays 01:00" gives "Sunday"
 
 # Each part: (name, built | planned | key (where a person decides), in simple terms, key technical details,
 # limits and risks, where it lives). The keys are the boxes' ids in the page's picture.
 PARTS = {
     "igs": ("IGS satellite file", "built",
             "The International GNSS Service's list of every navigation satellite: which spacecraft is which, its signal ID, its block.",
-            ["Copied into the archive by the documents job", "The registry is rebuilt from the archived copy each Sunday",
+            ["Copied into the archive by the documents job",
+             f"The registry is rebuilt from the archived copy each {_REGISTRY_WEEKDAY_EACH}",
              "Graded B: a scientific body"],
             ["One file with one maintainer (DLR, for IGS); if its layout changes, the rebuild stops and says so"],
             "evidence/igs_metadata.py · scripts/build_registry.py"),
     "gcat": ("GCAT catalogue", "built",
              "One expert's catalogue of every object launched, with owner, state and dates: a second opinion on each satellite, and the Library's counts.",
-             ["Archived daily at 00:45 UTC, after its own daily rebuild", "Graded C: widely cited, not an institution"],
+             [f"Archived daily at {_daily_time(_CATALOGUES_SCHEDULE)} UTC, after its own daily rebuild",
+              "Graded C: widely cited, not an institution"],
              ["Its author updates some dates patchily, so its status is read as his latest word, not a live one"],
              "evidence/gcat.py · evidence/catalogue_check.py"),
     "cel": ("CelesTrak orbit records", "built",
             "Where every satellite is: published orbit records (two-line elements) for the GNSS group. The dashboard's orbit maths starts here.",
-            ["The dashboard asks at most once every 2 hours, CelesTrak's own limit",
-             "Archived four times a day from 01:15 UTC, so every day's records are kept", "Graded B"],
+            [f"The dashboard asks at most once every {_CELESTRAK_GAP_WORDS}, CelesTrak's own limit",
+             f"Archived {len(_ORBITAL_TIMES)} times a day from {_ORBITAL_FIRST_TIME} UTC, so every day's records are kept",
+             "Graded B"],
             ["If CelesTrak fails, the dashboard keeps its last copy and says since when it has been failing"],
             "data/celestrak.py · evidence/settings.py"),
     "news": ("News and official feeds", "built",
              "Operator pages, advisories, specialist press and newsletters: what people say about the satellites.",
-             ["57 candidate sources, each with a proposed grade waiting for approval",
-              "44 read every 3 hours; a copy is kept only when the page changed",
-              "X accounts are read through twitterapi.io every 6 hours",
+             [f"{_CANDIDATE_COUNT} candidate sources, {_PROPOSED_COUNT} with a proposed grade waiting for approval",
+              f"{_NEWS_SOURCE_COUNT} read {_hourly_words(_NEWS_SCHEDULE)}; a copy is kept only when the page changed",
+              f"{_X_ACCOUNT_COUNT} X {_X_ACCOUNT_WORD} are read through twitterapi.io {_hourly_words(_X_SCHEDULE)}",
               "Substack newsletters arrive by email and are read as feeds from feeds.opengnss.org (Substack refuses GitHub's servers)",
               "Read for evidence only: nothing they say changes anything yet"],
-             ["Some fail in every run (6 of 44 on 20 Oct); the Jobs page shows which",
+             ["Some fail in every run; the Jobs page shows which",
               "Two tracker sites are never fetched, by a rule in the settings"],
              "evidence/source_candidates.csv · evidence/news.py"),
     "social": ("Social feeds", "built",
                "Reddit groups about space agencies and navigation, kept for the links they carry, never as evidence on their own.",
-               ["Read once a day at 01:40 UTC; Reddit refuses quick repeat requests", "Social posts never count as a second source"],
+               [f"Read once a day at {_daily_time(_SOCIAL_SCHEDULE)} UTC; Reddit refuses quick repeat requests",
+                "Social posts never count as a second source"],
                ["Grade E at most"], "evidence/settings.py (SOCIAL_PLATFORM_HOSTS)"),
     "job": ("Archive job", "built",
             "The collector. On a timer it visits every source politely, keeps a copy of anything new, and writes one line per run saying how it went.",
-            ["GitHub Actions, six schedules: documents, catalogues, orbits, news, social, X",
-             "Up to 3 tries per download, 60 s apart; a site that refuses is left for 1 hour, doubling up to 7 days",
-             "Copies over 50 MB are not kept"],
+            [f"GitHub Actions, {len(_ARCHIVE_GROUPS)} schedules: {', '.join(_schedule_label(group) for group in _ARCHIVE_GROUPS)}",
+             f"Up to {DOWNLOAD_TRIES} tries per download, {WAIT_BETWEEN_TRIES_SECONDS} s apart; a site that refuses is left for {_duration_words(BACKOFF_FIRST)}, doubling up to {_duration_words(BACKOFF_LONGEST)}",
+             f"Copies over {MAX_COPY_BYTES // (1024 * 1024)} MB are not kept"],
             ["GitHub starts scheduled runs late, sometimes by hours, and sometimes skips them"],
             ".github/workflows/archive.yml · evidence/archive.py"),
     "hc": ("Healthchecks.io", "built",
@@ -65,7 +138,7 @@ PARTS = {
             "the …-archive repository · evidence/archive.py"),
     "regjob": ("Registry job", "built",
                "Once a week it rebuilds the satellite tables from the archived IGS file and, if anything changed, proposes the change in plain words.",
-               ["Sundays 01:00 UTC, after that day's fetch",
+               [f"{_REGISTRY_SCHEDULE} UTC, after that day's fetch",
                 "Opens one pull request labelled 'decision: registry update' and starts the tests on it"],
                ["It never writes to the main copy itself"], ".github/workflows/registry-update.yml"),
     "store": ("Query store", "built",
@@ -147,6 +220,8 @@ def payload():
 def system_design_html(tokens_css, font):
     """The finished page: the console's colours first, the data last so it is never searched for placeholders."""
     page = PAGE_FILE.read_text(encoding="utf-8").replace("__TOKENS__", tokens_css).replace("__FONT__", font)
+    page = page.replace("__NEWS_READ__", f"{_NEWS_SOURCE_COUNT} read {_hourly_words(_NEWS_SCHEDULE)}".replace(" hours", " h"))
+    page = page.replace("__ARCHIVE_SCHEDULES__", f"{len(_ARCHIVE_GROUPS)} schedules")
     return page.replace("const DATA = __DATA__;", f"const DATA = {embed(payload())};", 1)
 
 
