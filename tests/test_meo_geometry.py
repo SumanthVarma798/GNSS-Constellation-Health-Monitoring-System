@@ -98,6 +98,25 @@ def test_a_satellite_away_from_its_height_is_scored_on_it_and_left_out_of_the_ga
     assert checks(rows["B01"])["spacing"][3] == checks(rows["B03"])["spacing"][3] == 100
 
 
+def test_two_satellites_in_one_slot_the_nearer_holds_it_and_the_other_is_left_out_of_the_gaps():
+    # GPS keeps an older satellite near the slot a newer one took over; the IGS file still gives both that slot
+    elements, registry = {}, {}
+    for slot, u in GALILEO_SLOTS.items():
+        if int(slot[1:]) <= 8:
+            plane = str("ABC".index(slot[0]) + 1)
+            elements[slot] = element(PLANE_NODE[plane], u)
+            registry[slot] = {"plane": plane, "slot": slot, "signal_id_now": slot}
+    elements["OLD A03"] = element(PLANE_NODE["1"], GALILEO_SLOTS["A03"] + 20)
+    registry["OLD A03"] = {"plane": "1", "slot": "A03", "signal_id_now": ""}
+
+    rows = {row["name"]: row for row in assess("Galileo", elements, registry)}
+
+    assert rows["OLD A03"]["shares_slot"] and not rows["A03"]["shares_slot"]
+    assert "spacing" not in checks(rows["OLD A03"])
+    # counted, the old one would put A03's gap ahead at 20 against 0, and A04's gap behind at 25 against 45
+    assert checks(rows["A03"])["spacing"][3] == checks(rows["A04"])["spacing"][3] == 100
+
+
 def test_older_elements_are_moved_to_the_newest_epoch():
     day = mean_motion(GALILEO_A) * 360   # degrees along the orbit in a day
     rows = galileo({"C05": {"u": GALILEO_SLOTS["C05"] - day, "epoch": EPOCH - timedelta(days=1)}})

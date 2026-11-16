@@ -2,6 +2,14 @@
 
 The numbers marked "our choice" are not from a standard: they are named on the page, in "How to read this page".
 """
+from datetime import timedelta
+
+# Home's counts, made four times a day by the archive job (scripts/home_snapshot.py, .github/workflows/archive.yml).
+SNAPSHOT_URL = ("https://raw.githubusercontent.com/SumanthVarma798/"
+                "GNSS-Constellation-Health-Monitoring-System/orbit-data/home_snapshot.json")
+# Older than this and Home counts again itself. Our choice: the job runs every 6 to 7 hours, so one late run is
+# covered and two are not.
+SNAPSHOT_MAX_AGE = timedelta(hours=14)
 
 # Who runs each system and where it serves, for a reader new to them: {system (ui/systems.py): (who, where)}.
 SYSTEMS = {
@@ -14,9 +22,7 @@ SYSTEMS = {
 }
 
 # What the page does not yet take into account for one system, said in its row: {name: one plain sentence}.
-CAVEATS = {
-    "GPS": "GPS flies more satellites than its 24 listed slots; the extra ones can read as out of step (issue 226).",
-}
+CAVEATS = {}
 
 # "Worth a look": the rules, in the order their findings are listed. {rule: (name, what it compares)}.
 RULES = {
@@ -46,6 +52,10 @@ HOW = [
         ("Healthy and in place", "The satellite's orbit, from public tracking records, scores 80 or more out of 100, "
          "and it sits in its slot or keeps step in its orbital plane. The constellation's own page shows every part of "
          "that score."),
+        ("Needs a look", "Counted, but not healthy and in place: its orbit scores under 80, or it is out of its slot, "
+         "out of step with its plane or off its plane. Its constellation's page says which."),
+        ("Set aside", "Moved to a graveyard orbit, away from the working orbit, after its service ended. It is in the "
+         "total but not judged."),
         ("Orbit kept", "The satellite is on the orbit it should be on. For one held over a longitude that is its "
          "tilt; for one in a medium orbit, its plane, tilt, height and shape. Each must score 80 or more."),
         ("Station held", "It is being held there: it is in its slot and not drifting, or in step with the others in "
@@ -83,6 +93,9 @@ HOW = [
 # them}. On the row they are a link to that card.
 HOW_LINKS = {
     "healthy and in place": "What is measured",
+    "needs a look": "What is measured",
+    "set aside": "What is measured",
+    "new, not scored yet": "What is left out",
     "orbit kept": "What is measured",
     "station held": "What is measured",
     "clock steady": "What is measured",

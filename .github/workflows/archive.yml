@@ -225,3 +225,39 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit --quiet -m "Latest CelesTrak GNSS copy for the dashboard"
           git push --quiet --set-upstream origin orbit-data
+
+  publish-home:
+    # Home's counts, made with the dashboard's own code so the dashboard need not count them on every cold start
+    # (scripts/home_snapshot.py, ui/home_data.py). Runs after the orbit copy so it counts from the newest one. Never
+    # touches main. A failed run only leaves the last copy, which Home stops using once it is SNAPSHOT_MAX_AGE old.
+    if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System' && always() && (needs.archive.outputs.group == 'orbital' || needs.archive.outputs.group == 'all')
+    needs: [archive, publish-orbits]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15  # a cold pip cache installs the whole requirements.txt
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'  # matches runtime.txt
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements.txt
+      - name: Count Home
+        run: python scripts/home_snapshot.py --out "$RUNNER_TEMP/home_snapshot.json"
+        env:
+          SPACETRACK_USERNAME: ${{ secrets.SPACETRACK_USERNAME }}
+          SPACETRACK_PASSWORD: ${{ secrets.SPACETRACK_PASSWORD }}
+      - name: Write home_snapshot.json on orbit-data
+        run: |
+          git fetch --quiet origin orbit-data
+          git worktree add "$RUNNER_TEMP/orbit-data" --detach FETCH_HEAD
+          cd "$RUNNER_TEMP/orbit-data"
+          git switch --quiet -C orbit-data
+          cp "$RUNNER_TEMP/home_snapshot.json" home_snapshot.json
+          git add home_snapshot.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --quiet -m "Home's counts for the dashboard"
+          git push --quiet origin orbit-data

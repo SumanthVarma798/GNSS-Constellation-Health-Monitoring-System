@@ -1,5 +1,5 @@
 """Shared by every test: no test reads or writes the real per-user CelesTrak or Space-Track copy, and none asks
-GitHub for the published orbit-record check or the archive job's orbit copy."""
+GitHub for the published orbit-record check, the archive job's orbit copy or its count of Home."""
 import os
 from pathlib import Path
 
@@ -22,6 +22,7 @@ def private_celestrak_copy(monkeypatch, tmp_path):
                                               "note": "ok"})
     monkeypatch.setattr(data, "orbit_gap", lambda: {})
     monkeypatch.setattr(data, "fitted_orbits", lambda: {})
+    monkeypatch.setattr(home_data, "_snapshot", lambda: {})   # Home counts itself, unless a test publishes a copy
     monkeypatch.setattr(celestrak, "fetch_copy", _no_copy)
     # The tests written before the Home page open on the Overview, as the dashboard then did; tests/test_home.py
     # sets the default back.
