@@ -1,6 +1,23 @@
 {
- "generated_at": "2026-11-16T19:54:29Z",
+ "generated_at": "2026-11-16T22:35:13Z",
  "items": [
+  {
+   "address": "https://x.com/Stellarixorine/status/2122372128267976977",
+   "category": "other",
+   "constellations": [
+    "GPS",
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-16T22:35:13Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "Stellarix (@Stellarixorine)",
+   "published_at": "2026-11-16T16:52:01Z",
+   "source_id": "x.com/Stellarixorine",
+   "summary": "ONE DAY, ONE SPACE AGENCY — Day 23 / 70+ 🚀✨ 🇨🇿 Czech🇨🇿 Republic — Czech Space Office / Ministerstvo dopravy The Space Engineering Heart of Europe 🔧🛰️ 🇨🇿--------------🇨🇿 📅 FORMED: Czech space since 1960s, Czech Space Office founded 2003, ESA member since 2008 📍 HEADQUARTERS: Prague, Czech Republic…",
+   "title": "ONE DAY, ONE SPACE AGENCY — Day 23 / 70+ 🚀✨ 🇨🇿 Czech🇨🇿 Republic — Czech Space Office / Ministerstvo dopravy The Space…",
+   "via": "https://x.com/Stellarixorine"
+  },
   {
    "address": "https://news.google.com/rss/articles/CBMivAFBVV95cUxNMGVnOFpqVHgxTHE3OGR2SzY2dDNodWlVOGVJa251TVI3bXhHOUhRSHM3YXM1RFlHVHBBcXZDV0hHNmtCWjRzZ0FVS0xGa3NwWkEzaXg3NnUtRnY1X0RqRmI3NHFRcFk3alVWRE5KYXNzcWhERFFFSHZMYUN0QTA2VnNjb0lXUUZwVFlBclFGQktnWjZLa1VsM0w2clBNUHNZYjhpTUYtOG01NmQxWFpfNmtHRHhIQ05TMzhNQw?oc=5",
    "category": "signal and service",
@@ -7233,22 +7250,6 @@
    "source_id": "deccanherald.com",
    "summary": "",
    "title": "Why is India's 'desi' GPS 'NavIC' dying?",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMivgFBVV95cUxNVHFnSXNoNnB4NHdwZl9aYWlaYjZXcUl4WS1hUjFvYnRfY0YtOG5uUFkwR1Axb1NxQTl2NUljUDRJcmtCcUtsUk5KbG9XU2Q5endrTG5EcWZQbEJsY0ZpbnlHamFNLUYyRHRzTDhtZ1VNcGdOTno2V1l6YWxobGRBRlRPQXRnTnh1OUFxUW1WOUg3dTVUME5ObnR2cFJ1a1l6dmdNVENBSDV2VElGTWdmZEUzaXFydlE4NVRzN3VB0gHDAUFVX3lxTE5uRV95Q0luYlZkN3lvVjk0am95ZVZGYWplREN5MmIzWTE0aTUwc0w2cWVnZHJfSVFZMFZjNGpNMjFDa0hhczJ5RWtweWhydWRKVTQtTXZocDFPc2NXM3Y2eW1Sakx1WUUtNVlMQVVGUVhGbk9abjIyakJBZ1VMbm9BcmdRZVMtRjdIcEh2OVdrbzZDTWk4RFh3OWgxUTR4bFFSMUxMOXpDNjVjMUpQbGpteWhYcXBLQ1owNWlDNFYxNHZfVQ?oc=5",
-   "category": "other",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "The Week",
-   "published_at": "2026-03-16T07:00:00Z",
-   "source_id": "theweek.in",
-   "summary": "",
-   "title": "NavIC in crisis: Why India’s GPS alternative faces a race against time",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
