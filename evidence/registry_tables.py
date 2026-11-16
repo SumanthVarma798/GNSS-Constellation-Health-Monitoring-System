@@ -60,6 +60,12 @@ def blocks(page_name):
     return tuple(prefix for prefix in (row or {}).get("block_prefixes", "").split() if prefix)
 
 
+def judged_by_plane(page_name):
+    """Whether a dashboard page judges its satellites by orbital plane, not longitude slot."""
+    row = _system_row(page_name)
+    return row is not None and row["orbit_kind"] == "global"
+
+
 def _tracked(constellation):
     """(dashboard name, registry row or None) for each satellite the dashboard tracks in one constellation, in display
     order; see _system_rows()."""

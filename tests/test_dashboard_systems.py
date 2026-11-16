@@ -1,6 +1,8 @@
 """The dashboard_systems table: one row per page system, and every tracked satellite lands on exactly one page."""
+from ui import systems
+from ui.home_settings import SYSTEMS as WHO
 from evidence.registry_tables import (constellation_names, dashboard_satellites, dashboard_satellites_not_in_registry,
-                                       dashboard_systems, read_table, registry_name)
+                                       dashboard_systems, judged_by_plane, read_table, registry_name)
 from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE
 
 
@@ -26,3 +28,15 @@ def test_registry_name_maps_the_two_beidou_pages_and_leaves_the_others_alone():
     for page in ("NavIC", "QZSS", "GPS", "GLONASS", "Galileo"):
         assert registry_name(page) == page
     assert registry_name("Starlink") == "Starlink"
+
+
+def test_judged_by_plane_is_exactly_the_global_systems():
+    for page in ("GPS", "GLONASS", "Galileo", "BeiDou-3 MEO"):
+        assert judged_by_plane(page)
+    for page in ("NavIC", "QZSS", "BeiDou-3", "Starlink"):
+        assert not judged_by_plane(page)
+
+
+def test_who_where_covers_every_page_system():
+    for row in dashboard_systems():
+        assert systems.system_of(row["page_name"]) in WHO

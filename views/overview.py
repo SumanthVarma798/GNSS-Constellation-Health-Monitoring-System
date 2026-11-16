@@ -13,8 +13,8 @@ import pandas as pd
 import streamlit as st
 
 from analysis.commissioning import SETTLING_DAYS
-from config.config import MEO_SATS, TRACKED_NOT_IN_REGISTRY
-from evidence.registry_tables import left_out_notice, new_on_dashboard
+from config.config import TRACKED_NOT_IN_REGISTRY
+from evidence.registry_tables import judged_by_plane, left_out_notice, new_on_dashboard
 from ui import (checks, data, limits, measures, meo_overview, official_status, orbit_age, orbit_section,
                 marks, palette, reveal, shell, surfaces, systems, three_measures, time_range, tooltip)
 from ui.data import SATELLITES
@@ -192,7 +192,7 @@ def constellation(name, window_days, params):
     surfaces.show(_system_line(name, window_days, params))
     measured = summary(name, result, data.orbit_gap())
     surfaces.show(three_measures.strip(measured))   # the three measures, declared before the count
-    if name in MEO_SATS:   # judged by orbital plane, not longitude slot
+    if judged_by_plane(name):   # judged by orbital plane, not longitude slot
         meo_overview.page(name, result)
         three_measures.section(measured)
         return
@@ -237,14 +237,14 @@ def compare(window_days, params):
     for name, picked in picks.items():
         result = data.load(name, window_days, params)
         tags = orbit_age.tags(name, result)
-        tiles = meo_overview.tiles(result, tags) if name in MEO_SATS else _tiles(result, tags)[0]
+        tiles = meo_overview.tiles(result, tags) if judged_by_plane(name) else _tiles(result, tags)[0]
         chosen += [(s, *tiles[s]) for s in picked if s in tiles]
-        if name not in MEO_SATS:   # the limits table is for slot-keeping satellites
+        if not judged_by_plane(name):   # the limits table is for slot-keeping satellites
             measured += [(name, result, tiles[s][2]) for s in picked if s in tiles and tiles[s][2] is not None]
     if not chosen:
         surfaces.show('<p class="small">Add satellites to compare.</p>')
         return
-    parts = PARTS + (meo_overview.PARTS if set(picks) & set(MEO_SATS) else [])
+    parts = PARTS + (meo_overview.PARTS if any(judged_by_plane(name) for name in picks) else [])
     scores = [[as_number(health.get(column)) if health else None for _, column in parts] for *_, health in chosen]
     rows = [(label, [column[i] for column in scores]) for i, (label, _) in enumerate(parts)]
     surfaces.show(surfaces.compare_grid([html for _, html, _, _ in chosen], surfaces.parts_matrix(rows)))

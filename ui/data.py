@@ -11,7 +11,7 @@ from config.config import BEIDOU3_SATS, GENERATIONS, MEO_SATS, NAVIK_SATS, QZSS_
 from data import celestrak, spacetrack
 from data.tle_cache import bundle_key, load_bundled_gp_history
 from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS
-from evidence.registry_tables import dashboard_registry_rows, generation_satellites
+from evidence.registry_tables import dashboard_registry_rows, generation_satellites, judged_by_plane
 from ui.age_rule import orbit_age_status
 
 SATELLITES = {"NavIC": NAVIK_SATS, "QZSS": QZSS_SATS, "BeiDou-3": BEIDOU3_SATS, **MEO_SATS}
@@ -70,7 +70,7 @@ def fitted_by_norad():
 # 512 MB Render gives the dashboard within about a day awake. 24 holds every constellation at a few time ranges.
 @st.cache_data(show_spinner=False, max_entries=24)
 def _assess(constellation, window_days, params, now, fresh):
-    assess_any = assess_meo if constellation in MEO_SATS else assess_constellation
+    assess_any = assess_meo if judged_by_plane(constellation) else assess_constellation
     return assess_any(constellation, now, window_days, params, fresh)
 
 

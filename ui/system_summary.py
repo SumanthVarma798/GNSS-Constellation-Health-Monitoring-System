@@ -6,9 +6,9 @@ from datetime import datetime, timedelta, timezone
 
 from analysis import commissioning
 from analysis.meo_geometry import plane_drift
-from config.config import MEO_SATS
 from statistics import median
 
+from evidence.registry_tables import judged_by_plane
 from ui import limits, meo_overview, orbit_age, orbit_section, palette, systems
 from ui.figures.slot_rows import as_number
 
@@ -121,7 +121,7 @@ def summary(name, result, gap=None):
     settling: {satellite: which stage it is at} for the new satellites not scored yet, which are not counted. planes: plane_drift's rows for a
     system judged by plane, else {}. `gap` is ui.data.orbit_gap()'s payload.
     """
-    by_plane = name in MEO_SATS
+    by_plane = judged_by_plane(name)
     sats = _plane_satellites(result) if by_plane else _slot_satellites(result)
     statuses = orbit_age._status_by_satellite(gap)
     for sat in sats:

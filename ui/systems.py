@@ -4,16 +4,17 @@ A part is a key of ui.data.SATELLITES: what `scope` holds and every page reads. 
 BeiDou-3 is two: its high-orbit satellites are judged by longitude slot, its medium-orbit ones by orbital plane.
 The reader chooses a system first; a system with parts then offers them, one step deeper.
 """
-from ui import data
+from evidence.registry_tables import dashboard_systems
 
 # {system: {part: what the part is called beside the system's name}}. A system not listed is its own one part.
 PARTS = {"BeiDou-3": {"BeiDou-3": "IGSO & GEO", "BeiDou-3 MEO": "MEO"}}
 
 
 def _systems():
-    """{system: (its parts)}, in the order of ui.data.SATELLITES."""
+    """{system: (its parts)}, in the order of the dashboard systems."""
     found = {}
-    for part in data.SATELLITES:
+    for row in dashboard_systems():
+        part = row["page_name"]
         system = next((name for name, parts in PARTS.items() if part in parts), part)
         found[system] = found.get(system, ()) + (part,)
     return found

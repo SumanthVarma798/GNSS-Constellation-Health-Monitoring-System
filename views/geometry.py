@@ -16,7 +16,7 @@ import streamlit as st
 from skyfield.api import EarthSatellite
 
 from analysis.raan_analysis import analyze_raan_spacing
-from config.config import MEO_SATS
+from evidence.registry_tables import judged_by_plane
 from ui import limits, data, reveal, shell, surfaces, tooltip
 from ui import geometry_data as gd
 from ui import geometry_settings as gs
@@ -175,7 +175,7 @@ def _trends(constellation, result, names, types, now):
     since = pd.Timestamp((now - timedelta(days=window_days)).date())
     history = result["history"]
     history = history[history["satellite"].isin(names) & (history["EPOCH"] >= since)]
-    measures = gs.MEO_TRENDS if constellation in MEO_SATS else gs.TRENDS
+    measures = gs.MEO_TRENDS if judged_by_plane(constellation) else gs.TRENDS
     series = {column: history[["satellite", "EPOCH", column]].dropna() for column, *_ in measures if column in history}
     if measures is gs.TRENDS:
         series["central_lon"] = gd.central_longitudes(result["history"], names, since)

@@ -2,7 +2,7 @@
 Home. A strip at the top declares the counts; a section lists every satellite with what each measure read and the
 figure behind it. What counts for each measure is in ui/limits.py (MEASURES, CLOCK_STEADY_NS).
 """
-from config.config import MEO_SATS
+from evidence.registry_tables import judged_by_plane
 from ui import limits, meo_overview, palette, reveal, surfaces, systems
 
 # (key in ui.system_summary's counts, the words on the page), in the order shown everywhere.
@@ -80,7 +80,7 @@ def _clock(sat):
 
 def table(summary):
     """Every satellite against the three measures and its own flag, with the figure behind each."""
-    kind = "plane" if summary["name"] in MEO_SATS else "slot"
+    kind = "plane" if judged_by_plane(summary["name"]) else "slot"
     labels = meo_overview.LABELS if kind == "plane" else {"Inclination": "tilt", "Drift": "drift"}
     columns = [("Satellite", ""), ("Orbit kept", "on the orbit it should be on"),
                ("Station held", STATION_LINE[kind]),

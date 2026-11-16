@@ -23,7 +23,7 @@ GRAVEYARD_ORBIT_MIN = 35986.0  # Minimum graveyard orbit altitude (GEO + 200 km)
 NAVIK_SATS = dashboard_satellites("NavIC")
 
 # The medium Earth orbit (MEO) systems, in the order the constellation chips show them.
-MEO_SYSTEMS = ("BeiDou-3 MEO", "GPS", "GLONASS", "Galileo")
+MEO_SYSTEMS = tuple(row["page_name"] for row in dashboard_systems() if row["orbit_kind"] == "global")
 
 # Tracked satellites the registry does not list, by the constellation name the dashboard
 # shows. Normally empty. The dashboard runs without them and says so in a notice.

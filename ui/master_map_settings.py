@@ -4,15 +4,7 @@ Rows follow the constellations as the other pages name them (ui/systems.py SYSTE
 constellation is read from registry/dashboard_systems.csv (evidence/registry_tables.py).
 """
 
-# Who runs each constellation and where it serves, in the Home page's words (ui/home_settings.py): {name: (who, where)}.
-WHO = {
-    "NavIC": ("India", "regional: India and 1,500 km around"),
-    "QZSS": ("Japan", "regional: Japan and Asia-Oceania"),
-    "BeiDou-3": ("China", "global, with high orbits over Asia-Pacific"),
-    "GPS": ("United States", "global"),
-    "GLONASS": ("Russia", "global"),
-    "Galileo": ("European Union", "global"),
-}
+from ui.home_settings import SYSTEMS as WHO
 
 # Every source named in full wherever a reader meets it on this page, never "the catalogue" or "the file":
 # {short name the evidence code uses (evidence/settings.py): the name a reader sees}.
