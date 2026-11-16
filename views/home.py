@@ -65,7 +65,8 @@ def _how_scored(system, index):
             ("", "Orbit kept", "on the orbit it should be on"),
             ("", "Station held", "held in its slot, or in step with its plane"),
             ("", "Clock steady", "no clock step past 30 ns in the day")],
-        note=("Counted the same: our choice. " if used == 3 else f"From {used} of 3 today: one could not be read. ")
+        note=("Counted the same: our choice. " if used == 3 else "None could be read today, so there is no score. "
+              if not used else f"From {used} of 3 today: {reveal.count(3 - used, 'measure')} could not be read. ")
         + "Open the card for each one."), key=f"score_{index}")
 
 

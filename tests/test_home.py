@@ -411,7 +411,7 @@ def test_each_card_leads_with_its_score_and_its_how_scored_tip_says_when_it_is_f
     assert score and f'<details class="sys card {score.group(2)}">' in navic   # the card's edge in the score's colour
     # no broadcast check in tests, so no clock: the tip on "how this is scored" says the score is from 2 of 3
     assert 'tabindex="0" aria-describedby="tt-' in head and ">how this is scored</span>" in head
-    assert "From 2 of 3 today: one could not be read." in head
+    assert "From 2 of 3 today: 1 measure could not be read." in head
     # opened: the three measures in the score, and what is shown beside it
     assert re.search(r"<h4>In the score</h4>.*orbit kept.*station held.*clock steady", body)
     assert re.search(r"<h4>Shown beside, not in the score</h4>.*says healthy.*flag matches our check.*burns", body)
