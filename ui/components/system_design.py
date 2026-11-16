@@ -220,6 +220,8 @@ def payload():
 def system_design_html(tokens_css, font):
     """The finished page: the console's colours first, the data last so it is never searched for placeholders."""
     page = PAGE_FILE.read_text(encoding="utf-8").replace("__TOKENS__", tokens_css).replace("__FONT__", font)
+    page = page.replace("__NEWS_READ__", f"{_NEWS_SOURCE_COUNT} read {_hourly_words(_NEWS_SCHEDULE)}".replace(" hours", " h"))
+    page = page.replace("__ARCHIVE_SCHEDULES__", f"{len(_ARCHIVE_GROUPS)} schedules")
     return page.replace("const DATA = __DATA__;", f"const DATA = {embed(payload())};", 1)
 
 

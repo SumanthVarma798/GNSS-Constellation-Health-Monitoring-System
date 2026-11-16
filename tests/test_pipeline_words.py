@@ -17,12 +17,6 @@ def _normalize(text):
     return re.sub(r"\s+", " ", text).strip()
 
 
-def _before_placeholder(command):
-    # Some shell placeholders expand to runtime values, so as a fallback we match the stable prefix before "$".
-    at = command.find("$")
-    return (command[:at] if at >= 0 else command).strip()
-
-
 def _module(path):
     return importlib.import_module(path.removesuffix(".py").replace("/", "."))
 
@@ -41,12 +35,7 @@ def test_stage_commands_are_kept_in_sync_with_their_workflow_files():
             # archive.yml runs every group with --group "$GROUP"; the words name the group itself.
             if technical.get("schedule_group"):
                 command = command.replace(f"--group {technical['schedule_group']}", '--group "$GROUP"')
-            normalized_command = _normalize(command)
-            if normalized_command and normalized_command in normalized_workflow:
-                continue
-            expected = _normalize(_before_placeholder(command))
-            assert expected, (stage_key, command)
-            assert expected in normalized_workflow, (stage_key, command)
+            assert _normalize(command) in normalized_workflow, (stage_key, command)
 
 
 def test_each_stage_setting_exists_in_one_of_its_named_setting_modules():

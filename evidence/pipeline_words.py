@@ -435,7 +435,7 @@ STAGES = {
             "schedule_group": _schedule_group("orbit_ages"),
             "commands": [
                 "python scripts/orbit_ages.py --archive archive --outcome \"$RUNNER_TEMP/orbit-ages.json\"",
-                "jq -r '.line // \"\"' \"$RUNNER_TEMP/orbit-ages.json\"",
+                "jq -r '.line // \"\"' \"$OUTCOME_FILE\" 2>/dev/null",
             ],
             "inputs": [
                 "Tracked NORAD IDs from config/config.py",
