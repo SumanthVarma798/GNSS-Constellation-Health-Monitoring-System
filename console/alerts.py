@@ -5,7 +5,7 @@ from html import escape
 import requests
 import streamlit as st
 
-from console import common
+from console import common, pages
 from evidence import alerts
 from evidence.alert_settings import (
     CHECKS,
@@ -18,11 +18,7 @@ from evidence.alert_settings import (
 from evidence.console_settings import RELIABILITY_DAYS
 from ui import console
 
-def _link(url, words):
-    if not url:
-        return '<span class="muted">none</span>'
-    safe_url = escape(url, quote=True)
-    return f'<a href="{safe_url}" target="_blank" rel="noopener noreferrer">{escape(words)}</a>'
+PAGE = pages.ALERTS
 
 
 def _streak_hours_words(hours):
@@ -34,10 +30,7 @@ def _streak_hours_words(hours):
 
 
 def _alerts_key():
-    try:
-        return str(st.secrets.get(SECRETS_SECTION, {}).get("key") or "").strip()
-    except FileNotFoundError:
-        return ""
+    return str(common.secret_section(SECRETS_SECTION).get("key") or "").strip()
 
 
 @st.cache_data(ttl=READ_EVERY_SECONDS, show_spinner="Reading Healthchecks.io…")
@@ -78,13 +71,12 @@ def _checks_table(rows):
     )
 
 
-seen = common.read()
+seen = common.read_page(PAGE.path)
 now = common.now()
 streak = alerts.green_streak(seen["runs"], now)
 
 body, actions = common.layout(
-    "alerts",
-    "Alerts",
+    PAGE.path,
     "Green streak, Healthchecks.io checks, and failed scheduled runs. Times in UTC.",
 )
 
@@ -105,7 +97,7 @@ with body:
     if streak["broke_on"] and streak["since"]:
         broke = (
             f"<p>Since {escape(console.when(streak['since']))} UTC, the last failed scheduled run: "
-            f"{escape(alerts.job_name(streak['broke_on']))} ({_link(streak['broke_on'].get('html_url'), 'link')}).</p>"
+            f"{escape(alerts.job_name(streak['broke_on']))} ({common.link(streak['broke_on'].get('html_url'), 'link')}).</p>"
         )
     green = (
         console.hero(_streak_hours_words(streak["hours"]), "green, at least" if streak["at_least"] else "green", tone)
@@ -173,7 +165,7 @@ with body:
                     escape(row["job"]),
                     console.status("bad", row["words"]),
                     escape(row["started"]),
-                    _link(row["html_url"], "Open"),
+                    common.link(row["html_url"], "Open"),
                 ]
                 for row in failed
             ],

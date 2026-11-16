@@ -8,13 +8,14 @@ from html import escape
 import requests
 import streamlit as st
 
-from console import common
+from console import common, pages
 from evidence import decisions, table_changes
 from evidence.decision_settings import (ACTIONS, AFTER_CHANGES, APPROVE, CHOICES, FINDING_ACTIONS, FINDING_CATEGORIES,
                                         MERGE_WORDS, OTHER_FINDINGS, REJECT, REPOSITORY, TESTS_WORDS)
 from ui import admin, console
 
 FINDING_CHOICES = {APPROVE: "Approve", REJECT: "Reject"}
+PAGE = pages.APPROVALS
 
 
 def waiting(days):
@@ -45,7 +46,7 @@ def decide(item, config, who):
             except requests.RequestException as error:
                 result = "bad", common.github_trouble(error)
             st.session_state["admin_result"] = (number, *result)
-            common.github.clear()   # read again: GitHub may have changed, whatever the outcome
+            common.clear_reading()   # read again: GitHub may have changed, whatever the outcome
             if result[0] == "ok":
                 for key in (f"choice_{number}", f"reason_{number}", f"changes_{number}"):
                     st.session_state.pop(key, None)
@@ -98,7 +99,7 @@ def finding_decide(item, finding, by_id, config, who):
         except requests.RequestException as error:
             result = "bad", common.github_trouble(error)
         st.session_state["admin_finding_result"] = ((number, finding_id), *result)
-        common.github.clear()
+        common.clear_reading()
         if result[0] == "ok":
             for key in (f"finding_choice_{number}_{finding_id}", f"finding_reason_{number}_{finding_id}"):
                 st.session_state.pop(key, None)
@@ -145,7 +146,7 @@ def finding_finish(item, by_id, all_approved, config, who):
         except requests.RequestException as error:
             result = "bad", common.github_trouble(error)
         st.session_state["admin_result"] = (number, *result)
-        common.github.clear()
+        common.clear_reading()
         st.rerun()
 
 
@@ -273,13 +274,13 @@ def old_style_item(item, reading, config, who):
 config = common.settings()
 email = st.user.get("email")
 who = st.user.get("name") or email
-seen = common.read()
+seen = common.read_page(PAGE.path)
 items = decisions.pending(seen["prs"], common.now())
 finding_items = [item for item in items if item["findings"] and not item["findings_unreadable"]]
 old_items = [item for item in items if item["findings_unreadable"] or not item["findings"]]
 
-body, actions = common.layout("approvals", "Approvals", "Changes the system proposes, and changes made from this "
-                                                        "console. Each is a pull request; approving merges it.")
+body, actions = common.layout(PAGE.path, "Changes the system proposes, and changes made from this console. Each is a "
+                                         "pull request; approving merges it.")
 with body:
     said = st.session_state.get("admin_result")
     if said and (said[1] == "ok" or said[0] not in {i["number"] for i in items}):   # its item has left the list

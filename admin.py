@@ -9,8 +9,8 @@ from html import escape
 
 import streamlit as st
 
-from console import common
-from evidence import decisions, jobs
+from console import common, pages
+from evidence import decisions
 from evidence.decision_settings import READ_EVERY_SECONDS
 from ui import console, sign_in_fix
 
@@ -28,10 +28,11 @@ def _sign_out():
 
 
 def _pick_scheme():
-    st.session_state["console_scheme"] = st.session_state["console_scheme_pick"] or st.session_state["console_scheme"]
+    st.session_state[common.CONSOLE_SCHEME_KEY] = (st.session_state[common.CONSOLE_SCHEME_PICK_KEY]
+                                                    or st.session_state[common.CONSOLE_SCHEME_KEY])
 
 
-scheme = st.session_state.setdefault("console_scheme", "auto")
+scheme = st.session_state.setdefault(common.CONSOLE_SCHEME_KEY, common.CONSOLE_SCHEME_DEFAULT)
 st.html(console.theme_css(scheme))
 
 config = common.settings()
@@ -54,28 +55,16 @@ if state != "in":
             _sign_out()
     st.stop()
 
-# The console tree: sections (shown as folders) and their pages, each page with its own icon.
-SECTIONS = {"Overview": [st.Page("console/summary.py", title="Summary", icon=":material/dashboard:", default=True),
-                         st.Page("console/design.py", title="System design", icon=":material/account_tree:",
-                                 url_path="design"),
-                         st.Page("console/ask.py", title="Ask", icon=":material/forum:", url_path="ask")],
-            "Monitoring": [st.Page("console/sources.py", title="Sources", icon=":material/public:", url_path="sources"),
-                           st.Page("console/jobs.py", title="Jobs", icon=":material/schedule:"),
-                           st.Page("console/pipeline.py", title="Live pipeline", icon=":material/conveyor_belt:",
-                                   url_path="pipeline"),
-                           st.Page("console/alerts.py", title="Alerts", icon=":material/notifications_active:",
-                                   url_path="alerts")],
-            "Work": [st.Page("console/work.py", title="Issues and pull requests", icon=":material/list_alt:",
-                             url_path="work"),
-                     st.Page("console/approvals.py", title="Approvals", icon=":material/task_alt:")]}
+SECTIONS = pages.navigation_sections()
 page = st.navigation(SECTIONS, position="sidebar")
-where = {p.url_path: (section, p) for section, pages in SECTIONS.items() for p in pages}
+where = {p.url_path: (section, p) for section, section_pages in SECTIONS.items() for p in section_pages}
 trail = common.follow(st.session_state.setdefault("console_trail", {"back": [], "forward": [], "at": None}), page.url_path)
 who = st.user.get("name") or email
 st.html(console.title_bar(page.title) + console.current_page_css(page.url_path))
 with st.sidebar, st.container(key="console_scheme"):   # placed in the tree's header, left of its close button
-    st.session_state["console_scheme_pick"] = scheme
-    st.segmented_control("Colours", list(console.SCHEMES), format_func=console.SCHEME_ICONS.get, key="console_scheme_pick",
+    st.session_state[common.CONSOLE_SCHEME_PICK_KEY] = scheme
+    st.segmented_control("Colours", list(console.SCHEMES), format_func=console.SCHEME_ICONS.get,
+                         key=common.CONSOLE_SCHEME_PICK_KEY,
                          on_change=_pick_scheme, label_visibility="collapsed",
                          help="Colours: as this computer is set, light, or dark")
 with st.container(key="console_bar"):
@@ -89,21 +78,19 @@ with st.container(key="console_bar"):
     crumb.html(f'<span class="c-crumb">GNSS Health Monitor › {escape(where[page.url_path][0])} › '
                f'<b>{escape(page.title)}</b></span>')
     if refresh.button("Refresh", key="console_refresh", icon=":material/refresh:", help="Read everything again from GitHub"):
-        common.github.clear()
-        st.session_state[common.REFRESH_PENDING] = True
+        common.request_refresh()
     person.html(f'<span class="c-who">Signed in as <b>{escape(who)}</b></span>')
     if out.button("Sign out", key="console_sign_out"):
         _sign_out()
 
 page.run()
 
-seen = common.read()
+seen = common.read_status()
 if st.session_state.pop(common.REFRESH_PENDING, False):
     st.toast(f"Read again from GitHub at {seen['read_at']:%H:%M} UTC")
-rows = jobs.job_rows(seen["workflows"], seen["runs"], seen["log"], common.workflow_texts(), common.now())
-failing = sum(r["result"][0] == "bad" for r in rows)
-off = sum(r["state"] == "Turned off" for r in rows)
-waiting = len(decisions.pending(seen["prs"], common.now()))
+failing = seen["status"]["failing"]
+off = seen["status"]["off"]
+waiting = seen["status"]["waiting"]
 st.html(console.status_bar(
     [console.status("bad" if failing else "ok", f"{failing} job{'' if failing == 1 else 's'} failing"),
      console.status("warn" if off else "ok", f"{off} turned off"),

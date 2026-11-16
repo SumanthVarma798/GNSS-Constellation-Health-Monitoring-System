@@ -7,6 +7,7 @@ from evidence.decision_settings import REPOSITORY
 
 API = "https://api.github.com"
 TIMEOUT_SECONDS = 20
+PAGE_SIZE = 100   # GitHub's largest page
 
 
 def ask(method, path, token, repository=REPOSITORY, **request):
@@ -21,3 +22,13 @@ def ask(method, path, token, repository=REPOSITORY, **request):
 def file_text(token, repository, path):
     """A text file from a repository's default branch."""
     return base64.b64decode(ask("GET", f"/contents/{path}", token, repository)["content"]).decode("utf-8")
+
+
+def paged(read_page, page_size=PAGE_SIZE):
+    """Collects paged rows by calling read_page(page_number) until the last (short) page."""
+    rows, page = [], 1
+    while True:
+        rows += (got := read_page(page))
+        if len(got) < page_size:
+            return rows
+        page += 1

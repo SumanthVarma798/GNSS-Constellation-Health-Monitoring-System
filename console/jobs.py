@@ -3,7 +3,7 @@ from html import escape
 
 import streamlit as st
 
-from console import common
+from console import common, pages
 from evidence import jobs
 from evidence.console_settings import ARCHIVE_WORKFLOW, JOBS, RELIABILITY_DAYS
 from evidence.decision_settings import REPOSITORY
@@ -11,13 +11,14 @@ from ui import console
 
 LOG_LINES = 15   # the newest lines of the run log shown
 STATE_TONE = {"Ready": "ok", "Running": "info", "Turned off": "idle"}
+PAGE = pages.JOBS
 
-seen = common.read()
+seen = common.read_page(PAGE.path)
 now = common.now()
 rows = jobs.job_rows(seen["workflows"], seen["runs"], seen["log"], common.workflow_texts(), now)
 
-body, actions = common.layout("jobs", "Jobs", "Every scheduled job: when it runs, whether it is running, and how each "
-                                              "run ended. Times in UTC.")
+body, actions = common.layout(PAGE.path, "Every scheduled job: when it runs, whether it is running, and how each run "
+                                         "ended. Times in UTC.")
 with body:
     for problem in seen["problems"]:
         st.html(console.notice(problem, "warn"))

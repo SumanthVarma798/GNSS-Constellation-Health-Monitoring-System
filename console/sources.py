@@ -10,7 +10,7 @@ from html import escape
 
 import streamlit as st
 
-from console import common
+from console import common, pages
 from evidence import decisions, grade_change
 from evidence.decision_settings import REPOSITORY
 from evidence.settings import RELIABILITY_GRADES
@@ -21,12 +21,13 @@ SHOW = {"all": "All", "graded": "Graded", "awaiting a grade": "Awaiting a grade"
         "not answering": "Not answering", "held": "Held by rule"}
 RAMP = {"A": "g-a", "B": "g-b", "C": "g-c", "D": "g-d"}   # the validated ordered ramp; any other grade is drawn neutral
 GRADE_FILTER = ("A", "B", "C", "D", "E", "F", "none")
+PAGE = pages.SOURCES
 
 config = common.settings()
 email = st.user.get("email")
 who = st.user.get("name") or email
 
-seen = common.read()
+seen = common.read_page(PAGE.path)
 rows = source_rows()
 counts = {group: sum(r["group"] == group for r in rows) for group in GROUPS}
 confirmed_sites = {r["source"] for r in rows if r["confirmed"]}   # a grade belongs to a site, whatever its last check
@@ -38,8 +39,8 @@ read_times = archive_read_times(seen.get("archive_versions") or [], seen.get("lo
 archived = archived_address_groups()
 now = seen["read_at"]
 
-body, actions = common.layout("sources", "Sources", "Everything the system reads, how far each is trusted, and whether it "
-                                                    "answered when last checked.")
+body, actions = common.layout(PAGE.path, "Everything the system reads, how far each is trusted, and whether it "
+                                         "answered when last checked.")
 
 
 def grade_html(row):
@@ -157,14 +158,14 @@ with body:
                     st.session_state["sources_grade_result"] = grade_change.submit(
                         config["github_token"], source_id, names[source_id], confirmed_grade.get(source_id),
                         new_grade, reason, who, common.now().date(), now=now)
-                    common.github.clear()
+                    common.clear_reading()
                 st.rerun()
-        st.page_link("console/approvals.py", label="Decide under Approvals", icon=":material/task_alt:")
+        pages.page_link(pages.APPROVALS.path, label="Decide under Approvals")
 
 with actions:
     common.refresh_action()
     st.html('<p class="c-actions-sub">Go to</p>')
-    st.page_link("console/approvals.py", label=f"Grades waiting ({len(grade_waits)})", icon=":material/task_alt:")
+    pages.page_link(pages.APPROVALS.path, label=f"Grades waiting ({len(grade_waits)})")
     st.html('<p class="c-actions-sub">On GitHub</p>')
     st.link_button("The candidates table", f"https://github.com/{REPOSITORY}/blob/main/evidence/source_candidates.csv",
                    icon=":material/open_in_new:")

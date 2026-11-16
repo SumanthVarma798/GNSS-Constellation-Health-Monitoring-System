@@ -8,7 +8,7 @@ from html import escape
 
 import streamlit as st
 
-from console import common
+from console import common, pages
 from evidence import decisions, jobs
 from evidence.console_settings import ORBIT_LOG_JOB, RELIABILITY_DAYS, TESTS_WORKFLOW
 from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS
@@ -16,8 +16,9 @@ from evidence.source_overview import overview
 from ui import console
 
 TESTS_SHOWN = 10   # the newest runs of the tests on main, as marks
+PAGE = pages.SUMMARY
 
-seen = common.read()
+seen = common.read_page(PAGE.path)
 now = common.now()
 rows = jobs.job_rows(seen["workflows"], seen["runs"], seen["log"], common.workflow_texts(), now)
 sources = overview()
@@ -26,7 +27,7 @@ items = jobs.attention(rows, sources["not_answering"], waiting)
 looks = sum(tone != "ok" for tone, *_ in items)
 worst = "bad" if any(tone == "bad" for tone, *_ in items) else "warn" if looks else "ok"
 
-body, actions = common.layout("summary", "Summary", "The state of the whole system, and what needs attention first.")
+body, actions = common.layout(PAGE.path, "The state of the whole system, and what needs attention first.")
 with body:
     for problem in seen["problems"]:
         st.html(console.notice(problem, "warn"))
@@ -97,6 +98,6 @@ with body:
 with actions:
     common.refresh_action()
     st.html('<p class="c-actions-sub">Go to</p>')
-    st.page_link("console/jobs.py", label="Jobs", icon=":material/schedule:")
-    st.page_link("console/work.py", label="Issues and pull requests", icon=":material/list_alt:")
-    st.page_link("console/approvals.py", label=f"Approvals ({waiting})", icon=":material/task_alt:")
+    pages.page_link(pages.JOBS.path)
+    pages.page_link(pages.WORK.path)
+    pages.page_link(pages.APPROVALS.path, label=f"{pages.APPROVALS.title} ({waiting})")

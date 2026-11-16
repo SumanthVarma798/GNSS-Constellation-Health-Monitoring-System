@@ -12,6 +12,7 @@ import shlex
 from evidence import jobs
 from evidence.console_settings import ARCHIVE_WORKFLOW, JOBS
 from evidence.pipeline_words import PLAIN_STATES, SETTING_SENTENCES, STAGES
+from ui import console
 from ui.components.frame import fill
 
 PAGE_FILE = Path(__file__).with_name("live_pipeline.html")
@@ -28,7 +29,6 @@ _OVERVIEW_SAFE_MARGIN = 36
 
 _RUN_NUMBER = re.compile(r"/actions/runs/(\d+)")
 _FAILED_SOURCES = re.compile(r"failed:\s*(\d+)\s+of\s+(\d+)\s+sources")
-_STATE_TONE = {"running now": "info", "done": "ok", "failed": "bad", "waiting": "warn", "off": "idle"}
 _COLLECT = [job.key for job in JOBS if job.stage and job.workflow == ARCHIVE_WORKFLOW]
 _OVERVIEW_COLLECT_ROWS = len(_COLLECT)
 _CHAIN = ["archive", "registry_update", "decision_waiting", "decision_made", "merged_main", "dashboard"]
@@ -436,7 +436,7 @@ def payload(stages, next_stage_key, next_at, workflow_texts):
             "technical_name": stage["name"],
             "state_plain": PLAIN_STATES.get(stage["state"], stage["state"]),
             "state_technical": stage["state"],
-            "tone": _STATE_TONE.get(stage["state"], "idle"),
+            "tone": console.PIPELINE_STATE_TONES.get(stage["state"], "idle"),
             "running": stage["state"] == "running now",
             "next_badge": key == next_stage_key and next_at is not None,
             "next_badge_words": f"Next {_when(next_at)}",
