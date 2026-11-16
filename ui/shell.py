@@ -16,10 +16,11 @@ from zoneinfo import ZoneInfo
 
 import streamlit as st
 
-from config.config import DEFAULT_PARAMS, MEO_SATS
+from config.config import DEFAULT_PARAMS
 from data import celestrak
 from evidence import jobs
 from evidence.console_settings import WORKFLOWS_DIR
+from evidence.registry_tables import judged_by_plane
 from ui import changes, data, icons, marks, palette, surfaces, systems, threshold_settings, time_range, tooltip
 from ui.age_rule import orbit_age_status
 from ui.components.clock import clock_frame
@@ -163,7 +164,7 @@ def _thresholds(scope):
     """The gear's panel: each setting with what to know before moving it, in its group, and a way back to the
     defaults. Returns only the settings moved off their defaults. A system judged by orbital plane shows the
     settings that find burns; its scoring limits are not moved here."""
-    by_plane = scope in MEO_SATS
+    by_plane = judged_by_plane(scope)
     shown = [s for s in threshold_settings.SETTINGS if not (by_plane and s["group"] == threshold_settings.SCORING)]
     st.html(f'<div class="th-head"><b>Settings for {escape(scope)}</b><span class="small">They apply on this '
             "constellation's pages for this visit. The Home page always uses the defaults.</span></div>")
