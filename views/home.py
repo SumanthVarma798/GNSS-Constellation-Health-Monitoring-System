@@ -146,11 +146,11 @@ def _row(system, unread=None, index=0):
     seen = (_tile("says healthy", system["flagged_healthy"], system["checked"])
             + _tile("flag matches our check", *system["flag_agrees"]) + _burns_tile(system))
     return (f'<details class="sys card {surfaces.band(system["score"]) if system["score"] is not None else "idle"}">'
-            f'<summary>{_gauge(system, split)}<div class="sys-id"><b>{marks.mark(name)}{escape(name)}</b>'
+            f'<summary><div class="sys-id"><b>{marks.mark(name)}{escape(name)}</b>'
             f'<span class="small">{escape(" · ".join(filter(None, [who, where])))}</span>'
             f'<div class="dots mixw small">{counted}</div>'
             f'<span class="small">{_how_scored(system, index)}</span></div>'
-            '<span class="sys-go" aria-hidden="true">&rsaquo;</span></summary>'
+            f'{_gauge(system, split)}<span class="sys-go" aria-hidden="true">&rsaquo;</span></summary>'
             f'<div class="card-more"><h4>In the score</h4><div class="tiles in">{in_score}</div>'
             f'<div class="tiles seen">{seen}</div>'
             + (f'<div class="card-notes">' + "".join(f'<div class="small">{note}</div>' for note in notes)
@@ -260,6 +260,49 @@ if (!page.getElementById("how-links")) {
 }
 </script>"""
 
+# Run once in the page too: a card opened goes to the top of the grid, the full row wide; one opened after it goes
+# under it; a card closed goes back to its own place, so with all closed the grid is in its default order. Native
+# details cannot remember the order cards were opened in, or move them smoothly, so this does both: the cards glide
+# to their new places (each drawn where it was, then let go) and the opened card's details fade in. A reader who asks
+# for less motion gets the same order with no motion. Without scripts the cards still open in place.
+_CARDS_SCRIPT = """<script>
+{   // its own block: the links script in the same frame already declares page
+const page = window.parent.document;
+if (!page.getElementById("home-cards")) {
+  const script = page.createElement("script"); script.id = "home-cards";
+  script.textContent = `document.addEventListener("click", event => {
+    const summary = event.target.closest && event.target.closest("details.card > summary");
+    const grid = summary && summary.closest(".st-key-home_systems");
+    if (!grid) return;
+    event.preventDefault();
+    const card = summary.parentElement, items = [...grid.children];
+    let item = card; while (item.parentElement !== grid) item = item.parentElement;
+    const before = new Map(items.map(each => [each, each.getBoundingClientRect()]));
+    card.open = !card.open;
+    window.homeCardTurn = (window.homeCardTurn || 0) + 1;
+    item.style.order = card.open ? String(window.homeCardTurn - 1000000) : "";
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const moving = [];
+    for (const each of items) {
+      const was = before.get(each), now = each.getBoundingClientRect();
+      const dx = was.left - now.left, dy = was.top - now.top;
+      if (dx || dy) moving.push(each.animate([{transform: "translate(" + dx + "px, " + dy + "px)"}, {transform: "none"}],
+                                             {duration: 360, easing: "cubic-bezier(.2, .8, .2, 1)"}));
+    }
+    const more = card.querySelector(".card-more");
+    if (card.open && more) {
+      moving.push(more.animate([{opacity: 0, transform: "translateY(-8px)"}, {opacity: 1, transform: "none"}],
+                               {duration: 300, easing: "ease-out"}));
+      setTimeout(() => item.scrollIntoView({behavior: "smooth", block: "nearest"}), 360);
+    }
+    // where a browser holds animations back (a hidden tab), each still ends in its place
+    setTimeout(() => moving.forEach(motion => motion.finish()), 600);
+  });`;
+  page.head.appendChild(script);
+}
+}
+</script>"""
+
 
 def page():
     """The rows are drawn as each constellation is counted, so a first visit (when nothing is kept yet and the
@@ -309,7 +352,7 @@ def page():
             f"{len(explained)} expected" if explained else ""])), "".join(_finding(finding) for finding in rest))
     reveal.section("home_how", "How to read this page",
                    "what is measured, how, what is left out, what comes next", _how())
-    components.html(_HOW_LINKS_SCRIPT, height=0)
+    components.html(_HOW_LINKS_SCRIPT + _CARDS_SCRIPT, height=0)
 
 
 page()

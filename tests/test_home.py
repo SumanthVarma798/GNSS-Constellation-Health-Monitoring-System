@@ -418,9 +418,10 @@ def test_each_card_leads_with_its_score_and_its_how_scored_tip_says_when_it_is_f
     navic = next(row for row in rows(run()) if "NavIC</b>" in row)
     head, body = navic.split("</summary>")
 
-    # the score sits before the name, in the middle of its ring, with the count in place said with it
-    score = re.search(r'<div class="gauge" [^>]*aria-label="Score (\d+) out of 100; \d+ of \d+ satellites healthy and '
-                      r'in place"><b class="num (ok|warn|bad)">\1</b><small>/ 100</small></div><div class="sys-id">', head)
+    # the score sits to the right of the name, big in the middle of its ring, with the count in place said with it
+    score = re.search(r'</div><div class="gauge" [^>]*aria-label="Score (\d+) out of 100; \d+ of \d+ satellites healthy '
+                      r'and in place"><b class="num (ok|warn|bad)">\1</b><small>/ 100</small></div><span class="sys-go"', head)
+    assert head.index('class="sys-id"') < head.index('class="gauge"')
     assert score and f'<details class="sys card {score.group(2)}">' in navic   # the card's edge in the score's colour
     # no broadcast check in tests, so no clock: the tip on "how this is scored" says the score is from 2 of 3
     assert 'tabindex="0" aria-describedby="tt-' in head and ">how this is scored</span>" in head
@@ -452,3 +453,13 @@ def test_burns_are_counted_over_the_last_90_days_and_a_flag_matches_where_it_say
     whole = system_summary.whole("BeiDou-3", [{**system_summary.summary("NavIC", data.load("NavIC", 90)), **part}
                                               for part in parts])
     assert whole["flag_agrees"] == (7, 8) and whole["burns"] == (2, 1)
+
+
+def test_an_opened_card_goes_to_the_top_after_any_opened_before_it_and_a_closed_one_goes_back():
+    from views import home
+    script = home._CARDS_SCRIPT
+
+    # the order a card takes: opened ones before every closed one (order 0), in the order they were opened
+    assert 'item.style.order = card.open ? String(window.homeCardTurn - 1000000) : ""' in script
+    assert "prefers-reduced-motion: reduce" in script and "motion.finish()" in script   # no motion asked: none
+    assert "{   // its own block" in script   # beside the links script in one frame, without a clash
