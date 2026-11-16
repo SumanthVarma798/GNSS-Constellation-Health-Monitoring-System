@@ -4,6 +4,8 @@ Handles longitudinal drift calculations and drift health assessment
 """
 
 import numpy as np
+
+from analysis import score_rules
 from config.config import GEOSYNC_MEAN_MOTION
 
 
@@ -24,7 +26,9 @@ def calculate_longitudinal_drift(mean_motion):
     return (mean_motion - GEOSYNC_MEAN_MOTION) * 360
 
 
-def assess_drift_health(drift_deg_per_day, sat_type, drift_tolerance_gso=0.05, drift_tolerance_igso=2.0):
+def assess_drift_health(drift_deg_per_day, sat_type,
+                        drift_tolerance_gso=score_rules.DRIFT_TOLERANCE_GEO,
+                        drift_tolerance_igso=score_rules.DRIFT_TOLERANCE_TILTED):
     """
     Assess drift health based on satellite type.
     

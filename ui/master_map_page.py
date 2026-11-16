@@ -9,8 +9,9 @@ from html import escape
 
 from evidence import jobs
 from evidence.console_settings import WORKFLOWS_DIR
-from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS, SCHEME_SIGNAL_ID
+from evidence.settings import SCHEME_SIGNAL_ID
 from ui import icons, marks, palette, surfaces, tooltip
+from ui.age_rule import orbit_age_status
 from ui.master_map_settings import DOTS, HOW, NOTES, REGISTRY_NAMES, REGISTRY_WORKFLOW, WHO
 from ui.pages_data import live_feed_time
 
@@ -155,7 +156,7 @@ def freshness(data, live, now):
         age = (now - taken).total_seconds() / 86400
         feed = {"when": f"copy taken {_day(taken.isoformat())} {taken:%H:%M} UTC",
                 "how": "Read every two hours from the copy of CelesTrak's GNSS group that this project's archive job saves.",
-                "status": "bad" if age >= ORBIT_STALE_DAYS else "warn" if age >= ORBIT_ALERT_DAYS else "ok"}
+                "status": orbit_age_status(age)}
     else:
         feed = {"when": f"weekly copy of {_day(max(data['feed_checked'].values(), default=''))}",
                 "how": "The two-hourly copy of CelesTrak's orbit feed could not be read, so this dashboard's weekly copy of "

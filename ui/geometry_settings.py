@@ -5,6 +5,7 @@ The places and the quality bands are the team's, from config/config.py (as app.p
 """
 from config.config import (CHINA_KEY_POINTS, DEFAULT_PARAMS, DOP_QUALITY_THRESHOLDS, INACTIVE_SATELLITES,
                            INDIA_EXTREME_POINTS, JAPAN_KEY_POINTS, MEO_SYSTEMS)
+from analysis.score_rules import DRIFT_TOLERANCE_TILTED
 from ui import palette
 
 # The page's sections, in the order offered.
@@ -88,7 +89,7 @@ TRENDS = [
 # which circles the globe (GPS drifts about 360 degrees a day by that measure). MEO systems get tilt and height only.
 GEOSYNCHRONOUS_ONLY = ("LonDrift_deg_per_day", "central_lon")
 MEO_TRENDS = [trend for trend in TRENDS if trend[0] not in GEOSYNCHRONOUS_ONLY]
-DRIFT_TOLERANCE_IGSO = 2.0   # degrees a day: analysis.health_assessment's default for inclined orbits
+DRIFT_TOLERANCE_IGSO = DRIFT_TOLERANCE_TILTED   # degrees a day: analysis.health_assessment's default for inclined orbits
 
 # How each orbit type is drawn. Colour is backed by the shape and the name, never alone.
 ORBIT_COLOURS = {"GEO": palette.ACCENT, "IGSO": palette.INK, "QZO": palette.INK}

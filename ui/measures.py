@@ -10,7 +10,7 @@ import pandas as pd
 
 from config.config import (BEIDOU3_SERVICE_REQUIREMENTS, DEFAULT_PARAMS, NAVIK_SERVICE_REQUIREMENTS,
                            QZSS_SERVICE_REQUIREMENTS)
-from ui import limits
+from ui import limits, surfaces
 from ui.figures.burns import EAST_WEST, NORTH_SOUTH
 from ui.figures.slot_rows import as_number
 
@@ -48,8 +48,8 @@ def requirement(name):
 def thresholds(constellation, params):
     """The thresholds assess_constellation used: the defaults with the gear's changes."""
     p = {**DEFAULT_PARAMS, **(params or {})}
-    if constellation == "QZSS" and "inclination_tolerance" not in (params or {}):
-        p["inclination_tolerance"] = limits.QZSS_INCLINATION_TOLERANCE
+    if "inclination_tolerance" not in (params or {}):
+        p["inclination_tolerance"] = limits.default_inclination_tolerance(constellation)
     return p
 
 
@@ -62,11 +62,7 @@ def in_window(history, window_days, today):
 
 def orbit_type(tilt, constellation):
     """GEO under 10 degrees of tilt, else QZO for QZSS and IGSO otherwise: the health assessment's rule."""
-    if tilt is None:
-        return "Unclassified"
-    if tilt < limits.TILT_GEO_BELOW:
-        return "GEO"
-    return "QZO" if constellation == "QZSS" else "IGSO"
+    return limits.orbit_type(tilt, constellation)
 
 
 def grouped(types):
@@ -158,7 +154,7 @@ def upkeep(health):
     """The rhythm the upkeep part reads: a burn expected every N days, the last one M days ago."""
     every, since = as_number(health.get("Expected Interval (days)")), as_number(health.get("Days Since Last"))
     score = as_number(health.get("_maintenance_score"))
-    status = "idle" if score is None else "ok" if score >= 80 else "warn" if score >= 60 else "bad"
+    status = "idle" if score is None else surfaces.band(score)
     counts = f"{health.get('EW Maneuvers', 0)} east-west, {health.get('NS Maneuvers', 0)} north-south"
     return cell("no burns" if since is None else f"{since:.0f} d ago", _every(every, since), status, counts)
 

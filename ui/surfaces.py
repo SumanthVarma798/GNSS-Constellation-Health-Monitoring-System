@@ -7,6 +7,8 @@ import base64
 import re
 from html import escape
 
+from analysis.score_rules import status_word
+
 STATUSES = ("ok", "warn", "bad", "idle", "accent")
 
 
@@ -61,7 +63,12 @@ def big_number(value, caption):
 
 def band(score):
     """ok from 80, warn from 60, else bad. The one place the score bands are set."""
-    return "ok" if score >= 80 else "warn" if score >= 60 else "bad"
+    return {"Healthy": "ok", "Fair": "warn", "Degraded": "bad", "Critical": "bad"}[status_word(score)]
+
+
+def share_tone(fraction):
+    """The tone of a count-of-total share bar: the same thresholds the score bands use today."""
+    return "ok" if fraction >= 80 else "warn" if fraction >= 60 else "bad"
 
 
 def tile(name, orbit="", score=None, status="", slot="", slot_status="idle", weakest=None, age_html="",

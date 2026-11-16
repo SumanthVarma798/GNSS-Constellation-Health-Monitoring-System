@@ -19,6 +19,7 @@ import pandas as pd
 from skyfield.api import EarthSatellite, load, wgs84
 
 from analysis import commissioning
+from analysis import score_rules
 from analysis.dop_calculations import parse_tle_data
 from analysis.drift_analysis import calculate_longitudinal_drift
 from analysis.health_assessment import assess_satellite_health_with_drift
@@ -84,9 +85,7 @@ def load_bundled_gp_as_dataframes(constellation_key: str, sat_dict: dict, fresh=
             df['LonDrift_deg_per_day'] = calculate_longitudinal_drift(df['MEAN_MOTION'])
 
         # Classify satellite type
-        df['type'] = df['INCLINATION'].apply(
-            lambda x: 'GEO' if (x > 0.0 and x < 10.0) else ('IGSO' if x >= 10 else 'Unclassified')
-        )
+        df['type'] = df['INCLINATION'].apply(lambda x: score_rules.orbit_type(x, None))   # GEO or IGSO here; QZO is named in the health step
 
         mean_incl = df['INCLINATION'].mean()
         df['mean_inclination'] = mean_incl
@@ -140,36 +139,6 @@ def _detect(sat_df, p):
     )
 
 
-def _longitude_score(abs_dev, sat_type):
-    if sat_type == 'GEO':
-        if abs_dev <= 0.5:
-            return 100
-        if abs_dev <= 1.0:
-            return 90 - ((abs_dev - 0.5) / 0.5) * 20
-        if abs_dev <= 2.0:
-            return 70 - ((abs_dev - 1.0) / 1.0) * 30
-        return max(0, 40 - ((abs_dev - 2.0) / 2.0) * 40)
-    # IGSO
-    if abs_dev <= 5.0:
-        return 100
-    if abs_dev <= 10.0:
-        return 90 - ((abs_dev - 5.0) / 5.0) * 30
-    return max(0, 60 - ((abs_dev - 10.0) / 10.0) * 60)
-
-
-def _longitude_remark(abs_dev, deviation, sat_type, designated_lon):
-    where = f"({deviation:+.2f}° from {designated_lon}°)"
-    if sat_type == 'GEO':
-        if abs_dev <= 0.5:
-            return f"✅ Excellent longitude slot position {where}"
-        if abs_dev <= 1.0:
-            return f"✓ Good longitude position {where}"
-        return f"⚠️ Longitude deviation from designated slot {where}"
-    if abs_dev <= 5.0:
-        return f"✅ Within central longitude tolerance {where}"
-    return f"⚠️ Central longitude deviation {where}"
-
-
 def _add_longitude(health_df, satellites_dop, now, warnings):
     """app.py's longitude step: 24-hour mean longitude per satellite, its deviation from
     the designated slot, the longitude score, and the overall score recalculated with it."""
@@ -209,13 +178,12 @@ def _add_longitude(health_df, satellites_dop, now, warnings):
 
             abs_dev = abs(longitude_deviation)
             sat_type = row['Type']
-            lon_score = _longitude_score(abs_dev, sat_type)
+            lon_score = score_rules.longitude_score(abs_dev, sat_type)
             health_df.at[idx, 'Lon Deviation Score'] = round(lon_score, 1)
 
             # Overall Score over all five parts. The health module's score used weights summing
             # to 0.85 (longitude left out); longitude (0.15) is folded back in here.
-            _weights = {'inc': 0.30, 'maintenance': 0.25, 'uniformity': 0.10,
-                        'drift': 0.20, 'longitude': 0.15}
+            _weights = dict(score_rules.WEIGHTS)
             _components = {}
             for _k, _col in [('inc', '_inc_score'), ('maintenance', '_maintenance_score'),
                              ('uniformity', '_uniformity_score'), ('drift', '_drift_score')]:
@@ -232,17 +200,10 @@ def _add_longitude(health_df, satellites_dop, now, warnings):
                 _new_score = _original_score * 0.85 + float(lon_score) * 0.15
 
             health_df.at[idx, 'Overall Score'] = round(_new_score, 1)
-            if _new_score >= 80:
-                _hs, _sc = "Healthy", "🟢"
-            elif _new_score >= 60:
-                _hs, _sc = "Fair", "🟡"
-            elif _new_score >= 40:
-                _hs, _sc = "Degraded", "🟠"
-            else:
-                _hs, _sc = "Critical", "🔴"
-            health_df.at[idx, 'Health Status'] = f"{_sc} {_hs}"
+            health_df.at[idx, 'Health Status'] = (f"{score_rules.status_emoji(_new_score)} "
+                                                  f"{score_rules.status_word(_new_score)}")
 
-            new_remark = _longitude_remark(abs_dev, longitude_deviation, sat_type, designated_lon)
+            new_remark = score_rules.longitude_remark(abs_dev, longitude_deviation, sat_type, designated_lon)
             current_remarks = health_df.at[idx, 'Remarks']
             health_df.at[idx, 'Remarks'] = f"{current_remarks} | {new_remark}" if current_remarks else new_remark
         except Exception as e:
@@ -301,8 +262,8 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
         raise ValueError("`now` must be timezone-aware")
     sat_dict, service_reqs = _CONSTELLATIONS[constellation]
     p = {**DEFAULT_PARAMS, **(params or {})}
-    if constellation == "QZSS" and "inclination_tolerance" not in (params or {}):
-        p["inclination_tolerance"] = 4.0
+    if "inclination_tolerance" not in (params or {}):
+        p["inclination_tolerance"] = score_rules.default_inclination_tolerance(constellation)
     warnings = []
 
     key = bundle_key(constellation)

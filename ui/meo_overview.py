@@ -11,6 +11,7 @@ from html import escape
 from datetime import datetime, timezone
 
 from analysis.meo_geometry import EXTENDED, NO_PLANE, part_score, plane_drift
+from analysis.score_rules import STATUS_FROM
 from config.config import TRACKED_NOT_IN_REGISTRY
 from evidence.registry_tables import left_out_notice, new_on_dashboard
 from config.meo_nominal import MEANINGS, NOMINAL, PLANE_MEANINGS
@@ -18,7 +19,7 @@ from ui import official_status, orbit_age, orbit_section, palette, reveal, shell
 from ui.data import SATELLITES
 from ui.figures.plane_strip import plane_strip
 
-HEALTHY_FROM = 80
+HEALTHY_FROM = STATUS_FROM[0][1]
 VIEWS = ["Planes", "Satellites"]   # the switch over the planes, kept in session_state["meo_view"]
 LABELS = {"plane": "Plane", "spacing": "Spacing", "inclination": "Inclination", "height": "Height",
           "eccentricity": "Eccentricity"}
@@ -158,7 +159,7 @@ def _strip(members):
 def _counts(members):
     """(in step, need a look) among one plane's satellites."""
     return (sum(state_of(row)[0] == palette.SLOT_IN for row in members),
-            sum(any(check[4] < 80 for check in row["checks"]) for row in members))
+            sum(any(surfaces.band(check[4]) != "ok" for check in row["checks"]) for row in members))
 
 
 def _fact(name, words, status, plane=""):
@@ -170,7 +171,7 @@ def _against(value, limit):
     """'0.8° · within 5°' and its status: never ok over the limit, though its score still is up to 1.4 times it."""
     if abs(value) <= limit:
         return f"{abs(value):.1f}° · within {limit:g}°", "ok"
-    return f"{abs(value):.1f}° · over {limit:g}°", "bad" if part_score(value, limit) < 60 else "warn"
+    return f"{abs(value):.1f}° · over {limit:g}°", "bad" if surfaces.band(part_score(value, limit)) == "bad" else "warn"
 
 
 def _plane_card(plane, members, drift):
