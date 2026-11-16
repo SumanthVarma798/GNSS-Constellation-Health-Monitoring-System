@@ -245,7 +245,7 @@ def test_how_to_read_sets_its_long_card_in_groups_and_each_term_on_its_own_line(
 
     measured = re.search(r'<div class="how well wide" id="how-what-is-measured">(.*?)</div></div></div>', how).group(1)
     assert re.findall(r"<h4>([^<]+)</h4>", measured) == ["The score", "The states round the score", "In the score",
-                                                       "Shown beside, not in the score"]
+                                                       "Also on each card"]
     assert '<p class="how-p" id="how-needs-a-look"><b>Needs a look</b> Counted, but' in measured
     assert '<div class="how well" id="how-how">' in how   # a card of one group keeps its place in the row
 
@@ -289,14 +289,20 @@ def test_a_satellite_is_judged_on_orbit_station_and_clock_and_not_judged_where_n
     assert system_summary.summary("NavIC", result)["clock"] == (0, 0)   # no broadcast check: no clock judged
 
 
-def test_an_open_card_compares_the_three_measures_then_what_is_beside_them_in_that_order():
+def test_an_open_card_shows_the_scores_measures_raised_then_what_is_only_seen_pressed_in():
     navic = next(row for row in rows(run()) if "NavIC</b>" in row)
+    body = navic.split("</summary>")[1]
 
-    said = re.findall(r'class="how-link"[^>]*>([^<]+)</a>[^<]*</span>(?:<i class="hbar">.*?</i>|<i></i>)?<b class="[^"]*">([^<]+)</b>', navic)
-    assert [words for words, _ in said] == ["orbit kept", "station held", "clock steady", "says healthy",
-                                            "flag matches our check", "burns"]
-    assert re.fullmatch(r"\d of 7", said[0][1]) and said[2][1] == "not read"   # 7 scored; no broadcast check in tests
-    assert said[5][1] != "none found: too little history"   # NavIC is held by slot: its burns are found
+    in_score, seen = body.split('<div class="tiles in">')[1].split('<div class="tiles seen">')
+    seen = re.split(r'<div class="(?:card-notes|dots)', seen)[0]
+    tile = r'class="how-link"[^>]*>([^<]+)</a>[^<]*</span><b class="[^"]*">(.*?)</b>'
+    assert [(words, re.sub(r"<[^>]+>", "", value)) for words, value in re.findall(tile, in_score)][:3] == [
+        ("orbit kept", re.findall(tile, in_score)[0][1].replace("<small>", "").replace("</small>", "")),
+        ("station held", re.findall(tile, in_score)[1][1].replace("<small>", "").replace("</small>", "")),
+        ("clock steady", "not read")]   # no broadcast check in tests
+    assert re.fullmatch(r"\d+ of 7", re.sub(r"<[^>]+>", "", re.findall(tile, in_score)[0][1]))   # 7 scored
+    assert [words for words, _ in re.findall(tile, seen)] == ["says healthy", "flag matches our check", "burns"]
+    assert "too little history" not in seen   # NavIC is held by slot: its burns are found
 
 
 def test_clock_stepped_fires_for_a_step_past_the_line_and_not_for_steady_clocks():
@@ -392,13 +398,20 @@ def test_the_job_writes_every_part_it_can_count_in_the_shape_home_reads(monkeypa
 
 # --- one score per constellation ---
 
-def test_the_score_is_the_average_of_the_three_measures_pass_rates_and_leaves_out_one_not_read():
-    full = system_summary.score_of({"orbit": (2, 7), "station": (6, 7), "clock": (3, 3)})
-    no_clock = system_summary.score_of({"orbit": (31, 32), "station": (18, 24), "clock": (0, 0)})
+def test_the_score_weighs_the_measures_by_mission_and_shares_out_one_not_read():
+    counts = {"orbit": (2, 7), "station": (6, 7), "clock": (3, 3)}
+    regional, global_ = system_summary.score_of(counts, "NavIC"), system_summary.score_of(counts, "Galileo")
+    no_clock = system_summary.score_of({"orbit": (31, 32), "station": (18, 24), "clock": (0, 0)}, "GPS")
 
-    assert full == (round((200 / 7 + 600 / 7 + 100) / 3), [("orbit", 200 / 7), ("station", 600 / 7), ("clock", 100.0)])
-    assert no_clock[0] == round((100 * 31 / 32 + 75) / 2) and [key for key, _ in no_clock[1]] == ["orbit", "station"]
-    assert system_summary.score_of({"orbit": (0, 0), "station": (0, 0), "clock": (0, 0)}) == (None, [])
+    # NavIC is regional: clock 50%, station 30%, orbit 20%; Galileo global: clock 40%, orbit 35%, station 25%
+    assert regional == (round(100 * .5 + 600 / 7 * .3 + 200 / 7 * .2),
+                        [("clock", 100.0, .5), ("station", 600 / 7, .3), ("orbit", 200 / 7, .2)])
+    assert global_[0] == round(100 * .4 + 200 / 7 * .35 + 600 / 7 * .25) and global_[0] < regional[0]
+    # a part takes its constellation's weights; a measure not read is left out and the rest scaled up to add to 1
+    assert system_summary.score_of(counts, "BeiDou-3 MEO") == system_summary.score_of(counts, "BeiDou-3")
+    assert no_clock == (round(100 * 31 / 32 * .35 / .6 + 75 * .25 / .6), [("orbit", 100 * 31 / 32, .35 / .6),
+                                                                          ("station", 75.0, .25 / .6)])
+    assert system_summary.score_of({"orbit": (0, 0), "station": (0, 0), "clock": (0, 0)}, "GPS") == (None, [])
 
 
 def test_each_card_leads_with_its_score_and_its_how_scored_tip_says_when_it_is_from_fewer_measures():
@@ -411,18 +424,18 @@ def test_each_card_leads_with_its_score_and_its_how_scored_tip_says_when_it_is_f
     assert score and f'<details class="sys card {score.group(2)}">' in navic   # the card's edge in the score's colour
     # no broadcast check in tests, so no clock: the tip on "how this is scored" says the score is from 2 of 3
     assert 'tabindex="0" aria-describedby="tt-' in head and ">how this is scored</span>" in head
-    assert "From 2 of 3 today: 1 measure could not be read." in head
-    # opened: the three measures in the score, and what is shown beside it
-    assert re.search(r"<h4>In the score</h4>.*orbit kept.*station held.*clock steady", body)
-    assert re.search(r"<h4>Shown beside, not in the score</h4>.*says healthy.*flag matches our check.*burns", body)
+    assert "From 2 of 3 today: 1 measure could not be read, so the others count for its share." in head
+    # the tip names the weights for NavIC's mission, heaviest first
+    assert re.search(r"weighed for a regional constellation.*Clock steady 50%.*Station held 30%.*Orbit kept 20%", head)
+    assert "Shown beside" not in body
 
 
 def test_a_constellations_page_opens_up_its_score_into_its_sum():
     bodies = htmls(run(scope("NavIC")))
 
     strip = next(body for body in bodies if 'class="measures"' in body)
-    assert re.search(r"Score \d+ of 100</span><span class=\"small\">the average of orbit kept \d+% \+ station held \d+%; "
-                     r"1 not read</span>", strip)
+    assert re.search(r"Score \d+ of 100</span><span class=\"small\">station held \d+% × 60% \+ orbit kept \d+% × 40%, "
+                     r"weighed for a regional constellation; 1 not read</span>", strip)   # clock not read: its 50% shared
 
 
 def test_burns_are_counted_over_the_last_90_days_and_a_flag_matches_where_it_says_what_we_count():
