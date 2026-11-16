@@ -63,16 +63,21 @@ def _plane_satellites(result):
     return sats
 
 
-def score_of(counts):
-    """(the constellation's score out of 100, [(measure, its pass rate in %)]): the average of the pass rates of orbit
-    kept, station held and clock steady that could be read, each weighted the same (our choice: ui/home_settings.py
-    HOW names it). (None, []) when none could be read."""
-    rates = [(key, 100 * passed / judged) for key in ("orbit", "station", "clock") for passed, judged in [counts[key]]
-             if judged]
-    return (round(sum(rate for _, rate in rates) / len(rates)) if rates else None), rates
+def score_of(counts, system):
+    """(the constellation's score out of 100, [(measure, its pass rate in %, its weight)]): the weighted average of
+    the pass rates of orbit kept, station held and clock steady that could be read, weighed by the constellation's
+    mission (ui.limits MISSION, MEASURE_WEIGHTS), heaviest first. A measure not read is left out and the others'
+    weights are scaled up to add to 1. (None, []) when none could be read."""
+    owner = next((name for name, parts in systems.SYSTEMS.items() if system in parts), system)   # a part's system
+    weights = limits.MEASURE_WEIGHTS[limits.MISSION.get(owner, "global")]
+    read = [(key, 100 * passed / judged) for key, weight in sorted(weights.items(), key=lambda item: -item[1])
+            for passed, judged in [counts[key]] if judged]
+    total = sum(weights[key] for key, _ in read)
+    parts = [(key, rate, weights[key] / total) for key, rate in read]
+    return (round(sum(rate * weight for _, rate, weight in parts)) if parts else None), parts
 
 
-def _measures(sats):
+def _measures(sats, system):
     """{"orbit", "station", "clock": (how many pass, how many were judged), "clock_typical_ns", "score",
     "score_parts"} over `sats`: the three measures counted, the middle of the satellites' typical clock steps (None
     when no clock was heard), and the score made from them (score_of())."""
@@ -84,7 +89,7 @@ def _measures(sats):
                if sat.get("clock") and sat["clock"].get("typical_step_ns") is not None]
     counts = {"orbit": count("orbit"), "station": count("station"), "clock": count("clock_steady"),
               "clock_typical_ns": median(typical) if typical else None}
-    counts["score"], counts["score_parts"] = score_of(counts)
+    counts["score"], counts["score_parts"] = score_of(counts, system)
     return counts
 
 
@@ -141,7 +146,7 @@ def summary(name, result, gap=None):
             "in_file": sum(sat["broadcast"] != "silent" for sat in checked) if checked else None,
             "flagged_healthy": sum(sat["broadcast"] == "ok" for sat in checked) if checked else None,
             "checked": len(checked), "broadcast_day": (gap or {}).get("day") if checked else None,
-            **_measures(sats)}
+            **_measures(sats, name)}
 
 
 def whole(system, parts):
@@ -158,4 +163,4 @@ def whole(system, parts):
             "flagged_healthy": sum(part["flagged_healthy"] or 0 for part in parts) if checked else None,
             "parts": [(systems.part_name(part["name"]), part["healthy"], part["total"]) for part in parts]
             if len(systems.SYSTEMS[system]) > 1 else [],
-            **_measures([sat for part in parts for sat in part["sats"]])}
+            **_measures([sat for part in parts for sat in part["sats"]], system)}

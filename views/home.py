@@ -14,7 +14,7 @@ import streamlit.components.v1 as components
 from ui import data, findings, home_data, icons, marks, palette, reveal, shell, surfaces, time_range, tooltip
 from config.config import MEO_SATS
 from ui.home_settings import CAVEATS, FINDINGS_SHOWN, HOW, HOW_LINKS, RULES, SYSTEMS
-from ui.limits import BURN_DAYS
+from ui.limits import BURN_DAYS, MEASURE_WEIGHTS, MISSION
 from ui.system_summary import whole
 from ui.systems import SYSTEMS as SYSTEMS_PARTS, part_name
 
@@ -57,17 +57,24 @@ def _gauge(system, split):
             f'<b class="num {band}">{score if score is not None else "–"}</b><small>/ 100</small></div>')
 
 
+MEASURE_WORDS = {"clock": ("Clock steady", "no clock step past 30 ns in the day"),
+                 "orbit": ("Orbit kept", "on the orbit it should be on"),
+                 "station": ("Station held", "held in its slot, or in step with its plane")}
+
+
 def _how_scored(system, index):
-    """'how this is scored', dotted, with a card that says it in a few lines."""
-    used = len(system["score_parts"])
+    """'how this is scored', dotted, with a card that says it in a few lines: each measure with how much it counts
+    for this constellation's mission (ui/limits.py MEASURE_WEIGHTS), heaviest first."""
+    used, mission = len(system["score_parts"]), MISSION.get(system["name"], "global")
+    weights = sorted(MEASURE_WEIGHTS[mission].items(), key=lambda item: -item[1])
     return tooltip.tip_html('how this is scored', tooltip.glance(
-        "The average of three measures, each the share of satellites that pass", [
-            ("", "Orbit kept", "on the orbit it should be on"),
-            ("", "Station held", "held in its slot, or in step with its plane"),
-            ("", "Clock steady", "no clock step past 30 ns in the day")],
-        note=("Counted the same: our choice. " if used == 3 else "None could be read today, so there is no score. "
-              if not used else f"From {used} of 3 today: {reveal.count(3 - used, 'measure')} could not be read. ")
-        + "Open the card for each one."), key=f"score_{index}")
+        f"Three measures, weighed for a {mission} constellation", [
+            ("", f"{MEASURE_WORDS[key][0]} {weight:.0%}", MEASURE_WORDS[key][1]) for key, weight in weights],
+        note=("Each is the share of satellites that pass. " if used == 3
+              else "None could be read today, so there is no score. " if not used
+              else f"From {used} of 3 today: {reveal.count(3 - used, 'measure')} could not be read, so the others "
+                   "count for its share. ")
+        + "Why these weights: How to read this page."), key=f"score_{index}")
 
 
 def _anchor(heading):
@@ -90,29 +97,29 @@ def _explained(words):
             f'title="What this means: opens How to read this page">{escape(words)}</a>')
 
 
-def _beside(system):
-    """What is shown beside the score and not counted in it: the operator's own flag, whether that flag matches our
-    check, and the burns found (none for most medium orbits: too little history to find them)."""
-    burns = system["burns"]
-    burn_words = (f"{burns[0]} by {reveal.count(burns[1], 'satellite')}" if burns
-                  else "none found: too little history" if system["name"] in MEO_SATS else "none found")
-    return ('<div class="ms">'
-            + _measure_line("says healthy", system["flagged_healthy"], system["checked"])
-            + _measure_line("flag matches our check", *system["flag_agrees"])
-            + f'<span class="small">{_explained("burns")} in {BURN_DAYS} days</span><i></i>'
-              f'<b class="{"num" if burns else "idle"}">{escape(burn_words)}</b></div>')
-
-
-def _measure_line(words, count, of):
-    """One line of _measures. With nothing to judge (no broadcast check read, or no part scored) it says so."""
+def _tile(words, count, of):
+    """One measure as a small tile: its words, the count out of how many were judged, a bar. With nothing judged
+    (no broadcast check read, or no part scored) it says so."""
     if not of:
-        return (f'<span class="small">{_explained(words)}</span><i class="hbar"></i>'
-                '<b class="idle">not read</b>')
+        return (f'<div class="tile"><span class="small">{_explained(words)}</span>'
+                '<b class="idle">not read</b><i class="hbar"></i></div>')
     share = 100 * count / of
-    band = surfaces.share_tone(share)
-    return (f'<span class="small">{_explained(words)}</span>'
-            f'<i class="hbar"><i class="{band}" style="width:{share:.0f}%"></i></i>'
-            f'<b class="num {band}">{count} of {of}</b>')
+    tone = surfaces.share_tone(share)
+    return (f'<div class="tile"><span class="small">{_explained(words)}</span>'
+            f'<b class="num {tone}">{count} <small>of {of}</small></b>'
+            f'<i class="hbar"><i class="{tone}" style="width:{share:.0f}%"></i></i></div>')
+
+
+def _burns_tile(system):
+    """The burns found in the last BURN_DAYS days: how many and by how many satellites (none for most medium orbits:
+    too little history to find them)."""
+    burns = system["burns"]
+    if burns:
+        value = f'<b class="num">{burns[0]} <small>by {reveal.count(burns[1], "satellite")}</small></b>'
+    else:
+        value = f'<b class="idle">{"too little history" if system["name"] in MEO_SATS else "none found"}</b>'
+    return f'<div class="tile"><span class="small">{_explained("burns")} in {BURN_DAYS} days</span>{value}</div>'
+
 
 
 def _row(system, unread=None, index=0):
@@ -133,17 +140,20 @@ def _row(system, unread=None, index=0):
     # in the card's head nothing is a link, so a click there always opens the card; the words link once it is open
     counted = "".join(f'<span><i class="{kind}"></i>{count} {escape(meaning)}</span>' for kind, meaning, count in split)
     key = "".join(f'<span><i class="{kind}"></i>{_explained(meaning)}</span>' for kind, meaning, _ in split)
-    in_score = '<div class="ms">' + "".join(_measure_line(*line) for line in [
-        ("orbit kept", *system["orbit"]), ("station held", *system["station"]), ("clock steady", *system["clock"])]) + "</div>"
+    # the score's three measures raised, the rest pressed in: what counts and what is only seen, told apart by shape
+    in_score = "".join(_tile(*line) for line in [
+        ("orbit kept", *system["orbit"]), ("station held", *system["station"]), ("clock steady", *system["clock"])])
+    seen = (_tile("says healthy", system["flagged_healthy"], system["checked"])
+            + _tile("flag matches our check", *system["flag_agrees"]) + _burns_tile(system))
     return (f'<details class="sys card {surfaces.band(system["score"]) if system["score"] is not None else "idle"}">'
             f'<summary>{_gauge(system, split)}<div class="sys-id"><b>{marks.mark(name)}{escape(name)}</b>'
             f'<span class="small">{escape(" · ".join(filter(None, [who, where])))}</span>'
             f'<div class="dots mixw small">{counted}</div>'
             f'<span class="small">{_how_scored(system, index)}</span></div>'
             '<span class="sys-go" aria-hidden="true">&rsaquo;</span></summary>'
-            f'<div class="card-more"><div class="card-g"><h4>In the score</h4>{in_score}</div>'
-            f'<div class="card-g"><h4>Shown beside, not in the score</h4>{_beside(system)}</div>'
-            + (f'<div class="card-g card-notes">' + "".join(f'<div class="small">{note}</div>' for note in notes)
+            f'<div class="card-more"><h4>In the score</h4><div class="tiles in">{in_score}</div>'
+            f'<div class="tiles seen">{seen}</div>'
+            + (f'<div class="card-notes">' + "".join(f'<div class="small">{note}</div>' for note in notes)
                + "</div>" if notes else "")
             + (f'<div class="dots mixw small card-key">{key}</div>' if key else "")
             + "</div></details>")

@@ -34,3 +34,13 @@ MEASURES = {"orbit": {"slot": ("Inclination",), "plane": ("plane", "inclination"
 BURN_PARTS = ("Upkeep", "Regularity")   # a slot satellite's burns: on time, and evenly spaced
 BURN_DAYS = 90   # Home counts the burns found in this many days of orbit records, the default time range
 CLOCK_STEADY_NS = 30.0   # our choice: 30 ns is 9 m of range, far past a steady clock's steps (about 1 ns)
+
+# A constellation's score (ui.system_summary.score_of) weighs its three measures by what a failure costs its users,
+# which depends on the mission. Our choice, for the team to confirm; How to read this page gives the reasons
+# (ui/home_settings.py HOW, "Weights"). A regional constellation has 7 or 8 satellites, none spare, all in every
+# user's sky: a bad clock corrupts every fix in its service area with nothing to stand in, and a satellite off its
+# station moves coverage off the region. A global one has 24 to 35, 8 to 12 in view: a receiver can leave out one bad
+# clock, a neighbour covers one satellite out of step, and the planes and spacing set the coverage everywhere.
+MISSION = {"NavIC": "regional", "QZSS": "regional"}   # every other constellation is global
+MEASURE_WEIGHTS = {"regional": {"clock": 0.5, "station": 0.3, "orbit": 0.2},
+                   "global": {"clock": 0.4, "orbit": 0.35, "station": 0.25}}

@@ -3,7 +3,7 @@ Home. A strip at the top declares the counts; a section lists every satellite wi
 figure behind it. What counts for each measure is in ui/limits.py (MEASURES, CLOCK_STEADY_NS).
 """
 from config.config import MEO_SATS
-from ui import limits, meo_overview, palette, reveal, surfaces
+from ui import limits, meo_overview, palette, reveal, surfaces, systems
 
 # (key in ui.system_summary's counts, the words on the page), in the order shown everywhere.
 MEASURES = [("orbit", "Orbit kept"), ("station", "Station held"), ("clock", "Clock steady")]
@@ -26,9 +26,10 @@ def strip(summary):
     if score is None:
         lead = surfaces.chip("Score: not read", "idle")
     else:
-        sum_words = " + ".join(f"{dict(MEASURES)[key].lower()} {rate:.0f}%" for key, rate in rates)
+        sum_words = " + ".join(f"{dict(MEASURES)[key].lower()} {rate:.0f}% × {weight:.0%}" for key, rate, weight in rates)
         lead = (surfaces.chip(f"Score {score} of 100", surfaces.band(score))
-                + f'<span class="small">the average of {sum_words}'
+                + f'<span class="small">{sum_words}, weighed for a '
+                  f'{limits.MISSION.get(systems.system_of(summary["name"]), "global")} constellation'
                 + ("" if len(rates) == 3 else f"; {3 - len(rates)} not read") + "</span>")
     chips = [_chip(words, *summary[key]) for key, words in MEASURES]
     chips.append(_chip("Says healthy", summary["flagged_healthy"], summary["checked"]))

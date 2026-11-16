@@ -59,5 +59,8 @@ def published(window_days, now=None):
     parts = payload.get("parts") if isinstance(payload.get("parts"), dict) else {}
     kept = {name: part for name, part in parts.items()
             if name in PARTS and isinstance(part, dict) and NEEDED <= part.keys() and isinstance(part["sats"], list)
-            and all(isinstance(sat, dict) and SAT_NEEDED <= sat.keys() for sat in part["sats"])}
+            and all(isinstance(sat, dict) and SAT_NEEDED <= sat.keys() for sat in part["sats"])
+            # a copy made before the score was weighed by mission has no weights: counted here instead
+            and isinstance(part["score_parts"], (list, tuple))
+            and all(isinstance(rate, (list, tuple)) and len(rate) == 3 for rate in part["score_parts"])}
     return (made if kept else None), kept

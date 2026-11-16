@@ -51,10 +51,16 @@ EXPLAINED = {
 HOW = [
     ("radar", "What is measured", [
         "The score",
-        ("Score", "One number out of 100, to compare constellations at a glance: the average of orbit kept, station "
-         "held and clock steady, each as the share of the satellites judged on it. A measure that could not be read "
-         "that day is left out, and the card says the score is from 2 of 3. The ring round it splits the "
-         "constellation's satellites by state. Open a card for each measure."),
+        ("Score", "One number out of 100, to compare constellations at a glance: orbit kept, station held and clock "
+         "steady, each as the share of the satellites judged on it, added up with weights that suit the "
+         "constellation's mission. A measure that could not be read that day is left out and the others count for "
+         "its share. The ring round the score splits the constellation's satellites by state."),
+        ("Weights", "Regional (NavIC, QZSS): clock 50%, station 30%, orbit 20%. Seven or eight satellites, none spare, "
+         "every one in every user's sky: a bad clock corrupts every position fix in the service area with nothing to "
+         "stand in, and a satellite off its station moves coverage off the region. Global (GPS, Galileo, GLONASS, "
+         "BeiDou-3): clock 40%, orbit 35%, station 25%. Twenty-four to thirty-five satellites, eight to twelve in "
+         "view: a receiver can leave out one bad clock, a neighbour covers one satellite out of step, and the orbital "
+         "planes and spacing set the coverage everywhere."),
         "The states round the score",
         ("Healthy and in place", "The satellite's orbit, from public tracking records, scores 80 or more out of 100, "
          "and it sits in its slot or keeps step in its orbital plane. The constellation's own page shows every part of "
@@ -70,7 +76,7 @@ HOW = [
          "its plane. How often and how evenly it burns to stay there is on the constellation's own page."),
         ("Clock steady", "Through the day, each new clock message landed within 30 ns of what the one before it "
          "predicted. A clock that was reset or is failing steps by far more. 1 ns of clock is 0.3 m of range."),
-        "Shown beside, not in the score",
+        "Also on each card",
         ("Says healthy", "The health flag each satellite sends about itself. It is read once a day, with the clock "
          "messages, from the International GNSS Service's daily broadcast file, which holds the navigation "
          "messages its ground stations received."),
@@ -93,7 +99,7 @@ HOW = [
         ("Measured accuracy", "How accurate each constellation's signal and clock actually are. That needs precise "
          "orbit and clock products we do not read yet. The flag and the clock messages are what the operator "
          "broadcasts, not a measurement against a reference."),
-        ("Our choices", "The score's three measures counted the same, the colours (green from 80 in 100, amber from "
+        ("Our choices", "The score's weights for each mission, the colours (green from 80 in 100, amber from "
          "60), the 30 ns line for a steady clock and "
          "the odd-one-out line (3 spreads under the median) are our choices, not a standard."),
         ("New satellites", "A satellite on its way to its slot, or at its slot for under 30 days, is not scored or "

@@ -190,31 +190,43 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .stApp:has(.st-key-topbar) :is([data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"], [data-testid="collapsedControl"], [data-testid="stHeader"]) { display: none; }
 .stApp:has(.st-key-topbar) [data-testid="stMainBlockContainer"] { padding-top: 22px; }
 .st-key-topbar { background: var(--platform); border: 1px solid var(--edge); border-radius: 18px; box-shadow: var(--raised); padding: 10px 16px; margin-bottom: 22px; }
-/* The bar (ui/shell.py top_bar): three groups on a grid, so nothing moves when a piece arrives late or its words
-   change length. The name and the buttons (refresh, the gear, the key) always share the first row, the buttons keeping
-   the bell's room beside them; the data's state (the UTC clock and the wait, the data chip) sits between them from
-   1280px, and on a row of its own under them, clock left and chip right, below that. The grid's items are whatever
+/* The bar (ui/shell.py top_bar): one row on a grid, so nothing moves when a piece arrives late or its words change
+   length. The name on the left, the UTC clock in the middle, and on the right the data chip (its source and the next
+   fetch are in its tip), then the buttons (refresh, the gear, the key) keeping the bell's room beside them. On a phone
+   the name and the buttons share the first row and the clock and the chip the second. The grid's items are whatever
    wraps each group, found by what they hold. */
-.st-key-bar_grid { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand buttons" "state state";
+.st-key-bar_grid { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-areas: "brand clock right";
   align-items: center; gap: 10px 16px; }
 .st-key-bar_grid > * { width: auto !important; min-width: 0; }
 .st-key-bar_grid > :has(.brand) { grid-area: brand; }
-.st-key-bar_grid > :is(.st-key-bar_state, :has(.st-key-bar_state)) { grid-area: state; }
-.st-key-bar_grid > :is(.st-key-bar_buttons, :has(.st-key-bar_buttons)) { grid-area: buttons; margin-right: calc(var(--bell) + 16px); }
-.st-key-bar_state { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; }
-.st-key-bar_buttons { flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 10px; min-height: var(--bell); }
-:is(.st-key-bar_state, .st-key-bar_buttons) > * { width: auto !important; flex: none; min-width: 0; }
-.st-key-bar_state > :last-child { flex: 0 1 auto; }   /* the data chip: its words wrap, the clock keeps its size */
-.st-key-bar_state .st-key-clock, .st-key-bar_state .st-key-clock [data-testid="stHtml"] { align-items: flex-start; }
-@media (min-width: 1280px) {
-  .st-key-bar_grid { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "brand state buttons"; }
-  .st-key-bar_state { justify-content: flex-end; flex-wrap: nowrap; }
-  .st-key-bar_state .st-key-clock, .st-key-bar_state .st-key-clock [data-testid="stHtml"] { align-items: flex-end; }
+.st-key-bar_grid > :is(.st-key-bar_clock, :has(.st-key-bar_clock)) { grid-area: clock; }
+.st-key-bar_grid > :is(.st-key-bar_right, :has(.st-key-bar_right)) { grid-area: right; justify-self: end; }
+.st-key-bar_right { flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 12px; }
+.st-key-bar_buttons { flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 10px; min-height: var(--bell); margin-right: calc(var(--bell) + 16px); }
+:is(.st-key-bar_right, .st-key-bar_buttons, .st-key-bar_chip) > * { width: auto !important; flex: none; min-width: 0; }
+.st-key-bar_clock .st-key-clock, .st-key-bar_clock .st-key-clock [data-testid="stHtml"] { align-items: center; text-align: center; }
+@media (max-width: 1023.98px) {   /* not room for one row (it needs about 1000px): the name and the buttons, then the clock and the chip */
+  .st-key-bar_grid { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand buttons" "clock chip"; }
+  .st-key-bar_grid :has(.st-key-bar_chip, .st-key-bar_buttons):not(.st-key-bar_chip *, .st-key-bar_buttons *) { display: contents; }
+  .st-key-bar_chip { grid-area: chip; justify-self: end; }
+  .st-key-bar_buttons { grid-area: buttons; justify-self: end; }
+  .st-key-bar_clock { justify-self: start; }
+  .st-key-bar_clock .st-key-clock, .st-key-bar_clock .st-key-clock [data-testid="stHtml"] { align-items: flex-start; text-align: left; }
 }
 @media (max-width: 639.98px) {
   .st-key-range button span:has(> [data-testid="stIconMaterial"]) { display: none; }   /* room for the menu, Compare and the range in one row */
 }
-.brand { display: block; font-size: var(--fs-section); font-weight: var(--fw-section); line-height: 1.2; letter-spacing: -.01em; color: var(--fc-section); white-space: nowrap; }
+/* the name: one quiet line with a small mark, so the bar is not led by a heading */
+.brand { display: inline-flex; align-items: center; gap: 8px; font-size: var(--fs-body); font-weight: 700; line-height: 1.2;
+  letter-spacing: .01em; color: var(--fc-section); white-space: nowrap; }
+.brand .ic { width: 1.25em; height: 1.25em; color: var(--accent); flex: none; }
+@media (max-width: 479.98px) {   /* a phone: only the mark, so the buttons and the bell keep their row */
+  .brand > span:not(.ic) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .brand .ic { width: 28px; height: 28px; }
+}
+/* the gear where a page has no settings of its own: in its place, greyed, saying where the settings are */
+.st-key-gear_off button { width: 36px; height: 36px; min-height: 0; padding: 0; border-radius: 50%; }
+.st-key-gear_off button :is([data-testid="stMarkdownContainer"], p) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .right { display: flex; justify-content: flex-end; }
 
 /* segmented controls: a pressed track, the chosen item raised in the accent colour */
@@ -259,8 +271,8 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 /* the data chip and the round refresh button; a thin ring round the button empties toward the next automatic refresh */
 /* the syntax is the percentage type, escaped: st.html drops a style block with a raw angle bracket in it */
 @property --left { syntax: "\3c percentage\3e"; inherits: false; initial-value: 0%; }
-.st-key-bar_state .chip + .chip { margin-left: 6px; }
-.st-key-bar_state > :last-child [data-testid="stHtml"] { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; row-gap: 2px; }
+.st-key-bar_chip .chip + .chip { margin-left: 6px; }
+.st-key-bar_chip [data-testid="stHtml"] { display: flex; flex-wrap: nowrap; justify-content: flex-end; align-items: center; }
 /* the UTC clock over the wait to the next automatic refresh */
 .st-key-clock { gap: 0; align-items: flex-end; }   /* the clock's own frame (ui/components/clock.py), then the wait */
 .st-key-clock > [data-testid="stElementContainer"] { width: auto !important; }
@@ -574,8 +586,8 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
   :root { --bell: 40px; }
   [data-testid="stMainBlockContainer"] > div > [data-testid="stVerticalBlock"] > :has(.st-key-notices) { top: 16px; }
   .st-key-notices { top: calc(31px - var(--bell) / 2); right: 13px; }
-  .st-key-bar_grid > :is(.st-key-bar_buttons, :has(.st-key-bar_buttons)) { margin-right: calc(var(--bell) + 12px); }
-  .brand { white-space: normal; }   /* a narrow phone: the name wraps before it pushes the buttons under the bell */
+  .st-key-bar_buttons { margin-right: calc(var(--bell) + 12px); }
+  .st-key-gear_off button { width: 40px; height: 40px; }
   [class*="st-key-ntread_"] button { width: 40px; height: 40px; }
 }
 
@@ -599,41 +611,53 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
 .dots i.ok { background: var(--ok); } .dots i.warn { background: var(--warn); border-radius: 2px; transform: rotate(45deg) scale(.82); } .dots i.bad { background: var(--bad); border-radius: 2px; } .dots i.accent { background: transparent; border: 2px solid var(--accent); }
 .sys-m { flex: 1 0 130px; max-width: 180px; display: flex; flex-direction: column; gap: 4px; }
 .sys-m .s { font-size: var(--fs-section); font-weight: var(--fw-num); line-height: 1.1; }
-/* Home's card (views/home.py _row): closed, the score in its ring, the name and the states; opened in place (a
-   details element, so no page reload), what makes the score and the button on to the constellation's pages */
+/* Home's cards (views/home.py _row) on a bento grid: as many to a row as fit, each closed card a tile; an opened card
+   takes the whole row. Closed: the score big in its ring, the name big beside it, the states counted. Opened in place
+   (a details element, so no page reload): the score's three measures as raised tiles, what is only seen as pressed
+   ones, then notes, and the button on to the constellation's pages. */
+.st-key-home_systems { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 16px; align-items: start; }
+.st-key-home_systems > * { width: auto !important; min-width: 0; }
+.st-key-home_systems > :has(details.card[open]) { grid-column: 1 / -1; }
 details.sys.card { display: block; padding: 0; }
-.card > summary { display: flex; align-items: center; gap: 12px 22px; padding: 12px 18px; cursor: pointer; list-style: none; border-radius: 18px; }
+.card > summary { display: flex; align-items: center; gap: 14px 18px; padding: 14px 16px; cursor: pointer; list-style: none; border-radius: 18px; }
 .card > summary::-webkit-details-marker { display: none; }
 .card > summary:hover { box-shadow: 0 0 0 1px var(--accent); }
 .card > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.card > summary .sys-id { flex: 1 1 auto; gap: 4px; }
-.card > summary .sys-go { margin-left: auto; transition: transform 200ms ease; }
+.card > summary .sys-id { flex: 1 1 auto; gap: 5px; min-width: 0; }
+.card > summary .sys-id > b { font-size: 24px; line-height: 1.15; }   /* the name, big */
+.card > summary .sys-go { margin-left: auto; align-self: flex-start; transition: transform 200ms ease; }
 .card[open] > summary .sys-go { transform: rotate(90deg); color: var(--accent); }
-.card-more { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 14px 28px;
-  padding: 4px 18px 16px; border-top: 1px solid var(--edge-soft); margin-top: 2px; padding-top: 14px; }
-.card-more .ms { max-width: none; }
-.card-g h4 { margin: 0 0 10px; font-size: var(--fs-small); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); }
-.card-notes, .card-key { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 4px; }
-.card-key { flex-direction: row; }
-/* the gauge: the score in the middle, the satellites' states round it as a speedometer's markings, open at the bottom */
-.gauge { position: relative; flex: none; width: 88px; height: 88px; display: grid; place-content: center; text-align: center; }
+.card-more { display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 16px; border-top: 1px solid var(--edge-soft); }
+.card-more h4 { margin: 0; font-size: var(--fs-small); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 10px; }
+.tile { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 14px; min-width: 0; }
+.tile b { font-size: var(--fs-section); font-weight: var(--fw-num); line-height: 1.1; }
+.tile b small { font-size: var(--fs-small); color: var(--muted); font-weight: 400; }
+.tile b.ok { color: var(--ok); } .tile b.warn { color: var(--warn); } .tile b.bad { color: var(--bad); } .tile b.idle { color: var(--idle); font-size: var(--fs-body); font-weight: 400; }
+.tiles.in .tile { background: var(--platform); border: 1px solid var(--edge); box-shadow: var(--raised-sm); }   /* in the score */
+.tiles.seen .tile { background: var(--well); box-shadow: var(--pressed); }   /* only seen */
+.card-notes { display: flex; flex-direction: column; gap: 4px; }
+/* the gauge: the score big in the middle, the satellites' states round it as a speedometer's markings, open at the bottom */
+.gauge { position: relative; flex: none; width: 112px; height: 112px; display: grid; place-content: center; text-align: center; }
 .gauge::before, .gauge::after { content: ""; position: absolute; inset: 0; border-radius: 50%;
-  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 9px), black calc(100% - 8px));
-  mask: radial-gradient(farthest-side, transparent calc(100% - 9px), black calc(100% - 8px)); }
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 11px), black calc(100% - 10px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 11px), black calc(100% - 10px)); }
 .gauge::before { background: conic-gradient(from -135deg, var(--well) 0 270deg, transparent 270deg); }
 .gauge::after { background: var(--ring); }
-.gauge b { font-size: 28px; font-weight: var(--fw-num); line-height: 1; }
+.gauge b { font-size: 38px; font-weight: var(--fw-num); line-height: 1; }
 .gauge b.ok { color: var(--ok); } .gauge b.warn { color: var(--warn); } .gauge b.bad { color: var(--bad); } .gauge b.idle { color: var(--idle); }
 .gauge small { font-size: var(--fs-small); color: var(--muted); }
-/* the button on to the constellation's pages: only while its card is open, wide and plain */
-[class*="st-key-home_card_"] { gap: 0; }
+/* the button on to the constellation's pages: only while its card is open, a wide raised pill in the dashboard's
+   neumorphic style, its words in the accent colour, pressed in while held */
+[class*="st-key-home_card_"] { gap: 10px; }
 [class*="st-key-home_card_"]:has(details.card:not([open])) [class*="st-key-home_explore_"] { display: none; }
-[class*="st-key-home_card_"]:has(details.card[open]) .card { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
-[class*="st-key-home_explore_"] { margin: -1px 0 0; }
-[class*="st-key-home_explore_"] button { width: 100%; min-height: 48px; border-radius: 0 0 18px 18px; font-weight: 700; font-size: var(--fs-body);
-  background: var(--accent); border-color: var(--accent); color: var(--platform); }
+[class*="st-key-home_explore_"] { padding: 0 18px 6px; }
+[class*="st-key-home_explore_"] button { width: 100%; min-height: 48px; border-radius: 999px; font-weight: 700; font-size: var(--fs-body);
+  background: var(--platform); border: 1px solid var(--edge); color: var(--accent); box-shadow: var(--raised); }
 [class*="st-key-home_explore_"] button :is(p, span) { color: inherit; }
-[class*="st-key-home_explore_"] button:hover { filter: brightness(1.08); color: var(--platform); }
+[class*="st-key-home_explore_"] button:hover { border-color: var(--accent); color: var(--accent); }
+[class*="st-key-home_explore_"] button:active { box-shadow: var(--pressed); background: var(--well); }
+[class*="st-key-home_explore_"] button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .sys-m .s.ok { color: var(--ok); } .sys-m .s.warn { color: var(--warn); } .sys-m .s.bad { color: var(--bad); } .sys-m .s.idle { color: var(--idle); }
 .hbar { display: block; height: 6px; border-radius: 3px; background: var(--well); box-shadow: var(--pressed); overflow: hidden; }
 .hbar i { display: block; height: 100%; border-radius: 3px; background: var(--idle); }
