@@ -39,7 +39,7 @@ from skyfield.api import load
 IGSO_INCLINATION_THRESHOLD_DEG = 20.0
 # Satellites that go round once a sidereal day (1.0027 turns): the only ones that can share a ground track. A medium
 # orbit goes round about twice a day, so its ground track is a different line every pass and "co-located" means nothing.
-GEOSYNCHRONOUS_TURNS_PER_DAY = (0.9, 1.1)
+GEOSYNCHRONOUS_TURNS_PER_DAY = (0.99, 1.01)   # within about 3.6° a day of a fixed track; a medium orbit makes about 2
 SIDEREAL_DAY_HOURS = 23.9344696
 DEFAULT_LONGITUDE_TOL_DEG = 5.0
 

@@ -157,9 +157,9 @@ def clock_record(constellation):
     """(the rows of clock_record.csv for one dashboard system, how many of its satellites the registry lists), or None
     when the system has no entry. The score judges only the satellites in service today; this is the other half: how
     many of all those launched lost atomic clocks in orbit. Rows are dicts keyed by the file's columns."""
-    member, _ = _membership(constellation)
+    member, registry = _membership(constellation)   # the registry and sightings.csv: NVS-03 is launched before the IGS lists it
     lost = [row for row in read_table(REGISTRY_CLOCK_RECORD_FILE) if member(row["svn"])]
-    launched = sum(member(row["svn"]) for row in read_table(REGISTRY_SATELLITES_FILE))
+    launched = sum(member(svn) for svn in registry)
     return (lost, launched) if lost else None
 
 

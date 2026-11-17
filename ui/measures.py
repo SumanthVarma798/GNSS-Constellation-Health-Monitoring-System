@@ -18,7 +18,7 @@ from ui.figures.slot_rows import as_number
 COLUMNS = [
     ("Drift per day", "Degrees of longitude it slides east or west each day"),
     ("Inclination", "Tilt of the orbit against the equator (0° is over the equator)"),
-    ("Longitude", "The longitude it is over now, against its own slot"),
+    ("Longitude", "Its average longitude over the last day, against its own slot"),
     ("Eccentricity", "How far the orbit is from a perfect circle (0 is a circle). A geostationary satellite on an oval one "
                      "speeds up and slows down each day, so it swings east and west of its slot by about 2 × e × 42,164 km"),
     ("Height", "Distance above the Earth's surface at the equator"),
