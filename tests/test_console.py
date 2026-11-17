@@ -561,6 +561,18 @@ def test_approvals_show_findings_by_category_before_old_style_items(monkeypatch)
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in page and "<script>alert(1)</script>" not in page
 
 
+def test_each_pull_request_is_its_own_card_with_only_its_own_findings(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    other = [{**FINDINGS_STAND_IN[0], "id": "R810", "statement": "A different new satellite, R810."}]
+    second = {**FINDINGS_PR, "number": 9, "title": "Second batch", "body": findings_body(other), "head": {"sha": "sha9"}}
+    at = run(monkeypatch, GitHub([FINDINGS_PR, second], comments={8: [], 9: []}), page="console/approvals.py")
+
+    page = text(at)
+    order = ["Pull request 8: Weekly registry findings", "COSMOS 2620", "Pull request 9: Second batch", "R810"]
+    assert [page.index(words) for words in order] == sorted(page.index(words) for words in order)
+    assert page.count('class="c-pr-banner"') == 2   # one title band per pull request
+
+
 def test_a_finding_stays_open_once_a_decision_on_it_is_under_way(monkeypatch):
     signed_in(monkeypatch, "member@example.com")
     at = run(monkeypatch, GitHub([FINDINGS_PR], comments={8: []}), page="console/approvals.py")

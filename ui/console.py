@@ -160,6 +160,11 @@ def section(title, body_html, right="", flush=False):
     return f'<div class="c-sect"><h3>{escape(title)}{note}</h3><div class="in{" flush" if flush else ""}">{body_html}</div></div>'
 
 
+def pr_banner(title, right):
+    """The top of one pull request's card on Approvals: its number and title, and how long it has waited."""
+    return f'<div class="c-pr-banner"><h2>{escape(title)}</h2><span>{escape(right)}</span></div>'
+
+
 def attention(items):
     """What needs a look: (tone, title, detail) items, each with a coloured edge and its icon."""
     rows = "".join(f'<li class="{_tone(tone)}">{icon(tone)}<div><b>{escape(title)}</b><div>{escape(detail)}</div></div></li>'

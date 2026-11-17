@@ -3,6 +3,7 @@
 Each item is an open pull request labelled "decision: <kind>" (evidence/decisions.py). The decision is written on the
 pull request as a comment, then it is merged, left open or closed (decided 20 Oct 2026, issue 17).
 """
+from contextlib import contextmanager
 from html import escape
 
 import requests
@@ -22,6 +23,15 @@ def waiting(days):
     """How long an item has waited, as a status: decisions.waited gives (words, tone)."""
     words, tone = decisions.waited(days)
     return console.status(tone, words)
+
+
+@contextmanager
+def pr_card(item):
+    """One pull request as one framed card: its title band first, everything about it inside, so two never run together."""
+    words, _ = decisions.waited(item["waited_days"])
+    with st.container(key=f"prcard_{item['number']}"):
+        st.html(console.pr_banner(f"Pull request {item['number']}: {item['title']}", words))
+        yield
 
 
 def decide(item, config, who):
@@ -151,40 +161,35 @@ def finding_finish(item, by_id, all_approved, config, who):
 
 
 def show_findings(items, comments, reviews, config, who):
-    for item in items:   # what each pull request asks, as for any other; its findings are decided one by one below
-        changes = changes_of(reviews.get(item["number"]))
-        look = table_changes.needs_a_look(changes)
-        review_summary(item, reviews.get(item["number"]), changes, look)
-        changes_by_kind(item, changes, look)
-        deeper(item, changes)
-    rows = []
-    finish_rows = []
+    """Each pull request is its own card: what it asks, its changes, then its findings by category, then one step deeper."""
     for item in items:
-        by_id = decisions.finding_decisions(comments.get(item["number"], []), item["sha"])
-        stale = decisions.finding_stale_ids(comments.get(item["number"], []), item["sha"])
+        number = item["number"]
+        by_id = decisions.finding_decisions(comments.get(number, []), item["sha"])
+        stale = decisions.finding_stale_ids(comments.get(number, []), item["sha"])
         decided_count = sum(finding["id"] in by_id for finding in item["findings"])
         finding_ids = [finding["id"] for finding in item["findings"]]
-        all_approved = finding_ids and all(by_id.get(fid) == APPROVE for fid in finding_ids)
-        all_rejected = finding_ids and all(by_id.get(fid) == REJECT for fid in finding_ids)
-        if all_approved or all_rejected:
-            finish_rows.append((item, by_id, all_approved))
-        for finding in item["findings"]:
-            rows.append({"item": item, "finding": finding, "by_id": by_id, "stale": stale, "decided_count": decided_count,
-                         "category": finding["category"] if finding["category"] in FINDING_CATEGORIES else OTHER_FINDINGS,
-                         "waiting": finding["id"] not in by_id})
-    for item, by_id, all_approved in finish_rows:
-        finding_finish(item, by_id, all_approved, config, who)
-    for category in [*FINDING_CATEGORIES, OTHER_FINDINGS]:
-        grouped = [row for row in rows if row["category"] == category]
-        if not grouped:
-            continue
-        waiting_count = sum(row["waiting"] for row in grouped)
-        st.html(console.section(category, console.list_view(
-            ["Finding", "Status"], [[escape(row["finding"]["statement"]),
-                                     finding_status(row["item"], row["by_id"], row["finding"]["id"])] for row in grouped]),
-                                right=f"{waiting_count} waiting", flush=True))
-        for row in grouped:
-            one_finding(row["item"], row["finding"], row["by_id"], row["stale"], row["decided_count"], config, who)
+        changes = changes_of(reviews.get(number))
+        look = table_changes.needs_a_look(changes)
+        with pr_card(item):
+            review_summary(item, reviews.get(number), changes, look)
+            changes_by_kind(item, changes, look)
+            if finding_ids and all(by_id.get(fid) == APPROVE for fid in finding_ids):
+                finding_finish(item, by_id, True, config, who)
+            elif finding_ids and all(by_id.get(fid) == REJECT for fid in finding_ids):
+                finding_finish(item, by_id, False, config, who)
+            for index, category in enumerate([*FINDING_CATEGORIES, OTHER_FINDINGS]):
+                grouped = [finding for finding in item["findings"]
+                           if (finding["category"] if finding["category"] in FINDING_CATEGORIES else OTHER_FINDINGS) == category]
+                if not grouped:
+                    continue
+                waiting_count = sum(finding["id"] not in by_id for finding in grouped)
+                st.html(console.section(category, console.list_view(
+                    ["Finding", "Status"], [[escape(finding["statement"]), finding_status(item, by_id, finding["id"])]
+                                            for finding in grouped]), right=f"{waiting_count} waiting", flush=True))
+                with st.container(key=f"prfind_{number}_{index}"):   # the decisions hang under the table they belong to
+                    for finding in grouped:
+                        one_finding(item, finding, by_id, stale, decided_count, config, who)
+            deeper(item, changes)
 
 
 def source_html(settings):
@@ -213,7 +218,7 @@ def review_summary(item, reading, changes, look):
                 ("Checks", console.status("warn", "GitHub did not give its changes or checks: look on GitHub"))]
     rows += [("Raised by", f"{escape(item['raised_by'])}, {opened.day} {opened:%b %Y}, {waiting(item['waited_days'])}"),
              ("On GitHub", finding_row(item["link"], f"pull request {number}"))]
-    st.html(console.section(f"Pull request {number}: {item['title']}", console.key_values(rows)))
+    st.html(console.section("What it asks and does", console.key_values(rows)))
 
 
 def changes_by_kind(item, changes, look):
@@ -261,14 +266,15 @@ def deeper(item, changes):
 
 
 def old_style_item(item, reading, config, who):
-    if item["findings_unreadable"]:
-        st.html(console.notice("Its findings block could not be read, so it is shown as one item.", "warn"))
     changes = changes_of(reading)
     look = table_changes.needs_a_look(changes)
-    review_summary(item, reading, changes, look)
-    changes_by_kind(item, changes, look)
-    decide(item, config, who)
-    deeper(item, changes)
+    with pr_card(item):
+        if item["findings_unreadable"]:
+            st.html(console.notice("Its findings block could not be read, so it is shown as one item.", "warn"))
+        review_summary(item, reading, changes, look)
+        changes_by_kind(item, changes, look)
+        decide(item, config, who)
+        deeper(item, changes)
 
 
 config = common.settings()
