@@ -39,7 +39,8 @@ def test_a_legend_lists_every_entry_and_escapes_its_words():
     entries = [(palette.OK, "in slot"), (palette.WARN, "off its slot"), ("var(--bad)", "<b>left</b>")]
     html = tooltip.legend(entries, label="Slot <legend>")
 
-    for colour, _ in entries:
+    # a palette colour that changes with the theme is drawn as its variable
+    for colour in ("var(--ok)", "var(--warn)", "var(--bad)"):
         assert f"background:{colour}" in html
     assert "&lt;b&gt;left&lt;/b&gt;" in html and "Slot &lt;legend&gt;" in html and "<b>" not in html
 

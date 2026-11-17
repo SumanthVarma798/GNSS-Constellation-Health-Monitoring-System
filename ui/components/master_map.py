@@ -106,7 +106,7 @@ def master_map_html(data, focus=None, records=None):
     focus names a constellation the map opens filtered to (chosen on the page around it), or None for every one.
     records is master_map_records(data) when the caller has made it already."""
     payload = {"records": records if records is not None else master_map_records(data),
-               "colours": palette.CONSTELLATION_COLOURS, "focus": focus}
+               "colours": {key: palette.css(c) for key, c in palette.CONSTELLATION_COLOURS.items()}, "focus": focus}
     return fill(
         PAGE_FILE.read_text(encoding="utf-8"),
         payload,

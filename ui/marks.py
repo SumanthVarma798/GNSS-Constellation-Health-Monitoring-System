@@ -73,7 +73,7 @@ def mark(name):
     known = key(name)
     if known is None:
         return ""
-    return (f'<span class="mk" style="--mk: var(--mk-{known.lower()}); color: {palette.CONSTELLATION_COLOURS[known]}" '
+    return (f'<span class="mk" style="--mk: var(--mk-{known.lower()}); color: {palette.css(palette.CONSTELLATION_COLOURS[known])}" '
             'aria-hidden="true"></span>')
 
 

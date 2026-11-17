@@ -69,6 +69,10 @@ __TIP__
 const DATA = __DATA__;
 const $ = id => document.getElementById(id);
 const css = getComputedStyle(document.documentElement), C = name => css.getPropertyValue("--" + name).trim();
+// A colour sent as a theme variable (var(--ok), ui/palette.py css) is read from the page when drawn; under System a
+// change of the computer's light or dark setting redraws the frame in the other theme.
+const themed = c => (c && c.startsWith("var(--")) ? css.getPropertyValue(c.slice(4, -1)).trim() : c;
+matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => location.reload());
 const STEPS = DATA.steps, SATS = DATA.satellites, LAST = STEPS.length - 1;
 const canvas = $("sky"), ctx = canvas.getContext("2d"), range = $("time"), play = $("play"), tip = $("tip");
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -96,7 +100,7 @@ function mark(p, size) {
   ctx.beginPath();
   if (p.s.shape === "circle") ctx.arc(p.x, p.y, size, 0, 2 * Math.PI);
   else { ctx.moveTo(p.x, p.y - size - 1); ctx.lineTo(p.x + size + 1, p.y); ctx.lineTo(p.x, p.y + size + 1); ctx.lineTo(p.x - size - 1, p.y); ctx.closePath(); }
-  ctx.fillStyle = p.s.colour; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = C("platform"); ctx.stroke();
+  ctx.fillStyle = themed(p.s.colour); ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = C("platform"); ctx.stroke();
 }
 function paint() {
   const { w, h, cx, cy, r } = box;

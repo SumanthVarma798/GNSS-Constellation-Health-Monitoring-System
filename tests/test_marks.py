@@ -13,7 +13,8 @@ def test_every_constellation_has_a_mark_and_a_colour_and_its_parts_share_it():
 def test_a_mark_is_a_mask_in_the_constellations_colour_and_the_name_says_which_it_is():
     drawn = marks.named("QZSS")
 
-    assert f"color: {palette.CONSTELLATION_COLOURS['QZSS']}" in drawn and "var(--mk-qzss)" in drawn
+    # the constellation's colour, as the variable that follows the theme
+    assert "color: var(--sys-qzss)" in drawn and "var(--mk-qzss)" in drawn
     assert 'aria-hidden="true"' in drawn and drawn.endswith("QZSS</span>")
     assert marks.mark("Starlink") == "" and marks.named("<b>") == '<span class="mk-name">&lt;b&gt;</span>'
     assert all(f"--mk-{key.lower()}:" in theme.root_block() for key in marks.SHAPES)   # each is on the page to mask with

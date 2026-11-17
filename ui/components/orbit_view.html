@@ -107,6 +107,7 @@ const SATS = DATA.satellites;
 const $ = id => document.getElementById(id);
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const css = getComputedStyle(document.documentElement);
+matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => location.reload());   // under System, redraw in the other theme
 const C = Object.fromEntries(["platform", "lift", "sink", "track", "fill", "ink", "ok", "warn", "bad", "idle", "muted"].map(n => [n, css.getPropertyValue("--" + n).trim()]));
 const canvas = $("orbits"), ctx = canvas.getContext("2d"), tip = $("tip"), readout = $("readout");
 
