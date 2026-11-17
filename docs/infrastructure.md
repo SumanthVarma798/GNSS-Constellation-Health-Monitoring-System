@@ -29,7 +29,8 @@ Administrator re-invites the person; if none is left, Cloudflare support recover
 | `feeds.opengnss.org` (mail) | Cloudflare Email Routing. Only `newsletters@feeds.opengnss.org` is accepted; all other addresses bounce |
 | `dashboard.opengnss.org` | The dashboard (`dashboard.py`) on Render: a DNS-only CNAME to `opengnss-dashboard.onrender.com` |
 | `console.opengnss.org` | The administration console (`admin.py`) on Render: a DNS-only CNAME to `opengnss-console.onrender.com` |
-| `opengnss.org` | Unused for now; kept free for the project's site and the team's own mail |
+| `opengnss.org` (mail) | Cloudflare Email Routing. Only `contact@opengnss.org` is accepted, handed to the Worker `opengnss-newsletters` for the console's Contact inbox; all other addresses bounce |
+| `opengnss.org` (web) | Unused for now; kept free for the project's site |
 
 ## The dashboard and the console on Render
 
@@ -61,6 +62,12 @@ Substack refuses GitHub's servers (403), so Substack posts reach the archive by 
    `opengnss-newsletters`, and lists the post (title, public link, date, a 300-character excerpt) in that
    publication's feed. Sign-in and welcome mail is never published.
 4. The archive job reads those feeds like any other (they are the Substack rows of `evidence/source_candidates.csv`).
+
+The same Worker keeps the contact inbox: mail to `contact@opengnss.org` and the dashboard's Contact us form (`POST
+/contact`, token `CONTACT_WRITE_TOKEN`) land privately in KV, at most 30 a day. The console reads it with
+`CONTACT_READ_TOKEN` (env var `CONTACT_READ_TOKEN` on Render); attachments wait for a ClamAV scan that the console
+starts when the inbox is opened (`.github/workflows/contact-scan.yml`, token `CONTACT_SCAN_TOKEN`). The three tokens
+must all differ, or the contact routes refuse to work. Replies go from your own mail until Email Sending is set up.
 
 Deploy a change from `cloudflare/newsletters/`: `npm ci`, `npm test`, then `npx wrangler deploy`. This needs a
 Cloudflare sign-in (`npx wrangler login`) with access to the OpenGNSS account. Settings live in its `wrangler.toml`.
