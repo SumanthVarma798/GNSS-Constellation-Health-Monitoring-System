@@ -12,12 +12,12 @@ from urllib.parse import quote
 from evidence.library_settings import (COMMONS_LARGE, COMMONS_PAGE, COMMONS_PICTURE, DAYS_PER_YEAR, DESIGN_LIFE_YEARS,
                                        END_STEP, FAILED, LIFECYCLE_SERIES, LIFECYCLE_STEPS, NOTE_STEP, REGISTRY_STEPS,
                                        SERIES_SYSTEM, SERVICE_STEP, SYSTEM_ORDER)
+from evidence.registry_tables import launch_date
 from evidence.settings import GCAT_CITATION
 from evidence.sources import IGS_SATELLITE_METADATA_URL
 
 IGS = {"name": "International GNSS Service (IGS) satellite metadata file", "link": IGS_SATELLITE_METADATA_URL}
 GCAT = {"name": GCAT_CITATION, "link": "https://planet4589.org/space/gcat/"}
-LAUNCHED = re.compile(r"\bLaunched (\d{4}-\d{2}-\d{2})\b")
 GCAT_DATE = re.compile(r"^(\d{4}) ([A-Z][a-z]{2})(?: +(\d{1,2}))?$")   # "2025 Jul 10", "2023 Feb"; "?" means unsure: unused
 
 DONE, IMPLIED, FAILED_STATE, MISSED, AHEAD = "done", "done, date not published", "failed", "not reached", "ahead"
@@ -93,8 +93,8 @@ def _when(iso):
 def registry_events(satellite, periods, catalogue_row):
     """A satellite's events from the registry tables: launch, signal IDs, and the end of regular operations."""
     events = []
-    if launched := LAUNCHED.search(satellite["note"]):
-        events.append(_made("launch", "Launch", f"{launched[1]}T00:00:00Z", "on", "IGS file",
+    if launched := launch_date(satellite.get("note", "")):
+        events.append(_made("launch", "Launch", f"{launched.isoformat()}T00:00:00Z", "on", "IGS file",
                             "The launch date the IGS satellite metadata file gives.", IGS))
     periods = sorted(periods, key=lambda row: row["valid_from"])
     for i, period in enumerate(periods):

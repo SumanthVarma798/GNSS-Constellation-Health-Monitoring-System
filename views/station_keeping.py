@@ -9,19 +9,12 @@ from html import escape
 import pandas as pd
 import streamlit as st
 
-from ui import data, measures, reveal, shell, surfaces, time_range, tooltip
+from ui import data, measures, reveal, surfaces, time_range, tooltip
 from ui.figures.burns import EAST_WEST, burn_timeline, rhythm
+from ui.picker import chosen_constellations
 
 PATTERN_STATUS = {"regular": "ok", "irregular": "warn", "too few": "idle"}
 CHART = {"use_container_width": True, "config": {"displayModeBar": False}}
-
-
-def _chosen():
-    """{constellation: [satellite, ...]} for the top bar's choice. Compare reuses the picks (ui.picker)."""
-    if not st.session_state["compare"]:
-        return {st.session_state["scope"]: None}
-    picks = st.session_state.get("compare_picks", {})
-    return {name: picks[name] for name in shell.CONSTELLATIONS if picks.get(name)}
 
 
 def _days(value):
@@ -126,7 +119,7 @@ def _events(recent, satellites, rhythm_rows):
     return '<div class="bl">' + "".join(lines) + "</div>"
 
 
-chosen = _chosen()
+chosen = chosen_constellations()
 if not chosen:
     surfaces.show('<p class="small">Pick satellites on the Overview to compare.</p>')
     st.stop()

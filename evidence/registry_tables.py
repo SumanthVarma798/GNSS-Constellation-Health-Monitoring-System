@@ -5,12 +5,36 @@ line-by-line difference a person can review. See registry/README.md. Their
 file names and columns are in evidence/settings.py.
 """
 import csv
-from datetime import date, timedelta
+import re
+from datetime import date, datetime, timedelta
 
 from evidence.settings import (REGISTRY_CONSTELLATIONS_FILE, REGISTRY_DASHBOARD_SATELLITES_FILE,
                                REGISTRY_DASHBOARD_SYSTEMS_FILE, REGISTRY_DIR, REGISTRY_DASHBOARD_TRACKED_SYSTEMS,
                                REGISTRY_SATELLITES_FILE, REGISTRY_SIGHTINGS_FILE, NEW_ON_DASHBOARD_DAYS,
                                REGISTRY_LEFT_OUT_FILE)
+
+LAUNCHED_WORDS_FORMAT = "Launched {day}"
+LAUNCH_DATE_NOT_READ = "Launch date not read"
+LAUNCH_NOTE_FORMAT = "{launch_words}; {name}"
+_LAUNCH_DATE = re.compile(r"\bLaunched (\d{4}-\d{2}-\d{2})\b")
+
+
+def launch_date(note):
+    """The launch date in a registry note, or None when the note holds none or is unreadable."""
+    if not isinstance(note, str):
+        return None
+    found = _LAUNCH_DATE.search(note)
+    if not found:
+        return None
+    try:
+        return datetime.strptime(found.group(1), "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def launch_name(note):
+    """The launch name in a registry note ("Launched ...; NAME"), or "" when the note has none."""
+    return note.split("; ", 1)[1].strip() if isinstance(note, str) and "; " in note else ""
 
 
 def read_table(name):

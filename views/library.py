@@ -24,9 +24,10 @@ from evidence.settings import (REGISTRY_CATALOGUE_FILE, REGISTRY_DASHBOARD_SATEL
 from evidence.registry_tables import read_table, registry_name
 from ui import library, reveal, shelf, surfaces, systems
 from ui.components.lifecycle import lifecycle_frame
+from ui.session_keys import LIBRARY_JUMP
 from ui.shelf_settings import (COLLEAGUES, OTHERS, OUR_CITATIONS, OURS, OUTSIDE_CITATIONS, SHELVES, STORIES_SHOWN)
 
-JUMP = "library_jump"
+JUMP = LIBRARY_JUMP
 
 
 @st.cache_data(show_spinner=False)

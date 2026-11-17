@@ -29,7 +29,8 @@ from evidence.igs_metadata import OPEN_END, block_rows, read_metadata, sinex_tim
 from evidence import news, recent_launches
 from evidence.registry_changes import (change_report, describe_satellite_changes, describe_signal_id_changes,
                                       registry_findings, BRACKETED, signal_row_tuple)
-from evidence.registry_tables import constellation_names, read_table, tracked_list_in_step, write_table
+from evidence.registry_tables import (LAUNCHED_WORDS_FORMAT, LAUNCH_DATE_NOT_READ, LAUNCH_NOTE_FORMAT,
+                                      constellation_names, read_table, tracked_list_in_step, write_table)
 from evidence.sources import IGS_SATELLITE_METADATA_URL, SPACE_TRACK_RECENT_LAUNCHES_URL
 from evidence.settings import (REGISTRY_CONSTELLATIONS_FILE, REGISTRY_DIR, REGISTRY_SATELLITE_COLUMNS,
                                REGISTRY_DASHBOARD_SATELLITE_COLUMNS,
@@ -135,7 +136,8 @@ def sightings_update(before, satellites, group):
         svn = f"{letters[system]}-{catalogue_no}"
         reads[svn] = read = celestrak_read(catalogue_no)
         launched = str((read.get("catalogue_entry") or {}).get("LAUNCH_DATE", "")).strip()
-        note = f"{f'Launched {launched}' if launched else 'Launch date not read'}; {name}"
+        launch_words = LAUNCHED_WORDS_FORMAT.format(day=launched) if launched else LAUNCH_DATE_NOT_READ
+        note = LAUNCH_NOTE_FORMAT.format(launch_words=launch_words, name=name)
         rows.append([svn, system, "", str(entry.get("OBJECT_ID", "")), catalogue_no, "", "", "", note])
         known.add(catalogue_no)
     return sorted(rows), reads, listed
