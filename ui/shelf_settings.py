@@ -159,13 +159,14 @@ COLLEAGUES = [
                   "https://www.russianspaceweb.com/glonass.html")]),
 ]
 
-# ---- How to cite: our own data and the dashboard, then each outside source with the credit its owner asks for
-# (as NOTICE records it).
-OUR_CITATIONS = [
-    ("Our data", "OpenGNSS, <dataset name>, data from OpenGNSS (opengnss.org), licensed CC BY 4.0, <its address>, "
-                 "retrieved <date>."),
-    ("The dashboard", f"OpenGNSS GNSS Health Monitor, {DASHBOARD_LINK}, retrieved <date>."),
-]
+# ---- How to cite: every form in one place. Short: organisation (year). title. url.
+# Long: add version/date, licence and accessed time.
+CITATION_FORMATS = {
+    "short": "{organisation} ({year}). {title}. {url}",
+    "long": "{organisation} ({year}). {title}. Version/date: {version}. Licence: {licence}. {url}. Accessed {accessed} UTC.",
+}
+DASHBOARD_CITATION = {"organisation": "OpenGNSS", "title": "OpenGNSS GNSS Health Monitor", "url": DASHBOARD_LINK}
+
 OUTSIDE_CITATIONS = [
     ("GCAT", GCAT_CREDIT + "."),
     ("IGS", "Acknowledge the International GNSS Service (IGS) for its satellite metadata file and broadcast files."),

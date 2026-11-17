@@ -32,6 +32,15 @@ def test_every_dataset_of_ours_says_how_to_get_use_and_cite_it():
         assert item["address"].startswith("https://raw.githubusercontent.com/")
 
 
+def test_dataset_citations_have_short_and_long_forms_with_the_key_fields():
+    content = b"at_utc,satellite\n2026-11-13T00:00:00Z,NVS-03\n"
+    words = shelf.dataset_citations("lifecycles", content)
+    assert "OpenGNSS (" in words["short"] and "Satellite lifecycles" in words["short"]
+    assert OURS["lifecycles"]["address"] in words["short"]
+    for needed in ("Version/date:", "2026-11-13", "Licence: CC BY 4.0", "Accessed "):
+        assert needed in words["long"]
+
+
 def test_only_our_own_files_are_offered_and_others_are_linked_to_their_owners():
     # NOTICE: orbit records keep Space-Track's and CelesTrak's terms, GCAT and the IGS files are their owners', and
     # headlines belong to their publishers. None of those is a dataset of ours.
@@ -133,3 +142,12 @@ def test_the_library_has_its_own_contact_shelf_and_the_footer_leaves_its_copy_ou
     keys = [box.key for box in at.text_input]
     assert "contact_library_address" in keys and "contact_footer_address" not in keys
     assert "<h2>Contact us</h2>" in page_html(at)
+
+
+def test_the_dashboard_citation_frame_is_filled_and_left_live_for_the_browser():
+    from ui.components.citation import citation_html
+
+    page = citation_html()
+    assert "OpenGNSS GNSS Health Monitor" in page and "CC BY 4.0" in page
+    assert "{accessed}" in page and "{year}" in page   # filled in the browser at the moment of copying
+    assert "__ROOT__" not in page and "__FONT__" not in page and "__DATA__" not in page

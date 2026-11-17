@@ -6,7 +6,7 @@ import csv
 import io
 import json
 import re
-from datetime import date
+from datetime import date, datetime, timezone
 from html import escape
 from pathlib import Path
 
@@ -15,7 +15,7 @@ import streamlit as st
 from evidence import jobs
 from evidence.console_settings import JOBS, WORKFLOWS_DIR
 from ui import icons, marks, surfaces
-from ui.shelf_settings import FITTED, JOB_NAMES, ORBIT_GAP, OUR_CREDIT, OUR_LICENCE, OURS, SHELVES
+from ui.shelf_settings import CITATION_FORMATS, FITTED, JOB_NAMES, ORBIT_GAP, OUR_CREDIT, OUR_LICENCE, OURS, SHELVES
 
 ROOT = Path(__file__).resolve().parent.parent
 _DAY = re.compile(r"\d{4}-\d{2}-\d{2}")
@@ -155,6 +155,50 @@ def file_name(key):
 def _link(address, words=""):
     return (f'<a href="{escape(address, quote=True)}" target="_blank" rel="noopener noreferrer">'
             f'{escape(words or address)}</a>')
+
+
+def _as_iso_day(text):
+    """'2026-11-15' from text that starts with an ISO day, or ''."""
+    found = _DAY.match(text or "")
+    return found.group(0) if found else ""
+
+
+def _dataset_version(key, content):
+    """The dataset's version/date in ISO day form where possible, else 'not known'."""
+    if content is None:
+        return "not known"
+    item = OURS[key]
+    if not item["date"]:
+        return "not known"
+    how, name = item["date"]
+    try:
+        if how == "column":
+            rows = csv.DictReader(io.StringIO(content.decode("utf-8")))
+            return max((_as_iso_day(row.get(name, "")) for row in rows), default="") or "not known"
+        data = json.loads(content.decode("utf-8"))
+        return _as_iso_day(str(data.get(name, ""))) or "not known"
+    except (OSError, ValueError, UnicodeDecodeError, json.JSONDecodeError):
+        return "not known"
+
+
+def _citation_year(version, now):
+    year = version[:4] if len(version) >= 4 and version[:4].isdigit() else str(now.year)
+    return year
+
+
+def _citation_accessed(now):
+    return now.strftime("%Y-%m-%d %H:%M")
+
+
+def dataset_citations(key, content, now=None):
+    """Short and long citation text for one dataset."""
+    when = now or datetime.now(timezone.utc)
+    item = OURS[key]
+    version = _dataset_version(key, content)
+    fields = {"organisation": "OpenGNSS", "title": item["name"], "url": item["address"],
+              "year": _citation_year(version, when), "version": version, "licence": OUR_LICENCE[0],
+              "accessed": _citation_accessed(when)}
+    return {"short": CITATION_FORMATS["short"].format(**fields), "long": CITATION_FORMATS["long"].format(**fields)}
 
 
 def card_html(key, content, fresh, problem):

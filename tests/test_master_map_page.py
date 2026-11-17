@@ -102,12 +102,12 @@ def test_a_row_leads_to_its_part_of_the_map_and_to_each_parts_overview():
     labels = [button.label for button in at.button]
     for part in systems.SYSTEMS["BeiDou-3"]:   # each part by its name in ui/systems.py PARTS, as it is spelt there
         assert f"BeiDou-3 {systems.part_name(part)} overview" in labels
-    assert labels.count("Show on the map") == len(systems.SYSTEMS)
+    assert labels.count("Show on map") == len(systems.SYSTEMS)
 
     at.button(key="mm_map_1").click().run()   # QZSS
     assert at.session_state["master_map_focus"] == "QZSS"
     assert "showing QZSS" in "\n".join(htmls(at))
-    assert any(button.label == "Show every constellation" for button in at.button)
+    assert any(button.label == "Show all constellations" for button in at.button)
 
     at.button(key="mm_ov_BeiDou-3 MEO").click().run()
     assert (at.session_state["scope"], at.session_state["page"]) == ("BeiDou-3 MEO", "Overview")
