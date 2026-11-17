@@ -75,11 +75,11 @@ def _how_scored(system, index):
               else "None could be read today, so there is no score. " if not used
               else f"From {used} of 3 today: {reveal.count(3 - used, 'measure')} could not be read, so the others "
                    "count for its share. ")
-        + "Why these weights: How to read this page."), key=f"score_{index}")
+        + "Why these weights: Need help reading this page?"), key=f"score_{index}")
 
 
 def _anchor(heading):
-    """The id of one "How to read this page" card or point, from its heading: 'What is measured' ->
+    """The id of one "Need help reading this page?" card or point, from its heading: 'What is measured' ->
     'how-what-is-measured'."""
     return "how-" + re.sub(r"[^a-z0-9]+", "-", heading.lower()).strip("-")
 
@@ -88,14 +88,14 @@ TERMS = {point[0].lower() for _, _, points in HOW for point in points if not isi
 
 
 def _explained(words):
-    """Words on a row that "How to read this page" explains, as a link to the card that explains them (dotted under,
+    """Words on a row that "Need help reading this page?" explains, as a link to the card that explains them (dotted under,
     like every word that opens an explanation); other words as they are. Following the link opens that section and
     scrolls to the card (_how_links_script); without scripts it still jumps to the card."""
     if words not in HOW_LINKS:
         return escape(words)
     target = _anchor(words if words.lower() in TERMS else HOW_LINKS[words])   # the point itself, else its card
     return (f'<a class="how-link" href="#{target}" '
-            f'title="What this means: opens How to read this page">{escape(words)}</a>')
+            f'title="What this means: opens Need help reading this page?">{escape(words)}</a>')
 
 
 def _tile(words, count, of):
@@ -221,7 +221,7 @@ WEIGHT_TONES = {"clock": "accent", "orbit": "ok", "station": "warn"}   # one col
 
 
 def _picture(name):
-    """What stands before a term in How to read this page (see HOW): an icon, a state's mark, a small score ring, or
+    """What stands before a term in Need help reading this page? (see HOW): an icon, a state's mark, a small score ring, or
     the mission weights as bars."""
     if not name:
         return ""
@@ -277,7 +277,7 @@ def _how():
     return '<div class="how-grid">' + "".join(cards) + "</div>"
 
 
-# Run once in the page itself: a click on a row's explained words opens "How to read this page" by its own header
+# Run once in the page itself: a click on a row's explained words opens "Need help reading this page?" by its own header
 # (so the section's state stays the reader's) and scrolls to the card. st.html drops scripts, so a frame of no height
 # adds it to the page; a browser that blocks that still follows the link to the card.
 _HOW_LINKS_SCRIPT = """<script>
@@ -390,7 +390,7 @@ def page():
         reveal.section("home_more", "The rest", " · ".join(filter(None, [
             f"{len(listed) - FINDINGS_SHOWN} more" if len(listed) > FINDINGS_SHOWN else "",
             f"{len(explained)} expected" if explained else ""])), "".join(_finding(finding) for finding in rest))
-    reveal.section("home_how", "How to read this page",
+    reveal.section("home_how", "Need help reading this page?",
                    "what is measured, how, and what we are working towards", _how())
     components.html(_HOW_LINKS_SCRIPT + _CARDS_SCRIPT, height=0)
 

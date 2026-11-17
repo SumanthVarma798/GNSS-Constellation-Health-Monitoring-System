@@ -1,6 +1,6 @@
 """The Home page's words and choices, in one place. Change a value here by pull request; nothing else needs editing.
 
-The numbers marked "our choice" are not from a standard: they are named on the page, in "How to read this page".
+The numbers marked "our choice" are not from a standard: they are named on the page, in "Need help reading this page?".
 """
 from datetime import timedelta
 
@@ -45,7 +45,7 @@ EXPLAINED = {
     ("disagree", "Galileo", "GSAT0202"): "launched into a wrong, eccentric orbit in 2014; flagged by Galileo itself",
 }
 
-# "How to read this page": the same order the whole dashboard follows. (icon in ui/icons.py MASKED, heading,
+# "Need help reading this page?": the same order the whole dashboard follows. (icon in ui/icons.py MASKED, heading,
 # [(term, words, picture)]). A plain string among the points starts a group under that small heading. words is one
 # short line or a list of short bullets. picture, drawn before the term, is an icon name (ui/icons.py MASKED), a
 # state's mark ("mark:ok", "mark:warn", "mark:bad", "mark:accent"), "gauge" (a small score ring) or "weights" (the
@@ -56,13 +56,14 @@ HOW = [
         ("Score", ["One number out of 100, to compare constellations at a glance",
                    "The weighted sum of the three key health attributes",
                    "The ring round it: the constellation's satellites, by state"], "gauge"),
-        ("Weights", ["Set by mission: what a failure costs the constellation's users",
+        ("Weights", ["Set by mission: what a failure costs the constellation's users (our choice, open to change)",
                      "Regional: 7 or 8 satellites, none spare. A bad clock reaches every fix; off station, coverage "
                      "leaves the region",
                      "Global: 24 to 35, 8 to 12 in view. One bad clock can be left out; the planes set the coverage"],
          "weights"),
         "The states round the score",
-        ("Healthy and in place", "orbit scores 80 or more, and it is in its slot or in step with its plane", "mark:ok"),
+        ("Healthy and in place", "orbit scores 80 or more (our line: green from 80, amber from 60), and it is in its "
+         "slot or in step with its plane", "mark:ok"),
         ("Needs a look", "counted, but its orbit scores under 80, or it is out of its slot or step", "mark:warn"),
         ("Set aside", "moved to a graveyard orbit after its service ended: in the total, not judged", "mark:bad"),
         "Key health attributes",
@@ -70,7 +71,7 @@ HOW = [
                         "held over a longitude: its tilt; in a medium orbit: plane, tilt, height and shape"], "planet"),
         ("Station held", ["held there: in its slot and not drifting, or in step with its plane",
                           "how often it burns to stay there: on its own page"], "satellite"),
-        ("Clock steady", ["each clock message within 30 ns of what the one before predicted",
+        ("Clock steady", ["each clock message within 30 ns of what the one before predicted (30 ns is our line)",
                           "1 ns of clock is 0.3 m of range"], "hourglass"),
         "Extra details",
         ("Says healthy", "the flag each satellite sends about itself, read daily from the IGS daily broadcast file",
@@ -81,19 +82,25 @@ HOW = [
                    "medium orbits rarely show any yet: their records are too short"], "rocket"),
     ]),
     ("calculator", "How", [
-        ("Two sources, never mixed", "orbit and station from public tracking records; clock and flag from the "
-         "satellites' own broadcast. Where they disagree, Worth a look says so", ""),
-        ("Default limits", "Home uses the default limits; limits moved on a constellation's page apply there only", ""),
-        ("Findings by rule", "each finding comes from a named rule, never a hand pick", ""),
+        ("Two sources, never mixed", ["orbit and station: public tracking records from CelesTrak and Space-Track",
+                                      "clock and flag: the IGS daily broadcast file",
+                                      "where the two disagree, Worth a look says so"], "database"),
+        ("Counted ahead", ["Home's counts are made four times a day", "the headline says when they were made"],
+         "hourglass"),
+        ("Default limits", ["Home always uses the default limits",
+                            "limits moved on a constellation's page apply there only"], "tool"),
+        ("Findings by rule", ["each comes from a named rule, never a hand pick; the largest of each rule first",
+                              "odd one out: 3 spreads under the median (our line)"], "search"),
     ]),
     ("rocket", "What we are working towards", [
-        ("Measured accuracy", "how accurate each signal and clock really are, from precise orbit and clock products we "
-         "do not read yet", ""),
-        ("New satellites", "one on its way to its slot, or there under 30 days, is named but not yet scored", ""),
-        ("Our choices", "the mission weights, the colours (green from 80, amber from 60), the 30 ns clock line and "
-         "the odd-one-out line are ours, not a standard, and open to change", ""),
-        ("Working together", "we are open to working with anyone measuring these constellations: data, methods or "
-         "reviews of ours", ""),
+        ("Signals as declared", ["whether each satellite broadcasts every signal its operator declares",
+                                 "for example NavIC's L5 and S, and L1 on NVS-01"], "broadcast"),
+        ("Measured accuracy", ["how accurate each signal and clock really are",
+                               "needs precise orbit and clock products we do not read yet"], "radar"),
+        ("New satellites", ["on its way to its slot, or there under 30 days", "named on its card, not yet scored"],
+         "satellite"),
+        ("Working together", ["open to working with anyone measuring these constellations",
+                              "data, methods, or a review of ours"], "quote"),
     ]),
 ]
 
@@ -101,7 +108,7 @@ HOW = [
 # so the page never shows an address that bounces.
 CONTACT_ADDRESS = ""
 
-# The words on a row that "How to read this page" explains: {words on the row: the heading of the card that explains
+# The words on a row that "Need help reading this page?" explains: {words on the row: the heading of the card that explains
 # them}. On the row they are a link to that card, landing on the point itself when its term is the same words.
 HOW_LINKS = {
     "score": "What is measured",

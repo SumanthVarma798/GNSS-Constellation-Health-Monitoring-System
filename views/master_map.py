@@ -76,7 +76,7 @@ def page():
     reveal.section("mm_look", "Where the IGS satellite metadata file, GCAT and CelesTrak's orbit feed disagree",
                    f"{mm.spacecraft(look)} marked on the map, each with the two sources and what each says",
                    mm.disagreements(records))
-    reveal.section("mm_how", "How to read this page", "what is shown, how, what is left out, what comes next", mm.how())
+    reveal.section("mm_how", "Need help reading this page?", "what is shown, how, what is left out, what comes next", mm.how())
 
 
 page()

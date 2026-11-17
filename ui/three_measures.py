@@ -21,6 +21,16 @@ def _chip(words, count, of):
     return surfaces.chip(f"{words} {count} of {of}", surfaces.share_tone(100 * count / of))
 
 
+def _whole_points(rates, score):
+    """Each part's points as whole numbers that add up to the score shown: each rounded down, then the points left
+    given to the parts that lost the most to rounding (so 29.64 + 19.76 shows as 29 + 20 beside a score of 49)."""
+    exact = [rate * weight for _, rate, weight in rates]
+    whole = [int(value) for value in exact]
+    for at in sorted(range(len(exact)), key=lambda i: exact[i] - whole[i], reverse=True)[:score - sum(whole)]:
+        whole[at] += 1
+    return whole
+
+
 def score_sum(summary):
     """The score opened into its parts, so it can be checked: one bar of 100 cut into each attribute's share (its
     weight for the constellation's mission), each share filled as far as its pass rate, so the filled length is the
@@ -30,18 +40,21 @@ def score_sum(summary):
     if score is None:
         return '<p class="small">No score: none of the three attributes could be read today.</p>'
     names = dict(MEASURES)
-    slots = "".join(f'<span class="ss-slot" style="flex:{weight:.4f}"><i class="{surfaces.share_tone(rate)}" '
-                    f'style="width:{rate:.1f}%"></i><em>{escape(names[key].split()[0].lower())}</em></span>'
-                    for key, rate, weight in rates)
-    terms = "".join(f'<span><b>{escape(names[key])}</b> {rate:.0f}% × {weight:.0%} = <b class="num">{rate * weight:.1f}</b></span>'
-                    for key, rate, weight in rates)
     mission = limits.MISSION.get(systems.system_of(summary["name"]), "global")
-    words = " + ".join(f"{names[key]} {rate * weight:.1f}" for key, rate, weight in rates)
-    return (f'<div class="ssum"><div class="ssum-bar" role="img" aria-label="Score {score}: {escape(words)}">{slots}</div>'
-            f'<div class="ssum-key small">{terms}<span class="ssum-total">= <b class="num">{score}</b> / 100</span></div>'
-            f'<p class="small muted">Weighed for a {mission} constellation'
-            + ("" if len(rates) == 3 else f"; {3 - len(rates)} not read today, so the others count for its share")
-            + "</p></div>")
+    # read aloud in full; on the page the bar says it: each part's name over it, its points under it
+    words = ", ".join(f"{names[key]} {rate:.0f}% of its {weight:.0%} share: {rate * weight:.1f} points"
+                      for key, rate, weight in rates)
+    words += f"; score {score} out of 100, weighed for a {mission} constellation"
+    if len(rates) < 3:
+        words += f"; {3 - len(rates)} not read today, so the others count for its share"
+    parts = "".join(
+        f'<div class="ss-seg" style="flex:{weight:.4f}"><span class="ss-name">{escape(names[key].split()[0])}</span>'
+        f'<span class="ss-slot"><i class="{surfaces.share_tone(rate)}" style="width:{rate:.1f}%"></i></span>'
+        f'<span class="ss-pts"><b class="num">{points}</b>/{weight * 100:.0f}</span></div>'
+        for (key, rate, weight), points in zip(rates, _whole_points(rates, score)))
+    return (f'<div class="ssum" role="img" aria-label="{escape(words)}"><div class="ssum-bar" aria-hidden="true">{parts}'
+            f'</div><div class="ss-total {surfaces.band(score)}" aria-hidden="true"><b class="num">{score}</b>'
+            f'<small>/100</small></div></div>')
 
 
 def strip(summary):
