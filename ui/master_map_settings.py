@@ -51,7 +51,7 @@ HOW = [
     ("alert-triangle", "What is left out", [
         ("Service", "Whether a satellite gives a navigation service is not on this page: the IGS satellite metadata file "
          "does not say, and GCAT's \"still operating\" is not the same thing. It is measured on each constellation's "
-         "Overview, under Signals heard today: which signals IGS receivers recorded from each satellite on the latest "
+         "Overview, under Signals heard (its title names the day): which signals IGS receivers recorded from each satellite on the latest "
          "day. Heard means a receiver tracked it, not that the signal was good."),
         ("Very new satellites", "One the IGS satellite metadata file does not list yet appears only once CelesTrak's "
          "GNSS group names it, under a stand-in SVN."),
