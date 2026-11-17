@@ -14,7 +14,7 @@ that are not there. GLONASS records give the offset and the relative frequency o
 import statistics
 from datetime import timedelta
 
-from analysis.broadcast_orbit import _known, _toc, read_navigation
+from analysis.broadcast_orbit import known, toc, read_navigation
 
 MAX_GAP = timedelta(hours=4)   # a prediction is not asked to hold for longer than this
 GALILEO_INAV_CLOCK = 512       # RINEX 3.04 "data sources", bit 9: the clock terms are for E5b and E1
@@ -29,9 +29,9 @@ def _glonass_terms(text):
     for line in body:
         if line[:1] != "R":
             continue
-        offset, frequency = _known(line[23:42]), _known(line[42:61])
+        offset, frequency = known(line[23:42]), known(line[42:61])
         if offset is not None and frequency is not None:
-            terms.setdefault(line[:3], {})[_toc(line)] = (offset, frequency, 0.0)
+            terms.setdefault(line[:3], {})[toc(line)] = (offset, frequency, 0.0)
     return terms
 
 

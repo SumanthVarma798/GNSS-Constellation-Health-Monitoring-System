@@ -36,7 +36,7 @@ def _layout(fig, height, **extra):
     return fig
 
 
-def _colour(orbit):
+def colour(orbit):
     return gs.ORBIT_COLOURS.get(orbit, gs.ORBIT_COLOURS[gs.OTHER_ORBIT])
 
 
@@ -271,7 +271,7 @@ def ground_map(tracks, here, types, places, chosen=None):
         lats, lons, info = _unwrapped(track["lat"], track["lon"], words)
         # big invisible markers: a hover near the line finds the track before the click grid under it
         fig.add_trace(go.Scatter(x=lons, y=lats, customdata=info, mode="lines+markers", opacity=0.8,
-                                 line={"color": _colour(orbit), "width": 2}, marker={"size": 16, "opacity": 0},
+                                 line={"color": colour(orbit), "width": 2}, marker={"size": 16, "opacity": 0},
                                  selected=hidden, unselected=hidden, name=orbit, legendgroup=orbit,
                                  showlegend=orbit not in shown,
                                  hovertemplate=plotly_template(name, ("When", "%{customdata[0]}"), ("Over", "%{customdata[1]}"),
@@ -283,7 +283,7 @@ def ground_map(tracks, here, types, places, chosen=None):
         x=[lon for _, _, lon in now], y=[lat for _, lat, _ in now], text=[escape(short(n)) for n, _, _ in now],
         customdata=[[escape(n), latlon_words(lat, lon, 1)] for n, lat, lon in now],
         mode="markers+text", textposition="top center", textfont={"color": palette.INK, "size": 11}, showlegend=False,
-        marker={"size": 10, "color": [_colour(types.get(n, gs.OTHER_ORBIT)) for n, _, _ in now],
+        marker={"size": 10, "color": [colour(types.get(n, gs.OTHER_ORBIT)) for n, _, _ in now],
                 "symbol": [_symbol(types.get(n, gs.OTHER_ORBIT)) for n, _, _ in now], "line": {"color": palette.PLATFORM, "width": 1}},
         selected=keep, unselected=keep, hovertemplate=plotly_template("%{customdata[0]}", ("Now over", "%{customdata[1]}"))))
     fig.add_trace(go.Scatter(x=[lon for lat, lon in places.values()], y=[lat for lat, lon in places.values()],

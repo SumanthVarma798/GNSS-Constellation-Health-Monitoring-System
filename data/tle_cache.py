@@ -30,7 +30,7 @@ def get_data_file_path(constellation: str, data_type: str) -> Path:
     Returns:
         Path to the JSON data file
     """
-    filename = f"{constellation.lower()}_{data_type}.json"
+    filename = f"{bundle_key(constellation)}_{data_type}.json"
     return DATA_DIR / filename
 
 

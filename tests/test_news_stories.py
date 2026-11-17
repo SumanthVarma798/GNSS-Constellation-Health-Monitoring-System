@@ -73,8 +73,8 @@ def _registry(monkeypatch, satellites, tracked=()):
 
     tables = {"satellites.csv": satellites, "sightings.csv": [], "dashboard_satellites.csv": list(tracked)}
     monkeypatch.setattr(news_stories, "read_table", lambda name: tables[name])
-    news_stories._aliases.cache_clear()
-    monkeypatch.setattr(news_stories, "_aliases", news_stories._aliases)   # cleared again after the test
+    news_stories.aliases.cache_clear()
+    monkeypatch.setattr(news_stories, "aliases", news_stories.aliases)   # cleared again after the test
     return news_stories
 
 
@@ -87,13 +87,13 @@ def test_a_satellites_other_name_tells_the_same_story_but_a_family_name_does_not
 
     # The dashboard's name (NVS-03) stands for the other; BeiDou-2 is on two rows, a family, so IGSO-6 and IGSO-7 pair
     # with nothing.
-    assert stories_module._aliases() == {"irnss-1l": "nvs-03"}
+    assert stories_module.aliases() == {"irnss-1l": "nvs-03"}
     grouped = stories_module.stories([
         item("ISRO launches GSLV-F18 with NVS-03 navigation satellite", "2026-10-31"),
         item("LAUNCH at 1821 UTC Oct 30 of Indian's IRNSS-1L navigation sat on a GSLV Mk II", "2026-10-31", source="b.com"),
     ])
     assert [len(story["items"]) for story in grouped] == [2]
-    stories_module._aliases.cache_clear()
+    stories_module.aliases.cache_clear()
 
 
 def test_a_post_cut_short_joins_its_story_by_the_satellite_its_text_names(monkeypatch):
@@ -106,7 +106,7 @@ def test_a_post_cut_short_joins_its_story_by_the_satellite_its_text_names(monkey
     grouped = stories_module.stories([item("ISRO launches NVS-03", "2026-10-31"), post, unnamed])
     nvs_03 = next(story for story in grouped if any(i["title"] == "ISRO launches NVS-03" for i in story["items"]))
     assert post in nvs_03["items"]   # its headline names nothing; its text names NVS-03
-    stories_module._aliases.cache_clear()
+    stories_module.aliases.cache_clear()
 
 
 def test_a_satellites_other_name_is_marked_like_its_story_word(monkeypatch):
@@ -117,4 +117,4 @@ def test_a_satellites_other_name_is_marked_like_its_story_word(monkeypatch):
     html = news_ui.marked_html("LAUNCH of IRNSS-1L on GSLV", {"nvs-03"})
 
     assert "<mark>IRNSS-1L</mark>" in html and "<mark>GSLV</mark>" not in html
-    stories_module._aliases.cache_clear()
+    stories_module.aliases.cache_clear()

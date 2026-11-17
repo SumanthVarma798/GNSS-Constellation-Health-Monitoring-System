@@ -37,9 +37,9 @@ def sky_payload(frames, paths, types, mask_deg, zone):
         "steps": [{"when": gf.clock_words(f["time"], zone), "tick": f"{f['time'].astimezone(zone):%H:%M}",
                    "seen": len(f["satellites"]), "gdop": gf.gdop_words(f["gdop"])} for f in frames],
         "satellites": [{"name": name, "label": gf.short(name), "orbit": gs.ORBIT_WORDS.get(orbit, orbit),
-                        "colour": gf._colour(orbit), "shape": shape[orbit], "az": _degrees(az), "el": _degrees(el)}
+                        "colour": gf.colour(orbit), "shape": shape[orbit], "az": _degrees(az), "el": _degrees(el)}
                        for name, (az, el) in paths.items() for orbit in [types.get(name, gs.OTHER_ORBIT)]],
-        "key": [{"shape": shape[o], "colour": gf._colour(o), "words": gs.ORBIT_WORDS.get(o, o)} for o in orbits],
+        "key": [{"shape": shape[o], "colour": gf.colour(o), "words": gs.ORBIT_WORDS.get(o, o)} for o in orbits],
     }
 
 

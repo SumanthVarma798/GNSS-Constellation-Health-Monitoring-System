@@ -10,7 +10,7 @@ signal: the dots carry hover text and the picture has a spoken description.
 from html import escape
 
 from ui import palette
-from ui.figures.slot_belt import _centred_labels, _text
+from ui.figures.slot_belt import centred_labels, text
 
 WIDTH, LEFT, RIGHT = 1000, 20, 980
 LINE_Y, ROW_PX = 26, 15
@@ -42,8 +42,8 @@ def plane_strip(satellites):
         colour = palette.SLOT_COLOURS[sat["state"]]
         out.append(f'<circle cx="{_x(sat["u"]):.1f}" cy="{LINE_Y}" r="5.5" fill="{colour}">'
                    f'<title>{escape(sat["title"])}</title></circle>')
-    labels, rows = _centred_labels([(_x(sat["u"]), sat["label"]) for sat in satellites])
-    out += [_text(x, LINE_Y + 26 + ROW_PX * row, text, palette.MUTED) for x, row, text in labels]
+    labels, rows = centred_labels([(_x(sat["u"]), sat["label"]) for sat in satellites])
+    out += [text(x, LINE_Y + 26 + ROW_PX * row, label, palette.MUTED) for x, row, label in labels]
     spoken = escape("Along the plane: " + "; ".join(sat["title"] for sat in satellites), quote=True)
     height = LINE_Y + 20 + ROW_PX * max(rows, 1)
     return (f'<svg viewBox="0 0 {WIDTH} {height}" role="img" aria-label="{spoken}" '
