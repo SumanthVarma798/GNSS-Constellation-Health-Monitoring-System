@@ -882,3 +882,6 @@ details.sys.card { display: block; padding: 0; }
   [class*="st-key-contact_form_"] [data-testid="stFormSubmitButton"] button { width: 100%; min-height: 44px; }
 }
 /* ==== end Contact form ==== */
+
+/* Signals heard (ui/signals_view.py): the chips of one satellite wrap in their own cell */
+.sig-chips { display: flex; flex-wrap: wrap; gap: 6px; }

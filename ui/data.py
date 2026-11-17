@@ -27,6 +27,8 @@ ORBIT_GAP_URL = ("https://raw.githubusercontent.com/SumanthVarma798/"
                  "GNSS-Constellation-Health-Monitoring-System/orbit-checks/orbit_gap.json")
 FITTED_URL = ("https://raw.githubusercontent.com/SumanthVarma798/"
               "GNSS-Constellation-Health-Monitoring-System/orbit-checks/fitted_orbits.json")
+SIGNALS_URL = ("https://raw.githubusercontent.com/SumanthVarma798/"
+               "GNSS-Constellation-Health-Monitoring-System/orbit-checks/signals_heard.json")
 # Every registry satellite of the generation each constellation shows, tracked or not (the 3D view's "All").
 # A MEO system's is the satellites it tracks: CelesTrak's GNSS group holds them, and asking for each
 # retired one by itself would mean dozens of requests every refresh.
@@ -49,6 +51,16 @@ def fitted_orbits():
     """The published fitted-orbit JSON, or {} when it cannot be read."""
     try:
         payload = requests.get(FITTED_URL, timeout=8).json()
+    except (requests.RequestException, ValueError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def signals_heard():
+    """The published signals-heard JSON (scripts/signals_heard.py), or {} when it cannot be read."""
+    try:
+        payload = requests.get(SIGNALS_URL, timeout=8).json()
     except (requests.RequestException, ValueError):
         return {}
     return payload if isinstance(payload, dict) else {}

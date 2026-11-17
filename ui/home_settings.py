@@ -94,6 +94,12 @@ HOW = [
         ("Flag matches our check", [("Means", "the operator's flag says healthy exactly where our orbit check does"),
                                     ("Why it matters", "where they differ, one of the two needs a closer look")],
          "circle-check"),
+        ("Signals heard", [("Means", "the signals that IGS receivers around the world recorded from each satellite on the latest day"),
+                           ("Measured by", "their 30-second observation files from BKG's IGS data centre, one reading in "
+                                           "ten minutes; heard by at least one station"),
+                           ("Limits", "heard means a receiver tracked it, not that the signal was good; a receiver that "
+                                      "does not track a signal (none of ours records NavIC's S band) cannot hear it; "
+                                      "shown, not scored")], "broadcast"),
         ("Burns", [("Means", "engine burns found in the last 90 days of public tracking records"),
                    ("Medium orbits", "rarely show any yet: their records are too short")], "rocket"),
     ]),
@@ -109,8 +115,9 @@ HOW = [
                               "odd one out: 3 spreads under the median (our line)"], "search"),
     ]),
     ("rocket", "What we are working towards", [
-        ("Signals as declared", ["whether each satellite broadcasts every signal its operator declares",
-                                 "for example NavIC's L5 and S, and L1 on NVS-01"], "broadcast"),
+        ("Signals against the declared list", ["whether each satellite sends every signal its operator declares",
+                                               "heard signals are measured now; the declared list to compare them with "
+                                               "(for example NavIC's L5 and S) is not read yet"], "broadcast"),
         ("Measured accuracy", ["how accurate each signal and clock really are",
                                "needs precise orbit and clock products we do not read yet"], "radar"),
         ("New satellites", ["on its way to its slot, or there under 30 days", "named on its card, not yet scored"],
