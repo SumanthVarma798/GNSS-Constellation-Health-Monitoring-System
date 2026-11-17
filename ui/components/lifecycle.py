@@ -45,7 +45,7 @@ def lifecycle_html(rows, today, registry=None, constellation=None):
     satellites, texts, sources = _shared(timelines(rows, today, registry))
     payload = {"satellites": satellites, "texts": texts, "sources": sources, "first": list(FIRST_SHOWN), "constellation": constellation,
                "max_compared": MAX_COMPARED,
-               "step_colours": palette.LIFECYCLE_STEP_COLOURS,
+               "step_colours": {step: palette.css(c) for step, c in palette.LIFECYCLE_STEP_COLOURS.items()},
                "icons": {step: TABLER[name] for step, name in LIFECYCLE_STEP_ICONS.items()}, "glyphs": {name: TABLER[name] for name in ("maximize", "info-circle", "chevron-down", "chevron-up", "search")},
                "today": today.strftime("%Y-%m-%dT%H:%M:%SZ"),   # whole seconds: every browser reads these
                "when_words": WHEN_WORDS, "evidence_words": {**EVIDENCE_WORDS, "IGS file": "IGS satellite metadata file"}}

@@ -83,9 +83,13 @@ const DATA = __DATA__;
 const LAND = __LAND__;
 const $ = id => document.getElementById(id);
 const css = getComputedStyle(document.documentElement), C = name => css.getPropertyValue("--" + name).trim();
+// A colour sent as a theme variable (var(--ok), ui/palette.py css) is read from the page when drawn; under System a
+// change of the computer's light or dark setting redraws the frame in the other theme.
+const themed = c => (c && c.startsWith("var(--")) ? css.getPropertyValue(c.slice(4, -1)).trim() : c;
+matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => location.reload());
 const stage = $("stage"), canvas = $("map"), ctx = canvas.getContext("2d"), tip = $("tip"), legend = $("legend");
 const STATUS_COLOURS = { ok: C("ok"), warn: C("warn"), bad: C("bad"), idle: C("idle") };
-const systemColours = new Map(DATA.system_key.map(s => [s.name, s.colour]));
+const systemColours = new Map(DATA.system_key.map(s => [s.name, themed(s.colour)]));
 const systemOf = name => DATA.systems.find(s => s.name === name);
 const visible = new Set(DATA.systems.map(s => s.name));
 let colourBy = "health";
@@ -214,7 +218,7 @@ function setColour(mode) {
 function buildLegend() {
   const key = colourBy === "health" ? DATA.health_key : DATA.system_key;
   legend.replaceChildren(...key.map(item => {
-    const s = el("span"); const sw = el("span", "swatch"); sw.style.background = item.colour;
+    const s = el("span"); const sw = el("span", "swatch"); sw.style.background = STATUS_COLOURS[item.status] || item.colour;
     s.append(sw, el("span", null, item.words || item.name)); return s;
   }));
 }

@@ -115,11 +115,15 @@ const canvas = $("map"), ctx = canvas.getContext("2d"), stage = $("stage");
 
 /* ---------- colours and type, all from the page's palette ---------- */
 const css = getComputedStyle(document.documentElement);
+// A colour sent as a theme variable (var(--ok), ui/palette.py css) is read from the page when drawn; under System a
+// change of the computer's light or dark setting redraws the frame in the other theme.
+const themed = c => (c && c.startsWith("var(--")) ? css.getPropertyValue(c.slice(4, -1)).trim() : c;
+matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => location.reload());
 const C = Object.fromEntries(["platform", "well", "track", "fill", "ink", "muted", "accent", "ok", "warn", "idle", "edge"].map(n => [n, css.getPropertyValue("--" + n).trim()]));
 const STATUS = { ok: C.ok, warn: C.warn, idle: C.idle, accent: C.accent };
 const SANS = getComputedStyle(document.body).fontFamily, MONO = getComputedStyle(document.body).getPropertyValue("--mono").trim();
 const F = { id: `700 15px ${SANS}`, name: `12px ${SANS}`, label: `600 9.5px ${SANS}`, value: `12px ${MONO}`, note: `9.5px ${SANS}`, small: `9px ${SANS}` };
-const hueOf = r => DATA.colours[r.constellation] || C.fill;
+const hueOf = r => themed(DATA.colours[r.constellation]) || C.fill;
 
 /* ---------- each card's lines, laid out once in plane units ---------- */
 const W = 220, PAD = 12, INDENT = 12, TEXT_W = W - 2 * PAD - INDENT;

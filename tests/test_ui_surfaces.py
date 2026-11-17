@@ -61,7 +61,7 @@ def test_theme_takes_its_colours_from_the_palette():
 
 
 def test_stylesheet_rules_use_variables_not_colours():
-    rules = theme_css().split("}", 1)[1]  # everything after the :root block
+    rules = re.sub(r":root \{[^}]*\}", "", theme_css())  # everything but the :root blocks (dark, then light)
     assert not re.findall(r"#[0-9a-fA-F]{3,8}\b", rules)
 
 
