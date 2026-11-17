@@ -6,6 +6,12 @@
 
 /* ---- page ---- */
 html, body, .stApp, [data-testid="stApp"] { background: var(--platform); color: var(--ink); }
+/* the theme's crossfade (ui/theme.py FADE_JS): its frame takes no room; the fade itself is the browser's own */
+.st-key-theme_fade { display: none; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .45s; }
+/* A frame whose colour scheme differs from its own page's is drawn opaque (a box behind the clock). Streamlit sets
+   normal on frames, and dark on its wrappers, so the frames take the page's from --look (ui/theme.py). */
+.stApp iframe { color-scheme: var(--look); }
 [data-testid="stHeader"] { background: var(--platform); }
 [data-testid="stMain"], [data-testid="stMain"] p, [data-testid="stMain"] li, [data-testid="stMarkdownContainer"] { color: var(--ink); }
 /* 1560px wide at most, centred: a table or a row of four tiles still reads as one block on a
@@ -41,6 +47,7 @@ code { color: var(--accent); background: var(--well); border-radius: 8px; }
 /* Icons and words in one control. Streamlit gives every button icon a right margin meant as the space before the
    words, which pushes it off centre in an icon-only or reversed button; the gap above makes that space instead. */
 button span:has(> [data-testid="stIconMaterial"]), button [data-testid="stIconMaterial"] { margin: 0; }
+[data-testid="stPageLink-NavLink"] [data-testid="stIconMaterial"] { color: var(--ink); }   /* Streamlit colours it from its own config */
 /* Streamlit fixes the size of a button's words on the words' own container, so the sizes set on buttons here did not take */
 button [data-testid="stMarkdownContainer"] { font-size: inherit; }
 [data-testid="stButton"] button:hover, [data-testid="stDownloadButton"] button:hover { color: var(--accent); border-color: var(--accent); }
@@ -102,6 +109,14 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
   background: var(--well); border: 1px solid var(--edge); border-radius: 14px; box-shadow: var(--pressed); color: var(--ink);
 }
 [data-testid="stTextInput"] input, [data-testid="stTextArea"] textarea, [data-testid="stSelectbox"] input, [data-testid="stSelectbox"] [data-baseweb="select"] div { color: var(--ink); background: transparent; }
+/* parts Streamlit paints in its own (dark) colours: the box inside a text area, the attachment drop zone and its
+   button, and placeholders */
+[data-testid="stTextArea"] [data-baseweb="base-input"] { background: transparent; }
+[data-testid="stFileUploaderDropzone"] { background: var(--well); border: 1px dashed var(--edge); border-radius: 14px; box-shadow: var(--pressed); color: var(--ink); }
+[data-testid="stFileUploaderDropzoneInstructions"] :is(span, small) { color: var(--muted); }
+[data-testid="stFileUploaderDropzoneInstructions"] span:first-child { color: var(--ink); }
+[data-testid="stFileUploaderDropzone"] button { background: var(--platform); color: var(--ink); border: 1px solid var(--edge); box-shadow: var(--raised-sm); }
+.stApp :is(input, textarea)::placeholder { color: var(--muted); opacity: 1; }   /* full strength: 4.5:1 in either theme */   /* .stApp: outranks Streamlit's own */
 [data-testid="stTextInput"] [data-baseweb="input"]:focus-within, [data-testid="stTextArea"] [data-baseweb="textarea"]:focus-within, [data-testid="stSelectbox"] [data-baseweb="select"] > div:focus-within {
   outline: 2px solid var(--accent); outline-offset: 2px; border-color: var(--accent);
 }
@@ -231,9 +246,6 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
   .brand-mark { width: 36px; height: 36px; }
   .st-key-bar_buttons { width: max-content !important; }   /* only as wide as its buttons */
 }
-/* the gear where a page has no settings of its own: in its place, greyed, saying where the settings are */
-.st-key-gear_off button { width: 36px; height: 36px; min-height: 0; padding: 0; border-radius: 50%; }
-.st-key-gear_off button :is([data-testid="stMarkdownContainer"], p) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .right { display: flex; justify-content: flex-end; }
 
 /* segmented controls: a pressed track, the chosen item raised in the accent colour */
@@ -254,8 +266,12 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 [data-testid="stPopover"] button[aria-expanded="true"] { box-shadow: var(--pressed); background: var(--well); color: var(--accent); }
 [data-testid="stPopover"] button :is(svg, span, p, [data-testid="stMarkdownContainer"]) { color: inherit; }
 .st-key-bar_buttons [data-testid="stPopover"] button { width: 36px; height: 36px; padding: 0; border-radius: 50%; }
-.st-key-bar_buttons [data-testid="stPopover"] button > :not(:first-child) { display: none; }   /* only the gear: no words, no arrow (its margins pushed the gear sideways) */
+.st-key-bar_buttons [data-testid="stPopover"] button > :not(:first-child):not([data-testid="stMarkdownContainer"]) { display: none; }   /* only the icon: no arrow (its margins pushed the gear sideways) */
+/* its words ("Settings", "Your Space-Track login") stay for screen readers, out of sight */
+.st-key-bar_buttons [data-testid="stPopover"] button > [data-testid="stMarkdownContainer"] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 [data-testid="stPopoverBody"] { background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); color: var(--ink); }
+[data-testid="stPopoverBody"] > div { color: var(--ink); }   /* its wrapper takes Streamlit's own (dark) text colour */
+[data-testid="stNumberInputContainer"] { border-color: var(--well); }   /* Streamlit draws it in its own (dark) colour */
 [data-testid="stNumberInput"] [data-baseweb="input"] { background: var(--well); border: 1px solid var(--edge); border-radius: 14px; box-shadow: var(--pressed); }
 [data-testid="stNumberInput"] [data-baseweb="base-input"] { background: transparent; border: 0; box-shadow: none; }
 [data-testid="stNumberInput"] input { color: var(--ink); background: transparent; }
@@ -545,15 +561,15 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
 /* The bell is drawn after the page, so its strip is moved to the top of the page (order) and held there on scroll
    (sticky, in the page's own scroll box): a zero-height strip over the top bar (its -16px undoes the page's gap), the
    bell at the bar's inner right edge, level with the bar's first row. Only that row keeps room for the bell, so the
-   filters strip and its line run the bar's full width. --bell: the bell's size; 29px: the bar's edge and top padding
-   (11px) plus half its first row (18px). */
+   filters strip and its line run the bar's full width. --bell: the bell's size; 48px (42px on phones): from the top of
+   the bell's strip to the middle of the bar's button row, measured against the gear (17 Nov 2026). */
 :root { --bell: 36px; }   /* the size of the bar's other round controls (40px on phones, below) */
 [data-testid="stMainBlockContainer"] > div > [data-testid="stVerticalBlock"] > :has(.st-key-notices) {
   order: -1; position: relative; z-index: 100; height: 0; margin-bottom: -16px; }
 /* with anything unread the bell stays in view while the page scrolls; with nothing unread it keeps its place in the bar */
 [data-testid="stMainBlockContainer"] > div > [data-testid="stVerticalBlock"] > :has(.st-key-notices):has(.nt-count) {
   position: sticky; top: 22px; }
-.st-key-notices { position: absolute; top: calc(29px - var(--bell) / 2); right: 17px; width: auto !important; gap: 0; }
+.st-key-notices { position: absolute; top: calc(48px - var(--bell) / 2); right: 17px; width: auto !important; gap: 0; }
 .st-key-notices > div { width: auto !important; }
 /* a rounded square, not a circle: the same size as refresh, the gear and the key, but an inbox, not an action */
 .st-key-notices [data-testid="stPopover"] button { position: relative; width: var(--bell); height: var(--bell); padding: 0; border-radius: 30%; justify-content: center; }
@@ -592,9 +608,8 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
 @media (max-width: 639.98px) {   /* phones: smaller page (16px) and bar (11px) paddings, controls 40px for a finger */
   :root { --bell: 40px; }
   [data-testid="stMainBlockContainer"] > div > [data-testid="stVerticalBlock"] > :has(.st-key-notices) { top: 16px; }
-  .st-key-notices { top: calc(31px - var(--bell) / 2); right: 13px; }
+  .st-key-notices { top: calc(42px - var(--bell) / 2); right: 13px; }
   .st-key-bar_buttons { margin-right: calc(var(--bell) + 12px); }
-  .st-key-gear_off button { width: 40px; height: 40px; }
   [class*="st-key-ntread_"] button { width: 40px; height: 40px; }
 }
 
@@ -721,7 +736,7 @@ details.sys.card { display: block; padding: 0; }
         line-height: 1.15; color: var(--platform); }
 .wbar span { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0;
              padding: 3px 2px; text-align: center; }
-.wbar span small { font-size: 12px; font-weight: 800; }
+.wbar span small { font-size: 12px; font-weight: 800; color: inherit; }   /* the bar's own text colour, not the page's muted */
 .wbar .accent { background: var(--accent); } .wbar .ok { background: var(--ok); } .wbar .warn { background: var(--warn); }
 /* the score opened into its parts (ui/three_measures.py score_sum), in pictures only: one bar of 100 cut into each
    attribute's share, each filled as far as its pass rate, its name over it and its points under it (outside the fill,
@@ -817,6 +832,7 @@ details.sys.card { display: block; padding: 0; }
 .th-head, .th-group { display: flex; flex-direction: column; gap: 4px; }
 .th-head b { font-size: var(--fs-section); font-weight: var(--fw-section); }
 .th-group { margin-top: 6px; padding-top: 12px; border-top: 1px solid var(--edge); }
+.th-group.th-first { margin-top: 0; padding-top: 0; border-top: 0; }   /* the theme opens the panel: no rule above it */
 .th-group b { font-size: var(--fs-side); font-weight: var(--fw-side); color: var(--accent); }
 [class*="st-key-thset_"] { gap: 6px; padding: 12px 14px; border-radius: 16px; background: var(--well); box-shadow: var(--pressed); }
 .th-help { margin: 0; display: grid; gap: 4px; font-size: var(--fs-small); line-height: 1.45; }

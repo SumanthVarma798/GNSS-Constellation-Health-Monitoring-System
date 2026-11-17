@@ -25,3 +25,18 @@ def test_text_and_status_colours_are_readable(name, surface):
 
 def test_every_slot_state_has_a_colour():
     assert set(palette.SLOT_COLOURS) == {palette.SLOT_IN, palette.SLOT_OFF, palette.SLOT_LEFT, palette.SLOT_UNKNOWN}
+
+
+@pytest.mark.parametrize("name", ["ink", "muted", "accent", "ok", "warn", "bad", "idle"])
+@pytest.mark.parametrize("surface", ["platform", "well"])
+def test_light_text_and_status_colours_are_readable(name, surface):
+    assert contrast(palette.LIGHT[name], palette.LIGHT[surface]) >= 4.5, f"light {name} on {surface}"
+
+
+def test_each_theme_choice_gives_its_colours():
+    from ui.theme import root_block
+
+    assert "#e4e8ee" not in root_block("dark")
+    assert root_block("light").rindex("--platform: #e4e8ee") > root_block("light").rindex("--platform: #20242b")
+    assert "@media (prefers-color-scheme: light)" in root_block("system")
+    assert "--fs-body" in root_block("light")   # the light block adds colours to the full set, never replaces it

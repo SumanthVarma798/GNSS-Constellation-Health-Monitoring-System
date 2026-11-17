@@ -77,7 +77,7 @@ def row(summary):
     follow, and how many need a look. Its edge is the constellation's own colour, the one its cards have on the map."""
     name = summary["name"]
     who, where = WHO.get(name, ("", ""))
-    colour = palette.CONSTELLATION_COLOURS.get(registry_name(name), palette.FILL)
+    colour = palette.css(palette.CONSTELLATION_COLOURS.get(registry_name(name), palette.FILL))
     notes = ([NOTES[name]] if name in NOTES else []) + (
         [f"{spacecraft(summary['seen'])} seen in CelesTrak's GNSS group, not yet in the IGS satellite metadata file"] if summary["seen"] else [])
     look = (_figure(summary["look"], "worth a look: the IGS metadata file, GCAT or CelesTrak disagree", "warn") if summary["look"]

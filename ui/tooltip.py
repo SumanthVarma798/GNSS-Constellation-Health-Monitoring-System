@@ -105,6 +105,7 @@ def legend(entries, label="Legend"):
         if shape and shape[0] not in LEGEND_SHAPES:
             raise ValueError(f"legend shape {shape[0]!r} must be one of {', '.join(LEGEND_SHAPES)}")
         cls = f"swatch {shape[0]}" if shape else "swatch"
+        colour = palette.css(colour)   # one that follows the theme, as its variable
         rows += f'<li><span class="{cls}" style="--c:{colour};background:{colour}"></span>{escape(text)}</li>'
     return tip_html(escape(label), f'<ul class="tt-list">{rows}</ul>', pill=True)
 
