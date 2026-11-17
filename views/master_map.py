@@ -12,6 +12,7 @@ from data import celestrak
 from ui import data, master_map_page as mm, reveal, shell, surfaces, systems
 from ui.components.master_map import master_map_canvas, master_map_records
 from ui.pages_data import load_master_map_data, with_live_feed
+from ui.session_keys import LIBRARY_JUMP
 
 FOCUS = "master_map_focus"   # session_state: the constellation the map is filtered to, or None
 
@@ -24,7 +25,7 @@ def _go(page, scope=None):
 def _lifecycles(name):
     """A button's on_click: open the Library on one constellation's satellite lifecycles (the Library reads
     library_jump: {shelf, constellation as ui/systems.py SYSTEMS names it})."""
-    st.session_state.update({"library_jump": {"shelf": "satellites", "constellation": name}, "page": "Library"})
+    st.session_state.update({LIBRARY_JUMP: {"shelf": "satellites", "constellation": name}, "page": "Library"})
 
 
 def _focus(name):

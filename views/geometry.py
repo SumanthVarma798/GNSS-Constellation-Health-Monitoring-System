@@ -22,6 +22,7 @@ from ui import geometry_data as gd
 from ui import geometry_settings as gs
 from ui.components.sky_view import sky_view
 from ui.figures import geometry as gf
+from ui.picker import chosen_constellations
 
 CSS = Path(__file__).resolve().parent.parent / "ui" / "geometry.css"
 CHART = {"use_container_width": True, "config": {"displayModeBar": False}}
@@ -34,14 +35,6 @@ SECTION_KEYS = {
     "Sky and ground": tooltip.glance(gs.SKY_GROUND_LEAD, gs.SKY_GROUND_KEY, gs.SKY_GROUND_NOTE),
     "Orbit trends": gf.trends_key(),
 }
-
-
-def _chosen():
-    """{constellation: [satellite, ...] or None for all} for the top bar's choice, as Station-keeping reads it."""
-    if not st.session_state["compare"]:
-        return {st.session_state["scope"]: None}
-    picks = st.session_state.get("compare_picks", {})
-    return {name: picks[name] for name in shell.CONSTELLATIONS if picks.get(name)}
 
 
 def _heading(text):
@@ -230,7 +223,7 @@ def constellation(name, picks, section, choice, mask, window, now):
 
 
 st.html(f"<style>{CSS.read_text(encoding='utf-8')}</style>")
-chosen = _chosen()
+chosen = chosen_constellations()
 if not chosen:
     surfaces.show('<p class="small">Pick satellites on the Overview to compare.</p>')
     st.stop()

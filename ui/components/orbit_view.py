@@ -21,8 +21,8 @@ from ui.data import GENERATION
 from ui.figures.fleet import OTHER_GROUP, fleet_rows
 from ui.figures.orbits_3d import latest_elements, orbit_scene
 from ui.figures.slot_rows import as_number, slot_words
-from ui.orbit_section import CHIP_STATUS
 from ui.pages_data import load_master_map_data
+from ui.slot_status import CHIP_STATUS
 from ui.theme import root_block
 from ui.tooltip import CARD_CSS
 

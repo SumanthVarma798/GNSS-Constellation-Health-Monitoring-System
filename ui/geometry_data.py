@@ -12,7 +12,7 @@ import pandas as pd
 from skyfield.api import EarthSatellite, load, wgs84
 
 from analysis.dop_calculations import calculate_dop_for_location
-from analysis.raan_analysis import _circular_mean_deg
+from analysis.raan_analysis import circular_mean_deg
 from config.config import (BEIDOU3_SERVICE_REQUIREMENTS, DEFAULT_PARAMS, NAVIK_SERVICE_REQUIREMENTS, R_EARTH,
                            QZSS_SERVICE_REQUIREMENTS)
 from ui import geometry_settings as gs
@@ -170,7 +170,7 @@ def central_longitudes(history, names, since):
                            gs.CENTRAL_LON_STEP_MINUTES)[:-1]
             sat = EarthSatellite(row.TLE_LINE1, row.TLE_LINE2, name, _ts)
             lons = wgs84.subpoint(sat.at(_ts.from_datetimes(times))).longitude.degrees
-            out.append({"satellite": name, "EPOCH": row.EPOCH, "central_lon": (_circular_mean_deg(lons) + 180) % 360 - 180})
+            out.append({"satellite": name, "EPOCH": row.EPOCH, "central_lon": (circular_mean_deg(lons) + 180) % 360 - 180})
     return pd.DataFrame(out, columns=["satellite", "EPOCH", "central_lon"])
 
 

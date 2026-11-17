@@ -20,8 +20,17 @@ from evidence.confidence import read_source_grades
 from evidence import source_record
 from evidence.news_settings import (NEWS_CATEGORIES, NEWS_ITEMS_PER_SYSTEM, NEWS_MAX_AGE_DAYS, NEWS_SAME_TITLE_PREFIX,
                                     NEWS_SAME_TITLE_SHARE, NEWS_TEXT_MATCH_KINDS, SUMMARY_CHARACTERS)
-from evidence.settings import (CANDIDATE_FEED_TYPE, CANDIDATE_SOCIAL_KIND, FEED_REPORT_COLUMNS, LABELLING_SHEET_SIZE,
-                               NOT_AN_ARTICLE_HOSTS, SOCIAL_PLATFORM_HOSTS, SYSTEM_WORDS)
+from evidence.settings import (
+    CANDIDATE_FEED_TYPE,
+    CANDIDATE_SOCIAL_KIND
+)
+from evidence.news_settings import (
+    FEED_REPORT_COLUMNS,
+    LABELLING_SHEET_SIZE,
+    NOT_AN_ARTICLE_HOSTS,
+    SOCIAL_PLATFORM_HOSTS,
+    SYSTEM_WORDS
+)
 from evidence.sources import ARCHIVED_SOURCES, PROVISIONAL_GROUPS, candidate_rows, working_candidates
 from evidence.registry_tables import page_name
 

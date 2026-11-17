@@ -3,12 +3,14 @@ from datetime import datetime, timedelta
 import re
 
 from evidence.news import systems_named
-from evidence.settings import NEWS_LAUNCH_WORDS, REGISTRY_COLUMN_PLAIN_NAMES, SIGNAL_ID_ISSUERS
+from evidence.registry_tables import launch_date, launch_name
+from evidence.settings import SIGNAL_ID_ISSUERS
+from evidence.registry_settings import REGISTRY_COLUMN_PLAIN_NAMES
+from evidence.news_settings import NEWS_LAUNCH_WORDS
+from evidence.source_grade_notes import grade_note
 from evidence.sources import IGS_SATELLITE_METADATA_URL
 
 BRACKETED = re.compile(r"\s*\[[^\]]*]\s*")
-LAUNCHED = re.compile(r"\bLaunched (\d{4}-\d{2}-\d{2})\b")
-GRADE_NOTE = re.compile(r"\(([^()]*)\)")
 SIGNAL_ROW_COLUMNS = ("svn", "signal_id", "valid_from", "valid_to", "note")
 NO_CATALOGUE_WORDS = "not checked: no catalogue number in the IGS file"
 
@@ -109,14 +111,14 @@ def _new_satellite_statement(row, celestrak_read):
     parts = [row["svn"]]
     if name := _name_for_new_satellite(row, celestrak_read):
         parts.append(name)
-    if launched := _launch_date(row.get("note", "")):
+    if launched := launch_date(row.get("note", "")):
         parts.append(f"launched {date_words(launched)}")
     return (f"We found a new satellite for the {constellation} constellation ({operator}), as described by the "
             f"following sources: {', '.join(parts)}.")
 
 
 def _signal_id_change_statement(before_row, after_row, before_signal_ids, after_signal_ids):
-    constellation, name = after_row["constellation"], _name_from_note(after_row.get("note", ""))
+    constellation, name = after_row["constellation"], launch_name(after_row.get("note", ""))
     subject = f"{after_row['svn']} ({constellation}{f', {name}' if name else ''})"
     old_id, new_id = before_row.get("signal_id_now", ""), after_row.get("signal_id_now", "")
     if closed := _closed_signal_date(after_row["svn"], old_id, before_signal_ids, after_signal_ids):
@@ -168,7 +170,7 @@ def _new_satellite_sources(row, celestrak_read, news_items, grade_rows, candidat
 
 
 def _news_sources(row, name, news_items, grade_rows, candidate_rows):
-    if not (launch := _launch_date(row.get("note", ""))):
+    if not (launch := launch_date(row.get("note", ""))):
         return []
     # The system named, and also this satellite (its name, or its SVN) or its launch: see NEWS_LAUNCH_WORDS.
     words = [*NEWS_LAUNCH_WORDS, row["svn"], *([name] if name and "?" not in name else [])]
@@ -254,7 +256,7 @@ def _source_grade(source_id, grade_rows, candidate_rows):
     if source_id in grade_rows:
         row = grade_rows[source_id]
         return {"name": row.get("name", source_id), "grade": row.get("reliability", "not graded"),
-                "note": _grade_note(row.get("graded_by", ""))}
+                "note": grade_note(row.get("graded_by", ""))}
     if source_id in candidate_rows:
         row = candidate_rows[source_id]
         grade = row.get("proposed_grade", "").strip() or "not graded"
@@ -263,26 +265,11 @@ def _source_grade(source_id, grade_rows, candidate_rows):
     return {"name": source_id, "grade": "not graded", "note": ""}
 
 
-def _grade_note(graded_by):
-    return match.group(1).strip() if (match := GRADE_NOTE.search(graded_by or "")) else ""
-
-
 def _name_for_new_satellite(row, celestrak_read):
     if (entry := celestrak_read.get("catalogue_entry")) and entry.get("OBJECT_NAME"):
         if named := BRACKETED.sub("", str(entry["OBJECT_NAME"])).strip():
             return named
-    return _name_from_note(row.get("note", ""))
-
-
-def _name_from_note(note):
-    return note.split("; ", 1)[1].strip() if "; " in note else ""
-
-
-def _launch_date(note):
-    try:
-        return datetime.strptime((LAUNCHED.search(note or "") or [None, ""])[1], "%Y-%m-%d").date()
-    except ValueError:
-        return None
+    return launch_name(row.get("note", ""))
 
 
 def _closed_signal_date(svn, old_signal_id, before_signal_ids, after_signal_ids):

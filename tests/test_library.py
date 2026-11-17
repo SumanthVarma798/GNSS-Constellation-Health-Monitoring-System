@@ -11,7 +11,11 @@ from evidence.library import gcat_updated, library_tables, vague_date
 from evidence.library_settings import (LIBRARY_COUNTS_COLUMNS, OTHER_PROGRAMME, LIBRARY_COUNTS_FILE, LIBRARY_FIGURES_COLUMNS,
                                        LIBRARY_FIGURES_FILE, LIBRARY_MATCHING_COLUMNS, LIBRARY_MATCHING_FILE, SYSTEMS)
 from evidence.registry_tables import read_table
-from evidence.settings import GCAT_CITATION, REGISTRY_DIR, REGISTRY_SATELLITES_FILE
+from evidence.settings import GCAT_CITATION
+from evidence.registry_settings import (
+    REGISTRY_DIR,
+    REGISTRY_SATELLITES_FILE
+)
 from ui import library
 
 # Same shape as the real files: tab-separated, padded, a '#' header line and a '#' update line.

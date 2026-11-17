@@ -28,9 +28,8 @@ from config.config import (
     BEIDOU3_SATS, BEIDOU3_SERVICE_REQUIREMENTS, DEFAULT_PARAMS, GRAVEYARD_ORBIT_MIN,
     NAVIK_SATS, QZSS_SATS, QZSS_SERVICE_REQUIREMENTS, R_EARTH,
 )
-from data.tle_cache import bundle_key, get_gp_history_metadata, load_bundled_gp_history, load_bundled_tles
+from data.tle_cache import get_gp_history_metadata, load_bundled_gp_history, load_bundled_tles
 
-# constellation -> (satellites it tracks, service requirements), as app.py picks them.
 _CONSTELLATIONS = {
     "NavIC": (NAVIK_SATS, None),
     "QZSS": (QZSS_SATS, QZSS_SERVICE_REQUIREMENTS),
@@ -40,13 +39,13 @@ _CONSTELLATIONS = {
 _ts = load.timescale()
 
 
-def load_bundled_gp_as_dataframes(constellation_key: str, sat_dict: dict, fresh=None) -> list:
+def load_bundled_gp_as_dataframes(constellation: str, sat_dict: dict, fresh=None) -> list:
     """Copy of app.py's load_bundled_gp_as_dataframes (same behaviour); app.py cannot be
     imported without running its Streamlit script. `fresh` ({norad: [rows]}, from data.celestrak)
     is added to each satellite's bundled records, leaving out epochs already there. With no bundled
     file the fresh rows alone are used (the MEO systems have one only for satellites CelesTrak publishes no orbit for)."""
     all_dfs = []
-    sat_data = (load_bundled_gp_history(constellation_key) or {}).get('satellites') or {}
+    sat_data = (load_bundled_gp_history(constellation) or {}).get('satellites') or {}
     fresh = fresh or {}
 
     for sat_name, norad_id in sat_dict.items():
@@ -58,7 +57,6 @@ def load_bundled_gp_as_dataframes(constellation_key: str, sat_dict: dict, fresh=
 
         df = pd.DataFrame(records)
 
-        # Standardize column names
         rename_map = {
             'epoch': 'EPOCH',
             'inclination': 'INCLINATION',
@@ -79,12 +77,10 @@ def load_bundled_gp_as_dataframes(constellation_key: str, sat_dict: dict, fresh=
         df['EPOCH'] = pd.to_datetime(df['EPOCH'])
         df['INCLINATION'] = df['INCLINATION'].astype(float)
 
-        # Calculate longitudinal drift
         if 'MEAN_MOTION' in df.columns:
             df['MEAN_MOTION'] = df['MEAN_MOTION'].astype(float)
             df['LonDrift_deg_per_day'] = calculate_longitudinal_drift(df['MEAN_MOTION'])
 
-        # Classify satellite type
         df['type'] = df['INCLINATION'].apply(lambda x: score_rules.orbit_type(x, None))   # GEO or IGSO here; QZO is named in the health step
 
         mean_incl = df['INCLINATION'].mean()
@@ -92,7 +88,6 @@ def load_bundled_gp_as_dataframes(constellation_key: str, sat_dict: dict, fresh=
         df['maintained'] = df['INCLINATION'].apply(lambda x: abs(x - mean_incl) <= 0.3)
         df['satellite'] = sat_name
 
-        # Calculate altitude
         if 'SEMIMAJOR_AXIS' in df.columns:
             df['SEMIMAJOR_AXIS'] = df['SEMIMAJOR_AXIS'].astype(float)
             df['altitude_km'] = df['SEMIMAJOR_AXIS'] - R_EARTH
@@ -113,14 +108,11 @@ def get_graveyard_satellites(df_all) -> set:
     for sat_name in df_all['satellite'].unique():
         sat_df = df_all[df_all['satellite'] == sat_name]
 
-        # Check if satellite has altitude data
         if 'altitude_km' not in sat_df.columns or sat_df['altitude_km'].isna().all():
             continue
 
-        # Get current altitude (most recent data point)
         current_altitude = sat_df['altitude_km'].iloc[-1]
 
-        # Check for graveyard orbit
         if current_altitude >= GRAVEYARD_ORBIT_MIN:
             graveyard_sats.add(sat_name)
 
@@ -142,7 +134,6 @@ def _detect(sat_df, p):
 def _add_longitude(health_df, satellites_dop, now, warnings):
     """app.py's longitude step: 24-hour mean longitude per satellite, its deviation from
     the designated slot, the longitude score, and the overall score recalculated with it."""
-    # "N/A" strings to NaN so float values can be assigned (as app.py does).
     for _col in ['Current Mean Lon (°)', 'Lon Slot Deviation (°)', 'Lon Deviation Score']:
         if _col in health_df.columns:
             health_df[_col] = pd.to_numeric(health_df[_col], errors='coerce')
@@ -155,14 +146,12 @@ def _add_longitude(health_df, satellites_dop, now, warnings):
         try:
             sat_obj = satellites_dop[sat_name]
 
-            # 96 steps of 15 minutes over the 24 hours before `now`
             longitudes = []
             for i in range(96):
                 dt = now - timedelta(hours=24) + timedelta(minutes=i * 15)
                 geocentric = sat_obj.at(_ts.from_datetime(dt))
                 longitudes.append(wgs84.subpoint(geocentric).longitude.degrees)
 
-            # circular mean longitude
             lons_rad = np.deg2rad(longitudes)
             current_mean_lon = np.rad2deg(np.arctan2(np.mean(np.sin(lons_rad)), np.mean(np.cos(lons_rad))))
 
@@ -211,7 +200,7 @@ def _add_longitude(health_df, satellites_dop, now, warnings):
             warnings.append(f"Longitude calculation failed for {sat_name}: {e}")
 
 
-def _burns(df_all_full, p, moving=()):
+def burns(df_all_full, p, moving=()):
     """One row per detected manoeuvre in each satellite's whole bundled history.
 
     A satellite on its way to its slot has none yet, and one that has parked has none from before it parked:
@@ -266,16 +255,14 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
         p["inclination_tolerance"] = score_rules.default_inclination_tolerance(constellation)
     warnings = []
 
-    key = bundle_key(constellation)
-    gp_meta = get_gp_history_metadata(key)
+    gp_meta = get_gp_history_metadata(constellation)
     if not gp_meta['available']:
         raise ValueError(f"No bundled data for {constellation}")
-    all_dfs = load_bundled_gp_as_dataframes(key, sat_dict, fresh)
+    all_dfs = load_bundled_gp_as_dataframes(constellation, sat_dict, fresh)
     if not all_dfs:
         raise ValueError(f"Bundled data for {constellation} could not be loaded")
     df_all_full = pd.concat(all_dfs, ignore_index=True, sort=False)
 
-    # Display range and satellites set aside (graveyard orbit), as app.py does
     now = now.astimezone(timezone.utc)
     end_date = now.date()
     start_date = end_date - timedelta(days=window_days)
@@ -289,7 +276,6 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
     moving = commissioning.moving_to_slot(df_all_full, now)   # new, and still being moved to its slot on purpose
     df_all = df_all[~df_all['satellite'].isin(graveyard_sats | set(moving))]
 
-    # Pattern analysis over the 365 days up to `now`, from the unfiltered bundled history
     pattern_start_ts = pd.Timestamp((now - timedelta(days=365)).strftime("%Y-%m-%d"))
     pattern_end_ts = pd.Timestamp(now.strftime("%Y-%m-%d"))
     pattern_data = {}
@@ -309,7 +295,6 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
         except Exception:
             pattern_data[sat_name] = None
 
-    # Days when at least 75% of the expected satellites have observations count as "deployed"
     date_counter = Counter()
     for pdata in pattern_data.values():
         if pdata is None:
@@ -319,8 +304,7 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
                 date_counter[d] += 1
         except Exception:
             continue
-    # Expected = the tracked satellites the data has observations of: one just added, with no history yet,
-    # would otherwise raise the bar and move every other satellite's score (QZS-7, 8 Nov 2026).
+    # QZS-7 (8 Nov 2026): satellites with no observations yet must not raise the expected-count bar.
     min_required = max(1, int(0.75 * sum(pdata is not None for pdata in pattern_data.values())))
     deployed_dates = {d for d, cnt in date_counter.items() if cnt >= min_required} or None
 
@@ -336,7 +320,6 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
             detected = _detect(sat_df, p)
             health_maneuvers = detected[detected['MANEUVER']].copy()
 
-        # Leave out days when the constellation was not fully deployed
         if deployed_dates is not None and not health_sat_df.empty:
             try:
                 health_sat_df['EPOCH_date'] = pd.to_datetime(health_sat_df['EPOCH']).dt.date
@@ -363,7 +346,7 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
         ))
     health_df = pd.DataFrame(health_assessments)
 
-    bundled_tles = load_bundled_tles(key)
+    bundled_tles = load_bundled_tles(constellation)
     satellites_dop = parse_tle_data(bundled_tles['tle_data'], sat_dict) if bundled_tles.get('tle_data') else {}
     for sat_name, norad_id in sat_dict.items():
         if (fresh or {}).get(norad_id):
@@ -381,7 +364,7 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
         'set_aside': sorted(graveyard_sats),
         'moving': {name: moving[name].strftime('%Y-%m-%d') for name in sorted(moving)},
         'history': df_all_full,
-        'burns': _burns(df_all_full, p, moving),
+        'burns': burns(df_all_full, p, moving),
         'data_time': gp_meta['timestamp'],
         'warnings': warnings,
     }

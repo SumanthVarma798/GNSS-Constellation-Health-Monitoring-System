@@ -49,25 +49,21 @@ def analyze_maneuver_pattern(maneuver_events, observation_start, observation_end
             'maintenance_status': 'No maneuvers detected'
         }
     
-    # Separate E-W and N-S maneuvers
     ew_maneuvers = maneuver_events[maneuver_events.get('EW_MANEUVER', False) == True].copy() if 'EW_MANEUVER' in maneuver_events.columns else pd.DataFrame()
     ns_maneuvers = maneuver_events[maneuver_events.get('NS_MANEUVER', False) == True].copy() if 'NS_MANEUVER' in maneuver_events.columns else pd.DataFrame()
     
     num_ew = len(ew_maneuvers)
     num_ns = len(ns_maneuvers)
     
-    # Helper function to analyze pattern for a specific maneuver type
     def analyze_type_pattern(maneuvers_df, maneuver_type_name):
         if len(maneuvers_df) == 0:
             return None, None, None, None, 'none'
 
-        # Coerce epoch values to pandas datetime (ensure consistent types)
         dates_ts = pd.to_datetime(maneuvers_df['EPOCH']).sort_values()
         dates = list(dates_ts)
         intervals = []
         if len(dates) >= 2:
             for i in range(1, len(dates)):
-                # Use pandas Timedelta `.days` safely by ensuring operands are Timestamps
                 delta = pd.to_datetime(dates[i]) - pd.to_datetime(dates[i - 1])
                 intervals.append(int(delta.days))
 
@@ -76,7 +72,6 @@ def analyze_maneuver_pattern(maneuver_events, observation_start, observation_end
             mean_int = float(np.mean(intervals))
             std_int = float(np.std(intervals))
             expected_int = float(median_int)
-            # Guard against divide-by-zero by checking mean_int
             if mean_int == 0:
                 confidence = 'low'
             elif (std_int / mean_int) < 0.3:
@@ -95,7 +90,6 @@ def analyze_maneuver_pattern(maneuver_events, observation_start, observation_end
 
         last_date = pd.to_datetime(dates[-1])
         days_since = int((pd.to_datetime(observation_end) - last_date).days)
-        # Avoid comparing timedelta-like types with floats
         is_overdue = False
         try:
             is_overdue = days_since > (expected_int * score_rules.OVERDUE_AFTER)
@@ -104,13 +98,10 @@ def analyze_maneuver_pattern(maneuver_events, observation_start, observation_end
 
         return expected_int, last_date, days_since, is_overdue, confidence
     
-    # Analyze E-W pattern
     ew_expected, ew_last_date, ew_days_since, ew_overdue, ew_confidence = analyze_type_pattern(ew_maneuvers, "E-W")
     
-    # Analyze N-S pattern
     ns_expected, ns_last_date, ns_days_since, ns_overdue, ns_confidence = analyze_type_pattern(ns_maneuvers, "N-S")
     
-    # Overall pattern analysis (all maneuvers)
     maneuver_dates = pd.to_datetime(maneuver_events['EPOCH']).sort_values().tolist()
     num_maneuvers = len(maneuver_dates)
     
@@ -146,11 +137,9 @@ def analyze_maneuver_pattern(maneuver_events, observation_start, observation_end
     days_since_last = (observation_end - last_maneuver_date).days
     is_overdue = days_since_last > (expected_interval_days * score_rules.OVERDUE_AFTER)
     
-    # Calculate combined maintenance score
     ew_score = 100
     ns_score = 100
     
-    # E-W score (60% weight - more critical for station-keeping)
     if ew_expected is not None and ew_days_since is not None:
         try:
             if ew_overdue:
@@ -170,7 +159,6 @@ def analyze_maneuver_pattern(maneuver_events, observation_start, observation_end
                 else:
                     ew_score = 90
 
-            # Adjust for confidence
             if ew_confidence == 'very_low':
                 ew_score = max(50, ew_score * 0.7)
             elif ew_confidence == 'low':
@@ -180,7 +168,6 @@ def analyze_maneuver_pattern(maneuver_events, observation_start, observation_end
     else:
         ew_score = 50  # No E-W maneuvers detected or insufficient pattern info
     
-    # N-S score (40% weight - less frequent but still important)
     if ns_expected is not None and ns_days_since is not None:
         try:
             if ns_overdue:
@@ -200,7 +187,6 @@ def analyze_maneuver_pattern(maneuver_events, observation_start, observation_end
                 else:
                     ns_score = 90
 
-            # Adjust for confidence
             if ns_confidence == 'very_low':
                 ns_score = max(50, ns_score * 0.7)
             elif ns_confidence == 'low':
@@ -210,10 +196,8 @@ def analyze_maneuver_pattern(maneuver_events, observation_start, observation_end
     else:
         ns_score = 70  # No N-S maneuvers (less critical) or insufficient data
     
-    # Combined maintenance score (weighted)
     maintenance_score = (ew_score * 0.6) + (ns_score * 0.4)
     
-    # Build maintenance status message
     status_parts = []
     if ew_expected is not None:
         if ew_overdue:
@@ -287,7 +271,6 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
     requirements_map = service_requirements if service_requirements is not None else NAVIK_SERVICE_REQUIREMENTS
     requirements = requirements_map.get(sat_name, {})
     
-    # Handle different inclination formats (NavIC uses "inclination", QZSS uses different keys)
     target_inclination = None
     inc_range_bounds = None  # (low, high) for range-based requirements
     if "inclination" in requirements:
@@ -298,7 +281,6 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
     elif "inclination_target_deg" in requirements:
         target_inclination = requirements["inclination_target_deg"]
 
-    # Use instantaneous (latest) inclination for health assessment
     current_inclination = sat_df['INCLINATION'].iloc[-1]
     std_inclination = sat_df['INCLINATION'].std()
 
@@ -313,7 +295,6 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
     num_maneuvers = len(maneuver_events)
     maneuvers_per_month = num_maneuvers / observation_months if observation_months > 0 else 0
 
-    # Inclination score with stability consideration
     if target_inclination is not None:
         # For range-based requirements (e.g. QZSS IGSO 39°–47°): score 100 when inside the
         # valid band; apply a steeper penalty for excess deviation BEYOND the nearest band edge
@@ -330,7 +311,6 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
             inc_deviation = abs(current_inclination - target_inclination)
             effective_tolerance = inc_tolerance
 
-        # Penalize high standard deviation (unstable inclination)
         inc_stability_penalty = min(20, std_inclination * 10)
 
         inc_score = max(0, 100 - (inc_deviation / effective_tolerance) * 100 - inc_stability_penalty)
@@ -338,16 +318,12 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
         inc_score = None
         inc_deviation = None
     
-    # ========== DYNAMIC MANEUVER PATTERN ANALYSIS ==========
-    # Use last year's data for pattern analysis if available, otherwise use selected range
-    # Incorporate a launch-date estimate: use the satellite's first observation as a lower bound
     sat_first_obs = None
     try:
         sat_first_obs = pd.to_datetime(sat_df['EPOCH'].min())
     except Exception:
         sat_first_obs = None
 
-    # Get commission/active date from config if available
     commission_date = None
     try:
         comm_raw = COMMISSION_DATES.get(sat_name, commissioned)   # a date kept by hand wins over the one worked out
@@ -360,7 +336,6 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
     except Exception:
         commission_date = None
 
-    # Effective active start is the later of first observation and commission date (if present)
     active_start = None
     if sat_first_obs is not None and commission_date is not None:
         active_start = max(sat_first_obs, commission_date)
@@ -387,14 +362,12 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
             obs_start = active_start
         pattern_analysis = analyze_maneuver_pattern(maneuver_events, obs_start, obs_end)
     
-    # Use the dynamically determined maintenance score
     maintenance_score = pattern_analysis.get('maintenance_score', 50)
     maintenance_status = pattern_analysis.get('maintenance_status', 'Pattern analysis unavailable')
     expected_interval_days = pattern_analysis.get('expected_interval_days')
     days_since_last = pattern_analysis.get('days_since_last_maneuver')
     pattern_confidence = pattern_analysis.get('pattern_confidence', 'none')
 
-    # Sanitize numeric pattern fields to avoid TypeError/ZeroDivisionError
     try:
         if expected_interval_days is not None:
             expected_interval_days = float(expected_interval_days)
@@ -409,7 +382,6 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
     except Exception:
         days_since_last = None
     
-    # Uniformity score with better weighting
     if num_maneuvers >= 2:
         maneuver_dates = pd.to_datetime(maneuver_events['EPOCH']).tolist()
         uniformity_cov = calculate_maneuver_uniformity(maneuver_dates)
@@ -417,7 +389,6 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
         if uniformity_cov is not None and uniformity_cov <= uniformity_threshold:
             uniformity_score = 100
         elif uniformity_cov is not None:
-            # Gradual degradation instead of abrupt
             excess = uniformity_cov - uniformity_threshold
             max_penalty = 50
             penalty = min(max_penalty, (excess / uniformity_threshold) * max_penalty)
@@ -428,22 +399,18 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
         uniformity_score = 50 if num_maneuvers == 1 else 0
         uniformity_cov = None
     
-    # Enhanced DRIFT ANALYSIS
     if 'LonDrift_deg_per_day' in sat_df.columns:
         current_drift = sat_df['LonDrift_deg_per_day'].iloc[-1]  # Use instantaneous (latest) drift
         std_drift = sat_df['LonDrift_deg_per_day'].std()
         mean_drift = sat_df['LonDrift_deg_per_day'].mean()
         
-        # Calculate drift trend
         drift_trend = calculate_drift_trend(sat_df)
         
-        # Base drift assessment using instantaneous drift
         drift_assessment = assess_drift_health(current_drift, sat_type, drift_tolerance_gso)
         drift_score = drift_assessment['drift_score']
         drift_status = drift_assessment['drift_status']
         drift_color = drift_assessment['drift_color']
         
-        # Stability penalty: penalize high standard deviation in drift (unstable station-keeping)
         if sat_type == 'GEO':
             drift_stability = std_drift / drift_tolerance_gso
             if drift_stability > 2:
@@ -455,7 +422,6 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
                 stability_penalty = min(20, (drift_stability - 1) * 10)
                 drift_score = max(0, drift_score - stability_penalty)
         
-        # Trend analysis bonus/penalty
         if drift_trend > 0.01:  # Drift magnitude increasing
             drift_score = max(0, drift_score - 10)
         elif drift_trend < -0.01:  # Drift magnitude decreasing (improving)
@@ -470,13 +436,11 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
         drift_color = "⚪"
         drift_trend = None
     
-    # ========== LONGITUDE SLOT DEVIATION ANALYSIS ==========
     longitude_deviation = None
     longitude_score = None
     designated_lon = None
     current_mean_lon = None
     
-    # Get designated longitude from requirements
     if 'longitude' in requirements:
         designated_lon = requirements['longitude']
     elif 'central_longitude_deg' in requirements:
@@ -486,13 +450,10 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
     # We'll mark it as unavailable here and calculate it separately if satellite object is provided
     # The longitude calculation will be done in the main app where we have access to satellite objects
     
-    # For now, set score to None - it will be calculated elsewhere if satellite data is available
     longitude_score = None
     longitude_deviation = None
     current_mean_lon = None
     
-    # Calculate overall score with updated weighting to include longitude deviation
-    # Define base weights (updated to include longitude)
     weights = dict(score_rules.WEIGHTS)
 
     components = {}
@@ -511,7 +472,6 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
         overall_score = 50.0
         total_weight = 0.0
     else:
-        # Normalize weights for available components
         total_weight = sum(weights[k] for k in components.keys())
         weighted_sum = sum(components[k] * weights[k] for k in components.keys())
         overall_score = weighted_sum / total_weight
@@ -521,10 +481,8 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
     
     remarks = []
     
-    # Inclination remarks
     if inc_score is not None and inc_deviation is not None:
         if inc_range_bounds is not None:
-            # Range-based requirement: report position within the band
             lo, hi = inc_range_bounds
             if lo <= current_inclination <= hi:
                 remarks.append(f"Inclination within spec ({current_inclination:.3f}°, range {lo}°–{hi}°)")
@@ -537,7 +495,6 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
         else:
             remarks.append(f"⚠️ Inclination deviation exceeds tolerance ({inc_deviation:.2f}°)")
     
-    # Enhanced drift remarks for both GEO (GSO) and IGSO/QZO
     if drift_score is not None:
         if sat_type == 'GEO':
             if drift_status == "Excellent":
@@ -551,7 +508,6 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
             else:
                 remarks.append(f"🔴 Critical drift - immediate attention needed ({abs(current_drift):.3f}°/day)")
             
-            # Add drift direction
             if current_drift > 0:
                 remarks.append(f"Drifting EASTWARD at {abs(current_drift):.3f}°/day")
             elif current_drift < 0:
@@ -564,7 +520,6 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
             else:
                 remarks.append(f"⚠️ High {sat_type} drift ({drift_color} {abs(current_drift):.3f}°/day)")
         
-        # Enhanced remarks about drift stability and trend
         if drift_trend is not None:
             if drift_trend > 0.01:
                 remarks.append(f"📈 Drift magnitude increasing (trend: +{drift_trend:.3f}°/day)")
@@ -577,15 +532,12 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
             elif std_drift > drift_tolerance_gso * 0.5:
                 remarks.append(f"Moderate drift variability (std dev: {std_drift:.3f}°/day)")
     
-    # Longitude slot deviation remarks
     if longitude_deviation is not None and designated_lon is not None:
         abs_dev = abs(longitude_deviation)
         remarks.append(score_rules.longitude_remark(abs_dev, longitude_deviation, sat_type, designated_lon))
     
-    # Dynamic maintenance remarks based on learned pattern (E-W and N-S separate)
     remarks.append(f"📊 {maintenance_status}")
     
-    # E-W specific remarks
     ew_expected = pattern_analysis.get('ew_expected_interval_days')
     ew_days_since = pattern_analysis.get('days_since_last_ew')
     ew_confidence = pattern_analysis.get('ew_confidence')
@@ -604,7 +556,6 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
             if next_ew > 0:
                 remarks.append(f"⏱️ Next E-W maneuver expected in ~{next_ew:.0f} days")
     
-    # N-S specific remarks
     ns_expected = pattern_analysis.get('ns_expected_interval_days')
     ns_days_since = pattern_analysis.get('days_since_last_ns')
     ns_confidence = pattern_analysis.get('ns_confidence')
@@ -623,7 +574,6 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
             if next_ns > 0:
                 remarks.append(f"⏱️ Next N-S maneuver expected in ~{next_ns:.0f} days")
     
-    # Uniformity remarks
     if uniformity_cov is not None:
         if uniformity_cov <= uniformity_threshold:
             remarks.append("Regular maneuver pattern detected")
@@ -633,12 +583,10 @@ def assess_satellite_health_with_drift(sat_name, sat_df, maneuver_events, inc_to
     if std_inclination < 0.1:
         remarks.append("Stable orbital parameters")
     
-    # Get current altitude if available
     current_altitude = None
     if 'altitude_km' in sat_df.columns and not sat_df['altitude_km'].isna().all():
         current_altitude = sat_df['altitude_km'].iloc[-1]
     
-    # Extract pattern details for display
     ew_expected = pattern_analysis.get('ew_expected_interval_days')
     ns_expected = pattern_analysis.get('ns_expected_interval_days')
     ew_days_since = pattern_analysis.get('days_since_last_ew')

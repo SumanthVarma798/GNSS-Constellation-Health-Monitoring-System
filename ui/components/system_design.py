@@ -118,7 +118,7 @@ PARTS = {
                "Reddit groups about space agencies and navigation, kept for the links they carry, never as evidence on their own.",
                [f"Read once a day at {_daily_time(_SOCIAL_SCHEDULE)} UTC; Reddit refuses quick repeat requests",
                 "Social posts never count as a second source"],
-               ["Grade E at most"], "evidence/settings.py (SOCIAL_PLATFORM_HOSTS)"),
+               ["Grade E at most"], "evidence/news_settings.py (SOCIAL_PLATFORM_HOSTS)"),
     "job": ("Archive job", "built",
             "The collector. On a timer it visits every source politely, keeps a copy of anything new, and writes one line per run saying how it went.",
             [f"GitHub Actions, {len(_ARCHIVE_GROUPS)} schedules: {', '.join(_schedule_label(group) for group in _ARCHIVE_GROUPS)}",

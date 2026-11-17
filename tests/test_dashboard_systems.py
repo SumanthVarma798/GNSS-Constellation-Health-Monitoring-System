@@ -3,7 +3,7 @@ from ui import systems
 from ui.home_settings import SYSTEMS as WHO
 from evidence.registry_tables import (constellation_names, dashboard_satellites, dashboard_satellites_not_in_registry,
                                        dashboard_systems, judged_by_plane, read_table, registry_name)
-from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE
+from evidence.registry_settings import REGISTRY_DASHBOARD_SATELLITES_FILE
 
 
 def test_every_registry_name_is_a_constellation():

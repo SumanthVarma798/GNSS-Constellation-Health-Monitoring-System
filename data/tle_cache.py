@@ -30,7 +30,7 @@ def get_data_file_path(constellation: str, data_type: str) -> Path:
     Returns:
         Path to the JSON data file
     """
-    filename = f"{constellation.lower()}_{data_type}.json"
+    filename = f"{bundle_key(constellation)}_{data_type}.json"
     return DATA_DIR / filename
 
 
@@ -163,7 +163,6 @@ def save_tles_to_bundle(constellation: str, tle_text: str, satellites: dict) -> 
             'satellites': satellites
         }
         
-        # Ensure directory exists
         filepath.parent.mkdir(parents=True, exist_ok=True)
         
         with open(filepath, 'w', encoding='utf-8') as f:
@@ -200,7 +199,6 @@ def save_gp_history_to_bundle(constellation: str, satellite_data: dict,
             'satellites': satellite_data
         }
         
-        # Ensure directory exists
         filepath.parent.mkdir(parents=True, exist_ok=True)
         
         with open(filepath, 'w', encoding='utf-8') as f:

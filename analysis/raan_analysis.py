@@ -66,7 +66,7 @@ def get_raan_deg(sat_obj):
         return None
 
 
-def _circular_mean_deg(lons_deg):
+def circular_mean_deg(lons_deg):
     """Circular mean of longitudes (deg) in [0, 360)."""
     rad = np.deg2rad(np.asarray(lons_deg) % 360.0)
     mean = math.atan2(float(np.mean(np.sin(rad))), float(np.mean(np.cos(rad))))
@@ -97,7 +97,7 @@ def get_ground_track_central_longitude_deg(sat_obj, ts=None,
             [t.second + t.microsecond * 1e-6 for t in times],
         )
         lons = np.asarray(sat_obj.at(t_sf).subpoint().longitude.degrees)
-        return _circular_mean_deg(lons)
+        return circular_mean_deg(lons)
     except Exception:
         return None
 
@@ -240,7 +240,7 @@ def analyze_raan_spacing(satellites_dict, service_requirements=None,
         max_dev = float(np.max(np.abs(devs)))
         rms_dev = float(np.sqrt(np.mean(devs ** 2)))
 
-        cluster_lon = _circular_mean_deg([c["central_lon"] for c in cluster])
+        cluster_lon = circular_mean_deg([c["central_lon"] for c in cluster])
 
         results.append({
             "central_longitude_deg": round(cluster_lon, 2),

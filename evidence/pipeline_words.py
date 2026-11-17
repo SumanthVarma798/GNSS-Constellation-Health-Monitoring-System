@@ -406,14 +406,14 @@ STAGES = {
                 "REGISTRY_CONSTELLATIONS_FILE",
                 "REGISTRY_SIGHTINGS_FILE",
             ],
-            "settings_files": ["evidence/settings.py"],
+            "settings_files": ["evidence/registry_settings.py"],
             "paths": [
                 ".github/workflows/registry-update.yml",
                 "scripts/build_registry.py",
                 "registry/satellites.csv",
                 "registry/sightings.csv",
                 "registry/signal_ids.csv",
-                "evidence/settings.py",
+                "evidence/registry_settings.py",
             ],
             "limits": [
                 "If the IGS file layout changes, the build exits and no tables are written.",
@@ -661,11 +661,11 @@ STAGES = {
                 "REGISTRY_DASHBOARD_SATELLITES_FILE",
                 "TESTS_WORKFLOW",
             ],
-            "settings_files": ["evidence/settings.py", "evidence/console_settings.py"],
+            "settings_files": ["evidence/registry_settings.py", "evidence/console_settings.py"],
             "paths": [
                 "dashboard.py",
                 "registry/dashboard_satellites.csv",
-                "evidence/settings.py",
+                "evidence/registry_settings.py",
                 "evidence/console_settings.py",
             ],
             "limits": [

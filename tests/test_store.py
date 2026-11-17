@@ -5,7 +5,7 @@ import pytest
 
 from evidence.archive import record
 from evidence.registry_tables import read_table
-from evidence.settings import REGISTRY_SATELLITES_FILE
+from evidence.registry_settings import REGISTRY_SATELLITES_FILE
 from evidence.store import build_store, new_store
 
 ADDRESS = "https://operator.example/notices"

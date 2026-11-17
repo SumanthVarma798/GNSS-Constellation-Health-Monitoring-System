@@ -31,7 +31,6 @@ from pathlib import Path
 
 import requests
 
-# Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import tomllib
@@ -77,14 +76,12 @@ def load_credentials_from_secrets():
         with open(secrets_path, 'rb') as f:
             secrets = tomllib.load(f)
 
-        # Check for nested [spacetrack] section first
         if 'spacetrack' in secrets:
             username = secrets['spacetrack'].get('username')
             password = secrets['spacetrack'].get('password')
             if username and password:
                 return username, password
         
-        # Fall back to flat keys
         username = secrets.get('SPACETRACK_USERNAME') or secrets.get('spacetrack_username')
         password = secrets.get('SPACETRACK_PASSWORD') or secrets.get('spacetrack_password')
         
@@ -369,11 +366,9 @@ def main():
     
     args = parser.parse_args()
     
-    # Try to get credentials from various sources
     username = args.username
     password = args.password
 
-    # If not provided via CLI/env, try secrets.toml
     if not username or not password:
         secrets_username, secrets_password = load_credentials_from_secrets()
         if secrets_username and secrets_password:
@@ -386,7 +381,6 @@ def main():
     print(f"\n🛰️  GNSS Health Monitor - Data Update Script")
     print(f"   Timestamp: {datetime.now(timezone.utc).isoformat()}")
 
-    # Update TLEs (uses CelesTrak, no auth needed)
     if not args.history_only:
         print("\n" + "="*60)
         print("UPDATING TLE DATA (CelesTrak)")
@@ -404,7 +398,6 @@ def main():
         print(message)
         print_actions_annotation("notice", message)
 
-    # Update GP History (uses Space-Track, auth required)
     if should_run_history and has_login:
         print("\n" + "="*60)
         print("UPDATING GP HISTORY DATA (Space-Track)")

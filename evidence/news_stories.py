@@ -13,7 +13,11 @@ from evidence.news_settings import (CORROBORATION_DAYS, NEWS_CATEGORIES, STORY_C
                                     STORY_HEADLINE_CHARACTERS, STORY_NEAR_SAME, STORY_SHARE, STORY_SHARED_WORDS, STORY_STOP_WORDS,
                                     STORY_TOLD_SHARE)
 from evidence.registry_tables import read_table
-from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_SATELLITES_FILE, REGISTRY_SIGHTINGS_FILE
+from evidence.registry_settings import (
+    REGISTRY_DASHBOARD_SATELLITES_FILE,
+    REGISTRY_SATELLITES_FILE,
+    REGISTRY_SIGHTINGS_FILE
+)
 from evidence.source_record import CLAIM_CATEGORIES
 
 WORD = re.compile(r"[a-z0-9][a-z0-9\-]*")
@@ -23,7 +27,7 @@ ID = re.compile(r"(?=.{4,}$)(?:[a-z]{2,}-?(?:[a-z]?\d+|\d+[a-z])|\d{5,})$")
 GRADE_ORDER = ("A", "B", "C", "D", "E", "F")
 
 
-def _stem(word):
+def stem(word):
     """launches, launched, launching -> launch; satellites, satellite -> satellit. IDs stay as they are."""
     if ID.match(word):
         return word
@@ -40,12 +44,12 @@ def words(text, aliased=True):
     """The words of a headline that can tie it to another: lower case, stop words dropped, endings cut, and a satellite's
     other name (IRNSS-1L) read as the one the registry pairs it with (NVS-03)."""
     found = WORD.findall(unicodedata.normalize("NFKC", text or "").casefold().replace("’", "'"))   # 𝐍𝐚𝐯𝐈𝐂 reads as navic
-    kept = {_stem(word) for word in found if word not in STORY_STOP_WORDS and (len(word) > 2 or ID.match(word))}
-    return {_aliases().get(word, word) for word in kept} if aliased else kept
+    kept = {stem(word) for word in found if word not in STORY_STOP_WORDS and (len(word) > 2 or ID.match(word))}
+    return {aliases().get(word, word) for word in kept} if aliased else kept
 
 
 @cache
-def _aliases():
+def aliases():
     """{ID: the one it stands for}: a satellite's other names, from the registry's notes and dashboard names, so a
     headline saying IRNSS-1L tells the same story as one saying NVS-03 ("NVS-03 (IRNSS-1L)"). An ID on more than one
     registry row (BeiDou-3, BeiDou-2) names a family, not a satellite, and stands for nothing."""
@@ -63,7 +67,7 @@ def _aliases():
 def _ids_in_order(text):
     """The IDs a text names, in the order it names them."""
     found = WORD.findall(unicodedata.normalize("NFKC", text or "").casefold())
-    return [_stem(word) for word in found if ID.match(word)]
+    return [stem(word) for word in found if ID.match(word)]
 
 
 def _ids(word_set):

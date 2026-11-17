@@ -8,7 +8,7 @@ material holds every other question's facts.
 import re
 
 from evidence.registry_tables import read_table
-from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE
+from evidence.registry_settings import REGISTRY_DASHBOARD_SATELLITES_FILE
 
 NOT_IN_MATERIAL = ("isn't in the project's material", "is not in the project's material")
 
