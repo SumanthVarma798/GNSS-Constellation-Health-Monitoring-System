@@ -27,7 +27,7 @@ SAMPLE_EVERY = 20   # read one 30-second epoch in 20 (one in ten minutes). Our c
 # B2a, B2b, B3I), GLONASS ICD, IS-QZSS-PNT, IRNSS ICD. {constellation letter: [(band digit, attribute letters, name)]}
 SIGNALS = {
     "G": [("1", "C", "L1 C/A"), ("1", "SLX", "L1C"), ("1", "PWYMN", "L1 P(Y)"),
-          ("2", "C", "L2 C/A"), ("2", "SLXD", "L2C"), ("2", "PWYMN", "L2 P(Y)"),
+          ("2", "C", "L2 C/A"), ("2", "SLX", "L2C"), ("2", "PWYMND", "L2 P(Y)"),   # 2D: semi-codeless P(Y), not L2C
           ("5", "IQX", "L5")],
     "R": [("1", "CP", "G1"), ("4", "ABX", "G1a"), ("2", "CP", "G2"), ("6", "ABX", "G2a"), ("3", "IQX", "G3")],
     "E": [("1", "ABCXZ", "E1"), ("5", "IQX", "E5a"), ("7", "IQX", "E5b"), ("8", "IQX", "E5 (AltBOC)"),
