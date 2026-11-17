@@ -32,6 +32,15 @@ def test_every_dataset_of_ours_says_how_to_get_use_and_cite_it():
         assert item["address"].startswith("https://raw.githubusercontent.com/")
 
 
+def test_dataset_citations_have_short_and_long_forms_with_the_key_fields():
+    content = b"at_utc,satellite\n2026-11-13T00:00:00Z,NVS-03\n"
+    words = shelf.dataset_citations("lifecycles", content)
+    assert "OpenGNSS (" in words["short"] and "Satellite lifecycles" in words["short"]
+    assert OURS["lifecycles"]["address"] in words["short"]
+    for needed in ("Version/date:", "2026-11-13", "Licence: CC BY 4.0", "Accessed "):
+        assert needed in words["long"]
+
+
 def test_only_our_own_files_are_offered_and_others_are_linked_to_their_owners():
     # NOTICE: orbit records keep Space-Track's and CelesTrak's terms, GCAT and the IGS files are their owners', and
     # headlines belong to their publishers. None of those is a dataset of ours.

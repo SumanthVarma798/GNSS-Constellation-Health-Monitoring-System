@@ -29,7 +29,8 @@ from evidence.registry_tables import read_table, registry_name
 from ui import library, reveal, shelf, surfaces, systems
 from ui.components.lifecycle import lifecycle_frame
 from ui.session_keys import LIBRARY_JUMP
-from ui.shelf_settings import (COLLEAGUES, OTHERS, OUR_CITATIONS, OURS, OUTSIDE_CITATIONS, SHELVES, STORIES_SHOWN)
+from ui.shelf_settings import (COLLEAGUES, DASHBOARD_CITATION, OTHERS, OURS, OUTSIDE_CITATIONS, SHELVES,
+                               STORIES_SHOWN)
 
 JUMP = LIBRARY_JUMP
 
@@ -74,7 +75,7 @@ surfaces.show(shelf.CSS)
 
 # ---- the shelves at a glance: each tile opens its shelf and goes to it ----
 tiles = {"stories": (len(told), "Stories"), "satellites": (sum(r["launched"] for r in constellations), "Satellites launched"),
-         "datasets": (len(OURS), "Our datasets"), "cite": (len(OUR_CITATIONS) + len(OUTSIDE_CITATIONS), "How to cite")}
+         "datasets": (len(OURS), "Our datasets"), "cite": (len(OURS) + 1 + len(OUTSIDE_CITATIONS), "How to cite")}
 with st.container(key="shop_map"):
     for key, (number, words) in tiles.items():
         st.button(f"**{number}**\n\n{words}", key=f"tile_{key}", on_click=jump_to, args=(key,), use_container_width=True)
@@ -149,9 +150,15 @@ surfaces.show(shelf.shelf_sign("cite"))
 
 def draw_citations():
     with st.container(key="shelfbody_cite"):
-        for who, words in OUR_CITATIONS:
-            st.html(f'<p class="small">{escape(who)}</p>')
-            st.code(words, language=None, wrap_lines=True)
+        st.html('<p class="small">Our datasets</p>')
+        for key, item in OURS.items():
+            words = shelf.dataset_citations(key, states[key][0], datetime.now(timezone.utc))
+            st.html(f'<p class="small"><b>{escape(item["name"])}</b> short citation</p>')
+            st.code(words["short"], language=None, wrap_lines=True)
+            st.html(f'<p class="small"><b>{escape(item["name"])}</b> long citation</p>')
+            st.code(words["long"], language=None, wrap_lines=True)
+        st.html(f'<p class="small"><b>{escape(DASHBOARD_CITATION["title"])}</b> short and long citation</p>')
+        components.html(shelf.dashboard_citation_frame(), height=170)
         st.html('<p class="small">Each outside source, as its owner asks</p>')
         for who, words in OUTSIDE_CITATIONS:
             st.html(f'<p class="small"><b>{escape(who)}</b> {escape(words)}</p>')

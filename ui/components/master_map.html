@@ -90,7 +90,7 @@ __TIP__
 </style>
 </head>
 <body>
-<div class="bar" id="bar"><button type="button" class="clear" id="clear" title="Show every spacecraft again" hidden>Clear</button></div>
+<div class="bar" id="bar"><button type="button" class="clear" id="clear" title="Show all constellations" hidden>Show all constellations</button></div>
 <div class="stage" id="stage">
   <canvas id="map" role="img" aria-label="Spacecraft identity cards. Drag to move; hold Ctrl and scroll, or pinch, to zoom; zoom in to read each card."></canvas>
   <div class="sr" id="cards" role="list" aria-label="Spacecraft"></div>
@@ -105,6 +105,7 @@ __TIP__
 "use strict";
 const DATA = JSON.parse(document.getElementById("map-data").textContent);
 const RECS = DATA.records;
+const HAS_CARD_FOCUS = !!DATA.focus;
 const $ = id => document.getElementById(id);
 const esc = v => String(v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -484,7 +485,8 @@ function refresh(move) {
   state = new Map(filtered ? RECS.map(r => [r.svn, hitSet.has(r.svn) ? "hit" : "dim"]) : []);
   buttons.forEach((el, svn) => { el.tabIndex = !filtered || hitSet.has(svn) ? 0 : -1; });
   menus.forEach(m => { fill(m); const n = chosen[m.key].size; m.pill.classList.toggle("on", n > 0); m.badge.hidden = !n; m.badge.textContent = n; });
-  $("clear").hidden = !filtered;
+  // The page around the map shows its own back button when opened from a constellation card.
+  $("clear").hidden = HAS_CARD_FOCUS || !filtered;
   const look = hits.filter(r => card.get(r.svn).mark).length;
   $("totals").innerHTML = `<b>${hits.length}</b> / ${RECS.length} shown · <span class="mark" aria-hidden="true">!</span> <b>${look}</b> worth a look`;
   if (move) goTo(!filtered ? home() : hits.length ? fitTo(hits) : view);
@@ -535,7 +537,7 @@ function fitFrame() {   // the frame takes the page's own height, so nothing scr
 }
 if (DATA.focus && RECS.some(r => r.constellation === DATA.focus)) {   // chosen from a row above: bring the map into view
   chosen.constellation.add(DATA.focus);
-  const back = window.frameElement && (parent.document.querySelector(".st-key-mm_all") || window.frameElement);   // its "Show every constellation" button first
+  const back = window.frameElement && (parent.document.querySelector(".st-key-mm_all") || window.frameElement);   // its "Show all constellations" button first
   if (back) back.scrollIntoView({ behavior: reduce.matches ? "auto" : "smooth", block: "start" });
 }
 let started = false;

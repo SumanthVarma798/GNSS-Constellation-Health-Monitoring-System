@@ -6,7 +6,7 @@ import csv
 import io
 import json
 import re
-from datetime import date
+from datetime import date, datetime, timezone
 from html import escape
 from pathlib import Path
 
@@ -15,7 +15,10 @@ import streamlit as st
 from evidence import jobs
 from evidence.console_settings import JOBS, WORKFLOWS_DIR
 from ui import icons, marks, surfaces
-from ui.shelf_settings import FITTED, JOB_NAMES, ORBIT_GAP, OUR_CREDIT, OUR_LICENCE, OURS, SHELVES
+from ui.components.frame import fill
+from ui.shelf_settings import (CITATION_FORMATS, DASHBOARD_CITATION, FITTED, JOB_NAMES, ORBIT_GAP, OUR_CREDIT,
+                               OUR_LICENCE, OURS, SHELVES)
+from ui.theme import root_block
 
 ROOT = Path(__file__).resolve().parent.parent
 _DAY = re.compile(r"\d{4}-\d{2}-\d{2}")
@@ -155,6 +158,117 @@ def file_name(key):
 def _link(address, words=""):
     return (f'<a href="{escape(address, quote=True)}" target="_blank" rel="noopener noreferrer">'
             f'{escape(words or address)}</a>')
+
+
+def _as_iso_day(text):
+    """'2026-11-15' from text that starts with an ISO day, or ''."""
+    found = _DAY.match(text or "")
+    return found.group(0) if found else ""
+
+
+def _dataset_version(key, content):
+    """The dataset's version/date in ISO day form where possible, else 'not known'."""
+    if content is None:
+        return "not known"
+    item = OURS[key]
+    if not item["date"]:
+        return "not known"
+    how, name = item["date"]
+    try:
+        if how == "column":
+            rows = csv.DictReader(io.StringIO(content.decode("utf-8")))
+            return max((_as_iso_day(row.get(name, "")) for row in rows), default="") or "not known"
+        data = json.loads(content.decode("utf-8"))
+        return _as_iso_day(str(data.get(name, ""))) or "not known"
+    except (OSError, ValueError, UnicodeDecodeError, json.JSONDecodeError):
+        return "not known"
+
+
+def _citation_year(version, now):
+    year = version[:4] if len(version) >= 4 and version[:4].isdigit() else str(now.year)
+    return year
+
+
+def _citation_accessed(now):
+    return now.strftime("%Y-%m-%d %H:%M")
+
+
+def dataset_citations(key, content, now=None):
+    """Short and long citation text for one dataset."""
+    when = now or datetime.now(timezone.utc)
+    item = OURS[key]
+    version = _dataset_version(key, content)
+    fields = {"organisation": "OpenGNSS", "title": item["name"], "url": item["address"],
+              "year": _citation_year(version, when), "version": version, "licence": OUR_LICENCE[0],
+              "accessed": _citation_accessed(when)}
+    return {"short": CITATION_FORMATS["short"].format(**fields), "long": CITATION_FORMATS["long"].format(**fields)}
+
+
+def dashboard_citation_frame():
+    """A tiny frame with live UTC citation text and one-click copy for the dashboard."""
+    template = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+__ROOT__
+html, body { margin: 0; background: transparent; }
+body { font: var(--fs-small)/1.45 sans-serif; color: var(--ink); }
+.box { background: var(--well); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--pressed); padding: 10px 12px; }
+.line { margin: 0 0 8px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.line:last-of-type { margin-bottom: 10px; }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+button { font: inherit; color: var(--ink); border: 1px solid var(--edge); border-radius: 999px; background: var(--platform); box-shadow: var(--raised-sm); padding: 5px 12px; cursor: pointer; }
+button:hover { color: var(--accent); border-color: var(--accent); }
+button:active { box-shadow: var(--pressed); background: var(--well); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+</head>
+<body>
+  <div class="box">
+    <p class="line" id="short"></p>
+    <p class="line" id="long"></p>
+    <div class="btns">
+      <button type="button" id="copy-short">Copy short citation</button>
+      <button type="button" id="copy-long">Copy long citation</button>
+    </div>
+  </div>
+<script>
+(() => {
+  "use strict";
+  const citation = __DATA__;
+  const shortLine = document.getElementById("short");
+  const longLine = document.getElementById("long");
+  const shortBtn = document.getElementById("copy-short");
+  const longBtn = document.getElementById("copy-long");
+  const yearOf = stamp => stamp.slice(0, 4);
+  const fill = stamp => {
+    shortLine.textContent = citation.short.replace("{year}", yearOf(stamp));
+    longLine.textContent = citation.long.replace("{year}", yearOf(stamp)).replace("{accessed}", stamp + " UTC");
+  };
+  const stamp = () => {
+    const now = new Date();
+    const hh = String(now.getUTCHours()).padStart(2, "0");
+    const mm = String(now.getUTCMinutes()).padStart(2, "0");
+    const ss = String(now.getUTCSeconds()).padStart(2, "0");
+    return now.toISOString().slice(0, 10) + " " + hh + ":" + mm + ":" + ss;
+  };
+  const copy = async text => {
+    try { await navigator.clipboard.writeText(text); } catch (err) { /* leave button text unchanged */ }
+  };
+  shortBtn.addEventListener("click", () => copy(shortLine.textContent));
+  longBtn.addEventListener("click", () => copy(longLine.textContent));
+  fill(stamp());
+  setInterval(() => fill(stamp()), 1000);
+})();
+</script>
+</body>
+</html>"""
+    return fill(template, {"short": CITATION_FORMATS["short"].format(**{**DASHBOARD_CITATION, "year": "{year}"}),
+                           "long": CITATION_FORMATS["long"].format(**{**DASHBOARD_CITATION, "year": "{year}",
+                                                                     "version": "live dashboard", "licence": "CC BY 4.0",
+                                                                     "accessed": "{accessed}"})},
+                __ROOT__=root_block())
 
 
 def card_html(key, content, fresh, problem):
