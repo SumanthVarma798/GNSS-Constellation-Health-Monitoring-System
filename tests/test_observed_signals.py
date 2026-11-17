@@ -41,7 +41,9 @@ FILE = (_header()
 def test_signal_names_are_plain_and_unknown_codes_are_kept():
     assert signal_name("G", "1C") == "L1 C/A" and signal_name("G", "1L") == "L1C" and signal_name("G", "5Q") == "L5"
     assert signal_name("E", "7Q") == "E5b" and signal_name("C", "2I") == "B1I" and signal_name("I", "9A") == "S"
-    assert signal_name("J", "6E") == "L6" and signal_name("R", "3Q") == "G3"
+    assert signal_name("J", "6E") == "L6E" and signal_name("J", "6L") == "L6" and signal_name("R", "3Q") == "G3"
+    assert signal_name("C", "7I") == "B2I" and signal_name("C", "7D") == "B2b"
+    assert signal_name("G", "1M") == "L1 M" and signal_name("G", "2W") == "L2 P(Y)" and signal_name("G", "2D") == "L2 P(Y)"
     assert signal_name("G", "9X") == "band 9"   # not dropped
 
 
@@ -111,7 +113,7 @@ def test_the_section_says_heard_silent_and_missing_in_words():
     summary, body = signals_view.section_markup(payload, ["A", "B", "C", "D"])
     assert summary == "1 of 4 satellites heard · 1 not heard by any of 2 stations · 16 Nov"
     assert "L1 C/A" in body and "L5" in body and "IISC, WTZR" in body
-    assert "not heard by any of the 2 stations today" in body and "no signal ID today" in body
+    assert "not heard by any of the 2 stations that day" in body and "no signal ID that day" in body
     assert "not in the signals check" in body and "16 Nov" in body and "https://igs.bkg.bund.de" in body
     assert "#" not in body.replace("&#x27;", "")   # no colour written into the markup
 
@@ -127,7 +129,8 @@ def test_show_draws_the_open_section_or_says_the_result_is_missing(monkeypatch):
                         lambda: {"day": "2026-11-16", "stations": [], "satellites": [{"satellite": "NVS-01", "signal_id": "I10",
                                                                                       "signals": {"L5": ["IISC"]}}]})
     signals_view.show("NavIC")
-    assert drawn[0][0][:2] == ("signals_NavIC", "Signals heard today") and drawn[0][1] == {"open": True}
+    assert drawn[0][0][0] == "signals_NavIC" and drawn[0][1] == {"open": True}
+    assert drawn[0][0][1] == f"Signals heard on {signals_view._day_words('2026-11-16')}"   # its day, never "today"
 
 
 def test_the_regional_overview_carries_the_section(monkeypatch):
@@ -139,5 +142,5 @@ def test_the_regional_overview_carries_the_section(monkeypatch):
                "satellites": [{"satellite": next(iter(data.SATELLITES["NavIC"])), "signal_id": "I02", "signals": {"L5": ["IISC"]}}]}
     monkeypatch.setattr(data, "signals_heard", lambda: payload)
     at = run(lambda at: at.session_state.__setitem__("scope", "NavIC"))
-    assert any("Signals heard today" in box.proto.label for box in at.get("checkbox"))
+    assert any("Signals heard on" in box.proto.label for box in at.get("checkbox"))
     assert "IISC" in "".join(part.proto.body for part in at.get("html"))

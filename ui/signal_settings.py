@@ -26,16 +26,16 @@ SAMPLE_EVERY = 20   # read one 30-second epoch in 20 (one in ten minutes). Our c
 # signal's name the constellation's interface document: IS-GPS-200/705/800, Galileo OS SIS ICD, BeiDou ICD (B1I, B1C,
 # B2a, B2b, B3I), GLONASS ICD, IS-QZSS-PNT, IRNSS ICD. {constellation letter: [(band digit, attribute letters, name)]}
 SIGNALS = {
-    "G": [("1", "C", "L1 C/A"), ("1", "SLX", "L1C"), ("1", "PWYMN", "L1 P(Y)"),
-          ("2", "C", "L2 C/A"), ("2", "SLX", "L2C"), ("2", "PWYMND", "L2 P(Y)"),   # 2D: semi-codeless P(Y), not L2C
+    "G": [("1", "C", "L1 C/A"), ("1", "SLX", "L1C"), ("1", "PWYN", "L1 P(Y)"), ("1", "M", "L1 M"),   # W, N: P(Y) tracked without its code
+          ("2", "C", "L2 C/A"), ("2", "SLX", "L2C"), ("2", "PWYND", "L2 P(Y)"), ("2", "M", "L2 M"),   # 2D: semi-codeless P(Y), not L2C; M: the military code
           ("5", "IQX", "L5")],
     "R": [("1", "CP", "G1"), ("4", "ABX", "G1a"), ("2", "CP", "G2"), ("6", "ABX", "G2a"), ("3", "IQX", "G3")],
     "E": [("1", "ABCXZ", "E1"), ("5", "IQX", "E5a"), ("7", "IQX", "E5b"), ("8", "IQX", "E5 (AltBOC)"),
           ("6", "ABCXZ", "E6")],
     "C": [("2", "IQX", "B1I"), ("1", "DPX", "B1C"), ("1", "ANSLZ", "B1A"), ("5", "DPX", "B2a"),
-          ("7", "IQXDPZ", "B2b / B2I"), ("8", "DPX", "B2 (a+b)"), ("6", "IQX", "B3I"), ("6", "DPZ", "B3A")],
+          ("7", "IQX", "B2I"), ("7", "DPZ", "B2b"), ("8", "DPX", "B2 (a+b)"), ("6", "IQX", "B3I"), ("6", "DPZ", "B3A")],
     "J": [("1", "C", "L1 C/A"), ("1", "SLX", "L1C"), ("1", "B", "L1Sb"), ("1", "Z", "L1S"), ("2", "SLX", "L2C"),
-          ("5", "IQX", "L5"), ("5", "DPZ", "L5S"), ("6", "SLXEZ", "L6")],
+          ("5", "IQX", "L5"), ("5", "DPZ", "L5S"), ("6", "SLXZ", "L6"), ("6", "E", "L6E")],
     "I": [("5", "ABCX", "L5"), ("9", "ABCX", "S"), ("1", "DPX", "L1")],
 }
 

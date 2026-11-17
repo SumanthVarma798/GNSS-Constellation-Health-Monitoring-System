@@ -1,4 +1,4 @@
-"""The Overview's "Signals heard today" section: for each satellite, the signals an IGS receiver recorded from it.
+"""The Overview's "Signals heard" section (on the day of the newest files read): for each satellite, the signals an IGS receiver recorded from it.
 
 The numbers come from scripts/signals_heard.py (published to the orbit-checks branch, read by ui/data.py); the
 names of the signals and the stations are in ui/signal_settings.py.
@@ -19,10 +19,10 @@ def _chips(row, stations_read):
     if row is None:
         return surfaces.chip("not in the signals check", "idle")
     if not row.get("signal_id"):
-        return surfaces.chip("no signal ID today", "idle")
+        return surfaces.chip("no signal ID that day", "idle")
     signals = row.get("signals") or {}
     if not signals:
-        return surfaces.chip(f"not heard by any of the {stations_read} stations today", "warn")
+        return surfaces.chip(f"not heard by any of the {stations_read} stations that day", "warn")
     return "".join(surfaces.chip(signal, "accent") for signal in signals)
 
 
@@ -48,6 +48,12 @@ def _how(payload, read):
             f'stations records NavIC\'s S band, for one), or the satellite may have been out of view of all of them.</p>')
 
 
+def title(payload):
+    """The section's name, with the day its files were recorded."""
+    day = _day_words(payload.get("day"))
+    return f"Signals heard on {day}" if day else "Signals heard"
+
+
 def section_markup(payload, names):
     """(summary, body html) for the satellites called `names`, in that order, from the published payload."""
     by_name = {row["satellite"]: row for row in payload.get("satellites", []) if isinstance(row, dict) and "satellite" in row}
@@ -71,4 +77,5 @@ def show(constellation):
         surfaces.show(surfaces.notice("Signals heard: the daily result is not available right now.", "idle"))
         return
     summary, body = section_markup(payload, list(dashboard_data.SATELLITES[constellation]))
-    reveal.section(f"signals_{constellation}", "Signals heard today", summary, body, open=True)
+    # named by its day, not "today": the files are a day behind, and a failed run keeps the day before's result
+    reveal.section(f"signals_{constellation}", title(payload), summary, body, open=True)
