@@ -3,7 +3,14 @@ from datetime import datetime
 from html import escape
 
 from data import spacetrack
-from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS, QZSS_HEALTH_BITS, TIME_CORRECTION_WORDS
+from evidence.settings import (
+    ORBIT_ALERT_DAYS,
+    ORBIT_STALE_DAYS
+)
+from ui.orbit_age_settings import (
+    QZSS_HEALTH_BITS,
+    TIME_CORRECTION_WORDS
+)
 from ui import data as dashboard_data
 from ui import measures, reveal, surfaces, tooltip
 

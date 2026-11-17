@@ -13,7 +13,11 @@ from evidence.news_settings import (CORROBORATION_DAYS, NEWS_CATEGORIES, STORY_C
                                     STORY_HEADLINE_CHARACTERS, STORY_NEAR_SAME, STORY_SHARE, STORY_SHARED_WORDS, STORY_STOP_WORDS,
                                     STORY_TOLD_SHARE)
 from evidence.registry_tables import read_table
-from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_SATELLITES_FILE, REGISTRY_SIGHTINGS_FILE
+from evidence.registry_settings import (
+    REGISTRY_DASHBOARD_SATELLITES_FILE,
+    REGISTRY_SATELLITES_FILE,
+    REGISTRY_SIGHTINGS_FILE
+)
 from evidence.source_record import CLAIM_CATEGORIES
 
 WORD = re.compile(r"[a-z0-9][a-z0-9\-]*")

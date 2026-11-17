@@ -32,12 +32,22 @@ from evidence.registry_changes import (change_report, describe_satellite_changes
 from evidence.registry_tables import (LAUNCHED_WORDS_FORMAT, LAUNCH_DATE_NOT_READ, LAUNCH_NOTE_FORMAT,
                                       constellation_names, read_table, tracked_list_in_step, write_table)
 from evidence.sources import IGS_SATELLITE_METADATA_URL, SPACE_TRACK_RECENT_LAUNCHES_URL
-from evidence.settings import (REGISTRY_CONSTELLATIONS_FILE, REGISTRY_DIR, REGISTRY_SATELLITE_COLUMNS,
-                               REGISTRY_DASHBOARD_SATELLITE_COLUMNS,
-                               REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_DASHBOARD_TRACKED_SYSTEMS,
-                               REGISTRY_SATELLITES_FILE, REGISTRY_SIGHTINGS_FILE, REGISTRY_SIGNAL_ID_COLUMNS,
-                               REGISTRY_SIGNAL_IDS_FILE, REGISTRY_UNIDENTIFIED_COLUMNS, REGISTRY_UNIDENTIFIED_FILE,
-                               SIGHTING_NAMES, SOURCE_CANDIDATES_FILE)
+from evidence.settings import SOURCE_CANDIDATES_FILE
+from evidence.registry_settings import (
+    REGISTRY_CONSTELLATIONS_FILE,
+    REGISTRY_DIR,
+    REGISTRY_SATELLITE_COLUMNS,
+    REGISTRY_DASHBOARD_SATELLITE_COLUMNS,
+    REGISTRY_DASHBOARD_SATELLITES_FILE,
+    REGISTRY_DASHBOARD_TRACKED_SYSTEMS,
+    REGISTRY_SATELLITES_FILE,
+    REGISTRY_SIGHTINGS_FILE,
+    REGISTRY_SIGNAL_ID_COLUMNS,
+    REGISTRY_SIGNAL_IDS_FILE,
+    REGISTRY_UNIDENTIFIED_COLUMNS,
+    REGISTRY_UNIDENTIFIED_FILE,
+    SIGHTING_NAMES
+)
 
 
 def build_tables(text):

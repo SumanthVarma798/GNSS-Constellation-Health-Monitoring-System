@@ -11,8 +11,13 @@ from data.tle_cache import DATA_DIR
 from evidence.library_settings import LIBRARY_COUNTS_FILE
 from evidence.master_map import orbit_feed_checked, orbit_feed_names
 from evidence.registry_tables import read_table
-from evidence.settings import (REGISTRY_CATALOGUE_FILE, REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_SATELLITES_FILE,
-                               REGISTRY_SIGHTINGS_FILE, REGISTRY_SIGNAL_IDS_FILE)
+from evidence.registry_settings import (
+    REGISTRY_CATALOGUE_FILE,
+    REGISTRY_DASHBOARD_SATELLITES_FILE,
+    REGISTRY_SATELLITES_FILE,
+    REGISTRY_SIGHTINGS_FILE,
+    REGISTRY_SIGNAL_IDS_FILE
+)
 
 
 @st.cache_data(show_spinner=False)

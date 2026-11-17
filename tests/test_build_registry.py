@@ -14,10 +14,15 @@ import build_registry
 from build_registry import build_tables
 from evidence.igs_metadata import sinex_time
 from evidence.registry_tables import read_table, recently_added, tracked_list_in_step
-from evidence.settings import (REGISTRY_SATELLITE_COLUMNS, REGISTRY_SATELLITES_FILE, REGISTRY_SIGHTINGS_FILE,
-                               REGISTRY_SIGNAL_ID_COLUMNS,
-                               REGISTRY_SIGNAL_IDS_FILE, REGISTRY_DASHBOARD_SATELLITES_FILE,
-                               REGISTRY_DASHBOARD_SATELLITE_COLUMNS)
+from evidence.registry_settings import (
+    REGISTRY_SATELLITE_COLUMNS,
+    REGISTRY_SATELLITES_FILE,
+    REGISTRY_SIGHTINGS_FILE,
+    REGISTRY_SIGNAL_ID_COLUMNS,
+    REGISTRY_SIGNAL_IDS_FILE,
+    REGISTRY_DASHBOARD_SATELLITES_FILE,
+    REGISTRY_DASHBOARD_SATELLITE_COLUMNS
+)
 from test_check_satellite_ids import SAMPLE
 
 
@@ -85,7 +90,7 @@ def test_a_tracked_satellite_missing_from_the_registry_is_left_out_and_named(mon
     # The tracked list and the registry are each approved by a person, at different
     # times. While one is behind, the dashboard runs without that satellite and says so.
     from evidence import registry_tables
-    from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE
+    from evidence.registry_settings import REGISTRY_DASHBOARD_SATELLITES_FILE
 
     tracked = [{"svn": "I002", "dashboard_name": "IRNSS-1B"}, {"svn": "I999", "dashboard_name": "NVS-99"}]
     tables = {REGISTRY_DASHBOARD_SATELLITES_FILE: tracked}

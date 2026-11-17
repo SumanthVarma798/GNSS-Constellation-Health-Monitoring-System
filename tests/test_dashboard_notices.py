@@ -11,7 +11,7 @@ from streamlit.testing.v1 import AppTest
 
 import config.config
 from evidence.registry_tables import read_table
-from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE
+from evidence.registry_settings import REGISTRY_DASHBOARD_SATELLITES_FILE
 from test_golden_scores import GOLDEN
 
 ROOT = Path(__file__).resolve().parent.parent

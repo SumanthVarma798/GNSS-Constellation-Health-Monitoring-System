@@ -18,7 +18,11 @@ from evidence.archive import latest_version, object_path
 from evidence.catalogue_check import disagreement_report, disagreements
 from evidence.gcat import catalogue_rows
 from evidence.registry_tables import read_table, write_table
-from evidence.settings import REGISTRY_CATALOGUE_COLUMNS, REGISTRY_CATALOGUE_FILE, REGISTRY_SATELLITES_FILE
+from evidence.registry_settings import (
+    REGISTRY_CATALOGUE_COLUMNS,
+    REGISTRY_CATALOGUE_FILE,
+    REGISTRY_SATELLITES_FILE
+)
 from evidence.sources import GCAT_OBJECTS_URL, GCAT_PAYLOADS_URL
 
 

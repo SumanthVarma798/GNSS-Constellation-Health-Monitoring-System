@@ -4,8 +4,12 @@ import pytest
 from evidence.catalogue_check import disagreement_report, disagreements
 from evidence.gcat import catalogue_rows, read_rows
 from evidence.registry_tables import read_table
-from evidence.settings import (GCAT_CITATION, REGISTRY_CATALOGUE_COLUMNS, REGISTRY_CATALOGUE_FILE,
-                               REGISTRY_SATELLITES_FILE)
+from evidence.settings import GCAT_CITATION
+from evidence.registry_settings import (
+    REGISTRY_CATALOGUE_COLUMNS,
+    REGISTRY_CATALOGUE_FILE,
+    REGISTRY_SATELLITES_FILE
+)
 
 # The same shape as the real files: tab-separated, padded with spaces, a '#' header and a '#' date line.
 OBJECTS = "\n".join([

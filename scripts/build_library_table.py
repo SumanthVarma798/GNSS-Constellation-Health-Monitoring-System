@@ -19,7 +19,7 @@ from evidence.library import library_tables
 from evidence.library_settings import (LIBRARY_COUNTS_COLUMNS, LIBRARY_COUNTS_FILE, LIBRARY_MATCHING_COLUMNS,
                                        LIBRARY_MATCHING_FILE)
 from evidence.registry_tables import read_table, write_table
-from evidence.settings import REGISTRY_SATELLITES_FILE
+from evidence.registry_settings import REGISTRY_SATELLITES_FILE
 from evidence.sources import GCAT_FAILED_LAUNCHES_URL, GCAT_OBJECTS_URL, GCAT_PAYLOADS_URL
 from build_catalogue_table import archived_copy
 

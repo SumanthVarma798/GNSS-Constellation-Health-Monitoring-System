@@ -8,7 +8,10 @@ Two of its files are used. The object catalogue has one row per catalogued
 object: owner, state, orbit. The payload catalogue has one row per payload:
 when regular operations ended, and whether the mission failed early.
 """
-from evidence.settings import GCAT_OBJECT_COLUMNS, GCAT_PAYLOAD_COLUMNS
+from evidence.registry_settings import (
+    GCAT_OBJECT_COLUMNS,
+    GCAT_PAYLOAD_COLUMNS
+)
 
 
 def read_rows(text, needed):

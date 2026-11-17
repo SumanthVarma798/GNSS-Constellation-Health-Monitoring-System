@@ -1,7 +1,7 @@
 """One small line to the operator's official status page, for the constellations that have one."""
 from html import escape
 
-from evidence.settings import OFFICIAL_STATUS_URLS
+from ui.official_status_settings import OFFICIAL_STATUS_URLS
 
 
 def line(constellation):
