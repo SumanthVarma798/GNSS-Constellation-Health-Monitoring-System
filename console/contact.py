@@ -137,6 +137,8 @@ with body:
         except (requests.RequestException, KeyError, TypeError, ValueError) as error:
             st.html(console.notice(contact.trouble(error), "bad"))
         else:
+            # ponytail: counts waiting files among the newest messages the Worker returns (200); a run scans every waiting
+            # file, so an older one is caught by the next; a pending count from the Worker if that ever matters
             if count := contact.waiting(found):
                 st.html(_scan_notice(count))
             if not found:

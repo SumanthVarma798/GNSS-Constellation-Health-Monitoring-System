@@ -74,9 +74,11 @@ const keepFiles = (env, files) => Promise.all(files.map(async ({ name, type, siz
 // ponytail: KV is eventually consistent, so a burst can pass the cap by a few; a Durable Object counter if that matters.
 const countKey = () => `contact-count:${new Date().toISOString().slice(0, 10)}`;
 const roomToday = async (env) => (Number(await env.NEWSLETTERS.get(countKey())) || 0) < CONTACT_DAILY_MESSAGES;
-async function countToday(env) {
+async function countToday(env) {   // after the message is kept: a failed count never turns a kept message into an error
   const key = countKey();
-  await env.NEWSLETTERS.put(key, String((Number(await env.NEWSLETTERS.get(key)) || 0) + 1), { expirationTtl: 2 * 86400 });
+  try {
+    await env.NEWSLETTERS.put(key, String((Number(await env.NEWSLETTERS.get(key)) || 0) + 1), { expirationTtl: 2 * 86400 });
+  } catch { /* the cap undercounts by one; the message itself is kept */ }
 }
 
 const keepContact = (env, record) =>
