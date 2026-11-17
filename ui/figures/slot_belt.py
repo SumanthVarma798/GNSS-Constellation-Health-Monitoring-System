@@ -76,7 +76,7 @@ def _stack(boxes):
     return [rows[i] for i in range(len(boxes))], len(row_ends)
 
 
-def _centred_labels(items):
+def centred_labels(items):
     """Stack labels centred on their x. items are (x, text); returns (x, row, text) and the row count."""
     boxes = []
     for x, text in items:
@@ -87,7 +87,7 @@ def _centred_labels(items):
     return [(box[0] + box[1] / 2, row, text) for box, row, (_, text) in zip(boxes, rows, items)], count
 
 
-def _text(x, y, content, fill, size=LABEL_SIZE, anchor="middle"):
+def text(x, y, content, fill, size=LABEL_SIZE, anchor="middle"):
     return (f'<text x="{x:.1f}" y="{y:.1f}" fill="{fill}" font-size="{size}" '
             f'text-anchor="{anchor}">{escape(content)}</text>')
 
@@ -183,9 +183,9 @@ def slot_belt(rows, caption=""):
         return PLOT_LEFT + (lon - low) / (high - low) * (PLOT_RIGHT - PLOT_LEFT)
 
     visible = [r for r in rows if r["actual_lon"] is not None and low <= r["actual_lon"] <= high]
-    slot_labels, slot_rows_count = _centred_labels([(x_of(g["lon"]), _slot_label(g)) for g in groups])
+    slot_labels, slot_rows_count = centred_labels([(x_of(g["lon"]), _slot_label(g)) for g in groups])
     sat_groups = group_by_position(visible)
-    sat_labels, sat_rows_count = _centred_labels(
+    sat_labels, sat_rows_count = centred_labels(
         [(sum(x_of(r["actual_lon"]) for r in g) / len(g), _satellite_label(g)[0]) for g in sat_groups])
 
     ideal_y = 21 + ROW_PX * slot_rows_count
@@ -194,8 +194,8 @@ def slot_belt(rows, caption=""):
     out = [_axis(low, high, step, x_of, ideal_y, actual_y, axis_y)]
 
     ring_radius = {}
-    for group, (lx, row_no, text) in zip(groups, slot_labels):
-        out.append(_text(lx, ideal_y - 24 - ROW_PX * row_no, text, _group_colour(group)))
+    for group, (lx, row_no, label) in zip(groups, slot_labels):
+        out.append(text(lx, ideal_y - 24 - ROW_PX * row_no, label, _group_colour(group)))
         for k, (owner, state) in enumerate(group["owners"]):
             ring_radius[owner] = RING_RADIUS + 4 * k
             out.append(_ring(x_of(group["lon"]), ideal_y, ring_radius[owner], state, group["lon"], owner,
@@ -203,8 +203,8 @@ def slot_belt(rows, caption=""):
 
     out += [_tie(row, x_of, ring_radius, ideal_y, actual_y) for row in visible if row["slot_lon"] is not None]
     out += [_dot(row, x_of(row["actual_lon"]), actual_y) for row in visible]
-    for group, (lx, row_no, text) in zip(sat_groups, sat_labels):
-        out.append(_text(lx, actual_y + 26 + ROW_PX * row_no, text, _satellite_label(group)[1]))
+    for group, (lx, row_no, label) in zip(sat_groups, sat_labels):
+        out.append(text(lx, actual_y + 26 + ROW_PX * row_no, label, _satellite_label(group)[1]))
     out += _notes(rows, low, high, x_of, ideal_y)
 
     label = escape(_aria(rows, low, high), quote=True)
@@ -217,14 +217,14 @@ def slot_belt(rows, caption=""):
 
 
 def _axis(low, high, step, x_of, ideal_y, actual_y, axis_y):
-    out = [_text(10, ideal_y + 4, "Ideal", palette.MUTED, 13, "start"),
-           _text(10, actual_y + 4, "Actual", palette.MUTED, 13, "start")]
+    out = [text(10, ideal_y + 4, "Ideal", palette.MUTED, 13, "start"),
+           text(10, actual_y + 4, "Actual", palette.MUTED, 13, "start")]
     for y in (ideal_y, actual_y):
         out.append(f'<line x1="{PLOT_LEFT}" y1="{y}" x2="{PLOT_RIGHT}" y2="{y}" stroke="{palette.TRACK}" stroke-width="2"/>')
     for lon in range(low, high + 1, step):
         x = x_of(lon)
         out.append(f'<line x1="{x:.1f}" y1="{actual_y}" x2="{x:.1f}" y2="{actual_y + 6}" stroke="{palette.TRACK}" stroke-width="2"/>')
-        out.append(_text(x, axis_y, _lon_text(lon), palette.MUTED))
+        out.append(text(x, axis_y, _lon_text(lon), palette.MUTED))
     return "".join(out)
 
 
@@ -262,6 +262,6 @@ def _notes(rows, low, high, x_of, ideal_y):
         boxes.append((x + 12 if east else max(x - 12 - width, EDGE_PX), width))
         anchors.append("start" if east else "end")
     row_numbers, _ = _stack(boxes)
-    return [_text(left if anchor == "start" else left + width, ideal_y + 36 + ROW_PX * row_no, note,
+    return [text(left if anchor == "start" else left + width, ideal_y + 36 + ROW_PX * row_no, note,
                   colour, anchor=anchor)
             for (left, width), anchor, row_no, (_, note, colour) in zip(boxes, anchors, row_numbers, wanted)]

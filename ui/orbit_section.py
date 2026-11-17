@@ -15,17 +15,17 @@ from config.config import (
     QZSS_SERVICE_REQUIREMENTS,
 )
 from ui import palette, surfaces, tooltip
+from ui.components.orbit_view import orbit_view
 from ui.figures.constellation_3d import constellation_3d, slot_legend
 from ui.figures.score_parts import score_parts
 from ui.figures.slot_belt import slot_belt
 from ui.figures.slot_rows import as_number, deviation_of, last_known_position, slot_rows
+from ui.slot_status import CHIP_STATUS
 
 HEADING = "Where each satellite is, against its own slot"
 SENTENCE = ("Each satellite is judged against its own slot only, so one that drifts onto "
             "another satellite's slot still shows as away from its own.")
 SET_ASIDE_NOTE = "set aside, graveyard orbit"
-CHIP_STATUS = {palette.SLOT_IN: "ok", palette.SLOT_OFF: "warn",
-               palette.SLOT_LEFT: "bad", palette.SLOT_UNKNOWN: "idle"}
 # The score parts in the order they are drawn: (label, column of the health table).
 PARTS = SCORE_PARTS
 
@@ -153,7 +153,6 @@ def render_belt(rows, view="Flat", history=None, health_df=None, constellation=N
     the constellation's generation by its name.
     """
     if view == "3D":
-        from ui.components.orbit_view import orbit_view   # here, as orbit_view reads this module's states
         attempt("3D view", orbit_view, rows, history, health_df, constellation)
     else:
         attempt("flat belt", lambda: surfaces.show(surfaces.raised(surfaces.picture(slot_belt(rows)))))

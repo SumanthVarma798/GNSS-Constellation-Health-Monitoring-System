@@ -28,7 +28,7 @@ from config.config import (
     BEIDOU3_SATS, BEIDOU3_SERVICE_REQUIREMENTS, DEFAULT_PARAMS, GRAVEYARD_ORBIT_MIN,
     NAVIK_SATS, QZSS_SATS, QZSS_SERVICE_REQUIREMENTS, R_EARTH,
 )
-from data.tle_cache import bundle_key, get_gp_history_metadata, load_bundled_gp_history, load_bundled_tles
+from data.tle_cache import get_gp_history_metadata, load_bundled_gp_history, load_bundled_tles
 
 # constellation -> (satellites it tracks, service requirements), as app.py picks them.
 _CONSTELLATIONS = {
@@ -40,13 +40,13 @@ _CONSTELLATIONS = {
 _ts = load.timescale()
 
 
-def load_bundled_gp_as_dataframes(constellation_key: str, sat_dict: dict, fresh=None) -> list:
+def load_bundled_gp_as_dataframes(constellation: str, sat_dict: dict, fresh=None) -> list:
     """Copy of app.py's load_bundled_gp_as_dataframes (same behaviour); app.py cannot be
     imported without running its Streamlit script. `fresh` ({norad: [rows]}, from data.celestrak)
     is added to each satellite's bundled records, leaving out epochs already there. With no bundled
     file the fresh rows alone are used (the MEO systems have one only for satellites CelesTrak publishes no orbit for)."""
     all_dfs = []
-    sat_data = (load_bundled_gp_history(constellation_key) or {}).get('satellites') or {}
+    sat_data = (load_bundled_gp_history(constellation) or {}).get('satellites') or {}
     fresh = fresh or {}
 
     for sat_name, norad_id in sat_dict.items():
@@ -211,7 +211,7 @@ def _add_longitude(health_df, satellites_dop, now, warnings):
             warnings.append(f"Longitude calculation failed for {sat_name}: {e}")
 
 
-def _burns(df_all_full, p, moving=()):
+def burns(df_all_full, p, moving=()):
     """One row per detected manoeuvre in each satellite's whole bundled history.
 
     A satellite on its way to its slot has none yet, and one that has parked has none from before it parked:
@@ -266,11 +266,10 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
         p["inclination_tolerance"] = score_rules.default_inclination_tolerance(constellation)
     warnings = []
 
-    key = bundle_key(constellation)
-    gp_meta = get_gp_history_metadata(key)
+    gp_meta = get_gp_history_metadata(constellation)
     if not gp_meta['available']:
         raise ValueError(f"No bundled data for {constellation}")
-    all_dfs = load_bundled_gp_as_dataframes(key, sat_dict, fresh)
+    all_dfs = load_bundled_gp_as_dataframes(constellation, sat_dict, fresh)
     if not all_dfs:
         raise ValueError(f"Bundled data for {constellation} could not be loaded")
     df_all_full = pd.concat(all_dfs, ignore_index=True, sort=False)
@@ -363,7 +362,7 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
         ))
     health_df = pd.DataFrame(health_assessments)
 
-    bundled_tles = load_bundled_tles(key)
+    bundled_tles = load_bundled_tles(constellation)
     satellites_dop = parse_tle_data(bundled_tles['tle_data'], sat_dict) if bundled_tles.get('tle_data') else {}
     for sat_name, norad_id in sat_dict.items():
         if (fresh or {}).get(norad_id):
@@ -381,7 +380,7 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
         'set_aside': sorted(graveyard_sats),
         'moving': {name: moving[name].strftime('%Y-%m-%d') for name in sorted(moving)},
         'history': df_all_full,
-        'burns': _burns(df_all_full, p, moving),
+        'burns': burns(df_all_full, p, moving),
         'data_time': gp_meta['timestamp'],
         'warnings': warnings,
     }
