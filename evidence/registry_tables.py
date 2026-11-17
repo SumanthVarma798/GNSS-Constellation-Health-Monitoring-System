@@ -2,16 +2,23 @@
 
 The tables are plain text in registry/ so that every change shows up as a
 line-by-line difference a person can review. See registry/README.md. Their
-file names and columns are in evidence/settings.py.
+file names and columns are in evidence/registry_settings.py.
 """
 import csv
 import re
 from datetime import date, datetime, timedelta
 
-from evidence.settings import (REGISTRY_CONSTELLATIONS_FILE, REGISTRY_DASHBOARD_SATELLITES_FILE,
-                               REGISTRY_DASHBOARD_SYSTEMS_FILE, REGISTRY_DIR, REGISTRY_DASHBOARD_TRACKED_SYSTEMS,
-                               REGISTRY_SATELLITES_FILE, REGISTRY_SIGHTINGS_FILE, NEW_ON_DASHBOARD_DAYS,
-                               REGISTRY_LEFT_OUT_FILE)
+from evidence.registry_settings import (
+    REGISTRY_CONSTELLATIONS_FILE,
+    REGISTRY_DASHBOARD_SATELLITES_FILE,
+    REGISTRY_DASHBOARD_SYSTEMS_FILE,
+    REGISTRY_DIR,
+    REGISTRY_DASHBOARD_TRACKED_SYSTEMS,
+    REGISTRY_SATELLITES_FILE,
+    REGISTRY_SIGHTINGS_FILE,
+    NEW_ON_DASHBOARD_DAYS,
+    REGISTRY_LEFT_OUT_FILE
+)
 
 LAUNCHED_WORDS_FORMAT = "Launched {day}"
 LAUNCH_DATE_NOT_READ = "Launch date not read"

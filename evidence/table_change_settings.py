@@ -3,9 +3,16 @@ it: what each table is, where its rows come from, what the dashboard shows from 
 The reading is in evidence/table_changes.py. A file not listed here is shown as a file, by its lines.
 """
 from evidence.library_settings import LIBRARY_COUNTS_COLUMNS, LIBRARY_MATCHING_COLUMNS
-from evidence.settings import (REGISTRY_CATALOGUE_COLUMNS, REGISTRY_DASHBOARD_SATELLITE_COLUMNS, REGISTRY_COLUMN_PLAIN_NAMES,
-                               REGISTRY_LEFT_OUT_COLUMNS, REGISTRY_SATELLITE_COLUMNS, REGISTRY_SIGNAL_ID_COLUMNS,
-                               REGISTRY_UNIDENTIFIED_COLUMNS, SOURCE_LINKS)
+from evidence.settings import SOURCE_LINKS
+from evidence.registry_settings import (
+    REGISTRY_CATALOGUE_COLUMNS,
+    REGISTRY_DASHBOARD_SATELLITE_COLUMNS,
+    REGISTRY_COLUMN_PLAIN_NAMES,
+    REGISTRY_LEFT_OUT_COLUMNS,
+    REGISTRY_SATELLITE_COLUMNS,
+    REGISTRY_SIGNAL_ID_COLUMNS,
+    REGISTRY_UNIDENTIFIED_COLUMNS
+)
 from evidence.sources import IGS_SATELLITE_METADATA_URL
 
 # Each source by its full name, never "the file" or "the catalogue", with where a reader can check it.

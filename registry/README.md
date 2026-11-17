@@ -20,7 +20,7 @@ International GNSS Service (IGS) satellite metadata file by `scripts/build_regis
 | `left_out.csv` | a person | Satellites with a signal ID today that the dashboard leaves out on purpose, each with why and a source; every other one must be tracked (`tests/test_registry_coverage.py`) |
 
 Code reads and writes these tables through `evidence/registry_tables.py`; file names
-and column names are written down once, in `evidence/settings.py`.
+and column names are written down once, in `evidence/registry_settings.py`.
 
 ## satellites.csv: one row per physical satellite
 
@@ -50,7 +50,7 @@ signal ID **and** the time, never on the signal ID alone.
 ## sightings.csv: satellites CelesTrak lists before the IGS file does
 
 The IGS file can take weeks to list a new satellite. Each week the build script also reads
-CelesTrak's GNSS group, and a satellite named as in `SIGHTING_NAMES` (`evidence/settings.py`;
+CelesTrak's GNSS group, and a satellite named as in `SIGHTING_NAMES` (`evidence/registry_settings.py`;
 every system) whose catalogue number the IGS file lacks is proposed here, in the
 columns of `satellites.csv`, under a stand-in SVN: the system letter, a dash and the catalogue
 number (`I-101228`). Approving it also adds it to `dashboard_satellites.csv`. Once the IGS file

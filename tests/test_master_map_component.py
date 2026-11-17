@@ -6,13 +6,24 @@ import pytest
 
 from evidence.catalogue_check import disagreements
 from evidence.registry_tables import read_table
-from evidence.settings import (COUNTRY_NAMES, COUNTRY_NOT_GIVEN, MAP_WARN, REGISTRY_CATALOGUE_FILE,
-                               REGISTRY_SATELLITES_FILE, REGISTRY_SIGHTINGS_FILE, SCHEME_ORBIT_FEED)
+from evidence.settings import (
+    MAP_WARN,
+    SCHEME_ORBIT_FEED
+)
+from evidence.registry_settings import (
+    REGISTRY_CATALOGUE_FILE,
+    REGISTRY_SATELLITES_FILE,
+    REGISTRY_SIGHTINGS_FILE
+)
+from ui.country_settings import COUNTRY_NAMES, COUNTRY_NOT_GIVEN
 from ui import palette
 from ui.components.master_map import PAGE_FILE, master_map_html, master_map_records
 from ui.pages_data import DATA_DIR
 from evidence.master_map import orbit_feed_checked, orbit_feed_names
-from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_SIGNAL_IDS_FILE
+from evidence.registry_settings import (
+    REGISTRY_DASHBOARD_SATELLITES_FILE,
+    REGISTRY_SIGNAL_IDS_FILE
+)
 from evidence.settings import (MAP_IDLE, NOT_YET_KNOWN, SCHEME_COSPAR, SCHEME_NORAD, SCHEME_SIGNAL_ID, SOURCE_IGS,
                                SOURCE_SIGHTING)
 from ui.master_map_settings import IDENTITY_WORDS, SIGHTING_WORDS, SOURCE_NAMES

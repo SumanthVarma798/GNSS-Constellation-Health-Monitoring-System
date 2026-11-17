@@ -8,9 +8,20 @@ from data.tle_cache import DATA_DIR
 from evidence.master_map import (agreement, display_name, holders_of, identifiers, orbit_feed_checked, orbit_feed_names,
                                  signal_ids_of, summary)
 from evidence.registry_tables import read_table
-from evidence.settings import (MAP_ACCENT, MAP_IDLE, MAP_OK, MAP_WARN, NOT_RECORDED, ORBIT_FEED_FILES, REGISTRY_CATALOGUE_FILE,
-                               REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_SATELLITES_FILE,
-                               REGISTRY_SIGNAL_IDS_FILE)
+from evidence.settings import (
+    MAP_ACCENT,
+    MAP_IDLE,
+    MAP_OK,
+    MAP_WARN,
+    NOT_RECORDED,
+    ORBIT_FEED_FILES
+)
+from evidence.registry_settings import (
+    REGISTRY_CATALOGUE_FILE,
+    REGISTRY_DASHBOARD_SATELLITES_FILE,
+    REGISTRY_SATELLITES_FILE,
+    REGISTRY_SIGNAL_IDS_FILE
+)
 
 
 def satellite(svn, **given):

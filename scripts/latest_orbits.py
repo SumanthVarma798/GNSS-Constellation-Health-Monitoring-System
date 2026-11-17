@@ -21,7 +21,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from evidence.archive import object_path, read_versions
 from evidence.registry_tables import read_table
-from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_SATELLITES_FILE, REGISTRY_SIGHTINGS_FILE
+from evidence.registry_settings import (
+    REGISTRY_DASHBOARD_SATELLITES_FILE,
+    REGISTRY_SATELLITES_FILE,
+    REGISTRY_SIGHTINGS_FILE
+)
 from evidence.sources import CELESTRAK_GNSS_URL
 
 GP_URL = CELESTRAK_GNSS_URL.split("?")[0]

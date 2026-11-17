@@ -13,8 +13,12 @@ from urllib.parse import urlsplit
 from evidence.archive import read_versions
 from evidence.confidence import read_source_grades
 from evidence.registry_tables import read_table
-from evidence.settings import (REGISTRY_CONSTELLATIONS_FILE, REGISTRY_SATELLITES_FILE, REGISTRY_SIGNAL_IDS_FILE,
-                               STORE_SCHEMA_FILE)
+from evidence.settings import STORE_SCHEMA_FILE
+from evidence.registry_settings import (
+    REGISTRY_CONSTELLATIONS_FILE,
+    REGISTRY_SATELLITES_FILE,
+    REGISTRY_SIGNAL_IDS_FILE
+)
 
 
 def new_store(path=":memory:"):

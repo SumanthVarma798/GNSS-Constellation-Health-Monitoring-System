@@ -130,7 +130,12 @@ def test_the_sheet_takes_the_newest_items_in_turn_from_every_system():
 def test_the_sheet_on_record_has_the_agreed_columns_and_every_system():
     import csv
 
-    from evidence.settings import LABELLING_SHEET_COLUMNS, LABELLING_SHEET_FILE, LABELLING_SHEET_SIZE, SYSTEM_WORDS
+    from evidence.news_settings import (
+        LABELLING_SHEET_COLUMNS,
+        LABELLING_SHEET_FILE,
+        LABELLING_SHEET_SIZE,
+        SYSTEM_WORDS
+    )
     with open(LABELLING_SHEET_FILE, newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
     assert list(rows[0]) == LABELLING_SHEET_COLUMNS and len(rows) == LABELLING_SHEET_SIZE

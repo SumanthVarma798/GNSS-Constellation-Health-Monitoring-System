@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
-from evidence import settings
+from ui.figures import burns_settings
 from ui import palette
 from ui.tooltip import PLOTLY_HOVER, plotly_card
 
@@ -189,8 +189,8 @@ def cadence_summary(burns, satellites):
                 q1, med, q3 = np.percentile(gaps, [25, 50, 75])
                 row.update(median_days=float(med), q1_days=float(q1), q3_days=float(q3), iqr_days=float(q3 - q1),
                            longest_gap_days=float(gaps.max()))
-                if len(mine) >= settings.BURN_MIN_FOR_PATTERN:
-                    regular = q3 - q1 <= settings.BURN_REGULAR_MAX_IQR_SHARE * med
+                if len(mine) >= burns_settings.BURN_MIN_FOR_PATTERN:
+                    regular = q3 - q1 <= burns_settings.BURN_REGULAR_MAX_IQR_SHARE * med
                     row["pattern"] = PATTERN_REGULAR if regular else PATTERN_IRREGULAR
             out.append(row)
     return out

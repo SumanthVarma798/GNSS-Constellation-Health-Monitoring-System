@@ -4,7 +4,9 @@ import re
 
 from evidence.news import systems_named
 from evidence.registry_tables import launch_date, launch_name
-from evidence.settings import NEWS_LAUNCH_WORDS, REGISTRY_COLUMN_PLAIN_NAMES, SIGNAL_ID_ISSUERS
+from evidence.settings import SIGNAL_ID_ISSUERS
+from evidence.registry_settings import REGISTRY_COLUMN_PLAIN_NAMES
+from evidence.news_settings import NEWS_LAUNCH_WORDS
 from evidence.source_grade_notes import grade_note
 from evidence.sources import IGS_SATELLITE_METADATA_URL
 

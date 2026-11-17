@@ -7,8 +7,15 @@ dashboard's colours into the page, and shows it with Streamlit.
 from pathlib import Path
 
 from evidence.master_map import agreement, display_name, identifiers, signal_ids_of
-from evidence.settings import (COUNTRY_NAMES, COUNTRY_NOT_GIVEN, IDENTITY_AGREE, IDENTITY_DIFFER, IDENTITY_ONE_SOURCE,
-                               SCHEME_ORBIT_FEED, SCHEME_SIGNAL_ID, SERVICE_DISAGREE)
+from evidence.settings import (
+    IDENTITY_AGREE,
+    IDENTITY_DIFFER,
+    IDENTITY_ONE_SOURCE,
+    SCHEME_ORBIT_FEED,
+    SCHEME_SIGNAL_ID,
+    SERVICE_DISAGREE
+)
+from ui.country_settings import COUNTRY_NAMES, COUNTRY_NOT_GIVEN
 from ui import palette
 from ui.components.frame import embed, fill
 from ui.master_map_settings import IDENTITY_WORDS, ISSUER_NAMES, SCHEME_SHORT, SIGHTING_WORDS, SOURCE_NAMES

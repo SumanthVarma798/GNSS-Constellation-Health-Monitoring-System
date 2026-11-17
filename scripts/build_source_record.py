@@ -16,8 +16,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from evidence import decisions, news, source_record
 from evidence.decision_settings import REJECT
 from evidence.registry_tables import read_table
-from evidence.settings import (REGISTRY_SATELLITES_FILE, SOURCE_GRADE_COLUMNS, SOURCE_GRADES_FILE, SOURCE_RECORD_FILE,
-                               SOURCE_RECORD_REJECTED_COLUMNS, SOURCE_RECORD_REJECTED_FILE)
+from evidence.settings import (
+    SOURCE_GRADE_COLUMNS,
+    SOURCE_GRADES_FILE,
+    SOURCE_RECORD_FILE,
+    SOURCE_RECORD_REJECTED_COLUMNS,
+    SOURCE_RECORD_REJECTED_FILE
+)
+from evidence.registry_settings import REGISTRY_SATELLITES_FILE
 from evidence.sources import candidate_rows
 
 

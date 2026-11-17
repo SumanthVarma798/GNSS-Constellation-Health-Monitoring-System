@@ -8,8 +8,12 @@ import pytest
 
 from config.config import MEO_SYSTEMS
 from evidence.registry_tables import constellation_names, dashboard_satellites, left_out, left_out_notice, read_table
-from evidence.settings import (REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_LEFT_OUT_FILE, REGISTRY_SATELLITES_FILE,
-                               REGISTRY_SIGHTINGS_FILE)
+from evidence.registry_settings import (
+    REGISTRY_DASHBOARD_SATELLITES_FILE,
+    REGISTRY_LEFT_OUT_FILE,
+    REGISTRY_SATELLITES_FILE,
+    REGISTRY_SIGHTINGS_FILE
+)
 
 PAGES = ("NavIC", "QZSS", "BeiDou", *MEO_SYSTEMS)
 

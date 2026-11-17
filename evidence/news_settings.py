@@ -1,5 +1,6 @@
 """Settings for the latest-news file the dashboard reads."""
 from collections import OrderedDict
+from pathlib import Path
 
 # The branch that holds the latest-news file for the dashboard.
 NEWS_BRANCH = "news-data"
@@ -112,3 +113,42 @@ X_POST_WORDS = "(GPS OR BeiDou OR Galileo OR GLONASS OR NavIC OR IRNSS OR NVS OR
 X_READ_DAYS = 2
 # A post has no headline: its first words, cut here, stand in for one.
 X_TITLE_CHARACTERS = 120
+
+# A social post's own platform. A link to one of these is not a link to the post's source.
+SOCIAL_PLATFORM_HOSTS = ("reddit.com", "redd.it", "redditmedia.com", "redditstatic.com")
+# Links in a post that are not an article to check: countdown clocks, image hosts, videos. Skipped when
+# looking for the post's source (an r/ISRO launch thread's first link was a countdown clock, 19 Oct 2026).
+NOT_AN_ARTICLE_HOSTS = ("timeanddate.com", "imgur.com", "youtube.com", "youtu.be", "twitch.tv",
+                        # another social post is a pointer too, never the source (r/roscosmos, 19 Oct 2026)
+                        "x.com", "twitter.com", "facebook.com", "instagram.com", "linkedin.com", "t.me")
+
+# One collected news item (issue 13): a pointer to an article, read from a feed. Not a claim; nothing here decides.
+# source_id: who published the article (for a discovery or social feed, the linked page's host, decision 5);
+# via: the feed it was read from; fetched_at: when our archive first held it.
+NEWS_ITEM_COLUMNS = ["source_id", "address", "title", "published_at", "fetched_at", "via"]
+
+# One row per archived feed, measured from the archive (issue 13): how often a copy changed per run of its group
+# (to set cadence), and the share of its items that name a navigation system (a first signal-to-noise measure,
+# until the hand-labelled set gives a better one). Measurements only: no grade or cadence changes by itself.
+FEED_REPORT_COLUMNS = ["via", "group", "runs", "copies", "copies_per_run", "items", "items_naming_a_system",
+                       "share_naming_a_system"]
+
+# The hand-labelled set for choosing a claim-extraction model (issue 15, week 1). Kept here, beside the
+# source lists, until the extraction step decides where its test data lives.
+LABELLING_SHEET_FILE = Path(__file__).resolve().parent / "labelling_sheet.csv"
+LABELLING_SHEET_COLUMNS = ["system", "title", "source_id", "published_at", "address", "claims_in_this_item", "none"]
+LABELLING_SHEET_SIZE = 30
+# For a new-satellite finding, a news item in the launch window counts only when its title also names the satellite
+# or says it launched (whole words, any case): naming the system alone matched unrelated articles (R809, 26 Oct 2026).
+NEWS_LAUNCH_WORDS = ("launch", "launched", "launches", "liftoff", "lifts off", "lifted off")
+
+# Words that put an item under a system, for spreading the sheet across all six. Matched as whole words,
+# any case. A cheap pointer, not the relevance filter: an item may name several systems or none.
+SYSTEM_WORDS = {
+    "GPS": ("GPS", "Navstar"),
+    "GLONASS": ("GLONASS",),
+    "Galileo": ("Galileo",),
+    "BeiDou": ("BeiDou", "Compass navigation"),
+    "QZSS": ("QZSS", "Michibiki", "QZS"),
+    "NavIC": ("NavIC", "IRNSS", "NVS-01", "NVS-02", "NVS-03"),
+}

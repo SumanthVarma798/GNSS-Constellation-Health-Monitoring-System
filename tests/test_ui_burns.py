@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 
 from analysis.maneuver_detection import detect_navik_maneuvers
-from evidence import settings
+from ui.figures import burns_settings
 from ui import palette
 from ui.figures import burns as B
 
@@ -123,10 +123,10 @@ def test_summary_pattern_rule():
 
 
 def test_pattern_follows_the_stated_thresholds(monkeypatch):
-    monkeypatch.setattr(settings, "BURN_REGULAR_MAX_IQR_SHARE", 100)
+    monkeypatch.setattr(burns_settings, "BURN_REGULAR_MAX_IQR_SHARE", 100)
     scatter = frame(*[burn("A", "east-west", d) for d in (0, 10, 50, 60, 130, 140)])
     assert B.cadence_summary(scatter, ["A"])[0]["pattern"] == "regular"
-    monkeypatch.setattr(settings, "BURN_MIN_FOR_PATTERN", 99)
+    monkeypatch.setattr(burns_settings, "BURN_MIN_FOR_PATTERN", 99)
     assert B.cadence_summary(scatter, ["A"])[0]["pattern"] == "too few"
 
 
