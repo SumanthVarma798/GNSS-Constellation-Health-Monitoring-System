@@ -16,7 +16,7 @@ from analysis.commissioning import SETTLING_DAYS
 from config.config import TRACKED_NOT_IN_REGISTRY
 from evidence.registry_tables import judged_by_plane, left_out_notice, new_on_dashboard
 from ui import (checks, data, limits, measures, meo_overview, official_status, orbit_age, orbit_section,
-                marks, palette, reveal, shell, surfaces, systems, three_measures, time_range, tooltip)
+                marks, palette, reveal, shell, signals_view, surfaces, systems, three_measures, time_range, tooltip)
 from ui.data import SATELLITES
 from ui.figures.constellation_3d import slot_legend
 from ui.figures.slot_rows import as_number, slot_words
@@ -212,6 +212,7 @@ def constellation(name, window_days, params):
         surfaces.show(official)
     _period(result, window, window_days, today)
     orbit_age.show(name, result)
+    signals_view.show(name)
     _gaps(name, result, today.date())
     groups = measures.grouped(_types(tiles, result, classes))
     for kind, names in groups.items():

@@ -22,6 +22,7 @@ def private_celestrak_copy(monkeypatch, tmp_path):
                                               "note": "ok"})
     monkeypatch.setattr(data, "orbit_gap", lambda: {})
     monkeypatch.setattr(data, "fitted_orbits", lambda: {})
+    monkeypatch.setattr(data, "signals_heard", lambda: {})
     monkeypatch.setattr(home_data, "_snapshot", lambda: {})   # Home counts itself, unless a test publishes a copy
     monkeypatch.setattr(celestrak, "fetch_copy", _no_copy)
     # The tests written before the Home page open on the Overview, as the dashboard then did; tests/test_home.py
