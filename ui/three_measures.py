@@ -47,14 +47,19 @@ def score_sum(summary):
     words += f"; score {score} out of 100, weighed for a {mission} constellation"
     if len(rates) < 3:
         words += f"; {3 - len(rates)} not read today, so the others count for its share"
+    # each part as wide as its weight, its weight said over it; filled as far as its pass rate; the points it adds under
     parts = "".join(
-        f'<div class="ss-seg" style="flex:{weight:.4f}"><span class="ss-name">{escape(names[key].split()[0])}</span>'
+        f'<div class="ss-seg" style="flex:{weight:.4f}"><span class="ss-head"><span class="ss-name">'
+        f'{escape(names[key].split()[0])}</span><span class="ss-w num">{weight:.0%}</span></span>'
         f'<span class="ss-slot"><i class="{surfaces.share_tone(rate)}" style="width:{rate:.1f}%"></i></span>'
-        f'<span class="ss-pts"><b class="num">{points}</b>/{weight * 100:.0f}</span></div>'
+        f'<span class="ss-pts">+<b class="num">{points}</b></span></div>'
         for (key, rate, weight), points in zip(rates, _whole_points(rates, score)))
-    return (f'<div class="ssum" role="img" aria-label="{escape(words)}"><div class="ssum-bar" aria-hidden="true">{parts}'
-            f'</div><div class="ss-total {surfaces.band(score)}" aria-hidden="true"><b class="num">{score}</b>'
-            f'<small>/100</small></div></div>')
+    key = ('<div class="ssum-key small" aria-hidden="true"><span><i class="k-width"></i>width: its weight</span>'
+           '<span><i class="k-fill"></i>filled: satellites that pass</span><span><b>+</b> points it adds</span></div>')
+    return (f'<div class="ssum-wrap" role="img" aria-label="{escape(words)}">{key}<div class="ssum">'
+            f'<div class="ssum-bar" aria-hidden="true">{parts}</div><span class="ss-eq" aria-hidden="true">=</span>'
+            f'<div class="ss-total {surfaces.band(score)}" aria-hidden="true"><b class="num">{score}</b>'
+            f'<small>/100</small></div></div></div>')
 
 
 def strip(summary):

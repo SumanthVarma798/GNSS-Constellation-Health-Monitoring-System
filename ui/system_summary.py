@@ -101,6 +101,15 @@ def _stage(result, name):
         return "new"
 
 
+def _when_scored(result, name, first):
+    """Its stage and the day it will be scored from (analysis/commissioning.py), or its stage alone when its records
+    cannot say."""
+    try:
+        return commissioning.when_scored(result["history"], name, first)
+    except (KeyError, TypeError, ValueError):
+        return _stage(result, name)
+
+
 def _recent_burns(burns, now=None):
     """(burns, satellites that made them) found in the last BURN_DAYS of orbit records, or None when none were found:
     the systems judged by plane mostly have too little history to find any (analysis/meo_run.py)."""
@@ -141,7 +150,7 @@ def summary(name, result, gap=None):
             # the operator's own word against our check: its flag says healthy exactly where we count it healthy
             "flag_agrees": (sum((sat["broadcast"] == "ok") == sat["ok"] for sat in flagged), len(flagged)),
             "burns": _recent_burns(result.get("burns")),
-            "settling": {new: _stage(result, new) for new in result.get("moving") or {}},
+            "settling": {new: _when_scored(result, new, first) for new, first in (result.get("moving") or {}).items()},
             "planes": plane_drift(name, result["rows"]) if by_plane else {},
             "in_file": sum(sat["broadcast"] != "silent" for sat in checked) if checked else None,
             "flagged_healthy": sum(sat["broadcast"] == "ok" for sat in checked) if checked else None,

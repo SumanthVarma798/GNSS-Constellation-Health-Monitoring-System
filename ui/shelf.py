@@ -1,5 +1,5 @@
-"""The Library's shelves: the newest stories, a card for each dataset only this project makes (how to get it, use it
-and cite it), the others' data we use and where to go for it, and the people already doing this work. What is on
+"""The Library's shelves: the newest stories, a card for each dataset we make and offer (how to get it, use it
+and cite it), the others' data we use and where to go for it, and others who collect and share GNSS data. What is on
 each shelf is in ui/shelf_settings.py. Every builder returns an HTML string; only the file bytes are not markup.
 """
 import csv
@@ -158,7 +158,7 @@ def _link(address, words=""):
 
 
 def card_html(key, content, fresh, problem):
-    """One dataset only this project makes: what it is, why it is ours, how fresh, size, its stable address, licence,
+    """One of our datasets: what it is, how it is made, how fresh, size, its stable address, licence,
     and, opened on request, how to use it: each field, an example, what not to use it for, how to cite it."""
     item = OURS[key]
     state = surfaces.chip("cannot be read right now", "warn") + f" {escape(problem)}" if problem else escape(fresh)
@@ -173,7 +173,7 @@ def card_html(key, content, fresh, problem):
            f'<p><b>Cite</b> {escape(cite)}</p></div></details>')
     return (f'<div class="obj"><span class="plinth">{icons.mask(item["icon"])}</span>'
             f'<span class="lbl"><b>{escape(item["name"])}</b><p>{escape(item["what"])}</p>'
-            f'<p class="small">{escape(item["why"])}</p></span><span class="facts">{facts}</span>{use}</div>')
+            f'<p class="small">{escape(item["made"])}</p></span><span class="facts">{facts}</span>{use}</div>')
 
 
 def others_html(others):
@@ -189,7 +189,7 @@ def others_html(others):
 
 
 def colleagues_html(colleagues):
-    """The people already doing this work, per constellation, each with a link."""
+    """Others who collect and share GNSS data, per constellation, each with a link."""
     groups = "".join(f'<h4>{marks.named(where)}</h4><ul>' + "".join(
         f'<li>{_link(link, who)}: {escape(what)}</li>' for who, what, link in people) + "</ul>"
         for where, people in colleagues)

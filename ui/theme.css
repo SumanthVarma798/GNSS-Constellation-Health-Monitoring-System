@@ -700,6 +700,11 @@ details.sys.card { display: block; padding: 0; }
 .how-p:last-child { margin-bottom: 0; }
 .how-p b { display: block; color: var(--ink); font-weight: 600; margin-bottom: 2px; }
 .how-p ul { margin: 2px 0 0; padding-left: 16px; } .how-p li { margin: 1px 0; }
+/* a definition read the same way every time: a small label ("Means", "Passes when"), then its words */
+.how-p ul.how-labelled { list-style: none; padding-left: 0; display: grid; gap: 5px; margin-top: 4px; }
+.how-lab { display: inline-block; margin-right: 6px; padding: 1px 7px; border-radius: 999px; background: var(--well);
+           box-shadow: var(--pressed); font-size: 11px; font-weight: 600; letter-spacing: .03em; color: var(--accent);
+           vertical-align: 1px; }
 .how-pic { display: grid; place-items: center; min-height: 22px; }
 .how-pic .ic { width: 22px; height: 22px; color: var(--accent); }
 .how-pic .dots i { width: 13px; height: 13px; }
@@ -719,7 +724,16 @@ details.sys.card { display: block; padding: 0; }
 .ssum { display: flex; align-items: center; gap: 12px; }
 .ssum-bar { display: flex; gap: 4px; flex: 1 1 auto; min-width: 0; }
 .ss-seg { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ss-head { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
 .ss-name { font-size: var(--fs-small); font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ss-w { flex: none; padding: 0 6px; border-radius: 999px; background: var(--platform); box-shadow: var(--raised);
+        font-size: 11px; font-weight: 700; color: var(--accent); }   /* the part's weight: how much of the 100 it can give */
+.ssum-key { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-bottom: 8px; color: var(--muted); }
+.ssum-key span { display: inline-flex; align-items: center; gap: 5px; }
+.ssum-key i { width: 22px; height: 9px; border-radius: 4px; background: var(--well); box-shadow: var(--pressed); }
+.ssum-key i.k-fill { background: linear-gradient(90deg, var(--ok) 55%, var(--well) 55%); }
+.ssum-key b { color: var(--ink); }
+.ss-eq { flex: none; font-size: 22px; font-weight: 700; color: var(--muted); }
 .ss-slot { position: relative; height: 22px; background: var(--well); box-shadow: var(--pressed); border-radius: 7px; overflow: hidden; }
 .ss-slot i { position: absolute; inset: 0 auto 0 0; background: var(--idle); }
 .ss-slot i.ok { background: var(--ok); } .ss-slot i.warn { background: var(--warn); } .ss-slot i.bad { background: var(--bad); }

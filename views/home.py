@@ -132,7 +132,7 @@ def _row(system, unread=None, index=0):
     name = system["name"]
     who, where = SYSTEMS.get(name, ("", ""))
     split = _split(system)
-    notes = [f"{escape(new)} is new ({escape(stage)}) and is {_explained('not scored yet')}"   # each note is markup
+    notes = [f"{escape(new)} is new and {_explained('not scored yet')}: {escape(stage)}"   # each note is markup
              for new, stage in system["settling"].items()]
     notes += [escape(CAVEATS[name])] if name in CAVEATS else []
     notes = ([escape(" · ".join(f"{label} {count} of {of}" for label, count, of in system["parts"]))] * bool(system["parts"])
@@ -245,10 +245,16 @@ def _picture(name):
 
 
 def _point(term, words, picture=""):
-    """One point: its picture, its term, then its words as one line or short bullets; the mission weights' bars go
-    under the words."""
+    """One point: its picture, its term, then its words as one line or short bullets; a bullet given as (label,
+    words) leads with its label ("Means", "Passes when"), so every definition reads the same way. The mission
+    weights' bars go under the words."""
+    def bullet(line):
+        if isinstance(line, tuple):
+            return f'<li><span class="how-lab">{escape(line[0])}</span> {escape(line[1])}</li>'
+        return f"<li>{escape(line)}</li>"
+    labelled = ' class="how-labelled"' if all(isinstance(line, tuple) for line in words) else ""
     lines = (f"<span>{escape(words)}</span>" if isinstance(words, str)
-             else "<ul>" + "".join(f"<li>{escape(line)}</li>" for line in words) + "</ul>")
+             else f"<ul{labelled}>" + "".join(bullet(line) for line in words) + "</ul>")
     if term == "Working together" and CONTACT_ADDRESS:
         lines += f' <a href="mailto:{escape(CONTACT_ADDRESS)}">{escape(CONTACT_ADDRESS)}</a>'
     below = _picture(picture) if picture == "weights" else ""

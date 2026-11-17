@@ -97,3 +97,22 @@ def test_a_new_satellites_stage_is_said_in_words_on_its_way_or_newly_parked():
     parked = pd.DataFrame([{"satellite": "NEW-2", "EPOCH": pd.Timestamp("2026-11-01"), "ECCENTRICITY": 0.001,
                             "MEAN_MOTION": 1.0027, "LonDrift_deg_per_day": 0.01}])
     assert stage(transfer, "NEW-1") == ON_ITS_WAY and stage(parked, "NEW-2") == NEWLY_PARKED
+
+
+def test_a_new_satellites_note_says_when_it_will_be_scored_so_it_ends_on_its_own():
+    import pandas as pd
+    from analysis.commissioning import COMMISSIONING_DAYS, SETTLING_DAYS, when_scored
+
+    def rows(name, under_way_days, settled_days):
+        start = pd.Timestamp("2026-10-01")
+        moving = [(0.5, 1.0027, 2.0)] * under_way_days
+        settled = [(0.001, 1.0027, 0.0)] * settled_days
+        return [{"satellite": name, "EPOCH": start + pd.Timedelta(days=i), "ECCENTRICITY": e, "MEAN_MOTION": m,
+                 "LonDrift_deg_per_day": d} for i, (e, m, d) in enumerate(moving + settled)]
+
+    history = pd.DataFrame(rows("PARKED", 5, 10) + rows("UNDERWAY", 5, 0))
+    assert when_scored(history, "PARKED", "2026-10-01") == (
+        f"at its slot since 6 Oct 2026, scored from {6 + SETTLING_DAYS - 31} Nov 2026")
+    assert when_scored(history, "UNDERWAY", "2026-10-01") == (
+        f"on its way to its slot, scored {SETTLING_DAYS} days after it parks, by 30 Dec 2026 at the latest")
+    assert COMMISSIONING_DAYS == 90

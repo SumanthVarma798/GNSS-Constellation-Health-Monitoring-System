@@ -443,13 +443,13 @@ def test_a_constellations_page_opens_up_its_score_into_its_sum():
     bodies = htmls(run(scope("NavIC")))
 
     strip = next(body for body in bodies if 'class="measures"' in body)
-    # in pictures: each attribute's name over its share of the bar, its points out of that share under it, the score in
-    # a box at the end; no line of sums. Clock not read: its 50% shared out, so station has 60 and orbit 40
+    # in pictures, with a short key: each attribute's name and its weight over its share of the bar, the points it
+    # adds under it, the score in a box at the end. Clock not read: its 50% shared out, so station weighs 60%, orbit 40%
     assert re.search(r"Score \d+ of 100</span>", strip)
-    assert re.search(r'<span class="ss-name">Station</span>.*?<span class="ss-pts"><b class="num">\d+</b>/60</span>.*?'
-                     r'<span class="ss-name">Orbit</span>.*?<span class="ss-pts"><b class="num">\d+</b>/40</span>', strip)
+    assert re.search(r'<span class="ss-name">Station</span><span class="ss-w num">60%</span>.*?<span class="ss-pts">\+<b '
+                     r'class="num">\d+</b></span>.*?<span class="ss-name">Orbit</span><span class="ss-w num">40%</span>', strip)
     assert re.search(r'<div class="ss-total (ok|warn|bad)" aria-hidden="true"><b class="num">\d+</b><small>/100', strip)
-    assert "ssum-key" not in strip and " × " not in strip.split('class="ssum"')[1].split('aria-label')[0]
+    assert "width: its weight" in strip and "filled: satellites that pass" in strip
     # read aloud in full instead
     assert re.search(r'aria-label="Station held \d+% of its 60% share: [\d.]+ points, Orbit kept \d+% of its 40% share: '
                      r'[\d.]+ points; score \d+ out of 100, weighed for a regional constellation; 1 not read today', strip)

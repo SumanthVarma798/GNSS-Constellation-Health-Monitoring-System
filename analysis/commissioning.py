@@ -72,6 +72,21 @@ ON_ITS_WAY = "on its way to its slot"
 NEWLY_PARKED = f"at its slot for under {SETTLING_DAYS} days"
 
 
+def _day(when):
+    return f"{when.day} {when:%b %Y}"
+
+
+def when_scored(history, name, first):
+    """When a satellite left out by moving_to_slot will be scored, in words, so its note says it ends on its own:
+    SETTLING_DAYS after it parked, or for one still on its way, by COMMISSIONING_DAYS after its first record at the
+    latest (a stranded one never parks). `first` is its first orbit record, as moving_to_slot gives it."""
+    parked = commissioned_on(history, name)
+    if parked is not None:
+        return f"at its slot since {_day(parked)}, scored from {_day(parked + pd.Timedelta(days=SETTLING_DAYS))}"
+    latest = pd.Timestamp(first) + pd.Timedelta(days=COMMISSIONING_DAYS)
+    return f"{ON_ITS_WAY}, scored {SETTLING_DAYS} days after it parks, by {_day(latest)} at the latest"
+
+
 def stage(history, name):
     """Which of the two a satellite left out by moving_to_slot is: still on its way (its newest record is in a transfer
     orbit or drifting), or parked too lately for its records to be scored."""
