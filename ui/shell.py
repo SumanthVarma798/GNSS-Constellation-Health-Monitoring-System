@@ -65,10 +65,12 @@ FOOTER_HTML = (
 )
 
 
-def footer():
-    """The licence and credits line, after the page, and the contact form under it."""
+def footer(page=None):
+    """The licence and credits line, after the page, and the contact form under it, except on the Library page,
+    which has its own (views/library.py)."""
     st.html(FOOTER_HTML)
-    contact.section("footer_contact", "footer")
+    if getattr(page, "title", None) != "Library":
+        contact.section("footer_contact", "footer")
 
 
 def pages():

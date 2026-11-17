@@ -198,6 +198,11 @@ def colleagues_html(colleagues):
 
 def shelf_sign(key):
     title, icon, _ = SHELVES[key]
+    return sign(title, icon)
+
+
+def sign(title, icon):
+    """A shelf's heading: its icon on a plinth, then its title."""
     return f'<div class="shelf-sign"><span class="plinth">{icons.mask(icon)}</span><h2>{escape(title)}</h2></div>'
 
 

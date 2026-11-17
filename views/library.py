@@ -164,7 +164,9 @@ if jump_section:
     st.session_state["_library_jumps"] = st.session_state.get("_library_jumps", 0) + 1
     components.html(shelf.scroll_script(jump_section, st.session_state["_library_jumps"]), height=0)
 
-# ---- Contact us ----
+# ---- Contact us: its own shelf; the footer leaves its copy out on this page (ui/shell.py footer) ----
 from ui import contact  # noqa: E402  (kept down here with the section it draws)
 
-contact.section("library_contact", "library")
+if contact.config():
+    surfaces.show(shelf.sign(contact.TITLE, "mail"))
+    contact.section("library_contact", "library")

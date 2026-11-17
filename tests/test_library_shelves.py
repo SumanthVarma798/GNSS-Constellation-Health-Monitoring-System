@@ -122,3 +122,13 @@ def test_the_library_still_draws_when_the_news_cannot_be_read(library_page):
     at = open_page({**FILES, "news": ({}, "the news file could not be read")})
     assert "The stories cannot be read right now: the news file could not be read." in page_html(at)
     assert "Download orbit_gap.json" in [button.proto.label for button in at.get("download_button")]
+
+
+def test_the_library_has_its_own_contact_shelf_and_the_footer_leaves_its_copy_out_there(library_page, monkeypatch):
+    monkeypatch.setenv("CONTACT_FORM_URL", "http://127.0.0.1:9/contact")
+    monkeypatch.setenv("CONTACT_FORM_TOKEN", "test-token")
+    open_page, _ = library_page
+    at = open_page(FILES)
+    keys = [box.key for box in at.text_input]
+    assert "contact_library_address" in keys and "contact_footer_address" not in keys
+    assert "<h2>Contact us</h2>" in page_html(at)

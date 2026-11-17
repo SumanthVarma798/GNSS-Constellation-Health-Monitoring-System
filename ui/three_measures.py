@@ -54,7 +54,7 @@ def score_sum(summary):
         f'<span class="ss-slot"><i class="{surfaces.share_tone(rate)}" style="width:{rate:.1f}%"></i></span>'
         f'<span class="ss-pts">+<b class="num">{points}</b></span></div>'
         for (key, rate, weight), points in zip(rates, _whole_points(rates, score)))
-    key = ('<div class="ssum-key small" aria-hidden="true"><span><i class="k-width"></i>width: its weight</span>'
+    key = ('<div class="ssum-key small" aria-hidden="true"><span><b class="k-width">↔</b>width: its weight</span>'
            '<span><i class="k-fill"></i>filled: satellites that pass</span><span><b>+</b> points it adds</span></div>')
     return (f'<div class="ssum-wrap" role="img" aria-label="{escape(words)}">{key}<div class="ssum">'
             f'<div class="ssum-bar" aria-hidden="true">{parts}</div><span class="ss-eq" aria-hidden="true">=</span>'
