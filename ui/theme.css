@@ -736,6 +736,14 @@ details.sys.card { display: block; padding: 0; }
 .ssum-key b.k-width { color: var(--accent); font-size: 15px; line-height: 1; }
 .ssum-key b { color: var(--ink); }
 .ss-eq { flex: none; font-size: 22px; font-weight: 700; color: var(--muted); }
+/* phone: the bar takes the full width, the total goes under it, and each part's name sits over its weight */
+@media (max-width: 640px) {
+  .ssum { flex-wrap: wrap; }
+  .ssum-bar { flex: 1 1 100%; }
+  .ss-eq { margin-left: auto; }
+  .ss-head { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .ss-name { overflow: visible; }
+}
 .ss-slot { position: relative; height: 22px; background: var(--well); box-shadow: var(--pressed); border-radius: 7px; overflow: hidden; }
 .ss-slot i { position: absolute; inset: 0 auto 0 0; background: var(--idle); }
 .ss-slot i.ok { background: var(--ok); } .ss-slot i.warn { background: var(--warn); } .ss-slot i.bad { background: var(--bad); }
