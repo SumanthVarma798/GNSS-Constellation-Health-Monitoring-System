@@ -154,7 +154,7 @@ def left_out_notice(constellation):
 
 
 def clock_record(constellation):
-    """(the rows of clock_record.csv for one dashboard system, how many of its satellites the registry lists), or None
+    """(the rows of clock_record.csv for one dashboard system, how many of its satellites satellites.csv and sightings.csv list), or None
     when the system has no entry. The score judges only the satellites in service today; this is the other half: how
     many of all those launched lost atomic clocks in orbit. Rows are dicts keyed by the file's columns."""
     member, registry = _membership(constellation)   # the registry and sightings.csv: NVS-03 is launched before the IGS lists it

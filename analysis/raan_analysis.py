@@ -39,8 +39,15 @@ from skyfield.api import load
 IGSO_INCLINATION_THRESHOLD_DEG = 20.0
 # Satellites that go round once a sidereal day (1.0027 turns): the only ones that can share a ground track. A medium
 # orbit goes round about twice a day, so its ground track is a different line every pass and "co-located" means nothing.
-GEOSYNCHRONOUS_TURNS_PER_DAY = (0.99, 1.01)   # within about 3.6° a day of a fixed track; a medium orbit makes about 2
 SIDEREAL_DAY_HOURS = 23.9344696
+SIDEREAL_TURNS_PER_DAY = 24 / SIDEREAL_DAY_HOURS   # 1.0027: once round while the Earth turns once under it
+GEOSYNCHRONOUS_TOLERANCE_TURNS = 0.01   # its ground track drifts at most 3.6° a day; a medium orbit makes about 2 turns
+
+
+def is_geosynchronous(turns_per_day):
+    """Whether an orbit of this many turns a day keeps (nearly) one ground track."""
+    return turns_per_day is not None and abs(turns_per_day - SIDEREAL_TURNS_PER_DAY) <= GEOSYNCHRONOUS_TOLERANCE_TURNS
+
 DEFAULT_LONGITUDE_TOL_DEG = 5.0
 
 _TS = None
@@ -201,8 +208,7 @@ def analyze_raan_spacing(satellites_dict, service_requirements=None,
         inc = _inclination_deg(sat_obj)
         if inc is None or inc < inclination_threshold_deg:
             continue
-        turns = _turns_per_day(sat_obj)
-        if turns is None or not GEOSYNCHRONOUS_TURNS_PER_DAY[0] <= turns <= GEOSYNCHRONOUS_TURNS_PER_DAY[1]:
+        if not is_geosynchronous(_turns_per_day(sat_obj)):
             continue   # a medium orbit shares no ground track: its planes are judged by analysis/meo_geometry.py
         raan = get_raan_deg(sat_obj)
         lon = get_ground_track_central_longitude_deg(sat_obj, ts=ts)

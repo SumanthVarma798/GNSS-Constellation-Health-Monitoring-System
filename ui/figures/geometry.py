@@ -425,11 +425,12 @@ def plane_card(row):
     """One plane of a medium-orbit system: how far its node is from the pattern of planes `spacing_deg` apart."""
     # the worse of its two misses decides: the node off the pattern, and the widest gap between neighbours along it
     misses = [abs(row["offset"]) / row["offset_limit"]]
-    if row["gap"] is not None and row.get("gap_limit"):
-        misses.append(abs(row["gap"]) / row["gap_limit"])
+    gap_limit = row.get("gap_limit") or None   # none set, or zero: the miss is shown without a verdict of its own
+    if row["gap"] is not None and gap_limit:
+        misses.append(abs(row["gap"]) / gap_limit)
     worst = max(misses)
     status = "ok" if worst <= 1 else "warn" if worst <= 3 else "bad"
-    gap = "–" if row["gap"] is None else f'{row["gap"]:.2f}° (allowed ±{row["gap_limit"]:g}°)'
+    gap = ("–" if row["gap"] is None else f'{row["gap"]:.2f}°' + (f' (allowed ±{gap_limit:g}°)' if gap_limit else ""))
     facts = (f'<div class="geo-facts"><span><small>Planes should be</small><b class="num">{row["spacing_deg"]:g}° apart</b></span>'
              f'<span><small>Node off the pattern</small><b class="num">{row["offset"]:+.2f}°</b></span>'
              f'<span><small>Allowed</small><b class="num">±{row["offset_limit"]:g}°</b></span>'
