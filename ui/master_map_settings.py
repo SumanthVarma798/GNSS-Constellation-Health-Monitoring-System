@@ -35,7 +35,7 @@ DOTS = [("now", "has a signal ID today", "round"), ("past", "no signal ID today:
 # The weekly job that rebuilds the registry tables (in .github/workflows/).
 REGISTRY_WORKFLOW = "registry-update.yml"
 
-# "How to read this page", in the order every page follows: (icon in ui/icons.py MASKED, heading,
+# "Need help reading this page?", in the order every page follows: (icon in ui/icons.py MASKED, heading,
 # [(the term in bold, what to know about it)]).
 HOW = [
     ("radar", "What is shown", [
