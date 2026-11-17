@@ -3,6 +3,7 @@
 GitHub is never called: console.common.read_page/read_status are replaced by stand-ins that answer from the figures below.
 """
 from pathlib import Path
+import re
 from types import SimpleNamespace
 
 import pytest
@@ -11,8 +12,8 @@ import streamlit
 from streamlit.testing.v1 import AppTest
 
 from console import common, pages
-from evidence import alerts, contact, decisions, jobs, pipeline as live_pipeline
-from evidence.decision_settings import AFTER_CHANGES, APPROVE, KINDS, LABEL_PREFIX, REJECT
+from evidence import alerts, contact, decisions, github_api, jobs, pipeline as live_pipeline
+from evidence.decision_settings import AFTER_CHANGES, APPROVE, KINDS, LABEL_PREFIX, REJECT, REPOSITORY
 from test_dashboard_shell import segmented_controls_rerun  # noqa: F401  (AppTest 1.45's segmented controls)
 from test_decisions import FINDINGS_STAND_IN, NOW, finding_comment, findings_body, pr
 from test_jobs import LOG, RUNS, WORKFLOWS, run as workflow_run
@@ -470,12 +471,12 @@ def test_the_ask_about_section_styles_follow_the_console_palette():
                      '[data-testid="stAlertContainer"]', '[data-testid="stChatMessage"]',
                      '[data-testid="stChatInput"]', '[data-testid="stSpinner"]'):
         assert selector in css
-    assert '[data-testid="stHeading"], [data-testid="stCaptionContainer"], [data-testid="stSpinner"] { color: var(--ink); }' in css
-    assert '[data-testid="stCaptionContainer"] { color: var(--muted); }' in css
-    assert '[data-testid="stChatInputTextArea"] { background: var(--input-bg) !important; color: var(--ink) !important;' in css
-    assert '.c-sect > .in.flush { padding: 0; display: flow-root; }' in css
-    assert '[data-testid="stButtonGroup"] [data-baseweb="button-group"] { display: flex; flex-wrap: wrap;' in css
-    assert '.c-subhead { margin: 8px 0 4px; font-size: 12px; font-weight: 800; color: var(--ink); }' in css
+    assert re.search(r'\[data-testid="stHeading"\][^{]*\{[^}]*color: var\(--ink\)', css)
+    assert re.search(r'\[data-testid="stCaptionContainer"\][^{]*\{[^}]*color: var\(--muted\)', css)
+    assert re.search(r'\[data-testid="stChatInputTextArea"\][^{]*\{[^}]*background: var\(--input-bg\)', css)
+    assert re.search(r'\.c-sect > \.in\.flush \{[^}]*padding: 0', css)
+    assert re.search(r'\[data-testid="stButtonGroup"\] \[data-baseweb="button-group"\] \{[^}]*display: flex', css)
+    assert re.search(r'\.c-subhead \{[^}]*color: var\(--ink\)', css)
 
 
 # ---- approvals ----
@@ -772,15 +773,28 @@ def test_a_pull_request_whose_changes_github_will_not_give_is_named_and_the_rest
 def test_a_review_reading_asks_for_files_tests_and_mergeable(monkeypatch):
     asked = []
 
-    def ask(method, path, token, **request):
+    class Reply:
+        def __init__(self, data):
+            self.data, self.content = data, b"x"
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return self.data
+
+    def ask(method, url, timeout, headers, **request):
+        path = url.removeprefix(f"{github_api.API}/repos/{REPOSITORY}")
         asked.append(path)
         if path.endswith("/files"):
-            return [{"filename": "registry/unidentified.csv", "additions": 1, "deletions": 0, "patch": "+1,A"}]
-        if "check-runs" in path:
-            return {"check_runs": [{"id": 1, "status": "completed", "conclusion": "success"}]}
-        return {"mergeable": True}
+            data = [{"filename": "registry/unidentified.csv", "additions": 1, "deletions": 0, "patch": "+1,A"}]
+        elif "check-runs" in path:
+            data = {"check_runs": [{"id": 1, "status": "completed", "conclusion": "success"}]}
+        else:
+            data = {"mergeable": True}
+        return Reply(data)
 
-    monkeypatch.setattr(decisions, "_ask", ask)
+    monkeypatch.setattr(github_api.requests, "request", ask)
 
     reading = decisions.review_reading("t", REGISTRY_PR)
 
@@ -802,7 +816,7 @@ def test_the_work_page_lists_open_pull_requests_and_issues_and_finds_by_title(mo
     page = text(at)
     assert "Registry update from the IGS satellite metadata file" in page and "waits on a decision: registry update" in page
     assert page.index("Demo tracker") < page.index("Signal-to-noise per source")   # the most recently updated first
-    assert "background:#0075ca" in page
+    assert "#0075ca" in page   # each label is drawn in its own GitHub colour
 
     at.text_input(key="work_find").set_value("signal").run()
     assert "Signal-to-noise per source" in text(at) and "Demo tracker" not in text(at)

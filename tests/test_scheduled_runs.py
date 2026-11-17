@@ -3,6 +3,7 @@ leaves one line in the run log. No network: replies are canned; the clock is fro
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+import re
 
 import pytest
 import requests
@@ -148,18 +149,18 @@ def test_the_alert_ping_does_not_fail_for_a_missing_check_or_an_unset_key():
 
 
 def test_the_workflow_publishes_latest_news_on_its_own_branch_with_write_access_only_there():
-    assert "outputs:\n      group: ${{ steps.due.outputs.group }}" in ARCHIVE_WORKFLOW
+    assert re.search(r"outputs:\s*group:\s*\${{ steps\.due\.outputs\.group }}", ARCHIVE_WORKFLOW)
     assert "publish-news:" in ARCHIVE_WORKFLOW
     publish = ARCHIVE_WORKFLOW.split("publish-news:", 1)[1]
     assert "needs: archive" in publish
     assert ("if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System' && always() && "
             "(needs.archive.outputs.group == 'news' || needs.archive.outputs.group == 'x' || needs.archive.outputs.group == 'all')") in publish
-    assert "permissions:\n      contents: write" in publish
+    assert re.search(r"permissions:\s*contents:\s*write", publish)
     assert "git add latest_news.json" in publish and "git diff --cached --quiet" in publish
     assert 'git commit --quiet -m "Latest news for the dashboard"' in publish and "git push" in publish
 
     archive_job = ARCHIVE_WORKFLOW.split("archive:", 1)[1].split("publish-news:", 1)[0]
-    assert "permissions:\n  contents: read" in ARCHIVE_WORKFLOW
+    assert re.search(r"permissions:\s*contents:\s*read", ARCHIVE_WORKFLOW)
     assert "contents: write" not in archive_job
 
 

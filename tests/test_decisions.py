@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from evidence import decisions
+from evidence import decisions, github_api
 from evidence.decision_settings import OTHER_GROUP, REPOSITORY
 
 NOW = datetime(2026, 10, 20, 12, 0, tzinfo=timezone.utc)
@@ -32,6 +32,30 @@ SIGNAL_ID_CHANGE_FINDING = {
     "measured": [],
 }
 FINDINGS_STAND_IN = [R809_FINDING, SIGNAL_ID_CHANGE_FINDING]
+
+
+class ApiAnswer:
+    """The part of requests' response `github_api.ask` reads."""
+
+    def __init__(self, data):
+        self.data = data
+        self.content = b"x" if data is not None else b""
+
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        return self.data
+
+
+def patch_github(monkeypatch, github):
+    """Patch the network layer, not decisions._ask: answers and records through requests.request."""
+    def request(method, url, timeout, headers, **request):
+        path = url.removeprefix(f"{github_api.API}/repos/{REPOSITORY}")
+        token = headers["Authorization"].removeprefix("Bearer ")
+        return ApiAnswer(github(method, path, token, **request))
+
+    monkeypatch.setattr(github_api.requests, "request", request)
 
 
 def findings_body(findings):
@@ -178,7 +202,7 @@ def test_fetch_comments_reads_every_page(monkeypatch):
         asked.append((method, path, token, request["params"]["page"]))
         return [{"id": n} for n in range(100)] if request["params"]["page"] == 1 else [{"id": 100}]
 
-    monkeypatch.setattr(decisions, "_ask", ask)
+    patch_github(monkeypatch, ask)
     comments = decisions.fetch_comments("t0ken", 7)
 
     assert len(comments) == 101
@@ -261,7 +285,7 @@ class GitHub:
 
 
 def decide(monkeypatch, github, choice, changes=""):
-    monkeypatch.setattr(decisions, "_ask", github)
+    patch_github(monkeypatch, github)
     return decisions.decide("t", ITEM, choice, "Checked against the IGS file", changes, "A Member", NOW)
 
 
@@ -308,7 +332,7 @@ def test_an_item_whose_branch_was_deleted_still_shows_and_cannot_be_approved(mon
     gone = {**pr(5, ["decision: slot"]), "head": None}
     item = decisions.pending([gone], NOW)[0]
 
-    monkeypatch.setattr(decisions, "_ask", lambda method, path, token, **request: {"state": "open", "head": None})
+    patch_github(monkeypatch, lambda method, path, token, **request: {"state": "open", "head": None})
     status, words = decisions.decide("t", item, APPROVE, "Checked", "", "A Member", NOW)
 
     assert item["sha"] is None and status == "warn" and "branch no longer exists" in words
@@ -357,7 +381,7 @@ class FindingsGitHub:
 
 
 def decide_finding(monkeypatch, github, finding, choice):
-    monkeypatch.setattr(decisions, "_ask", github)
+    patch_github(monkeypatch, github)
     return decisions.decide_finding("t", FINDINGS_ITEM, finding, choice, "Checked against the source", "A Member", NOW)
 
 
@@ -439,7 +463,7 @@ def test_deciding_a_finding_when_findings_ids_changed_is_refused_and_writes_noth
 def test_finish_merges_when_every_finding_is_approved(monkeypatch):
     github = FindingsGitHub(comments=[{"body": finding_comment(APPROVE, "R723", "sha8")},
                                       {"body": finding_comment(APPROVE, "R809", "sha8")}])
-    monkeypatch.setattr(decisions, "_ask", github)
+    patch_github(monkeypatch, github)
 
     status, words = decisions.finish("t", FINDINGS_ITEM, "A Member", NOW)
 
@@ -449,7 +473,7 @@ def test_finish_merges_when_every_finding_is_approved(monkeypatch):
 
 def test_finish_refuses_when_findings_are_mixed(monkeypatch):
     github = FindingsGitHub(comments=[{"body": finding_comment(APPROVE, "R723", "sha8")}])
-    monkeypatch.setattr(decisions, "_ask", github)
+    patch_github(monkeypatch, github)
 
     status, words = decisions.finish("t", FINDINGS_ITEM, "A Member", NOW)
 

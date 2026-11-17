@@ -3,7 +3,7 @@
 Every feed here is a saved sample in tests/samples/news; no test touches the network.
 """
 import sys
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -417,10 +417,16 @@ def test_latest_news_keeps_items_for_constellations_that_still_have_room(monkeyp
     assert latest["sources"]["beta.example"]["kind"] == "press feed"
 
 
-def test_source_grade_lookup_order_is_confirmed_then_candidate_then_record_then_not_graded():
-    today = date(2026, 10, 20)
-    confirmed = {"alpha.example": {"reliability": "B", "reason": "confirmed", "graded_by": "Team"}}
-    provisional = {"beta.example": {"proposed_grade": "C", "grade_reason": "candidate"}}
+def test_source_grade_lookup_order_is_confirmed_then_candidate_then_record_then_not_graded(monkeypatch):
+    monkeypatch.setattr(news, "NEWS_ITEMS_PER_SYSTEM", 10)
+    monkeypatch.setattr(news, "read_source_grades", lambda: [
+        {"source_id": "alpha.example", "name": "Alpha", "reliability": "B", "graded_by": "Team",
+         "graded_on": "2026-10-20", "reason": "confirmed"},
+    ])
+    monkeypatch.setattr(news, "candidate_rows", lambda: [
+        {"source_id": "beta.example", "name": "Beta Feed", "kind": "press feed", "address": "https://beta.example/feed",
+         "check_status": "200", "proposed_grade": "C", "grade_reason": "candidate", "note": ""},
+    ])
     record_rows = [{"source_id": "gamma.example", "address": "https://gamma.example/one", "published_at": "2026-10-20",
                     "claim": "status", "constellation": "GPS", "satellite": "", "checked_on": "2026-10-20",
                     "result": "held", "weight": "", "weight_reason": "", "evidence": "", "evidence_link": ""},
@@ -430,14 +436,37 @@ def test_source_grade_lookup_order_is_confirmed_then_candidate_then_record_then_
                    {"source_id": "gamma.example", "address": "https://gamma.example/three", "published_at": "2026-10-18",
                     "claim": "status", "constellation": "GPS", "satellite": "", "checked_on": "2026-10-20",
                     "result": "held", "weight": "", "weight_reason": "", "evidence": "", "evidence_link": ""}]
+    monkeypatch.setattr(news.source_record, "read_record", lambda: record_rows)
 
-    assert news._source_grade("alpha.example", confirmed, provisional, record_rows, today) == (
-        "B", "confirmed", "confirmed", "Team", "")
-    assert news._source_grade("beta.example", confirmed, provisional, record_rows, today) == (
-        "C", "provisional", "candidate", "", "")
-    assert news._source_grade("gamma.example", confirmed, provisional, record_rows, today) == (
-        "D", "provisional", "From the checked-claims record, waiting for approval.", "", "record")
-    assert news._source_grade("none.example", confirmed, provisional, [], today) == ("", "not graded", "", "", "")
+    items = [
+        {"source_id": "alpha.example", "address": "https://alpha.example/story", "title": "GPS alpha notice",
+         "summary": "", "outlet": "Alpha", "published_at": "2026-10-20T10:00:00Z",
+         "fetched_at": "2026-10-20T12:00:00Z", "via": "https://alpha.example/feed", "social": False},
+        {"source_id": "beta.example", "address": "https://beta.example/story", "title": "BeiDou beta notice",
+         "summary": "", "outlet": "", "published_at": "2026-10-20T10:00:00Z",
+         "fetched_at": "2026-10-20T12:00:00Z", "via": "https://beta.example/feed", "social": False},
+        {"source_id": "gamma.example", "address": "https://gamma.example/story", "title": "GLONASS gamma notice",
+         "summary": "", "outlet": "", "published_at": "2026-10-20T10:00:00Z",
+         "fetched_at": "2026-10-20T12:00:00Z", "via": "https://gamma.example/feed", "social": False},
+        {"source_id": "none.example", "address": "https://none.example/story", "title": "QZSS none notice",
+         "summary": "", "outlet": "", "published_at": "2026-10-20T10:00:00Z",
+         "fetched_at": "2026-10-20T12:00:00Z", "via": "https://none.example/feed", "social": False},
+    ]
+
+    latest = latest_news(items)
+    by_source = {row["source_id"]: row for row in latest["items"]}
+
+    assert by_source["alpha.example"]["grade"] == "B"
+    assert by_source["alpha.example"]["grade_standing"] == "confirmed"
+    assert by_source["beta.example"]["grade"] == "C"
+    assert by_source["beta.example"]["grade_standing"] == "provisional"
+    assert by_source["gamma.example"]["grade"] == "D"
+    assert by_source["gamma.example"]["grade_standing"] == "provisional"
+    assert by_source["gamma.example"]["grade_from"] == "record"
+    assert by_source["none.example"]["grade"] == ""
+    assert by_source["none.example"]["grade_standing"] == "not graded"
+    assert latest["sources"]["alpha.example"]["graded_by"] == "Team"
+    assert latest["sources"]["beta.example"]["reason"] == "candidate"
 
 
 def test_latest_news_uses_record_grade_when_no_other_grade_and_adds_record_line(monkeypatch):
