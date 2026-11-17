@@ -2,8 +2,10 @@
 # fits a fresh SGP4 record to those broadcast positions when regular records are stale. It writes the day
 # report, gap JSON, fitted records and run log to the private archive, pings Healthchecks.io (rinex-check),
 # and publishes the derived orbit_gap.json plus fitted_orbits.json to branch orbit-checks, which the public
-# dashboard reads; it never touches main. The fitted records are this project's own fit to the IGS
-# broadcast file, not CelesTrak or Space-Track data. Healthchecks.io comes last, so it covers the publish.
+# dashboard reads; it never touches main. One more step reads six IGS stations' observation files for the same
+# day and publishes signals_heard.json there too: which signals each satellite was heard sending. That step may
+# fail without stopping the orbit files (the dashboard then says the result is not available). The fitted
+# records are this project's own fit to the IGS broadcast file, not CelesTrak or Space-Track data. Healthchecks.io comes last, so it covers the publish.
 
 name: RINEX check
 
@@ -57,6 +59,13 @@ jobs:
           python scripts/orbit_record_gap.py ${DAY_INPUT:+--day "$DAY_INPUT"} --json "$RUNNER_TEMP/gap.json" --fitted "$RUNNER_TEMP/fitted.json" --previous-fitted-dir archive/orbits/fitted --summary-out "$RUNNER_TEMP/gap-summary.txt" > "$RUNNER_TEMP/gap.md"
           echo "day=$(jq -r '.day' "$RUNNER_TEMP/gap.json")" >> "$GITHUB_OUTPUT"
 
+      - name: Measure which signals each satellite was heard sending
+        id: signals
+        continue-on-error: true
+        env:
+          DAY: ${{ steps.gap.outputs.day }}
+        run: python scripts/signals_heard.py --day "$DAY" --json "$RUNNER_TEMP/signals.json"
+
       - name: Copy reports to the archive and add one run-log line
         if: always()
         id: archive_line
@@ -107,7 +116,7 @@ jobs:
           # The archive job may have saved meanwhile; it never touches these files.
           git push --quiet || { git pull --rebase --quiet && git push --quiet; }
 
-      - name: Publish today's derived gap JSON to orbit-checks
+      - name: Publish today's derived gap and signals JSON to orbit-checks
         # A re-run of a past day goes to the archive only, so it never replaces the newer files the dashboard reads.
         if: success() && !inputs.day
         env:
@@ -131,6 +140,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add orbit_gap.json fitted_orbits.json
+          if [ -f "$RUNNER_TEMP/signals.json" ]; then
+            cp "$RUNNER_TEMP/signals.json" signals_heard.json
+            git add signals_heard.json
+          else
+            echo "::warning::No signals_heard.json today: the signals step failed. The branch keeps yesterday's."
+          fi
           if git diff --cached --quiet; then
             echo "No orbit-checks changes to commit."
             cd "$GITHUB_WORKSPACE"

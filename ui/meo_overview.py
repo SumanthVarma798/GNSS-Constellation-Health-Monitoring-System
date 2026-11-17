@@ -15,7 +15,7 @@ from analysis.score_rules import STATUS_FROM
 from config.config import TRACKED_NOT_IN_REGISTRY
 from evidence.registry_tables import left_out_notice, new_on_dashboard
 from config.meo_nominal import MEANINGS, NOMINAL, PLANE_MEANINGS
-from ui import official_status, orbit_age, orbit_section, palette, reveal, shell, surfaces, tooltip
+from ui import official_status, orbit_age, orbit_section, palette, reveal, shell, signals_view, surfaces, tooltip
 from ui.data import SATELLITES
 from ui.figures.plane_strip import plane_strip
 
@@ -211,6 +211,7 @@ def page(name, result):
         surfaces.show(official)
     surfaces.show(surfaces.notice(result["history_note"], "idle"))
     orbit_age.show(name, result)
+    signals_view.show(name)
     _gaps(name, result, today)
     planes = by_plane(result["rows"])
     if shell.segment("meo_view", VIEWS, label="Show planes or satellites") == "Planes":
