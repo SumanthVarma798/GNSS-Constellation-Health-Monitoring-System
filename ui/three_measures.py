@@ -21,6 +21,16 @@ def _chip(words, count, of):
     return surfaces.chip(f"{words} {count} of {of}", surfaces.share_tone(100 * count / of))
 
 
+def _whole_points(rates, score):
+    """Each part's points as whole numbers that add up to the score shown: each rounded down, then the points left
+    given to the parts that lost the most to rounding (so 29.64 + 19.76 shows as 29 + 20 beside a score of 49)."""
+    exact = [rate * weight for _, rate, weight in rates]
+    whole = [int(value) for value in exact]
+    for at in sorted(range(len(exact)), key=lambda i: exact[i] - whole[i], reverse=True)[:score - sum(whole)]:
+        whole[at] += 1
+    return whole
+
+
 def score_sum(summary):
     """The score opened into its parts, so it can be checked: one bar of 100 cut into each attribute's share (its
     weight for the constellation's mission), each share filled as far as its pass rate, so the filled length is the
@@ -40,8 +50,8 @@ def score_sum(summary):
     parts = "".join(
         f'<div class="ss-seg" style="flex:{weight:.4f}"><span class="ss-name">{escape(names[key].split()[0])}</span>'
         f'<span class="ss-slot"><i class="{surfaces.share_tone(rate)}" style="width:{rate:.1f}%"></i></span>'
-        f'<span class="ss-pts"><b class="num">{rate * weight:.0f}</b>/{weight * 100:.0f}</span></div>'
-        for key, rate, weight in rates)
+        f'<span class="ss-pts"><b class="num">{points}</b>/{weight * 100:.0f}</span></div>'
+        for (key, rate, weight), points in zip(rates, _whole_points(rates, score)))
     return (f'<div class="ssum" role="img" aria-label="{escape(words)}"><div class="ssum-bar" aria-hidden="true">{parts}'
             f'</div><div class="ss-total {surfaces.band(score)}" aria-hidden="true"><b class="num">{score}</b>'
             f'<small>/100</small></div></div>')

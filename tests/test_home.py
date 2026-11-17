@@ -479,3 +479,11 @@ def test_an_opened_card_goes_to_the_top_after_any_opened_before_it_and_a_closed_
     assert 'item.style.order = card.open ? String(window.homeCardTurn - 1000000) : ""' in script
     assert "prefers-reduced-motion: reduce" in script and "motion.finish()" in script   # no motion asked: none
     assert "{   // its own block" in script   # beside the links script in one frame, without a clash
+
+
+def test_the_bars_points_always_add_up_to_the_score_shown():
+    from ui.three_measures import _whole_points
+    assert _whole_points([("station", 49.4, 0.6), ("orbit", 49.4, 0.4)], 49) == [29, 20]   # 29.64 + 19.76
+    assert _whole_points([("clock", 100.0, 0.5), ("station", 600 / 7, 0.3), ("orbit", 200 / 7, 0.2)], 81) == [50, 26, 5]
+    for rates, score in (([("clock", 33.3, 0.4), ("orbit", 66.7, 0.35), ("station", 50.0, 0.25)], 49),):
+        assert sum(_whole_points(rates, score)) == score
