@@ -44,13 +44,14 @@ def test_only_our_own_files_are_offered_and_others_are_linked_to_their_owners():
     assert "indianspaceflight.in" in shelf.colleagues_html(COLLEAGUES)
 
 
-def test_a_file_that_cannot_be_read_says_so_and_freshness_names_the_job():
+def test_a_file_that_cannot_be_read_says_so_and_freshness_says_when_we_update_it():
     content, fresh, problem = shelf.item_state("fitted", FILES)
     assert content is None and "cannot be read right now" in shelf.card_html("fitted", content, fresh, problem)
     content, fresh, problem = shelf.item_state("orbit_gap", FILES)
     assert not problem and json.loads(content)["day"] == "2026-11-13"
-    assert fresh.startswith("made 13 Nov 2026 · the Orbit record check job, daily 06:00 UTC")
-    assert "Registry update job, Sundays 01:00 UTC" in shelf.item_state("counts", FILES)[1]
+    assert fresh.startswith("made 13 Nov 2026 · updated by us daily 06:00 UTC")
+    assert "updated by us Sundays 02:00 UTC" in shelf.item_state("sources", FILES)[1]
+    assert "counts" not in OURS   # launched, lost and kept: published widely, so not offered as ours
     assert "kept by hand" in shelf.item_state("lifecycles", FILES)[1]
 
 
@@ -122,3 +123,13 @@ def test_the_library_still_draws_when_the_news_cannot_be_read(library_page):
     at = open_page({**FILES, "news": ({}, "the news file could not be read")})
     assert "The stories cannot be read right now: the news file could not be read." in page_html(at)
     assert "Download orbit_gap.json" in [button.proto.label for button in at.get("download_button")]
+
+
+def test_the_library_has_its_own_contact_shelf_and_the_footer_leaves_its_copy_out_there(library_page, monkeypatch):
+    monkeypatch.setenv("CONTACT_FORM_URL", "http://127.0.0.1:9/contact")
+    monkeypatch.setenv("CONTACT_FORM_TOKEN", "test-token")
+    open_page, _ = library_page
+    at = open_page(FILES)
+    keys = [box.key for box in at.text_input]
+    assert "contact_library_address" in keys and "contact_footer_address" not in keys
+    assert "<h2>Contact us</h2>" in page_html(at)

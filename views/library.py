@@ -1,5 +1,5 @@
 """Library: the newest stories, the satellites and their lives (counts per constellation, lifecycles, generations,
-money), the datasets (what only this project makes, what others make that we use, and who already does this work),
+money), the datasets (ours, offered to everyone; others' that we use; and others who collect and share GNSS data),
 and how to cite. A tile per shelf opens that shelf and brings it into view.
 
 What each shelf holds is in ui/shelf_settings.py; the cards are built in ui/shelf.py. Details sit in sections
@@ -74,7 +74,7 @@ surfaces.show(shelf.CSS)
 
 # ---- the shelves at a glance: each tile opens its shelf and goes to it ----
 tiles = {"stories": (len(told), "Stories"), "satellites": (sum(r["launched"] for r in constellations), "Satellites launched"),
-         "datasets": (len(OURS), "Datasets only here"), "cite": (len(OUR_CITATIONS) + len(OUTSIDE_CITATIONS), "How to cite")}
+         "datasets": (len(OURS), "Our datasets"), "cite": (len(OUR_CITATIONS) + len(OUTSIDE_CITATIONS), "How to cite")}
 with st.container(key="shop_map"):
     for key, (number, words) in tiles.items():
         st.button(f"**{number}**\n\n{words}", key=f"tile_{key}", on_click=jump_to, args=(key,), use_container_width=True)
@@ -118,7 +118,7 @@ lag = library.registry_lag_note(matched, satellites)
 if lag:
     surfaces.show(surfaces.notice(lag, "warn"))
 
-# ---- Datasets: ours first, with how to get, use and cite each; then others', and who already does this work ----
+# ---- Datasets: ours first, with how to get, use and cite each; then others', and others who share GNSS data ----
 surfaces.show(shelf.shelf_sign("datasets"))
 
 
@@ -135,12 +135,12 @@ def draw_ours():
                                        icon=":material/download:")
 
 
-reveal.section("library_ours", "Only here",
-               f"{reveal.count(len(OURS), 'dataset')} this project makes, free to reuse under CC BY 4.0", draw_ours)
+reveal.section("library_ours", "Our datasets",
+               f"{reveal.count(len(OURS), 'dataset')} we make and offer to everyone, free to reuse under CC BY 4.0", draw_ours)
 reveal.section("library_others", "Others' data we use",
                f"{reveal.count(len(OTHERS), 'source')}, each kept by its owner; go to them for it", shelf.others_html(OTHERS))
-reveal.section("library_people", "Who already does this work",
-               f"{reveal.count(sum(len(people) for _, people in COLLEAGUES), 'place')} to go, by constellation",
+reveal.section("library_people", "Others who collect and share GNSS data",
+               f"{reveal.count(sum(len(people) for _, people in COLLEAGUES), 'place')} to follow, by constellation; some of our data starts with them",
                shelf.colleagues_html(COLLEAGUES))
 
 # ---- How to cite ----
@@ -163,3 +163,10 @@ reveal.section("library_cite", "Citations", f"our data and the dashboard · {rev
 if jump_section:
     st.session_state["_library_jumps"] = st.session_state.get("_library_jumps", 0) + 1
     components.html(shelf.scroll_script(jump_section, st.session_state["_library_jumps"]), height=0)
+
+# ---- Contact us: its own shelf; the footer leaves its copy out on this page (ui/shell.py footer) ----
+from ui import contact  # noqa: E402  (kept down here with the section it draws)
+
+if contact.config():
+    surfaces.show(shelf.sign(contact.TITLE, "mail"))
+    contact.section("library_contact", "library")

@@ -53,33 +53,49 @@ EXPLAINED = {
 HOW = [
     ("radar", "What is measured", [
         "The score",
-        ("Score", ["One number out of 100, to compare constellations at a glance",
-                   "The weighted sum of the three key health attributes",
-                   "The ring round it: the constellation's satellites, by state"], "gauge"),
-        ("Weights", ["Set by mission: what a failure costs the constellation's users (our choice, open to change)",
-                     "Regional: 7 or 8 satellites, none spare. A bad clock reaches every fix; off station, coverage "
-                     "leaves the region",
-                     "Global: 24 to 35, 8 to 12 in view. One bad clock can be left out; the planes set the coverage"],
-         "weights"),
+        ("Score", [("Means", "how healthy a constellation is today, from 0 to 100"),
+                   ("Made of", "the three key health attributes: each adds its share of satellites that pass, times "
+                               "its weight"),
+                   ("The ring", "the constellation's satellites, coloured by state")], "gauge"),
+        ("Weights", [("Means", "how much each attribute counts towards the 100; together they make 100%"),
+                     ("Set by", "what a failure costs the constellation's users (our choice, open to change)"),
+                     ("Regional", "7 or 8 satellites, all in every user's sky, none spare: one bad clock spoils "
+                                  "every position fix"),
+                     ("Global", "8 to 12 satellites in view: a receiver can leave out one bad clock")], "weights"),
         "The states round the score",
-        ("Healthy and in place", "orbit scores 80 or more (our line: green from 80, amber from 60), and it is in its "
-         "slot or in step with its plane", "mark:ok"),
-        ("Needs a look", "counted, but its orbit scores under 80, or it is out of its slot or step", "mark:warn"),
-        ("Set aside", "moved to a graveyard orbit after its service ended: in the total, not judged", "mark:bad"),
+        ("Healthy and in place", [("Means", "its orbit scores 80 or more of 100, and it is where it should be: in its "
+                                            "slot, or in step with its plane"),
+                                  ("Colours", "our line: green from 80, amber from 60")], "mark:ok"),
+        ("Needs a look", [("Means", "still counted, but its orbit scores under 80, or it has left its slot or fallen "
+                                    "out of step"),
+                          ("Is it a fault?", "not always: it is a reason to look closer, on its own page")],
+         "mark:warn"),
+        ("Set aside", [("Means", "retired: moved up to a graveyard orbit, above the working ones, after its service "
+                                 "ended"),
+                       ("Counted?", "in the total, never judged")], "mark:bad"),
         "Key health attributes",
-        ("Orbit kept", ["on the orbit it should be on",
-                        "held over a longitude: its tilt; in a medium orbit: plane, tilt, height and shape"], "planet"),
-        ("Station held", ["held there: in its slot and not drifting, or in step with its plane",
-                          "how often it burns to stay there: on its own page"], "satellite"),
-        ("Clock steady", ["each clock message within 30 ns of what the one before predicted (30 ns is our line)",
-                          "1 ns of clock is 0.3 m of range"], "hourglass"),
+        ("Orbit kept", [("Means", "the satellite is on the orbit it was placed in"),
+                        ("Passes when", "every part of its orbit scores 80 or more of 100: its tilt for one held over a "
+                                        "longitude; its plane, tilt, height and shape for one in a medium orbit"),
+                        ("Why it matters", "a receiver's sums assume that orbit")], "planet"),
+        ("Station held", [("Means", "the satellite stays at its own place among the others"),
+                          ("Passes when", "it is in its slot and not drifting along the belt, or keeps its spacing in "
+                                          "its plane"),
+                          ("Why it matters", "coverage depends on where each satellite is; how often it burns to stay "
+                                             "there is on its own page")], "satellite"),
+        ("Clock steady", [("Means", "the satellite's atomic clock keeps even time"),
+                          ("Passes when", "all day, each clock message lands within 30 ns of what the one before "
+                                          "predicted (30 ns is our line)"),
+                          ("Why it matters", "a position is worked out from time: 1 ns off is 30 cm off")],
+         "hourglass"),
         "Extra details",
-        ("Says healthy", "the flag each satellite sends about itself, read daily from the IGS daily broadcast file",
-         "broadcast"),
-        ("Flag matches our check", "the operator's flag says healthy exactly where our orbit check does",
+        ("Says healthy", [("Means", "the health flag each satellite sends about itself"),
+                          ("From", "the IGS daily broadcast file, read every day; shown, not scored")], "broadcast"),
+        ("Flag matches our check", [("Means", "the operator's flag says healthy exactly where our orbit check does"),
+                                    ("Why it matters", "where they differ, one of the two needs a closer look")],
          "circle-check"),
-        ("Burns", ["engine burns found in the last 90 days of public tracking records",
-                   "medium orbits rarely show any yet: their records are too short"], "rocket"),
+        ("Burns", [("Means", "engine burns found in the last 90 days of public tracking records"),
+                   ("Medium orbits", "rarely show any yet: their records are too short")], "rocket"),
     ]),
     ("calculator", "How", [
         ("Two sources, never mixed", ["orbit and station: public tracking records from CelesTrak and Space-Track",

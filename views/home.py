@@ -132,7 +132,7 @@ def _row(system, unread=None, index=0):
     name = system["name"]
     who, where = SYSTEMS.get(name, ("", ""))
     split = _split(system)
-    notes = [f"{escape(new)} is new ({escape(stage)}) and is {_explained('not scored yet')}"   # each note is markup
+    notes = [f"{escape(new)} is new and {_explained('not scored yet')}: {escape(stage)}"   # each note is markup
              for new, stage in system["settling"].items()]
     notes += [escape(CAVEATS[name])] if name in CAVEATS else []
     notes = ([escape(" · ".join(f"{label} {count} of {of}" for label, count, of in system["parts"]))] * bool(system["parts"])
@@ -153,6 +153,7 @@ def _row(system, unread=None, index=0):
             f'<span class="small">{_how_scored(system, index)}</span></div>'
             f'{_gauge(system, split)}<span class="sys-go" aria-hidden="true">&rsaquo;</span></summary>'
             f'<div class="card-more"><h4>Key health attributes</h4>{three_measures.score_sum(system)}'
+            f'{three_measures.part_scores(system)}'
             f'<div class="tiles in">{in_score}</div>'
             f'<div class="tiles seen">{seen}</div>'
             + (f'<div class="card-notes">' + "".join(f'<div class="small">{note}</div>' for note in notes)
@@ -235,8 +236,8 @@ def _picture(name):
         rows = ""
         for mission, weights in MEASURE_WEIGHTS.items():
             members = ", ".join(sorted(m for m, kind in MISSION.items() if kind == mission)) or "the rest"
-            parts = "".join(f'<span class="{WEIGHT_TONES[key]}" style="flex:{weight}">{escape(MEASURE_WORDS[key][0].split()[0])} '
-                            f'{weight:.0%}</span>' for key, weight in sorted(weights.items(), key=lambda item: -item[1]))
+            parts = "".join(f'<span class="{WEIGHT_TONES[key]}" style="flex:{weight}">{escape(MEASURE_WORDS[key][0].split()[0])}'
+                            f'<small>{weight:.0%}</small></span>' for key, weight in sorted(weights.items(), key=lambda item: -item[1]))
             rows += (f'<div class="wrow"><span class="small"><b>{escape(mission.title())}</b> '
                      f'{escape(members if mission == "regional" else "GPS, Galileo, GLONASS, BeiDou-3")}</span>'
                      f'<div class="wbar">{parts}</div></div>')
@@ -245,10 +246,16 @@ def _picture(name):
 
 
 def _point(term, words, picture=""):
-    """One point: its picture, its term, then its words as one line or short bullets; the mission weights' bars go
-    under the words."""
+    """One point: its picture, its term, then its words as one line or short bullets; a bullet given as (label,
+    words) leads with its label ("Means", "Passes when"), so every definition reads the same way. The mission
+    weights' bars go under the words."""
+    def bullet(line):
+        if isinstance(line, tuple):
+            return f'<li><span class="how-lab">{escape(line[0])}</span> {escape(line[1])}</li>'
+        return f"<li>{escape(line)}</li>"
+    labelled = ' class="how-labelled"' if all(isinstance(line, tuple) for line in words) else ""
     lines = (f"<span>{escape(words)}</span>" if isinstance(words, str)
-             else "<ul>" + "".join(f"<li>{escape(line)}</li>" for line in words) + "</ul>")
+             else f"<ul{labelled}>" + "".join(bullet(line) for line in words) + "</ul>")
     if term == "Working together" and CONTACT_ADDRESS:
         lines += f' <a href="mailto:{escape(CONTACT_ADDRESS)}">{escape(CONTACT_ADDRESS)}</a>'
     below = _picture(picture) if picture == "weights" else ""

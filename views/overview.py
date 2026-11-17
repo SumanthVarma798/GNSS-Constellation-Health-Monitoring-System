@@ -175,14 +175,17 @@ def _system_line(name, window_days, params):
     read = []
     for part in systems.SYSTEMS[system]:
         try:
-            read.append(summary(part, data.load(part, window_days, params if part == name else None)))
+            read.append(summary(part, data.load(part, window_days, params if part == name else None), data.orbit_gap()))
         except Exception:   # that part's own page says why it cannot be read
             pass
     both = whole(system, read)
     chips = "".join(surfaces.chip(f"{label} {count} of {of}", "accent" if label == systems.part_name(name) else "idle")
                     for label, count, of in both["parts"])
-    return (f'<div class="sysline"><b>{marks.mark(system)}{escape(system)}</b><span class="num">{both["healthy"]} of {both["total"]}</span>'
-            f'<span class="muted">healthy and in place, across its parts</span>{chips}</div>')
+    score = (surfaces.chip(f"{system} score {both['score']} of 100", surfaces.band(both["score"]))
+             if both["score"] is not None else "")   # the same number as Home's card
+    return (f'<div class="sysline"><b>{marks.mark(system)}{escape(system)}</b>{score}<span class="num">{both["healthy"]} of {both["total"]}</span>'
+            f'<span class="muted">healthy and in place, across its parts</span>{chips}</div>'
+            + three_measures.part_scores(both, systems.part_name(name)))
 
 
 def constellation(name, window_days, params):

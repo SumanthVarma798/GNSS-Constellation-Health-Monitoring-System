@@ -43,6 +43,7 @@ TABLER = {
     "download": ['M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2', 'M7 11l5 5l5 -5', 'M12 4l0 12'],
     "quote": ['M10 11h-4a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1h3a1 1 0 0 1 1 1v6c0 2.667 -1.333 4.333 -4 5',
               'M19 11h-4a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1h3a1 1 0 0 1 1 1v6c0 2.667 -1.333 4.333 -4 5'],
+    "mail": ['M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z', 'M3 7l9 6l9 -6'],
 }
 
 # Each lifecycle step's icon (the Library's lifecycles); a step not listed has none.
@@ -60,7 +61,7 @@ MASKED = ("bell", "check", *dict.fromkeys(STATUS_ICONS.values()), "map", "click"
           # the Library's column help (evidence/library_settings.py LIBRARY_COLUMN_HELP)
           "rocket", "power", "broadcast", "calculator", "hourglass", "coin", "database",
           # the Library's shelves (ui/shelf_settings.py)
-          "satellite", "search", "download", "quote", "tool")
+          "satellite", "search", "download", "quote", "tool", "mail")
 
 
 def mask_url(name):

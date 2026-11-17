@@ -16,6 +16,7 @@ ORBIT_AGES_WORKFLOW = "orbit-ages.yml"
 RINEX_CHECK_WORKFLOW = "rinex-check.yml"
 UPDATE_TLE_WORKFLOW = "update-tle-data.yml"
 TESTS_WORKFLOW = "tests.yml"
+CONTACT_SCAN_WORKFLOW = "contact-scan.yml"
 
 ARCHIVE_ALL_LOG = "archive all"
 ARCHIVE_LOG_ALIASES = {ARCHIVE_ALL_LOG: ARCHIVE_WORKFLOW}
@@ -77,6 +78,8 @@ JOBS: list[Job] = [
     Job(UPDATE_TLE_WORKFLOW, "", "Update orbit data",
         "Refreshes the dashboard's bundled orbit data", None, "update_tle_data",
         (("update-tle-data", "Update orbit data"),), None, False),
+    Job(CONTACT_SCAN_WORKFLOW, "", "Contact attachment scan",
+        "Scans the contact inbox's attachments for viruses with ClamAV", None, "contact_scan", (), None, False),
     Job(TESTS_WORKFLOW, "", "Tests", "Runs every test on each change", None, "tests", (), None, False),
 ]
 
@@ -96,4 +99,5 @@ PIPELINE_READ_EVERY_SECONDS = 30   # how often the live pipeline page refreshes 
 CONTACT_ADDRESS = "contact@opengnss.org"
 CONTACT_INBOX_URL = "https://feeds.opengnss.org/contact"
 CONTACT_TOKEN_KEY = "contact_read_token"   # under [admin] in the secrets: the same value as the Worker's CONTACT_READ_TOKEN
+CONTACT_TOKEN_ENV = "CONTACT_READ_TOKEN"   # or this environment variable on the console's server; the secrets win
 CONTACT_READ_EVERY_SECONDS = 300           # how long one reading of the inbox is kept, at most

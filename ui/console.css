@@ -248,6 +248,16 @@ dl.c-kv dt { color: var(--muted); } dl.c-kv dd { margin: 0; color: var(--ink); }
 .stApp details.c-more > :not(summary) { margin: 8px 10px; }
 .stApp details.c-more > .c-mail { white-space: pre-wrap; overflow-wrap: anywhere; }   /* Contact inbox: a message's text */
 
+/* ---- Contact inbox: one thread's messages; theirs on the left edge, ours set in and edged in the info colour ---- */
+.c-msg { border: 1px solid var(--edge); border-left: 5px solid var(--idle); background: var(--pane); margin: 0 0 10px; }
+.c-msg.out { border-left-color: var(--c-info); background: var(--pane-alt); margin-left: 32px; }
+.c-msg-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; padding: 5px 10px; border-bottom: 1px solid var(--edge-soft); color: var(--ink); }
+.c-msg-head > span:last-child { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
+.c-msg .c-mail { white-space: pre-wrap; overflow-wrap: anywhere; padding: 8px 10px; color: var(--ink); }
+.c-files { list-style: none; margin: 0; padding: 4px 10px 8px; display: grid; gap: 4px; }
+.c-files li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; overflow-wrap: anywhere; color: var(--ink); }
+@media (max-width: 639.98px) { .c-msg.out { margin-left: 12px; } }
+
 /* ---- chat and other markdown: draw code and tables in the console's tokens, not Streamlit's dark base theme ---- */
 :is([data-testid="stMarkdownContainer"], [data-testid="stChatMessageContent"]) code {
   font-family: var(--mono); color: var(--ink); background: var(--pane-alt); border: 1px solid var(--edge-soft); padding: 0 3px;

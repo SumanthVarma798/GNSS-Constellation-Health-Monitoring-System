@@ -1,5 +1,5 @@
-"""The Library's shelves: the newest stories, a card for each dataset only this project makes (how to get it, use it
-and cite it), the others' data we use and where to go for it, and the people already doing this work. What is on
+"""The Library's shelves: the newest stories, a card for each dataset we make and offer (how to get it, use it
+and cite it), the others' data we use and where to go for it, and others who collect and share GNSS data. What is on
 each shelf is in ui/shelf_settings.py. Every builder returns an HTML string; only the file bytes are not markup.
 """
 import csv
@@ -88,7 +88,7 @@ def _day_words(text):
 
 @st.cache_data(show_spinner=False)
 def job_words(job):
-    """'the Registry update job, Sundays 01:00 UTC' from the console's job list and the workflow's own schedule."""
+    """'updated by us Sundays 01:00 UTC' from the workflow's own schedule, or 'updated by us regularly' without one."""
     if job == "hand":
         return "kept by hand; each change is a reviewed pull request"
     workflow, group = job
@@ -98,7 +98,7 @@ def job_words(job):
     except OSError:
         crons = []
     when = ", ".join(jobs.schedule_words(cron) for cron in crons)
-    return f"the {name} job" + (f", {when} UTC" if when else "")
+    return f"updated by us {when} UTC" if when else f"updated by us regularly ({name})"
 
 
 def published():
@@ -158,7 +158,7 @@ def _link(address, words=""):
 
 
 def card_html(key, content, fresh, problem):
-    """One dataset only this project makes: what it is, why it is ours, how fresh, size, its stable address, licence,
+    """One of our datasets: what it is, how it is made, how fresh, size, its stable address, licence,
     and, opened on request, how to use it: each field, an example, what not to use it for, how to cite it."""
     item = OURS[key]
     state = surfaces.chip("cannot be read right now", "warn") + f" {escape(problem)}" if problem else escape(fresh)
@@ -173,14 +173,14 @@ def card_html(key, content, fresh, problem):
            f'<p><b>Cite</b> {escape(cite)}</p></div></details>')
     return (f'<div class="obj"><span class="plinth">{icons.mask(item["icon"])}</span>'
             f'<span class="lbl"><b>{escape(item["name"])}</b><p>{escape(item["what"])}</p>'
-            f'<p class="small">{escape(item["why"])}</p></span><span class="facts">{facts}</span>{use}</div>')
+            f'<p class="small">{escape(item["made"])}</p></span><span class="facts">{facts}</span>{use}</div>')
 
 
 def others_html(others):
     """The others' data we use: whose it is, what we use it for, how fresh our copy is, and a link to its owner."""
     cards = ""
     for name, icon, link, used_for, job in others:
-        read = "a copy comes with the code" if job == "hand" else "read by " + job_words(job)
+        read = "a copy comes with the code" if job == "hand" else "we read it " + job_words(job).removeprefix("updated by us ")
         go = _link(link, "Go to " + name) if link else "Read each on its publisher's site, linked from the News page."
         cards += (f'<div class="obj"><span class="plinth">{icons.mask(icon)}</span><span class="lbl"><b>{escape(name)}</b>'
                   f'<p>We use it for: {escape(used_for)}</p></span><span class="facts"><span><i>Fresh</i>kept by its '
@@ -189,7 +189,7 @@ def others_html(others):
 
 
 def colleagues_html(colleagues):
-    """The people already doing this work, per constellation, each with a link."""
+    """Others who collect and share GNSS data, per constellation, each with a link."""
     groups = "".join(f'<h4>{marks.named(where)}</h4><ul>' + "".join(
         f'<li>{_link(link, who)}: {escape(what)}</li>' for who, what, link in people) + "</ul>"
         for where, people in colleagues)
@@ -198,6 +198,11 @@ def colleagues_html(colleagues):
 
 def shelf_sign(key):
     title, icon, _ = SHELVES[key]
+    return sign(title, icon)
+
+
+def sign(title, icon):
+    """A shelf's heading: its icon on a plinth, then its title."""
     return f'<div class="shelf-sign"><span class="plinth">{icons.mask(icon)}</span><h2>{escape(title)}</h2></div>'
 
 

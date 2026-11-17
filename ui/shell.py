@@ -24,7 +24,7 @@ from data import celestrak
 from evidence import jobs
 from evidence.console_settings import WORKFLOWS_DIR
 from evidence.registry_tables import judged_by_plane
-from ui import changes, data, marks, palette, surfaces, systems, threshold_settings, time_range, tooltip
+from ui import changes, contact, data, marks, palette, surfaces, systems, threshold_settings, time_range, tooltip
 from ui.age_rule import orbit_age_status
 from ui.components.clock import clock_frame
 
@@ -65,9 +65,12 @@ FOOTER_HTML = (
 )
 
 
-def footer():
-    """The licence and credits line, after the page."""
+def footer(page=None):
+    """The licence and credits line, after the page, and the contact form under it, except on the Library page,
+    which has its own (views/library.py)."""
     st.html(FOOTER_HTML)
+    if getattr(page, "title", None) != "Library":
+        contact.section("footer_contact", "footer")
 
 
 def pages():

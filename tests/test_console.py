@@ -253,22 +253,145 @@ def test_without_its_token_the_contact_inbox_says_it_is_not_connected_and_which_
     assert "CONTACT_READ_TOKEN" in page
 
 
-def test_the_contact_inbox_lists_messages_newest_first_with_the_text_folded_and_escaped(monkeypatch):
+THREAD = [   # newest first, as the Worker answers
+    {"id": "m3", "thread": "t1", "direction": "in", "from": "Newer <newer@example.org>", "address": "newer@example.org",
+     "subject": "Re: Let's <b>work</b> together", "at": "2026-11-15T16:00:00.000Z", "text": "Great, thanks.",
+     "attachments": [{"id": "f-clean", "name": "plan.pdf", "size": 2048, "scan": "clean"},
+                     {"id": "f-wait", "name": "data.csv", "size": 10, "scan": "pending"},
+                     {"id": "f-bad", "name": "tool.docx", "size": 10, "scan": "infected", "signature": "Eicar-Test-Signature"},
+                     {"name": "huge.pdf", "size": 9000000, "note": "not kept: too large"}]},
+    {"id": "m2", "thread": "t1", "direction": "out", "from": "contact@opengnss.org", "address": "contact@opengnss.org",
+     "to": "newer@example.org", "subject": "Re: Let's <b>work</b> together", "at": "2026-11-15T15:00:00.000Z", "text": "Happy to."},
+    {"id": "m1", "thread": "t1", "direction": "in", "from": "Newer <newer@example.org>", "address": "newer@example.org",
+     "subject": "Let's <b>work</b> together", "at": "2026-11-15T14:30:00.000Z", "text": "We track a constellation too.\nCan we help?"},
+    {"id": "m0", "thread": "t0", "direction": "in", "from": "form@example.org", "address": "form@example.org", "via": "form",
+     "subject": "", "at": "2026-11-10T09:00:00.000Z", "text": "Old note"},
+]
+
+
+def test_messages_are_grouped_into_threads_the_latest_activity_first():
+    found = contact.threads(contact.messages(THREAD))
+
+    assert [t["id"] for t in found] == ["t1", "t0"]
+    t1, t0 = found
+    assert [m["id"] for m in t1["messages"]] == ["m1", "m2", "m3"]   # oldest first
+    assert (t1["correspondent"], t1["address"], t1["subject"], t1["count"], t1["form"]) == (
+        "Newer <newer@example.org>", "newer@example.org", "Let's <b>work</b> together", 3, False)
+    assert (t0["subject"], t0["form"]) == ("(no subject)", True)
+    # a message kept before threads existed is a thread of its own
+    old = contact.threads(contact.messages([{"id": "x", "from": "a@example.org", "at": "2026-11-01T00:00:00Z", "text": "Hi"}]))
+    assert old[0]["id"] == "x" and old[0]["messages"][0]["direction"] == "in"
+
+
+def test_each_attachment_says_where_its_scan_stands():
+    states = [contact.attachment_state(a) for a in contact.messages(THREAD)[0]["attachments"]]
+
+    assert states == [("clean", "scanned: no virus found; download it below"), ("wait", "being scanned; Read again in a few minutes"),
+                      ("bad", "removed: virus found (Eicar-Test-Signature)"), ("note", "not kept: too large")]
+    assert [contact.size_words(n) for n in (512, 2048, 4_404_019)] == ["512 B", "2 KB", "4.2 MB"]
+
+
+def test_the_contact_inbox_shows_threads_and_opens_the_latest_oldest_message_first_escaped(monkeypatch):
     signed_in(monkeypatch, "member@example.com")
     asked = []
-    messages = [
-        {"from": "Older <older@example.org>", "subject": "First", "at": "2026-11-10T09:00:00.000Z", "text": "Old note"},
-        {"from": "Newer <newer@example.org>", "subject": "Let's <b>work</b> together", "at": "2026-11-15T14:30:00.000Z",
-         "text": "We track a constellation too.\nCan we help?"},
-    ]
-    monkeypatch.setattr(contact, "read_messages", lambda token: asked.append(token) or messages)
+    monkeypatch.setattr(contact, "read_messages", lambda token: asked.append(token) or THREAD)
+    monkeypatch.setattr(contact, "read_attachment", lambda token, attachment_id: asked.append(attachment_id) or b"%PDF")
+    scans = []
+    monkeypatch.setattr(contact, "start_scan", lambda token: scans.append(token) or "")
+    streamlit.cache_data.clear()
 
-    page = text(run(monkeypatch, page="console/contact.py", secrets=CONTACT_SECRETS))
+    at = run(monkeypatch, page="console/contact.py", secrets=CONTACT_SECRETS)
+    page = text(at)
 
-    assert asked == ["c0ntact-t0ken"] and "c0ntact-t0ken" not in page
-    assert page.index("15 Nov 14:30") < page.index("10 Nov 09:00")
+    assert asked == ["c0ntact-t0ken", "f-clean"] and "c0ntact-t0ken" not in page   # only the clean file is read
     assert "Newer &lt;newer@example.org&gt;" in page and "Let&#x27;s &lt;b&gt;work&lt;/b&gt; together" in page
-    assert '<details class="c-more"><summary>' in page and "We track a constellation too.\nCan we help?" in page
+    assert page.count("address not verified") == 1   # the form thread, in the list
+    assert page.index("We track a constellation too.\nCan we help?") < page.index("Happy to.") < page.index("Great, thanks.")
+    assert 'class="c-msg out"' in page and "Sent by the team to newer@example.org" in page
+    assert "being scanned; Read again in a few minutes" in page and "removed: virus found (Eicar-Test-Signature)" in page
+    # a file is waiting, so opening the inbox started the scan with the console's GitHub token, and says so
+    assert len(scans) == 1 and "1 waiting to be scanned for viruses: the scan started at" in page
+    assert "not kept: too large" in page
+    assert [b.label for b in at.get("download_button")] == ["Download plan\\.pdf (2 KB)"]   # escaped: a label is Markdown
+    # replies from contact@opengnss.org are off for now: a reply from the reader's own mail, address and subject filled
+    assert not at.get("text_area")
+    assert [b.proto.url for b in at.get("link_button")] == ["mailto:newer@example.org?subject=Re%3A%20Let%27s%20%3Cb%3Ework%3C/b%3E%20together"]
+
+
+def test_a_thread_from_the_dashboard_form_is_marked_as_not_verified_when_open(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    monkeypatch.setattr(contact, "read_messages", lambda token: THREAD)
+
+    def open_form_thread(at):
+        at.selectbox(key="contact_thread").set_value("t0")
+
+    page = text(run(monkeypatch, page="console/contact.py", secrets=CONTACT_SECRETS, then=open_form_thread))
+
+    assert "sent from the dashboard form; address not verified" in page and "Old note" in page
+
+
+def test_a_reply_is_posted_for_the_open_thread_and_says_it_was_sent(monkeypatch):
+    from evidence import contact_settings
+    monkeypatch.setattr(contact_settings, "REPLIES_FROM_US", True)   # once email sending is set up
+    monkeypatch.setattr(contact, "start_scan", lambda token: "")
+    signed_in(monkeypatch, "member@example.com")
+    monkeypatch.setattr(contact, "read_messages", lambda token: THREAD)
+    monkeypatch.setattr(contact, "read_attachment", lambda token, attachment_id: b"%PDF")
+    posted = []
+    monkeypatch.setattr(contact, "reply", lambda token, thread, text, address: posted.append((token, thread, text, address))
+                        or ("ok", f"Sent to {address}."))
+
+    def write_and_send(at):
+        at.text_area(key="contact_reply_t1").input("Thanks, we will be in touch.")
+        at.button(key="contact_send_t1").click()
+
+    at = run(monkeypatch, page="console/contact.py", secrets=CONTACT_SECRETS, then=write_and_send)
+
+    assert posted == [("c0ntact-t0ken", "t1", "Thanks, we will be in touch.", "newer@example.org")]
+    assert "Sent to newer@example.org." in text(at) and at.text_area(key="contact_reply_t1").value == ""
+
+
+class Answer:
+    def __init__(self, status_code, body=None):
+        self.status_code, self.body = status_code, body
+
+    def json(self):
+        if self.body is None:
+            raise ValueError("no JSON")
+        return self.body
+
+
+@pytest.mark.parametrize("answer, tone, words", [
+    (Answer(201, {"ok": True}), "ok", "Sent to a@example.org."),
+    (Answer(503, {"ok": False, "problem": "email sending is not set up: the Worker has no EMAIL binding"}), "bad",
+     "Not sent: the inbox refused it (email sending is not set up: the Worker has no EMAIL binding)."),
+    (Answer(404, {"ok": False, "problem": "no such thread"}), "bad", "Not sent: the inbox refused it (no such thread)."),
+    (Answer(401), "bad", "Not sent: the inbox refused the console's token"),
+    (Answer(500), "warn", "may or may not have been sent"),
+    (requests.Timeout("slow"), "warn", "may or may not have been sent"),
+])
+def test_a_reply_carries_the_token_and_its_answer_reads_in_plain_words(monkeypatch, answer, tone, words):
+    from evidence.contact_settings import REPLY_URL
+    seen = {}
+
+    def post(url, json, headers, timeout):
+        seen.update(url=url, json=json, headers=headers)
+        if isinstance(answer, Exception):
+            raise answer
+        return answer
+
+    monkeypatch.setattr(contact.requests, "post", post)
+
+    said_tone, said = contact.reply("s3cr3t-r34d", "t1", "  Hello  ", "a@example.org")
+    assert said_tone == tone and words in said and "s3cr3t-r34d" not in said
+    assert seen == {"url": REPLY_URL, "json": {"thread": "t1", "text": "Hello"}, "headers": {"Authorization": "Bearer s3cr3t-r34d"}}
+
+
+def test_an_empty_or_too_long_reply_is_not_sent(monkeypatch):
+    monkeypatch.setattr(contact.requests, "post", lambda *a, **k: pytest.fail("sent"))
+
+    assert contact.reply("tok", "t1", "   ", "a@example.org") == ("bad", "Not sent: the reply is empty.")
+    assert contact.reply("tok", "t1", "x" * 4001, "a@example.org")[1] == "Not sent: the reply is 4001 characters long; the most is 4000."
 
 
 @pytest.mark.parametrize("trouble, words", [
@@ -858,3 +981,32 @@ def test_a_secrets_file_that_cannot_be_read_is_named_with_its_line(monkeypatch):
     said = common.missing()[0]
 
     assert said.startswith("a readable secrets file (Duplicate keys!") and "line 2" in said and '"2"' not in said
+
+
+def test_the_inbox_token_comes_from_the_secrets_or_else_the_environment(monkeypatch):
+    from evidence import contact
+    monkeypatch.delenv("CONTACT_READ_TOKEN", raising=False)
+    assert contact.inbox_token({}) == ""
+    monkeypatch.setenv("CONTACT_READ_TOKEN", " from-env ")
+    assert contact.inbox_token({}) == "from-env"
+    assert contact.inbox_token({"contact_read_token": "from-secrets"}) == "from-secrets"
+
+
+def test_names_from_outside_are_escaped_before_they_become_markdown_widget_labels():
+    from evidence import contact
+    assert contact.label_text("![x](http://attacker.example)@b.co") == (
+        "\\!\\[x\\]\\(http\\://attacker\\.example\\)@b\\.co")
+    source = (ROOT / "console" / "contact.py").read_text()
+    assert 'contact.label_text(a["name"])' in source and 'contact.label_text(thread["address"])' in source
+
+
+def test_starting_the_scan_says_plainly_when_github_will_not(monkeypatch):
+    import requests as http
+    from evidence import github_api
+
+    def refuse(*args, **kwargs):
+        raise http.HTTPError(response=SimpleNamespace(status_code=403))
+    monkeypatch.setattr(github_api, "ask", refuse)
+    assert contact.start_scan("t") == "its GitHub token may not start workflows (it needs Actions: write)"
+    monkeypatch.setattr(github_api, "ask", lambda *a, **k: None)
+    assert contact.start_scan("t") == ""

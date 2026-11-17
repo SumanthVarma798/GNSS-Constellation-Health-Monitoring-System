@@ -251,7 +251,7 @@ def test_how_to_read_says_it_in_short_bullets_with_a_picture_for_each_term():
     assert re.search(r'id="how-clock-steady"><span class="how-pic"><span class="ic"', measured)
     assert 'id="how-score"><span class="how-pic"><span class="gauge mini"' in measured
     # the mission weights as bars, from ui/limits.py, and words in bullets rather than paragraphs
-    assert '<div class="wbars">' in measured and "Clock 50%" in measured and "Clock 40%" in measured
+    assert '<div class="wbars">' in measured and "Clock<small>50%</small>" in measured and "Clock<small>40%</small>" in measured
     assert measured.count("<li>") >= 8
     # what is not done yet is framed as what we are working towards, open to working together
     assert "Working together" in how and "What is left out" not in how
@@ -443,13 +443,13 @@ def test_a_constellations_page_opens_up_its_score_into_its_sum():
     bodies = htmls(run(scope("NavIC")))
 
     strip = next(body for body in bodies if 'class="measures"' in body)
-    # in pictures: each attribute's name over its share of the bar, its points out of that share under it, the score in
-    # a box at the end; no line of sums. Clock not read: its 50% shared out, so station has 60 and orbit 40
+    # in pictures, with a short key: each attribute's name and its weight over its share of the bar, the points it
+    # adds under it, the score in a box at the end. Clock not read: its 50% shared out, so station weighs 60%, orbit 40%
     assert re.search(r"Score \d+ of 100</span>", strip)
-    assert re.search(r'<span class="ss-name">Station</span>.*?<span class="ss-pts"><b class="num">\d+</b>/60</span>.*?'
-                     r'<span class="ss-name">Orbit</span>.*?<span class="ss-pts"><b class="num">\d+</b>/40</span>', strip)
+    assert re.search(r'<span class="ss-name">Station</span><span class="ss-w num">60%</span>.*?<span class="ss-pts">\+<b '
+                     r'class="num">\d+</b></span>.*?<span class="ss-name">Orbit</span><span class="ss-w num">40%</span>', strip)
     assert re.search(r'<div class="ss-total (ok|warn|bad)" aria-hidden="true"><b class="num">\d+</b><small>/100', strip)
-    assert "ssum-key" not in strip and " × " not in strip.split('class="ssum"')[1].split('aria-label')[0]
+    assert "width: its weight" in strip and "filled: satellites that pass" in strip
     # read aloud in full instead
     assert re.search(r'aria-label="Station held \d+% of its 60% share: [\d.]+ points, Orbit kept \d+% of its 40% share: '
                      r'[\d.]+ points; score \d+ out of 100, weighed for a regional constellation; 1 not read today', strip)
@@ -488,3 +488,25 @@ def test_the_bars_points_always_add_up_to_the_score_shown():
     assert tied[0] == 50 and sum(tied) == 81   # station and orbit tie on what rounding lost: either takes the point
     for rates, score in (([("clock", 33.3, 0.4), ("orbit", 66.7, 0.35), ("station", 50.0, 0.25)], 49),):
         assert sum(_whole_points(rates, score)) == score
+
+
+def test_a_constellation_of_two_parts_has_one_score_shown_alike_everywhere_with_each_parts_own_beside_it():
+    from ui import system_summary, three_measures
+
+    def sat(ok):
+        return {"name": "x", "orbit": ok, "station": ok, "clock_steady": ok, "clock": None}
+
+    def part(name, good, bad):
+        sats = [sat(True)] * good + [sat(False)] * bad
+        return {"name": name, "sats": sats, "checked": 0, "burns": None, "flag_agrees": (0, 0), "healthy": good,
+                "total": good + bad, "settling": {}, "flagged_healthy": None,
+                **system_summary._measures(sats, name)}
+
+    high, medium = part("BeiDou-3", 6, 4), part("BeiDou-3 MEO", 20, 0)
+    whole = system_summary.whole("BeiDou-3", [high, medium])
+    assert whole["part_scores"] == [("IGSO & GEO", 60), ("MEO", 100)]
+    assert 60 < whole["score"] < 100   # every satellite counted once: 26 of 30 pass
+    shown = three_measures.part_scores(whole, "MEO")
+    assert 'class="ps-box here ok"><small>MEO</small><b class="num">100</b>' in shown
+    assert "BeiDou-3&#x27;s score counts every satellite of its parts once" in shown
+    assert three_measures.part_scores(system_summary.whole("NavIC", [part("NavIC", 3, 1)])) == ""

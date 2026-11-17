@@ -47,22 +47,45 @@ def score_sum(summary):
     words += f"; score {score} out of 100, weighed for a {mission} constellation"
     if len(rates) < 3:
         words += f"; {3 - len(rates)} not read today, so the others count for its share"
+    # each part as wide as its weight, its weight said over it; filled as far as its pass rate; the points it adds under
     parts = "".join(
-        f'<div class="ss-seg" style="flex:{weight:.4f}"><span class="ss-name">{escape(names[key].split()[0])}</span>'
+        f'<div class="ss-seg" style="flex:{weight:.4f}"><span class="ss-head"><span class="ss-name">'
+        f'{escape(names[key].split()[0])}</span><span class="ss-w num">{weight:.0%}</span></span>'
         f'<span class="ss-slot"><i class="{surfaces.share_tone(rate)}" style="width:{rate:.1f}%"></i></span>'
-        f'<span class="ss-pts"><b class="num">{points}</b>/{weight * 100:.0f}</span></div>'
+        f'<span class="ss-pts">+<b class="num">{points}</b></span></div>'
         for (key, rate, weight), points in zip(rates, _whole_points(rates, score)))
-    return (f'<div class="ssum" role="img" aria-label="{escape(words)}"><div class="ssum-bar" aria-hidden="true">{parts}'
-            f'</div><div class="ss-total {surfaces.band(score)}" aria-hidden="true"><b class="num">{score}</b>'
-            f'<small>/100</small></div></div>')
+    key = ('<div class="ssum-key small" aria-hidden="true"><span><b class="k-width">↔</b>width: its weight</span>'
+           '<span><i class="k-fill"></i>filled: satellites that pass</span><span><b>+</b> points it adds</span></div>')
+    return (f'<div class="ssum-wrap" role="img" aria-label="{escape(words)}">{key}<div class="ssum">'
+            f'<div class="ssum-bar" aria-hidden="true">{parts}</div><span class="ss-eq" aria-hidden="true">=</span>'
+            f'<div class="ss-total {surfaces.band(score)}" aria-hidden="true"><b class="num">{score}</b>'
+            f'<small>/100</small></div></div></div>')
+
+
+PARTS_WORDS = "{system}'s score counts every satellite of its parts once, so it sits between their own scores"
+
+
+def part_scores(system, current=""):
+    """A constellation of several parts (BeiDou-3: IGSO & GEO, MEO): each part's own score in a small box beside the
+    whole's, the part being read marked, and one line saying how the whole is made. "" for a one-part constellation."""
+    if not system.get("part_scores"):
+        return ""
+    boxes = "".join(
+        f'<span class="ps-box{" here" if label == current else ""} {surfaces.band(score) if score is not None else "idle"}">'
+        f'<small>{escape(label)}</small><b class="num">{score if score is not None else "–"}</b></span>'
+        for label, score in system["part_scores"])
+    return (f'<div class="ps"><div class="ps-boxes">{boxes}</div>'
+            f'<p class="small">{escape(PARTS_WORDS.format(system=system["name"]))}</p></div>')
 
 
 def strip(summary):
     """The score and its sum, then the three counts and the constellation's own flag, as chips: declared before
     anything else on the page. Home's score for this constellation is opened up here; every satellite's result is in
     the section under the page (section())."""
-    lead = (surfaces.chip(f"Score {summary['score']} of 100", surfaces.band(summary["score"]))
-            if summary["score"] is not None else surfaces.chip("Score: not read", "idle"))
+    part = systems.part_name(summary["name"])   # on one part's page the chip names the part, never the whole
+    label = f"{part} score" if part else "Score"
+    lead = (surfaces.chip(f"{label} {summary['score']} of 100", surfaces.band(summary["score"]))
+            if summary["score"] is not None else surfaces.chip(f"{label}: not read", "idle"))
     chips = [_chip(words, *summary[key]) for key, words in MEASURES]
     chips.append(_chip("Says healthy", summary["flagged_healthy"], summary["checked"]))
     return (f'<div class="measures" role="group" aria-label="Score, orbit, station-keeping and clock">{lead}'

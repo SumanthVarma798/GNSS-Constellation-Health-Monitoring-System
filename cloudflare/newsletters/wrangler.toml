@@ -9,10 +9,19 @@ account_id = "16a8736db713b936302230f75fad84b2"   # the OpenGNSS account, not an
 routes = [{ pattern = "feeds.opengnss.org", custom_domain = true }]
 
 # Kept newsletters: raw:<key> (private), post:<key> (what the feed shows), notice:<time> (sign-in and welcome mail).
-# Kept contact mail: contact:<time>:<id> (private; read only through GET /contact with the token below).
+# Kept contact mail: contact:<time>:<id> (private; read only through GET /contact with the token below), and its
+# attachments: contact-file:<id> (bytes, with the scan state in the key's metadata; downloadable only once clean).
 [[kv_namespaces]]
 binding = "NEWSLETTERS"
 id = "ebebf306d0a244baad87cd7136c9a708"
+
+# Replies from the console (POST /contact/reply), sent by Cloudflare Email Service. opengnss.org must be onboarded to
+# Email Sending first (dashboard: Compute > Email Service > Email Sending > Onboard Domain), and sending to any address
+# needs the Workers Paid plan. Until then a reply answers with the reason and nothing is sent. Only the contact address
+# may send; change it here too if CONTACT_TO changes.
+[[send_email]]
+name = "EMAIL"
+allowed_sender_addresses = ["contact@opengnss.org"]
 
 # Optional vars. NOTICE_TO: a verified address that receives Substack's sign-in and confirmation mail; unset, those are
 # only logged. CONTACT_TO: the address whose mail goes to the contact inbox; unset, contact@opengnss.org.
@@ -22,3 +31,10 @@ id = "ebebf306d0a244baad87cd7136c9a708"
 
 # Secret, never written here: CONTACT_READ_TOKEN, the token the console sends to read GET /contact
 # (npx wrangler secret put CONTACT_READ_TOKEN). Unset, GET /contact answers 401 to everyone.
+# Secret, never written here: CONTACT_WRITE_TOKEN, the token the public dashboard's contact form sends to POST /contact
+# (npx wrangler secret put CONTACT_WRITE_TOKEN). It only adds messages, never reads them, so it must differ from
+# CONTACT_READ_TOKEN. Unset, POST /contact answers 401 to everyone.
+# Secret, never written here: CONTACT_SCAN_TOKEN, the token the GitHub job contact-scan.yml sends to list, fetch and judge
+# attachments (npx wrangler secret put CONTACT_SCAN_TOKEN; the same value as that repository's Actions secret).
+# Unset, attachments stay "being scanned" and no one can download them.
+# The contact routes refuse to work while any two of the three tokens are the same.

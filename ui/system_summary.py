@@ -101,6 +101,15 @@ def _stage(result, name):
         return "new"
 
 
+def _when_scored(result, name, first):
+    """Its stage and the day it will be scored from (analysis/commissioning.py), or its stage alone when its records
+    cannot say."""
+    try:
+        return commissioning.when_scored(result["history"], name, first)
+    except (KeyError, TypeError, ValueError):
+        return _stage(result, name)
+
+
 def _recent_burns(burns, now=None):
     """(burns, satellites that made them) found in the last BURN_DAYS of orbit records, or None when none were found:
     the systems judged by plane mostly have too little history to find any (analysis/meo_run.py)."""
@@ -141,7 +150,7 @@ def summary(name, result, gap=None):
             # the operator's own word against our check: its flag says healthy exactly where we count it healthy
             "flag_agrees": (sum((sat["broadcast"] == "ok") == sat["ok"] for sat in flagged), len(flagged)),
             "burns": _recent_burns(result.get("burns")),
-            "settling": {new: _stage(result, new) for new in result.get("moving") or {}},
+            "settling": {new: _when_scored(result, new, first) for new, first in (result.get("moving") or {}).items()},
             "planes": plane_drift(name, result["rows"]) if by_plane else {},
             "in_file": sum(sat["broadcast"] != "silent" for sat in checked) if checked else None,
             "flagged_healthy": sum(sat["broadcast"] == "ok" for sat in checked) if checked else None,
@@ -152,7 +161,9 @@ def summary(name, result, gap=None):
 def whole(system, parts):
     """A system's parts as one: each part's satellites in turn, and the counts added up. `parts` are summary()'s
     rows for the parts that could be read, in the system's order. "parts" holds (the part's name beside the
-    system's, healthy, total) for a system with several parts, so a reader can go one step deeper."""
+    system's, healthy, total) for a system with several parts, so a reader can go one step deeper, and "part_scores"
+    (the part's name, its own score) beside them. The system's score counts every satellite of every part once,
+    so it lies between its parts' scores and is the same number on Home and on each part's page."""
     checked = sum(part["checked"] for part in parts)
     burns = [part["burns"] for part in parts if part["burns"]]
     return {"name": system, "sats": [sat for part in parts for sat in part["sats"]],
@@ -162,5 +173,7 @@ def whole(system, parts):
             "settling": {name: stage for part in parts for name, stage in part["settling"].items()}, "checked": checked,
             "flagged_healthy": sum(part["flagged_healthy"] or 0 for part in parts) if checked else None,
             "parts": [(systems.part_name(part["name"]), part["healthy"], part["total"]) for part in parts]
+            if len(systems.SYSTEMS[system]) > 1 else [],
+            "part_scores": [(systems.part_name(part["name"]), part.get("score")) for part in parts]
             if len(systems.SYSTEMS[system]) > 1 else [],
             **_measures([sat for part in parts for sat in part["sats"]], system)}

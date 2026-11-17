@@ -700,6 +700,12 @@ details.sys.card { display: block; padding: 0; }
 .how-p:last-child { margin-bottom: 0; }
 .how-p b { display: block; color: var(--ink); font-weight: 600; margin-bottom: 2px; }
 .how-p ul { margin: 2px 0 0; padding-left: 16px; } .how-p li { margin: 1px 0; }
+/* a definition read the same way every time: a small label ("Means", "Passes when"), then its words */
+.how-p ul.how-labelled { list-style: none; padding-left: 0; display: grid; gap: 7px; margin-top: 5px; }
+.how-labelled li { display: grid; gap: 2px; justify-items: start; }
+.how-lab { display: inline-block; padding: 1px 7px; border-radius: 999px; background: var(--well);
+           box-shadow: var(--pressed); font-size: 11px; font-weight: 600; letter-spacing: .03em; color: var(--accent);
+           vertical-align: 1px; }
 .how-pic { display: grid; place-items: center; min-height: 22px; }
 .how-pic .ic { width: 22px; height: 22px; color: var(--accent); }
 .how-pic .dots i { width: 13px; height: 13px; }
@@ -708,10 +714,14 @@ details.sys.card { display: block; padding: 0; }
   mask: radial-gradient(farthest-side, transparent calc(100% - 5px), black calc(100% - 4px)); }
 .gauge.mini b { font-size: 11px; }
 /* the mission weights as bars: one row per mission, each attribute's share in its own colour */
-.wbars { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
-.wrow { display: flex; flex-direction: column; gap: 3px; }
-.wbar { display: flex; gap: 2px; height: 20px; border-radius: 6px; overflow: hidden; font-size: 11px; font-weight: 700; color: var(--platform); }
-.wbar span { display: grid; place-items: center; white-space: nowrap; overflow: hidden; }
+.wbars { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.wrow { display: flex; flex-direction: column; gap: 4px; }
+/* each part's name over its weight, so even the smallest share (20%) shows both whole */
+.wbar { display: flex; gap: 3px; min-height: 40px; border-radius: 8px; overflow: hidden; font-size: 12px; font-weight: 700;
+        line-height: 1.15; color: var(--platform); }
+.wbar span { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0;
+             padding: 3px 2px; text-align: center; }
+.wbar span small { font-size: 12px; font-weight: 800; }
 .wbar .accent { background: var(--accent); } .wbar .ok { background: var(--ok); } .wbar .warn { background: var(--warn); }
 /* the score opened into its parts (ui/three_measures.py score_sum), in pictures only: one bar of 100 cut into each
    attribute's share, each filled as far as its pass rate, its name over it and its points under it (outside the fill,
@@ -719,7 +729,25 @@ details.sys.card { display: block; padding: 0; }
 .ssum { display: flex; align-items: center; gap: 12px; }
 .ssum-bar { display: flex; gap: 4px; flex: 1 1 auto; min-width: 0; }
 .ss-seg { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ss-head { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
 .ss-name { font-size: var(--fs-small); font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ss-w { flex: none; padding: 0 6px; border-radius: 999px; background: var(--platform); box-shadow: var(--raised);
+        font-size: var(--fs-small); font-weight: 700; color: var(--accent); }   /* the part's weight: how much of the 100 it can give */
+.ssum-key { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-bottom: 8px; color: var(--muted); }
+.ssum-key span { display: inline-flex; align-items: center; gap: 5px; }
+.ssum-key i { display: inline-block; flex: none; width: 26px; height: 10px; border: 1px solid var(--edge); border-radius: 4px; background: var(--well); box-shadow: var(--pressed); }
+.ssum-key i.k-fill { box-shadow: none; background: linear-gradient(90deg, var(--ok) 55%, var(--well) 55%); }
+.ssum-key b.k-width { color: var(--accent); font-size: 15px; line-height: 1; }
+.ssum-key b { color: var(--ink); }
+.ss-eq { flex: none; font-size: 22px; font-weight: 700; color: var(--muted); }
+/* phone: the bar takes the full width, the total goes under it, and each part's name sits over its weight */
+@media (max-width: 640px) {
+  .ssum { flex-wrap: wrap; }
+  .ssum-bar { flex: 1 1 100%; }
+  .ss-eq { margin-left: auto; }
+  .ss-head { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .ss-name { overflow: visible; }
+}
 .ss-slot { position: relative; height: 22px; background: var(--well); box-shadow: var(--pressed); border-radius: 7px; overflow: hidden; }
 .ss-slot i { position: absolute; inset: 0 auto 0 0; background: var(--idle); }
 .ss-slot i.ok { background: var(--ok); } .ss-slot i.warn { background: var(--warn); } .ss-slot i.bad { background: var(--bad); }
@@ -772,6 +800,15 @@ details.sys.card { display: block; padding: 0; }
 .measures { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
 /* a part of a system with several: the whole system's count over the part's own page (views/overview.py) */
 .sysline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; margin: 0 0 14px; }
+/* a constellation of several parts: each part's own score in a box, under the whole's (ui/three_measures.py part_scores) */
+.ps { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 0 0 14px; }
+.ps-boxes { display: flex; flex-wrap: wrap; gap: 8px; }
+.ps-box { display: inline-flex; align-items: baseline; gap: 8px; padding: 6px 12px; border-radius: 12px; background: var(--platform);
+          border: 1px solid var(--edge); box-shadow: var(--raised-sm); }
+.ps-box small { font-size: var(--fs-small); color: var(--muted); }
+.ps-box b { font-size: 20px; } .ps-box.ok b { color: var(--ok); } .ps-box.warn b { color: var(--warn); } .ps-box.bad b { color: var(--bad); }
+.ps-box.here { outline: 2px solid var(--accent); outline-offset: 2px; }   /* the part this page is about */
+.ps p { margin: 0; flex: 1 1 220px; }
 .sysline b { font-size: var(--fs-section); font-weight: var(--fw-section); }
 .sysline .num { font-size: var(--fs-section); font-weight: var(--fw-num); color: var(--accent); }
 
@@ -800,11 +837,6 @@ details.sys.card { display: block; padding: 0; }
    The rows reuse Home's .sys; their edge is the constellation's own colour. Each dot state has its own shape, as on
    Home: a filled circle (signal ID today, in the constellation's colour), a small grey circle (none today), a ring
    (seen, not yet listed) and a diamond (worth a look). The buttons under a row wrap as one line of pills. */
-.mm-dots { gap: 4px; }
-.mm-dots i { width: 11px; height: 11px; }
-.mm-dots i.mm-past { width: 7px; height: 7px; margin: 2px; background: var(--track); }
-.mm-dots i.mm-seen { background: transparent; border: 2px solid var(--accent); }
-.mm-dots i.mm-look { background: var(--warn); border-radius: 2px; transform: rotate(45deg) scale(.82); }
 .st-key-mm_rows { gap: 14px; margin-bottom: 18px; }
 [class*="st-key-mm_row_"] { gap: 8px; }
 [class*="st-key-mm_links_"] { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; padding-left: 6px; }
@@ -823,3 +855,14 @@ details.sys.card { display: block; padding: 0; }
   .head.mm-head:has(.right) .muted { flex-basis: 100%; order: 3; }
 }
 /* ==== end Master map ==== */
+
+/* ==== Contact form (ui/contact.py): inside a section (ui/reveal.py), padded like its body, closed to nothing ==== */
+[class*="st-key-contact_form_"] { padding: 0 20px 16px; }
+[class*="st-key-rv_"]:not(:has([class*="st-key-rvx_"] input:checked)) [class*="st-key-contact_form_"] { display: none; }
+[class*="st-key-contact_form_"] [data-testid="stForm"] { padding: 0; }
+[class*="st-key-contact_form_"] .notice { margin: 0; }
+@media (max-width: 639.98px) {
+  [class*="st-key-contact_form_"] { padding: 0 16px 14px; }
+  [class*="st-key-contact_form_"] [data-testid="stFormSubmitButton"] button { width: 100%; min-height: 44px; }
+}
+/* ==== end Contact form ==== */
