@@ -36,16 +36,21 @@ def test_the_address_and_message_are_checked_before_sending():
     assert "the most is 4000" in contact.problem("a@example.org", "x" * (TEXT_CHARACTERS + 1))
 
 
-def test_the_attachments_are_checked_before_sending_as_the_worker_checks_them():
-    ok = [("plan.pdf", b"%PDF"), ("photo.JPG", b"x"), ("data.csv", b"a,b")]
-    assert contact.problem("a@example.org", "Hello", ok) == ""
-    assert contact.problem("a@example.org", "Hello", [*ok, ("more.txt", b"x")]) == "there are 4 attachments; the most is 3."
+def test_the_attachment_is_checked_before_sending_as_the_worker_checks_it():
+    assert contact.problem("a@example.org", "Hello", [("photo.JPG", b"x")]) == ""
+    assert contact.problem("a@example.org", "Hello", [("plan.pdf", b"%PDF"), ("data.csv", b"a,b")]) == (
+        "there are 2 attachments; the most is 1.")   # one file a message on the form: it bounds server memory
     assert contact.problem("a@example.org", "Hello", [("setup.exe", b"x")]) == "setup.exe is not a type the form accepts."
     assert contact.problem("a@example.org", "Hello", [("pdf", b"x")]) == "pdf is not a type the form accepts."
-    half = b"x" * (FILE_BYTES // 2)
-    assert contact.problem("a@example.org", "Hello", [("a.pdf", half), ("b.pdf", half)]) == ""
-    assert contact.problem("a@example.org", "Hello", [("a.pdf", half), ("b.pdf", half + b"x")]) == (
+    assert contact.problem("a@example.org", "Hello", [("a.pdf", b"x" * FILE_BYTES)]) == ""
+    assert contact.problem("a@example.org", "Hello", [("a.pdf", b"x" * (FILE_BYTES + 1))]) == (
         "the attachments are 5.0 MB in all; the most is 5 MB.")
+
+
+def test_a_full_inbox_for_the_day_is_said_in_plain_words(monkeypatch):
+    from ui.contact_settings import DAILY_FULL
+    monkeypatch.setattr(contact.requests, "post", lambda *a, **k: SimpleNamespace(status_code=429))
+    assert contact.post(URL, "t", "a@example.org", "Hello") == DAILY_FULL
 
 
 def test_one_visitor_waits_a_minute_between_messages():

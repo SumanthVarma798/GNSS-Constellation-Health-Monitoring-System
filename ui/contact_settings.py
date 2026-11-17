@@ -16,7 +16,9 @@ ADDRESS_CHARACTERS = 254
 TEXT_CHARACTERS = 4000
 # Attachments, as the Worker accepts them (lib.js ATTACHMENT_*). Each is scanned for viruses before the team can open it.
 FILE_TYPES = ["pdf", "png", "jpg", "jpeg", "gif", "webp", "txt", "csv", "json", "docx", "xlsx"]
-FILES = 3
+# One file a message on the form: Streamlit 1.45 cannot cap how many files one uploader takes, and each sits in server
+# memory, so one uploader of one file (maxUploadSize 5 MB in .streamlit/config.toml) is the bound. Mail may carry 3.
+FILES = 1
 FILE_BYTES = 5 * 1024 * 1024   # all of one message's files together
 # Limits that keep the Worker's store (1000 writes a day, shared with the newsletter feed) safe.
 SESSION_COOLDOWN_SECONDS = 60   # one message a minute from one visitor
@@ -28,8 +30,8 @@ SUMMARY = "write to the team; only the team reads it, and we reply by email"
 ADDRESS_LABEL = "Your email, so we can reply"
 ADDRESS_PLACEHOLDER = "you@example.org"
 MESSAGE_LABEL = "Message"
-FILES_LABEL = "Attachments (optional)"
-FILES_HELP = f"Up to {FILES} files, 5 MB in all: {', '.join(FILE_TYPES)}. Each is checked for viruses before the team opens it."
+FILES_LABEL = "Attachment (optional)"
+FILES_HELP = f"One file, up to 5 MB: {', '.join(FILE_TYPES)}. It is checked for viruses before the team opens it."
 SEND = "Send message"
 
 SENT = "Sent. We will reply to {address}."
@@ -45,4 +47,5 @@ CAP_WAIT = (f"many messages have arrived this hour. Try again in {{minutes}} min
             f"or write to {CONTACT_ADDRESS}.")
 REFUSED = "the inbox refused it ({problem})."
 NOT_SET_UP = f"the form is not set up right on our side. Please write to {CONTACT_ADDRESS}."
+DAILY_FULL = f"the inbox is full for today. Please try again tomorrow, or write to {CONTACT_ADDRESS}."
 NO_ANSWER = f"the inbox did not answer. Try again in a few minutes, or write to {CONTACT_ADDRESS}."

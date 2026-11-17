@@ -130,3 +130,9 @@ def trouble(error):
         return ("The contact inbox refused the console's token: [admin] contact_read_token must be the same as the "
                 "Worker's secret CONTACT_READ_TOKEN.")
     return "The contact inbox did not answer, so its messages cannot be shown now. Try again in a few minutes."
+
+
+def label_text(text):
+    """Text from outside as a widget label shows it: Streamlit reads labels as Markdown, so every punctuation mark is
+    escaped. Otherwise an address or file name like ![x](http://...) would make the console load that address."""
+    return "".join(f"\\{c}" if c in "\\`*_{}[]()#+-.!|<>~$:=^&\"'" else c for c in str(text))

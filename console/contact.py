@@ -82,7 +82,7 @@ def _downloads(token, thread):
             except requests.RequestException:
                 st.html(console.notice(DOWNLOAD_FAILED.format(name=a["name"]), "warn"))
                 continue
-            st.download_button(DOWNLOAD.format(name=a["name"], size=contact.size_words(a["size"])), data, file_name=a["name"],
+            st.download_button(DOWNLOAD.format(name=contact.label_text(a["name"]), size=contact.size_words(a["size"])), data, file_name=a["name"],
                                key=f"contact_file_{a['id']}", icon=":material/download:")
 
 
@@ -92,7 +92,7 @@ def _thread(token, thread):
     _downloads(token, thread)
     if not thread["address"]:
         return
-    label = REPLY_LABEL.format(address=thread["address"]) + (f" ({NOT_VERIFIED})" if thread["form"] else "")
+    label = REPLY_LABEL.format(address=contact.label_text(thread["address"])) + (f" ({NOT_VERIFIED})" if thread["form"] else "")
     st.text_area(label, key=f"contact_reply_{thread['id']}", max_chars=REPLY_CHARACTERS, height=140, help=REPLY_HELP)
     st.button(SEND, key=f"contact_send_{thread['id']}", type="primary", icon=":material/send:",
               on_click=_send_reply, args=(token, thread))

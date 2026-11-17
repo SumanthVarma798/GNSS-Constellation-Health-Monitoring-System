@@ -306,8 +306,8 @@ def test_the_contact_inbox_shows_threads_and_opens_the_latest_oldest_message_fir
     assert 'class="c-msg out"' in page and "Sent by the team to newer@example.org" in page
     assert "being scanned (checked every 3 hours)" in page and "removed: virus found (Eicar-Test-Signature)" in page
     assert "not kept: too large" in page
-    assert [b.label for b in at.get("download_button")] == ["Download plan.pdf (2 KB)"]
-    assert at.text_area(key="contact_reply_t1").label == "Reply to newer@example.org"
+    assert [b.label for b in at.get("download_button")] == ["Download plan\\.pdf (2 KB)"]   # escaped: a label is Markdown
+    assert at.text_area(key="contact_reply_t1").label == "Reply to newer@example\\.org"   # escaped Markdown
 
 
 def test_a_thread_from_the_dashboard_form_is_marked_as_not_verified_when_open(monkeypatch):
@@ -966,3 +966,11 @@ def test_the_inbox_token_comes_from_the_secrets_or_else_the_environment(monkeypa
     monkeypatch.setenv("CONTACT_READ_TOKEN", " from-env ")
     assert contact.inbox_token({}) == "from-env"
     assert contact.inbox_token({"contact_read_token": "from-secrets"}) == "from-secrets"
+
+
+def test_names_from_outside_are_escaped_before_they_become_markdown_widget_labels():
+    from evidence import contact
+    assert contact.label_text("![x](http://attacker.example)@b.co") == (
+        "\\!\\[x\\]\\(http\\://attacker\\.example\\)@b\\.co")
+    source = (ROOT / "console" / "contact.py").read_text()
+    assert 'contact.label_text(a["name"])' in source and 'contact.label_text(thread["address"])' in source

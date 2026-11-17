@@ -68,6 +68,9 @@ export function rss(publication, posts) {
 // The contact inbox: mail to contact@opengnss.org is kept privately for the team to read in the console, never published.
 export const CONTACT_TO = "contact@opengnss.org";   // the default; the Worker's CONTACT_TO var overrides it
 export const CONTACT_TEXT_CHARACTERS = 4000;
+// Messages the inbox takes in a UTC day, the form and contact mail together. With 3 files each that is at most
+// 30 x 8 = 240 KV writes (message, files, verdicts, this count), so the newsletters keep most of the free 1000 a day.
+export const CONTACT_DAILY_MESSAGES = 30;
 export const CONTACT_READ_ITEMS = 200;             // the newest messages GET /contact returns
 
 export const isContact = (to, contactTo) => (to || "").trim().toLowerCase() === (contactTo || CONTACT_TO).trim().toLowerCase();
@@ -105,6 +108,10 @@ export function threadOf(mail, records) {
   return found ? found.thread : "";
 }
 
+// One line, as a mail header must be: control characters (CR and LF among them) become a space, so stored text can
+// never add a header to a reply.
+export const oneLine = (value) => String(value || "").replace(/[\u0000-\u001f\u007f]+/g, " ").trim();
+
 export const REPLY_SUBJECT_DEFAULT = "your message to OpenGNSS";   // a form message has no subject
 export const HEADER_VALUE_BYTES = 2048;                           // Email Service's limit on one header's value
 
@@ -118,13 +125,14 @@ export function replyTo(records, thread, text) {
   if (!oldestFirst.length) return { status: 404, problem: "no such thread" };
   const first = oldestFirst.find((r) => r.direction === "in");
   if (!first || !PLAUSIBLE_ADDRESS.test(first.address || "")) return { status: 409, problem: "the thread has no address to reply to" };
-  const subject = oldestFirst[0].subject || "";
+  const subject = oneLine(oldestFirst[0].subject);
   const headers = {};
   const last = [...oldestFirst].reverse().find((r) => r.direction === "in" && r.message_id);
   if (last) {
     const chain = [...messageIds(last.references), ...messageIds(last.message_id)];
     while (chain.length > 1 && new TextEncoder().encode(chain.join(" ")).length > HEADER_VALUE_BYTES) chain.splice(1, 1);   // keep the first and the newest
-    headers["In-Reply-To"] = asMessageId(last.message_id);
+    headers["In-Reply-To"] = messageIds(last.message_id)[0] || "";   // only a whole <id>, never stored text as it came
+    if (!headers["In-Reply-To"]) delete headers["In-Reply-To"];
     headers.References = chain.join(" ");
   }
   return { to: first.address, subject: /^re:/i.test(subject) ? subject : `Re: ${subject || REPLY_SUBJECT_DEFAULT}`, headers, text: words };
@@ -211,7 +219,7 @@ const PLAUSIBLE_ADDRESS = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
 
 export function formMessage(body) {
   const field = (name) => (body && typeof body[name] === "string" ? body[name].trim() : "");
-  const from = field("from"), subject = field("subject"), text = field("text");
+  const from = field("from"), subject = oneLine(field("subject")), text = field("text");
   if (!body || typeof body !== "object") return { problem: "the message must be JSON" };
   if (characters(from) > CONTACT_ADDRESS_CHARACTERS || !PLAUSIBLE_ADDRESS.test(from)) return { problem: "from is not an email address" };
   if (characters(subject) > CONTACT_SUBJECT_CHARACTERS) return { problem: `subject is longer than ${CONTACT_SUBJECT_CHARACTERS} characters` };

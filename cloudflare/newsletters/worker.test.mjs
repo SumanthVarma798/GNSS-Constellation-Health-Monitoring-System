@@ -159,6 +159,10 @@ test("an attachment waits for its scan: the console cannot download it until it 
   assert.equal(await clean.text(), "%PDF-1.4 plan");
   assert.equal(clean.headers.get("content-type"), "application/pdf");
   assert.equal(clean.headers.get("content-disposition"), "attachment; filename*=UTF-8''plan.pdf");
+  // a leaked scan token can neither fetch a clean file nor remove it
+  assert.equal((await worker.fetch(attachment(pdf.id, "scan-1"), env)).status, 409);
+  assert.equal((await worker.fetch(verdict(pdf.id, { result: "infected", signature: "x" }), env)).status, 409);
+  assert.equal(await (await worker.fetch(attachment(pdf.id, "read-1"), env)).text(), "%PDF-1.4 plan");
 
   assert.equal((await worker.fetch(verdict(csv.id, { result: "infected", signature: "Eicar-Test-Signature" }), env)).status, 200);
   assert.equal(env.NEWSLETTERS.values.get(`contact-file:${csv.id}`), "");   // the bytes are gone
@@ -192,4 +196,28 @@ test("an email's attachment is kept for scanning; one of a type not accepted is 
   assert.deepEqual(kept.map((a) => [a.name, a.type, a.scan]), [["report.pdf", "application/pdf", "pending"]]);
   assert.equal(await (await worker.fetch(attachment(kept[0].id, "scan-1"), env)).text(), "%PDF-1.4 test");
   assert.deepEqual(messages.find((m) => m.address === "b@example.org").attachments, [{ name: "setup.exe", size: 13, note: "not kept: type not accepted" }]);
+});
+
+test("a subject with line breaks is kept on one line, so a reply can never carry an extra header", async () => {
+  const env = environment();
+  await worker.fetch(post({ from: "a@example.org", subject: "Hello\r\nBcc: someone@example.net", text: "Hi" }, "write-1"), env);
+  const [message] = await inbox(env);
+  assert.equal(message.subject, "Hello Bcc: someone@example.net");
+  assert.equal((await worker.fetch(call("/contact/reply", { method: "POST", body: { thread: message.thread, text: "Thanks" }, token: "read-1" }), env)).status, 201);
+  assert.equal(env.EMAIL.sent[0].subject, "Re: Hello Bcc: someone@example.net");
+  assert.equal(env.EMAIL.sent[0].to, "a@example.org");
+});
+
+test("the inbox takes at most its daily number of messages, form and mail together", async () => {
+  const { CONTACT_DAILY_MESSAGES } = await import("./lib.js");
+  const env = environment();
+  for (let i = 0; i < CONTACT_DAILY_MESSAGES; i++) {
+    assert.equal((await worker.fetch(post({ from: "a@example.org", text: `n${i}` }, "write-1"), env)).status, 201);
+  }
+  const full = await worker.fetch(post({ from: "a@example.org", text: "one more" }, "write-1"), env);
+  assert.equal(full.status, 429);
+  let rejected = "";
+  await worker.email({ ...email("b@example.org", "Hi"), setReject: (why) => { rejected = why; } }, env);
+  assert.match(rejected, /full for today/);
+  assert.equal((await inbox(env)).length, CONTACT_DAILY_MESSAGES);
 });

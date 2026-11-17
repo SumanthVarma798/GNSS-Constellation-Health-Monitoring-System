@@ -16,7 +16,7 @@
 //   An attachment's scan state lives in its own key's metadata, so a verdict rewrites only that key, never the message.
 import PostalMime from "postal-mime";
 import {
-  CONTACT_READ_ITEMS, CONTACT_TO, FEED_ITEMS, asMessageId, authorized, contactRecord, excerpt, formAttachments, formMessage,
+  CONTACT_DAILY_MESSAGES, CONTACT_READ_ITEMS, CONTACT_TO, FEED_ITEMS, asMessageId, authorized, contactRecord, excerpt, formAttachments, formMessage,
   fromSubstack, isContact, newestFirst, postLink, publicationOf, receiverResults, replyTo, rss, sameTokens, scanResult,
   sortAttachments, threadOf,
 } from "./lib.js";
@@ -70,6 +70,15 @@ const keepFiles = (env, files) => Promise.all(files.map(async ({ name, type, siz
 }));
 
 // One message into the contact inbox, under the time it arrived.
+// Today's count of messages taken in, so a flood (or a leaked write token) cannot spend the newsletters' KV writes.
+// ponytail: KV is eventually consistent, so a burst can pass the cap by a few; a Durable Object counter if that matters.
+const countKey = () => `contact-count:${new Date().toISOString().slice(0, 10)}`;
+const roomToday = async (env) => (Number(await env.NEWSLETTERS.get(countKey())) || 0) < CONTACT_DAILY_MESSAGES;
+async function countToday(env) {
+  const key = countKey();
+  await env.NEWSLETTERS.put(key, String((Number(await env.NEWSLETTERS.get(key)) || 0) + 1), { expirationTtl: 2 * 86400 });
+}
+
 const keepContact = (env, record) =>
   env.NEWSLETTERS.put(`${CONTACT}${record.at}:${crypto.randomUUID().slice(0, 8)}`, JSON.stringify(record));
 
@@ -97,7 +106,7 @@ async function attachments(request, env, path) {
     if (verdict.problem) return refused(400, verdict.problem);
     const { value, metadata } = await env.NEWSLETTERS.getWithMetadata(key, "arrayBuffer");
     if (value === null) return refused(404, "no such attachment");
-    if (metadata?.scan === "infected") return refused(409, "already removed: a virus was found");
+    if ((metadata?.scan || "pending") !== "pending") return refused(409, `already scanned: ${metadata.scan}`);   // a leaked scan token cannot remove a clean file
     if (verdict.result === "clean") await env.NEWSLETTERS.put(key, value, { metadata: { ...metadata, scan: "clean" } });
     else await env.NEWSLETTERS.put(key, "", { metadata: { ...metadata, scan: "infected", signature: verdict.signature } });   // bytes gone, record kept
     return Response.json({ ok: true, scan: verdict.result });
@@ -107,8 +116,9 @@ async function attachments(request, env, path) {
   const { value, metadata } = await env.NEWSLETTERS.getWithMetadata(key, "arrayBuffer");
   if (value === null) return refused(404, "no such attachment");
   const scan = metadata?.scan || "pending";
-  // The scanner fetches a file to scan it; anyone else only once it is clean.
-  if (scan === "infected" || (!scanner && scan !== "clean")) return Response.json({ ok: false, scan }, { status: 409 });
+  // The scanner fetches a file only while it waits to be scanned; the console only once it is clean.
+  const allowed = (scanner && scan === "pending") || (reader && scan === "clean");
+  if (!allowed) return Response.json({ ok: false, scan }, { status: 409 });
   return new Response(value, {
     headers: {
       ...NO_STORE, "content-type": metadata?.type || "application/octet-stream", "x-content-type-options": "nosniff",
@@ -146,6 +156,10 @@ export default {
     const raw = await new Response(message.raw).arrayBuffer();
     const mail = await PostalMime.parse(raw);
     if (isContact(message.to, env.CONTACT_TO)) {   // the time it arrived, not the Date the sender wrote
+      if (!(await roomToday(env))) {
+        message.setReject("The OpenGNSS contact inbox is full for today. Please write again tomorrow.");
+        return;
+      }
       const { kept, noted } = sortAttachments((mail.attachments || []).map((a) => ({ name: a.filename, content: a.content })));
       await keepContact(env, {
         ...contactRecord(mail, message.from, new Date().toISOString()),
@@ -153,6 +167,7 @@ export default {
         message_id: headerIds(mail.messageId), in_reply_to: headerIds(mail.inReplyTo), references: headerIds(mail.references),
         attachments: [...await keepFiles(env, kept), ...noted],
       });
+      await countToday(env);
       return;
     }
     const headers = Object.fromEntries(mail.headers.map((h) => [h.key.toLowerCase(), h.value]));
@@ -188,6 +203,7 @@ export default {
     }
     if (path === "/contact" && request.method === "POST") {   // the dashboard's contact form
       if (!authorized(request.headers.get("authorization"), env.CONTACT_WRITE_TOKEN)) return notAllowed();
+      if (!(await roomToday(env))) return refused(429, "the inbox takes no more messages today");
       const text = await request.text();
       if (text.length > CONTACT_BODY_CHARACTERS) return refused(413, "the message is too large");
       let body = null;
@@ -201,6 +217,7 @@ export default {
         ...contactRecord(mail, "", new Date().toISOString()), via: "form", thread: crypto.randomUUID(), direction: "in",
         attachments: await keepFiles(env, files.files),
       });
+      await countToday(env);
       return Response.json({ ok: true }, { status: 201 });
     }
     if (path === "/contact/reply" && request.method === "POST") return reply(request, env);

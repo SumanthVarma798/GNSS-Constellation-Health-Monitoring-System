@@ -18,7 +18,7 @@ import streamlit as st
 from ui import reveal, surfaces
 from ui.contact_settings import (
     ADDRESS_CHARACTERS, ADDRESS_LABEL, ADDRESS_PLACEHOLDER, BAD_ADDRESS, CAP_WAIT, EMPTY, FILE_BYTES, FILE_TYPE, FILE_TYPES,
-    FILES, FILES_HELP, FILES_LABEL, FILES_TOO_LARGE, MESSAGE_LABEL, NO_ANSWER, NOT_SENT, NOT_SET_UP, REFUSED,
+    DAILY_FULL, FILES, FILES_HELP, FILES_LABEL, FILES_TOO_LARGE, MESSAGE_LABEL, NO_ANSWER, NOT_SENT, NOT_SET_UP, REFUSED,
     SECRETS_SECTION, SEND, SEND_TIMEOUT_SECONDS, SENDS_PER_WINDOW, SENT, SESSION_COOLDOWN_SECONDS, TOO_MANY_FILES,
     SESSION_WAIT, SUMMARY, TEXT_CHARACTERS, TITLE, TOKEN_ENV, TOKEN_KEY, TOO_LONG, URL_ENV, URL_KEY, WINDOW_SECONDS,
 )
@@ -98,6 +98,8 @@ def post(url, token, address, message, files=()):
         except (ValueError, AttributeError):
             said = ""
         return REFUSED.format(problem=said or "no reason given")
+    if answer.status_code == 429:
+        return DAILY_FULL
     return NOT_SET_UP if answer.status_code == 401 else NO_ANSWER
 
 
@@ -137,7 +139,8 @@ def _send(prefix):
         return
     address, message, now = st.session_state[address_key].strip(), st.session_state[message_key].strip(), time.time()
     times, lock = _sent_times()
-    files = [(f.name, f.getvalue()) for f in st.session_state.get(_files_key(prefix)) or []]
+    chosen = st.session_state.get(_files_key(prefix))
+    files = [(chosen.name, chosen.getvalue())] if chosen else []
     words, status = attempt(address, message, st.session_state.get(LAST_SENT), now, times, lock,
                             lambda a, m: post(*settings, a, m, files), files)
     st.session_state[status_key] = (words, status)
@@ -157,7 +160,7 @@ def form(prefix):
             st.text_input(ADDRESS_LABEL, key=address_key, max_chars=ADDRESS_CHARACTERS, placeholder=ADDRESS_PLACEHOLDER,
                           autocomplete="email")
             st.text_area(MESSAGE_LABEL, key=message_key, max_chars=TEXT_CHARACTERS)
-            st.file_uploader(FILES_LABEL, type=FILE_TYPES, accept_multiple_files=True, key=_files_key(prefix), help=FILES_HELP)
+            st.file_uploader(FILES_LABEL, type=FILE_TYPES, key=_files_key(prefix), help=FILES_HELP)
             st.form_submit_button(SEND, on_click=_send, args=(prefix,), icon=":material/send:")
         if status_key in st.session_state:
             surfaces.show(surfaces.notice(*st.session_state[status_key], inline=True))
