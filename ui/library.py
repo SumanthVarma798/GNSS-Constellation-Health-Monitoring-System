@@ -164,7 +164,7 @@ def scoreboard(counts, figures):
                  else surfaces.chip("not known", "idle"))
         service = row["years_retired"] + row["years_operating"]
         lines += (
-            f'<tr><td class="who"><b><span class="dot" style="background:{palette.CONSTELLATION_COLOURS[row["system"]]}"></span>{system}</b>'
+            f'<tr><td class="who"><b><span class="dot" style="background:{palette.css(palette.CONSTELLATION_COLOURS[row["system"]])}"></span>{system}</b>'
             f'<span class="small">{escape(SYSTEMS[row["system"]]["country"])}, launches {_span(row["first"], row["last"])}</span></td>'
             + _count(row["launched"], label="Launched") + _count(row["failed_at_launch"], bad=True, label="Failed at launch")
             + _count(row["failed_in_orbit"], bad=True, label="Failed in orbit")

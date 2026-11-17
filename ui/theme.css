@@ -116,7 +116,7 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 [data-testid="stFileUploaderDropzoneInstructions"] :is(span, small) { color: var(--muted); }
 [data-testid="stFileUploaderDropzoneInstructions"] span:first-child { color: var(--ink); }
 [data-testid="stFileUploaderDropzone"] button { background: var(--platform); color: var(--ink); border: 1px solid var(--edge); box-shadow: var(--raised-sm); }
-.stApp :is(input, textarea)::placeholder { color: var(--muted); opacity: .75; }   /* .stApp: outranks Streamlit's own */
+.stApp :is(input, textarea)::placeholder { color: var(--muted); opacity: 1; }   /* full strength: 4.5:1 in either theme */   /* .stApp: outranks Streamlit's own */
 [data-testid="stTextInput"] [data-baseweb="input"]:focus-within, [data-testid="stTextArea"] [data-baseweb="textarea"]:focus-within, [data-testid="stSelectbox"] [data-baseweb="select"] > div:focus-within {
   outline: 2px solid var(--accent); outline-offset: 2px; border-color: var(--accent);
 }
@@ -266,7 +266,9 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 [data-testid="stPopover"] button[aria-expanded="true"] { box-shadow: var(--pressed); background: var(--well); color: var(--accent); }
 [data-testid="stPopover"] button :is(svg, span, p, [data-testid="stMarkdownContainer"]) { color: inherit; }
 .st-key-bar_buttons [data-testid="stPopover"] button { width: 36px; height: 36px; padding: 0; border-radius: 50%; }
-.st-key-bar_buttons [data-testid="stPopover"] button > :not(:first-child) { display: none; }   /* only the gear: no words, no arrow (its margins pushed the gear sideways) */
+.st-key-bar_buttons [data-testid="stPopover"] button > :not(:first-child):not([data-testid="stMarkdownContainer"]) { display: none; }   /* only the icon: no arrow (its margins pushed the gear sideways) */
+/* its words ("Settings", "Your Space-Track login") stay for screen readers, out of sight */
+.st-key-bar_buttons [data-testid="stPopover"] button > [data-testid="stMarkdownContainer"] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 [data-testid="stPopoverBody"] { background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); color: var(--ink); }
 [data-testid="stPopoverBody"] > div { color: var(--ink); }   /* its wrapper takes Streamlit's own (dark) text colour */
 [data-testid="stNumberInputContainer"] { border-color: var(--well); }   /* Streamlit draws it in its own (dark) colour */

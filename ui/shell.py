@@ -289,7 +289,7 @@ def _refresh(names, window_days, gear_scope):
         with st.container(key="bar_buttons"):
             clicked = st.button("Refresh orbit data", key="refresh_button", icon=":material/refresh:",
                                 help="Load the newest orbit data we have fetched")
-            with st.popover("", icon=":material/settings:",
+            with st.popover("Settings", icon=":material/settings:",   # the label names it; theme.css shows only the icon
                             help="Settings: the theme, and on a constellation's pages what counts as a burn and how "
                                  "strictly satellites are scored"):
                 _theme_setting()
@@ -312,7 +312,7 @@ _OWN_NOTE_WORDS = {"busy": "busy, will try again in an hour", "login refused": "
 
 def _own_login():
     """The key popover next to the gear: the viewer's own Space-Track login, kept only for this visit."""
-    with st.popover("", icon=":material/key:", help="Your Space-Track login (this session only)"):
+    with st.popover("Your Space-Track login", icon=":material/key:", help="Your Space-Track login (this session only)"):
         login = st.session_state.get(data.OWN_LOGIN)
         if login:
             st.write("Using your Space-Track login for this visit")
@@ -423,7 +423,7 @@ def _chip_marks():
     position: the chips are in the order of ui.systems.SYSTEMS."""
     rules = "".join(
         f":is(.st-key-nav_system, .st-key-nav_system_menu) button:nth-of-type({place})::before "
-        f"{{ --mk: var(--mk-{marks.key(name).lower()}); color: {palette.CONSTELLATION_COLOURS[marks.key(name)]}; }}"
+        f"{{ --mk: var(--mk-{marks.key(name).lower()}); color: {palette.css(palette.CONSTELLATION_COLOURS[marks.key(name)])}; }}"
         for place, name in enumerate(systems.SYSTEMS, 1) if marks.key(name))
     return f"<style>{rules}</style>"
 

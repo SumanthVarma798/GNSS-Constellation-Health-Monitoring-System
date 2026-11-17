@@ -157,7 +157,7 @@ def payload(systems, gap=None, now=None):
             if not tracks.get(name) and "track" not in sat:
                 sat["track"] = {"lat": [], "lon": [], "height": []}
             records.append(_satellite_record(system, sat, tracks))
-        shown_systems.append({"name": system, "colour": world_settings.SYSTEM_COLOURS.get(system, palette.FILL),
+        shown_systems.append({"name": system, "colour": palette.css(world_settings.SYSTEM_COLOURS.get(system, palette.FILL)),
                               "satellites": records})
     return {
         "areas": world_settings.SERVICE_AREAS,
@@ -169,7 +169,7 @@ def payload(systems, gap=None, now=None):
             {"words": "some signals off", "status": "warn", "colour": world_settings.HEALTH_COLOURS["warn"]},
             {"words": "not in the IGS daily broadcast file, or unknown", "status": "idle", "colour": world_settings.HEALTH_COLOURS["idle"]},
         ],
-        "system_key": [{"name": system, "colour": world_settings.SYSTEM_COLOURS.get(system, palette.FILL)}
+        "system_key": [{"name": system, "colour": palette.css(world_settings.SYSTEM_COLOURS.get(system, palette.FILL))}
                        for system in world_settings.SYSTEM_COLOURS],
         "systems": shown_systems,
     }

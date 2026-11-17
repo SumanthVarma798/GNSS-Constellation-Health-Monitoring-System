@@ -22,19 +22,7 @@ SCHEMES = {"system": ":material/brightness_auto: System", "light": ":material/li
 
 # CSS variable name -> value. The shadows are written in terms of the colour variables; the type scale follows.
 VARIABLES = {
-    "platform": palette.PLATFORM,
-    "lift": palette.LIFT,
-    "sink": palette.SINK,
-    "well": palette.WELL,
-    "track": palette.TRACK,
-    "fill": palette.FILL,
-    "ink": palette.INK,
-    "muted": palette.MUTED,
-    "accent": palette.ACCENT,
-    "ok": palette.OK,
-    "warn": palette.WARN,
-    "bad": palette.BAD,
-    "idle": palette.IDLE,
+    **palette.THEMED_DARK,   # the surfaces, text, statuses and each constellation's colour (--sys-gps and the rest)
     "edge": EDGE,
     "raised": "-6px -6px 14px var(--lift), 7px 7px 16px var(--sink)",
     "raised-sm": "-3px -3px 8px var(--lift), 4px 4px 10px var(--sink)",
@@ -48,7 +36,7 @@ VARIABLES = {
 }
 
 
-LIGHT_VARIABLES = {**palette.LIGHT, "edge": LIGHT_EDGE}
+LIGHT_VARIABLES = {**palette.THEMED_LIGHT, "edge": LIGHT_EDGE}
 
 
 def chosen_scheme():
@@ -84,7 +72,7 @@ def figure_rules():
     dark colours."""
     rules = ""
     # Ours, then the text colours Streamlit's own Plotly template writes where a figure sets none (ticks, legend).
-    for colour, name in [(VARIABLES[name], name) for name in palette.LIGHT] + [("#e6eaf1", "ink"), ("#fafafa", "ink")]:
+    for colour, name in [(colour, name) for name, colour in palette.THEMED_DARK.items()] + [("#e6eaf1", "ink"), ("#fafafa", "ink")]:
         red, green, blue = (int(colour[i:i + 2], 16) for i in (1, 3, 5))
         for part in ("fill", "stroke"):
             rules += (f'.js-plotly-plot [style*="{part}: rgb({red}, {green}, {blue})"] '

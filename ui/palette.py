@@ -52,6 +52,24 @@ LIFECYCLE_STEP_COLOURS = {"built": IDLE, "launch": ACCENT, "separation": ACCENT,
 CONSTELLATION_COLOURS = {"GPS": "#8f9cf0", "Galileo": "#6fc3cf", "GLONASS": "#d98f7a", "BeiDou": "#d3b56b",
                          "NavIC": "#8fcf8a", "QZSS": "#d58fc6"}
 
+# The same hues darker for the light theme: at least 3 to 1 against its platform and well, as a mark must be.
+LIGHT_CONSTELLATION_COLOURS = {"GPS": "#4a5bc7", "Galileo": "#1d7a87", "GLONASS": "#a4513a", "BeiDou": "#7f6212",
+                               "NavIC": "#3a7f35", "QZSS": "#94457f"}
+
+# Every colour that follows the theme, by its CSS variable's name (ui/theme.py defines both sets on :root).
+DARK = {"platform": PLATFORM, "lift": LIFT, "sink": SINK, "well": WELL, "track": TRACK, "fill": FILL, "ink": INK,
+        "muted": MUTED, "accent": ACCENT, "ok": OK, "warn": WARN, "bad": BAD, "idle": IDLE}
+THEMED_DARK = {**DARK, **{f"sys-{key.lower()}": colour for key, colour in CONSTELLATION_COLOURS.items()}}
+THEMED_LIGHT = {**LIGHT, **{f"sys-{key.lower()}": colour for key, colour in LIGHT_CONSTELLATION_COLOURS.items()}}
+_AS_VARIABLE = {colour: f"var(--{name})" for name, colour in THEMED_DARK.items()}
+
+
+def css(colour):
+    """A colour for a page or a frame: one that follows the theme becomes its variable (var(--ok)), any other stays.
+    A canvas resolves the variable when it draws (the frames' themed())."""
+    return _AS_VARIABLE.get(colour, colour)
+
+
 FONT = '"Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif'
 FONT_NUMBERS = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace'
 RADIUS_PX = 20         # surfaces; chips and buttons are fully rounded
