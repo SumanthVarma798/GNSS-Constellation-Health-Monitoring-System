@@ -466,7 +466,8 @@ def test_the_quality_map_draws_a_dot_per_city_by_its_band_and_rings_the_two_chos
 
     dots = [t for t in fig.data if t.mode == "markers" and t.hovertemplate]
     assert sum(len(t.x) for t in dots) == 2 and {t.marker.symbol for t in dots} == {"circle", "diamond", "square"}
-    assert any("Your place: Beijing" in "".join(t.text or ()) for t in fig.data)
+    assert [a.text for a in fig.layout.annotations] == ["<b>Beijing</b>", "<b>Chongqing</b>"]   # city only, on a backing
+    assert all(a.bgcolor for a in fig.layout.annotations) and {"Your place", "Compare with"} <= {t.name for t in fig.data}
     assert [t.name for t in dots] == [words for _, _, words in gf.quality_legend()]
 
 
@@ -605,3 +606,29 @@ def test_a_click_on_a_satellite_marker_uses_its_position_not_its_words():
     assert geometry_data.clicked_place({"customdata": ["NVS-01", "0.0° N, 129.5° E"], "x": 129.5, "y": 0.0}) == (0.0, 129.5)
     assert geometry_data.clicked_place({"customdata": ["2026-10-20 05:00", "over …", "35,800 km"], "x": 55, "y": 9}) == (9, 55)
     assert geometry_data.clicked_place({"x": 55, "y": 9}) == (9, 55)
+
+
+def test_too_few_satellites_say_so_once_for_the_constellation_and_name_them():
+    line = gf.too_few_line("NavIC", ["IRNSS-1B", "NVS-01", "<x>"], "In service", more=True)
+
+    assert "NavIC has" in line and "3 satellites</span>" in line and "needs 4" in line and "Choose All" in line
+    assert "IRNSS-1B<br>NVS-01<br>&lt;x&gt;" in line
+    assert "Choose All" not in gf.too_few_line("NavIC", ["A"], "In service") and "1 satellite<" in gf.too_few_line("NavIC", ["A"], "All")
+    assert gf.too_few_line("NavIC", list("ABCD"), "All") == ""
+
+
+def test_the_city_map_is_exactly_as_wide_as_the_card_shape_and_stays_on_the_earth():
+    for places, picks in (([(6, 68), (35, 97)], [(17, 78), (29, 106)]), ([(30, 130), (45, 145)], [(17, 78)]),
+                          ([(-30, 30), (60, 170)], [(51, -0.1)]), ([(36, 120)], [(37, 125)])):
+        (x0, x1), (y0, y1) = gf.map_ranges(places, picks)
+        assert abs((x1 - x0) - gf.MAP_ASPECT * (y1 - y0)) < 1e-9 and -180 <= x0 and x1 <= 180 and -90 <= y0 and y1 <= 90
+        assert x0 <= min(lon for _, lon in [*places, *picks]) and x1 >= max(lon for _, lon in [*places, *picks])
+        assert y0 <= min(lat for lat, _ in [*places, *picks]) and y1 >= max(lat for lat, _ in [*places, *picks])
+    assert gf.map_ranges([(-30, 30), (60, 170)], [(51, -0.1)]) == ([-180, 180], [-90, 90])
+
+
+def test_the_maps_key_is_a_row_of_marks_with_words_and_no_hex():
+    key = gf.quality_legend_html()
+
+    assert key.count("<li>") == 5 and "swatch diamond" in key and "swatch square" in key and "swatch ring" in key
+    assert "under 25 m" in key and "Your place" in key and "#" not in key

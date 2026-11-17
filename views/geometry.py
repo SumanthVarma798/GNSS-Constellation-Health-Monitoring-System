@@ -84,7 +84,8 @@ def _city_rows(satellites, cities, when, mask):
     return gd.dop_rows(satellites, dict(cities), when, mask)
 
 
-def _position_quality(constellation, satellites, now, mask):
+def _position_quality(constellation, satellites, now, mask, choice, more):
+    surfaces.show(gf.too_few_line(constellation, list(satellites), choice, more))
     you, vs = _place_pickers(constellation)
     here, there = gs.CITIES[you], gs.CITIES[vs]
     x_range, y_range = gf.map_ranges(list(gs.PLACES[constellation].values()), [here, there])
@@ -94,7 +95,9 @@ def _position_quality(constellation, satellites, now, mask):
     rows = _city_rows(satellites, tuple(shown.items()), when, mask)
     by_name = {row["place"]: row for row in rows}
     surfaces.show(gf.place_cards(by_name[you], by_name[vs]))
-    st.plotly_chart(gf.quality_map(rows, by_name[you], by_name[vs], (x_range, y_range)), **CHART)
+    surfaces.show(gf.quality_legend_html())
+    with st.container(key="geo_qmap"):
+        st.plotly_chart(gf.quality_map(rows, by_name[you], by_name[vs], (x_range, y_range)), **CHART)
     _explained(f"geo_map_say_{constellation}", "The map",
                "Each dot is a city: its colour and shape say how well the satellites pin its position down now.",
                gf.quality_map_deeper())
@@ -209,7 +212,7 @@ def _sky_and_ground(constellation, satellites, own, types, now, mask, window, re
     ground, sky = st.columns([3, 2])
     with ground:
         tracks, now_at = gd.ground_tracks({n: satellites[n] for n in own if n in satellites}, now, window)
-        marked = [(f"{label}: {gs.city_short(city)}", *gs.CITIES[city]) for label, city in ((gs.YOU_LABEL, you), (gs.COMPARE_LABEL, vs))]
+        marked = [(gs.city_short(city), *gs.CITIES[city]) for city in (you, vs)]
         st.plotly_chart(gf.ground_map(tracks, now_at, types, gs.PLACES[constellation], (name, lat, lon), marked),
                         key=f"geo_map_{constellation}", on_select=lambda: _clicked(constellation),
                         selection_mode="points", **CHART)
@@ -293,7 +296,7 @@ def constellation(name, picks, section, choice, mask, window, now):
     types = gd.orbit_types(result["health"], result["history"])
     own = [n for n in counted if picks is None or n in picks]
     if section == "Position quality":
-        _position_quality(name, satellites, now, mask)
+        _position_quality(name, satellites, now, mask, choice, bool(left_out))
     elif section == "Sky and ground":
         _sky_and_ground(name, satellites, own, types, now, mask, window, result)
     else:

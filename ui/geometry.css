@@ -58,3 +58,7 @@
   .geo-bands .br > :last-child { grid-column: 1 / -1; color: var(--fc-small); }
   .geo-bands .br.hd > :last-child { display: none; }
 }
+/* the city map is as wide as its card and half as tall, the shape its degrees are drawn in (MAP_ASPECT), so land fills it */
+.st-key-geo_qmap [data-testid="stPlotlyChart"], .st-key-geo_qmap .js-plotly-plot, .st-key-geo_qmap .plot-container { aspect-ratio: 2 / 1; height: auto !important; width: 100%; }
+.geo-legend { list-style: none; margin: 4px 0 6px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: var(--fs-small); color: var(--fc-small); }
+.geo-legend li { display: inline-flex; align-items: center; gap: 7px; }

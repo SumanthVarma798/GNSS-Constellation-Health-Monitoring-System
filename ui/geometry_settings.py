@@ -59,6 +59,7 @@ DEFAULT_PLACES = {"NavIC": ("Hyderabad, India", "Chongqing, China"), "QZSS": ("T
 GLOBAL_DEFAULT_PLACES = ("Hyderabad, India", "London, United Kingdom")
 CITY_STEP_MINUTES = 5     # the cities' position quality is worked out on the clock's five-minute steps, so it can be kept
 MAP_REGION_PAD_DEG = 14   # a regional constellation's map shows its key places and this much around them
+MAP_MIN_SPAN_DEG = 70     # ...and is never narrower than this, so a small region still shows its surroundings
 YOU_LABEL, COMPARE_LABEL = "Your place", "Compare with"
 
 
@@ -74,6 +75,8 @@ def city_short(name):
 # Satellites the team marks as not in service. "In service" leaves them out, as app.py did by default.
 NOT_IN_SERVICE = tuple(INACTIVE_SATELLITES)
 SATELLITE_CHOICES = ["In service", "All"]
+MIN_FOR_FIX = 4   # satellites a position needs
+CHOOSE_ALL = "Choose All to include satellites the page sets aside."
 
 ELEVATION_MASK_DEG = DEFAULT_PARAMS["elevation_mask_deg"]   # a satellite lower in the sky than this is not counted
 ELEVATION_MASK_RANGE = (0, 30)

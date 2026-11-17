@@ -19,7 +19,7 @@ from ui import geometry_data as gd
 from ui import geometry_settings as gs
 from ui import palette, surfaces, type_scale
 from ui.figures.orbits_3d import LAND_FILE
-from ui.tooltip import PLOTLY_HOVER, plotly_label_backing, plotly_line, plotly_template
+from ui.tooltip import PLOTLY_HOVER, tip_html, plotly_label_backing, plotly_line, plotly_template
 
 CLEAR = "rgba(0,0,0,0)"
 AXIS = {"linecolor": palette.TRACK, "tickcolor": palette.TRACK, "gridcolor": palette.WELL, "zeroline": False}
@@ -31,12 +31,13 @@ TREND_PAD_PX = 110       # a trend picture's height beyond its strips: the line'
 TREND_FORMAT = {"altitude_km": ",.1f"}   # hover numbers: km to a tenth, the rest to three places
 MAP_PAD_DEG = 12
 MAP_MIN_WIDE = 1.6     # the map is at least this many times as wide as it is tall
+MAP_ASPECT = 2.0       # the city map's width over its height: the whole world fits it exactly (360 by 180 degrees)
 MAP_PX = 500
 LANE_PX = 30            # each satellite's lane in the timeline: tall enough to read and to touch on a phone
 
 
 def _layout(fig, height, **extra):
-    fig.update_layout(height=height, paper_bgcolor=CLEAR, plot_bgcolor=CLEAR, font={"color": palette.INK},
+    fig.update_layout(**({"height": height} if height else {}), paper_bgcolor=CLEAR, plot_bgcolor=CLEAR, font={"color": palette.INK},
                       hoverlabel=PLOTLY_HOVER, **extra)
     return fig
 
@@ -191,41 +192,61 @@ def quality_legend():
 
 def quality_map(rows, you, other, ranges):
     """The land, each city a dot coloured (and shaped) by its position error now, and the two chosen places ringed and
-    named. rows: gd.dop_rows for the cities shown. ranges: (x_range, y_range)."""
+    named beside the ring on a backing, towards the nearer edge so they stay off the dots. rows: gd.dop_rows for the
+    cities shown. ranges: (x_range, y_range) from map_ranges, in the card's shape (MAP_ASPECT), so land fills the plot."""
     land_x, land_y = _land()
     fig = go.Figure(go.Scatter(x=land_x, y=land_y, mode="lines", fill="toself", fillcolor=palette.FILL, opacity=0.6,
                                line={"color": palette.TRACK, "width": 0.5}, hoverinfo="skip", showlegend=False))
     for status, symbol, words in quality_legend():
         mine = [r for r in rows if _error_class(r)[1] == status]
         fig.add_trace(go.Scatter(
-            x=[r["lon"] for r in mine], y=[r["lat"] for r in mine], mode="markers", name=words,
+            x=[r["lon"] for r in mine], y=[r["lat"] for r in mine], mode="markers", name=words, showlegend=False,
             marker={"symbol": symbol, "size": 11, "color": {"ok": palette.OK, "warn": palette.WARN, "bad": palette.BAD}[status],
                     "line": {"color": palette.PLATFORM, "width": 1}},
             customdata=[[escape(r["place"]), r["seen"], metres_words(r["metres"]), _error_class(r)[0]] for r in mine],
             hovertemplate=plotly_template("%{customdata[0]}", ("In view", "%{customdata[1]} satellites"),
                                           ("Expected error", "%{customdata[2]}"), ("Quality", "%{customdata[3]}"))))
+    middle = [(ranges[0][0] + ranges[0][1]) / 2, (ranges[1][0] + ranges[1][1]) / 2]
     for label, row, line in ((gs.YOU_LABEL, you, palette.ACCENT), (gs.COMPARE_LABEL, other, palette.INK)):
-        fig.add_trace(go.Scatter(
-            x=[row["lon"]], y=[row["lat"]], mode="markers+text", showlegend=False, hoverinfo="skip",
-            text=[escape(f"{label}: {gs.city_short(row['place'])}")], textposition="top center",
-            textfont={"color": line, "size": type_scale.LEVELS["small"][1]},
-            marker={"symbol": "circle-open", "size": 22, "color": line, "line": {"width": 3}}))
-    fig.update_xaxes(range=ranges[0], ticksuffix="°", showgrid=True, constrain="domain", **AXIS)
+        fig.add_trace(go.Scatter(x=[row["lon"]], y=[row["lat"]], mode="markers", name=label, hoverinfo="skip",
+                                 showlegend=False, marker={"symbol": "circle-open", "size": 22, "color": line, "line": {"width": 3}}))
+        left, up = row["lon"] < middle[0], row["lat"] >= middle[1]   # the label goes outwards, away from the middle
+        fig.add_annotation(x=row["lon"], y=row["lat"], text=f"<b>{escape(gs.city_short(row['place']))}</b>", showarrow=False,
+                           xanchor="right" if left else "left", yanchor="bottom" if up else "top",
+                           xshift=-16 if left else 16, yshift=10 if up else -10,
+                           font={"color": line, "size": type_scale.LEVELS["small"][1]}, **plotly_label_backing())
+    fig.update_xaxes(range=ranges[0], ticksuffix="°", showgrid=True, **AXIS)
     fig.update_yaxes(range=ranges[1], ticksuffix="°", showgrid=True, scaleanchor="x", constrain="domain", **AXIS)
-    return _layout(fig, 380, margin={"l": 44, "r": 12, "t": 8, "b": 56}, hovermode="closest", dragmode=False,
-                   legend={"orientation": "h", "x": 0, "y": -0.1, "bgcolor": CLEAR, "title": {"text": "Error: "}})
+    return _layout(fig, None, margin={"l": 40, "r": 4, "t": 4, "b": 24}, hovermode="closest", dragmode=False, showlegend=False)
+
+
+def quality_legend_html():
+    """What the map's marks mean, in a row above it that wraps on a phone: each mark as the map draws it, with its words."""
+    marks = [(palette.css({"ok": palette.OK, "warn": palette.WARN, "bad": palette.BAD}[status]), words, symbol)
+             for status, symbol, words in quality_legend()]
+    marks += [(palette.css(palette.ACCENT), gs.YOU_LABEL, "ring"), (palette.css(palette.INK), gs.COMPARE_LABEL, "ring")]
+    shape = {"circle": "swatch", "diamond": "swatch diamond", "square": "swatch square", "ring": "swatch ring"}
+    items = "".join(f'<li><span class="{shape[mark]}" style="--c:{colour};background:{colour}"></span>{escape(words)}</li>'
+                    for colour, words, mark in marks)
+    return f'<ul class="geo-legend" aria-label="Map key">{items}</ul>'
 
 
 def map_ranges(key_points, picks):
-    """(x_range, y_range) for the map: the key places of a regional constellation and the picks, with a margin; the
-    whole world (to 60° S and 80° N) for a constellation with places all round it."""
+    """(x_range, y_range) for the map: wide enough for the key places and the picks with a margin, and exactly
+    MAP_ASPECT times as wide as tall, so with equal degrees on both axes the land fills the plot to its edges. The
+    whole world when the places spread over more than half of it. Kept inside -180 to 180 and -90 to 90."""
     lats = [lat for lat, _ in [*key_points, *picks]]
     lons = [lon for _, lon in [*key_points, *picks]]
-    if max(lons) - min(lons) > 120:
-        return [-180, 180], [-60, 80]
     pad = gs.MAP_REGION_PAD_DEG
-    x_range, y_range = _ranges([min(lats) - pad, max(lats) + pad], [min(lons) - pad, max(lons) + pad])
-    return x_range, y_range
+    width = max(max(lons) - min(lons) + 2 * pad, (max(lats) - min(lats) + 2 * pad) * MAP_ASPECT, gs.MAP_MIN_SPAN_DEG)
+    if width >= 360 * 0.6:
+        return [-180, 180], [-90, 90]
+    height = width / MAP_ASPECT
+    def fit(low, high, span, limit):
+        start = (low + high) / 2 - span / 2
+        start = max(-limit, min(limit - span, start))
+        return [start, start + span]
+    return fit(min(lons), max(lons), width, 180), fit(min(lats), max(lats), height, 90)
 
 
 def quality_map_deeper():
@@ -310,6 +331,19 @@ def spread_words():
     """The sketches' one line, with the sizes of their patches worked out: how many times bigger the patch is bunched."""
     times = overlap_area(gs.BUNCHED_ANGLES) / overlap_area(gs.SPREAD_ANGLES)
     return f"{gs.SPREAD_LINE} Here the patch is about {times:.0f} times bigger when they are bunched."
+
+
+def too_few_line(constellation, names, choice, more=False):
+    """When the satellites counted number fewer than the 4 a position needs, one line saying so for the whole
+    constellation, the count's names in a tooltip. '' with 4 or more. choice: gs.SATELLITE_CHOICES' word; more: satellites are set aside that All would add."""
+    if len(names) >= gs.MIN_FOR_FIX:
+        return ""
+    count = f"{len(names)} satellite{'' if len(names) == 1 else 's'}"
+    kind = "in service" if choice == gs.SATELLITE_CHOICES[0] else "counted"
+    listed = tip_html(escape(count), "<br>".join(escape(n) for n in names) or "none", key=constellation)
+    hint = f" {gs.CHOOSE_ALL}" if more and choice == gs.SATELLITE_CHOICES[0] else ""
+    return (f'<p class="geo-say">{escape(constellation)} has {listed} {kind} now, and a position needs {gs.MIN_FOR_FIX}, '
+            f'so no place gets a position from {escape(constellation)} alone today.{escape(hint)}</p>')
 
 
 def place_line(row):
