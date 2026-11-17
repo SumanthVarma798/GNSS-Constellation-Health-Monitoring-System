@@ -1,6 +1,40 @@
 {
- "generated_at": "2026-11-17T04:15:18Z",
+ "generated_at": "2026-11-17T16:33:22Z",
  "items": [
+  {
+   "address": "https://www.gsc-europa.eu/notice-advisory-to-galileo-users-nagu-2026048",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-17T16:30:43Z",
+   "grade": "B",
+   "grade_standing": "confirmed",
+   "outlet": "European GNSS Service Centre: news",
+   "published_at": "2026-11-17T14:42:44Z",
+   "source_id": "gsc-europa.eu",
+   "summary": "NOTICE ADVISORY TO GALILEO USERS (NAGU) 2026048 barrisa 17 November 2026 Tue, 11/17/2026 - 14:42 DATE GENERATED (UTC): 2026-11-17 15:00 NAGU TYPE: UNP_UNUFN NAGU NUMBER: 2026048 NAGU SUBJECT: UNAVAILABLE FROM 2026-11-17 UNTIL FURTHER NOTICE NAGU REFERENCED TO: N/A START DATE EVENT (UTC): 2026-11-17…",
+   "title": "NOTICE ADVISORY TO GALILEO USERS (NAGU) 2026048",
+   "via": "https://www.gsc-europa.eu/rss.xml"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMizwFBVV95cUxNNndudTFNZm1aMVNsNDh4cVQyMkxIXzJZVXpmOFljUDhfU2swX2dweXBRd3RsUS1tcVdXa3dwRUZ1N3Yxa2FIZUphbUZVeGJZYTg2X0Frb3FGVjY3QWtXSjVjd1dFZjI1VHZ5QlloaHhTa1kyZVpQTjZOMGNFQmFoOWJxTFNtYmVFX2xVZlRDQl9RZm9ET0lXRDhRR2tWMllFUU44MXcwWDFfdVU4RkROOG1PSHJPMkx1VmhCMllQeG9XeUkzYTZTN0dsMTBnbUHSAc8BQVVfeXFMTUZUeXV4TzNzTnU2Sm5vVU1lWS1WTWsxclVFUm45YzJMMzNZUVVQV1dscWNkZG5sdVN4WkNtNTJtcGI3aHBYMGZOeXJxYW1ocGY2TnZFMHl2RzU4MnhucFFNQXdzRmZsMlluanNQdE5peWFSMTVBODFIN2VhSDdmb21qTjVmRnlnZlV5ajY3Z3JOcVNQQ0hvWWhLUFM5YXRRd05BWU9JX3BsdG9rdVhPekc5dHYtTV9SOTFoQjgzLS1mUUppdGxQTWdtc1BMYndZ?oc=5",
+   "category": "other",
+   "constellations": [
+    "GPS",
+    "BeiDou-3"
+   ],
+   "fetched_at": "2026-11-17T16:32:41Z",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
+   "outlet": "South China Morning Post",
+   "published_at": "2026-11-17T08:00:10Z",
+   "source_id": "scmp.com",
+   "summary": "",
+   "title": "China’s GPS rival BeiDou expands reach with 27% rise in compatible devices",
+   "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
   {
    "address": "https://news.google.com/rss/articles/CBMiYkFVX3lxTE13S1h1bjAxN2VINXFYNVR6cE5za1JwVFNlMmVMQ3FtajMyS2RabUl4SVFLemlHbEdaMjVLSmYxdzR0bGlMa3E5Vl8ydFRuZWYtTWlTTFNzSmJGVlVIVV81MGdR?oc=5",
    "category": "other",
@@ -218,7 +252,7 @@
     "Galileo"
    ],
    "fetched_at": "2026-11-11T17:29:09Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "European GNSS Service Centre: news",
    "published_at": "2026-11-11T08:39:58Z",
@@ -266,7 +300,7 @@
     "Galileo"
    ],
    "fetched_at": "2026-11-10T17:19:42Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "European GNSS Service Centre: news",
    "published_at": "2026-11-10T11:07:16Z",
@@ -331,8 +365,9 @@
     "GLONASS"
    ],
    "fetched_at": "2026-11-09T01:16:22Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Tech Times",
    "published_at": "2026-11-08T21:46:11Z",
    "source_id": "techtimes.com",
@@ -443,7 +478,7 @@
     "NavIC"
    ],
    "fetched_at": "2026-11-07T17:53:23Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "pib.gov.in",
    "published_at": "2026-11-07T13:13:44Z",
@@ -796,7 +831,7 @@
     "NavIC"
    ],
    "fetched_at": "2026-11-05T08:29:08Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "isro.gov.in",
    "published_at": "2026-11-04T14:50:11Z",
@@ -911,8 +946,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-11-04T16:34:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "India Today",
    "published_at": "2026-11-04T09:45:02Z",
    "source_id": "indiatoday.in",
@@ -1056,7 +1092,7 @@
     "Galileo"
    ],
    "fetched_at": "2026-11-03T11:24:18Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "European GNSS Service Centre: news",
    "published_at": "2026-11-03T07:47:55Z",
@@ -1152,7 +1188,7 @@
     "Galileo"
    ],
    "fetched_at": "2026-11-02T19:50:09Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "European GNSS Service Centre: news",
    "published_at": "2026-11-02T18:33:05Z",
@@ -1442,8 +1478,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-11-01T06:53:59Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Vajiram & Ravi",
    "published_at": "2026-11-01T06:27:12Z",
    "source_id": "vajiramandravi.com",
@@ -1554,8 +1591,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-11-01T06:53:59Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Times of India",
    "published_at": "2026-10-31T19:29:00Z",
    "source_id": "timesofindia.indiatimes.com",
@@ -1618,8 +1656,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-10-31T21:54:33Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Tech Times",
    "published_at": "2026-10-31T17:54:37Z",
    "source_id": "techtimes.com",
@@ -1667,8 +1706,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-10-31T17:24:13Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Livemint",
    "published_at": "2026-10-31T16:28:11Z",
    "source_id": "livemint.com",
@@ -1699,7 +1739,7 @@
     "NavIC"
    ],
    "fetched_at": "2026-11-01T08:06:57Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "isro.gov.in",
    "published_at": "2026-10-31T15:39:10Z",
@@ -1715,8 +1755,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-10-31T17:24:13Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Indian Express",
    "published_at": "2026-10-31T15:26:46Z",
    "source_id": "indianexpress.com",
@@ -1811,8 +1852,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-10-31T17:24:13Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "INSIGHTS IAS",
    "published_at": "2026-10-31T10:38:30Z",
    "source_id": "insightsonindia.com",
@@ -1859,8 +1901,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-10-31T17:24:13Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Times of India",
    "published_at": "2026-10-31T10:25:10Z",
    "source_id": "timesofindia.indiatimes.com",
@@ -1971,8 +2014,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-10-31T17:24:13Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Times of India",
    "published_at": "2026-10-31T08:46:16Z",
    "source_id": "timesofindia.indiatimes.com",
@@ -2116,8 +2160,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-11-04T11:37:55Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "ThePrint",
    "published_at": "2026-10-31T07:23:44Z",
    "source_id": "theprint.in",
@@ -2180,8 +2225,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-11-09T01:15:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Economic Times",
    "published_at": "2026-10-31T07:00:00Z",
    "source_id": "m.economictimes.com",
@@ -2196,8 +2242,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-11-09T22:44:31Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Economic Times",
    "published_at": "2026-10-31T07:00:00Z",
    "source_id": "m.economictimes.com",
@@ -2358,8 +2405,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-11-04T11:37:55Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Economic Times",
    "published_at": "2026-10-31T05:36:56Z",
    "source_id": "m.economictimes.com",
@@ -2422,8 +2470,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-11-01T06:53:59Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "OpIndia",
    "published_at": "2026-10-31T05:31:09Z",
    "source_id": "opindia.com",
@@ -2486,7 +2535,7 @@
     "NavIC"
    ],
    "fetched_at": "2026-10-31T10:00:36Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "pib.gov.in",
    "published_at": "2026-10-31T05:17:00Z",
@@ -2518,8 +2567,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-10-31T09:59:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "ThePrint",
    "published_at": "2026-10-31T05:10:26Z",
    "source_id": "theprint.in",
@@ -2614,8 +2664,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-10-31T17:24:13Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "WION",
    "published_at": "2026-10-31T04:21:00Z",
    "source_id": "wionews.com",
@@ -2678,8 +2729,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-10-31T09:59:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Economic Times",
    "published_at": "2026-10-31T03:35:00Z",
    "source_id": "m.economictimes.com",
@@ -2824,8 +2876,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-10-31T09:59:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "News18",
    "published_at": "2026-10-31T03:03:00Z",
    "source_id": "news18.com",
@@ -2889,8 +2942,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-10-31T21:54:33Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Economic Times",
    "published_at": "2026-10-31T02:53:03Z",
    "source_id": "m.economictimes.com",
@@ -2905,8 +2959,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-10-31T09:59:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Statesman",
    "published_at": "2026-10-31T02:53:00Z",
    "source_id": "thestatesman.com",
@@ -2921,8 +2976,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-11-07T17:53:23Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "NDTV Profit",
    "published_at": "2026-10-31T02:51:57Z",
    "source_id": "ndtvprofit.com",
@@ -3001,8 +3057,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-10-31T09:59:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "DT Next",
    "published_at": "2026-10-31T02:30:55Z",
    "source_id": "dtnext.in",
@@ -3017,8 +3074,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-10-31T09:59:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Firstpost",
    "published_at": "2026-10-31T02:28:17Z",
    "source_id": "firstpost.com",
@@ -3098,8 +3156,9 @@
     "NavIC"
    ],
    "fetched_at": "2026-10-31T09:59:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "India Today",
    "published_at": "2026-10-31T02:09:19Z",
    "source_id": "indiatoday.in",
@@ -3146,8 +3205,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-31T01:06:36Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "India Today",
    "published_at": "2026-10-30T18:21:39Z",
    "source_id": "indiatoday.in",
@@ -3178,8 +3238,9 @@
     "GPS"
    ],
    "fetched_at": "2026-11-07T10:43:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "DW.com",
    "published_at": "2026-10-30T16:42:08Z",
    "source_id": "dw.com",
@@ -3226,8 +3287,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-30T13:39:30Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "India Today",
    "published_at": "2026-10-30T11:20:56Z",
    "source_id": "indiatoday.in",
@@ -3274,8 +3336,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-30T13:39:30Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Economic Times",
    "published_at": "2026-10-30T06:34:07Z",
    "source_id": "m.economictimes.com",
@@ -3610,8 +3673,9 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-28T00:47:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Via Satellite",
    "published_at": "2026-10-27T19:44:20Z",
    "source_id": "satellitetoday.com",
@@ -3787,8 +3851,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-27T15:35:00Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "India Today",
    "published_at": "2026-10-27T09:42:15Z",
    "source_id": "indiatoday.in",
@@ -3803,8 +3868,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-27T09:22:51Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Moneycontrol.com",
    "published_at": "2026-10-27T05:42:59Z",
    "source_id": "moneycontrol.com",
@@ -3868,8 +3934,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-25T16:52:07Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "KeepTrack",
    "published_at": "2026-10-25T09:02:51Z",
    "source_id": "keeptrack.space",
@@ -3900,8 +3967,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-24T05:05:11Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Indian Express",
    "published_at": "2026-10-24T00:36:51Z",
    "source_id": "indianexpress.com",
@@ -4061,8 +4129,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-20T12:16:53Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "KeepTrack",
    "published_at": "2026-10-20T09:01:31Z",
    "source_id": "keeptrack.space",
@@ -4077,8 +4146,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-20T12:16:53Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "36Kr",
    "published_at": "2026-10-20T05:43:15Z",
    "source_id": "eu.36kr.com",
@@ -4157,7 +4227,7 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:39:43Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "European GNSS Service Centre: news",
    "published_at": "2026-10-13T13:48:01Z",
@@ -4173,8 +4243,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Vandenberg Space Force Base (.mil)",
    "published_at": "2026-10-12T12:32:43Z",
    "source_id": "vandenberg.spaceforce.mil",
@@ -4285,7 +4356,7 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:39:43Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "European GNSS Service Centre: news",
    "published_at": "2026-10-06T21:12:31Z",
@@ -4301,7 +4372,7 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:39:43Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "European GNSS Service Centre: news",
    "published_at": "2026-10-06T20:48:01Z",
@@ -4397,8 +4468,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Xinhua",
    "published_at": "2026-09-29T01:19:15Z",
    "source_id": "english.news.cn",
@@ -4413,8 +4485,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "South China Morning Post",
    "published_at": "2026-09-27T07:00:00Z",
    "source_id": "scmp.com",
@@ -4429,8 +4502,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "UA.NEWS",
    "published_at": "2026-09-27T07:00:00Z",
    "source_id": "ua.news",
@@ -4461,8 +4535,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-20T17:35:11Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "South China Morning Post",
    "published_at": "2026-09-27T07:00:00Z",
    "source_id": "scmp.com",
@@ -4525,8 +4600,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "UA.NEWS",
    "published_at": "2026-09-23T07:00:00Z",
    "source_id": "ua.news",
@@ -4669,7 +4745,7 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:39:43Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "European GNSS Service Centre: news",
    "published_at": "2026-09-18T06:51:54Z",
@@ -4685,7 +4761,7 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:39:43Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "European GNSS Service Centre: news",
    "published_at": "2026-09-17T12:04:45Z",
@@ -4733,7 +4809,7 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:39:43Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "European GNSS Service Centre: news",
    "published_at": "2026-09-17T08:26:32Z",
@@ -4749,8 +4825,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "UA.NEWS",
    "published_at": "2026-09-17T07:00:00Z",
    "source_id": "ua.news",
@@ -4765,8 +4842,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Xinhua",
    "published_at": "2026-09-17T07:00:00Z",
    "source_id": "english.news.cn",
@@ -4861,7 +4939,7 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:39:43Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "European GNSS Service Centre: news",
    "published_at": "2026-09-12T05:37:14Z",
@@ -4910,7 +4988,7 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:39:43Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "European GNSS Service Centre: news",
    "published_at": "2026-09-10T13:52:59Z",
@@ -4958,7 +5036,7 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:39:43Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "European GNSS Service Centre: news",
    "published_at": "2026-09-02T08:29:05Z",
@@ -4974,8 +5052,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Times of India",
    "published_at": "2026-09-01T07:00:00Z",
    "source_id": "timesofindia.indiatimes.com",
@@ -4990,8 +5069,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "UA.NEWS",
    "published_at": "2026-08-28T07:00:00Z",
    "source_id": "ua.news",
@@ -5006,8 +5086,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "South China Morning Post",
    "published_at": "2026-08-26T07:00:00Z",
    "source_id": "scmp.com",
@@ -5102,8 +5183,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Sanskriti IAS",
    "published_at": "2026-08-19T07:00:00Z",
    "source_id": "sanskritiias.com",
@@ -5166,7 +5248,7 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:39:43Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "European GNSS Service Centre: news",
    "published_at": "2026-08-17T09:03:44Z",
@@ -5198,8 +5280,9 @@
     "QZSS"
    ],
    "fetched_at": "2026-10-19T22:40:08Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "SatNews Publishers",
    "published_at": "2026-08-16T07:00:00Z",
    "source_id": "satnews.com",
@@ -5214,8 +5297,9 @@
     "QZSS"
    ],
    "fetched_at": "2026-10-19T22:40:08Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Japan Times",
    "published_at": "2026-08-11T07:00:00Z",
    "source_id": "japantimes.co.jp",
@@ -5230,8 +5314,9 @@
     "QZSS"
    ],
    "fetched_at": "2026-10-19T22:40:08Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Mezha.net",
    "published_at": "2026-08-12T07:00:00Z",
    "source_id": "mezha.net",
@@ -5246,8 +5331,9 @@
     "QZSS"
    ],
    "fetched_at": "2026-10-19T22:40:08Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Qazinform",
    "published_at": "2026-08-11T07:00:00Z",
    "source_id": "qazinform.com",
@@ -5263,8 +5349,9 @@
     "QZSS"
    ],
    "fetched_at": "2026-10-19T22:40:08Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Nation Thailand",
    "published_at": "2026-08-11T07:00:00Z",
    "source_id": "nationthailand.com",
@@ -5279,8 +5366,9 @@
     "QZSS"
    ],
    "fetched_at": "2026-10-19T22:40:08Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Peninsula Qatar",
    "published_at": "2026-08-11T07:00:00Z",
    "source_id": "thepeninsulaqatar.com",
@@ -5296,8 +5384,9 @@
     "QZSS"
    ],
    "fetched_at": "2026-10-19T22:40:08Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Chosunbiz",
    "published_at": "2026-08-11T07:00:00Z",
    "source_id": "biz.chosun.com",
@@ -5312,7 +5401,7 @@
     "QZSS"
    ],
    "fetched_at": "2026-10-21T17:42:06Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "Japan Aerospace Exploration Agency",
    "published_at": "2026-08-11T07:00:00Z",
@@ -5329,8 +5418,9 @@
     "QZSS"
    ],
    "fetched_at": "2026-10-21T22:00:24Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Myanmar International TV",
    "published_at": "2026-08-11T07:00:00Z",
    "source_id": "myanmaritv.com",
@@ -5345,8 +5435,9 @@
     "QZSS"
    ],
    "fetched_at": "2026-10-19T22:40:08Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "UA.NEWS",
    "published_at": "2026-08-10T07:00:00Z",
    "source_id": "ua.news",
@@ -5362,8 +5453,9 @@
     "QZSS"
    ],
    "fetched_at": "2026-10-19T22:40:08Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "finance.biggo.com",
    "published_at": "2026-08-10T07:00:00Z",
    "source_id": "finance.biggo.com",
@@ -5412,8 +5504,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Swarajya",
    "published_at": "2026-08-05T07:00:00Z",
    "source_id": "swarajyamag.com",
@@ -5476,7 +5569,7 @@
     "QZSS"
    ],
    "fetched_at": "2026-10-26T13:37:20Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "Japan Aerospace Exploration Agency",
    "published_at": "2026-08-03T07:00:00Z",
@@ -5492,8 +5585,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Qazinform",
    "published_at": "2026-08-02T07:00:00Z",
    "source_id": "qazinform.com",
@@ -5508,8 +5602,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Tech Times",
    "published_at": "2026-08-01T07:00:00Z",
    "source_id": "techtimes.com",
@@ -5556,8 +5651,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "India Today",
    "published_at": "2026-07-30T07:00:00Z",
    "source_id": "indiatoday.in",
@@ -5572,8 +5668,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "WION",
    "published_at": "2026-07-30T07:00:00Z",
    "source_id": "wionews.com",
@@ -5604,8 +5701,9 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:40:40Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Spatial Source",
    "published_at": "2026-07-27T07:00:00Z",
    "source_id": "spatialsource.com.au",
@@ -5620,8 +5718,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Aerospace Corporation",
    "published_at": "2026-07-24T07:00:00Z",
    "source_id": "aerospace.org",
@@ -5636,8 +5735,9 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:40:40Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Via Satellite",
    "published_at": "2026-07-24T07:00:00Z",
    "source_id": "satellitetoday.com",
@@ -5668,8 +5768,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "KeepTrack",
    "published_at": "2026-07-21T16:37:54Z",
    "source_id": "keeptrack.space",
@@ -5716,8 +5817,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-24T11:41:04Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "China Daily Global Edition",
    "published_at": "2026-07-16T07:00:00Z",
    "source_id": "global.chinadaily.com.cn",
@@ -5748,8 +5850,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Tech Times",
    "published_at": "2026-07-12T07:00:00Z",
    "source_id": "techtimes.com",
@@ -5764,8 +5867,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "36Kr",
    "published_at": "2026-07-07T07:00:00Z",
    "source_id": "eu.36kr.com",
@@ -5780,7 +5884,7 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "Space Force — Space Systems Command (.mil)",
    "published_at": "2026-07-07T07:00:00Z",
@@ -5796,8 +5900,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Vajiram & Ravi",
    "published_at": "2026-07-05T07:00:00Z",
    "source_id": "vajiramandravi.com",
@@ -5861,7 +5966,7 @@
     "QZSS"
    ],
    "fetched_at": "2026-10-19T22:40:08Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "Japan Aerospace Exploration Agency",
    "published_at": "2026-06-22T07:00:00Z",
@@ -5909,8 +6014,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Xinhua",
    "published_at": "2026-06-17T07:00:00Z",
    "source_id": "english.news.cn",
@@ -5925,8 +6031,9 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:40:40Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Spatial Source",
    "published_at": "2026-06-16T07:00:00Z",
    "source_id": "spatialsource.com.au",
@@ -6023,8 +6130,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "South China Morning Post",
    "published_at": "2026-06-04T07:00:00Z",
    "source_id": "scmp.com",
@@ -6040,8 +6148,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-11-09T12:12:22Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "South China Morning Post",
    "published_at": "2026-06-04T07:00:00Z",
    "source_id": "scmp.com",
@@ -6088,8 +6197,9 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:40:40Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "https://defence-industry-space.ec.europa.eu/",
    "published_at": "2026-05-29T07:00:00Z",
    "source_id": "defence-industry-space.ec.europa.eu",
@@ -6152,8 +6262,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "KeepTrack",
    "published_at": "2026-05-22T07:00:00Z",
    "source_id": "keeptrack.space",
@@ -6169,8 +6280,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "South China Morning Post",
    "published_at": "2026-05-20T07:00:00Z",
    "source_id": "scmp.com",
@@ -6201,8 +6313,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "CGTN",
    "published_at": "2026-05-18T07:00:00Z",
    "source_id": "news.cgtn.com",
@@ -6329,8 +6442,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Interesting Engineering",
    "published_at": "2026-05-02T07:00:00Z",
    "source_id": "interestingengineering.com",
@@ -6409,8 +6523,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "spaceconnectonline.com.au",
    "published_at": "2026-04-23T07:00:00Z",
    "source_id": "spaceconnectonline.com.au",
@@ -6425,8 +6540,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Spatial Source",
    "published_at": "2026-04-23T07:00:00Z",
    "source_id": "spatialsource.com.au",
@@ -6441,8 +6557,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Space Force (.mil)",
    "published_at": "2026-04-22T07:00:00Z",
    "source_id": "spaceforce.mil",
@@ -6457,8 +6574,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "ExecutiveGov",
    "published_at": "2026-04-22T07:00:00Z",
    "source_id": "executivegov.com",
@@ -6473,8 +6591,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "DVIDS",
    "published_at": "2026-04-22T07:00:00Z",
    "source_id": "dvidshub.net",
@@ -6489,8 +6608,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Lockheed Martin",
    "published_at": "2026-04-21T07:00:00Z",
    "source_id": "news.lockheedmartin.com",
@@ -6553,7 +6673,7 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "Space Force — Space Systems Command (.mil)",
    "published_at": "2026-04-21T07:00:00Z",
@@ -6569,8 +6689,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "MeriTalk",
    "published_at": "2026-04-21T07:00:00Z",
    "source_id": "meritalk.com",
@@ -6585,8 +6706,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Peninsula Qatar",
    "published_at": "2026-04-21T07:00:00Z",
    "source_id": "thepeninsulaqatar.com",
@@ -6601,8 +6723,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "KeepTrack",
    "published_at": "2026-04-21T07:00:00Z",
    "source_id": "keeptrack.space",
@@ -6617,8 +6740,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "DVIDS",
    "published_at": "2026-04-21T07:00:00Z",
    "source_id": "dvidshub.net",
@@ -6633,8 +6757,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Aviation Week",
    "published_at": "2026-04-21T07:00:00Z",
    "source_id": "aviationweek.com",
@@ -6649,8 +6774,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "TalkOfTitusville.com",
    "published_at": "2026-04-21T07:00:00Z",
    "source_id": "talkoftitusville.com",
@@ -6665,8 +6791,8 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "D",
+   "grade_standing": "confirmed",
    "outlet": "Florida Today",
    "published_at": "2026-04-21T07:00:00Z",
    "source_id": "floridatoday.com",
@@ -6681,8 +6807,8 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "D",
+   "grade_standing": "confirmed",
    "outlet": "Florida Today",
    "published_at": "2026-04-21T07:00:00Z",
    "source_id": "floridatoday.com",
@@ -6697,8 +6823,8 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "D",
+   "grade_standing": "confirmed",
    "outlet": "Florida Today",
    "published_at": "2026-04-21T07:00:00Z",
    "source_id": "floridatoday.com",
@@ -6713,8 +6839,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Space Coast Daily",
    "published_at": "2026-04-21T07:00:00Z",
    "source_id": "spacecoastdaily.com",
@@ -6761,8 +6888,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Spectrum News 13",
    "published_at": "2026-04-20T07:00:00Z",
    "source_id": "mynews13.com",
@@ -6777,8 +6905,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "BASENOR - Tesla Accessories",
    "published_at": "2026-04-18T07:00:00Z",
    "source_id": "basenor.com",
@@ -6793,8 +6922,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Defense Daily",
    "published_at": "2026-04-17T07:00:00Z",
    "source_id": "defensedaily.com",
@@ -6809,8 +6939,8 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "D",
+   "grade_standing": "confirmed",
    "outlet": "Florida Today",
    "published_at": "2026-04-17T07:00:00Z",
    "source_id": "floridatoday.com",
@@ -6825,8 +6955,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-24T16:17:20Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Space Coast Daily",
    "published_at": "2026-04-17T07:00:00Z",
    "source_id": "spacecoastdaily.com",
@@ -6841,8 +6972,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Lockheed Martin",
    "published_at": "2026-04-16T07:00:00Z",
    "source_id": "lockheedmartin.com",
@@ -6858,8 +6990,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "South China Morning Post",
    "published_at": "2026-04-04T07:00:00Z",
    "source_id": "scmp.com",
@@ -6906,8 +7039,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Times of India",
    "published_at": "2026-03-26T07:00:00Z",
    "source_id": "timesofindia.indiatimes.com",
@@ -6955,8 +7089,9 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:40:40Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "www.yacht.de",
    "published_at": "2026-03-25T07:00:00Z",
    "source_id": "yacht.de",
@@ -6987,8 +7122,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "SatNews Publishers",
    "published_at": "2026-03-24T07:00:00Z",
    "source_id": "satnews.com",
@@ -7003,8 +7139,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-21T12:28:55Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "ExecutiveGov",
    "published_at": "2026-03-23T07:00:00Z",
    "source_id": "executivegov.com",
@@ -7019,8 +7156,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Techiexpert.com",
    "published_at": "2026-03-21T07:00:00Z",
    "source_id": "techiexpert.com",
@@ -7035,7 +7173,7 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "Space Force — Space Systems Command (.mil)",
    "published_at": "2026-03-20T07:00:00Z",
@@ -7051,8 +7189,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Aviation Week",
    "published_at": "2026-03-20T07:00:00Z",
    "source_id": "aviationweek.com",
@@ -7115,8 +7254,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "BASENOR - Tesla Accessories",
    "published_at": "2026-03-20T07:00:00Z",
    "source_id": "basenor.com",
@@ -7131,8 +7271,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-20T17:35:11Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "CGTN",
    "published_at": "2026-03-20T07:00:00Z",
    "source_id": "news.cgtn.com",
@@ -7163,8 +7304,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "WION",
    "published_at": "2026-03-18T07:00:00Z",
    "source_id": "wionews.com",
@@ -7195,8 +7337,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Vajiram & Ravi",
    "published_at": "2026-03-17T07:00:00Z",
    "source_id": "vajiramandravi.com",
@@ -7211,8 +7354,9 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "India Today",
    "published_at": "2026-03-16T07:00:00Z",
    "source_id": "indiatoday.in",
@@ -7243,29 +7387,14 @@
     "GPS"
    ],
    "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Indian Express",
    "published_at": "2026-03-16T07:00:00Z",
    "source_id": "indianexpress.com",
    "summary": "",
    "title": "NavIC satellite loses its atomic clock: What this means for India’s bid for its own GPS",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMijgFBVV95cUxObVlIWGJvYXVGUVN4VU1IMmkyQThzNnN4SGY1Z3lDeThSQ2FJMWJ2TWFHWnA5eUE2VzRqT1RaQVpZaTFHQWRzWVZkQUVGeVZDMnZPWmR4aTc0RDFONkdfcF9objI2d25uWmxoOEpPdWtWZnJOWUN5TURuWHRIWmxsN1c5c0EtRzZCQTBTbHVB?oc=5",
-   "category": "other",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Deccan Herald",
-   "published_at": "2026-03-16T07:00:00Z",
-   "source_id": "deccanherald.com",
-   "summary": "",
-   "title": "Why is India's 'desi' GPS 'NavIC' dying?",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -7283,6 +7412,22 @@
    "summary": "",
    "title": "What is China’s BeiDou system and why analysts say Iran may be using it",
    "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMinwFBVV95cUxOSFR1YUkyTVlSbHNidFJIdlVtMHFBRGFvUVhjUjRULTE4RGItdkprMGx4UmlOamg2cVByOGQwSm80UHVnWUpPUy13UXM3bmlTVVZIaTJzbENxcXllQ2xsMmlTcjJ5eGJsOTVOdU5WQnlIZmNaUFJJREduVG1ZTXVRRTV1VWREc2lQTEJzalJQN1AzdVoyNGJyUlpKeklkbnc?oc=5",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-17T16:33:02Z",
+   "grade": "B",
+   "grade_standing": "confirmed",
+   "outlet": "ESA",
+   "published_at": "2026-03-13T15:57:30Z",
+   "source_id": "esa.int",
+   "summary": "",
+   "title": "Galileo satellites",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMiYkFVX3lxTE84Tkx1UTZSNUc4eEtUSjV2ZDhMMUVFTWlKZUdPT3ZuOGtoemloWFBtVWtEMkh0N1NiOTlMSzU2Z1hERER3NEN2MDctMkxKZ2IwQ3lwV1JxWWVhVkJrcHY1UUFn?oc=5",
@@ -7307,8 +7452,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Xinhua",
    "published_at": "2026-03-13T07:00:00Z",
    "source_id": "english.news.cn",
@@ -7323,8 +7469,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Xinhua",
    "published_at": "2026-03-13T07:00:00Z",
    "source_id": "english.news.cn",
@@ -7339,8 +7486,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "CGTN",
    "published_at": "2026-03-13T07:00:00Z",
    "source_id": "news.cgtn.com",
@@ -7371,8 +7519,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Times of India",
    "published_at": "2026-03-12T07:00:00Z",
    "source_id": "timesofindia.indiatimes.com",
@@ -7387,8 +7536,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Firstpost",
    "published_at": "2026-03-12T07:00:00Z",
    "source_id": "firstpost.com",
@@ -7483,8 +7633,9 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-21T17:42:37Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "autoevolution",
    "published_at": "2026-03-02T08:00:00Z",
    "source_id": "autoevolution.com",
@@ -7579,8 +7730,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "CGTN",
    "published_at": "2026-02-06T08:00:00Z",
    "source_id": "news.cgtn.com",
@@ -7611,8 +7763,9 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:40:40Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Newsroom Arianespace",
    "published_at": "2026-01-27T08:00:00Z",
    "source_id": "newsroom.arianespace.com",
@@ -7659,8 +7812,9 @@
     "QZSS"
    ],
    "fetched_at": "2026-10-19T22:40:08Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Myanmar International TV",
    "published_at": "2025-12-23T08:00:00Z",
    "source_id": "myanmaritv.com",
@@ -7691,8 +7845,9 @@
     "QZSS"
    ],
    "fetched_at": "2026-10-19T22:40:08Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "The Japan Times",
    "published_at": "2025-12-22T08:00:00Z",
    "source_id": "japantimes.co.jp",
@@ -7707,8 +7862,9 @@
     "BeiDou-3"
    ],
    "fetched_at": "2026-10-19T22:40:19Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "South China Morning Post",
    "published_at": "2025-12-20T08:00:00Z",
    "source_id": "scmp.com",
@@ -7723,8 +7879,9 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-27T15:35:42Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "EU Reporter",
    "published_at": "2025-12-19T08:00:00Z",
    "source_id": "eureporter.co",
@@ -7739,8 +7896,9 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:40:40Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Spatial Source",
    "published_at": "2025-12-18T08:00:00Z",
    "source_id": "spatialsource.com.au",
@@ -7755,7 +7913,7 @@
     "QZSS"
    ],
    "fetched_at": "2026-10-19T22:40:08Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "Japan Aerospace Exploration Agency",
    "published_at": "2025-12-17T08:00:00Z",
@@ -7771,8 +7929,9 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:40:40Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "https://defence-industry-space.ec.europa.eu/",
    "published_at": "2025-12-17T08:00:00Z",
    "source_id": "defence-industry-space.ec.europa.eu",
@@ -7787,8 +7946,9 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:40:40Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "https://defence-industry-space.ec.europa.eu/",
    "published_at": "2025-12-17T08:00:00Z",
    "source_id": "defence-industry-space.ec.europa.eu",
@@ -7819,8 +7979,9 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:40:40Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Newsroom Arianespace",
    "published_at": "2025-12-17T08:00:00Z",
    "source_id": "newsroom.arianespace.com",
@@ -7835,8 +7996,9 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:40:40Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "DW.com",
    "published_at": "2025-12-17T08:00:00Z",
    "source_id": "dw.com",
@@ -7851,8 +8013,9 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:40:40Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "AeroTime",
    "published_at": "2025-12-17T08:00:00Z",
    "source_id": "aerotime.aero",
@@ -7899,8 +8062,9 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-27T00:53:25Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "Centre national d'études spatiales (CNES)",
    "published_at": "2025-12-15T08:00:00Z",
    "source_id": "cnes.fr",
@@ -7963,7 +8127,7 @@
     "QZSS"
    ],
    "fetched_at": "2026-10-24T11:40:54Z",
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
    "outlet": "Japan Aerospace Exploration Agency",
    "published_at": "2025-12-03T08:00:00Z",
@@ -7995,8 +8159,9 @@
     "Galileo"
    ],
    "fetched_at": "2026-10-19T22:40:40Z",
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "outlet": "defence-industry-space.ec.europa.eu",
    "published_at": "2025-11-19T08:00:00Z",
    "source_id": "defence-industry-space.ec.europa.eu",
@@ -8129,22 +8294,26 @@
    "reason": ""
   },
   "aerospace.org": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "aerospace.org",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "aerotime.aero": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "aerotime.aero",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "airandspaceforces.com": {
    "grade": "C",
@@ -8201,13 +8370,15 @@
    "reason": ""
   },
   "autoevolution.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "autoevolution.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "aviationbusinessme.com": {
    "grade": "",
@@ -8219,22 +8390,26 @@
    "reason": ""
   },
   "aviationweek.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "aviationweek.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 2 of 3 claims checked"
   },
   "basenor.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "basenor.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "bastillepost.com": {
    "grade": "",
@@ -8264,13 +8439,15 @@
    "reason": ""
   },
   "biz.chosun.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "biz.chosun.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "bloomberg.com": {
    "grade": "",
@@ -8354,13 +8531,15 @@
    "reason": ""
   },
   "cnes.fr": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "cnes.fr",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "computerweekly.com": {
    "grade": "",
@@ -8435,13 +8614,15 @@
    "reason": ""
   },
   "defence-industry-space.ec.europa.eu": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "defence-industry-space.ec.europa.eu",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 2 of 3 claims checked"
   },
   "defence-industry.eu": {
    "grade": "",
@@ -8462,13 +8643,15 @@
    "reason": ""
   },
   "defensedaily.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "defensedaily.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "defensehere.com": {
    "grade": "",
@@ -8516,31 +8699,37 @@
    "reason": ""
   },
   "dtnext.in": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "dtnext.in",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "dvidshub.net": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "dvidshub.net",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "dw.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "dw.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "e.vnexpress.net": {
    "grade": "",
@@ -8651,13 +8840,15 @@
    "reason": ""
   },
   "english.news.cn": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "english.news.cn",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "english.www.gov.cn": {
    "grade": "",
@@ -8696,13 +8887,15 @@
    "reason": ""
   },
   "eu.36kr.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "eu.36kr.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "eurasiareview.com": {
    "grade": "",
@@ -8723,13 +8916,15 @@
    "reason": ""
   },
   "eureporter.co": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "eureporter.co",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "euspa.europa.eu": {
    "grade": "A",
@@ -8750,13 +8945,15 @@
    "reason": ""
   },
   "executivegov.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "executivegov.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 2 of 3 claims checked"
   },
   "facebook.com": {
    "grade": "",
@@ -8768,22 +8965,26 @@
    "reason": ""
   },
   "finance.biggo.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "finance.biggo.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "firstpost.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "firstpost.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "flightglobal.com": {
    "grade": "",
@@ -8795,13 +8996,13 @@
    "reason": ""
   },
   "floridatoday.com": {
-   "grade": "",
-   "grade_standing": "not graded",
-   "graded_by": "",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "graded_by": "the source record (weekly job), approved on the Approvals page",
    "kind": "",
    "name": "floridatoday.com",
    "note": "",
-   "reason": ""
+   "reason": "Raise floridatoday.com from F to D: 4 of 4 checked claims held (score 0.83)."
   },
   "fonearena.com": {
    "grade": "",
@@ -8885,22 +9086,24 @@
    "reason": ""
   },
   "global.chinadaily.com.cn": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "global.chinadaily.com.cn",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "global.jaxa.jp": {
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
-   "graded_by": "the team, decided in the administration console",
+   "graded_by": "the source record (weekly job), approved on the Approvals page",
    "kind": "official page",
    "name": "JAXA press releases",
    "note": "Feed address tried was 404; the press page answered with only 857 bytes, probably a redirect or script page. Needs a look",
-   "reason": "Japan's space agency; first-hand for the QZSS launches it carries out, and only for those"
+   "reason": "Shortlisted to drop from A: global.jaxa.jp is below the B bar (1 claims, score 0.67; B needs 10 and 0.90)."
   },
   "globaltimes.cn": {
    "grade": "",
@@ -8930,13 +9133,13 @@
    "reason": ""
   },
   "gsc-europa.eu": {
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
-   "graded_by": "the team, decided in the administration console",
+   "graded_by": "the source record (weekly job), approved on the Approvals page",
    "kind": "official advisories",
    "name": "European GNSS Service Centre: notices (NAGU)",
    "note": "Page, not a feed; snapshot and compare",
-   "reason": "Galileo's service centre; its notices are operator advisories"
+   "reason": "Shortlisted to drop from A: gsc-europa.eu is below the B bar (0 claims, score 0.50; B needs 10 and 0.90)."
   },
   "hackaday.com": {
    "grade": "",
@@ -9011,13 +9214,15 @@
    "reason": ""
   },
   "indianexpress.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "indianexpress.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "indianmasterminds.com": {
    "grade": "",
@@ -9056,13 +9261,15 @@
    "reason": ""
   },
   "indiatoday.in": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "indiatoday.in",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "indiatodayne.in": {
    "grade": "",
@@ -9110,13 +9317,15 @@
    "reason": "Specialist GNSS press"
   },
   "insightsonindia.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "insightsonindia.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "instagram.com": {
    "grade": "",
@@ -9137,13 +9346,15 @@
    "reason": ""
   },
   "interestingengineering.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "interestingengineering.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "iot-now.com": {
    "grade": "",
@@ -9155,13 +9366,13 @@
    "reason": ""
   },
   "isro.gov.in": {
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
-   "graded_by": "the team, decided in the administration console",
+   "graded_by": "the source record (weekly job), approved on the Approvals page",
    "kind": "official page",
    "name": "ISRO press releases",
    "note": "No feed; read by snapshot and compare (decision 5)",
-   "reason": "The operator of NavIC"
+   "reason": "Shortlisted to drop from A: isro.gov.in is below the B bar (0 claims, score 0.50; B needs 10 and 0.90)."
   },
   "ithinkdiff.com": {
    "grade": "",
@@ -9200,13 +9411,15 @@
    "reason": ""
   },
   "japantimes.co.jp": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "japantimes.co.jp",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "jharkhandstatenews.com": {
    "grade": "",
@@ -9218,13 +9431,15 @@
    "reason": ""
   },
   "keeptrack.space": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "keeptrack.space",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "keralakaumudi.com": {
    "grade": "",
@@ -9245,22 +9460,26 @@
    "reason": ""
   },
   "livemint.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "livemint.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "lockheedmartin.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "lockheedmartin.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "londondaily.news": {
    "grade": "",
@@ -9281,13 +9500,15 @@
    "reason": ""
   },
   "m.economictimes.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "m.economictimes.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "manoramayearbook.in": {
    "grade": "",
@@ -9317,22 +9538,26 @@
    "reason": ""
   },
   "meritalk.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "meritalk.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "mezha.net": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "mezha.net",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "mid-day.com": {
    "grade": "",
@@ -9380,13 +9605,15 @@
    "reason": ""
   },
   "moneycontrol.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "moneycontrol.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "mptc.gov.kh": {
    "grade": "",
@@ -9398,22 +9625,26 @@
    "reason": ""
   },
   "myanmaritv.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "myanmaritv.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "mynews13.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "mynews13.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "nasa.gov": {
    "grade": "",
@@ -9434,13 +9665,15 @@
    "reason": ""
   },
   "nationthailand.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "nationthailand.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "nature.com": {
    "grade": "",
@@ -9461,13 +9694,15 @@
    "reason": ""
   },
   "ndtvprofit.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "ndtvprofit.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "newindianexpress.com": {
    "grade": "",
@@ -9488,13 +9723,15 @@
    "reason": ""
   },
   "news.cgtn.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "news.cgtn.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "news.futunn.com": {
    "grade": "",
@@ -9506,22 +9743,26 @@
    "reason": ""
   },
   "news.lockheedmartin.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "news.lockheedmartin.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "news18.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "news18.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "news24online.com": {
    "grade": "",
@@ -9569,13 +9810,15 @@
    "reason": ""
   },
   "newsroom.arianespace.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "newsroom.arianespace.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "nktv.in": {
    "grade": "",
@@ -9605,13 +9848,15 @@
    "reason": ""
   },
   "opindia.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "opindia.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "ourchinastory.com": {
    "grade": "",
@@ -9650,13 +9895,13 @@
    "reason": "Specialist space-industry press"
   },
   "pib.gov.in": {
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
-   "graded_by": "the team, decided in the administration console",
+   "graded_by": "the source record (weekly job), approved on the Approvals page",
    "kind": "official feed",
    "name": "Press Information Bureau, Government of India",
    "note": "Answered #84's check, then refused the archive job's request (403) later on 19 Oct; read through Google News instead (row below)",
-   "reason": "The Government of India's own release channel; carries Department of Space statements"
+   "reason": "Shortlisted to drop from A: pib.gov.in is below the B bar (0 claims, score 0.50; B needs 10 and 0.90)."
   },
   "play.google.com": {
    "grade": "",
@@ -9695,13 +9940,15 @@
    "reason": ""
   },
   "qazinform.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "qazinform.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "raksha-anirveda.com": {
    "grade": "",
@@ -9749,13 +9996,15 @@
    "reason": "A specialist journalist on the Russian programme, GLONASS included"
   },
   "sanskritiias.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "sanskritiias.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "sarkaritel.com": {
    "grade": "",
@@ -9767,22 +10016,26 @@
    "reason": ""
   },
   "satellitetoday.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "satellitetoday.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "satnews.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "satnews.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "science.nasa.gov": {
    "grade": "",
@@ -9803,13 +10056,15 @@
    "reason": ""
   },
   "scmp.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "scmp.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "shattered.io": {
    "grade": "",
@@ -9848,22 +10103,26 @@
    "reason": ""
   },
   "spacecoastdaily.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "spacecoastdaily.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "spaceconnectonline.com.au": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "spaceconnectonline.com.au",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "spaceflightnow.com": {
    "grade": "C",
@@ -9875,13 +10134,15 @@
    "reason": "Specialist space press; strong on launches"
   },
   "spaceforce.mil": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "spaceforce.mil",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "spacenews.com": {
    "grade": "C",
@@ -9911,13 +10172,15 @@
    "reason": ""
   },
   "spatialsource.com.au": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "spatialsource.com.au",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "splash247.com": {
    "grade": "",
@@ -9947,13 +10210,13 @@
    "reason": ""
   },
   "ssc.spaceforce.mil": {
-   "grade": "A",
+   "grade": "B",
    "grade_standing": "confirmed",
-   "graded_by": "the team, decided in the administration console",
+   "graded_by": "the source record (weekly job), approved on the Approvals page",
    "kind": "official feed",
    "name": "US Space Force Space Systems Command: news",
    "note": "Feed answered 200 with an empty body; may refuse automated requests",
-   "reason": "Buys and launches the GPS satellites"
+   "reason": "Shortlisted to drop from A: ssc.spaceforce.mil is below the B bar (1 claims, score 0.67; B needs 10 and 0.90)."
   },
   "streetinsider.com": {
    "grade": "",
@@ -9965,22 +10228,26 @@
    "reason": ""
   },
   "swarajyamag.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "swarajyamag.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "talkoftitusville.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "talkoftitusville.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "tbsnews.net": {
    "grade": "",
@@ -10010,13 +10277,15 @@
    "reason": ""
   },
   "techiexpert.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "techiexpert.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "techinsights.com": {
    "grade": "",
@@ -10046,13 +10315,15 @@
    "reason": ""
   },
   "techtimes.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "techtimes.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "telanganatoday.com": {
    "grade": "",
@@ -10163,22 +10434,26 @@
    "reason": ""
   },
   "thepeninsulaqatar.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "thepeninsulaqatar.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 2 of 3 claims checked"
   },
   "theprint.in": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "theprint.in",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "theshillongtimes.com": {
    "grade": "",
@@ -10190,13 +10465,15 @@
    "reason": ""
   },
   "thestatesman.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "thestatesman.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "theweek.in": {
    "grade": "",
@@ -10208,13 +10485,15 @@
    "reason": ""
   },
   "timesofindia.indiatimes.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "timesofindia.indiatimes.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "twaslnews1.twaslnews.com": {
    "grade": "",
@@ -10226,13 +10505,15 @@
    "reason": ""
   },
   "ua.news": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "ua.news",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "udaipurtimes.com": {
    "grade": "",
@@ -10271,22 +10552,26 @@
    "reason": ""
   },
   "vajiramandravi.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "vajiramandravi.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "vandenberg.spaceforce.mil": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "vandenberg.spaceforce.mil",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
   },
   "varindia.com": {
    "grade": "",
@@ -10325,13 +10610,15 @@
    "reason": ""
   },
   "wionews.com": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "wionews.com",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   },
   "www1.ru": {
    "grade": "",
@@ -10433,13 +10720,15 @@
    "reason": "3 of 3 checked launch posts held; Jonathan McDowell, author of GCAT (planet4589.org, C)"
   },
   "yacht.de": {
-   "grade": "",
-   "grade_standing": "not graded",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
    "graded_by": "",
    "kind": "",
    "name": "yacht.de",
    "note": "",
-   "reason": ""
+   "reason": "From the checked-claims record, waiting for approval.",
+   "record_line": "F · cannot be judged yet: 0 of 3 claims checked"
   }
  }
 }
