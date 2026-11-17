@@ -1,5 +1,5 @@
 source_id,name,reliability,graded_by,graded_on,reason
-files.igs.org,International GNSS Service (IGS),B,Sumanth Varma (awaiting the team's review),2026-10-09,"A scientific body; its satellite metadata file is maintained for it by the German Aerospace Center (DLR)"
+files.igs.org,International GNSS Service (IGS),B,Sumanth Varma (awaiting the team's review),2026-10-09,A scientific body; its satellite metadata file is maintained for it by the German Aerospace Center (DLR)
 planet4589.org,General Catalog of Artificial Space Objects (GCAT),C,Sumanth Varma (awaiting the team's review),2026-10-09,"One expert's catalogue, widely cited, with sources listed; not an institution, and its author says some dates are updated patchily"
 celestrak.org,CelesTrak,B,Proposed with issue 31 (awaiting the team's review),2026-10-19,"Republishes the US Space Force's public orbit records, the same data Space-Track holds; run by a non-profit and widely used by researchers. It says where an object is, not what its operator says about it"
 space.com,Space.com,D,"the team, decided in the administration console",2026-10-22,Popular space news; often rewrites agency releases and wire copy
@@ -8,17 +8,17 @@ thehindu.com,The Hindu: science,D,"the team, decided in the administration conso
 taikonautica.substack.com,Taikonautica (formerly China NewSpace),D,"the team, decided in the administration console",2026-10-22,One enthusiast's newsletter on China's space programme; its sourcing is still to check
 newspaceasia.substack.com,NewSpace Asia,D,"the team, decided in the administration console",2026-10-22,Same author as Taikonautica; an Asia-wide briefing
 pradx.substack.com,Pradeep's Space Newsletter,D,"the team, decided in the administration console",2026-10-22,One person's newsletter on Indian space
-isro.gov.in,ISRO press releases,A,"the team, decided in the administration console",2026-10-22,The operator of NavIC
-pib.gov.in,"Press Information Bureau, Government of India",A,"the team, decided in the administration console",2026-10-22,The Government of India's own release channel; carries Department of Space statements
+isro.gov.in,ISRO press releases,B,"the source record (weekly job), approved on the Approvals page",2026-11-17,"Shortlisted to drop from A: isro.gov.in is below the B bar (0 claims, score 0.50; B needs 10 and 0.90)."
+pib.gov.in,"Press Information Bureau, Government of India",B,"the source record (weekly job), approved on the Approvals page",2026-11-17,"Shortlisted to drop from A: pib.gov.in is below the B bar (0 claims, score 0.50; B needs 10 and 0.90)."
 qzss.go.jp,"QZSS (Michibiki), Cabinet Office of Japan: news",A,"the team, decided in the administration console",2026-10-22,The operator of QZSS
 sys.qzss.go.jp,QZSS notices to users (NAQU),A,"the team, decided in the administration console",2026-10-22,The operator's own notices to users
-global.jaxa.jp,JAXA press releases,A,"the team, decided in the administration console",2026-10-22,"Japan's space agency; first-hand for the QZSS launches it carries out, and only for those"
+global.jaxa.jp,JAXA press releases,B,"the source record (weekly job), approved on the Approvals page",2026-11-17,"Shortlisted to drop from A: global.jaxa.jp is below the B bar (1 claims, score 0.67; B needs 10 and 0.90)."
 en.beidou.gov.cn,"BeiDou, China Satellite Navigation Office: news",A,"the team, decided in the administration console",2026-10-22,The office that runs BeiDou
 csno-tarc.cn,BeiDou test and assessment centre (CSNO): constellation status,A,"the team, decided in the administration console",2026-10-22,Part of the BeiDou office; publishes the constellation status
 navcen.uscg.gov,US Coast Guard Navigation Center: GPS notices (NANU),A,"the team, decided in the administration console",2026-10-22,The official channel for civil GPS notices
 gps.gov,GPS.gov (US government GPS site): news,A,"the team, decided in the administration console",2026-10-22,The US government's official GPS information site
-ssc.spaceforce.mil,US Space Force Space Systems Command: news,A,"the team, decided in the administration console",2026-10-22,Buys and launches the GPS satellites
-gsc-europa.eu,European GNSS Service Centre: notices (NAGU),A,"the team, decided in the administration console",2026-10-22,Galileo's service centre; its notices are operator advisories
+ssc.spaceforce.mil,US Space Force Space Systems Command: news,B,"the source record (weekly job), approved on the Approvals page",2026-11-17,"Shortlisted to drop from A: ssc.spaceforce.mil is below the B bar (1 claims, score 0.67; B needs 10 and 0.90)."
+gsc-europa.eu,European GNSS Service Centre: notices (NAGU),B,"the source record (weekly job), approved on the Approvals page",2026-11-17,"Shortlisted to drop from A: gsc-europa.eu is below the B bar (0 claims, score 0.50; B needs 10 and 0.90)."
 euspa.europa.eu,EU Agency for the Space Programme (EUSPA): news,A,"the team, decided in the administration console",2026-10-22,Galileo's service provider
 arianespace.com,Arianespace (launches Galileo): press releases,A,"the team, decided in the administration console",2026-10-22,"The launch provider; first-hand for launch outcomes, and only for those"
 esa.int,European Space Agency: navigation,B,"the team, decided in the administration console",2026-10-22,Intergovernmental; designs and procures Galileo for the EU but does not run the service
@@ -62,3 +62,5 @@ x.com/iSpaceFlight_in,indianspaceflight.in (@iSpaceFlight_in),D,Sumanth Varma (u
 x.com/ISROSpaceflight,ISRO Spaceflight (@ISROSpaceflight),D,Sumanth Varma (until the source record settles it),2026-11-05,"An unnamed individual's account about ISRO, which says it is not affiliated with ISRO"
 youtube.com/@indianspaceflight_in,IndianSpaceflight (YouTube),D,Sumanth Varma (until the source record settles it),2026-11-04,As indianspaceflight.in: the site's own channel
 www.space-track.org,Space-Track,B,Sumanth Varma (approved 6 Nov 2026),2026-11-06,"The US Space Force's own catalogue, the data CelesTrak republishes. It says an object exists and where it is, not what it is or what its operator says about it; A is arguable"
+floridatoday.com,floridatoday.com,D,"the source record (weekly job), approved on the Approvals page",2026-11-17,Raise floridatoday.com from F to D: 4 of 4 checked claims held (score 0.83).
+fox35orlando.com,fox35orlando.com,D,"the source record (weekly job), approved on the Approvals page",2026-11-17,Raise fox35orlando.com from F to D: 3 of 3 checked claims held (score 0.80).
