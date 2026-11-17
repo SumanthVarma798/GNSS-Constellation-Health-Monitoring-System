@@ -1,6 +1,22 @@
 {
- "generated_at": "2026-11-16T22:35:13Z",
+ "generated_at": "2026-11-17T04:15:18Z",
  "items": [
+  {
+   "address": "https://news.google.com/rss/articles/CBMiYkFVX3lxTE13S1h1bjAxN2VINXFYNVR6cE5za1JwVFNlMmVMQ3FtajMyS2RabUl4SVFLemlHbEdaMjVLSmYxdzR0bGlMa3E5Vl8ydFRuZWYtTWlTTFNzSmJGVlVIVV81MGdR?oc=5",
+   "category": "other",
+   "constellations": [
+    "BeiDou-3"
+   ],
+   "fetched_at": "2026-11-17T04:14:36Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Global Times",
+   "published_at": "2026-11-17T02:43:00Z",
+   "source_id": "globaltimes.cn",
+   "summary": "",
+   "title": "BeiDou terminal devices in use near 42 million in China, up 27% y-o-y: report",
+   "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
   {
    "address": "https://x.com/Stellarixorine/status/2122372128267976977",
    "category": "other",
