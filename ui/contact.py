@@ -64,7 +64,8 @@ def cap_wait(times, now):
 
 @st.cache_resource
 def _sent_times():
-    # ponytail: one server process holds the count; with several, each would allow SENDS_PER_WINDOW
+    # ponytail: one server process holds the count, so a restart (Render's free plan sleeps when idle) or a second
+    # process starts it afresh; a count kept by the Worker (a Durable Object) if abuse ever gets past this
     return deque(), threading.Lock()
 
 

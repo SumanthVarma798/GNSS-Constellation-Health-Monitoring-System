@@ -26,6 +26,9 @@ test("a contact message keeps who wrote, the subject, when, and its plain text t
 });
 
 test("a contact-form message is kept trimmed, or refused with a short reason", () => {
+  // counted as the dashboard counts (Python's len): 4000 emoji pass, 4001 do not
+  assert.equal(formMessage({ from: "a@example.org", text: "🛰".repeat(CONTACT_TEXT_CHARACTERS) }).text.length, 2 * CONTACT_TEXT_CHARACTERS);
+  assert.match(formMessage({ from: "a@example.org", text: "🛰".repeat(CONTACT_TEXT_CHARACTERS + 1) }).problem, /longer than/);
   assert.deepEqual(formMessage({ from: " a@example.org ", text: "  Hello  " }), { from: "a@example.org", subject: "", text: "Hello" });
   assert.deepEqual(formMessage({ from: "a@example.org", subject: "Hi", text: "x" }), { from: "a@example.org", subject: "Hi", text: "x" });
   for (const body of [null, "text", 42]) assert.ok(formMessage(body).problem);

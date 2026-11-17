@@ -18,6 +18,7 @@ URL = "http://localhost:8787/contact"
 def nowhere_to_send(monkeypatch):
     monkeypatch.delenv(URL_ENV, raising=False)
     monkeypatch.delenv(TOKEN_ENV, raising=False)
+    monkeypatch.setattr(contact.st, "secrets", {})   # never the developer's own secrets file
     contact._sent_times.clear()
 
 
@@ -112,8 +113,12 @@ def test_a_post_carries_the_token_and_its_answer_reads_in_plain_words(monkeypatc
 
 def test_config_comes_from_the_environment_or_else_the_secrets(monkeypatch):
     assert contact.config() is None
+    monkeypatch.setattr(contact.st, "secrets", {"contact": {"url": "https://feeds.example/contact", "token": "from-secrets"}})
+    assert contact.config() == ("https://feeds.example/contact", "from-secrets")
+    monkeypatch.setattr(contact.st, "secrets", {"contact": {"url": "https://feeds.example/contact", "token": ""}})
+    assert contact.config() is None   # half set up is not set up
     configured(monkeypatch)
-    assert contact.config() == (URL, "test-write-token")
+    assert contact.config() == (URL, "test-write-token")   # the environment wins over the secrets
 
 
 def _page():

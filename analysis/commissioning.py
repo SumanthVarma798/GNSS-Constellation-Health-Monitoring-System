@@ -78,13 +78,16 @@ def _day(when):
 
 def when_scored(history, name, first):
     """When a satellite left out by moving_to_slot will be scored, in words, so its note says it ends on its own:
-    SETTLING_DAYS after it parked, or for one still on its way, by COMMISSIONING_DAYS after its first record at the
-    latest (a stranded one never parks). `first` is its first orbit record, as moving_to_slot gives it."""
+    SETTLING_DAYS after it parked, or for one still on its way, SETTLING_DAYS after it parks, or from COMMISSIONING_DAYS
+    after its first record if it is still on its way then (a stranded one never parks). One that parks just before that
+    day is scored SETTLING_DAYS later, so that day is not promised as a deadline. `first` is its first orbit record, as
+    moving_to_slot gives it."""
     parked = commissioned_on(history, name)
     if parked is not None:
         return f"at its slot since {_day(parked)}, scored from {_day(parked + pd.Timedelta(days=SETTLING_DAYS))}"
-    latest = pd.Timestamp(first) + pd.Timedelta(days=COMMISSIONING_DAYS)
-    return f"{ON_ITS_WAY}, scored {SETTLING_DAYS} days after it parks, by {_day(latest)} at the latest"
+    cutoff = pd.Timestamp(first) + pd.Timedelta(days=COMMISSIONING_DAYS)
+    return (f"{ON_ITS_WAY}, scored {SETTLING_DAYS} days after it parks, or from {_day(cutoff)} if it is still on its "
+            "way then")
 
 
 def stage(history, name):

@@ -85,8 +85,11 @@ export function contactRecord(mail, envelopeFrom, at) {
   const address = mail.from && mail.from.address;
   const from = address ? (mail.from.name ? `${mail.from.name} <${address}>` : address) : envelopeFrom || "";
   const text = mail.text || plainText(mail.html || "");
-  return { from, subject: mail.subject || "", at, text: text.trim().slice(0, CONTACT_TEXT_CHARACTERS) };
+  return { from, subject: mail.subject || "", at, text: Array.from(text.trim()).slice(0, CONTACT_TEXT_CHARACTERS).join("") };
 }
+
+// Characters as the dashboard counts them (Python's len): an emoji is one, not the two UTF-16 units .length counts.
+const characters = (value) => Array.from(value).length;
 
 // A message from the dashboard's contact form (POST /contact): {from, subject?, text}.
 // Returns {from, subject, text} trimmed, or {problem} saying in a few words why it is refused.
@@ -98,12 +101,16 @@ export function formMessage(body) {
   const field = (name) => (body && typeof body[name] === "string" ? body[name].trim() : "");
   const from = field("from"), subject = field("subject"), text = field("text");
   if (!body || typeof body !== "object") return { problem: "the message must be JSON" };
-  if (from.length > CONTACT_ADDRESS_CHARACTERS || !PLAUSIBLE_ADDRESS.test(from)) return { problem: "from is not an email address" };
-  if (subject.length > CONTACT_SUBJECT_CHARACTERS) return { problem: `subject is longer than ${CONTACT_SUBJECT_CHARACTERS} characters` };
+  if (characters(from) > CONTACT_ADDRESS_CHARACTERS || !PLAUSIBLE_ADDRESS.test(from)) return { problem: "from is not an email address" };
+  if (characters(subject) > CONTACT_SUBJECT_CHARACTERS) return { problem: `subject is longer than ${CONTACT_SUBJECT_CHARACTERS} characters` };
   if (!text) return { problem: "text is empty" };
-  if (text.length > CONTACT_TEXT_CHARACTERS) return { problem: `text is longer than ${CONTACT_TEXT_CHARACTERS} characters` };
+  if (characters(text) > CONTACT_TEXT_CHARACTERS) return { problem: `text is longer than ${CONTACT_TEXT_CHARACTERS} characters` };
   return { from, subject, text };
 }
+
+// The public dashboard holds the write token; were it the read token too, a leak would open the whole inbox. So the
+// contact routes refuse to work at all while the two are set to the same value.
+export const sameTokens = (env) => Boolean(env.CONTACT_READ_TOKEN) && env.CONTACT_READ_TOKEN === env.CONTACT_WRITE_TOKEN;
 
 // True only for "Bearer <token>" with the configured token. Every byte is compared whatever the input, so the time taken
 // does not tell how much of a guess was right. No token configured means no one is let in.

@@ -114,5 +114,6 @@ def test_a_new_satellites_note_says_when_it_will_be_scored_so_it_ends_on_its_own
     assert when_scored(history, "PARKED", "2026-10-01") == (
         f"at its slot since 6 Oct 2026, scored from {6 + SETTLING_DAYS - 31} Nov 2026")
     assert when_scored(history, "UNDERWAY", "2026-10-01") == (
-        f"on its way to its slot, scored {SETTLING_DAYS} days after it parks, by 30 Dec 2026 at the latest")
+        f"on its way to its slot, scored {SETTLING_DAYS} days after it parks, or from 30 Dec 2026 if it is still on its "
+        "way then")
     assert COMMISSIONING_DAYS == 90

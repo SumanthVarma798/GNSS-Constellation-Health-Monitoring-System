@@ -8,7 +8,7 @@
 import PostalMime from "postal-mime";
 import {
   CONTACT_READ_ITEMS, FEED_ITEMS, authorized, contactRecord, excerpt, formMessage, fromSubstack, isContact, newestFirst,
-  postLink, publicationOf, receiverResults, rss,
+  postLink, publicationOf, receiverResults, rss, sameTokens,
 } from "./lib.js";
 
 // The newest values under a prefix, newest first.
@@ -58,6 +58,9 @@ export default {
 
   async fetch(request, env) {
     const path = new URL(request.url).pathname;
+    if (path === "/contact" && sameTokens(env)) {
+      return new Response("Contact inbox closed: CONTACT_READ_TOKEN and CONTACT_WRITE_TOKEN must differ.\n", { status: 503 });
+    }
     if (path === "/contact" && request.method === "GET") {
       if (!authorized(request.headers.get("authorization"), env.CONTACT_READ_TOKEN)) {
         return new Response("Not allowed.\n", { status: 401, headers: { "www-authenticate": "Bearer" } });
