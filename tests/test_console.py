@@ -285,7 +285,7 @@ def test_messages_are_grouped_into_threads_the_latest_activity_first():
 def test_each_attachment_says_where_its_scan_stands():
     states = [contact.attachment_state(a) for a in contact.messages(THREAD)[0]["attachments"]]
 
-    assert states == [("clean", "scanned: no virus found; download it below"), ("wait", "being scanned (checked every 3 hours)"),
+    assert states == [("clean", "scanned: no virus found; download it below"), ("wait", "being scanned; Read again in a few minutes"),
                       ("bad", "removed: virus found (Eicar-Test-Signature)"), ("note", "not kept: too large")]
     assert [contact.size_words(n) for n in (512, 2048, 4_404_019)] == ["512 B", "2 KB", "4.2 MB"]
 
@@ -295,6 +295,9 @@ def test_the_contact_inbox_shows_threads_and_opens_the_latest_oldest_message_fir
     asked = []
     monkeypatch.setattr(contact, "read_messages", lambda token: asked.append(token) or THREAD)
     monkeypatch.setattr(contact, "read_attachment", lambda token, attachment_id: asked.append(attachment_id) or b"%PDF")
+    scans = []
+    monkeypatch.setattr(contact, "start_scan", lambda token: scans.append(token) or "")
+    streamlit.cache_data.clear()
 
     at = run(monkeypatch, page="console/contact.py", secrets=CONTACT_SECRETS)
     page = text(at)
@@ -304,10 +307,14 @@ def test_the_contact_inbox_shows_threads_and_opens_the_latest_oldest_message_fir
     assert page.count("address not verified") == 1   # the form thread, in the list
     assert page.index("We track a constellation too.\nCan we help?") < page.index("Happy to.") < page.index("Great, thanks.")
     assert 'class="c-msg out"' in page and "Sent by the team to newer@example.org" in page
-    assert "being scanned (checked every 3 hours)" in page and "removed: virus found (Eicar-Test-Signature)" in page
+    assert "being scanned; Read again in a few minutes" in page and "removed: virus found (Eicar-Test-Signature)" in page
+    # a file is waiting, so opening the inbox started the scan with the console's GitHub token, and says so
+    assert len(scans) == 1 and "1 waiting to be scanned for viruses: the scan started at" in page
     assert "not kept: too large" in page
     assert [b.label for b in at.get("download_button")] == ["Download plan\\.pdf (2 KB)"]   # escaped: a label is Markdown
-    assert at.text_area(key="contact_reply_t1").label == "Reply to newer@example\\.org"   # escaped Markdown
+    # replies from contact@opengnss.org are off for now: a reply from the reader's own mail, address and subject filled
+    assert not at.get("text_area")
+    assert [b.proto.url for b in at.get("link_button")] == ["mailto:newer@example.org?subject=Re%3A%20Let%27s%20%3Cb%3Ework%3C/b%3E%20together"]
 
 
 def test_a_thread_from_the_dashboard_form_is_marked_as_not_verified_when_open(monkeypatch):
@@ -323,6 +330,9 @@ def test_a_thread_from_the_dashboard_form_is_marked_as_not_verified_when_open(mo
 
 
 def test_a_reply_is_posted_for_the_open_thread_and_says_it_was_sent(monkeypatch):
+    from evidence import contact_settings
+    monkeypatch.setattr(contact_settings, "REPLIES_FROM_US", True)   # once email sending is set up
+    monkeypatch.setattr(contact, "start_scan", lambda token: "")
     signed_in(monkeypatch, "member@example.com")
     monkeypatch.setattr(contact, "read_messages", lambda token: THREAD)
     monkeypatch.setattr(contact, "read_attachment", lambda token, attachment_id: b"%PDF")
@@ -974,3 +984,15 @@ def test_names_from_outside_are_escaped_before_they_become_markdown_widget_label
         "\\!\\[x\\]\\(http\\://attacker\\.example\\)@b\\.co")
     source = (ROOT / "console" / "contact.py").read_text()
     assert 'contact.label_text(a["name"])' in source and 'contact.label_text(thread["address"])' in source
+
+
+def test_starting_the_scan_says_plainly_when_github_will_not(monkeypatch):
+    import requests as http
+    from evidence import github_api
+
+    def refuse(*args, **kwargs):
+        raise http.HTTPError(response=SimpleNamespace(status_code=403))
+    monkeypatch.setattr(github_api, "ask", refuse)
+    assert contact.start_scan("t") == "its GitHub token may not start workflows (it needs Actions: write)"
+    monkeypatch.setattr(github_api, "ask", lambda *a, **k: None)
+    assert contact.start_scan("t") == ""

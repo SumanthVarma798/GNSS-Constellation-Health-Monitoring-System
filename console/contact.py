@@ -1,6 +1,8 @@
 """Contact inbox: mail people sent to contact@opengnss.org, as threads. One thread open at a time, its messages oldest
 first, its clean attachments to download, and a reply box that answers the thread's correspondent."""
+from datetime import datetime, timezone
 from html import escape
+from urllib.parse import quote
 
 import requests
 import streamlit as st
@@ -10,7 +12,8 @@ from evidence import contact
 from evidence.console_settings import CONTACT_ADDRESS, CONTACT_READ_EVERY_SECONDS, CONTACT_TOKEN_KEY
 from evidence.contact_settings import (
     DOWNLOAD, DOWNLOAD_FAILED, DOWNLOADS_KEPT, EMPTY, FROM_FORM, FROM_THEM, FROM_US, NO_SENDER, NO_TEXT, NOT_VERIFIED,
-    OPEN_THREAD, REPLY_CHARACTERS, REPLY_HELP, REPLY_LABEL, SEND, THREAD_COLUMNS, THREAD_NOTE, THREADS, THREADS_NOTE,
+    OPEN_THREAD, REPLIES_FROM_US, REPLY_BY_EMAIL, REPLY_BY_EMAIL_NOTE, REPLY_CHARACTERS, REPLY_HELP, REPLY_LABEL,
+    SCAN_AGAIN_SECONDS, SCAN_NOT_STARTED, SCAN_STARTED, SEND, THREAD_COLUMNS, THREAD_NOTE, THREADS, THREADS_NOTE,
 )
 from evidence.decision_settings import SECRETS_SECTION
 from ui import console
@@ -28,6 +31,18 @@ def _inbox(token):
 @st.cache_data(max_entries=DOWNLOADS_KEPT, show_spinner=False)
 def _file(token, attachment_id):   # a clean file never changes, so it is read once
     return contact.read_attachment(token, attachment_id)
+
+
+@st.cache_data(ttl=SCAN_AGAIN_SECONDS, show_spinner=False)
+def _scan(github_token):   # opening the inbox again within SCAN_AGAIN_SECONDS does not start a second run
+    return datetime.now(timezone.utc).strftime("%H:%M"), contact.start_scan(github_token)
+
+
+def _scan_notice(count):
+    at, why = _scan(common.settings().get("github_token", ""))
+    if why:
+        return console.notice(SCAN_NOT_STARTED.format(count=count, why=why), "warn")
+    return console.notice(SCAN_STARTED.format(count=count, at=at), "info")
 
 
 def _correspondent(thread):
@@ -92,6 +107,11 @@ def _thread(token, thread):
     _downloads(token, thread)
     if not thread["address"]:
         return
+    if not REPLIES_FROM_US:
+        subject = thread["subject"] if thread["subject"].lower().startswith("re:") else f"Re: {thread['subject']}"
+        st.link_button(REPLY_BY_EMAIL, f"mailto:{quote(thread['address'], safe='@')}?subject={quote(subject)}",
+                       icon=":material/mail:", help=REPLY_BY_EMAIL_NOTE)
+        return
     label = REPLY_LABEL.format(address=contact.label_text(thread["address"])) + (f" ({NOT_VERIFIED})" if thread["form"] else "")
     st.text_area(label, key=f"contact_reply_{thread['id']}", max_chars=REPLY_CHARACTERS, height=140, help=REPLY_HELP)
     st.button(SEND, key=f"contact_send_{thread['id']}", type="primary", icon=":material/send:",
@@ -117,6 +137,8 @@ with body:
         except (requests.RequestException, KeyError, TypeError, ValueError) as error:
             st.html(console.notice(contact.trouble(error), "bad"))
         else:
+            if count := contact.waiting(found):
+                st.html(_scan_notice(count))
             if not found:
                 st.html(console.section(THREADS, console.notice(EMPTY, "info")))
             else:

@@ -5,11 +5,12 @@ from datetime import datetime
 
 import requests
 
-from evidence.console_settings import CONTACT_INBOX_URL, CONTACT_TOKEN_ENV, CONTACT_TOKEN_KEY
+from evidence import github_api
+from evidence.console_settings import CONTACT_INBOX_URL, CONTACT_SCAN_WORKFLOW, CONTACT_TOKEN_ENV, CONTACT_TOKEN_KEY
 from evidence.contact_settings import (
     ATTACHMENT_URL, CLEAN, DOWNLOAD_TIMEOUT_SECONDS, INFECTED, MISSING, NO_SENDER, NO_SUBJECT, NOT_SENT, PENDING,
     REPLY_CHARACTERS, REPLY_EMPTY, REPLY_NO_ANSWER, REPLY_REFUSED, REPLY_TIMEOUT_SECONDS, REPLY_TOKEN, REPLY_TOO_LONG,
-    REPLY_URL, SENT,
+    REPLY_URL, SCAN_NO_ANSWER, SCAN_TOKEN_CANNOT, SENT,
 )
 
 
@@ -136,3 +137,21 @@ def label_text(text):
     """Text from outside as a widget label shows it: Streamlit reads labels as Markdown, so every punctuation mark is
     escaped. Otherwise an address or file name like ![x](http://...) would make the console load that address."""
     return "".join(f"\\{c}" if c in "\\`*_{}[]()#+-.!|<>~$:=^&\"'" else c for c in str(text))
+
+
+def start_scan(github_token):
+    """Starts the attachment scan (.github/workflows/contact-scan.yml) on main. "" when GitHub took it, else why not, in
+    plain words. Never says the token."""
+    try:
+        github_api.ask("POST", f"/actions/workflows/{CONTACT_SCAN_WORKFLOW}/dispatches", github_token, json={"ref": "main"})
+    except requests.HTTPError as error:
+        code = getattr(error.response, "status_code", None)
+        return SCAN_TOKEN_CANNOT if code in (401, 403, 404) else f"GitHub answered {code}"
+    except requests.RequestException:
+        return SCAN_NO_ANSWER
+    return ""
+
+
+def waiting(found):
+    """How many attachments across the threads are waiting to be scanned."""
+    return sum(attachment_state(a)[0] == "wait" for thread in found for row in thread["messages"] for a in row["attachments"])

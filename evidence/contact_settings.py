@@ -8,8 +8,10 @@ REPLY_CHARACTERS = 4000          # as the Worker's CONTACT_TEXT_CHARACTERS
 REPLY_TIMEOUT_SECONDS = 20
 DOWNLOAD_TIMEOUT_SECONDS = 30
 DOWNLOADS_KEPT = 20              # clean files kept in the console's memory, so opening a thread again reads none twice
-SCAN_EVERY = "every 3 hours"  # as .github/workflows/contact-scan.yml runs: about 240 Actions minutes a month,
-                              # where every 30 minutes would take 1,440 of a private repo's 2,000 free
+# The scan runs only when needed: opening the inbox with a file waiting starts .github/workflows/contact-scan.yml, at
+# most once in SCAN_AGAIN_SECONDS, so Actions minutes go only to real files.
+SCAN_AGAIN_SECONDS = 600
+SCAN_MINUTES = 3                # about how long a run takes, freshclam included
 SCAN_TOKEN_ENV = "CONTACT_SCAN_TOKEN"   # scripts/contact_scan.py: the Worker's secret of that name, a GitHub Actions secret
 
 NO_SUBJECT = "(no subject)"
@@ -26,14 +28,26 @@ THREAD_COLUMNS = ["Correspondent", "Subject", "Last message", "Messages"]
 OPEN_THREAD = "Open a thread"
 THREAD_NOTE = "{count} messages, the oldest first; times in UTC"
 EMPTY = "No message has arrived yet."
+SCAN_STARTED = (f"{{count}} waiting to be scanned for viruses: the scan started at {{at}} UTC and takes about {SCAN_MINUTES} "
+                "minutes. Press Read again then.")
+SCAN_NOT_STARTED = ("{count} waiting to be scanned, but the console could not start the scan: {why}. Run Contact "
+                    "attachment scan by hand in GitHub Actions.")
+SCAN_TOKEN_CANNOT = "its GitHub token may not start workflows (it needs Actions: write)"
+SCAN_NO_ANSWER = "GitHub did not answer"
 
-PENDING = f"being scanned (checked {SCAN_EVERY})"
+PENDING = "being scanned; Read again in a few minutes"
 CLEAN = "scanned: no virus found; download it below"
 INFECTED = "removed: virus found ({signature})"
 MISSING = "missing from the inbox store"
 DOWNLOAD = "Download {name} ({size})"
 DOWNLOAD_FAILED = "{name} could not be read from the inbox now. Read the inbox again in a few minutes."
 
+# Replies from contact@opengnss.org need Cloudflare Email Sending, which the free plan sends only to verified addresses.
+# Until it is set up the console offers a reply from the reader's own mail instead; True turns the reply box on.
+REPLIES_FROM_US = False
+REPLY_BY_EMAIL = "Reply from your own email"
+REPLY_BY_EMAIL_NOTE = ("Opens your mail app with the address and subject filled in. Replies from contact@opengnss.org "
+                       "come once its email sending is set up.")
 REPLY_LABEL = "Reply to {address}"
 REPLY_HELP = "Plain text. It goes only to this thread's correspondent, from contact@opengnss.org."
 SEND = "Send reply"
