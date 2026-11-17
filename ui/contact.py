@@ -4,6 +4,7 @@ Drawn in the footer of every page and on the Library page, each in a section (ui
 prefix so the two do not collide. With nothing configured to send to, nothing is drawn. Words and limits are in
 ui/contact_settings.py.
 """
+import base64
 import math
 import os
 import re
@@ -16,8 +17,9 @@ import streamlit as st
 
 from ui import reveal, surfaces
 from ui.contact_settings import (
-    ADDRESS_CHARACTERS, ADDRESS_LABEL, ADDRESS_PLACEHOLDER, BAD_ADDRESS, CAP_WAIT, EMPTY, MESSAGE_LABEL, NO_ANSWER,
-    NOT_SENT, NOT_SET_UP, REFUSED, SECRETS_SECTION, SEND, SEND_TIMEOUT_SECONDS, SENDS_PER_WINDOW, SENT, SESSION_COOLDOWN_SECONDS,
+    ADDRESS_CHARACTERS, ADDRESS_LABEL, ADDRESS_PLACEHOLDER, BAD_ADDRESS, CAP_WAIT, EMPTY, FILE_BYTES, FILE_TYPE, FILE_TYPES,
+    FILES, FILES_HELP, FILES_LABEL, FILES_TOO_LARGE, MESSAGE_LABEL, NO_ANSWER, NOT_SENT, NOT_SET_UP, REFUSED,
+    SECRETS_SECTION, SEND, SEND_TIMEOUT_SECONDS, SENDS_PER_WINDOW, SENT, SESSION_COOLDOWN_SECONDS, TOO_MANY_FILES,
     SESSION_WAIT, SUMMARY, TEXT_CHARACTERS, TITLE, TOKEN_ENV, TOKEN_KEY, TOO_LONG, URL_ENV, URL_KEY, WINDOW_SECONDS,
 )
 
@@ -38,14 +40,22 @@ def config():
         return None
 
 
-def problem(address, message):
-    """Why the form cannot be sent as typed, in plain words, or "" when it can. Both already trimmed."""
+def problem(address, message, files=()):
+    """Why the form cannot be sent as typed, in plain words, or "" when it can. Address and message already trimmed;
+    `files` are (name, bytes) pairs."""
     if len(address) > ADDRESS_CHARACTERS or not _ADDRESS.fullmatch(address):
         return BAD_ADDRESS
     if not message:
         return EMPTY
     if len(message) > TEXT_CHARACTERS:
         return TOO_LONG.format(length=len(message), limit=TEXT_CHARACTERS)
+    if len(files) > FILES:
+        return TOO_MANY_FILES.format(count=len(files))
+    for name, _ in files:
+        if "." not in name or name.rpartition(".")[2].lower() not in FILE_TYPES:
+            return FILE_TYPE.format(name=name)
+    if (size := sum(len(data) for _, data in files)) > FILE_BYTES:
+        return FILES_TOO_LARGE.format(size=f"{size / 1024 / 1024:.1f}")
     return ""
 
 
@@ -69,10 +79,14 @@ def _sent_times():
     return deque(), threading.Lock()
 
 
-def post(url, token, address, message):
-    """Send one message. "" when the inbox kept it, else why not, in plain words. Never says the token."""
+def post(url, token, address, message, files=()):
+    """Send one message, with its (name, bytes) files. "" when the inbox kept it, else why not, in plain words. Never
+    says the token."""
+    body = {"from": address, "text": message}
+    if files:
+        body["attachments"] = [{"name": name, "content": base64.b64encode(data).decode()} for name, data in files]
     try:
-        answer = requests.post(url, json={"from": address, "text": message},
+        answer = requests.post(url, json=body,
                                headers={"Authorization": f"Bearer {token}"}, timeout=SEND_TIMEOUT_SECONDS)
     except requests.RequestException:
         return NO_ANSWER
@@ -87,10 +101,10 @@ def post(url, token, address, message):
     return NOT_SET_UP if answer.status_code == 401 else NO_ANSWER
 
 
-def attempt(address, message, last_sent, now, times, lock, send):
-    """(words, status) for one press of Send: checks the message, then both limits, then sends with `send`.
-    A send that fails gives its place under the cap back."""
-    why, status = problem(address, message), "bad"
+def attempt(address, message, last_sent, now, times, lock, send, files=()):
+    """(words, status) for one press of Send: checks the message and its files, then both limits, then sends with
+    `send`. A send that fails gives its place under the cap back."""
+    why, status = problem(address, message, files), "bad"
     if not why and (wait := session_wait(last_sent, now)):
         why, status = SESSION_WAIT.format(seconds=wait), "warn"
     if not why:
@@ -111,6 +125,11 @@ def _keys(prefix):
     return f"contact_{prefix}_address", f"contact_{prefix}_message", f"contact_{prefix}_status"
 
 
+def _files_key(prefix):
+    """The uploader's key. Streamlit cannot empty an uploader, so a sent message moves it to a new, empty one."""
+    return f"contact_{prefix}_files_{st.session_state.get(f'contact_{prefix}_files_round', 0)}"
+
+
 def _send(prefix):
     address_key, message_key, status_key = _keys(prefix)
     settings = config()
@@ -118,12 +137,14 @@ def _send(prefix):
         return
     address, message, now = st.session_state[address_key].strip(), st.session_state[message_key].strip(), time.time()
     times, lock = _sent_times()
+    files = [(f.name, f.getvalue()) for f in st.session_state.get(_files_key(prefix)) or []]
     words, status = attempt(address, message, st.session_state.get(LAST_SENT), now, times, lock,
-                            lambda a, m: post(*settings, a, m))
+                            lambda a, m: post(*settings, a, m, files), files)
     st.session_state[status_key] = (words, status)
     if status == "ok":   # in the button's callback, so the fields can still be emptied before they are drawn
         st.session_state[LAST_SENT] = now
         st.session_state[address_key] = st.session_state[message_key] = ""
+        st.session_state[f"contact_{prefix}_files_round"] = st.session_state.get(f"contact_{prefix}_files_round", 0) + 1
 
 
 def form(prefix):
@@ -136,6 +157,7 @@ def form(prefix):
             st.text_input(ADDRESS_LABEL, key=address_key, max_chars=ADDRESS_CHARACTERS, placeholder=ADDRESS_PLACEHOLDER,
                           autocomplete="email")
             st.text_area(MESSAGE_LABEL, key=message_key, max_chars=TEXT_CHARACTERS)
+            st.file_uploader(FILES_LABEL, type=FILE_TYPES, accept_multiple_files=True, key=_files_key(prefix), help=FILES_HELP)
             st.form_submit_button(SEND, on_click=_send, args=(prefix,), icon=":material/send:")
         if status_key in st.session_state:
             surfaces.show(surfaces.notice(*st.session_state[status_key], inline=True))

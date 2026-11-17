@@ -4,3 +4,7 @@ primaryColor = "#7fb0ff"
 backgroundColor = "#20242b"
 secondaryBackgroundColor = "#1a1d23"
 textColor = "#e8ebf1"
+
+[server]
+# The contact form takes at most 5 MB of files in all (ui/contact_settings.py FILE_BYTES); nothing else uploads.
+maxUploadSize = 5

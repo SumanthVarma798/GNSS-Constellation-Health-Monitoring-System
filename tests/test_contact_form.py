@@ -8,8 +8,8 @@ import requests
 from streamlit.testing.v1 import AppTest
 
 from ui import contact
-from ui.contact_settings import (BAD_ADDRESS, EMPTY, NO_ANSWER, NOT_SET_UP, SENDS_PER_WINDOW, SESSION_COOLDOWN_SECONDS,
-                                 TEXT_CHARACTERS, TOKEN_ENV, URL_ENV, WINDOW_SECONDS)
+from ui.contact_settings import (BAD_ADDRESS, EMPTY, FILE_BYTES, NO_ANSWER, NOT_SET_UP, SENDS_PER_WINDOW,
+                                 SESSION_COOLDOWN_SECONDS, TEXT_CHARACTERS, TOKEN_ENV, URL_ENV, WINDOW_SECONDS)
 
 URL = "http://localhost:8787/contact"
 
@@ -34,6 +34,18 @@ def test_the_address_and_message_are_checked_before_sending():
     assert contact.problem("a@example.org", "") == EMPTY
     assert contact.problem("a@example.org", "x" * TEXT_CHARACTERS) == ""
     assert "the most is 4000" in contact.problem("a@example.org", "x" * (TEXT_CHARACTERS + 1))
+
+
+def test_the_attachments_are_checked_before_sending_as_the_worker_checks_them():
+    ok = [("plan.pdf", b"%PDF"), ("photo.JPG", b"x"), ("data.csv", b"a,b")]
+    assert contact.problem("a@example.org", "Hello", ok) == ""
+    assert contact.problem("a@example.org", "Hello", [*ok, ("more.txt", b"x")]) == "there are 4 attachments; the most is 3."
+    assert contact.problem("a@example.org", "Hello", [("setup.exe", b"x")]) == "setup.exe is not a type the form accepts."
+    assert contact.problem("a@example.org", "Hello", [("pdf", b"x")]) == "pdf is not a type the form accepts."
+    half = b"x" * (FILE_BYTES // 2)
+    assert contact.problem("a@example.org", "Hello", [("a.pdf", half), ("b.pdf", half)]) == ""
+    assert contact.problem("a@example.org", "Hello", [("a.pdf", half), ("b.pdf", half + b"x")]) == (
+        "the attachments are 5.0 MB in all; the most is 5 MB.")
 
 
 def test_one_visitor_waits_a_minute_between_messages():
@@ -111,6 +123,14 @@ def test_a_post_carries_the_token_and_its_answer_reads_in_plain_words(monkeypatc
                     "headers": {"Authorization": "Bearer tok"}, "timeout": 10}
 
 
+def test_attachments_go_with_the_message_as_base64(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(contact.requests, "post", lambda url, json, headers, timeout: seen.update(json=json) or Answer(201))
+
+    assert contact.post(URL, "tok", "a@example.org", "Hi", [("note.txt", b"hello")]) == ""
+    assert seen["json"]["attachments"] == [{"name": "note.txt", "content": "aGVsbG8="}]
+
+
 def test_config_comes_from_the_environment_or_else_the_secrets(monkeypatch):
     assert contact.config() is None
     monkeypatch.setattr(contact.st, "secrets", {"contact": {"url": "https://feeds.example/contact", "token": "from-secrets"}})
@@ -136,7 +156,7 @@ def test_with_nowhere_to_send_no_form_is_drawn():
 def _press_send(monkeypatch, said):
     configured(monkeypatch)
     posted = []
-    monkeypatch.setattr(contact, "post", lambda url, token, a, m: posted.append((url, a, m)) or said)
+    monkeypatch.setattr(contact, "post", lambda url, token, a, m, files: posted.append((url, a, m, files)) or said)
     at = AppTest.from_function(_page).run()
     assert [box.label for box in at.checkbox] == ["**Contact us** write to the team; only the team reads it, and we reply by email"]
     at.text_input(key="contact_library_address").input(" a@example.org ")
@@ -148,7 +168,7 @@ def _press_send(monkeypatch, said):
 def test_sending_from_the_form_says_so_and_empties_the_fields(monkeypatch):
     at, posted = _press_send(monkeypatch, "")
 
-    assert posted == [(URL, "a@example.org", "Hello team")]
+    assert posted == [(URL, "a@example.org", "Hello team", [])]
     assert any("Sent. We will reply to a@example.org." in h.proto.body for h in at.get("html"))
     assert at.text_input(key="contact_library_address").value == "" and at.text_area(key="contact_library_message").value == ""
 

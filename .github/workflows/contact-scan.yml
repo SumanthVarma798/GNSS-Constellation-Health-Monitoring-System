@@ -1,0 +1,63 @@
+# Scans the contact inbox's attachments for viruses every 30 minutes (scripts/contact_scan.py).
+# Until a file is scanned clean, the console shows it as "being scanned" and the Worker refuses to hand it out;
+# an infected one is deleted and its record kept with the signature ClamAV named.
+# It first asks whether anything is waiting, and installs ClamAV only when something is.
+
+name: Contact attachment scan
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: contact-scan  # two runs at once would scan and report the same files twice
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    # Only in the private working copy. Anyone who copies this file elsewhere must opt in.
+    if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20  # freshclam downloads the whole signature set on a fresh runner
+    env:
+      CONTACT_SCAN_TOKEN: ${{ secrets.CONTACT_SCAN_TOKEN }}  # the same value as the Worker's secret of that name
+    steps:
+      - name: Anything waiting?
+        id: waiting
+        run: |
+          if [ -z "$CONTACT_SCAN_TOKEN" ]; then
+            echo "::warning::Not scanned: no CONTACT_SCAN_TOKEN secret. Attachments stay 'being scanned' until it is set."
+            echo "count=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          TOKEN=$(printf %s "$CONTACT_SCAN_TOKEN" | tr -d '[:space:]')  # a pasted token can carry a newline
+          COUNT=$(curl -fsS -m 30 --retry 3 -H "Authorization: Bearer $TOKEN" \
+            "https://feeds.opengnss.org/contact/attachments?scan=pending" | jq length)
+          echo "Attachments waiting: $COUNT"
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        if: steps.waiting.outputs.count != '0'
+      - uses: actions/setup-python@v5
+        if: steps.waiting.outputs.count != '0'
+        with:
+          python-version: '3.11'  # matches runtime.txt
+      - name: Install the one library the scan needs, and ClamAV
+        if: steps.waiting.outputs.count != '0'
+        run: |
+          pip install "$(grep '^requests==' requirements.txt)"
+          sudo apt-get update -q
+          sudo apt-get install -y -q clamav
+      - name: Update the virus signatures
+        if: steps.waiting.outputs.count != '0'
+        run: |
+          sudo systemctl stop clamav-freshclam || true  # the service would hold freshclam's lock
+          sudo freshclam
+
+      - name: Scan and report
+        if: steps.waiting.outputs.count != '0'
+        run: python scripts/contact_scan.py
