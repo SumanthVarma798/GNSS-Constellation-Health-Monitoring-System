@@ -3,6 +3,8 @@
 These are the values the scores already use (analysis/drift_analysis.py, analysis/bundled_run.py).
 Writing them here does not change a score: it lets the pages say "should be" next to "is".
 """
+import math
+
 from analysis.score_rules import (DRIFT_TOLERANCE_TILTED, OVERDUE_AFTER, QZSS_INCLINATION_TOLERANCE,
                                   SCORE_WEIGHTS, SLOT_ALLOWED, SLOT_ALLOWED_TILTED, STATUS_FROM,
                                   STATUS_WORDS, TILT_GEO_BELOW, default_inclination_tolerance,
@@ -13,6 +15,21 @@ from config.config import GEO_NOMINAL_ALTITUDE, GRAVEYARD_ORBIT_MIN
 DRIFT_ALLOWED_TILTED = DRIFT_TOLERANCE_TILTED
 NOMINAL_HEIGHT_KM = GEO_NOMINAL_ALTITUDE
 SET_ASIDE_HEIGHT_KM = GRAVEYARD_ORBIT_MIN
+
+# A geosynchronous satellite on an orbit that is not quite a circle (eccentricity e) speeds up and slows down once a
+# day, so it swings east and west of its mean longitude by about 2 x e radians of its orbit's radius.
+GEO_RADIUS_KM = 42164.0
+
+
+def ecc_swing_km(e, radius_km=GEO_RADIUS_KM):
+    """How far, in km, a geosynchronous satellite of eccentricity `e` swings east or west of its mean longitude: 2 e a."""
+    return 2 * e * radius_km
+
+
+# A geostationary satellite is held within SLOT_ALLOWED["GEO"] degrees of its slot, so it may swing no further than that:
+# an eccentricity of half that angle in radians (0.5 degrees: 0.0044, about 368 km). A limit set for a tilted orbit
+# (QZSS's 0.099, BeiDou-3's 0.05) is far wider and would let a geostationary satellite swing some 10 degrees.
+GEO_ECC_MAX = math.radians(SLOT_ALLOWED["GEO"]) / 2
 
 # Orbit types in the order the Overview groups them, each with one plain line. A tilt under 10 degrees is GEO.
 ORBIT_TYPES = {
@@ -34,6 +51,10 @@ MEASURES = {"orbit": {"slot": ("Inclination",), "plane": ("plane", "inclination"
 BURN_PARTS = ("Upkeep", "Regularity")   # a slot satellite's burns: on time, and evenly spaced
 BURN_DAYS = 90   # Home counts the burns found in this many days of orbit records, the default time range
 CLOCK_STEADY_NS = 30.0   # our choice: 30 ns is 9 m of range, far past a steady clock's steps (about 1 ns)
+# The clock score judges only the satellites in service today, so a constellation whose clocks have failed in orbit
+# can still score high: the record of those that failed (registry/clock_record.csv) is said beside it.
+CLOCK_RECORD = ("Clock record: {lost} of {launched} {name} satellites launched are reported to have lost atomic clocks in orbit.",
+                "The score above judges only the satellites in service today. Sources:")
 
 # A constellation's score (ui.system_summary.score_of) weighs its three measures by what a failure costs its users,
 # which depends on the mission. Our choice, for the team to confirm; Need help reading this page? gives the reasons

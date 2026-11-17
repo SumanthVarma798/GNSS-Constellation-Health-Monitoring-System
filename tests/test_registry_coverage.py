@@ -65,3 +65,19 @@ def test_every_tracked_regional_satellite_with_a_slot_has_its_targets():
         rows = dashboard_registry_rows(page)
         missing = [name for name in sats if name not in targets and rows.get(name, {}).get("slot")]
         assert missing == [], page
+
+
+def test_a_constellation_with_lost_clocks_says_so_and_others_say_nothing():
+    from evidence.registry_tables import clock_record
+    from ui import three_measures
+
+    lost, launched = clock_record("NavIC")
+    assert {row["name"] for row in lost} >= {"IRNSS-1A", "IRNSS-1F"} and len(lost) < launched
+    assert all(row["source_link"].startswith("https://") for row in lost)
+    # "launched" counts sightings too: a new satellite (NVS-03) is launched before the IGS file lists it
+    sightings = [row for row in read_table(REGISTRY_SIGHTINGS_FILE) if row["svn"].startswith("I")]
+    assert launched == sum(row["svn"].startswith("I") for row in read_table(REGISTRY_SATELLITES_FILE)) + len(sightings)
+    line = three_measures.record_line("NavIC")
+    assert f"{len(lost)} of {launched} NavIC satellites launched are reported to have lost atomic clocks in orbit" in line
+    assert all(link in line for link in {row["source_link"] for row in lost})
+    assert clock_record("GPS") is None and three_measures.record_line("GPS") == ""

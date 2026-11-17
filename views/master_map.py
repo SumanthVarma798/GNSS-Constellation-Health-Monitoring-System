@@ -36,7 +36,7 @@ def _links(index, summary):
     """The row's ways onward: its part of the map, each part's Overview, its News, the Library."""
     name, parts = summary["name"], summary["parts"]
     with st.container(key=f"mm_links_{index}"):
-        st.button("Show on the map", key=f"mm_map_{index}", icon=":material/my_location:", on_click=_focus,
+        st.button("Show on map", key=f"mm_map_{index}", icon=":material/my_location:", on_click=_focus,
                   args=(mm.registry_name(name),))
         for part in parts:
             words = systems.part_name(part)
@@ -66,7 +66,7 @@ def page():
         (f"showing {shown}" if focus else "every constellation") + " · drag to move, pinch or Ctrl and scroll to zoom, "
         "tap a card for its signal IDs over time"))
     if focus:
-        st.button("Show every constellation", key="mm_all", icon=":material/zoom_out_map:", on_click=_focus, args=(None,))
+        st.button("Show all constellations", key="mm_all", icon=":material/zoom_out_map:", on_click=_focus, args=(None,))
     master_map_canvas(tables, focus, records)
 
     surfaces.show(surfaces.group_head("Where this comes from", "and how fresh each part is"))

@@ -421,6 +421,24 @@ def spacing_card(group):
     return surfaces.raised(facts, spacing_title(group))
 
 
+def plane_card(row):
+    """One plane of a medium-orbit system: how far its node is from the pattern of planes `spacing_deg` apart."""
+    # the worse of its two misses decides: the node off the pattern, and the widest gap between neighbours along it
+    misses = [abs(row["offset"]) / row["offset_limit"]]
+    gap_limit = row.get("gap_limit") or None   # none set, or zero: the miss is shown without a verdict of its own
+    if row["gap"] is not None and gap_limit:
+        misses.append(abs(row["gap"]) / gap_limit)
+    worst = max(misses)
+    status = "ok" if worst <= 1 else "warn" if worst <= 3 else "bad"
+    gap = ("–" if row["gap"] is None else f'{row["gap"]:.2f}°' + (f' (allowed ±{gap_limit:g}°)' if gap_limit else ""))
+    facts = (f'<div class="geo-facts"><span><small>Planes should be</small><b class="num">{row["spacing_deg"]:g}° apart</b></span>'
+             f'<span><small>Node off the pattern</small><b class="num">{row["offset"]:+.2f}°</b></span>'
+             f'<span><small>Allowed</small><b class="num">±{row["offset_limit"]:g}°</b></span>'
+             f'<span><small>Worst spacing miss in it</small><b class="num">{gap}</b></span>'
+             f'<span><small>Verdict</small>{surfaces.chip("within limit" if status == "ok" else "past limit", status)}</span></div>')
+    return surfaces.raised(facts, f'Plane {escape(str(row["plane"]))} · {row["count"]} satellites')
+
+
 def spacing_title(group):
     return f'{group["satellite_count"]} satellites around {group["central_longitude_deg"]:.1f}° east'
 

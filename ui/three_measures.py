@@ -4,8 +4,8 @@ figure behind it. What counts for each measure is in ui/limits.py (MEASURES, CLO
 """
 from html import escape
 
-from evidence.registry_tables import judged_by_plane
-from ui import limits, meo_overview, palette, reveal, surfaces, systems
+from evidence.registry_tables import clock_record, judged_by_plane
+from ui import limits, meo_overview, palette, reveal, surfaces, systems, tooltip
 
 # (key in ui.system_summary's counts, the words on the page), in the order shown everywhere.
 MEASURES = [("orbit", "Orbit kept"), ("station", "Station held"), ("clock", "Clock steady")]
@@ -89,7 +89,24 @@ def strip(summary):
     chips = [_chip(words, *summary[key]) for key, words in MEASURES]
     chips.append(_chip("Says healthy", summary["flagged_healthy"], summary["checked"]))
     return (f'<div class="measures" role="group" aria-label="Score, orbit, station-keeping and clock">{lead}'
-            f'{"".join(chips)}</div>{score_sum(summary) if summary["score"] is not None else ""}')
+            f'{"".join(chips)}</div>{score_sum(summary) if summary["score"] is not None else ""}'
+            f'{record_line(summary["name"])}')
+
+
+def record_line(name):
+    """The constellation's clock track record beside its clock score: how many of the satellites it launched lost
+    atomic clocks in orbit, with the sources in a tip. "" when the registry holds no entry for it."""
+    found = clock_record(name)
+    if not found:
+        return ""
+    lost, launched = found
+    words, tip = limits.CLOCK_RECORD
+    sources = "".join(
+        f'<span>{escape(row["name"])}: {escape(row["what"])} ({escape(row["when"])}); '
+        f'<a class="tt-src" href="{escape(row["source_link"], quote=True)}" target="_blank" rel="noopener noreferrer">'
+        f'{escape(row["source_name"])}</a></span><br>' for row in lost)
+    return (f'<p class="small clock-record">{escape(words.format(lost=len(lost), launched=launched, name=name))} '
+            f'{tooltip.tip_html("Sources", escape(tip) + "<br>" + sources, key=name)}</p>')
 
 
 def _cell(now, status, should="", note=""):

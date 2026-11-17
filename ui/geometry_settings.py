@@ -75,7 +75,13 @@ SKY_GROUND_KEY = [
                                 "node): N satellites, 360 ÷ N degrees apart. Uneven spacing leaves gaps in the sky "
                                 "and worsens position quality."),
 ]
-SKY_GROUND_NOTE = "Plane spacing is shown for information; it is not part of the health score."
+# Why a medium-orbit constellation's planes are checked differently from inclined ones, said once on the page.
+PLANE_WHY_INCLINED = ("Inclined orbits go round once a day, so satellites sharing a ground track are checked "
+                      "against each other: N of them should have nodes 360 ÷ N degrees apart.")
+PLANE_WHY_MEO = ("Medium orbits go round about twice a day and share no ground track, so each plane's node is "
+                 "checked against planes spaced {spacing:g}° apart ({planes} planes), as on the Overview.")
+SKY_GROUND_NOTE = ("Plane spacing of inclined orbits is shown for information; it is not part of the health score. "
+                   "A medium orbit's plane node is: the Overview scores it.")
 SPACING_STATUS = {"Ideal": "ok", "Good": "ok", "Moderate": "warn", "Poor": "bad", "N/A": "idle"}
 
 # Orbit trends: one row per satellite, one column per measure. (column in the history, name, unit, what it means).
