@@ -6,6 +6,7 @@ import requests
 
 from ui import orbit_age
 from ui import data as dashboard_data
+from ui import notices
 from ui.data import orbit_age_rows
 
 
@@ -28,6 +29,19 @@ GAP = {
 
 def epoch(days):
     return (NOW - timedelta(days=days)).isoformat()
+
+
+def notices_for(monkeypatch, rows, gap):
+    """The notices `orbit_age.show` posts for one page run, with drawing side effects stood in."""
+    posted = []
+    monkeypatch.setattr(notices, "post", lambda text, status: posted.append((text, status)))
+    monkeypatch.setattr(orbit_age.surfaces, "show", lambda html: None)
+    monkeypatch.setattr(orbit_age.reveal, "section", lambda *args, **kwargs: None)
+    monkeypatch.setattr(orbit_age.dashboard_data, "orbit_ages", lambda constellation, result: rows)
+    monkeypatch.setattr(orbit_age.dashboard_data, "orbit_gap", lambda: gap)
+    monkeypatch.setattr(orbit_age.dashboard_data, "own_note", lambda: "ok")
+    orbit_age.show("NavIC", None)
+    return posted
 
 
 def test_newest_row_wins_and_source_is_celestrak_spacetrack_or_history():
@@ -106,7 +120,7 @@ def test_tag_and_table_add_the_broadcast_gap_when_one_is_published():
          "source": "Space-Track", "age_days": 3.1, "status": "bad"},
     ]
 
-    html = orbit_age.tag(rows[0], orbit_age._gap_by_satellite(GAP)["IRNSS-1B"])
+    html = orbit_age.tag(rows[0], gap=(3.2, "25 Oct"))
     summary, body, stale_notice = orbit_age.section_markup(rows, gap=GAP)
 
     assert "Orbit record from 25 Oct 09:12 UTC, CelesTrak · off by 3.2 km on 25 Oct · alert at 2 days, stale at 3" in _words(html)
@@ -153,9 +167,15 @@ def test_orbit_gap_reads_the_published_json_and_falls_back_to_empty(monkeypatch)
 
 
 def test_a_gap_that_is_not_a_number_is_left_out_not_a_crash():
-    assert orbit_age._gap_by_satellite({"day": "2026-10-24", "satellites": [{"satellite": "IRNSS-1B", "typical_km": "9"},
-                                                                            {"satellite": "QZS-2", "typical_km": 3.2}]}) \
-        == {"QZS-2": (3.2, "24 Oct")}
+    gap = {"day": "2026-10-24", "satellites": [{"satellite": "IRNSS-1B", "typical_km": "9"},
+                                               {"satellite": "QZS-2", "typical_km": 3.2}]}
+    rows = [{"satellite": "IRNSS-1B", "epoch": None, "source": "", "age_days": None, "status": "idle"},
+            {"satellite": "QZS-2", "epoch": None, "source": "", "age_days": None, "status": "idle"}]
+
+    _, body, _ = orbit_age.section_markup(rows, gap=gap)
+
+    assert "3.2 km" in body
+    assert "9 km" not in body
 
 
 def test_a_fitted_record_stands_in_only_when_every_other_record_is_old_enough():
@@ -182,7 +202,7 @@ def test_a_fitted_row_card_and_table_say_fit_and_leave_out_the_published_gap():
     row = {"satellite": "IRNSS-1B", "epoch": datetime(2026, 10, 24, 23, 45, tzinfo=timezone.utc),
            "source": "fitted to broadcast", "age_days": 1.2, "status": "ok", "fit_km": 0.12}
 
-    html = orbit_age.tag(row, orbit_age._gap_by_satellite(GAP)["IRNSS-1B"])
+    html = orbit_age.tag(row)
     _, body, _ = orbit_age.section_markup([row], gap=GAP)
 
     assert "Orbit record from 24 Oct 23:45 UTC, fitted to the broadcast orbit (within 0.1 km)" in html
@@ -211,26 +231,29 @@ BROADCAST_ROWS = [
 ]
 
 
-def test_broadcast_health_accuracy_and_system_times_show_and_unhealthy_satellites_are_named():
+def test_broadcast_health_accuracy_and_system_times_show_and_unhealthy_satellites_are_named(monkeypatch):
     _, body, _ = orbit_age.section_markup(BROADCAST_ROWS, gap=BROADCAST_GAP)
+    posted = notices_for(monkeypatch, BROADCAST_ROWS, BROADCAST_GAP)
+    irnss_1c = next(row for row in BROADCAST_GAP["satellites"] if row["satellite"] == "IRNSS-1C")
 
     assert "Broadcast health" in body and "Signal accuracy" in body
     assert "healthy</b>" in body and "unhealthy (code 130)" in body and "not in the IGS broadcast file" in body
     assert "2.0 m" in body and "3.1 m" in body
     assert "System times from the IGS daily broadcast file: GPS−UTC -1.86 ns · Galileo−GPS -0.32 ns · 18 leap seconds" in body
-    assert orbit_age._unhealthy_notice(BROADCAST_GAP, BROADCAST_ROWS) == (
+    assert (
         "Broadcasting unhealthy: IRNSS-1C (I03). From the IGS broadcast file of 25 Oct; "
-        "work in progress, not yet part of the score.")
-    assert orbit_age._missing_notice(BROADCAST_GAP, BROADCAST_ROWS) == "Not in the IGS daily broadcast file: IRNSS-1D (I04)."
+        "work in progress, not yet part of the score.", "warn") in posted
+    assert ("Not in the IGS daily broadcast file: IRNSS-1D (I04).", "idle") in posted
     assert "Broadcast health: unhealthy (code 130) · accuracy 3.1 m" in orbit_age.tag(
-        BROADCAST_ROWS[1], status=orbit_age._status_by_satellite(BROADCAST_GAP)["IRNSS-1C"])
+        BROADCAST_ROWS[1], status=irnss_1c)
 
 
-def test_an_old_payload_without_broadcast_fields_still_renders_without_notices_or_system_times():
+def test_an_old_payload_without_broadcast_fields_still_renders_without_notices_or_system_times(monkeypatch):
     _, body, _ = orbit_age.section_markup(BROADCAST_ROWS, gap=GAP)
+    posted = notices_for(monkeypatch, BROADCAST_ROWS, GAP)
 
     assert "System times" not in body and "unhealthy" not in body
-    assert orbit_age._unhealthy_notice(GAP, BROADCAST_ROWS) is None and orbit_age._missing_notice(GAP, BROADCAST_ROWS) is None
+    assert posted == []
 
 
 def test_official_status_links_only_where_there_is_one():
@@ -259,13 +282,13 @@ def test_qzss_broadcast_health_is_read_bit_by_bit_per_signal():
     assert orbit_age.health_words(galileo) == ("unhealthy (code 130)", "bad")
 
 
-def test_a_qzss_satellite_with_no_usable_signal_is_in_the_unhealthy_notice():
+def test_a_qzss_satellite_with_no_usable_signal_is_in_the_unhealthy_notice(monkeypatch):
     qzss = {"satellite": "QZS-3", "signal_id": "J07", "health": 55, "accuracy_m": 2.0, "note": ""}
     gap = {**GAP, "satellites": [qzss]}
     rows = [{"satellite": "QZS-3", "epoch": None, "source": "", "age_days": None, "status": "idle"}]
 
     _, body, _ = orbit_age.section_markup(rows, gap=gap)
     assert "unhealthy (code 55): only L2C usable" in body
-    assert orbit_age._unhealthy_notice(gap, rows) == (
+    assert (
         "Broadcasting unhealthy: QZS-3 (J07). From the IGS broadcast file of 25 Oct; "
-        "work in progress, not yet part of the score.")
+        "work in progress, not yet part of the score.", "warn") in notices_for(monkeypatch, rows, gap)
