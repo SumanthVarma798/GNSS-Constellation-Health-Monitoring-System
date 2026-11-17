@@ -9,6 +9,9 @@ html, body, .stApp, [data-testid="stApp"] { background: var(--platform); color: 
 /* the theme's crossfade (ui/theme.py FADE_JS): its frame takes no room; the fade itself is the browser's own */
 .st-key-theme_fade { display: none; }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .45s; }
+/* A frame whose colour scheme differs from its own page's is drawn opaque (a box behind the clock). Streamlit sets
+   normal on frames, and dark on its wrappers, so the frames take the page's from --look (ui/theme.py). */
+.stApp iframe { color-scheme: var(--look); }
 [data-testid="stHeader"] { background: var(--platform); }
 [data-testid="stMain"], [data-testid="stMain"] p, [data-testid="stMain"] li, [data-testid="stMarkdownContainer"] { color: var(--ink); }
 /* 1560px wide at most, centred: a table or a row of four tiles still reads as one block on a

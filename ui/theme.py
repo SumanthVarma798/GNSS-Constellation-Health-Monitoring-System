@@ -62,7 +62,8 @@ def chosen_scheme():
 def _block(values, look, scheme):
     lines = "".join(f"  --{name}: {value};\n" for name, value in values.items())
     # --theme says which choice the page has drawn; the crossfade (FADE_JS) waits for it.
-    return f":root {{\n  color-scheme: {look};\n  --theme: {scheme};\n{lines}}}\n"
+    # --look carries the scheme to the component frames (ui/theme.css), as Streamlit's wrappers say "dark" whatever this says.
+    return f":root {{\n  color-scheme: {look};\n  --look: {look};\n  --theme: {scheme};\n{lines}}}\n"
 
 
 def root_block(scheme=None):
