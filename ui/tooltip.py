@@ -92,6 +92,8 @@ def glance(lead, items, note=""):
 
 
 LEGEND_SHAPES = ("round", "diamond", "square", "ring")   # drawn by .swatch in ui/theme.css
+# A palette colour that changes with the theme is drawn as its variable, so a swatch matches its picture in either.
+_THEMED = {getattr(palette, name.upper()): f"var(--{name})" for name in palette.LIGHT}
 
 
 def legend(entries, label="Legend"):
@@ -105,6 +107,7 @@ def legend(entries, label="Legend"):
         if shape and shape[0] not in LEGEND_SHAPES:
             raise ValueError(f"legend shape {shape[0]!r} must be one of {', '.join(LEGEND_SHAPES)}")
         cls = f"swatch {shape[0]}" if shape else "swatch"
+        colour = _THEMED.get(colour, colour)
         rows += f'<li><span class="{cls}" style="--c:{colour};background:{colour}"></span>{escape(text)}</li>'
     return tip_html(escape(label), f'<ul class="tt-list">{rows}</ul>', pill=True)
 

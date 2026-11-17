@@ -214,7 +214,7 @@ function setColour(mode) {
 function buildLegend() {
   const key = colourBy === "health" ? DATA.health_key : DATA.system_key;
   legend.replaceChildren(...key.map(item => {
-    const s = el("span"); const sw = el("span", "swatch"); sw.style.background = item.colour;
+    const s = el("span"); const sw = el("span", "swatch"); sw.style.background = STATUS_COLOURS[item.status] || item.colour;
     s.append(sw, el("span", null, item.words || item.name)); return s;
   }));
 }

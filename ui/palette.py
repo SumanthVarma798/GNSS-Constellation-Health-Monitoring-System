@@ -26,6 +26,12 @@ WARN = "#f0c36a"
 BAD = "#ff9a94"
 IDLE = "#8d96a5"
 
+# The light look (Settings, Theme): the same parts on a pale platform, with the statuses darkened to stay readable.
+# Pictures drawn in Python keep the dark values above; ui/theme.py puts these in their place in the browser.
+LIGHT = {"platform": "#e4e8ee", "lift": "#ffffff", "sink": "#b8c0cc", "well": "#dbe0e7", "track": "#b3bbc7",
+         "fill": "#98a2b1", "ink": "#1d222b", "muted": "#4f5866", "accent": "#2a5cba", "ok": "#17704a",
+         "warn": "#7f5100", "bad": "#b1261f", "idle": "#59626f"}
+
 # How a satellite stands against ITS OWN slot, and how each state is drawn.
 # Never judge a satellite against the nearest slot: one that drifts onto
 # another satellite's slot would then look fine.

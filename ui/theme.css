@@ -6,6 +6,9 @@
 
 /* ---- page ---- */
 html, body, .stApp, [data-testid="stApp"] { background: var(--platform); color: var(--ink); }
+/* the theme's crossfade (ui/theme.py FADE_JS): its frame takes no room; the fade itself is the browser's own */
+.st-key-theme_fade { display: none; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .45s; }
 [data-testid="stHeader"] { background: var(--platform); }
 [data-testid="stMain"], [data-testid="stMain"] p, [data-testid="stMain"] li, [data-testid="stMarkdownContainer"] { color: var(--ink); }
 /* 1560px wide at most, centred: a table or a row of four tiles still reads as one block on a
@@ -41,6 +44,7 @@ code { color: var(--accent); background: var(--well); border-radius: 8px; }
 /* Icons and words in one control. Streamlit gives every button icon a right margin meant as the space before the
    words, which pushes it off centre in an icon-only or reversed button; the gap above makes that space instead. */
 button span:has(> [data-testid="stIconMaterial"]), button [data-testid="stIconMaterial"] { margin: 0; }
+[data-testid="stPageLink-NavLink"] [data-testid="stIconMaterial"] { color: var(--ink); }   /* Streamlit colours it from its own config */
 /* Streamlit fixes the size of a button's words on the words' own container, so the sizes set on buttons here did not take */
 button [data-testid="stMarkdownContainer"] { font-size: inherit; }
 [data-testid="stButton"] button:hover, [data-testid="stDownloadButton"] button:hover { color: var(--accent); border-color: var(--accent); }
@@ -231,9 +235,6 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
   .brand-mark { width: 36px; height: 36px; }
   .st-key-bar_buttons { width: max-content !important; }   /* only as wide as its buttons */
 }
-/* the gear where a page has no settings of its own: in its place, greyed, saying where the settings are */
-.st-key-gear_off button { width: 36px; height: 36px; min-height: 0; padding: 0; border-radius: 50%; }
-.st-key-gear_off button :is([data-testid="stMarkdownContainer"], p) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .right { display: flex; justify-content: flex-end; }
 
 /* segmented controls: a pressed track, the chosen item raised in the accent colour */
@@ -256,6 +257,8 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 .st-key-bar_buttons [data-testid="stPopover"] button { width: 36px; height: 36px; padding: 0; border-radius: 50%; }
 .st-key-bar_buttons [data-testid="stPopover"] button > :not(:first-child) { display: none; }   /* only the gear: no words, no arrow (its margins pushed the gear sideways) */
 [data-testid="stPopoverBody"] { background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--raised); color: var(--ink); }
+[data-testid="stPopoverBody"] > div { color: var(--ink); }   /* its wrapper takes Streamlit's own (dark) text colour */
+[data-testid="stNumberInputContainer"] { border-color: var(--well); }   /* Streamlit draws it in its own (dark) colour */
 [data-testid="stNumberInput"] [data-baseweb="input"] { background: var(--well); border: 1px solid var(--edge); border-radius: 14px; box-shadow: var(--pressed); }
 [data-testid="stNumberInput"] [data-baseweb="base-input"] { background: transparent; border: 0; box-shadow: none; }
 [data-testid="stNumberInput"] input { color: var(--ink); background: transparent; }
@@ -594,7 +597,6 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
   [data-testid="stMainBlockContainer"] > div > [data-testid="stVerticalBlock"] > :has(.st-key-notices) { top: 16px; }
   .st-key-notices { top: calc(31px - var(--bell) / 2); right: 13px; }
   .st-key-bar_buttons { margin-right: calc(var(--bell) + 12px); }
-  .st-key-gear_off button { width: 40px; height: 40px; }
   [class*="st-key-ntread_"] button { width: 40px; height: 40px; }
 }
 
@@ -817,6 +819,7 @@ details.sys.card { display: block; padding: 0; }
 .th-head, .th-group { display: flex; flex-direction: column; gap: 4px; }
 .th-head b { font-size: var(--fs-section); font-weight: var(--fw-section); }
 .th-group { margin-top: 6px; padding-top: 12px; border-top: 1px solid var(--edge); }
+.th-group.th-first { margin-top: 0; padding-top: 0; border-top: 0; }   /* the theme opens the panel: no rule above it */
 .th-group b { font-size: var(--fs-side); font-weight: var(--fw-side); color: var(--accent); }
 [class*="st-key-thset_"] { gap: 6px; padding: 12px 14px; border-radius: 16px; background: var(--well); box-shadow: var(--pressed); }
 .th-help { margin: 0; display: grid; gap: 4px; font-size: var(--fs-small); line-height: 1.45; }

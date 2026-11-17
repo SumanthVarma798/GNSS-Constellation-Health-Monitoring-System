@@ -6,7 +6,7 @@ The choices live in st.session_state: `scope` (one constellation: a system, or o
 ({constellation: [satellite, ...]}, set with ui.picker), `window_days` (the time range, ui/time_range.py) and
 `params` (only the detection thresholds moved off their defaults). Pages read them.
 
-The bar: the product name and its buttons (refresh, the gear, the key; the bell keeps its room beside them), and the
+The bar: the product name and its buttons (refresh, the gear with the theme and the limits, the key; the bell keeps its room beside them), and the
 data's state (the UTC clock, when the next update is, the data chip). Under it, the navigation in two steps (_nav): the pages across every system and the systems, then,
 once a system is chosen, that system's pages with what filters them. On a phone the systems are a menu.
 """
@@ -24,7 +24,7 @@ from data import celestrak
 from evidence import jobs
 from evidence.console_settings import WORKFLOWS_DIR
 from evidence.registry_tables import judged_by_plane
-from ui import changes, contact, data, marks, palette, surfaces, systems, threshold_settings, time_range, tooltip
+from ui import changes, contact, data, marks, palette, surfaces, systems, theme, threshold_settings, time_range, tooltip
 from ui.age_rule import orbit_age_status
 from ui.components.clock import clock_frame
 
@@ -170,6 +170,13 @@ def _setting_help(setting, default):
             f'<p class="th-also small">Default {setting["format"] % default} · also called {escape(setting["also"])}</p>')
 
 
+def _theme_setting():
+    """The first setting, on every page: the theme (ui/theme.py). The change crossfades (ui/theme.py FADE_JS)."""
+    st.html('<div class="th-group th-first"><b>Theme</b><span class="small">System follows your computer\'s own light or dark '
+            "setting.</span></div>")
+    segment(theme.SCHEME_KEY, list(theme.SCHEMES), theme.SCHEMES, "Theme")
+
+
 def _thresholds(scope):
     """The gear's panel: each setting with what to know before moving it, in its group, and a way back to the
     defaults. Returns only the settings moved off their defaults. A system judged by orbital plane shows the
@@ -272,9 +279,8 @@ def _clock():
 def _refresh(names, window_days, gear_scope):
     """The bar's groups, each with its own place on its grid (ui/theme.css, "the bar"): the UTC clock and the wait to
     the next automatic refresh in the middle; on the right the data chip, then the buttons (the round refresh button
-    with its ring, the gear, and the key). The gear is always there, so the bar does not change from page to page: on
-    a constellation's pages it opens that constellation's settings (`gear_scope` names whose), elsewhere it is greyed
-    and says where they are."""
+    with its ring, the gear, and the key). The gear opens on every page with the theme first; on a constellation's pages that
+    constellation's limits follow (`gear_scope` names whose), elsewhere a line says where they are."""
     with st.container(key="bar_clock"):
         clock = st.container(key="clock")
     with st.container(key="bar_right"):
@@ -283,13 +289,16 @@ def _refresh(names, window_days, gear_scope):
         with st.container(key="bar_buttons"):
             clicked = st.button("Refresh orbit data", key="refresh_button", icon=":material/refresh:",
                                 help="Load the newest orbit data we have fetched")
-            if gear_scope:
-                with st.popover("", icon=":material/settings:", help="Settings: what counts as a burn, and how strictly satellites are scored"):
+            with st.popover("", icon=":material/settings:",
+                            help="Settings: the theme, and on a constellation's pages what counts as a burn and how "
+                                 "strictly satellites are scored"):
+                _theme_setting()
+                if gear_scope:
                     st.session_state["params"] = _thresholds(gear_scope)
-            else:
-                st.button("Settings", key="gear_off", icon=":material/settings:", disabled=True,
-                          help="Settings belong to one constellation: choose one to change its limits. This page "
-                               "uses the defaults.")
+                else:
+                    st.html('<div class="th-group"><b>Limits</b><span class="small">What counts as a burn and how '
+                            "strictly satellites are scored belong to one constellation: choose one to change them. "
+                            "This page uses the defaults.</span></div>")
             _own_login()
     live, now = data.refresh(clicked), datetime.now(timezone.utc)
     chip.html(_data_chip(names, window_days, st.session_state["params"], live, now) + _ring(live, now))
