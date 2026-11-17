@@ -96,4 +96,5 @@ PIPELINE_READ_EVERY_SECONDS = 30   # how often the live pipeline page refreshes 
 CONTACT_ADDRESS = "contact@opengnss.org"
 CONTACT_INBOX_URL = "https://feeds.opengnss.org/contact"
 CONTACT_TOKEN_KEY = "contact_read_token"   # under [admin] in the secrets: the same value as the Worker's CONTACT_READ_TOKEN
+CONTACT_TOKEN_ENV = "CONTACT_READ_TOKEN"   # or this environment variable on the console's server; the secrets win
 CONTACT_READ_EVERY_SECONDS = 300           # how long one reading of the inbox is kept, at most

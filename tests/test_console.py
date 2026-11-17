@@ -856,3 +856,12 @@ def test_a_secrets_file_that_cannot_be_read_is_named_with_its_line(monkeypatch):
     said = common.missing()[0]
 
     assert said.startswith("a readable secrets file (Duplicate keys!") and "line 2" in said and '"2"' not in said
+
+
+def test_the_inbox_token_comes_from_the_secrets_or_else_the_environment(monkeypatch):
+    from evidence import contact
+    monkeypatch.delenv("CONTACT_READ_TOKEN", raising=False)
+    assert contact.inbox_token({}) == ""
+    monkeypatch.setenv("CONTACT_READ_TOKEN", " from-env ")
+    assert contact.inbox_token({}) == "from-env"
+    assert contact.inbox_token({"contact_read_token": "from-secrets"}) == "from-secrets"

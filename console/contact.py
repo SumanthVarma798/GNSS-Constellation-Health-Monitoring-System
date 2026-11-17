@@ -29,12 +29,13 @@ def _message(row):
 body, actions = common.layout(PAGE.path, f"Mail sent to {CONTACT_ADDRESS}, newest first. Times in UTC.")
 
 with body:
-    token = str(common.settings().get(CONTACT_TOKEN_KEY) or "").strip()
+    token = contact.inbox_token(common.settings())
     if not token:
         st.html(console.notice(
             f"The contact inbox is not connected: the console has no token to read it. Set [{SECRETS_SECTION}] "
             f"{CONTACT_TOKEN_KEY} in the console's secrets (on Render the secret file secrets.toml; on a computer "
-            ".streamlit/secrets.toml) to the same value as the Worker's secret CONTACT_READ_TOKEN.", "info"))
+            ".streamlit/secrets.toml), or the environment variable CONTACT_READ_TOKEN, to the same value as the "
+            "Worker's secret CONTACT_READ_TOKEN.", "info"))
     else:
         try:
             rows = _inbox(token)

@@ -1,9 +1,16 @@
 """The contact inbox: mail sent to contact@opengnss.org, read from the newsletters Worker for the console's Contact page."""
+import os
 from datetime import datetime
 
 import requests
 
-from evidence.console_settings import CONTACT_INBOX_URL
+from evidence.console_settings import CONTACT_INBOX_URL, CONTACT_TOKEN_ENV, CONTACT_TOKEN_KEY
+
+
+def inbox_token(settings):
+    """The console's token for the inbox: [admin] contact_read_token in its secrets, else the CONTACT_READ_TOKEN
+    environment variable, else ""."""
+    return str(settings.get(CONTACT_TOKEN_KEY) or os.environ.get(CONTACT_TOKEN_ENV) or "").strip()
 
 
 def read_messages(token):
