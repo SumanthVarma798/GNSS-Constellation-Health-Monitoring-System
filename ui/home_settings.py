@@ -120,9 +120,9 @@ HOW = [
     ]),
 ]
 
-# Where to write to us, shown under "Working together". Empty until its mail routing is live (cloudflare/newsletters),
-# so the page never shows an address that bounces.
-CONTACT_ADDRESS = ""
+# Where to write to us, shown under "Working together". Mail to it goes to the console's Contact inbox through the
+# newsletters Worker (cloudflare/newsletters); live since 17 Nov 2026. Set it to "" to hide it if the routing ever stops.
+CONTACT_ADDRESS = "contact@opengnss.org"
 
 # The words on a row that "Need help reading this page?" explains: {words on the row: the heading of the card that explains
 # them}. On the row they are a link to that card, landing on the point itself when its term is the same words.
