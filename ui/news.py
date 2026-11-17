@@ -348,8 +348,8 @@ def as_of_line(generated_at, now, zone=timezone.utc):
     """A notice when news is late, else a quiet as-of line."""
     generated = _time(generated_at)
     if generated is None:
-        return surfaces.notice("The news file (latest_news.json) gives no collection time. Collection runs every 3 hours.", "warn")
+        return surfaces.notice(f"The news file (latest_news.json) gives no collection time. We collect news every {NEWS_CYCLE_HOURS} hours.", "warn")
     if now - generated > timedelta(hours=NEWS_LATE_HOURS):
-        return surfaces.notice(f"News was last seen {_time_words(generated, timezone.utc)}. Collection runs every "
+        return surfaces.notice(f"News was last seen {_time_words(generated, timezone.utc)}. We collect news every "
                                f"{NEWS_CYCLE_HOURS} hours.", "warn")
     return f'<p class="news-asof">News as of {escape(_time_words(generated, zone))}</p>'

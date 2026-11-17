@@ -251,7 +251,7 @@ def test_how_to_read_says_it_in_short_bullets_with_a_picture_for_each_term():
     assert re.search(r'id="how-clock-steady"><span class="how-pic"><span class="ic"', measured)
     assert 'id="how-score"><span class="how-pic"><span class="gauge mini"' in measured
     # the mission weights as bars, from ui/limits.py, and words in bullets rather than paragraphs
-    assert '<div class="wbars">' in measured and "Clock 50%" in measured and "Clock 40%" in measured
+    assert '<div class="wbars">' in measured and "Clock<small>50%</small>" in measured and "Clock<small>40%</small>" in measured
     assert measured.count("<li>") >= 8
     # what is not done yet is framed as what we are working towards, open to working together
     assert "Working together" in how and "What is left out" not in how

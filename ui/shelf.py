@@ -88,7 +88,7 @@ def _day_words(text):
 
 @st.cache_data(show_spinner=False)
 def job_words(job):
-    """'the Registry update job, Sundays 01:00 UTC' from the console's job list and the workflow's own schedule."""
+    """'updated by us Sundays 01:00 UTC' from the workflow's own schedule, or 'updated by us regularly' without one."""
     if job == "hand":
         return "kept by hand; each change is a reviewed pull request"
     workflow, group = job
@@ -98,7 +98,7 @@ def job_words(job):
     except OSError:
         crons = []
     when = ", ".join(jobs.schedule_words(cron) for cron in crons)
-    return f"the {name} job" + (f", {when} UTC" if when else "")
+    return f"updated by us {when} UTC" if when else f"updated by us regularly ({name})"
 
 
 def published():
@@ -180,7 +180,7 @@ def others_html(others):
     """The others' data we use: whose it is, what we use it for, how fresh our copy is, and a link to its owner."""
     cards = ""
     for name, icon, link, used_for, job in others:
-        read = "a copy comes with the code" if job == "hand" else "read by " + job_words(job)
+        read = "a copy comes with the code" if job == "hand" else "we read it " + job_words(job).removeprefix("updated by us ")
         go = _link(link, "Go to " + name) if link else "Read each on its publisher's site, linked from the News page."
         cards += (f'<div class="obj"><span class="plinth">{icons.mask(icon)}</span><span class="lbl"><b>{escape(name)}</b>'
                   f'<p>We use it for: {escape(used_for)}</p></span><span class="facts"><span><i>Fresh</i>kept by its '

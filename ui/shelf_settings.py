@@ -25,7 +25,8 @@ JOB_NAMES = {"source-record.yml": "Source record"}
 ORBIT_GAP, FITTED = "orbit_gap", "fitted"   # files read from the orbit-checks branch (ui/data.py)
 
 # ---- Our datasets: the data this project makes and offers to everyone, most distinctive first. Each should be one
-# no other source publishes: that is ours to check before adding one, never a claim written on the page.
+# no other source publishes: that is ours to check before adding one, never a claim written on the page. (The
+# launched/lost/kept counts are left out: GCAT and others publish the same; the Library still shows them.)
 # file: ("repo", path in the repository) or ("published", ORBIT_GAP or FITTED). date: ("column", name) the newest value
 # in a CSV column, ("json", key), or None. job: (workflow, schedule group) or "hand". fields: (name, what it means).
 OURS = {
@@ -97,18 +98,6 @@ OURS = {
                    ("added", "the day it was added, where recorded")],
         "example": "Join on svn to the IGS satellite metadata file for each satellite's generation and catalogue number.",
         "not_for": "A list of every navigation satellite in orbit: older generations are not followed."},
-    "counts": {
-        "name": "Launched, lost and kept", "icon": "calculator", "file": ("repo", "registry/library_counts.csv"),
-        "date": ("column", "gcat_updated"), "job": ("registry-update.yml", ""), "address": RAW + "main/registry/library_counts.csv",
-        "what": "How many satellites each constellation and design generation launched, lost, retired and still runs.",
-        "made": "Counted here from GCAT, J. McDowell's catalogue of space objects, matched satellite by satellite to the "
-               "IGS satellite metadata file. Credit GCAT as well as us.",
-        "fields": [("system, programme", "the constellation and its design generation, as GCAT names them"),
-                   ("launched, failed_at_launch, failed_in_orbit, retired, operating", "counts of satellites"),
-                   ("years_retired, years_operating", "years in service added up over the satellites"),
-                   ("gcat_updated", "the day GCAT was last updated when counted")],
-        "example": "(launched - failed_at_launch) / launched is the share of launches that reached orbit.",
-        "not_for": "Ranking agencies: the constellations began in different decades."},
     "figures": {
         "name": "Money stated by public sources", "icon": "coin", "file": ("repo", "registry/library_figures.csv"),
         "date": None, "job": "hand", "address": RAW + "main/registry/library_figures.csv",

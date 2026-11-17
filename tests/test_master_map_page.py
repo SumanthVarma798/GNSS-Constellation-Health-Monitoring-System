@@ -1,7 +1,6 @@
 """The Master map page around the map: a row per constellation with ways onward, the live orbit-feed names, and how
 fresh each source is, said in words. No network."""
 import json
-from html import unescape
 import re
 from datetime import datetime, timezone
 
@@ -89,11 +88,10 @@ def test_the_page_reads_in_the_dashboards_order_with_a_row_per_constellation():
     order = ["navigation spacecraft on record", '<div class="sys mm-sys"', "Every spacecraft under every name",
              "Where this comes from", "mm-sources"]
     assert [text.index(words) for words in order] == sorted(text.index(words) for words in order)
-    legend = unescape(re.sub(r"<[^>]+>", "", next(body for body in bodies if "What a dot means" in body)))
-    for words in ("round: has a signal ID today", "ring: seen in CelesTrak's GNSS group", "diamond: the IGS satellite metadata file, GCAT or CelesTrak's orbit feed disagree"):
-        assert words in legend
-    for row in rows:   # state is said in words beside the dots, never by colour alone
-        assert re.search(r'role="img" aria-label="\d+ has a signal ID today', row)
+    # counts in words only: no strip of dots per constellation, so no key to explain them
+    assert "What a dot means" not in text and "mm-dots" not in text
+    for row in rows:
+        assert "with a signal ID today" in row and "followed on the other pages" in row
     mine = [body for body in bodies if ("mm-" in body or "navigation spacecraft" in body) and "<style" not in body]
     seen = re.sub(r"<[^>]+>", " ", "\n".join(mine))   # the words a reader sees: they say constellation, not system
     assert "constellations" in seen and not re.search(r"\bsystems?\b", seen, re.I)

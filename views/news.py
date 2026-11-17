@@ -11,7 +11,7 @@ st.html(f"<style>{news.CSS}</style>")
 data, problem = news.load_news()
 if problem:
     surfaces.show(surfaces.notice(f"No news to show just now: {problem}. The rest of the dashboard works as usual; "
-                                  f"news collection runs every {news.NEWS_CYCLE_HOURS} hours.", "warn", inline=True))
+                                  f"we collect news every {news.NEWS_CYCLE_HOURS} hours.", "warn", inline=True))
 else:
     now = datetime.now(timezone.utc)
     scope = st.session_state.get("scope", shell.CONSTELLATIONS[0])

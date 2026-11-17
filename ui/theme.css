@@ -714,10 +714,14 @@ details.sys.card { display: block; padding: 0; }
   mask: radial-gradient(farthest-side, transparent calc(100% - 5px), black calc(100% - 4px)); }
 .gauge.mini b { font-size: 11px; }
 /* the mission weights as bars: one row per mission, each attribute's share in its own colour */
-.wbars { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
-.wrow { display: flex; flex-direction: column; gap: 3px; }
-.wbar { display: flex; gap: 2px; height: 20px; border-radius: 6px; overflow: hidden; font-size: 11px; font-weight: 700; color: var(--platform); }
-.wbar span { display: grid; place-items: center; white-space: nowrap; overflow: hidden; }
+.wbars { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.wrow { display: flex; flex-direction: column; gap: 4px; }
+/* each part's name over its weight, so even the smallest share (20%) shows both whole */
+.wbar { display: flex; gap: 3px; min-height: 40px; border-radius: 8px; overflow: hidden; font-size: 12px; font-weight: 700;
+        line-height: 1.15; color: var(--platform); }
+.wbar span { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0;
+             padding: 3px 2px; text-align: center; }
+.wbar span small { font-size: 12px; font-weight: 800; }
 .wbar .accent { background: var(--accent); } .wbar .ok { background: var(--ok); } .wbar .warn { background: var(--warn); }
 /* the score opened into its parts (ui/three_measures.py score_sum), in pictures only: one bar of 100 cut into each
    attribute's share, each filled as far as its pass rate, its name over it and its points under it (outside the fill,
@@ -824,11 +828,6 @@ details.sys.card { display: block; padding: 0; }
    The rows reuse Home's .sys; their edge is the constellation's own colour. Each dot state has its own shape, as on
    Home: a filled circle (signal ID today, in the constellation's colour), a small grey circle (none today), a ring
    (seen, not yet listed) and a diamond (worth a look). The buttons under a row wrap as one line of pills. */
-.mm-dots { gap: 4px; }
-.mm-dots i { width: 11px; height: 11px; }
-.mm-dots i.mm-past { width: 7px; height: 7px; margin: 2px; background: var(--track); }
-.mm-dots i.mm-seen { background: transparent; border: 2px solid var(--accent); }
-.mm-dots i.mm-look { background: var(--warn); border-radius: 2px; transform: rotate(45deg) scale(.82); }
 .st-key-mm_rows { gap: 14px; margin-bottom: 18px; }
 [class*="st-key-mm_row_"] { gap: 8px; }
 [class*="st-key-mm_links_"] { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; padding-left: 6px; }

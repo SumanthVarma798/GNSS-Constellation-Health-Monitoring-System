@@ -26,12 +26,6 @@ SIGHTING_WORDS ="Stand-in SVN: seen in CelesTrak's GNSS group, not yet in the IG
 # What a row's count holds beyond what the other pages follow, said under its dots: {name: one plain sentence}.
 NOTES = {"BeiDou-3": "Counts every BeiDou generation on record; the other pages follow BeiDou-3 only."}
 
-# One dot per spacecraft: (kind, what it means, its shape), in the order the legend lists them and the row draws them.
-# Each has its own shape (ui/theme.css), as on Home, so the colour only backs it up.
-DOTS = [("now", "has a signal ID today", "round"), ("past", "no signal ID today: retired, spare or lost", "small round"),
-        ("seen", "seen in CelesTrak's GNSS group, not yet in the IGS satellite metadata file", "ring"),
-        ("look", "the IGS satellite metadata file, GCAT or CelesTrak's orbit feed disagree: worth a look", "diamond")]
-
 # The weekly job that rebuilds the registry tables (in .github/workflows/).
 REGISTRY_WORKFLOW = "registry-update.yml"
 
@@ -50,9 +44,9 @@ HOW = [
          "CelesTrak's orbit feed gives the name each orbit is published under."),
         ("Disagreements", "Where two of those three disagree, the spacecraft is marked and listed with the two names "
          "and what each says. Neither is taken as right."),
-        ("Approved changes", "A weekly job (registry-update) rebuilds the tables from the IGS satellite metadata file and "
-         "GCAT. What it finds arrives as a proposal a person approves, so an addition or a removal can show here a "
-         "week or more after the source changed."),
+        ("Approved changes", "We update the tables weekly from the IGS satellite metadata file and GCAT. Each change is "
+         "a proposal a person approves, so an addition or a removal can show here a week or more after the source "
+         "changed."),
     ]),
     ("alert-triangle", "What is left out", [
         ("Service", "Whether a satellite gives a navigation service: the IGS satellite metadata file does not say, and "
@@ -64,6 +58,6 @@ HOW = [
     ]),
     ("rocket", "What comes next", [
         ("Last checked", "When the IGS satellite metadata file and GCAT were last checked, not only when they last "
-         "changed, once the weekly registry-update job publishes that."),
+         "changed, once our weekly update records that."),
     ]),
 ]

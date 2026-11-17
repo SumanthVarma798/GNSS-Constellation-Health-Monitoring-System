@@ -235,8 +235,8 @@ def _picture(name):
         rows = ""
         for mission, weights in MEASURE_WEIGHTS.items():
             members = ", ".join(sorted(m for m, kind in MISSION.items() if kind == mission)) or "the rest"
-            parts = "".join(f'<span class="{WEIGHT_TONES[key]}" style="flex:{weight}">{escape(MEASURE_WORDS[key][0].split()[0])} '
-                            f'{weight:.0%}</span>' for key, weight in sorted(weights.items(), key=lambda item: -item[1]))
+            parts = "".join(f'<span class="{WEIGHT_TONES[key]}" style="flex:{weight}">{escape(MEASURE_WORDS[key][0].split()[0])}'
+                            f'<small>{weight:.0%}</small></span>' for key, weight in sorted(weights.items(), key=lambda item: -item[1]))
             rows += (f'<div class="wrow"><span class="small"><b>{escape(mission.title())}</b> '
                      f'{escape(members if mission == "regional" else "GPS, Galileo, GLONASS, BeiDou-3")}</span>'
                      f'<div class="wbar">{parts}</div></div>')

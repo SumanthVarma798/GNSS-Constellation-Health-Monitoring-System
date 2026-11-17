@@ -44,13 +44,14 @@ def test_only_our_own_files_are_offered_and_others_are_linked_to_their_owners():
     assert "indianspaceflight.in" in shelf.colleagues_html(COLLEAGUES)
 
 
-def test_a_file_that_cannot_be_read_says_so_and_freshness_names_the_job():
+def test_a_file_that_cannot_be_read_says_so_and_freshness_says_when_we_update_it():
     content, fresh, problem = shelf.item_state("fitted", FILES)
     assert content is None and "cannot be read right now" in shelf.card_html("fitted", content, fresh, problem)
     content, fresh, problem = shelf.item_state("orbit_gap", FILES)
     assert not problem and json.loads(content)["day"] == "2026-11-13"
-    assert fresh.startswith("made 13 Nov 2026 · the Orbit record check job, daily 06:00 UTC")
-    assert "Registry update job, Sundays 01:00 UTC" in shelf.item_state("counts", FILES)[1]
+    assert fresh.startswith("made 13 Nov 2026 · updated by us daily 06:00 UTC")
+    assert "updated by us Sundays 02:00 UTC" in shelf.item_state("sources", FILES)[1]
+    assert "counts" not in OURS   # launched, lost and kept: published widely, so not offered as ours
     assert "kept by hand" in shelf.item_state("lifecycles", FILES)[1]
 
 

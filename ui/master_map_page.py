@@ -13,10 +13,9 @@ from evidence.registry_tables import page_name, registry_name
 from evidence.settings import SCHEME_SIGNAL_ID
 from ui import icons, marks, palette, surfaces, tooltip
 from ui.age_rule import orbit_age_status
-from ui.master_map_settings import DOTS, HOW, NOTES, REGISTRY_WORKFLOW, WHO
+from ui.master_map_settings import HOW, NOTES, REGISTRY_WORKFLOW, WHO
 from ui.pages_data import live_feed_time
 
-DOT_SWATCH = {"now": palette.MUTED, "past": palette.TRACK, "seen": palette.ACCENT, "look": palette.WARN}
 
 
 def spacecraft(n):
@@ -34,7 +33,7 @@ def holds_signal_id(record):
 
 
 def dot_kind(record):
-    """Which of DOTS one spacecraft is drawn as; a disagreement wins over everything else."""
+    """What one spacecraft counts as: "look", "seen", "now" (a signal ID today) or "past"; a disagreement wins."""
     if needs_a_look(record):
         return "look"
     if record["sighting"]:
@@ -55,18 +54,13 @@ def constellations(records, parts, tracked_counts):
     return rows
 
 
-def legend():
-    return tooltip.legend([(DOT_SWATCH[kind], f"{shape}: {meaning}") for kind, meaning, shape in DOTS], "What a dot means")
-
-
 def head(rows):
-    """The count across every constellation, the legend, and what the page is for."""
+    """The count across every constellation, and what the page is for."""
     total, now = sum(r["total"] for r in rows), sum(r["now"] for r in rows)
     tracked, look = sum(r["tracked"] for r in rows), sum(r["look"] for r in rows)
     return (f'<div class="head mm-head"><span class="big num">{total}</span>'
             f'<span class="muted">navigation spacecraft on record across {len(rows)} constellations · '
-            f'{now} with a signal ID today · {tracked} followed on the other pages · {look} worth a look</span>'
-            f'<span class="right">{legend()}</span></div>'
+            f'{now} with a signal ID today · {tracked} followed on the other pages · {look} worth a look</span></div>'
             '<p class="lede small">Everything up there that has ever been part of a navigation constellation, launched '
             'or retired, one dot per spacecraft. Each goes by several names: a launch designator, a catalogue number, '
             'a signal ID that can pass to a newer satellite. The map below keeps them apart, and marks where the IGS '
@@ -74,25 +68,12 @@ def head(rows):
             'disagree.</p>')
 
 
-def _dots(row):
-    """The constellation's spacecraft as dots, grouped by kind; nothing at all (no unnamed picture) when it has none."""
-    if not row["kinds"]:
-        return ""
-    colour = palette.CONSTELLATION_COLOURS.get(registry_name(row["name"]), palette.FILL)
-    order = {kind: i for i, (kind, _, _) in enumerate(DOTS)}
-    spans = "".join(f'<i class="mm-{kind}"' + (f' style="background:{colour}"' if kind == "now" else "") + "></i>"
-                    for kind in sorted(row["kinds"], key=order.get))
-    counts = {kind: row["kinds"].count(kind) for kind, _, _ in DOTS}
-    words = ", ".join(f"{counts[kind]} {meaning}" for kind, meaning, _ in DOTS if counts[kind])
-    return f'<div class="dots mm-dots" role="img" aria-label="{escape(words)}">{spans}</div>'
-
-
 def _figure(value, words, status=""):
     return f'<div class="sys-m"><span class="s num {status}">{value}</span><span class="small">{escape(words)}</span></div>'
 
 
 def row(summary):
-    """One constellation: who runs it, its spacecraft as dots, how many hold a signal ID, how many the other pages
+    """One constellation: who runs it, how many hold a signal ID, how many the other pages
     follow, and how many need a look. Its edge is the constellation's own colour, the one its cards have on the map."""
     name = summary["name"]
     who, where = WHO.get(name, ("", ""))
@@ -105,7 +86,7 @@ def row(summary):
             f'<div class="sys-id"><b>{marks.mark(name)}{escape(name)}</b>'
             f'<span class="small">{escape(" · ".join(filter(None, [who, where])))}</span>'
             f'<span class="small">{spacecraft(summary["total"])} on record</span></div>'
-            f'<div class="sys-mid">{_dots(summary)}'
+            f'<div class="sys-mid">'
             + "".join(f'<div class="small">{escape(note)}</div>' for note in notes) + '</div>'
             f'{_figure(summary["now"], "with a signal ID today")}'
             f'{_figure(summary["tracked"], "followed on the other pages")}{look}</div>')
@@ -139,14 +120,14 @@ def freshness(data, live, now):
     the page reads. live is data.celestrak.state; now is an aware UTC datetime."""
     schedule, upcoming = _registry_schedule(now)
     approval = "A change waits for a person's approval."
-    weekly = f"The registry-update job checks it {schedule}" + (f", {upcoming}" if upcoming else "") + f". {approval}"
+    weekly = f"We update it from this file {schedule}" + (f", {upcoming}" if upcoming else "") + f". {approval}"
     changes = [row[key][:10] for row in data["signal_ids"] for key in ("valid_from", "valid_to") if row[key]]
     added = [row["added"] for row in data["tracked"] if row.get("added")]
     taken = live_feed_time(live)
     if taken:
         age = (now - taken).total_seconds() / 86400
         feed = {"when": f"copy taken {_day(taken.isoformat())} {taken:%H:%M} UTC",
-                "how": "Read every two hours from the copy of CelesTrak's GNSS group that this project's archive job saves.",
+                "how": "We copy CelesTrak's GNSS group every two hours and read it from that copy.",
                 "status": orbit_age_status(age)}
     else:
         feed = {"when": f"weekly copy of {_day(max(data['feed_checked'].values(), default=''))}",
@@ -159,7 +140,7 @@ def freshness(data, live, now):
          "when": f"newest signal-ID change in it: {_day(max(changes, default=''))}", "how": weekly, "status": "idle"},
         {"what": "Owner, and whether it still works", "source": "GCAT, J. McDowell's catalogue of space objects",
          "when": f"GCAT dated {_day(data.get('gcat_updated', ''))}",
-         "how": f"Rebuilt from GCAT in the same weekly registry-update job. {approval}", "status": "idle"},
+         "how": f"We rebuild it from GCAT in the same weekly update. {approval}", "status": "idle"},
         {"what": "The name its orbit is published under", "source": "CelesTrak's orbit feed", **feed},
         {"what": "The name the dashboard uses", "source": "this dashboard's list of the satellites it follows",
          "when": f"last satellite added {_day(max(added, default=''))}",
