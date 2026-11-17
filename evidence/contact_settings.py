@@ -8,7 +8,8 @@ REPLY_CHARACTERS = 4000          # as the Worker's CONTACT_TEXT_CHARACTERS
 REPLY_TIMEOUT_SECONDS = 20
 DOWNLOAD_TIMEOUT_SECONDS = 30
 DOWNLOADS_KEPT = 20              # clean files kept in the console's memory, so opening a thread again reads none twice
-SCAN_EVERY = "every 30 minutes"  # as .github/workflows/contact-scan.yml runs
+SCAN_EVERY = "every 3 hours"  # as .github/workflows/contact-scan.yml runs: about 240 Actions minutes a month,
+                              # where every 30 minutes would take 1,440 of a private repo's 2,000 free
 SCAN_TOKEN_ENV = "CONTACT_SCAN_TOKEN"   # scripts/contact_scan.py: the Worker's secret of that name, a GitHub Actions secret
 
 NO_SUBJECT = "(no subject)"

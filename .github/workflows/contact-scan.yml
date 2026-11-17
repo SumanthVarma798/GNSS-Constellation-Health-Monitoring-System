@@ -1,4 +1,4 @@
-# Scans the contact inbox's attachments for viruses every 30 minutes (scripts/contact_scan.py).
+# Scans the contact inbox's attachments for viruses every 3 hours (scripts/contact_scan.py).
 # Until a file is scanned clean, the console shows it as "being scanned" and the Worker refuses to hand it out;
 # an infected one is deleted and its record kept with the signature ClamAV named.
 # It first asks whether anything is waiting, and installs ClamAV only when something is.
@@ -7,7 +7,7 @@ name: Contact attachment scan
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '20 */3 * * *'
   workflow_dispatch:
 
 permissions:

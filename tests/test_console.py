@@ -285,7 +285,7 @@ def test_messages_are_grouped_into_threads_the_latest_activity_first():
 def test_each_attachment_says_where_its_scan_stands():
     states = [contact.attachment_state(a) for a in contact.messages(THREAD)[0]["attachments"]]
 
-    assert states == [("clean", "scanned: no virus found; download it below"), ("wait", "being scanned (checked every 30 minutes)"),
+    assert states == [("clean", "scanned: no virus found; download it below"), ("wait", "being scanned (checked every 3 hours)"),
                       ("bad", "removed: virus found (Eicar-Test-Signature)"), ("note", "not kept: too large")]
     assert [contact.size_words(n) for n in (512, 2048, 4_404_019)] == ["512 B", "2 KB", "4.2 MB"]
 
@@ -304,7 +304,7 @@ def test_the_contact_inbox_shows_threads_and_opens_the_latest_oldest_message_fir
     assert page.count("address not verified") == 1   # the form thread, in the list
     assert page.index("We track a constellation too.\nCan we help?") < page.index("Happy to.") < page.index("Great, thanks.")
     assert 'class="c-msg out"' in page and "Sent by the team to newer@example.org" in page
-    assert "being scanned (checked every 30 minutes)" in page and "removed: virus found (Eicar-Test-Signature)" in page
+    assert "being scanned (checked every 3 hours)" in page and "removed: virus found (Eicar-Test-Signature)" in page
     assert "not kept: too large" in page
     assert [b.label for b in at.get("download_button")] == ["Download plan.pdf (2 KB)"]
     assert at.text_area(key="contact_reply_t1").label == "Reply to newer@example.org"
