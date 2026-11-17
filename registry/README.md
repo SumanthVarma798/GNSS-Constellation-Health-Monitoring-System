@@ -18,6 +18,7 @@ International GNSS Service (IGS) satellite metadata file by `scripts/build_regis
 | `dashboard_satellites.csv` | a person | Which satellites the dashboard tracks, and its name for each |
 | `dashboard_systems.csv` | a person | Which dashboard page each system is, its registry name, block prefixes, orbit kind and order |
 | `left_out.csv` | a person | Satellites with a signal ID today that the dashboard leaves out on purpose, each with why and a source; every other one must be tracked (`tests/test_registry_coverage.py`) |
+| `clock_record.csv` | a person | Satellites that lost atomic clocks in orbit, with what failed, when and a named source; shown beside the clock score |
 
 Code reads and writes these tables through `evidence/registry_tables.py`; file names
 and column names are written down once, in `evidence/registry_settings.py`.

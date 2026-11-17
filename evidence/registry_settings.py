@@ -41,6 +41,10 @@ REGISTRY_DASHBOARD_TRACKED_SYSTEMS = ("GPS", "GLONASS", "Galileo")
 # Every satellite with a signal ID is either tracked or listed here (tests/test_registry_coverage.py).
 REGISTRY_LEFT_OUT_FILE = "left_out.csv"
 REGISTRY_LEFT_OUT_COLUMNS = ["svn", "name", "reason", "source"]
+# Kept by hand: satellites that lost atomic clocks in orbit, each with what failed, when and a named source. The
+# constellation's page shows the count beside its clock score, which judges only today's satellites.
+REGISTRY_CLOCK_RECORD_FILE = "clock_record.csv"
+REGISTRY_CLOCK_RECORD_COLUMNS = ["svn", "name", "what", "when", "source_name", "source_link"]
 NEW_ON_DASHBOARD_DAYS = 30  # a tracked satellite is shown as "new" on the dashboard for this many days
 
 # Built from the General Catalog of Artificial Space Objects (GCAT): owner and status per satellite.

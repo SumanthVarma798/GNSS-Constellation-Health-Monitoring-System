@@ -1,8 +1,9 @@
 """Each measure as "is" next to "should be": read from the health row and the settings, never a new score."""
 import pandas as pd
+import pytest
 
 from config.config import DEFAULT_PARAMS
-from ui import measures, surfaces
+from ui import limits, measures, surfaces
 
 GEO = {"Satellite": "IRNSS-1C", "Type": "GEO", "Current Drift (°/day)": -0.0203, "Incl. (°)": 6.784,
        "Target Incl. (°)": 5.0, "Incl. Dev. (°)": 1.784, "Designated Lon (°)": 83.0, "Current Mean Lon (°)": 82.64,
@@ -88,3 +89,12 @@ def test_the_table_escapes_its_words_and_sets_figures_in_the_number_face():
     html = surfaces.table([("<b>", "<i>")], [("<script>", [measures.cell("1.5°", "&"), measures.cell("set aside")])])
     assert "<script>" not in html and "&lt;b&gt;" in html and "&amp;" in html
     assert '<b class="num idle">1.5°</b>' in html and '<b class="idle">set aside</b>' in html
+
+
+def test_eccentricity_in_km_and_the_geostationary_limit():
+    assert limits.ecc_swing_km(0.0005) == pytest.approx(42.164)   # 2 e a
+    assert limits.GEO_ECC_MAX == pytest.approx(0.0043633, rel=1e-4)   # half the 0.5 degree slot, in radians
+    geo = measures.eccentricity(0.0005, {"ecc_max": 0.099}, "GEO")
+    assert geo["status"] == "ok" and "±42 km" in geo["note"] and "(±368 km)" in geo["should"]
+    assert measures.eccentricity(0.01, {"ecc_max": 0.099}, "GEO")["status"] == "warn"   # QZSS's tilted-orbit limit is not GEO's
+    assert measures.eccentricity(0.01, {"ecc_max": 0.099}, "IGSO")["status"] == "ok"

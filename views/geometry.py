@@ -140,7 +140,7 @@ def _place_controls(constellation):
         surfaces.show(surfaces.notice(error, "bad", inline=True))
 
 
-def _sky_and_ground(constellation, satellites, own, types, now, mask, window):
+def _sky_and_ground(constellation, satellites, own, types, now, mask, window, result):
     """The map and the sky above the chosen place side by side (one under the other on a phone), when each satellite
     is next in view there, then plane spacing."""
     name, lat, lon = _where(constellation)
@@ -159,7 +159,7 @@ def _sky_and_ground(constellation, satellites, own, types, now, mask, window):
     reveal.section(f"geo_next_{constellation}", "When each satellite is in view", gf.next_summary(rows, now, zone),
                    gf.next_table(rows, types, now, zone), open=True)
     _heading("Plane spacing")
-    _spacing(constellation, satellites)
+    _spacing(constellation, satellites, result)
 
 
 def _trends(constellation, result, names, types, now):
@@ -182,7 +182,15 @@ def _trends(constellation, result, names, types, now):
                                                 measures), **CHART)
 
 
-def _spacing(constellation, satellites):
+def _spacing(constellation, satellites, result):
+    if judged_by_plane(constellation):
+        rows = gd.plane_rows(constellation, result["rows"])
+        spacing = rows[0]["spacing_deg"] if rows else 0
+        surfaces.show(f'<p class="small">{gs.PLANE_WHY_MEO.format(spacing=spacing, planes=len(rows))}</p>')
+        for row in rows:
+            surfaces.show(gf.plane_card(row))
+        return
+    surfaces.show(f'<p class="small">{gs.PLANE_WHY_INCLINED}</p>')
     groups = analyze_raan_spacing(satellites)
     if not groups:
         surfaces.show(surfaces.notice("No inclined orbits here share a ground track, so there is no spacing to check.",
@@ -217,7 +225,7 @@ def constellation(name, picks, section, choice, mask, window, now):
     if section == "Position quality":
         _position_quality(name, satellites, now, mask)
     elif section == "Sky and ground":
-        _sky_and_ground(name, satellites, own, types, now, mask, window)
+        _sky_and_ground(name, satellites, own, types, now, mask, window, result)
     else:
         _trends(name, result, own, types, now)
 

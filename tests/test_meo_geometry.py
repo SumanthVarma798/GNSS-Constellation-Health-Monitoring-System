@@ -1,4 +1,5 @@
 """The MEO calculations by hand, on small made-up element sets: planes, spacing, the nominal values, the score."""
+import math
 from datetime import datetime, timedelta
 
 import pytest
@@ -193,3 +194,38 @@ def test_a_plane_tilted_one_degree_more_drifts_against_the_pattern_and_the_rest_
     drift = plane_drift("Galileo", tilted.values())
     assert drift["A"]["rate"] == pytest.approx(0.165, abs=0.005)
     assert drift["B"]["rate"] == drift["C"]["rate"] == pytest.approx(-0.0823, abs=0.003)
+
+
+def test_a_medium_orbit_has_no_ground_track_group_but_its_planes_are_spaced_by_its_own_reference():
+    from types import SimpleNamespace
+
+    from analysis.raan_analysis import analyze_raan_spacing
+    from config.meo_nominal import NOMINAL
+    from ui import geometry_data
+
+    def sat(turns_per_day, node):   # what analyze_raan_spacing reads of a Skyfield satellite
+        return SimpleNamespace(model=SimpleNamespace(inclo=math.radians(55), nodeo=math.radians(node),
+                                                     no_kozai=turns_per_day * 2 * math.pi / 1440))
+    medium = {f"M{i}": sat(1.86, 120 * (i % 3) + 5 * i) for i in range(6)}
+    assert analyze_raan_spacing(medium) == []   # was nine "Poor" groups of two for BeiDou-3 MEO
+    assert NOMINAL["BeiDou-3 MEO"]["plane_spacing_deg"].value == 120 and NOMINAL["GPS"]["plane_spacing_deg"].value == 60
+    rows = [{"plane": "A", "checks": [("plane", 0.0, 1.0, 1.0, 100.0)], "node_rate": 0.0}]
+    assert geometry_data.plane_rows("GPS", rows)[0]["spacing_deg"] == 60
+
+
+def test_only_an_orbit_of_one_sidereal_day_counts_as_geosynchronous():
+    from analysis.raan_analysis import SIDEREAL_TURNS_PER_DAY, is_geosynchronous
+
+    assert is_geosynchronous(SIDEREAL_TURNS_PER_DAY) and is_geosynchronous(1.0027 + 0.009)
+    assert not is_geosynchronous(1.05) and not is_geosynchronous(1.86) and not is_geosynchronous(None)
+
+
+def test_a_plane_card_takes_the_worse_of_its_two_misses():
+    from ui.figures.geometry import plane_card
+
+    base = {"plane": "A", "count": 8, "spacing_deg": 120, "offset_limit": 2.0, "gap_limit": 4.0}
+    assert "within limit" in plane_card({**base, "offset": 1.0, "gap": 2.0})
+    assert "past limit" in plane_card({**base, "offset": 1.0, "gap": 9.0})      # node fine, spacing past its limit
+    assert "past limit" in plane_card({**base, "offset": 5.0, "gap": 1.0})      # spacing fine, node past its limit
+    no_limit = plane_card({k: v for k, v in {**base, "offset": 1.0, "gap": 9.0}.items() if k != "gap_limit"})
+    assert "within limit" in no_limit and "allowed" not in no_limit.split("spacing miss")[1].split("Verdict")[0]
