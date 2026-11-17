@@ -15,10 +15,7 @@ import streamlit as st
 from evidence import jobs
 from evidence.console_settings import JOBS, WORKFLOWS_DIR
 from ui import icons, marks, surfaces
-from ui.components.frame import fill
-from ui.shelf_settings import (CITATION_FORMATS, DASHBOARD_CITATION, FITTED, JOB_NAMES, ORBIT_GAP, OUR_CREDIT,
-                               OUR_LICENCE, OURS, SHELVES)
-from ui.theme import root_block
+from ui.shelf_settings import CITATION_FORMATS, FITTED, JOB_NAMES, ORBIT_GAP, OUR_CREDIT, OUR_LICENCE, OURS, SHELVES
 
 ROOT = Path(__file__).resolve().parent.parent
 _DAY = re.compile(r"\d{4}-\d{2}-\d{2}")
@@ -202,73 +199,6 @@ def dataset_citations(key, content, now=None):
               "year": _citation_year(version, when), "version": version, "licence": OUR_LICENCE[0],
               "accessed": _citation_accessed(when)}
     return {"short": CITATION_FORMATS["short"].format(**fields), "long": CITATION_FORMATS["long"].format(**fields)}
-
-
-def dashboard_citation_frame():
-    """A tiny frame with live UTC citation text and one-click copy for the dashboard."""
-    template = """<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<style>
-__ROOT__
-html, body { margin: 0; background: transparent; }
-body { font: var(--fs-small)/1.45 sans-serif; color: var(--ink); }
-.box { background: var(--well); border: 1px solid var(--edge); border-radius: var(--r); box-shadow: var(--pressed); padding: 10px 12px; }
-.line { margin: 0 0 8px; white-space: pre-wrap; overflow-wrap: anywhere; }
-.line:last-of-type { margin-bottom: 10px; }
-.btns { display: flex; flex-wrap: wrap; gap: 8px; }
-button { font: inherit; color: var(--ink); border: 1px solid var(--edge); border-radius: 999px; background: var(--platform); box-shadow: var(--raised-sm); padding: 5px 12px; cursor: pointer; }
-button:hover { color: var(--accent); border-color: var(--accent); }
-button:active { box-shadow: var(--pressed); background: var(--well); }
-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-</style>
-</head>
-<body>
-  <div class="box">
-    <p class="line" id="short"></p>
-    <p class="line" id="long"></p>
-    <div class="btns">
-      <button type="button" id="copy-short">Copy short citation</button>
-      <button type="button" id="copy-long">Copy long citation</button>
-    </div>
-  </div>
-<script>
-(() => {
-  "use strict";
-  const citation = __DATA__;
-  const shortLine = document.getElementById("short");
-  const longLine = document.getElementById("long");
-  const shortBtn = document.getElementById("copy-short");
-  const longBtn = document.getElementById("copy-long");
-  const yearOf = stamp => stamp.slice(0, 4);
-  const fill = stamp => {
-    shortLine.textContent = citation.short.replace("{year}", yearOf(stamp));
-    longLine.textContent = citation.long.replace("{year}", yearOf(stamp)).replace("{accessed}", stamp + " UTC");
-  };
-  const stamp = () => {
-    const now = new Date();
-    const hh = String(now.getUTCHours()).padStart(2, "0");
-    const mm = String(now.getUTCMinutes()).padStart(2, "0");
-    const ss = String(now.getUTCSeconds()).padStart(2, "0");
-    return now.toISOString().slice(0, 10) + " " + hh + ":" + mm + ":" + ss;
-  };
-  const copy = async text => {
-    try { await navigator.clipboard.writeText(text); } catch (err) { /* leave button text unchanged */ }
-  };
-  shortBtn.addEventListener("click", () => copy(shortLine.textContent));
-  longBtn.addEventListener("click", () => copy(longLine.textContent));
-  fill(stamp());
-  setInterval(() => fill(stamp()), 1000);
-})();
-</script>
-</body>
-</html>"""
-    return fill(template, {"short": CITATION_FORMATS["short"].format(**{**DASHBOARD_CITATION, "year": "{year}"}),
-                           "long": CITATION_FORMATS["long"].format(**{**DASHBOARD_CITATION, "year": "{year}",
-                                                                     "version": "live dashboard", "licence": "CC BY 4.0",
-                                                                     "accessed": "{accessed}"})},
-                __ROOT__=root_block())
 
 
 def card_html(key, content, fresh, problem):

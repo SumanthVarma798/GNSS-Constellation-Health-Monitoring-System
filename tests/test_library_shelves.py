@@ -142,3 +142,12 @@ def test_the_library_has_its_own_contact_shelf_and_the_footer_leaves_its_copy_ou
     keys = [box.key for box in at.text_input]
     assert "contact_library_address" in keys and "contact_footer_address" not in keys
     assert "<h2>Contact us</h2>" in page_html(at)
+
+
+def test_the_dashboard_citation_frame_is_filled_and_left_live_for_the_browser():
+    from ui.components.citation import citation_html
+
+    page = citation_html()
+    assert "OpenGNSS GNSS Health Monitor" in page and "CC BY 4.0" in page
+    assert "{accessed}" in page and "{year}" in page   # filled in the browser at the moment of copying
+    assert "__ROOT__" not in page and "__FONT__" not in page and "__DATA__" not in page

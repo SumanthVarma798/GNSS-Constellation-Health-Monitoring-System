@@ -27,6 +27,7 @@ from evidence.registry_settings import (
 )
 from evidence.registry_tables import read_table, registry_name
 from ui import library, reveal, shelf, surfaces, systems
+from ui.components.citation import citation_frame
 from ui.components.lifecycle import lifecycle_frame
 from ui.session_keys import LIBRARY_JUMP
 from ui.shelf_settings import (COLLEAGUES, DASHBOARD_CITATION, OTHERS, OURS, OUTSIDE_CITATIONS, SHELVES,
@@ -158,7 +159,7 @@ def draw_citations():
             st.html(f'<p class="small"><b>{escape(item["name"])}</b> long citation</p>')
             st.code(words["long"], language=None, wrap_lines=True)
         st.html(f'<p class="small"><b>{escape(DASHBOARD_CITATION["title"])}</b> short and long citation</p>')
-        components.html(shelf.dashboard_citation_frame(), height=170)
+        citation_frame()
         st.html('<p class="small">Each outside source, as its owner asks</p>')
         for who, words in OUTSIDE_CITATIONS:
             st.html(f'<p class="small"><b>{escape(who)}</b> {escape(words)}</p>')
