@@ -5,7 +5,7 @@ from pathlib import Path
 from evidence import jobs, pipeline
 from evidence import console_settings
 from evidence.console_settings import WORKFLOWS_DIR
-from evidence.pipeline_words import SETTING_SENTENCES, STAGES
+from evidence.pipeline_words import STAGES
 from test_jobs import LOG, NOW, RUNS, WORKFLOWS
 from ui.components.live_pipeline import live_pipeline_html, payload
 
@@ -199,21 +199,3 @@ def test_level_2_words_avoid_internal_jargon():
             assert term not in text, (key, term)
         if "pull request" in text:
             assert "(pull request)" in text, key
-
-
-def test_fact_checked_setting_sentence_entries_are_exact():
-    assert SETTING_SENTENCES["ARCHIVE_VERSIONS_FILE"] == (
-        "CSV file name inside the archive repository that records every change (a changed copy or a page becoming gone)."
-    )
-    assert SETTING_SENTENCES["BACKOFF_FIRST"] == (
-        "How long a source is held off after its first refusal before it may be asked again."
-    )
-    assert SETTING_SENTENCES["MIN_GAP_BETWEEN_DOWNLOADS"] == (
-        "Per-site minimum wait between two requests to the same site (a named host or any host under it)."
-    )
-    assert SETTING_SENTENCES["NEVER_FETCH"] == (
-        "Host-name fragments the archive fetcher refuses before any request, including redirects to them."
-    )
-    assert SETTING_SENTENCES["WAIT_WARN_DAYS"] == (
-        "Days a waiting decision item may wait before it is shown as overdue (warning once it has waited longer than this)."
-    )

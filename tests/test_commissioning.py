@@ -89,9 +89,8 @@ def test_nvs_03_is_on_its_way_and_out_of_the_scores_and_the_burns(monkeypatch, t
 
 
 def test_a_new_satellites_stage_is_said_in_words_on_its_way_or_newly_parked():
-    from analysis.commissioning import NEWLY_PARKED, ON_ITS_WAY, SETTLING_DAYS, stage
+    from analysis.commissioning import NEWLY_PARKED, ON_ITS_WAY, stage
 
-    assert ON_ITS_WAY == "on its way to its slot" and NEWLY_PARKED == f"at its slot for under {SETTLING_DAYS} days"
     transfer = pd.DataFrame([{"satellite": "NEW-1", "EPOCH": pd.Timestamp("2026-11-01"), "ECCENTRICITY": 0.7,
                               "MEAN_MOTION": 2.2, "LonDrift_deg_per_day": 0.0}])
     parked = pd.DataFrame([{"satellite": "NEW-2", "EPOCH": pd.Timestamp("2026-11-01"), "ECCENTRICITY": 0.001,

@@ -44,10 +44,11 @@ def test_the_material_holds_the_documents_the_page_the_code_and_the_issues_each_
 def test_the_material_holds_each_job_with_its_schedule_and_the_comment_that_explains_it():
     text = assistant.material([], PARTS)
 
-    job = text[text.index("=== [.github/workflows/rinex-check.yml] ==="):]
+    job = text[text.index("=== [.github/workflows/archive.yml] ==="):]
     job = job[:job.index("\n\n===")]
-    assert "pings Healthchecks.io (rinex-check)" in job and "name: RINEX check" in job
-    assert "06:00 UTC = 11:30 India time" in job and "- cron: '0 6 * * *'" in job
+    assert "Keeps a raw copy of every archived source whenever it changes." in job
+    assert "name: Archive sources" in job
+    assert "- cron: '30 0 * * *'" in job and "00:30 UTC = 06:00 India time" in job
     assert "runs-on" not in job and "steps:" not in job   # the job's steps stay out
     assert "[.github/workflows/archive.yml]" in text and "- cron: '15 1,8,14,20 * * *'" in text
 
