@@ -62,12 +62,30 @@ def score_sum(summary):
             f'<small>/100</small></div></div></div>')
 
 
+PARTS_WORDS = "{system}'s score counts every satellite of its parts once, so it sits between their own scores"
+
+
+def part_scores(system, current=""):
+    """A constellation of several parts (BeiDou-3: IGSO & GEO, MEO): each part's own score in a small box beside the
+    whole's, the part being read marked, and one line saying how the whole is made. "" for a one-part constellation."""
+    if not system.get("part_scores"):
+        return ""
+    boxes = "".join(
+        f'<span class="ps-box{" here" if label == current else ""} {surfaces.band(score) if score is not None else "idle"}">'
+        f'<small>{escape(label)}</small><b class="num">{score if score is not None else "–"}</b></span>'
+        for label, score in system["part_scores"])
+    return (f'<div class="ps"><div class="ps-boxes">{boxes}</div>'
+            f'<p class="small">{escape(PARTS_WORDS.format(system=system["name"]))}</p></div>')
+
+
 def strip(summary):
     """The score and its sum, then the three counts and the constellation's own flag, as chips: declared before
     anything else on the page. Home's score for this constellation is opened up here; every satellite's result is in
     the section under the page (section())."""
-    lead = (surfaces.chip(f"Score {summary['score']} of 100", surfaces.band(summary["score"]))
-            if summary["score"] is not None else surfaces.chip("Score: not read", "idle"))
+    part = systems.part_name(summary["name"])   # on one part's page the chip names the part, never the whole
+    label = f"{part} score" if part else "Score"
+    lead = (surfaces.chip(f"{label} {summary['score']} of 100", surfaces.band(summary["score"]))
+            if summary["score"] is not None else surfaces.chip(f"{label}: not read", "idle"))
     chips = [_chip(words, *summary[key]) for key, words in MEASURES]
     chips.append(_chip("Says healthy", summary["flagged_healthy"], summary["checked"]))
     return (f'<div class="measures" role="group" aria-label="Score, orbit, station-keeping and clock">{lead}'

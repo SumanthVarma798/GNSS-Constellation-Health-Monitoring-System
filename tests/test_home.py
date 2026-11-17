@@ -488,3 +488,25 @@ def test_the_bars_points_always_add_up_to_the_score_shown():
     assert tied[0] == 50 and sum(tied) == 81   # station and orbit tie on what rounding lost: either takes the point
     for rates, score in (([("clock", 33.3, 0.4), ("orbit", 66.7, 0.35), ("station", 50.0, 0.25)], 49),):
         assert sum(_whole_points(rates, score)) == score
+
+
+def test_a_constellation_of_two_parts_has_one_score_shown_alike_everywhere_with_each_parts_own_beside_it():
+    from ui import system_summary, three_measures
+
+    def sat(ok):
+        return {"name": "x", "orbit": ok, "station": ok, "clock_steady": ok, "clock": None}
+
+    def part(name, good, bad):
+        sats = [sat(True)] * good + [sat(False)] * bad
+        return {"name": name, "sats": sats, "checked": 0, "burns": None, "flag_agrees": (0, 0), "healthy": good,
+                "total": good + bad, "settling": {}, "flagged_healthy": None,
+                **system_summary._measures(sats, name)}
+
+    high, medium = part("BeiDou-3", 6, 4), part("BeiDou-3 MEO", 20, 0)
+    whole = system_summary.whole("BeiDou-3", [high, medium])
+    assert whole["part_scores"] == [("IGSO & GEO", 60), ("MEO", 100)]
+    assert 60 < whole["score"] < 100   # every satellite counted once: 26 of 30 pass
+    shown = three_measures.part_scores(whole, "MEO")
+    assert 'class="ps-box here ok"><small>MEO</small><b class="num">100</b>' in shown
+    assert "BeiDou-3&#x27;s score counts every satellite of its parts once" in shown
+    assert three_measures.part_scores(system_summary.whole("NavIC", [part("NavIC", 3, 1)])) == ""

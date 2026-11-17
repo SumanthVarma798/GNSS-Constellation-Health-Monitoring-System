@@ -161,7 +161,9 @@ def summary(name, result, gap=None):
 def whole(system, parts):
     """A system's parts as one: each part's satellites in turn, and the counts added up. `parts` are summary()'s
     rows for the parts that could be read, in the system's order. "parts" holds (the part's name beside the
-    system's, healthy, total) for a system with several parts, so a reader can go one step deeper."""
+    system's, healthy, total) for a system with several parts, so a reader can go one step deeper, and "part_scores"
+    (the part's name, its own score) beside them. The system's score counts every satellite of every part once,
+    so it lies between its parts' scores and is the same number on Home and on each part's page."""
     checked = sum(part["checked"] for part in parts)
     burns = [part["burns"] for part in parts if part["burns"]]
     return {"name": system, "sats": [sat for part in parts for sat in part["sats"]],
@@ -171,5 +173,7 @@ def whole(system, parts):
             "settling": {name: stage for part in parts for name, stage in part["settling"].items()}, "checked": checked,
             "flagged_healthy": sum(part["flagged_healthy"] or 0 for part in parts) if checked else None,
             "parts": [(systems.part_name(part["name"]), part["healthy"], part["total"]) for part in parts]
+            if len(systems.SYSTEMS[system]) > 1 else [],
+            "part_scores": [(systems.part_name(part["name"]), part.get("score")) for part in parts]
             if len(systems.SYSTEMS[system]) > 1 else [],
             **_measures([sat for part in parts for sat in part["sats"]], system)}
