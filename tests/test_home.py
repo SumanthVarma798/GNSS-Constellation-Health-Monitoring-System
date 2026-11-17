@@ -47,7 +47,7 @@ def test_a_cards_states_ring_its_score_and_are_counted_in_words_beside_each_mark
     # the same counts in words, each beside its mark, so colour is never the only sign; none a link in the head
     assert re.search(r'<span><i class="ok"></i>\d+ healthy and in place</span>', head)
     assert '<span><i class="bad"></i>1 set aside</span>' in head and "how-link" not in head
-    # opened, each state's words open their own explanation in "How to read this page"
+    # opened, each state's words open their own explanation in "Need help reading this page?"
     assert re.search(r'<a class="how-link" href="#how-needs-a-look"[^>]*>needs a look</a>', body)
     assert '<a class="how-link" href="#how-set-aside"' in body
 
@@ -443,11 +443,16 @@ def test_a_constellations_page_opens_up_its_score_into_its_sum():
     bodies = htmls(run(scope("NavIC")))
 
     strip = next(body for body in bodies if 'class="measures"' in body)
-    # each attribute's pass rate × its weight = its points, adding to the score; clock not read, its 50% shared
+    # in pictures: each attribute's name over its share of the bar, its points out of that share under it, the score in
+    # a box at the end; no line of sums. Clock not read: its 50% shared out, so station has 60 and orbit 40
     assert re.search(r"Score \d+ of 100</span>", strip)
-    assert re.search(r"<b>Station held</b> \d+% × 60% = <b class=\"num\">[\d.]+</b>.*<b>Orbit kept</b> \d+% × 40% = ", strip)
-    assert re.search(r'<div class="ssum-bar" role="img" aria-label="Score \d+: Station held [\d.]+ \+ Orbit kept', strip)
-    assert "Weighed for a regional constellation; 1 not read today" in strip
+    assert re.search(r'<span class="ss-name">Station</span>.*?<span class="ss-pts"><b class="num">\d+</b>/60</span>.*?'
+                     r'<span class="ss-name">Orbit</span>.*?<span class="ss-pts"><b class="num">\d+</b>/40</span>', strip)
+    assert re.search(r'<div class="ss-total (ok|warn|bad)" aria-hidden="true"><b class="num">\d+</b><small>/100', strip)
+    assert "ssum-key" not in strip and " × " not in strip.split('class="ssum"')[1].split('aria-label')[0]
+    # read aloud in full instead
+    assert re.search(r'aria-label="Station held \d+% of its 60% share: [\d.]+ points, Orbit kept \d+% of its 40% share: '
+                     r'[\d.]+ points; score \d+ out of 100, weighed for a regional constellation; 1 not read today', strip)
 
 
 def test_burns_are_counted_over_the_last_90_days_and_a_flag_matches_where_it_says_what_we_count():
