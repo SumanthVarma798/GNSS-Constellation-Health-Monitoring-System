@@ -515,3 +515,9 @@ def test_back_to_the_defaults_undoes_every_setting_moved():
 
     assert at.session_state["params"] == {} and at.number_input(key="th_z_threshold_NavIC").value == 3.5
     assert at.button(key="th_reset_NavIC").disabled   # nothing left to undo
+
+
+def test_the_tab_icon_is_the_logo_on_the_dashboards_surface():
+    icon = ROOT / "ui" / "opengnss_tab_icon.png"
+    assert icon.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
+    assert 'page_icon=str(Path(__file__).parent / "ui" / "opengnss_tab_icon.png")' in (ROOT / "dashboard.py").read_text()
