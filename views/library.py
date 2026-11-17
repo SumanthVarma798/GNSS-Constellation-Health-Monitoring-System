@@ -163,3 +163,8 @@ reveal.section("library_cite", "Citations", f"our data and the dashboard · {rev
 if jump_section:
     st.session_state["_library_jumps"] = st.session_state.get("_library_jumps", 0) + 1
     components.html(shelf.scroll_script(jump_section, st.session_state["_library_jumps"]), height=0)
+
+# ---- Contact us ----
+from ui import contact  # noqa: E402  (kept down here with the section it draws)
+
+contact.section("library_contact", "library")

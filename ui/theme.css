@@ -837,3 +837,14 @@ details.sys.card { display: block; padding: 0; }
   .head.mm-head:has(.right) .muted { flex-basis: 100%; order: 3; }
 }
 /* ==== end Master map ==== */
+
+/* ==== Contact form (ui/contact.py): inside a section (ui/reveal.py), padded like its body, closed to nothing ==== */
+[class*="st-key-contact_form_"] { padding: 0 20px 16px; }
+[class*="st-key-rv_"]:not(:has([class*="st-key-rvx_"] input:checked)) [class*="st-key-contact_form_"] { display: none; }
+[class*="st-key-contact_form_"] [data-testid="stForm"] { padding: 0; }
+[class*="st-key-contact_form_"] .notice { margin: 0; }
+@media (max-width: 639.98px) {
+  [class*="st-key-contact_form_"] { padding: 0 16px 14px; }
+  [class*="st-key-contact_form_"] [data-testid="stFormSubmitButton"] button { width: 100%; min-height: 44px; }
+}
+/* ==== end Contact form ==== */

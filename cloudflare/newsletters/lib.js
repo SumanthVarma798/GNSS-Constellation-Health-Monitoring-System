@@ -88,6 +88,23 @@ export function contactRecord(mail, envelopeFrom, at) {
   return { from, subject: mail.subject || "", at, text: text.trim().slice(0, CONTACT_TEXT_CHARACTERS) };
 }
 
+// A message from the dashboard's contact form (POST /contact): {from, subject?, text}.
+// Returns {from, subject, text} trimmed, or {problem} saying in a few words why it is refused.
+export const CONTACT_ADDRESS_CHARACTERS = 254;
+export const CONTACT_SUBJECT_CHARACTERS = 200;
+const PLAUSIBLE_ADDRESS = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
+
+export function formMessage(body) {
+  const field = (name) => (body && typeof body[name] === "string" ? body[name].trim() : "");
+  const from = field("from"), subject = field("subject"), text = field("text");
+  if (!body || typeof body !== "object") return { problem: "the message must be JSON" };
+  if (from.length > CONTACT_ADDRESS_CHARACTERS || !PLAUSIBLE_ADDRESS.test(from)) return { problem: "from is not an email address" };
+  if (subject.length > CONTACT_SUBJECT_CHARACTERS) return { problem: `subject is longer than ${CONTACT_SUBJECT_CHARACTERS} characters` };
+  if (!text) return { problem: "text is empty" };
+  if (text.length > CONTACT_TEXT_CHARACTERS) return { problem: `text is longer than ${CONTACT_TEXT_CHARACTERS} characters` };
+  return { from, subject, text };
+}
+
 // True only for "Bearer <token>" with the configured token. Every byte is compared whatever the input, so the time taken
 // does not tell how much of a guess was right. No token configured means no one is let in.
 export function authorized(header, token) {

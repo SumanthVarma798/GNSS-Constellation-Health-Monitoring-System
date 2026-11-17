@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  CONTACT_TEXT_CHARACTERS, authorized, contactRecord, excerpt, fromSubstack, isContact, newestFirst, plainText, postLink, publicationOf,
+  CONTACT_TEXT_CHARACTERS, authorized, contactRecord, excerpt, formMessage, fromSubstack, isContact, newestFirst, plainText, postLink, publicationOf,
   receiverResults, rss,
 } from "./lib.js";
 
@@ -23,6 +23,21 @@ test("a contact message keeps who wrote, the subject, when, and its plain text t
   assert.equal(htmlOnly.from, "env@example.org");
   assert.equal(htmlOnly.subject, "");
   assert.equal(htmlOnly.text, "Hi there");
+});
+
+test("a contact-form message is kept trimmed, or refused with a short reason", () => {
+  assert.deepEqual(formMessage({ from: " a@example.org ", text: "  Hello  " }), { from: "a@example.org", subject: "", text: "Hello" });
+  assert.deepEqual(formMessage({ from: "a@example.org", subject: "Hi", text: "x" }), { from: "a@example.org", subject: "Hi", text: "x" });
+  for (const body of [null, "text", 42]) assert.ok(formMessage(body).problem);
+  assert.match(formMessage({ text: "x" }).problem, /from/);
+  assert.match(formMessage({ from: "not an address", text: "x" }).problem, /from/);
+  assert.match(formMessage({ from: "A <a@example.org>", text: "x" }).problem, /from/);
+  assert.match(formMessage({ from: `${"a".repeat(250)}@example.org`, text: "x" }).problem, /from/);
+  assert.match(formMessage({ from: "a@example.org", subject: "s".repeat(201), text: "x" }).problem, /subject/);
+  assert.match(formMessage({ from: "a@example.org", text: "   " }).problem, /empty/);
+  assert.match(formMessage({ from: "a@example.org", text: 7 }).problem, /empty/);
+  assert.equal(formMessage({ from: "a@example.org", text: "x".repeat(CONTACT_TEXT_CHARACTERS) }).text.length, CONTACT_TEXT_CHARACTERS);
+  assert.match(formMessage({ from: "a@example.org", text: "x".repeat(CONTACT_TEXT_CHARACTERS + 1) }).problem, /longer/);
 });
 
 test("the contact inbox opens only for the right bearer token", () => {

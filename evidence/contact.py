@@ -14,11 +14,13 @@ def read_messages(token):
 
 
 def messages(answer):
-    """The messages newest first, each with `at` as a time. Raises TypeError or ValueError on an answer of another shape."""
+    """The messages newest first, each with `at` as a time and `via` ("form" from the dashboard's form, else "").
+    Raises TypeError or ValueError on an answer of another shape."""
     if not isinstance(answer, list):
         raise TypeError("the inbox is not a list")
     rows = [{"at": datetime.fromisoformat(str(m["at"]).replace("Z", "+00:00")), "from": str(m.get("from") or ""),
-             "subject": str(m.get("subject") or ""), "text": str(m.get("text") or "")} for m in answer]
+             "subject": str(m.get("subject") or ""), "text": str(m.get("text") or ""), "via": str(m.get("via") or "")}
+            for m in answer]
     return sorted(rows, key=lambda row: row["at"], reverse=True)
 
 

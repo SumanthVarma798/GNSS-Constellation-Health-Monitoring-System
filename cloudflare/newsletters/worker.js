@@ -4,10 +4,11 @@
 // the post's public link, the date and a short excerpt.
 // It also keeps mail to the contact address (CONTACT_TO, contact@opengnss.org) privately, for the team to read in the
 // console through GET /contact with the CONTACT_READ_TOKEN secret. That mail is never published and never bounced.
+// The dashboard's contact form adds to the same inbox through POST /contact with the CONTACT_WRITE_TOKEN secret.
 import PostalMime from "postal-mime";
 import {
-  CONTACT_READ_ITEMS, FEED_ITEMS, authorized, contactRecord, excerpt, fromSubstack, isContact, newestFirst, postLink,
-  publicationOf, receiverResults, rss,
+  CONTACT_READ_ITEMS, FEED_ITEMS, authorized, contactRecord, excerpt, formMessage, fromSubstack, isContact, newestFirst,
+  postLink, publicationOf, receiverResults, rss,
 } from "./lib.js";
 
 // The newest values under a prefix, newest first.
@@ -22,13 +23,16 @@ async function newest(env, prefix, limit) {
   return (await Promise.all(newestFirst(keys, limit).map((name) => env.NEWSLETTERS.get(name, "json")))).filter(Boolean);
 }
 
+// One message into the contact inbox, under the time it arrived.
+const keepContact = (env, record) =>
+  env.NEWSLETTERS.put(`contact:${record.at}:${crypto.randomUUID().slice(0, 8)}`, JSON.stringify(record));
+
 export default {
   async email(message, env) {
     const raw = await new Response(message.raw).arrayBuffer();
     const mail = await PostalMime.parse(raw);
     if (isContact(message.to, env.CONTACT_TO)) {   // the time it arrived, not the Date the sender wrote
-      const at = new Date().toISOString();
-      await env.NEWSLETTERS.put(`contact:${at}:${crypto.randomUUID().slice(0, 8)}`, JSON.stringify(contactRecord(mail, message.from, at)));
+      await keepContact(env, contactRecord(mail, message.from, new Date().toISOString()));
       return;
     }
     const headers = Object.fromEntries(mail.headers.map((h) => [h.key.toLowerCase(), h.value]));
@@ -59,6 +63,16 @@ export default {
         return new Response("Not allowed.\n", { status: 401, headers: { "www-authenticate": "Bearer" } });
       }
       return Response.json(await newest(env, "contact:", CONTACT_READ_ITEMS), { headers: { "cache-control": "no-store" } });
+    }
+    if (path === "/contact" && request.method === "POST") {   // the dashboard's contact form
+      if (!authorized(request.headers.get("authorization"), env.CONTACT_WRITE_TOKEN)) {
+        return new Response("Not allowed.\n", { status: 401, headers: { "www-authenticate": "Bearer" } });
+      }
+      const form = formMessage(await request.json().catch(() => null));
+      if (form.problem) return Response.json({ ok: false, problem: form.problem }, { status: 400 });
+      const mail = { from: { address: form.from }, subject: form.subject, text: form.text };
+      await keepContact(env, { ...contactRecord(mail, "", new Date().toISOString()), via: "form" });
+      return Response.json({ ok: true }, { status: 201 });
     }
     const found = path.match(/^\/substack\/([a-z0-9-]+)\/feed\/?$/);
     if (!found) return new Response("OpenGNSS feeds. See https://github.com/SumanthVarma798/GNSS-Constellation-Health-Monitoring-System\n");

@@ -270,6 +270,18 @@ def test_the_contact_inbox_lists_messages_newest_first_with_the_text_folded_and_
     assert '<details class="c-more"><summary>' in page and "We track a constellation too.\nCan we help?" in page
 
 
+def test_a_message_from_the_dashboard_form_is_marked_as_not_verified(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    messages = [{"from": "form@example.org", "subject": "", "at": "2026-11-16T09:00:00.000Z", "text": "Hi", "via": "form"},
+                {"from": "mail@example.org", "subject": "By mail", "at": "2026-11-15T09:00:00.000Z", "text": "Hello"}]
+    monkeypatch.setattr(contact, "read_messages", lambda token: messages)
+
+    page = text(run(monkeypatch, page="console/contact.py", secrets=CONTACT_SECRETS))
+
+    assert page.count("sent from the dashboard form; address not verified") == 1
+    assert page.index("form@example.org") < page.index("address not verified") < page.index("mail@example.org")
+
+
 @pytest.mark.parametrize("trouble, words", [
     (requests.HTTPError("401", response=SimpleNamespace(status_code=401)), "refused the console&#x27;s token"),
     (requests.ConnectionError("down"), "did not answer"),

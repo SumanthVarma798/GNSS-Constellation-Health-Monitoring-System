@@ -22,3 +22,6 @@ id = "ebebf306d0a244baad87cd7136c9a708"
 
 # Secret, never written here: CONTACT_READ_TOKEN, the token the console sends to read GET /contact
 # (npx wrangler secret put CONTACT_READ_TOKEN). Unset, GET /contact answers 401 to everyone.
+# Secret, never written here: CONTACT_WRITE_TOKEN, the token the public dashboard's contact form sends to POST /contact
+# (npx wrangler secret put CONTACT_WRITE_TOKEN). It only adds messages, never reads them, so it must differ from
+# CONTACT_READ_TOKEN. Unset, POST /contact answers 401 to everyone.

@@ -11,6 +11,7 @@ from evidence.decision_settings import SECRETS_SECTION
 from ui import console
 
 PAGE = pages.CONTACT
+FROM_FORM = "sent from the dashboard form; address not verified"
 
 
 @st.cache_data(ttl=CONTACT_READ_EVERY_SECONDS, show_spinner="Reading the contact inbox…")
@@ -20,6 +21,8 @@ def _inbox(token):
 
 def _message(row):
     head = " · ".join(escape(part) for part in (console.when(row["at"]), row["from"] or "no sender", row["subject"] or "(no subject)"))
+    if row["via"] == "form":
+        head += f' <span class="muted">· {FROM_FORM}</span>'
     return f'<details class="c-more"><summary>{head}</summary><div class="c-mail">{escape(row["text"]) or "(no text)"}</div></details>'
 
 
