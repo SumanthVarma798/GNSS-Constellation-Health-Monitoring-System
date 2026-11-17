@@ -74,8 +74,8 @@ def test_the_candidate_list_is_well_formed():
         assert row["name"] and row["grade_reason"] and row["standing"] in CANDIDATE_STANDINGS
         assert row["proposed_grade"] in ("", *RELIABILITY_GRADES)
         assert (row["standing"] == CANDIDATE_GRADED) == (row["source_id"] in graded)
-        if row["standing"] == CANDIDATE_GRADED:
-            assert row["proposed_grade"] == graded[row["source_id"]]
+        # proposed_grade is the original proposal. Once a source is graded, the confirmed grade in source_grades.csv
+        # rules and may later move (the weekly source-record job, the console), so the two need not match.
         # The Russian and Chinese tracker sites are never fetched, so never listed (issue 13, 17 Oct).
         assert not any(name in " ".join(row.values()).lower() for name in ("vimpel", "spacemapper"))
 
