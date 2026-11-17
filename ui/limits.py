@@ -53,7 +53,7 @@ BURN_DAYS = 90   # Home counts the burns found in this many days of orbit record
 CLOCK_STEADY_NS = 30.0   # our choice: 30 ns is 9 m of range, far past a steady clock's steps (about 1 ns)
 # The clock score judges only the satellites in service today, so a constellation whose clocks have failed in orbit
 # can still score high: the record of those that failed (registry/clock_record.csv) is said beside it.
-CLOCK_RECORD = ("Clock record: {lost} of {launched} {name} satellites launched lost atomic clocks in orbit.",
+CLOCK_RECORD = ("Clock record: {lost} of {launched} {name} satellites launched are reported to have lost atomic clocks in orbit.",
                 "The score above judges only the satellites in service today. Sources:")
 
 # A constellation's score (ui.system_summary.score_of) weighs its three measures by what a failure costs its users,

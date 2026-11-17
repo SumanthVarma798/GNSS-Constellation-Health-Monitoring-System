@@ -75,6 +75,6 @@ def test_a_constellation_with_lost_clocks_says_so_and_others_say_nothing():
     assert {row["name"] for row in lost} >= {"IRNSS-1A", "IRNSS-1F"} and len(lost) < launched
     assert all(row["source_link"].startswith("https://") for row in lost)
     line = three_measures.record_line("NavIC")
-    assert f"{len(lost)} of {launched} NavIC satellites launched lost atomic clocks in orbit" in line
+    assert f"{len(lost)} of {launched} NavIC satellites launched are reported to have lost atomic clocks in orbit" in line
     assert all(link in line for link in {row["source_link"] for row in lost})
     assert clock_record("GPS") is None and three_measures.record_line("GPS") == ""
