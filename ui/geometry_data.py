@@ -12,6 +12,8 @@ import pandas as pd
 from skyfield.api import EarthSatellite, load, wgs84
 
 from analysis.dop_calculations import calculate_dop_for_location
+from analysis.meo_geometry import plane_drift
+from config.meo_nominal import NOMINAL
 from analysis.raan_analysis import circular_mean_deg
 from config.config import (BEIDOU3_SERVICE_REQUIREMENTS, DEFAULT_PARAMS, NAVIK_SERVICE_REQUIREMENTS, R_EARTH,
                            QZSS_SERVICE_REQUIREMENTS)
@@ -208,3 +210,13 @@ def clicked_place(point):
     custom = point.get("customdata")
     numbers = custom is not None and len(custom) == 2 and all(isinstance(v, (int, float)) for v in custom)
     return tuple(custom) if numbers else (point["y"], point["x"])
+
+
+def plane_rows(system, meo_rows):
+    """[{plane, count, spacing_deg, offset, offset_limit, rate, gap, gap_limit}] for a medium-orbit system, one per plane,
+    from analysis.meo_geometry's rows (the Overview's own): how far each plane's node is from planes spaced
+    `spacing_deg` apart (360 / planes: 120 for BeiDou-3, GLONASS and Galileo, 60 for GPS). Ground-track groups
+    (analysis/raan_analysis.py) cannot be made for a medium orbit, which goes round the Earth twice a day."""
+    spacing = NOMINAL[system]["plane_spacing_deg"].value
+    return [{"plane": plane, "count": sum(row["plane"] == plane for row in meo_rows), "spacing_deg": spacing, **drift}
+            for plane, drift in sorted(plane_drift(system, meo_rows).items())]

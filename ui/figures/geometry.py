@@ -421,6 +421,19 @@ def spacing_card(group):
     return surfaces.raised(facts, spacing_title(group))
 
 
+def plane_card(row):
+    """One plane of a medium-orbit system: how far its node is from the pattern of planes `spacing_deg` apart."""
+    off = abs(row["offset"])
+    status = "ok" if off <= row["offset_limit"] else "warn" if off <= 3 * row["offset_limit"] else "bad"
+    gap = "–" if row["gap"] is None else f'{row["gap"]:.2f}°'
+    facts = (f'<div class="geo-facts"><span><small>Planes should be</small><b class="num">{row["spacing_deg"]:g}° apart</b></span>'
+             f'<span><small>Node off the pattern</small><b class="num">{row["offset"]:+.2f}°</b></span>'
+             f'<span><small>Allowed</small><b class="num">±{row["offset_limit"]:g}°</b></span>'
+             f'<span><small>Worst gap along it</small><b class="num">{gap}</b></span>'
+             f'<span><small>Verdict</small>{surfaces.chip("within limit" if status == "ok" else "past limit", status)}</span></div>')
+    return surfaces.raised(facts, f'Plane {escape(str(row["plane"]))} · {row["count"]} satellites')
+
+
 def spacing_title(group):
     return f'{group["satellite_count"]} satellites around {group["central_longitude_deg"]:.1f}° east'
 

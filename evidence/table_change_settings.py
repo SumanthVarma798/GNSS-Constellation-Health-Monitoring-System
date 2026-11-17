@@ -8,6 +8,7 @@ from evidence.registry_settings import (
     REGISTRY_CATALOGUE_COLUMNS,
     REGISTRY_DASHBOARD_SATELLITE_COLUMNS,
     REGISTRY_COLUMN_PLAIN_NAMES,
+    REGISTRY_CLOCK_RECORD_COLUMNS,
     REGISTRY_LEFT_OUT_COLUMNS,
     REGISTRY_SATELLITE_COLUMNS,
     REGISTRY_SIGNAL_ID_COLUMNS,
@@ -65,6 +66,9 @@ TABLES = {
     "registry/left_out.csv": {
         "name": "Satellites the dashboard leaves out on purpose", "columns": REGISTRY_LEFT_OUT_COLUMNS, "key": ("svn",),
         "label": ("svn", "name"), "source": BY_HAND, "shows": {"Overview": "which satellites are left out"}},
+    "registry/clock_record.csv": {
+        "name": "Satellites that lost atomic clocks in orbit", "columns": REGISTRY_CLOCK_RECORD_COLUMNS, "key": ("svn",),
+        "label": ("svn", "name"), "source": BY_HAND, "shows": {"Overview": "the clock record beside the clock score"}},
 }
 
 # What a routine change is, in words, for the tables that have routine columns.

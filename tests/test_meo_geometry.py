@@ -1,4 +1,5 @@
 """The MEO calculations by hand, on small made-up element sets: planes, spacing, the nominal values, the score."""
+import math
 from datetime import datetime, timedelta
 
 import pytest
@@ -193,3 +194,20 @@ def test_a_plane_tilted_one_degree_more_drifts_against_the_pattern_and_the_rest_
     drift = plane_drift("Galileo", tilted.values())
     assert drift["A"]["rate"] == pytest.approx(0.165, abs=0.005)
     assert drift["B"]["rate"] == drift["C"]["rate"] == pytest.approx(-0.0823, abs=0.003)
+
+
+def test_a_medium_orbit_has_no_ground_track_group_but_its_planes_are_spaced_by_its_own_reference():
+    from types import SimpleNamespace
+
+    from analysis.raan_analysis import analyze_raan_spacing
+    from config.meo_nominal import NOMINAL
+    from ui import geometry_data
+
+    def sat(turns_per_day, node):   # what analyze_raan_spacing reads of a Skyfield satellite
+        return SimpleNamespace(model=SimpleNamespace(inclo=math.radians(55), nodeo=math.radians(node),
+                                                     no_kozai=turns_per_day * 2 * math.pi / 1440))
+    medium = {f"M{i}": sat(1.86, 120 * (i % 3) + 5 * i) for i in range(6)}
+    assert analyze_raan_spacing(medium) == []   # was nine "Poor" groups of two for BeiDou-3 MEO
+    assert NOMINAL["BeiDou-3 MEO"]["plane_spacing_deg"].value == 120 and NOMINAL["GPS"]["plane_spacing_deg"].value == 60
+    rows = [{"plane": "A", "checks": [("plane", 0.0, 1.0, 1.0, 100.0)], "node_rate": 0.0}]
+    assert geometry_data.plane_rows("GPS", rows)[0]["spacing_deg"] == 60

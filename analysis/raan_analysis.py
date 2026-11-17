@@ -37,6 +37,9 @@ import numpy as np
 from skyfield.api import load
 
 IGSO_INCLINATION_THRESHOLD_DEG = 20.0
+# Satellites that go round once a sidereal day (1.0027 turns): the only ones that can share a ground track. A medium
+# orbit goes round about twice a day, so its ground track is a different line every pass and "co-located" means nothing.
+GEOSYNCHRONOUS_TURNS_PER_DAY = (0.9, 1.1)
 SIDEREAL_DAY_HOURS = 23.9344696
 DEFAULT_LONGITUDE_TOL_DEG = 5.0
 
@@ -54,6 +57,13 @@ def _get_timescale():
 def _inclination_deg(sat_obj):
     try:
         return math.degrees(sat_obj.model.inclo)
+    except Exception:
+        return None
+
+
+def _turns_per_day(sat_obj):
+    try:
+        return sat_obj.model.no_kozai * 1440 / (2 * math.pi)
     except Exception:
         return None
 
@@ -191,6 +201,9 @@ def analyze_raan_spacing(satellites_dict, service_requirements=None,
         inc = _inclination_deg(sat_obj)
         if inc is None or inc < inclination_threshold_deg:
             continue
+        turns = _turns_per_day(sat_obj)
+        if turns is None or not GEOSYNCHRONOUS_TURNS_PER_DAY[0] <= turns <= GEOSYNCHRONOUS_TURNS_PER_DAY[1]:
+            continue   # a medium orbit shares no ground track: its planes are judged by analysis/meo_geometry.py
         raan = get_raan_deg(sat_obj)
         lon = get_ground_track_central_longitude_deg(sat_obj, ts=ts)
         if raan is None or lon is None:

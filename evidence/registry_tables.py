@@ -12,6 +12,7 @@ from evidence.registry_settings import (
     REGISTRY_CONSTELLATIONS_FILE,
     REGISTRY_DASHBOARD_SATELLITES_FILE,
     REGISTRY_DASHBOARD_SYSTEMS_FILE,
+    REGISTRY_CLOCK_RECORD_FILE,
     REGISTRY_DIR,
     REGISTRY_DASHBOARD_TRACKED_SYSTEMS,
     REGISTRY_SATELLITES_FILE,
@@ -150,6 +151,16 @@ def left_out_notice(constellation):
     """The page's line on satellites left out on purpose, or ""."""
     named = "; ".join(f"{name}: {reason}" for name, reason, _ in left_out(constellation))
     return f"Broadcasting but not shown, on purpose: {named}." if named else ""
+
+
+def clock_record(constellation):
+    """(the rows of clock_record.csv for one dashboard system, how many of its satellites the registry lists), or None
+    when the system has no entry. The score judges only the satellites in service today; this is the other half: how
+    many of all those launched lost atomic clocks in orbit. Rows are dicts keyed by the file's columns."""
+    member, _ = _membership(constellation)
+    lost = [row for row in read_table(REGISTRY_CLOCK_RECORD_FILE) if member(row["svn"])]
+    launched = sum(member(row["svn"]) for row in read_table(REGISTRY_SATELLITES_FILE))
+    return (lost, launched) if lost else None
 
 
 def dashboard_satellites(constellation):

@@ -16,12 +16,13 @@ from ui.figures.slot_rows import as_number
 
 # (heading, one plain line) for each column of the Overview table, after the satellite's name.
 COLUMNS = [
-    ("Drift per day", "How fast it slides east or west"),
-    ("Inclination", "Tilt of the orbit against the equator"),
-    ("Longitude", "Where it sits, against its own slot"),
-    ("Eccentricity", "How far the orbit is from a circle"),
-    ("Height", "Above the equator"),
-    ("Upkeep", "Burns over the year scored"),
+    ("Drift per day", "Degrees of longitude it slides east or west each day"),
+    ("Inclination", "Tilt of the orbit against the equator (0° is over the equator)"),
+    ("Longitude", "The longitude it is over now, against its own slot"),
+    ("Eccentricity", "How far the orbit is from a perfect circle (0 is a circle). A geostationary satellite on an oval one "
+                     "speeds up and slows down each day, so it swings east and west of its slot by about 2 × e × 42,164 km"),
+    ("Height", "Distance above the Earth's surface at the equator"),
+    ("Upkeep", "Days since its last thruster burn, against how often it usually burns"),
 ]
 # The Station-keeping table's columns: burns in the window, then the year the score reads.
 BURN_COLUMNS = [
@@ -131,14 +132,20 @@ def longitude(health):
     return cell(_lon(now), _outside(should, within), "ok" if within else "warn", f"{off:+.2f}° from its slot")
 
 
-def eccentricity(now, need):
+def eccentricity(now, need, kind=None):
+    """Against the requirements' limit; a geostationary satellite is also held to limits.GEO_ECC_MAX, which keeps its
+    swing inside its slot. The note gives the swing in km, so the number means something."""
     limit = need.get("ecc_max")
+    if kind == "GEO":
+        limit = limits.GEO_ECC_MAX if limit is None else min(limit, limits.GEO_ECC_MAX)
     if now is None:
         return cell("not known", "" if limit is None else f"under {limit:g}")
+    note = f"swings ±{limits.ecc_swing_km(now):,.0f} km east and west" if kind == "GEO" else ""
     if limit is None:
-        return cell(f"{now:.5f}", "no limit set")
+        return cell(f"{now:.5f}", "no limit set", note=note)
     within = now < limit
-    return cell(f"{now:.5f}", _outside(f"under {limit:g}", within), "ok" if within else "warn")
+    return cell(f"{now:.5f}", _outside(f"under {limit:g}" + (f" (±{limits.ecc_swing_km(limit):,.0f} km)" if kind == "GEO" else ""), within),
+                "ok" if within else "warn", note)
 
 
 def height(health):
@@ -173,7 +180,7 @@ def row(health, constellation, params, history, spread=None):
     name, p = str(health["Satellite"]), thresholds(constellation, params)
     need = requirement(name)
     return [drift(health, p, spread), inclination(health, need, p), longitude(health),
-            eccentricity(newest(history, name, "ECCENTRICITY"), need), height(health), upkeep(health)]
+            eccentricity(newest(history, name, "ECCENTRICITY"), need, health.get("Type")), height(health), upkeep(health)]
 
 
 def spreads(window_history):

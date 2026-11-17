@@ -153,7 +153,7 @@ def _row(system, unread=None, index=0):
             f'<span class="small">{_how_scored(system, index)}</span></div>'
             f'{_gauge(system, split)}<span class="sys-go" aria-hidden="true">&rsaquo;</span></summary>'
             f'<div class="card-more"><h4>Key health attributes</h4>{three_measures.score_sum(system)}'
-            f'{three_measures.part_scores(system)}'
+            f'{three_measures.part_scores(system)}{three_measures.record_line(name)}'
             f'<div class="tiles in">{in_score}</div>'
             f'<div class="tiles seen">{seen}</div>'
             + (f'<div class="card-notes">' + "".join(f'<div class="small">{note}</div>' for note in notes)
