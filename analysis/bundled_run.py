@@ -19,6 +19,7 @@ import pandas as pd
 from skyfield.api import EarthSatellite, load, wgs84
 
 from analysis import commissioning
+from analysis.burn_classes import classify
 from analysis import score_rules
 from analysis.dop_calculations import parse_tle_data
 from analysis.drift_analysis import calculate_longitudinal_drift
@@ -200,8 +201,14 @@ def _add_longitude(health_df, satellites_dop, now, warnings):
             warnings.append(f"Longitude calculation failed for {sat_name}: {e}")
 
 
-def burns(df_all_full, p, moving=()):
-    """One row per detected manoeuvre in each satellite's whole bundled history.
+BURN_COLUMNS = ['satellite', 'kind', 'window_start', 'window_end', 'd_sma_km', 'd_inc_deg']
+# What the classifier (analysis/burn_classes.py) also needs of the detector: the persistent change either side of the burn.
+BURN_DETAIL_COLUMNS = BURN_COLUMNS + ['pre_sma_med', 'post_sma_med', 'pre_inc_med', 'post_inc_med']
+
+
+def burns_detailed(df_all_full, p, moving=()):
+    """One row per detected manoeuvre in each satellite's whole bundled history, with the detector's before and after
+    medians of the semi-major axis and inclination (signed persistent change = post - pre).
 
     A satellite on its way to its slot has none yet, and one that has parked has none from before it parked:
     the burns that raised it are not station-keeping.
@@ -225,9 +232,22 @@ def burns(df_all_full, p, moving=()):
                         'window_end': det.at[i, 'EPOCH'],
                         'd_sma_km': float(det.at[i, 'dSMA']),
                         'd_inc_deg': float(det.at[i, 'dINC']),
+                        'pre_sma_med': float(det.at[i, 'pre_sma_med']),
+                        'post_sma_med': float(det.at[i, 'post_sma_med']),
+                        'pre_inc_med': float(det.at[i, 'pre_inc_med']),
+                        'post_inc_med': float(det.at[i, 'post_inc_med']),
                     })
-    return pd.DataFrame(rows, columns=['satellite', 'kind', 'window_start', 'window_end',
-                                       'd_sma_km', 'd_inc_deg'])
+    return pd.DataFrame(rows, columns=BURN_DETAIL_COLUMNS)
+
+
+def burns(df_all_full, p, moving=()):
+    """burns_detailed without the before and after medians: the one list of burns every consumer reads."""
+    return burns_detailed(df_all_full, p, moving)[BURN_COLUMNS]
+
+
+def burn_classes_of(result, constellation):
+    """What kind each burn in assess_constellation's `result` was (analysis/burn_classes.classify). Not used by any score."""
+    return classify(result['burns_detailed'], result['history'], constellation)
 
 
 def assess_constellation(constellation, now, window_days=90, params=None, fresh=None):
@@ -241,7 +261,9 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
     `fresh` ({norad: [history rows]}, from data.celestrak) is merged onto the bundled history, and
     the newest of those rows places the satellite for the longitude step.
 
-    Returns {'health', 'set_aside', 'moving', 'history', 'burns', 'data_time', 'warnings'}. `moving` is {satellite: day of
+    Returns {'health', 'set_aside', 'moving', 'history', 'burns', 'burns_detailed', 'data_time', 'warnings'};
+    `burns_detailed` is `burns` with the detector's before and after medians, for burn_classes_of (not run here: no page
+    shows the kinds yet, and the free host's CPU is slow). `moving` is {satellite: day of
     its first orbit record} for each new one still being moved to its slot (analysis/commissioning.py): left out of the scores.
     Raises ValueError for an unknown constellation, no bundled data, or no records in the window.
     """
@@ -364,7 +386,8 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
         'set_aside': sorted(graveyard_sats),
         'moving': {name: moving[name].strftime('%Y-%m-%d') for name in sorted(moving)},
         'history': df_all_full,
-        'burns': burns(df_all_full, p, moving),
+        'burns_detailed': (detailed := burns_detailed(df_all_full, p, moving)),
+        'burns': detailed[BURN_COLUMNS],
         'data_time': gp_meta['timestamp'],
         'warnings': warnings,
     }
