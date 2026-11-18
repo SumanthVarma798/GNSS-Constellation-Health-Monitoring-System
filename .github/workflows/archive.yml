@@ -112,7 +112,9 @@ jobs:
         if: steps.due.outputs.group == 'orbital' || steps.due.outputs.group == 'all'
         # CelesTrak's GNSS group changes only 2 to 3 times a day. A run that finds the same element sets as the ones
         # already published ends here: the two publish jobs below are skipped, so it costs one short job.
-        run: python scripts/orbit_publish_due.py --archive archive >> "$GITHUB_OUTPUT"
+        # Fails open: if the check itself cannot decide, both publish jobs run as they always did, and the archive is
+        # still saved by the next step.
+        run: python scripts/orbit_publish_due.py --archive archive >> "$GITHUB_OUTPUT" || printf 'orbits_changed=true\nhome_due=true\n' >> "$GITHUB_OUTPUT"
 
       - name: Save the changes and the run log line to the archive
         working-directory: archive
