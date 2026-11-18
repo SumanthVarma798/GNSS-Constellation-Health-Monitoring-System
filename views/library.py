@@ -132,11 +132,8 @@ def draw_ours():
             with st.container(key=f"item_{key}"):
                 st.html(shelf.card_html(key, content, fresh, problem))
                 if content is not None:
-                    shown = datetime.now(timezone.utc)
-                    words = shelf.dataset_citations(key, content, shown)
-                    accessed = shown.strftime("%Y-%m-%d %H:%M")
-                    long_words = words["long"].replace(f"Accessed {accessed} UTC.", "Accessed {accessed} UTC.")
-                    copy_buttons_frame({"Copy short citation": words["short"], "Copy long citation": long_words})
+                    words = shelf.dataset_citations(key, content, accessed="{accessed}")   # filled at the click
+                    copy_buttons_frame({"Copy short citation": words["short"], "Copy long citation": words["long"]})
                     name = shelf.file_name(key)
                     st.download_button(f"Download {name}", content, file_name=name, key=f"dl_{key}", on_click="ignore",
                                        mime="text/csv" if name.endswith(".csv") else "application/json",

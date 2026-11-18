@@ -6,7 +6,7 @@
 __ROOT__
 html, body { margin: 0; background: transparent; }
 body { font: var(--fs-small)/1.45 __FONT__; color: var(--ink); }
-.btns { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
+.btns { display: flex; flex-wrap: wrap; gap: 10px; box-sizing: border-box; width: 100%; padding: 4px 8px 12px 4px; }   /* room for the raised shadow inside the frame */
 button {
   flex: 1 1 160px;
   width: 100%;
@@ -40,7 +40,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     const now = new Date();
     const hh = String(now.getUTCHours()).padStart(2, "0");
     const mm = String(now.getUTCMinutes()).padStart(2, "0");
-    return now.toISOString().slice(0, 10) + " " + hh + ":" + mm + " UTC";
+    return now.toISOString().slice(0, 10) + " " + hh + ":" + mm;   // the format already says UTC
   };
   const wordsAtClick = text => text.replaceAll("{accessed}", stamp());
   const fitFrame = () => {   // the frame takes its content's height: nothing clipped, no gap (as the other frames)
@@ -63,7 +63,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     button.textContent = message;
     say(message);
     fitFrame();
-    setTimeout(() => { button.textContent = label; fitFrame(); }, 2000);
+    clearTimeout(button.reset);   // a second click restarts the 2 s, so an earlier click's timer cannot cut it short
+    button.reset = setTimeout(() => { button.textContent = label; fitFrame(); }, 2000);
   };
   Object.entries(controls).forEach(([label, text], index) => {
     const button = document.createElement("button");

@@ -162,3 +162,12 @@ def test_dataset_copy_buttons_frame_is_filled_and_keeps_accessed_for_the_browser
     assert "Orbit record check" in page
     assert "{accessed}" in page
     assert "__ROOT__" not in page and "__FONT__" not in page and "__DATA__" not in page and "__PLACEHOLDER__" not in page
+
+
+def test_a_copied_long_citation_says_utc_once():
+    """The copy buttons fill {accessed} with a bare time; the long form's own words add "UTC" once."""
+    from ui.components.copy_buttons import PAGE_FILE
+
+    words = shelf.dataset_citations("lifecycles", b"at_utc\n2026-11-13T00:00:00Z\n", accessed="{accessed}")
+    assert words["long"].count("UTC") == 1 and "Accessed {accessed} UTC." in words["long"]
+    assert '+ " UTC"' not in PAGE_FILE.read_text(encoding="utf-8")
