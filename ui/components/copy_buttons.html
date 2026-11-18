@@ -58,6 +58,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       document.body.append(hold); hold.select();
       try { done = document.execCommand("copy"); } catch (e) { done = false; }
       hold.remove();
+      button.focus({ preventScroll: true });   // the hidden copy took focus: give it back, for keyboard and screen readers
     }
     const message = done ? "Copied" : "Copy failed: use Download below";
     button.textContent = message;

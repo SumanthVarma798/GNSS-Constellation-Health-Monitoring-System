@@ -171,3 +171,10 @@ def test_a_copied_long_citation_says_utc_once():
     words = shelf.dataset_citations("lifecycles", b"at_utc\n2026-11-13T00:00:00Z\n", accessed="{accessed}")
     assert words["long"].count("UTC") == 1 and "Accessed {accessed} UTC." in words["long"]
     assert '+ " UTC"' not in PAGE_FILE.read_text(encoding="utf-8")
+
+
+def test_citation_text_cannot_end_the_frames_script():
+    from ui.components.copy_buttons import copy_buttons_html
+
+    page = copy_buttons_html({"Copy short citation": 'A </script><script>alert(1)</script> "B"'})
+    assert "</script><script>alert" not in page and "\\u003c/script\\u003e" in page
