@@ -4,11 +4,12 @@ The numbers marked "our choice" are not from a standard: they are named on the p
 """
 from datetime import timedelta
 
-# Home's counts, made four times a day by the archive job (scripts/home_snapshot.py, .github/workflows/archive.yml).
-SNAPSHOT_URL = ("https://raw.githubusercontent.com/SumanthVarma798/"
-                "GNSS-Constellation-Health-Monitoring-System/orbit-data/home_snapshot.json")
-# Older than this and Home counts again itself. Our choice: the job runs every 6 to 7 hours, so one late run is
-# covered and two are not.
+from evidence.settings import ORBIT_DATA_URL
+
+# Home's counts, made by the archive job when the orbit copy changes, and at least every 8 hours (HOME_COUNT_EVERY) (scripts/home_snapshot.py, .github/workflows/archive.yml).
+SNAPSHOT_URL = ORBIT_DATA_URL + "home_snapshot.json"
+# Older than this and Home counts again itself. Our choice: counts are made at least every 8 hours, so one missed
+# run is covered.
 SNAPSHOT_MAX_AGE = timedelta(hours=14)
 
 # Who runs each system and where it serves, for a reader new to them: {system (ui/systems.py): (who, where)}.
@@ -107,7 +108,7 @@ HOW = [
         ("Two sources, never mixed", ["orbit and station: public tracking records from CelesTrak and Space-Track",
                                       "clock and flag: the IGS daily broadcast file",
                                       "where the two disagree, Worth a look says so"], "database"),
-        ("Counted ahead", ["Home's counts are made four times a day", "the headline says when they were made"],
+        ("Counted ahead", ["Home's counts are made when the orbit data changes, and at least every 8 hours", "the headline says when they were made"],
          "hourglass"),
         ("Default limits", ["Home always uses the default limits",
                             "limits moved on a constellation's page apply there only"], "tool"),

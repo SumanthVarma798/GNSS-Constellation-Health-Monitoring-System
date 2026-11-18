@@ -25,11 +25,12 @@ def private_celestrak_copy(monkeypatch, tmp_path):
     monkeypatch.setattr(data, "signals_heard", lambda: {})
     monkeypatch.setattr(home_data, "_snapshot", lambda: {})   # Home counts itself, unless a test publishes a copy
     monkeypatch.setattr(celestrak, "fetch_copy", _no_copy)
+    monkeypatch.setattr(celestrak, "copy_rows", _no_copy)
     # The tests written before the Home page open on the Overview, as the dashboard then did; tests/test_home.py
     # sets the default back.
     monkeypatch.setattr(shell, "DEFAULT_PAGE", "Overview")
     home_data.part_summary.clear()   # Home keeps its counts; a test must not read another test's
 
 
-def _no_copy(norads):
+def _no_copy(*norads):
     raise requests.ConnectionError("no orbit copy in tests")

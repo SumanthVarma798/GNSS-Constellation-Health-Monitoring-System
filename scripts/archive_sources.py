@@ -7,7 +7,8 @@ Writes only when a source's content or availability changed. Tries every
 source even if one fails, then exits with an error so the failure is noticed.
 Every run, whatever happens, adds one line to the archive's run log, runs/archive.csv.
 Waits between two requests to the same site, as long as MIN_GAP_BETWEEN_DOWNLOADS
-in evidence/settings.py says. A site that refused us, or did not answer, is left
+in evidence/settings.py says, and does not ask a gated site (RUN_GATED_SITES: CelesTrak) that an earlier run asked
+less than that gap ago. A site that refused us, or did not answer, is left
 alone until its back-off has passed (limits.csv in the archive): that is shown,
 but is not a new failure.
 """
@@ -18,10 +19,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from evidence.archive import (FetchFailed, log_run, note_answer, pacer, read_limits, record, thin, waiting_until,
+from evidence.archive import (FetchFailed, SKIPPED_WORDS, asked_lately, log_run, note_answer, pacer, read_limits, record, site, thin, waiting_until,
                               write_limits)
 from evidence import recent_launches, x_reader
-from evidence.settings import ARCHIVE_THIN_GROUPS
+from evidence.settings import ARCHIVE_THIN_GROUPS, RUN_GATED_SITES
 from evidence.sources import ARCHIVED_SOURCES, PROVISIONAL_GROUPS, archived_addresses
 
 RUN_LOG = "archive"  # runs/archive.csv in the archive folder
@@ -37,7 +38,8 @@ def main():
     parser.add_argument("--group", choices=sorted(ARCHIVED_SOURCES), help="fetch only this group (default: all)")
     args = parser.parse_args()
 
-    started, changed, thinned, failures, graded_failures, waiting = utc_now(), [], [], 0, 0, 0
+    started, changed, thinned, failures, graded_failures, waiting, gated = utc_now(), [], [], 0, 0, 0, 0
+    asked_gated = set()   # the rate-limited sites this run really asked (read back by the gate and orbit-ages)
     addresses = archived_addresses(args.group)
     result = "stopped early"  # replaced below unless something unexpected ends the run
     paced_fetch, limits = pacer(), read_limits(args.archive)
@@ -60,7 +62,15 @@ def main():
                 waiting += 1
                 print(f"waiting    {address} (refused lately; asked again after {until:%Y-%m-%d %H:%M} UTC)")
                 continue
+            jobs = {"archive all", *(f"archive {name}" for name, group in ARCHIVED_SOURCES.items() if address in group)}
+            last = asked_lately(args.archive, address, jobs, now)
+            if last:  # a run asked this site lately (CelesTrak: one download per 2 hours): not a failure, not asked now
+                gated += 1
+                print(f"skipped    {address} (asked at {last:%Y-%m-%d %H:%M} UTC, less than its minimum gap ago)")
+                continue
             graded = graded_group if graded_group is not None else address not in provisional_addresses
+            if site(address) in RUN_GATED_SITES:
+                asked_gated.add(site(address))
             try:
                 reply = readers[address](address) if address in readers else paced_fetch(address)
             except FetchFailed as error:
@@ -90,12 +100,15 @@ def main():
             print(f"thinned    {row['sha256']}  {row['address']}")
         result = f"failed: {failures} of {len(addresses)} sources" if failures else "ok"
         result += f"; {waiting} waiting out a refusal" if waiting else ""
+        result += f"; {gated} {SKIPPED_WORDS}" if gated else ""
+        if waiting or gated:   # only then is it unclear which rate-limited sites it asked (the gate and orbit-ages read this)
+            result += f"; asked: {', '.join(sorted(asked_gated)) or 'none'}"
     finally:
         write_limits(args.archive, limits)
         log_run(args.archive, RUN_LOG, f"archive {args.group or 'all'}", started, utc_now(), result,
                 " ".join(changed + ([f"thinned {len(thinned)} old {'copy' if len(thinned) == 1 else 'copies'}"]
                                     if thinned else [])) or "nothing")
-    attempted = len(addresses) - waiting
+    attempted = len(addresses) - waiting - gated
     if failures and (graded_failures or (attempted and failures == attempted)):
         sys.exit(f"{failures} of {len(addresses)} sources could not be fetched.")
 

@@ -128,13 +128,13 @@ def failing_words(since, now, tz=timezone.utc, what="CelesTrak"):
 
 
 def copy_words(copy_at, now, tz=timezone.utc):
-    """'Orbits from CelesTrak, fetched 05:06 · next fetch about 08:15' for a copy in use: in words a reader of the
+    """'Orbits from CelesTrak, newest copy from 05:06 · next fetch about 08:15' for a copy in use: in words a reader of the
     dashboard knows (the archive job that fetches them is ours, not theirs).
 
     The copy's time and the archive job's next orbital run are shown in `tz`, with the day in front when not today.
     No next time is shown when the workflow file cannot be read or has no orbital schedule.
     """
-    words = f"Orbits from CelesTrak, fetched {_day_time(copy_at, now, tz)}"
+    words = f"Orbits from CelesTrak, newest copy from {_day_time(copy_at, now, tz)}"   # a run that finds no change makes no new copy
     try:
         crons = jobs.schedules((WORKFLOWS_DIR / "archive.yml").read_text(encoding="utf-8")).get("orbital", [])
         next_at = jobs.next_run(crons, now) if crons else None
@@ -240,24 +240,25 @@ def _data_chip(names, window_days, params, live, now):
 
 
 def next_words(left):
-    """'Next update in 1 h 42 m' for `left` seconds to go; minutes are rounded up, so it never says 0 m too soon."""
+    """'Next check in 1 h 42 m' for `left` seconds to go; minutes are rounded up, so it never says 0 m too soon.
+    A check is a look for a newer copy of the orbit data on GitHub; the copy itself is made every 2 hours."""
     if left <= 0:
-        return "Next update due now"
+        return "Next check due now"
     hours, minutes = divmod(-(-int(left) // 60), 60)
     parts = ([f"{hours} h"] if hours else []) + ([f"{minutes} m"] if minutes or not hours else [])
-    return "Next update in " + " ".join(parts)
+    return "Next check in " + " ".join(parts)
 
 
 def _left(tried, now):
-    """Seconds to the next automatic refresh; 0 before the first try."""
-    return max(0.0, (tried + celestrak.EVERY - now).total_seconds()) if tried else 0.0
+    """Seconds to the next automatic check for a newer copy; 0 before the first try."""
+    return max(0.0, (tried + celestrak.LOOK_EVERY - now).total_seconds()) if tried else 0.0
 
 
 def _ring(live, now):
     """A style rule: the ring round the refresh button holds the share of the wait left before the next automatic
     refresh, and empties over that time. A keyframe name per run restarts it from the right place."""
     left = _left(live["tried"], now)
-    share = f"{100 * left / celestrak.EVERY.total_seconds():.2f}%"
+    share = f"{100 * left / celestrak.LOOK_EVERY.total_seconds():.2f}%"
     name = f"ring{now:%H%M%S%f}"
     return (f"<style>@keyframes {name} {{ from {{ --left: {share}; }} to {{ --left: 0%; }} }}"
             f".st-key-refresh_button button::before {{ --left: {share}; animation: {name} {left:.0f}s linear forwards; }}"

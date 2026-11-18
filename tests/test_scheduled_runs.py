@@ -1,7 +1,7 @@
 """Scheduled runs: a failed download is tried again, never faster than the source allows, and every run
 leaves one line in the run log. No network: replies are canned; the clock is frozen."""
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import re
 
@@ -202,3 +202,51 @@ def test_rinex_check_can_check_a_past_day_again_without_publishing_it():
     assert "DAY_INPUT: ${{ inputs.day }}" in workflow
     assert 'orbit_record_gap.py ${DAY_INPUT:+--day "$DAY_INPUT"} --json' in workflow
     assert "if: success() && !inputs.day" in workflow
+
+
+def test_a_run_started_within_celestraks_two_hours_of_the_last_skips_the_download_and_does_not_reset_the_clock(monkeypatch, tmp_path):
+    asked, _ = answers(monkeypatch, Reply(200, b"first"), Reply(200, b"second"))
+    run_job(monkeypatch, tmp_path, "orbital")                       # at RUN_TIME: asks CelesTrak
+    assert len(asked) == 1
+
+    for minutes in (30, 100):                                       # by hand, then a later one: both inside 2 h
+        with time_machine.travel(RUN_TIME + timedelta(minutes=minutes), tick=False):
+            monkeypatch.setattr(sys, "argv", ["archive_sources.py", "--archive", str(tmp_path), "--group", "orbital"])
+            archive_sources.main()
+    assert len(asked) == 1
+    skipped = read_runs(tmp_path, "archive")[1]
+    assert skipped["result"].startswith("ok; 1 skipped") and skipped["changed"] == "nothing"
+
+    with time_machine.travel(RUN_TIME + timedelta(hours=1, minutes=55), tick=False):   # a run a few minutes early: skipped too
+        monkeypatch.setattr(sys, "argv", ["archive_sources.py", "--archive", str(tmp_path), "--group", "orbital"])
+        archive_sources.main()
+    assert len(asked) == 1   # the full 2 hours: CelesTrak's rule is strict
+
+    with time_machine.travel(RUN_TIME + timedelta(hours=2), tick=False):
+        monkeypatch.setattr(sys, "argv", ["archive_sources.py", "--archive", str(tmp_path), "--group", "orbital"])
+        archive_sources.main()
+    assert len(asked) == 2   # the skipped runs did not move the clock: counted from the run that asked
+
+
+def test_only_celestrak_is_gated_other_sites_are_asked_every_run(monkeypatch, tmp_path):
+    asked, _ = answers(monkeypatch, Reply(200, b"a"), Reply(200, b"a"))
+    run_job(monkeypatch, tmp_path, "documents")
+    run_job(monkeypatch, tmp_path, "documents")
+    assert len(asked) == 2
+
+
+def test_the_tests_workflow_cancels_only_superseded_pull_request_runs():
+    workflow = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "tests.yml").read_text()
+
+    assert "group: tests-${{ github.ref }}" in workflow
+    assert "cancel-in-progress: ${{ github.event_name == 'pull_request' }}" in workflow
+
+
+def test_a_run_counts_as_a_celestrak_check_only_when_it_asked_celestrak():
+    from evidence.archive import asked_site
+
+    assert asked_site("ok", "celestrak.org") and asked_site("failed: 1 of 2 sources", "celestrak.org")
+    assert asked_site("ok; 1 waiting out a refusal; asked: celestrak.org", "celestrak.org")   # waited on another, asked it
+    assert not asked_site("ok; 1 waiting out a refusal; asked: none", "celestrak.org")         # an all run that asked others only
+    assert not asked_site("ok; 1 skipped: asked less than the site's minimum gap ago; asked: none", "celestrak.org")
+    assert not asked_site("ok; 1 waiting out a refusal", "celestrak.org")                     # an older line: cannot tell

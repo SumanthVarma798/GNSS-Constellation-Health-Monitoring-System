@@ -35,6 +35,21 @@ MIN_GAP_BETWEEN_DOWNLOADS = {
     # Seven search feeds in a row; how often Google allows them is not stated (guess).
     "news.google.com": timedelta(seconds=10),
 }
+# How often the dashboard looks for a newer copy of CelesTrak's GNSS group on GitHub (latest_gnss.json on branch
+# orbit-data). Reading a raw GitHub file is cheap and CelesTrak is not asked, so this is not bound by the 2-hour gap
+# above. The archive job publishes a new copy every 2 hours, a few minutes after its run starts (archive.yml), so a
+# look every 20 minutes shows a published copy within about 20 minutes of its publication.
+COPY_LOOK_GAP = timedelta(minutes=20)
+# Where the archive job publishes what the dashboard reads (branch orbit-data), and how often Home's counts are made
+# anyway when the orbit copy has not changed (the orbit-checks files and the clock still move them).
+ORBIT_DATA_URL = "https://raw.githubusercontent.com/SumanthVarma798/GNSS-Constellation-Health-Monitoring-System/orbit-data/"
+HOME_COUNT_EVERY = timedelta(hours=8)
+# A scheduled or manual run does not download from these sites when the archive's run log shows a run asked them less
+# than the site's FULL minimum gap ago (no slack: CelesTrak's rule is strict, and it blocked us on 17 Oct). A scheduled run
+# that GitHub starts a few minutes early is skipped, and the next one, 2 hours later, fetches. This also keeps a manual
+# run of the orbital group from asking CelesTrak again right after a scheduled one.
+RUN_GATED_SITES = ("celestrak.org",)
+RUN_GATE_SLACK = timedelta(0)
 DEFAULT_MIN_GAP = timedelta(seconds=5)  # any other site: no stated limit, so a polite pause
 # The most one run of a group may spend waiting out gaps, so it ends well inside archive.yml's 30-minute fetch step.
 RUN_WAIT_BUDGET = timedelta(minutes=15)

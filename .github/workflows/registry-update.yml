@@ -3,6 +3,9 @@
 # to review. It never writes to main. Every run adds one line to the archive's run log,
 # runs/registry-update.csv, then tells Healthchecks.io how it went (check registry-update), which emails when
 # a run fails or none arrives within its grace time.
+# CelesTrak: GP orbit elements are read from the archive job's copy on orbit-data (the archive's orbital group is the
+# only job that downloads the GNSS group, once per 2 hours). Asked directly: SATCAT (not in the copy), and GP elements
+# for a satellite the copy lacks (the log says so).
 
 name: Registry update
 

@@ -50,7 +50,7 @@ def test_the_material_holds_each_job_with_its_schedule_and_the_comment_that_expl
     assert "name: Archive sources" in job
     assert "- cron: '30 0 * * *'" in job and "00:30 UTC = 06:00 India time" in job
     assert "runs-on" not in job and "steps:" not in job   # the job's steps stay out
-    assert "[.github/workflows/archive.yml]" in text and "- cron: '15 1,8,14,20 * * *'" in text
+    assert "[.github/workflows/archive.yml]" in text and "- cron: '15 */2 * * *'" in text
 
 
 def test_the_material_counts_the_tracked_satellites_and_lists_merged_pull_requests_newest_first_after_the_documents():

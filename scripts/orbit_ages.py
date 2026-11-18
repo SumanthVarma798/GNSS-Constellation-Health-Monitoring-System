@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from config import config  # noqa: E402
 from data import celestrak, spacetrack  # noqa: E402
-from evidence.archive import log_run  # noqa: E402
+from evidence.archive import asked_site, log_run, read_runs  # noqa: E402
 from evidence.settings import ORBIT_AGE_COLUMNS, ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS  # noqa: E402
 
 
@@ -107,6 +107,13 @@ def _old_list(rows):
     return out
 
 
+def _last_orbital_check(archive):
+    """When an orbital run of the archive job last asked CelesTrak (run log runs/archive.csv), or None."""
+    asked = [datetime.fromisoformat(row["started"].replace("Z", "+00:00")) for row in read_runs(archive, "archive")
+             if row["job"] in ("archive orbital", "archive all") and asked_site(row["result"], "celestrak.org")]
+    return max(asked, default=None)
+
+
 def run(archive, outcome, now=None, env=None):
     """Write orbit ages to the archive, one line to the run log, and one JSON outcome file."""
     fixed_now = now
@@ -119,9 +126,18 @@ def run(archive, outcome, now=None, env=None):
     norads = sorted({norad for _, _, norad in satellites})
     celestrak_rows = {}
     try:
-        celestrak_rows, _ = celestrak.fetch(norads)
-    except (requests.RequestException, ValueError, KeyError) as error:
-        notes.append(f"CelesTrak failed: {_short_reason(error)}")
+        # The archive job's copy of CelesTrak's GNSS group (latest_gnss.json on orbit-data): this job never contacts
+        # CelesTrak, whose one download per 2 hours the archive's orbital group uses.
+        celestrak_rows, _, _ = celestrak.fetch_copy(norads)
+        # The copy's own time is when its content last CHANGED, so it says nothing about a copy that is current but
+        # unchanged. What shows the archive's orbital runs have stopped is the time of their last check.
+        checked = _last_orbital_check(archive)
+        if checked is None:
+            notes.append("no orbital check of CelesTrak recorded in the archive's run log")
+        elif now - checked > 2 * celestrak.EVERY:
+            notes.append(f"CelesTrak copy last checked {checked:%Y-%m-%d %H:%MZ}, over 4 hours ago")
+    except (requests.RequestException, ValueError, KeyError, TypeError, AttributeError) as error:
+        notes.append(f"CelesTrak copy failed: {_short_reason(error)}")
 
     stale_norads = []
     for _, _, norad in satellites:

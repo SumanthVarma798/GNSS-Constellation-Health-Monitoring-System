@@ -193,8 +193,26 @@ def new_prn_lines(before_signal_ids, after_signal_ids, prn_lines):
     return by_svn
 
 
+def orbit_copy():
+    """({catalogue number: GP row}, the GNSS group's rows) from the archive job's copy on orbit-data, read once per run,
+    or None when it cannot be read. CelesTrak is not asked for these: the archive's orbital group is the one job that
+    downloads GP data from it (once per 2 hours)."""
+    if "copy" not in _COPY:
+        try:
+            group, outside, _ = celestrak.copy_rows()
+            _COPY["copy"] = ({int(row["NORAD_CAT_ID"]): row for row in [*outside, *group]}, group)
+        except (requests.RequestException, ValueError, KeyError, TypeError, AttributeError):
+            _COPY["copy"] = None
+    return _COPY["copy"]
+
+
+_COPY = {}
+
+
 def celestrak_read(catalogue_no):
-    """One satellite's CelesTrak catalogue and orbit read, with non-fatal read status."""
+    """One satellite's CelesTrak catalogue (asked of CelesTrak: SATCAT is a different file from the GP data, and our
+    copy does not hold it) and orbit read (from our copy; CelesTrak is asked directly only for a satellite the copy
+    lacks, and the log says so), with non-fatal read status."""
     read = {"checked": False, "catalogue_status": "none", "catalogue_entry": None,
             "orbit_status": "none", "orbit_row": None}
     if not str(catalogue_no).isdigit():
@@ -207,13 +225,20 @@ def celestrak_read(catalogue_no):
         read["catalogue_status"] = "error"
     else:
         read["catalogue_status"] = "ok" if read["catalogue_entry"] else "none"
-    try:
-        rows = celestrak._get(CATNR=catnr, empty_text="No GP data found")
-    except (requests.RequestException, ValueError, KeyError, TypeError):
+    copy = orbit_copy()
+    if copy is None:   # no copy to read: say so, and do not ask CelesTrak for GP data instead
         read["orbit_status"] = "error"
-    else:
-        read["orbit_status"] = "ok" if rows else "none"
-        read["orbit_row"] = rows[0] if rows else None
+        return read
+    row = copy[0].get(catnr)
+    if row is None:
+        # Not asked of CelesTrak here: only the archive's orbital runs ask it, once per 2 hours at most.
+        # The copy holds CelesTrak's whole GNSS group and every tracked satellite outside it, so one missing from it has no
+        # orbit record we can use.
+        print(f"Catalogue number {catnr} is not in our orbit copy: no orbit record this run.", file=sys.stderr)
+        read["orbit_status"] = "none"
+        return read
+    read["orbit_status"] = "ok"
+    read["orbit_row"] = row
     return read
 
 
@@ -279,10 +304,7 @@ def main():
     dashboard_rows, dashboard_lines, dashboard_details, celestrak_reads = dashboard_updates(before[2], after_satellites,
                                                                                             today.isoformat())
     before_sightings = read_table(REGISTRY_SIGHTINGS_FILE)
-    try:
-        group = celestrak._get(GROUP="gnss")
-    except (requests.RequestException, ValueError, KeyError, TypeError):
-        group = None
+    group = (orbit_copy() or (None, None))[1]   # the GNSS group from our copy, not a CelesTrak download
     sightings, sighting_reads, listed = sightings_update(before_sightings, after_satellites, group)
     write_table(REGISTRY_SIGHTINGS_FILE, REGISTRY_SATELLITE_COLUMNS, sightings)
     after_sightings = read_table(REGISTRY_SIGHTINGS_FILE)
