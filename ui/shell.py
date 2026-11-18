@@ -240,24 +240,25 @@ def _data_chip(names, window_days, params, live, now):
 
 
 def next_words(left):
-    """'Next update in 1 h 42 m' for `left` seconds to go; minutes are rounded up, so it never says 0 m too soon."""
+    """'Next check in 1 h 42 m' for `left` seconds to go; minutes are rounded up, so it never says 0 m too soon.
+    A check is a look for a newer copy of the orbit data on GitHub; the copy itself is made every 2 hours."""
     if left <= 0:
-        return "Next update due now"
+        return "Next check due now"
     hours, minutes = divmod(-(-int(left) // 60), 60)
     parts = ([f"{hours} h"] if hours else []) + ([f"{minutes} m"] if minutes or not hours else [])
-    return "Next update in " + " ".join(parts)
+    return "Next check in " + " ".join(parts)
 
 
 def _left(tried, now):
-    """Seconds to the next automatic refresh; 0 before the first try."""
-    return max(0.0, (tried + celestrak.EVERY - now).total_seconds()) if tried else 0.0
+    """Seconds to the next automatic check for a newer copy; 0 before the first try."""
+    return max(0.0, (tried + celestrak.LOOK_EVERY - now).total_seconds()) if tried else 0.0
 
 
 def _ring(live, now):
     """A style rule: the ring round the refresh button holds the share of the wait left before the next automatic
     refresh, and empties over that time. A keyframe name per run restarts it from the right place."""
     left = _left(live["tried"], now)
-    share = f"{100 * left / celestrak.EVERY.total_seconds():.2f}%"
+    share = f"{100 * left / celestrak.LOOK_EVERY.total_seconds():.2f}%"
     name = f"ring{now:%H%M%S%f}"
     return (f"<style>@keyframes {name} {{ from {{ --left: {share}; }} to {{ --left: 0%; }} }}"
             f".st-key-refresh_button button::before {{ --left: {share}; animation: {name} {left:.0f}s linear forwards; }}"

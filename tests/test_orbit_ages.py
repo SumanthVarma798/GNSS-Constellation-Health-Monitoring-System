@@ -35,13 +35,13 @@ def test_statuses_space_track_fallback_and_outcome_json(monkeypatch, tmp_path):
     track(monkeypatch)
     asked = []
 
-    def celestrak_fetch(norads):
+    def celestrak_fetch(norads):   # the archive job's copy: the only CelesTrak data this job reads
         assert sorted(norads) == [36585, 39635, 40547, 44204]
         return {
             39635: {"EPOCH": epoch(1.9)},
             40547: {"EPOCH": epoch(2.0)},
             44204: {"EPOCH": epoch(3.0)},
-        }, {36585, 39635, 40547, 44204}
+        }, {36585, 39635, 40547, 44204}, NOW
 
     def spacetrack_fetch(username, password, norads):
         asked.append((username, password, list(norads)))
@@ -50,7 +50,7 @@ def test_statuses_space_track_fallback_and_outcome_json(monkeypatch, tmp_path):
             44204: {"EPOCH": epoch(3.5)},
         }
 
-    monkeypatch.setattr(orbit_ages.celestrak, "fetch", celestrak_fetch)
+    monkeypatch.setattr(orbit_ages.celestrak, "fetch_copy", celestrak_fetch)
     monkeypatch.setattr(orbit_ages.spacetrack, "fetch", spacetrack_fetch)
     outcome = tmp_path / "outcome.json"
 
@@ -80,7 +80,7 @@ def test_statuses_space_track_fallback_and_outcome_json(monkeypatch, tmp_path):
 
 def test_space_track_login_refused_is_a_note_not_a_failure(monkeypatch, tmp_path):
     track(monkeypatch)
-    monkeypatch.setattr(orbit_ages.celestrak, "fetch", lambda norads: ({39635: {"EPOCH": epoch(2.1)}}, set(norads)))
+    monkeypatch.setattr(orbit_ages.celestrak, "fetch_copy", lambda norads: ({39635: {"EPOCH": epoch(2.1)}}, set(norads), NOW))
     monkeypatch.setattr(orbit_ages.spacetrack, "fetch",
                         lambda username, password, norads: (_ for _ in ()).throw(LoginRefused("no")))
     outcome = tmp_path / "outcome.json"
@@ -97,7 +97,7 @@ def test_space_track_is_not_called_without_login_and_csv_header_is_written_once(
     track(monkeypatch)
     called = []
 
-    monkeypatch.setattr(orbit_ages.celestrak, "fetch", lambda norads: ({39635: {"EPOCH": epoch(1.0)}}, set(norads)))
+    monkeypatch.setattr(orbit_ages.celestrak, "fetch_copy", lambda norads: ({39635: {"EPOCH": epoch(1.0)}}, set(norads), NOW))
 
     def should_not_run(*args, **kwargs):
         called.append((args, kwargs))
@@ -118,7 +118,7 @@ def test_space_track_is_not_called_without_login_and_csv_header_is_written_once(
 
 def test_celestrak_failure_is_not_fatal(monkeypatch, tmp_path):
     track(monkeypatch)
-    monkeypatch.setattr(orbit_ages.celestrak, "fetch",
+    monkeypatch.setattr(orbit_ages.celestrak, "fetch_copy",
                         lambda norads: (_ for _ in ()).throw(requests.Timeout("timed out")))
     monkeypatch.setattr(orbit_ages.spacetrack, "fetch", lambda username, password, norads: {})
     outcome = tmp_path / "outcome.json"
@@ -127,4 +127,4 @@ def test_celestrak_failure_is_not_fatal(monkeypatch, tmp_path):
 
     run_line = read_runs(tmp_path, "orbit-ages")[0]
     assert run_line["result"] == "success"
-    assert "CelesTrak failed:" in run_line["changed"]
+    assert "CelesTrak copy failed:" in run_line["changed"]

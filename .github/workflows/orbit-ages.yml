@@ -6,7 +6,8 @@ name: Orbit ages
 
 on:
   schedule:
-    # 03:30 UTC = 09:00 India time, over 2 hours after archive.yml's CelesTrak fetch at 01:15.
+    # 03:30 UTC = 09:00 India time. It reads the archive job's copy of CelesTrak's GNSS group (latest_gnss.json on
+    # orbit-data, newest at 02:15 UTC) and never contacts CelesTrak itself.
     - cron: '30 3 * * *'
   workflow_dispatch:
 

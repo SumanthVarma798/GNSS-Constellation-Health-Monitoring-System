@@ -119,9 +119,13 @@ def run(archive, outcome, now=None, env=None):
     norads = sorted({norad for _, _, norad in satellites})
     celestrak_rows = {}
     try:
-        celestrak_rows, _ = celestrak.fetch(norads)
-    except (requests.RequestException, ValueError, KeyError) as error:
-        notes.append(f"CelesTrak failed: {_short_reason(error)}")
+        # The archive job's copy of CelesTrak's GNSS group (latest_gnss.json on orbit-data): this job never contacts
+        # CelesTrak, whose one download per 2 hours the archive's orbital group uses.
+        celestrak_rows, _, taken = celestrak.fetch_copy(norads)
+        if now - taken > 2 * celestrak.EVERY:
+            notes.append(f"CelesTrak copy is from {taken:%Y-%m-%d %H:%MZ}, older than 2 refreshes")
+    except (requests.RequestException, ValueError, KeyError, TypeError, AttributeError) as error:
+        notes.append(f"CelesTrak copy failed: {_short_reason(error)}")
 
     stale_norads = []
     for _, _, norad in satellites:

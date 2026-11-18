@@ -35,6 +35,11 @@ MIN_GAP_BETWEEN_DOWNLOADS = {
     # Seven search feeds in a row; how often Google allows them is not stated (guess).
     "news.google.com": timedelta(seconds=10),
 }
+# How often the dashboard looks for a newer copy of CelesTrak's GNSS group on GitHub (latest_gnss.json on branch
+# orbit-data). Reading a raw GitHub file is cheap and CelesTrak is not asked, so this is not bound by the 2-hour gap
+# above. The archive job publishes a new copy every 2 hours, a few minutes after its run starts (archive.yml), so a
+# look every 20 minutes shows a published copy within about 20 minutes of its publication.
+COPY_LOOK_GAP = timedelta(minutes=20)
 DEFAULT_MIN_GAP = timedelta(seconds=5)  # any other site: no stated limit, so a polite pause
 # The most one run of a group may spend waiting out gaps, so it ends well inside archive.yml's 30-minute fetch step.
 RUN_WAIT_BUDGET = timedelta(minutes=15)

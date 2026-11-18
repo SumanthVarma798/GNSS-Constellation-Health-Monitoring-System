@@ -270,15 +270,16 @@ def test_rows_from_celestrak_make_the_chip_say_today_and_its_time(monkeypatch):
 def test_the_bar_says_how_long_to_the_next_automatic_refresh():
     chips = " ".join(htmls(run()))
 
-    assert '<span class="next">Next update in 2 h</span>' in chips   # tried at the frozen 12:00 UTC, every two hours
+    assert '<span class="next">Next check in 20 m</span>' in chips   # tried at the frozen 12:00 UTC, a look every 20 minutes
 
 
 def test_next_words_say_hours_and_minutes_rounded_up():
-    assert next_words(1 * 3600 + 41 * 60 + 5) == "Next update in 1 h 42 m"
-    assert next_words(7200) == "Next update in 2 h"
-    assert next_words(42 * 60) == "Next update in 42 m"
-    assert next_words(20) == "Next update in 1 m"
-    assert next_words(0) == "Next update due now"
+    assert next_words(1 * 3600 + 41 * 60 + 5) == "Next check in 1 h 42 m"
+    assert next_words(7200) == "Next check in 2 h"
+    assert next_words(0) == "Next check due now"
+    assert next_words(42 * 60) == "Next check in 42 m"
+    assert next_words(20) == "Next check in 1 m"
+    assert next_words(0) == "Next check due now"
 
 
 def test_the_clock_starts_at_utc_and_a_double_click_or_key_switches_to_local_12_hour_time():
@@ -368,7 +369,7 @@ def test_the_copy_chip_says_which_copy_and_when_the_next_orbital_run_is_due(monk
     monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: ({}, set(), FROZEN - timedelta(hours=1)))
     chips = " ".join(htmls(run(lambda at: at.button(key="refresh_button").click())))
 
-    assert "<b>Source</b> Orbits from " in chips and ", fetched 11:00 · next fetch about 14:15" in chips   # the chip's tip
+    assert "<b>Source</b> Orbits from " in chips and ", fetched 11:00 · next fetch about 12:15" in chips   # the chip's tip
 
 
 def test_when_the_copy_read_fails_the_chip_says_the_archive_copy_is_failing(monkeypatch):
@@ -422,9 +423,9 @@ def test_copy_words_say_the_copy_time_and_the_next_orbital_run():
     now = FROZEN.replace(hour=9, minute=0)
 
     assert copy_words(now.replace(hour=5, minute=6), now) == \
-        "Orbits from CelesTrak, fetched 05:06 · next fetch about 14:15"
+        "Orbits from CelesTrak, fetched 05:06 · next fetch about 10:15"
     assert copy_words(now.replace(hour=5, minute=6), FROZEN.replace(hour=21, minute=0)) == \
-        "Orbits from CelesTrak, fetched 05:06 · next fetch about 7 Oct 01:15"
+        "Orbits from CelesTrak, fetched 05:06 · next fetch about 22:15"
 
 
 def test_copy_words_leaves_out_the_next_time_without_a_readable_schedule(monkeypatch, tmp_path):

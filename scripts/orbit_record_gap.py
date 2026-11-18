@@ -12,8 +12,7 @@ Prints a Markdown report. Read-only apart from the files it is told to write.
     python scripts/orbit_record_gap.py --day 2026-10-17 --file BRDC00IGS_R_20262900000_01D_MN.rnx
     python scripts/orbit_record_gap.py --fitted fitted.json --previous-fitted-dir archive/orbits/fitted
 
-Orbit records: the bundled history, plus CelesTrak's newest through data.celestrak (which keeps to
-CelesTrak's 2 hours and its saved copy). Issue 77.
+Orbit records: the bundled history, plus CelesTrak's newest through data.celestrak, from the archive job's copy on orbit-data (CelesTrak is not asked). Issue 77.
 """
 import argparse
 import csv
@@ -117,14 +116,15 @@ def cospar_ids():
 
 
 def orbit_records(catalogue_numbers, now):
-    """{catalogue number: [(epoch, line1, line2), ...] oldest first}: bundled history plus CelesTrak's newest."""
+    """{catalogue number: [(epoch, line1, line2), ...] oldest first}: bundled history plus CelesTrak's newest, read from the
+    archive job's copy on orbit-data (direct=False): this job never contacts CelesTrak."""
     records = {}
     for name in HISTORIES:
         history = json.loads((ROOT / "data" / f"{name}_gp_history.json").read_text())["satellites"]
         for rows in history.values():
             for row in rows:
                 records.setdefault(int(row["NORAD_CAT_ID"]), []).append(row)
-    for norad, rows in celestrak.refresh(sorted(catalogue_numbers), now)["rows"].items():
+    for norad, rows in celestrak.refresh(sorted(catalogue_numbers), now, direct=False)["rows"].items():
         records.setdefault(norad, []).extend(rows)
     out = {}
     for norad, rows in records.items():

@@ -48,9 +48,34 @@ def test_every_schedule_line_is_assigned_to_a_group():
         assert ARCHIVED_SOURCES[group], f"'{group}' has a schedule but no sources: its runs would do nothing"
 
 
-def test_orbits_are_kept_four_times_a_day():
-    # CelesTrak asks that unchanged data is not fetched more than every 2 hours; every 5 to 7 hours is well inside.
-    assert re.search(r"- cron: '15 1,8,14,20 \* \* \*'\s+# orbital: four times a day", JOB)
+def test_orbits_are_kept_every_two_hours():
+    # CelesTrak updates its GP data only every 2 hours and allows one download per update.
+    assert re.search(r"- cron: '15 \*/2 \* \* \*'\s+# orbital: every 2 hours", JOB)
+
+
+# Scheduled workflows that still ask celestrak.org themselves, with the reason (the weekly registry job needs CelesTrak's
+# SATCAT catalogue, which the orbit copy on orbit-data does not hold).
+STILL_ASKS_CELESTRAK = {"registry-update.yml": "weekly: SATCAT and one GP request per changed satellite"}
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def downloads_from_celestrak(script):
+    """Whether a script calls CelesTrak itself: celestrak.fetch/_get/catalogue_entry, or refresh without direct=False."""
+    text = (ROOT / "scripts" / f"{script}.py").read_text()
+    return bool(re.search(r"celestrak\.(fetch\(|_get\(|catalogue_entry\()", text)
+                or any("direct=False" not in line for line in text.splitlines() if "celestrak.refresh(" in line))
+
+
+def test_only_the_archive_orbital_group_downloads_gnss_orbits_from_celestrak():
+    # orbit-ages and rinex-check read the copy the orbital group publishes on orbit-data; the archive runs every 2 hours.
+    asking = {path.name for path in (ROOT / ".github" / "workflows").glob("*.yml")
+              if "schedule:" in path.read_text()
+              and any(downloads_from_celestrak(name) for name in re.findall(r"scripts/(\w+)\.py", path.read_text()))}
+    assert asking - {"archive.yml"} == set(STILL_ASKS_CELESTRAK)
+    assert not downloads_from_celestrak("orbit_ages") and not downloads_from_celestrak("orbit_record_gap")
+    assert "fetch_copy" in (ROOT / "scripts" / "orbit_ages.py").read_text()
+    orbital = re.search(r"- cron: '([^']+)'\s+# orbital:", JOB).group(1)
+    assert timedelta(hours=hours_between_runs(orbital)) >= min_gap(CELESTRAK_GNSS_URL)
 
 
 def test_the_job_can_be_started_by_hand_for_any_group():
@@ -81,6 +106,7 @@ def hours_between_runs(cron):
 
 def test_the_shortest_gap_counts_a_list_and_midnight():
     assert hours_between_runs("15 1,8,14,20 * * *") == 5
+    assert hours_between_runs("15 */2 * * *") == 2
     assert hours_between_runs("15 1,2 * * *") == 1
     assert hours_between_runs("15 0,23 * * *") == 1
     assert hours_between_runs("50 */3 * * *") == 3 and hours_between_runs("30 0 * * *") == 24
