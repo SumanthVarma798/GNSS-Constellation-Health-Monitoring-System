@@ -23,6 +23,7 @@ import plotly.graph_objects as go
 
 from ui.figures import burns_settings
 from ui import palette
+from ui.burn_groups import COLOURS, CONFIDENCE_WORDS, VERDICT, group_of
 from ui.tooltip import PLOTLY_HOVER, plotly_card
 
 EAST_WEST = "east-west"
@@ -33,6 +34,9 @@ KIND_LABEL = {EAST_WEST: "East-west", NORTH_SOUTH: "North-south"}
 # The burn list on the page draws the same two shapes (ui/theme.css, .mk.ew and .mk.ns).
 KIND_SYMBOL = {EAST_WEST: "circle", NORTH_SOUTH: "diamond-open"}
 PATTERN_REGULAR, PATTERN_IRREGULAR, PATTERN_TOO_FEW = "regular", "irregular", "too few"
+
+# What burn_timeline needs of the classified burns (ui/burn_record.py classified) to colour a mark by what the burn was.
+KIND_COLUMNS = ["satellite", "kind", "window_end", "burn_class", "confidence", "counted", "tests", "note"]
 
 MARK_PX = 9                   # one burn's mark
 ROW_PX = 34                   # height of one satellite's row
@@ -93,6 +97,18 @@ def _days(value):
     return f"{value:.0f} d"
 
 
+def _with_classes(b, kinds):
+    """`b` with what each burn was (the columns of KIND_COLUMNS, matched on satellite, kind and window_end) and the
+    picture's group for it; a burn the table does not hold has no group and is drawn as before."""
+    if kinds is None or not len(kinds):
+        return b.assign(group=None)
+    k = kinds.reindex(columns=KIND_COLUMNS).copy()
+    k["window_end"] = pd.to_datetime(k["window_end"], utc=True).dt.tz_localize(None)
+    b = b.merge(k.drop_duplicates(["satellite", "kind", "window_end"]), on=["satellite", "kind", "window_end"], how="left")
+    b["group"] = [group_of(c, bool(n)) if isinstance(c, str) else None for c, n in zip(b["burn_class"], b["counted"])]
+    return b
+
+
 def _mark_hover(row):
     """One burn: when (the window it fell in), how much it changed the orbit, and the gap since the one before."""
     when = (f"{_when(row.window_start)} – {_when_after(row.window_start, row.window_end)} UTC "
@@ -101,7 +117,12 @@ def _mark_hover(row):
     gap = "first in view" if pd.isna(row.gap_days) else f"{_days(row.gap_days)} after the one before"
     if not pd.isna(row.usual_days):
         gap += f", usually {_days(row.usual_days)}"
-    return plotly_card(f"{row.satellite} · {row.kind} burn", ("When", when), ("Change", change), ("Gap", gap))
+    lines = [("When", when), ("Change", change), ("Gap", gap)]
+    if isinstance(getattr(row, "burn_class", None), str):   # what it was, how sure, and the tests behind it
+        lines.insert(0, ("What", f"{row.burn_class} ({VERDICT.get(row.group, '')})"))
+        lines.insert(1, ("Sure", CONFIDENCE_WORDS.get(row.confidence, str(row.confidence))))
+        lines += [("Test", test) for test in str(row.tests or "").split("; ") if test]
+    return plotly_card(f"{row.satellite} · {row.kind} burn", *lines)
 
 
 def _since_hover(r):
@@ -116,24 +137,35 @@ def _since_hover(r):
     return plotly_card(r["satellite"], *lines)
 
 
-def burn_timeline(burns, satellites, start, end):
+def burn_timeline(burns, satellites, start, end, kinds=None):
     """One row per satellite on a shared time axis over [start, end]: each burn a small mark (east-west a dot,
     north-south an open diamond) and, at the row's end, the days since its last east-west burn. The stretch from
     that burn to the end is drawn as a thicker line, in the warning colour once it has run past the usual window
-    (rhythm's late). Every mark and every end value opens a hover card; nothing else is written on the chart."""
+    (rhythm's late). Every mark and every end value opens a hover card; nothing else is written on the chart.
+    With `kinds` (the classified burns, KIND_COLUMNS) each mark is filled by what the burn was (ui/burn_groups.py
+    COLOURS); a burn not judged is an empty outline, and its hover card says the kind, how sure, and the tests."""
     start, end = _naive_utc(start), _naive_utc(end)
     satellites = list(satellites)
-    b = _with_gaps(_clean(burns))
+    b = _with_classes(_with_gaps(_clean(burns)), kinds)
     b["usual_days"] = b.groupby(["satellite", "kind"])["gap_days"].transform("median")
     row_of = {name: -i for i, name in enumerate(satellites)}
     fig = go.Figure()
     for kind in KINDS:
         rows = b[(b["kind"] == kind) & b["satellite"].isin(satellites)]
+        marker = {"symbol": KIND_SYMBOL[kind], "size": MARK_PX, "color": palette.INK,
+                  "line": {"color": palette.INK, "width": 1.5}}
+        if kinds is not None:   # filled by what the burn was; an outline when it was not judged (or not in the table)
+            shapes = KIND_SYMBOL[kind].replace("-open", "")
+            fills = [COLOURS.get(g) for g in rows["group"]]
+            marker.update(symbol=[shapes if f else shapes + "-open" for f in fills],
+                          color=[f or palette.INK for f in fills], line={"color": [f or palette.INK for f in fills], "width": 1.5})
+            fig.add_trace(go.Scatter(x=[None], y=[None], mode="markers", name=KIND_LABEL[kind], hoverinfo="skip",
+                                     marker={"symbol": KIND_SYMBOL[kind], "size": MARK_PX, "color": palette.INK,
+                                             "line": {"color": palette.INK, "width": 1.5}}, legendgroup=kind))
         fig.add_trace(go.Scatter(
             x=rows["middle"], y=[row_of[s] for s in rows["satellite"]], mode="markers", name=KIND_LABEL[kind],
             cliponaxis=False, hoverinfo="text", hovertext=[_mark_hover(r) for r in rows.itertuples()],
-            marker={"symbol": KIND_SYMBOL[kind], "size": MARK_PX, "color": palette.INK,
-                    "line": {"color": palette.INK, "width": 1.5}}))
+            showlegend=kinds is None, legendgroup=kind, marker=marker))
     for r in rhythm(burns, satellites, end):
         y, late = row_of[r["satellite"]], bool(r["late"])
         fig.add_shape(type="line", x0=start, x1=end, y0=y, y1=y, line={"color": palette.TRACK, "width": 1}, layer="below")

@@ -1,14 +1,14 @@
-"""Orbit kept, station held, clock steady: the three measures on one constellation's own page, one step deeper than
+"""Orbit kept, station held, clock steady and the burn record: the four measures on one constellation's own page, one step deeper than
 Home. A strip at the top declares the counts; a section lists every satellite with what each measure read and the
 figure behind it. What counts for each measure is in ui/limits.py (MEASURES, CLOCK_STEADY_NS).
 """
 from html import escape
 
 from evidence.registry_tables import clock_record, judged_by_plane
-from ui import limits, meo_overview, palette, reveal, surfaces, systems, tooltip
+from ui import burn_ledger, limits, meo_overview, palette, reveal, surfaces, systems, tooltip
 
 # (key in ui.system_summary's counts, the words on the page), in the order shown everywhere.
-MEASURES = [("orbit", "Orbit kept"), ("station", "Station held"), ("clock", "Clock steady")]
+MEASURES = [("orbit", "Orbit kept"), ("station", "Station held"), ("clock", "Clock steady"), ("care", "Burn record")]
 # The table's columns: (heading, one plain line), by how the constellation is judged.
 STATION_LINE = {"slot": "in its slot and not drifting", "plane": "in step with its plane"}
 FLAG = {"ok": ("healthy", "ok"), "bad": ("unhealthy", "bad"), "silent": ("not in the IGS daily broadcast file", "idle"),
@@ -38,15 +38,15 @@ def score_sum(summary):
     constellation's own page show the same."""
     score, rates = summary["score"], summary["score_parts"]
     if score is None:
-        return '<p class="small">No score: none of the three attributes could be read today.</p>'
+        return '<p class="small">No score: none of the attributes could be read today.</p>'
     names = dict(MEASURES)
     mission = limits.MISSION.get(systems.system_of(summary["name"]), "global")
     # read aloud in full; on the page the bar says it: each part's name over it, its points under it
     words = ", ".join(f"{names[key]} {rate:.0f}% of its {weight:.0%} share: {rate * weight:.1f} points"
                       for key, rate, weight in rates)
     words += f"; score {score} out of 100, weighed for a {mission} constellation"
-    if len(rates) < 3:
-        words += f"; {3 - len(rates)} not read today, so the others count for its share"
+    if len(rates) < len(MEASURES):
+        words += f"; {len(MEASURES) - len(rates)} not read today, so the others count for its share"
     # each part as wide as its weight, its weight said over it; filled as far as its pass rate; the points it adds under
     parts = "".join(
         f'<div class="ss-seg" style="flex:{weight:.4f}"><span class="ss-head"><span class="ss-name">'
@@ -86,11 +86,17 @@ def strip(summary):
     label = f"{part} score" if part else "Score"
     lead = (surfaces.chip(f"{label} {summary['score']} of 100", surfaces.band(summary["score"]))
             if summary["score"] is not None else surfaces.chip(f"{label}: not read", "idle"))
-    chips = [_chip(words, *summary[key]) for key, words in MEASURES]
+    chips = [_chip(words, *summary[key]) for key, words in _read(summary)]
     chips.append(_chip("Says healthy", summary["flagged_healthy"], summary["checked"]))
     return (f'<div class="measures" role="group" aria-label="Score, orbit, station-keeping and clock">{lead}'
             f'{"".join(chips)}</div>{score_sum(summary) if summary["score"] is not None else ""}'
-            f'{record_line(summary["name"])}')
+            f'{record_line(summary["name"])}{burn_ledger.bar(summary.get("burn_record"))}')
+
+
+def _read(summary):
+    """The measures to show for a constellation: all four, but the burn record only where burns were found (the
+    medium-orbit constellations have too little history to find any)."""
+    return [(key, words) for key, words in MEASURES if key != "care" or summary.get("burn_record")]
 
 
 def record_line(name):
@@ -140,6 +146,13 @@ def _station(sat, kind, labels):
     return {**cell, "note": " · ".join(filter(None, [cell["note"], *extra]))}
 
 
+def _care(sat):
+    if sat.get("care") is None:
+        return _cell("not judged", "idle", note="fewer than " + str(limits.CARE_MIN_JUDGED) + " judged burns in 365 days")
+    return _cell("regular" if sat["care"] else "irregular", "ok" if sat["care"] else "warn",
+                 should=f"no irregular burn in {limits.CARE_RECENT_DAYS} days, at most {limits.CARE_MAX_SHARE:.0%} in 365")
+
+
 def _clock(sat):
     clock = sat.get("clock")
     if not clock or sat["clock_steady"] is None:
@@ -158,14 +171,18 @@ def table(summary):
                ("Station held", STATION_LINE[kind]),
                ("Clock steady", f"no step past {limits.CLOCK_STEADY_NS:g} ns in the day"),
                ("Says healthy", "its own broadcast flag")]
+    burns = bool(summary.get("burn_record"))
+    if burns:
+        columns.insert(4, ("Burn record", "how regularly it is looked after"))
     rows = [(sat["name"], [_judged(sat, "orbit", kind, "kept", "not kept", labels), _station(sat, kind, labels),
-                           _clock(sat), _cell(*FLAG[sat["broadcast"]])]) for sat in summary["sats"]]
+                           _clock(sat)] + [_care(sat)] * burns + [_cell(*FLAG[sat["broadcast"]])])
+            for sat in summary["sats"]]
     return surfaces.table(columns, rows)
 
 
 def section(summary):
     """The section under the page: every satellite, measure by measure."""
     said = " · ".join(f"{words.lower()} {count} of {of}" if of else f"{words.lower()} not read"
-                      for (key, words) in MEASURES for count, of in [summary[key]])
+                      for (key, words) in _read(summary) for count, of in [summary[key]])
     reveal.section(f"three_measures_{summary['name']}", "The score, satellite by satellite",
                    said, table(summary))

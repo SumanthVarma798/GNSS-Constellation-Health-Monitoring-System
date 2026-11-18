@@ -55,11 +55,14 @@ HOW = [
     ("radar", "What is measured", [
         "The score",
         ("Score", [("Means", "how healthy a constellation is today, from 0 to 100"),
-                   ("Made of", "the three key health attributes: each adds its share of satellites that pass, times "
+                   ("Made of", "the four key health attributes: each adds its share of satellites that pass, times "
                                "its weight"),
                    ("The ring", "the constellation's satellites, coloured by state")], "gauge"),
         ("Weights", [("Means", "how much each attribute counts towards the 100; together they make 100%"),
                      ("Set by", "what a failure costs the constellation's users (our choice, open to change)"),
+                     ("Burn record", "10% for every constellation, taken evenly from the other three, so clock, station "
+                                     "and orbit each give up a tenth of their weight (our choice, for the team to "
+                                     "confirm)"),
                      ("Regional", "7 or 8 satellites, all in every user's sky, none spare: one bad clock spoils "
                                   "every position fix"),
                      ("Global", "8 to 12 satellites in view: a receiver can leave out one bad clock")], "weights"),
@@ -101,8 +104,29 @@ HOW = [
                            ("Limits", "heard means a receiver tracked it, not that the signal was good; a receiver that "
                                       "does not track a signal (none of ours records NavIC's S band) cannot hear it; "
                                       "shown, not scored")], "broadcast"),
-        ("Burns", [("Means", "engine burns found in the last 90 days of public tracking records"),
-                   ("Medium orbits", "rarely show any yet: their records are too short")], "rocket"),
+        ("Burn record", [("Means", "how regularly the operator looks after the satellite, read from what kind each of its "
+                                   "engine burns was"),
+                         ("First principles", "a satellite is kept in its slot by small burns on a rhythm the operator "
+                                              "sets; a burn on that rhythm is routine, a relocation or the raise to a "
+                                              "graveyard orbit at the end of life is planned, and a burn made because "
+                                              "the satellite had already strayed, in a cluster, or out of its usual "
+                                              "size or direction is a sign the rhythm was missed"),
+                         ("Irregular", "a response (made after it was off its box or drift limit, in a cluster, or "
+                                       "reversed at once) or off its pattern, judged at medium confidence or better; "
+                                       "planned moves count neither way"),
+                         ("Passes when", "no irregular burn in the last 90 days and at most 25% of its judged burns "
+                                         "in 365 days irregular; with fewer than 3 judged burns it is not judged"),
+                         ("From", "the burns found in CelesTrak and Space-Track tracking records; a burn is found "
+                                  "within the days between two records, so it is a kind judged from the orbit, not "
+                                  "an operator's log"),
+                         ("Limits", "our rule, for the team to confirm; medium orbits rarely show any burns yet: "
+                                    "their records are too short, so the other three count for its whole score")],
+         "rocket"),
+        ("Irregular burns", [("Means", "of the burns judged in 365 days, how many were irregular, with the range "
+                                      "that count allows (a 95% interval)"),
+                             ("Too few to rate", "under 8 judged burns: the share is shown only as a count"),
+                             ("Shown, with the score", "the same burns make the burn record that counts in the score")],
+         "rocket"),
     ]),
     ("calculator", "How", [
         ("Two sources, never mixed", ["orbit and station: public tracking records from CelesTrak and Space-Track",
@@ -137,7 +161,6 @@ CONTACT_ADDRESS = "contact@opengnss.org"
 HOW_LINKS = {
     "score": "What is measured",
     "flag matches our check": "What is measured",
-    "burns": "What is measured",
     "healthy and in place": "What is measured",
     "needs a look": "What is measured",
     "set aside": "What is measured",
@@ -145,6 +168,8 @@ HOW_LINKS = {
     "orbit kept": "What is measured",
     "station held": "What is measured",
     "clock steady": "What is measured",
+    "burn record": "What is measured",
+    "irregular burns": "What is measured",
     "says healthy": "What is measured",
     "not scored yet": "What we are working towards",
 }
