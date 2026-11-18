@@ -240,3 +240,13 @@ def test_the_tests_workflow_cancels_only_superseded_pull_request_runs():
 
     assert "group: tests-${{ github.ref }}" in workflow
     assert "cancel-in-progress: ${{ github.event_name == 'pull_request' }}" in workflow
+
+
+def test_a_run_counts_as_a_check_when_it_asked_anyone():
+    from evidence.archive import asked_anything
+
+    assert asked_anything("ok") and asked_anything("failed: 1 of 2 sources")
+    assert asked_anything("ok; 1 waiting out a refusal; 1 asked")            # waited on one address, asked another
+    assert not asked_anything("ok; 2 waiting out a refusal; 0 asked")
+    assert not asked_anything("ok; 1 skipped: asked less than the site's minimum gap ago; 0 asked")
+    assert not asked_anything("ok; 1 waiting out a refusal")                   # an older line: cannot tell, so not a check

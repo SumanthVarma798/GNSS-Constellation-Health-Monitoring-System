@@ -19,6 +19,7 @@ never used to name a file.
 import csv
 import hashlib
 import os
+import re
 import time
 from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
@@ -251,6 +252,17 @@ def read_runs(archive, log):
 
 SKIPPED_WORDS = "skipped: asked less than the site's minimum gap ago"   # in a run's result; such a run asked nobody
 REFUSAL_WORDS = "waiting out a refusal"   # in a run's result: it may not have reached the site, so it is not a check
+_ASKED = re.compile(r"; (\d+) asked\b")
+
+
+def asked_anything(result):
+    """Whether a run with this run-log result asked at least one address. A run that waited out a refusal or skipped an
+    address writes "; N asked"; any other run asked every address. An older line without the count counts as asking
+    unless it skipped or waited out a refusal."""
+    found = _ASKED.search(result or "")
+    if found:
+        return int(found.group(1)) > 0
+    return SKIPPED_WORDS not in result and REFUSAL_WORDS not in result
 
 
 def asked_lately(archive, address, jobs, now):
@@ -260,6 +272,6 @@ def asked_lately(archive, address, jobs, now):
     if site(address) not in RUN_GATED_SITES:
         return None
     asked = [datetime.fromisoformat(row["started"].replace("Z", "+00:00")) for row in read_runs(archive, "archive")
-             if row["job"] in jobs and SKIPPED_WORDS not in row["result"]]
+             if row["job"] in jobs and asked_anything(row["result"])]
     last = max(asked, default=None)
     return last if last and now - last < min_gap(address) - RUN_GATE_SLACK else None

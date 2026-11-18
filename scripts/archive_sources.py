@@ -98,6 +98,8 @@ def main():
         result = f"failed: {failures} of {len(addresses)} sources" if failures else "ok"
         result += f"; {waiting} waiting out a refusal" if waiting else ""
         result += f"; {gated} {SKIPPED_WORDS}" if gated else ""
+        if waiting or gated:   # only then is it unclear whether it asked anyone (the gate and orbit-ages read this)
+            result += f"; {len(addresses) - waiting - gated} asked"
     finally:
         write_limits(args.archive, limits)
         log_run(args.archive, RUN_LOG, f"archive {args.group or 'all'}", started, utc_now(), result,
