@@ -166,6 +166,8 @@ CITATION_FORMATS = {
     "long": "{organisation} ({year}). {title}. Version/date: {version}. Licence: {licence}. {url}. Accessed {accessed} UTC.",
 }
 DASHBOARD_CITATION = {"organisation": "OpenGNSS", "title": "OpenGNSS GNSS Health Monitor", "url": DASHBOARD_LINK}
+DATASET_CITATION_NOTE = ("Each of our datasets: Copy short citation or Copy long citation on its card, under "
+                         "Our datasets.")
 
 OUTSIDE_CITATIONS = [
     ("GCAT", GCAT_CREDIT + "."),
