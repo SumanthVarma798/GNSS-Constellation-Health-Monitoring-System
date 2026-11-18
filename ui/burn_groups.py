@@ -10,8 +10,9 @@ ARTEFACT_GROUP = "artefact"
 GROUPS = ((ROUTINE, "routine"), (PLANNED, "planned moves"), (RESPONSE, "response"), (OFF, "off pattern"),
           (OPEN, "not judged"))
 # The shape variant each group takes in a Plotly figure, added to the kind's circle or diamond, so shape says it as well
-# as colour: filled, open, crossed (x), plus (+), open with a dot.
-GROUP_SYMBOL = {ROUTINE: "", PLANNED: "-open", RESPONSE: "-x", OFF: "-cross", OPEN: "-open-dot"}
+# as colour: filled, open, open with an x, open with a +, open with a dot. (A filled x or + is invisible: Plotly draws
+# the x in the outline colour, which here is the fill colour.)
+GROUP_SYMBOL = {ROUTINE: "", PLANNED: "-open", RESPONSE: "-x-open", OFF: "-cross-open", OPEN: "-open-dot"}
 # What each group counts as, said after the burn's kind in a tooltip.
 VERDICT = {ROUTINE: "counted: routine", PLANNED: "planned: counted neither way", RESPONSE: "counted: irregular",
            OFF: "counted: irregular", OPEN: "not judged: counted neither way", ARTEFACT_GROUP: "a record error, left out"}

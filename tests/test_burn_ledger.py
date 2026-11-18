@@ -49,7 +49,7 @@ def test_the_timeline_fills_each_mark_by_what_the_burn_was_and_leaves_those_not_
     east_west = next(trace for trace in figure.data if trace.name == "East-west" and trace.showlegend is not True and trace.x[0] is not None)
     assert list(east_west.marker.color) == [palette.OK, palette.BAD, palette.INK, palette.IDLE]   # routine, response, not judged, planned
     # shape says it too: filled, crossed, open with a dot (not judged), open (planned)
-    assert list(east_west.marker.symbol) == ["circle", "circle-x", "circle-open-dot", "circle-open"]
+    assert list(east_west.marker.symbol) == ["circle", "circle-x-open", "circle-open-dot", "circle-open"]
     legend = [trace.name for trace in figure.data if trace.showlegend is not False and trace.x[0] is None]
     assert legend == ["East-west", "North-south", "routine", "planned moves", "response", "off pattern", "not judged"]
     assert "response (counted: irregular)" in east_west.hovertext[1] and "Test" in east_west.hovertext[1]
