@@ -48,13 +48,20 @@ def chosen_satellites(names, set_aside, choice):
     return [n for n in names if n not in set_aside and n not in gs.NOT_IN_SERVICE]
 
 
+def error_metres(dop, uere_m=gs.UERE_M):
+    """The position error a DOP value gives, in metres: DOP x the error of one distance measurement (None without a DOP)."""
+    return None if dop is None else dop * uere_m
+
+
 def dop_rows(satellites, places, when, mask_deg):
-    """One row per place: place, lat, lon, seen (satellites in view) and each DOP value (None without a position)."""
+    """One row per place: place, lat, lon, seen (satellites in view), each DOP value (None without a position), and
+    metres (the 3D position error, PDOP x gs.UERE_M) and ground_metres (HDOP x gs.UERE_M)."""
     rows = []
     for place, (lat, lon) in places.items():
         dop, seen, _ = calculate_dop_for_location(satellites, lat, lon, when, elevation_mask_deg=mask_deg)
-        rows.append({"place": place, "lat": lat, "lon": lon, "seen": len(seen),
-                     **{key: (dop[key] if dop else None) for key in DOP_KEYS}})
+        values = {key: (dop[key] if dop else None) for key in DOP_KEYS}
+        rows.append({"place": place, "lat": lat, "lon": lon, "seen": len(seen), **values,
+                     "metres": error_metres(values["PDOP"]), "ground_metres": error_metres(values["HDOP"])})
     return rows
 
 
@@ -113,19 +120,42 @@ def ground_tracks(satellites, now, window, hours=gs.TRACK_HOURS, step_minutes=gs
     return tracks, here
 
 
-def next_visible(satellites, lat, lon, start, mask_deg, hours=gs.NEXT_HOURS, step_minutes=gs.NEXT_STEP_MINUTES):
-    """Whether each satellite is in view at one place at `start`, and when that next changes within `hours`.
+def windows_from(above, times):
+    """[(rise, set), ...] from a True/False per time step: each stretch of True from its first step to the first step
+    below the mask after it (so a pass seen at one step still lasts one step). A stretch still running at the end of
+    `times` ends at the last step (the picture gives even that a step's width)."""
+    edges = np.flatnonzero(np.diff(np.concatenate(([0], np.asarray(above, dtype=int), [0]))))
+    last = len(times) - 1
+    return [(times[start], times[min(end, last)]) for start, end in zip(edges[0::2], edges[1::2])]
 
-    [{"satellite", "in_view" (above the mask at `start`), "change" (the first step at which it has risen above the
-    mask, or set below it; None when it does not within the window)}], to the step."""
+
+def view_windows(satellites, lat, lon, start, mask_deg, hours=gs.NEXT_HOURS, step_minutes=gs.NEXT_STEP_MINUTES):
+    """When each satellite is above the elevation mask at one place over the next `hours`, to the step.
+
+    [{"satellite", "in_view" (above the mask at `start`), "windows": [(rise, set), ...]}]; a window of a satellite in
+    view now starts at `start`, and one still going at the end of the day ends there."""
     times = _steps(start, hours, step_minutes)
     steps, observer = _ts.from_datetimes(times), wgs84.latlon(lat, lon)
     rows = []
     for name, sat in satellites.items():
         above = (sat - observer).at(steps).altaz()[0].degrees > mask_deg   # strictly above, as position quality counts
-        flips = np.flatnonzero(above != above[0])
-        rows.append({"satellite": name, "in_view": bool(above[0]), "change": times[flips[0]] if len(flips) else None})
+        rows.append({"satellite": name, "in_view": bool(above[0]), "windows": windows_from(above, times)})
     return rows
+
+
+def next_rise(row):
+    """When a satellite next comes into view (after the window it is in now, if it is in view): None if it does not."""
+    later = row["windows"][1:] if row["in_view"] else row["windows"]
+    return later[0][0] if later else None
+
+
+def timeline_order(rows):
+    """In view now first (setting soonest first), then the rest by their next rise; those never in view last."""
+    def key(row):
+        if row["in_view"]:
+            return (0, row["windows"][0][1])
+        return (1, row["windows"][0][0]) if row["windows"] else (2, 0)
+    return sorted(rows, key=key)
 
 
 _COORDINATE = re.compile(r"([+-]?\d+(?:\.\d+)?)\s*°?\s*([NSEW]?)", re.IGNORECASE)
