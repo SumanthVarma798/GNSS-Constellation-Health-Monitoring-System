@@ -121,10 +121,12 @@ def ground_tracks(satellites, now, window, hours=gs.TRACK_HOURS, step_minutes=gs
 
 
 def windows_from(above, times):
-    """[(rise, set), ...] from a True/False per time step: each stretch of True as the first and last step it holds.
-    A stretch still running at the end of `times` ends at the last step."""
+    """[(rise, set), ...] from a True/False per time step: each stretch of True from its first step to the first step
+    below the mask after it (so a pass seen at one step still lasts one step). A stretch still running at the end of
+    `times` ends at the last step."""
     edges = np.flatnonzero(np.diff(np.concatenate(([0], np.asarray(above, dtype=int), [0]))))
-    return [(times[start], times[end - 1]) for start, end in zip(edges[0::2], edges[1::2])]
+    last = len(times) - 1
+    return [(times[start], times[min(end, last)]) for start, end in zip(edges[0::2], edges[1::2])]
 
 
 def view_windows(satellites, lat, lon, start, mask_deg, hours=gs.NEXT_HOURS, step_minutes=gs.NEXT_STEP_MINUTES):

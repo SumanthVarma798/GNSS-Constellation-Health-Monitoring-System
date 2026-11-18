@@ -440,7 +440,8 @@ def view_timeline(rows, types, now, zone, hours=gs.NEXT_HOURS):
     written at the start of each bar, a line for now. Lanes in gd.timeline_order: in view now first, then the next rise.
     Each lane is LANE_PX tall, so the picture grows with the number of satellites and the page scrolls."""
     rows = gd.timeline_order(rows)
-    lanes = _lane_names(rows)
+    # each lane names its orbit too, so colour is never the only sign of it
+    lanes = [f"{lane} · {types.get(row['satellite'], gs.OTHER_ORBIT)}" for row, lane in zip(rows, _lane_names(rows))]
     start, end = _wall(now, zone), _wall(now + timedelta(hours=hours), zone)
     bars = {"y": [], "base": [], "x": [], "text": [], "colour": [], "hover": []}
     for row, lane in zip(rows, lanes):
@@ -450,7 +451,7 @@ def view_timeline(rows, types, now, zone, hours=gs.NEXT_HOURS):
             now_up = rise == now
             bars["y"].append(lane)
             bars["base"].append(a)
-            bars["x"].append((b - a).total_seconds() * 1000)
+            bars["x"].append((set_ - rise).total_seconds() * 1000)   # elapsed time: right across a clock change
             bars["text"].append("in view" if now_up else f"{a:%H:%M}")
             bars["colour"].append(colour(orbit))
             bars["hover"].append([escape(row["satellite"]), gs.ORBIT_WORDS.get(orbit, orbit),

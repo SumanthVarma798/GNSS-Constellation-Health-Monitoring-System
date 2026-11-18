@@ -116,8 +116,8 @@ def test_view_windows_find_each_stretch_above_the_mask():
     end = at(gs.NEXT_HOURS * 60)
 
     assert rows["rises"]["windows"] == [(at(150), end)] and not rows["rises"]["in_view"]
-    assert rows["sets"]["windows"] == [(WHEN, at(60))] and rows["sets"]["in_view"]
-    assert rows["twice"]["windows"] == [(WHEN, at(29)), (at(100), at(199))]
+    assert rows["sets"]["windows"] == [(WHEN, at(61))] and rows["sets"]["in_view"]   # to the first step below the mask
+    assert rows["twice"]["windows"] == [(WHEN, at(30)), (at(100), at(200))]
     assert rows["always"]["windows"] == [(WHEN, end)] and rows["always"]["in_view"]
     assert rows["never"]["windows"] == [] and not rows["never"]["in_view"]
     assert rows["at the mask"]["windows"] == []   # exactly on the mask is not above it
@@ -394,10 +394,10 @@ def test_the_timeline_has_a_bar_per_stretch_with_the_rise_time_and_a_lane_for_ev
     fig = gf.view_timeline(rows, {"up": "GEO"}, WHEN, INDIA)
 
     bars = fig.data[0]
-    assert list(bars.y) == ["up", "QZS-2", "QZS-2"] and list(bars.text) == ["in view", "13:00", "07:30"]
+    assert list(bars.y) == ["up · GEO", f"QZS-2 · {gs.OTHER_ORBIT}", f"QZS-2 · {gs.OTHER_ORBIT}"] and list(bars.text) == ["in view", "13:00", "07:30"]
     assert list(bars.base)[0] == datetime(2026, 10, 4, 11, 30) and bars.x[0] == 2 * 3600 * 1000   # the viewer's clock
-    assert fig.layout.yaxis.categoryarray == ("up", "QZS-2", "never <b>") and fig.layout.yaxis.autorange == "reversed"
-    assert any(t.type == "scatter" and t.mode == "text" and list(t.y) == ["never <b>"] for t in fig.data)   # a lane without a bar says so
+    assert fig.layout.yaxis.categoryarray == ("up · GEO", f"QZS-2 · {gs.OTHER_ORBIT}", f"never <b> · {gs.OTHER_ORBIT}") and fig.layout.yaxis.autorange == "reversed"
+    assert any(t.type == "scatter" and t.mode == "text" and list(t.y) == [f"never <b> · {gs.OTHER_ORBIT}"] for t in fig.data)   # a lane without a bar says so
     assert fig.layout.height == gf.LANE_PX * 3 + 70 and fig.layout.xaxis.fixedrange   # a lane each: the page scrolls
     assert any(s.line.color == palette.ACCENT for s in fig.layout.shapes)               # the line for now
 
@@ -632,3 +632,16 @@ def test_the_maps_key_is_a_row_of_marks_with_words_and_no_hex():
 
     assert key.count("<li>") == 5 and "swatch diamond" in key and "swatch square" in key and "swatch ring" in key
     assert "under 25 m" in key and "Your place" in key and "#" not in key
+
+
+def test_a_one_step_pass_has_a_width_and_a_stretch_ends_at_the_first_step_below():
+    from datetime import datetime, timedelta, timezone
+
+    times = [datetime(2026, 11, 18, tzinfo=timezone.utc) + timedelta(minutes=10 * i) for i in range(6)]
+    assert gd.windows_from([False, True, False, False, True, True], times) == [(times[1], times[2]), (times[4], times[5])]
+
+
+def test_a_measure_without_a_range_is_never_called_outside_it():
+    from ui.figures.geometry import outside
+
+    assert not outside(5.0, None) and not outside(5.0, (3.0, 3.0)) and outside(5.0, (0.0, 4.0))

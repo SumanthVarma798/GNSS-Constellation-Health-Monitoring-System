@@ -116,7 +116,7 @@ UERE_WORDS = (f"{UERE_M:g} m is our assumption for the error of one distance mea
               "single-frequency civil receiver): the few-metre budgets in Kaplan and Hegarty, Understanding GPS/GNSS, "
               "and GPS.gov's 4.9 m (95 %) for a phone in the open sky. A two-frequency receiver does better.")
 DOP_LINE = ("DOP says how much the satellites' layout multiplies the error of one distance measurement: "
-            f"position error is about DOP × {UERE_M:g} m, and 1 is the best layout there can be.")
+            f"position error is about PDOP × {UERE_M:g} m (HDOP × {UERE_M:g} m along the ground), and 1 is the best layout there can be.")
 # From first principles, one step at a time (the first is the line always shown, the rest one step deeper).
 DOP_STEPS = [
     "A receiver times a radio signal from each satellite; time × the speed of light is its distance from that satellite.",
