@@ -6,7 +6,7 @@ outside files, so they are escaped. No Streamlit and no clock: the numbers come 
 """
 import json
 import math
-from datetime import timedelta
+from datetime import timedelta, timezone
 from functools import cache
 from html import escape
 
@@ -430,6 +430,12 @@ def _wall(when, zone):
     return when.astimezone(zone).replace(tzinfo=None)
 
 
+def _utc(when):
+    """A moment on the timeline's axis: UTC without a zone, so every bar's start and length agree across a clock change
+    in the reader's zone (only the axis labels are written in that zone)."""
+    return when.astimezone(timezone.utc).replace(tzinfo=None)
+
+
 def _lane_names(rows):
     names = [short(r["satellite"]) for r in rows]
     return [r["satellite"] if names.count(n) > 1 else n for r, n in zip(rows, names)]
@@ -442,7 +448,7 @@ def view_timeline(rows, types, now, zone, hours=gs.NEXT_HOURS):
     rows = gd.timeline_order(rows)
     # each lane names its orbit too, so colour is never the only sign of it
     lanes = [f"{lane} · {types.get(row['satellite'], gs.OTHER_ORBIT)}" for row, lane in zip(rows, _lane_names(rows))]
-    start, end = _wall(now, zone), _wall(now + timedelta(hours=hours), zone)
+    start, end = _utc(now), _utc(now + timedelta(hours=hours))
     bars = {"y": [], "base": [], "x": [], "text": [], "colour": [], "hover": []}
     for row, lane in zip(rows, lanes):
         orbit = types.get(row["satellite"], gs.OTHER_ORBIT)
@@ -450,8 +456,9 @@ def view_timeline(rows, types, now, zone, hours=gs.NEXT_HOURS):
             a, b = _wall(rise, zone), _wall(set_, zone)
             now_up = rise == now
             bars["y"].append(lane)
-            bars["base"].append(a)
-            bars["x"].append((set_ - rise).total_seconds() * 1000)   # elapsed time: right across a clock change
+            bars["base"].append(_utc(rise))   # placed in UTC; the words on it are the reader's clock (a)
+            # elapsed time (right across a clock change), never under one step, so a pass seen once still shows
+            bars["x"].append(max((set_ - rise).total_seconds(), gs.NEXT_STEP_MINUTES * 60) * 1000)
             bars["text"].append("in view" if now_up else f"{a:%H:%M}")
             bars["colour"].append(colour(orbit))
             bars["hover"].append([escape(row["satellite"]), gs.ORBIT_WORDS.get(orbit, orbit),
@@ -473,7 +480,9 @@ def view_timeline(rows, types, now, zone, hours=gs.NEXT_HOURS):
                   line={"color": palette.ACCENT, "width": 2})
     fig.add_annotation(text="now", x=start, y=1, yref="paper", xanchor="left", yanchor="bottom", showarrow=False,
                        font={"color": palette.ACCENT, "size": type_scale.LEVELS["small"][1]})
-    fig.update_xaxes(type="date", range=[start, end], side="top", tickformat="%H:%M<br>%d %b", dtick=6 * 3600 * 1000,
+    ticks = [start + timedelta(hours=h) for h in range(0, hours + 1, 6)]
+    fig.update_xaxes(type="date", range=[start, end], side="top", tickvals=ticks,
+                     ticktext=[f"{_wall(t.replace(tzinfo=timezone.utc), zone):%H:%M<br>%d %b}" for t in ticks],
                      fixedrange=True, showgrid=True, **AXIS)
     fig.update_yaxes(autorange="reversed", categoryorder="array", categoryarray=lanes, fixedrange=True, showgrid=False,
                      tickfont={"size": type_scale.LEVELS["small"][1]}, **{k: v for k, v in AXIS.items() if k != "gridcolor"})

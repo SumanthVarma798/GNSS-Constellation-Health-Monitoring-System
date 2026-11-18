@@ -395,7 +395,7 @@ def test_the_timeline_has_a_bar_per_stretch_with_the_rise_time_and_a_lane_for_ev
 
     bars = fig.data[0]
     assert list(bars.y) == ["up · GEO", f"QZS-2 · {gs.OTHER_ORBIT}", f"QZS-2 · {gs.OTHER_ORBIT}"] and list(bars.text) == ["in view", "13:00", "07:30"]
-    assert list(bars.base)[0] == datetime(2026, 10, 4, 11, 30) and bars.x[0] == 2 * 3600 * 1000   # the viewer's clock
+    assert list(bars.base)[0] == datetime(2026, 10, 4, 6, 0) and bars.x[0] == 2 * 3600 * 1000   # placed in UTC; labels in the viewer's clock
     assert fig.layout.yaxis.categoryarray == ("up · GEO", f"QZS-2 · {gs.OTHER_ORBIT}", f"never <b> · {gs.OTHER_ORBIT}") and fig.layout.yaxis.autorange == "reversed"
     assert any(t.type == "scatter" and t.mode == "text" and list(t.y) == [f"never <b> · {gs.OTHER_ORBIT}"] for t in fig.data)   # a lane without a bar says so
     assert fig.layout.height == gf.LANE_PX * 3 + 70 and fig.layout.xaxis.fixedrange   # a lane each: the page scrolls
@@ -645,3 +645,14 @@ def test_a_measure_without_a_range_is_never_called_outside_it():
     from ui.figures.geometry import outside
 
     assert not outside(5.0, None) and not outside(5.0, (3.0, 3.0)) and outside(5.0, (0.0, 4.0))
+
+
+def test_a_pass_seen_only_at_the_last_step_still_has_a_bar():
+    rows = [{"satellite": "late", "in_view": False, "windows": [(WHEN + timedelta(hours=24), WHEN + timedelta(hours=24))]}]
+    bars = gf.view_timeline(rows, {}, WHEN, INDIA).data[0]
+    assert bars.x[0] == gs.NEXT_STEP_MINUTES * 60 * 1000
+
+
+def test_the_timeline_axis_is_labelled_in_the_viewers_clock():
+    fig = gf.view_timeline([{"satellite": "up", "in_view": True, "windows": [(WHEN, WHEN + timedelta(hours=2))]}], {}, WHEN, INDIA)
+    assert fig.layout.xaxis.ticktext[0].startswith(f"{WHEN.astimezone(INDIA):%H:%M}")
