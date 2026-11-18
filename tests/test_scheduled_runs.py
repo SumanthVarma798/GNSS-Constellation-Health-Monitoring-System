@@ -242,11 +242,11 @@ def test_the_tests_workflow_cancels_only_superseded_pull_request_runs():
     assert "cancel-in-progress: ${{ github.event_name == 'pull_request' }}" in workflow
 
 
-def test_a_run_counts_as_a_check_when_it_asked_anyone():
-    from evidence.archive import asked_anything
+def test_a_run_counts_as_a_celestrak_check_only_when_it_asked_celestrak():
+    from evidence.archive import asked_site
 
-    assert asked_anything("ok") and asked_anything("failed: 1 of 2 sources")
-    assert asked_anything("ok; 1 waiting out a refusal; 1 asked")            # waited on one address, asked another
-    assert not asked_anything("ok; 2 waiting out a refusal; 0 asked")
-    assert not asked_anything("ok; 1 skipped: asked less than the site's minimum gap ago; 0 asked")
-    assert not asked_anything("ok; 1 waiting out a refusal")                   # an older line: cannot tell, so not a check
+    assert asked_site("ok", "celestrak.org") and asked_site("failed: 1 of 2 sources", "celestrak.org")
+    assert asked_site("ok; 1 waiting out a refusal; asked: celestrak.org", "celestrak.org")   # waited on another, asked it
+    assert not asked_site("ok; 1 waiting out a refusal; asked: none", "celestrak.org")         # an all run that asked others only
+    assert not asked_site("ok; 1 skipped: asked less than the site's minimum gap ago; asked: none", "celestrak.org")
+    assert not asked_site("ok; 1 waiting out a refusal", "celestrak.org")                     # an older line: cannot tell

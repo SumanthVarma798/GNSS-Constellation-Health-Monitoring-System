@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from config import config  # noqa: E402
 from data import celestrak, spacetrack  # noqa: E402
-from evidence.archive import asked_anything, log_run, read_runs  # noqa: E402
+from evidence.archive import asked_site, log_run, read_runs  # noqa: E402
 from evidence.settings import ORBIT_AGE_COLUMNS, ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS  # noqa: E402
 
 
@@ -110,7 +110,7 @@ def _old_list(rows):
 def _last_orbital_check(archive):
     """When an orbital run of the archive job last asked CelesTrak (run log runs/archive.csv), or None."""
     asked = [datetime.fromisoformat(row["started"].replace("Z", "+00:00")) for row in read_runs(archive, "archive")
-             if row["job"] in ("archive orbital", "archive all") and asked_anything(row["result"])]
+             if row["job"] in ("archive orbital", "archive all") and asked_site(row["result"], "celestrak.org")]
     return max(asked, default=None)
 
 

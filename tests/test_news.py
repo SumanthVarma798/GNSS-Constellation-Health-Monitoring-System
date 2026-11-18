@@ -305,8 +305,8 @@ def test_a_refusing_site_fails_one_run_then_waits_without_failing_and_is_asked_a
 
     assert asked == ["https://www.reddit.com/r/ISRO/.rss"] * 2
     assert [line["result"] for line in archive.read_runs(tmp_path, "archive")] == [
-        "failed: 1 of 2 sources; 1 waiting out a refusal; 1 asked", "ok; 2 waiting out a refusal; 0 asked",
-        "failed: 1 of 2 sources; 1 waiting out a refusal; 1 asked"]   # how many it really asked, for the gate and orbit-ages
+        "failed: 1 of 2 sources; 1 waiting out a refusal; asked: none", "ok; 2 waiting out a refusal; asked: none",
+        "failed: 1 of 2 sources; 1 waiting out a refusal; asked: none"]   # which rate-limited sites it asked (Reddit is not one)   # how many it really asked, for the gate and orbit-ages
     assert archive.read_limits(tmp_path)["reddit.com"]["refusals"] == "2"
 
 

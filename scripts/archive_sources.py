@@ -19,10 +19,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from evidence.archive import (FetchFailed, SKIPPED_WORDS, asked_lately, log_run, note_answer, pacer, read_limits, record, thin, waiting_until,
+from evidence.archive import (FetchFailed, SKIPPED_WORDS, asked_lately, log_run, note_answer, pacer, read_limits, record, site, thin, waiting_until,
                               write_limits)
 from evidence import recent_launches, x_reader
-from evidence.settings import ARCHIVE_THIN_GROUPS
+from evidence.settings import ARCHIVE_THIN_GROUPS, RUN_GATED_SITES
 from evidence.sources import ARCHIVED_SOURCES, PROVISIONAL_GROUPS, archived_addresses
 
 RUN_LOG = "archive"  # runs/archive.csv in the archive folder
@@ -39,6 +39,7 @@ def main():
     args = parser.parse_args()
 
     started, changed, thinned, failures, graded_failures, waiting, gated = utc_now(), [], [], 0, 0, 0, 0
+    asked_gated = set()   # the rate-limited sites this run really asked (read back by the gate and orbit-ages)
     addresses = archived_addresses(args.group)
     result = "stopped early"  # replaced below unless something unexpected ends the run
     paced_fetch, limits = pacer(), read_limits(args.archive)
@@ -68,6 +69,8 @@ def main():
                 print(f"skipped    {address} (asked at {last:%Y-%m-%d %H:%M} UTC, less than its minimum gap ago)")
                 continue
             graded = graded_group if graded_group is not None else address not in provisional_addresses
+            if site(address) in RUN_GATED_SITES:
+                asked_gated.add(site(address))
             try:
                 reply = readers[address](address) if address in readers else paced_fetch(address)
             except FetchFailed as error:
@@ -98,8 +101,8 @@ def main():
         result = f"failed: {failures} of {len(addresses)} sources" if failures else "ok"
         result += f"; {waiting} waiting out a refusal" if waiting else ""
         result += f"; {gated} {SKIPPED_WORDS}" if gated else ""
-        if waiting or gated:   # only then is it unclear whether it asked anyone (the gate and orbit-ages read this)
-            result += f"; {len(addresses) - waiting - gated} asked"
+        if waiting or gated:   # only then is it unclear which rate-limited sites it asked (the gate and orbit-ages read this)
+            result += f"; asked: {', '.join(sorted(asked_gated)) or 'none'}"
     finally:
         write_limits(args.archive, limits)
         log_run(args.archive, RUN_LOG, f"archive {args.group or 'all'}", started, utc_now(), result,
