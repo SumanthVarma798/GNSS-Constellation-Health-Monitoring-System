@@ -164,3 +164,26 @@ def test_the_fuel_band_keeps_back_the_end_of_life_raise():
     assert low == pytest.approx((budget * 0.65 - 336 - EOL_RAISE_M_S[1]) / 42)
     assert high == pytest.approx((budget * 1.35 - 336 - EOL_RAISE_M_S[0]) / 42)
     assert "not public" in label and remaining_band(15, 336, 0)[0] == float("inf")
+
+
+
+def test_beyond_the_far_edge_the_pull_does_the_work():
+    from analysis.slot_forecast import _turn_back
+
+    assert _turn_back(-0.5, 0.04, 0.001, 0.09) == 0.0                     # pulled east, already moving east: no burn
+    assert _turn_back(-0.5, -0.04, 0.001, 0.09) == pytest.approx(0.04)     # moving west, away: only that is cancelled
+
+
+def test_with_no_pull_a_satellite_outside_has_no_single_recovery_burn():
+    from analysis.slot_forecast import forecast
+
+    out = {r["kind"]: r for r in forecast(-0.7, -0.01, 0.0, 0.09, 0.5, date(2026, 11, 19))}
+    assert out["too_late"]["delta_lambda_dot_deg_per_day"] is None and out["too_late"]["delta_v_m_s"] is None
+    back = {r["kind"]: r for r in forecast(-0.7, 0.01, 0.0, 0.09, 0.5, date(2026, 11, 19))}
+    assert back["too_late"]["delta_lambda_dot_deg_per_day"] == 0.0         # already heading back
+
+
+def test_the_end_of_life_raise_is_a_range():
+    from analysis.forecast_settings import EOL_RAISE_M_S
+
+    assert 0 < EOL_RAISE_M_S[0] < EOL_RAISE_M_S[1]

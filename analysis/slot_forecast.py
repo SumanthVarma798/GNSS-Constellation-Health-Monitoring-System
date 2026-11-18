@@ -105,8 +105,10 @@ def _turn_back(x, v, acc, own_half_width):
     side away from the pull (`acc`), so the pull itself stops it there: a speed w towards that edge, against the pull,
     with w² = 2·|acc|·distance. If that edge lies on the pull's side, w is 0: stopping it is enough, the pull brings it back."""
     target = -(_sign(acc) or 1.0) * own_half_width
-    w = math.sqrt(max(0.0, -2.0 * acc * (target - x)))
-    return -math.copysign(w, acc) - v
+    w_sq = -2.0 * acc * (target - x)
+    if w_sq <= 0.0:   # beyond that edge: the pull already brings it back, so only drift away from the box is cancelled
+        return 0.0 if v * acc > 0.0 else -v
+    return -math.copysign(math.sqrt(w_sq), acc) - v
 
 
 def _burn_row(kind, when, delta_lambda_dot, reason):
@@ -185,7 +187,9 @@ def forecast(x0, v0, acc, own_half_width, dashboard_half_width, today):
 
     # Too late: once outside dashboard edge, re-entry needs larger change.
     if abs(acc) <= EPS:
-        delta_too_late = -v0   # no pull: stopping it is the recovery
+        # No pull to bring it back: one burn cannot recover it (it takes a drift back and a later stop), so no row
+        # value; heading back already needs nothing.
+        delta_too_late = 0.0 if v0 * x0 < 0.0 else None
         t_too_late = 0.0
         x_too_late = x0
     else:
@@ -207,6 +211,8 @@ def forecast(x0, v0, acc, own_half_width, dashboard_half_width, today):
             "too_late",
             _offset_date(today, t_too_late),
             delta_too_late,
+            "No pull brings it back, so no single burn recovers it: a drift back and a later stop."
+            if delta_too_late is None else
             "After dashboard exit, recovery burn rises quickly with both drift rate and distance.",
         )
     )
