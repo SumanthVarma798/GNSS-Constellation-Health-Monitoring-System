@@ -190,14 +190,15 @@ def _citation_accessed(now):
     return now.strftime("%Y-%m-%d %H:%M")
 
 
-def dataset_citations(key, content, now=None):
-    """Short and long citation text for one dataset."""
+def dataset_citations(key, content, now=None, accessed=None):
+    """Short and long citation text for one dataset. `accessed` replaces the access time (the copy buttons pass
+    "{accessed}" so the browser writes the moment of the click)."""
     when = now or datetime.now(timezone.utc)
     item = OURS[key]
     version = _dataset_version(key, content)
     fields = {"organisation": "OpenGNSS", "title": item["name"], "url": item["address"],
               "year": _citation_year(version, when), "version": version, "licence": OUR_LICENCE[0],
-              "accessed": _citation_accessed(when)}
+              "accessed": accessed or _citation_accessed(when)}
     return {"short": CITATION_FORMATS["short"].format(**fields), "long": CITATION_FORMATS["long"].format(**fields)}
 
 
