@@ -301,3 +301,21 @@ def test_irnss_1d_is_end_of_life_and_nothing_unclassified():
     t = br.burn_classes_of(real("NavIC"), "NavIC")
     assert (t.loc[t["satellite"] == "IRNSS-1D", "burn_class"] == C.DISPOSAL).all()
     assert t["burn_class"].isin(C.CLASSES).all() and t["confidence"].notna().all()
+
+
+def test_a_north_south_burn_made_beyond_the_limit_is_left_out_of_the_norm_whichever_way_it_went():
+    """At 58.2 degrees (limit 58) two burns RAISE the tilt (away from target), then one lowers it while still beyond: none is
+    a sample of the usual burns, so the last one, made inside the limit, has no norm to be judged by."""
+    def inc(day):
+        out = np.empty_like(day)
+        steps = [(20, +0.3), (70, +0.3), (170, -0.9), (280, -0.4)]   # 58.2 -> 58.5 -> 58.8 (both away) -> 57.9 -> 57.5
+        value = 58.2
+        for k, d in enumerate(day):
+            if steps and d >= steps[0][0]:
+                value += steps.pop(0)[1]
+            out[k] = value
+        return out
+    t = run(make_history("BeiDou-3 I1", 118.0, 310, inc_fn=inc), "BeiDou-3")
+    ns = t[t["kind"] == "north-south"].sort_values("when")
+    assert len(ns) == 4
+    assert ns["burn_class"].iloc[3] == C.UNEXPLAINED

@@ -380,6 +380,7 @@ def _rules_3_to_7(t, constellation, verdict):
     for name in t.loc[ew, "satellite"].unique():
         cluster |= _clusters(t, [i for i in ew if t.at[i, "satellite"] == name])
     reasons = {}
+    off_norm = set()                     # made while already off its limit: not a sample of its usual burns, whatever its direction
     for i in rest:                       # the signs that a burn answers a state that was already off
         row, found = t.loc[i], []
         if row["kind"] == EW:
@@ -394,11 +395,13 @@ def _rules_3_to_7(t, constellation, verdict):
                 found.append(f"drift {row['drift_before']:+.3f} degrees/day before the burn")
         else:
             toward = inclination_target(row["satellite"], row["orbit_type"]) - row["inc_before"]
-            if (np.isfinite(toward) and _sign(row["delta_i_deg"]) == _sign(toward)
-                    and _inclination_beyond(row["satellite"], row["orbit_type"], row["inc_before"], constellation)):
+            beyond = _inclination_beyond(row["satellite"], row["orbit_type"], row["inc_before"], constellation)
+            if beyond:
+                off_norm.add(i)
+            if np.isfinite(toward) and _sign(row["delta_i_deg"]) == _sign(toward) and beyond:
                 found.append("inclination was beyond its limit before the burn")
         reasons[i] = found
-    info = _norms(t, rest, [i for i in rest if not reasons[i]])
+    info = _norms(t, rest, [i for i in rest if not reasons[i] and i not in off_norm])
     for i in rest:
         row, n = t.loc[i], info[i]
         accompanied = ((t["satellite"] == row["satellite"]) & (t["kind"] == EW)
