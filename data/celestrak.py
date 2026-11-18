@@ -27,13 +27,12 @@ from sgp4 import exporter, omm
 from sgp4.api import Satrec
 
 from evidence.archive import min_gap
-from evidence.settings import COPY_LOOK_GAP
+from evidence.settings import COPY_LOOK_GAP, ORBIT_DATA_URL
 
 URL = "https://celestrak.org/NORAD/elements/gp.php"
 CATALOGUE_URL = "https://celestrak.org/satcat/records.php"
 # The archive job's newest copy of the GNSS group (scripts/latest_orbits.py), read when CelesTrak refuses.
-COPY_URL = ("https://raw.githubusercontent.com/SumanthVarma798/"
-            "GNSS-Constellation-Health-Monitoring-System/orbit-data/latest_gnss.json")
+COPY_URL = ORBIT_DATA_URL + "latest_gnss.json"
 TIMEOUT = 8          # seconds per request
 EVERY = min_gap(URL)   # between two downloads from CelesTrak itself
 LOOK_EVERY = COPY_LOOK_GAP   # between two looks at the archive job's copy on GitHub

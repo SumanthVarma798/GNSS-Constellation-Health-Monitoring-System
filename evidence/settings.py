@@ -40,6 +40,10 @@ MIN_GAP_BETWEEN_DOWNLOADS = {
 # above. The archive job publishes a new copy every 2 hours, a few minutes after its run starts (archive.yml), so a
 # look every 20 minutes shows a published copy within about 20 minutes of its publication.
 COPY_LOOK_GAP = timedelta(minutes=20)
+# Where the archive job publishes what the dashboard reads (branch orbit-data), and how often Home's counts are made
+# anyway when the orbit copy has not changed (the orbit-checks files and the clock still move them).
+ORBIT_DATA_URL = "https://raw.githubusercontent.com/SumanthVarma798/GNSS-Constellation-Health-Monitoring-System/orbit-data/"
+HOME_COUNT_EVERY = timedelta(hours=8)
 DEFAULT_MIN_GAP = timedelta(seconds=5)  # any other site: no stated limit, so a polite pause
 # The most one run of a group may spend waiting out gaps, so it ends well inside archive.yml's 30-minute fetch step.
 RUN_WAIT_BUDGET = timedelta(minutes=15)

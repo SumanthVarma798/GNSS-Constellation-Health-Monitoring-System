@@ -1,7 +1,7 @@
 """Home's counts: read from the copy the scheduled job publishes, else counted here and kept.
 
 Counting one part means assessing every satellite in it, which takes seconds on the dashboard's small server, and the
-server forgets everything it kept each time it sleeps. So the archive job counts every part every 2 hours and
+server forgets everything it kept each time it sleeps. So the archive job counts every part when the orbit copy changes (and at least every 8 hours) and
 publishes the result on branch orbit-data (scripts/home_snapshot.py); Home reads that one file while it is fresh.
 When it is missing, too old, or the reader chose another time range, a part is counted here and kept until something
 it reads changes: a new UTC hour (the assessment's own clock), a new orbit fetch, or a new broadcast check.

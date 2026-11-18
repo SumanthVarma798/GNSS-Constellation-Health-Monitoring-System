@@ -50,6 +50,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       group: ${{ steps.due.outputs.group }}
+      orbits_changed: ${{ steps.orbit_files.outputs.orbits_changed }}  # CelesTrak's copy differs from the published one
+      home_due: ${{ steps.orbit_files.outputs.home_due }}  # ...or Home's counts are older than HOME_COUNT_EVERY
     timeout-minutes: 35  # the fetch step's limit below, plus time to save
     steps:
       - uses: actions/checkout@v4
@@ -104,6 +106,13 @@ jobs:
           else
             python scripts/archive_sources.py --archive archive --group "$GROUP"
           fi
+
+      - name: Is a new orbit copy or a new count of Home due?
+        id: orbit_files
+        if: steps.due.outputs.group == 'orbital' || steps.due.outputs.group == 'all'
+        # CelesTrak's GNSS group changes only 2 to 3 times a day. A run that finds the same element sets as the ones
+        # already published ends here: the two publish jobs below are skipped, so it costs one short job.
+        run: python scripts/orbit_publish_due.py --archive archive >> "$GITHUB_OUTPUT"
 
       - name: Save the changes and the run log line to the archive
         working-directory: archive
@@ -182,9 +191,9 @@ jobs:
 
   publish-orbits:
     # CelesTrak refuses the hosted dashboard but answers GitHub, so the dashboard reads only this copy from orbit-data
-    # and never contacts CelesTrak itself (data/celestrak.py, COPY_URL). Never touches main; an unchanged copy makes
-    # no commit.
-    if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System' && always() && (needs.archive.outputs.group == 'orbital' || needs.archive.outputs.group == 'all')
+    # and never contacts CelesTrak itself (data/celestrak.py, COPY_URL). Never touches main. Runs only when the archive
+    # job found the element sets changed (orbit_files step); the dashboard looks for a new copy every 20 minutes.
+    if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System' && always() && needs.archive.outputs.orbits_changed == 'true'
     needs: archive
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -230,8 +239,9 @@ jobs:
   publish-home:
     # Home's counts, made with the dashboard's own code so the dashboard need not count them on every cold start
     # (scripts/home_snapshot.py, ui/home_data.py). Runs after the orbit copy so it counts from the newest one. Never
-    # touches main. A failed run only leaves the last copy, which Home stops using once it is SNAPSHOT_MAX_AGE old.
-    if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System' && always() && (needs.archive.outputs.group == 'orbital' || needs.archive.outputs.group == 'all')
+    # touches main. Runs when the orbit copy changed, and otherwise when the last count is HOME_COUNT_EVERY old
+    # (evidence/settings.py). A failed run only leaves the last copy, which Home stops using once it is SNAPSHOT_MAX_AGE old.
+    if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System' && always() && needs.archive.outputs.home_due == 'true'
     needs: [archive, publish-orbits]
     runs-on: ubuntu-latest
     timeout-minutes: 15  # a cold pip cache installs the whole requirements.txt

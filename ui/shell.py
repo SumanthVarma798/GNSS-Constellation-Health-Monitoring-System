@@ -128,13 +128,13 @@ def failing_words(since, now, tz=timezone.utc, what="CelesTrak"):
 
 
 def copy_words(copy_at, now, tz=timezone.utc):
-    """'Orbits from CelesTrak, fetched 05:06 · next fetch about 08:15' for a copy in use: in words a reader of the
+    """'Orbits from CelesTrak, newest copy from 05:06 · next fetch about 08:15' for a copy in use: in words a reader of the
     dashboard knows (the archive job that fetches them is ours, not theirs).
 
     The copy's time and the archive job's next orbital run are shown in `tz`, with the day in front when not today.
     No next time is shown when the workflow file cannot be read or has no orbital schedule.
     """
-    words = f"Orbits from CelesTrak, fetched {_day_time(copy_at, now, tz)}"
+    words = f"Orbits from CelesTrak, newest copy from {_day_time(copy_at, now, tz)}"   # a run that finds no change makes no new copy
     try:
         crons = jobs.schedules((WORKFLOWS_DIR / "archive.yml").read_text(encoding="utf-8")).get("orbital", [])
         next_at = jobs.next_run(crons, now) if crons else None

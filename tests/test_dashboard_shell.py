@@ -369,7 +369,7 @@ def test_the_copy_chip_says_which_copy_and_when_the_next_orbital_run_is_due(monk
     monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: ({}, set(), FROZEN - timedelta(hours=1)))
     chips = " ".join(htmls(run(lambda at: at.button(key="refresh_button").click())))
 
-    assert "<b>Source</b> Orbits from " in chips and ", fetched 11:00 · next fetch about 12:15" in chips   # the chip's tip
+    assert "<b>Source</b> Orbits from " in chips and ", newest copy from 11:00 · next fetch about 12:15" in chips   # the chip's tip
 
 
 def test_when_the_copy_read_fails_the_chip_says_the_archive_copy_is_failing(monkeypatch):
@@ -423,15 +423,15 @@ def test_copy_words_say_the_copy_time_and_the_next_orbital_run():
     now = FROZEN.replace(hour=9, minute=0)
 
     assert copy_words(now.replace(hour=5, minute=6), now) == \
-        "Orbits from CelesTrak, fetched 05:06 · next fetch about 10:15"
+        "Orbits from CelesTrak, newest copy from 05:06 · next fetch about 10:15"
     assert copy_words(now.replace(hour=5, minute=6), FROZEN.replace(hour=21, minute=0)) == \
-        "Orbits from CelesTrak, fetched 05:06 · next fetch about 22:15"
+        "Orbits from CelesTrak, newest copy from 05:06 · next fetch about 22:15"
 
 
 def test_copy_words_leaves_out_the_next_time_without_a_readable_schedule(monkeypatch, tmp_path):
     monkeypatch.setattr(shell, "WORKFLOWS_DIR", tmp_path)
 
-    assert copy_words(FROZEN - timedelta(hours=1), FROZEN) == "Orbits from CelesTrak, fetched 11:00"
+    assert copy_words(FROZEN - timedelta(hours=1), FROZEN) == "Orbits from CelesTrak, newest copy from 11:00"
 
 
 def _on(page):
