@@ -26,7 +26,7 @@ def accel(longitude):
     return -S.LON_ACCEL_K * np.sin(np.deg2rad(2 * (longitude - S.LON_ACCEL_STABLE)))
 
 
-def make_history(name, lon0, days, burns=(), inc=0.05, drift0=0.0, per_day=6, inc_spikes=()):
+def make_history(name, lon0, days, burns=(), inc=0.05, drift0=0.0, per_day=6, inc_spikes=(), inc_fn=None):
     """One satellite's element sets every 1/per_day days. `burns` is [(day, delta-a km)]; `inc_spikes` is
     [(first record, last record, extra degrees)] of wrong inclination."""
     n = int(days * per_day)
@@ -39,6 +39,8 @@ def make_history(name, lon0, days, burns=(), inc=0.05, drift0=0.0, per_day=6, in
     epoch = START + pd.to_timedelta(day, unit="D")
     raan, argp = 100.0, 0.0
     inclination = np.full(n, inc, dtype=float)
+    if inc_fn is not None:
+        inclination = inc_fn(day)
     for first, last, extra in inc_spikes:
         inclination[first:last + 1] += extra
     return pd.DataFrame({
@@ -166,6 +168,55 @@ def test_wrong_way_burn_is_off_pattern_and_late_burn_is_off_cycle_timing():
     t = run(make_history("NVS-01", 131.5, period * 9.5 + 12, late, drift0=0.0237))
     timing = t[t["burn_class"] == C.OFF_CYCLE]
     assert len(timing) >= 1 and not timing["counted"].any()
+
+
+def test_a_burn_made_while_drift_is_off_limit_is_a_response_even_if_it_passes_t1_t2_t3(monkeypatch):
+    """The 7th burn is 6 days late: interval, size and direction still pass, but the drift before it is beyond the limit."""
+    monkeypatch.setattr(S, "DRIFT_TOLERANCE_GEO", 0.03)
+    plan, period, dsma = sawtooth(131.5, 7)
+    plan[6] = (plan[6][0] + 6.0, dsma)
+    t = run(make_history("NVS-01", 131.5, period * 7 + 26, plan, drift0=0.0237))
+    last = t[t["kind"] == "east-west"].iloc[-1]
+    assert "T1 interval: pass" in last["tests"] and "T2 size: pass" in last["tests"] and "T3 direction: pass" in last["tests"]
+    assert last["burn_class"] == C.RESPONSE and "drift" in last["note"]
+    assert (t[t["kind"] == "east-west"].iloc[3:6]["burn_class"] == C.ROUTINE_EW).all()
+
+
+def test_north_south_burns_beyond_the_inclination_limit_do_not_set_the_norm():
+    """Two burns made at 58.37 degrees (limit 58) answer an off state; the third, at 57.95, has no norm left to be judged by."""
+    def inc(day):
+        out = np.empty_like(day)
+        rate = 0.5 / 60
+        resets = [20, 80, 90]
+        value = 58.2
+        for k, d in enumerate(day):
+            value += rate / 6
+            if resets and d >= resets[0]:
+                value -= 0.5
+                resets.pop(0)
+            out[k] = value
+        return out
+    t = run(make_history("BeiDou-3 I1", 118.0, 130, inc_fn=inc), "BeiDou-3")
+    ns = t[t["kind"] == "north-south"]
+    assert len(ns) == 3
+    assert ns["burn_class"].tolist()[:2] == [C.RESPONSE, C.RESPONSE]
+    assert ns["burn_class"].iloc[2] == C.UNEXPLAINED
+
+
+def test_zero_length_window_leaves_the_burn_record_out_of_both_medians():
+    from analysis.burn_context import _around
+    epoch = np.array([1, 2, 3, 4, 5], dtype="int64") * 86400 * 10**9
+    value = np.array([1.0, 5.0, 100.0, 9.0, 50.0])
+    before, after = _around(epoch, epoch[2], epoch[2], value, 5.0, 5.0)
+    assert (before, after) == (3.0, 29.5)
+    before, after = _around(epoch, epoch[2], epoch[3], value, 5.0, 5.0)     # an ordinary window still counts both ends
+    assert before == 5.0 and after == 29.5
+
+
+def test_direction_is_unknown_without_a_position():
+    row = pd.DataFrame([{"drift_before": -0.03, "delta_a_km": -3.0, "pos_from_station": np.nan, "orbit_type": "GEO"}])
+    ok, words = C._test_direction(row, 0)
+    assert ok is None and "no position" in words
 
 
 def test_wilson_interval():

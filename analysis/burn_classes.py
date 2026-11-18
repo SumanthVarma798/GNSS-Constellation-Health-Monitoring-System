@@ -9,7 +9,7 @@ tests it passed or failed.
     1 relocation          planned     a pair of big opposite burns with a fast drift between (or one big burn that moved it)
     2 end of life         planned     a raise that ends in, or a burn made in, the graveyard
     3 routine east-west   counted     T1 interval, T2 size, T3 direction (reverses the drift, inside its box); 3 of 3 high;
-                                      never a burn that is part of a cluster
+                                      never one with a sign of response (cluster, off-limit state)
     4 routine north-south counted     moves the inclination towards its target, a normal size, apart from the last one, no big radial move
     5 response            irregular   it was off before the burn (outside its box or drift limit), a cluster, a quick reversal
     6 off pattern         irregular   an east-west burn that does not reverse the drift, or of a size far from its own norm
@@ -362,7 +362,9 @@ def _test_direction(t, i):
     if not np.isfinite(drift) or abs(drift) < S.DRIFT_NOISE:
         return None, "T3 direction: drift before too small to give a direction"
     reverses = _sign(row["delta_a_km"]) == _sign(drift)       # a lower orbit drifts east: it reverses a westward drift
-    inside = True if not np.isfinite(row["pos_from_station"]) else bool(abs(row["pos_from_station"]) <= _box(row["orbit_type"]))
+    if not np.isfinite(row["pos_from_station"]):
+        return None, "T3 direction: no position to put it in its box"
+    inside = bool(abs(row["pos_from_station"]) <= _box(row["orbit_type"]))
     words = (f"T3 direction: {'pass' if reverses and inside else 'fail'}, drift before {drift:+.3f} degrees/day, "
              f"{'reverses it' if reverses else 'does not reverse it'}, "
              f"{'inside' if inside else 'outside'} its box")
@@ -390,6 +392,11 @@ def _rules_3_to_7(t, constellation, verdict):
                 found.append(f"{row['pos_from_station']:+.2f} degrees from its station before the burn")
             if np.isfinite(row["drift_before"]) and abs(row["drift_before"]) > _drift_limit(row["orbit_type"]):
                 found.append(f"drift {row['drift_before']:+.3f} degrees/day before the burn")
+        else:
+            toward = inclination_target(row["satellite"], row["orbit_type"]) - row["inc_before"]
+            if (np.isfinite(toward) and _sign(row["delta_i_deg"]) == _sign(toward)
+                    and _inclination_beyond(row["satellite"], row["orbit_type"], row["inc_before"], constellation)):
+                found.append("inclination was beyond its limit before the burn")
         reasons[i] = found
     info = _norms(t, rest, [i for i in rest if not reasons[i]])
     for i in rest:
@@ -432,7 +439,7 @@ def _rules_3_to_7(t, constellation, verdict):
         why = reasons[i]
 
         if basis and t3 is True and t2 is not None and (t2 or t1):
-            if t1 and t2 and i not in cluster:
+            if t1 and t2 and not why:
                 verdict[i] = _Verdict("3", ROUTINE_EW, drop("high"), basis, words)
                 continue
             if not why and t1 is not False:               # T1 not failing: it passed with T2 failing, or has no earlier burn

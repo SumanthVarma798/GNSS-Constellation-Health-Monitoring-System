@@ -58,11 +58,12 @@ def _median(values):
 
 
 def _around(epoch_ns, t0, t1, column, days_before, days_after):
-    """Medians of `column` over the records in the days_before up to and including t0, and from t1 for days_after."""
+    """Medians of `column` over the records in the days_before up to and including t0, and from t1 for days_after (the record at t0 == t1 on neither side)."""
     lo = np.searchsorted(epoch_ns, t0 - days_before * 86400e9, side="right")
-    mid = np.searchsorted(epoch_ns, t0, side="right")
+    same = t0 == t1     # a zero-length window sits on one record: it belongs to neither side
+    mid = np.searchsorted(epoch_ns, t0, side="left" if same else "right")
     hi = np.searchsorted(epoch_ns, t1 + days_after * 86400e9, side="right")
-    first = np.searchsorted(epoch_ns, t1, side="left")
+    first = np.searchsorted(epoch_ns, t1, side="right" if same else "left")
     return _median(column[lo:mid]), _median(column[first:hi])
 
 

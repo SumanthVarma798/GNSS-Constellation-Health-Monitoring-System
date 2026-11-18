@@ -22,8 +22,7 @@ EW_MAX_DV = 20.0                # m/s: a single east-west burn above this is not
 NS_MAX_DEG = 1.0                # degrees: an inclination step above this costs ~50 m/s
 CONTAMINATED_DAYS = 1.0         # a burn whose window starts this close to the end of an impossible step starts on the same bad record
 REVERSAL_DAYS = 90              # a step that is undone within this many days ...
-REVERSAL_NET = 0.25             # ... to within this share of its size ...
-REVERSAL_SERIES_SHARE = 0.25    # ... while the series between the two moved less than this share of the step, is a record error
+REVERSAL_NET = 0.25             # ... to within this share of its size is a record error (the series between the two is the spike itself, so it cannot tell)
 
 # ---- rule 1: relocation (OUR CHOICE, team to confirm) ---------------------------------------------------------------
 RELOCATION_MIN_KM = 19.0        # each burn of the pair changes the semi-major axis by at least this (drift ~0.25 degrees a day)
