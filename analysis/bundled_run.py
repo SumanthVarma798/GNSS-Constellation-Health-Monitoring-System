@@ -245,6 +245,11 @@ def burns(df_all_full, p, moving=()):
     return burns_detailed(df_all_full, p, moving)[BURN_COLUMNS]
 
 
+def burn_classes_of(result, constellation):
+    """What kind each burn in assess_constellation's `result` was (analysis/burn_classes.classify). Not used by any score."""
+    return classify(result['burns_detailed'], result['history'], constellation)
+
+
 def assess_constellation(constellation, now, window_days=90, params=None, fresh=None):
     """Health of every tracked satellite of `constellation` as app.py shows it.
 
@@ -256,8 +261,9 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
     `fresh` ({norad: [history rows]}, from data.celestrak) is merged onto the bundled history, and
     the newest of those rows places the satellite for the longitude step.
 
-    Returns {'health', 'set_aside', 'moving', 'history', 'burns', 'burn_classes', 'data_time', 'warnings'}; `burn_classes` is
-    analysis/burn_classes.classify's table of the same burns (what kind each was), not used by any score. `moving` is {satellite: day of
+    Returns {'health', 'set_aside', 'moving', 'history', 'burns', 'burns_detailed', 'data_time', 'warnings'};
+    `burns_detailed` is `burns` with the detector's before and after medians, for burn_classes_of (not run here: no page
+    shows the kinds yet, and the free host's CPU is slow). `moving` is {satellite: day of
     its first orbit record} for each new one still being moved to its slot (analysis/commissioning.py): left out of the scores.
     Raises ValueError for an unknown constellation, no bundled data, or no records in the window.
     """
@@ -380,8 +386,8 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
         'set_aside': sorted(graveyard_sats),
         'moving': {name: moving[name].strftime('%Y-%m-%d') for name in sorted(moving)},
         'history': df_all_full,
-        'burns': burns(df_all_full, p, moving),
-        'burn_classes': classify(burns_detailed(df_all_full, p, moving), df_all_full, constellation),
+        'burns_detailed': (detailed := burns_detailed(df_all_full, p, moving)),
+        'burns': detailed[BURN_COLUMNS],
         'data_time': gp_meta['timestamp'],
         'warnings': warnings,
     }

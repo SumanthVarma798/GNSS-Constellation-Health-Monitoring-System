@@ -12,6 +12,7 @@ import pandas as pd
 import pytest
 
 from analysis import burn_class_settings as S
+from analysis import bundled_run as br
 from analysis import burn_classes as C
 from analysis.burn_context import gmst_deg
 from analysis.bundled_run import BURN_COLUMNS, assess_constellation, burns, burns_detailed
@@ -199,14 +200,14 @@ def test_one_list_of_burns():
     """burns() is burns_detailed() less its extra columns, and the class table is the same burns."""
     result = real("NavIC")
     assert list(result["burns"].columns) == BURN_COLUMNS
-    classes = result["burn_classes"]
+    classes = br.burn_classes_of(result, "NavIC")
     assert len(classes) == len(result["burns"])
     key = ["satellite", "kind", "window_end", "d_sma_km"]
     assert classes[key].sort_values(key).reset_index(drop=True).equals(result["burns"][key].sort_values(key).reset_index(drop=True))
 
 
 def test_g1_april_pair_is_a_relocation():
-    t = real("BeiDou-3")["burn_classes"]
+    t = br.burn_classes_of(real("BeiDou-3"), "BeiDou-3")
     g1 = t[(t["satellite"] == "BeiDou-3 G1") & (t["kind"] == "east-west")]
     pair = g1[g1["delta_a_km"].abs() > 50]
     assert pair["delta_a_km"].round().tolist() == [-107, 107]
@@ -216,7 +217,7 @@ def test_g1_april_pair_is_a_relocation():
 
 
 def test_nvs01_2026_burns_are_routine_east_west():
-    t = real("NavIC")["burn_classes"]
+    t = br.burn_classes_of(real("NavIC"), "NavIC")
     nvs = t[(t["satellite"] == "NVS-01") & (t["when"] >= "2026-01-01")]
     assert len(nvs) >= 10
     assert (nvs["burn_class"] == C.ROUTINE_EW).all()
@@ -226,26 +227,26 @@ def test_nvs01_2026_burns_are_routine_east_west():
 
 
 def test_i3_inclination_pair_is_an_artefact():
-    t = real("BeiDou-3")["burn_classes"]
+    t = br.burn_classes_of(real("BeiDou-3"), "BeiDou-3")
     i3 = t[(t["satellite"] == "BeiDou-3 I3") & (t["delta_i_deg"].abs() > 0.1) & (t["when"] < "2026-03-01")]
     assert len(i3) >= 2
     assert (i3["burn_class"] == C.ARTEFACT).all()
 
 
 def test_g2_north_south_burns_are_routine():
-    t = real("BeiDou-3")["burn_classes"]
+    t = br.burn_classes_of(real("BeiDou-3"), "BeiDou-3")
     g2 = t[(t["satellite"] == "BeiDou-3 G2") & (t["kind"] == "north-south")]
     assert g2["delta_i_deg"].round(2).tolist() == [-0.5, -0.45]
     assert (g2["burn_class"] == C.ROUTINE_NS).all()
 
 
 def test_g1_july_cluster_is_a_response():
-    t = real("BeiDou-3")["burn_classes"]
+    t = br.burn_classes_of(real("BeiDou-3"), "BeiDou-3")
     july = t[(t["satellite"] == "BeiDou-3 G1") & (t["kind"] == "east-west") & (t["when"].dt.month == 7)]
     assert len(july) == 4 and (july["burn_class"] == C.RESPONSE).all()
 
 
 def test_irnss_1d_is_end_of_life_and_nothing_unclassified():
-    t = real("NavIC")["burn_classes"]
+    t = br.burn_classes_of(real("NavIC"), "NavIC")
     assert (t.loc[t["satellite"] == "IRNSS-1D", "burn_class"] == C.DISPOSAL).all()
     assert t["burn_class"].isin(C.CLASSES).all() and t["confidence"].notna().all()
