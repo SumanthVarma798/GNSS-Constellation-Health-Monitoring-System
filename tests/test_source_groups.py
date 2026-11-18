@@ -53,9 +53,10 @@ def test_orbits_are_kept_every_two_hours():
     assert re.search(r"- cron: '15 \*/2 \* \* \*'\s+# orbital: every 2 hours", JOB)
 
 
-# Scheduled workflows that still ask celestrak.org themselves, with the reason (the weekly registry job needs CelesTrak's
-# SATCAT catalogue, which the orbit copy on orbit-data does not hold).
-STILL_ASKS_CELESTRAK = {"registry-update.yml": "weekly: SATCAT and one GP request per changed satellite"}
+# Scheduled workflows that still ask celestrak.org themselves, with the reason. The weekly registry job reads GP elements
+# from our orbit copy; it asks CelesTrak for SATCAT (a different file, not in the copy) and, in its log, for a satellite
+# the copy lacks. Both are rare requests; the archive's orbital group is the only job that downloads the GNSS group.
+STILL_ASKS_CELESTRAK = {"registry-update.yml": "weekly: SATCAT (not in our copy), and GP elements only for a satellite our orbit copy lacks"}
 ROOT = Path(__file__).resolve().parent.parent
 
 

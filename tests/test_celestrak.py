@@ -17,6 +17,7 @@ IRNSS_1B = {"OBJECT_NAME": "IRNSS-1B", "OBJECT_ID": "2014-017A", "EPOCH": "2026-
             "EPHEMERIS_TYPE": 0, "CLASSIFICATION_TYPE": "U", "NORAD_CAT_ID": 39635, "ELEMENT_SET_NO": 999,
             "REV_AT_EPOCH": 4592, "BSTAR": 0, "MEAN_MOTION_DOT": 7.6e-07, "MEAN_MOTION_DDOT": 0}
 NOW = datetime(2026, 10, 15, 10, 42, tzinfo=timezone.utc)
+COPY_ROWS = celestrak.copy_rows
 FETCH_COPY = celestrak.fetch_copy   # the real one: conftest swaps in one that fails, so no test reads GitHub
 
 
@@ -214,6 +215,7 @@ def test_when_celestrak_refuses_the_archive_jobs_copy_fills_in_and_says_when_it_
 
     monkeypatch.setattr(celestrak, "fetch", refused)
     monkeypatch.setattr(celestrak, "fetch_copy", FETCH_COPY)
+    monkeypatch.setattr(celestrak, "copy_rows", COPY_ROWS)
     monkeypatch.setattr(requests, "get", get)
     after = celestrak.refresh([39635], NOW)
 
@@ -230,6 +232,7 @@ def test_the_copy_carries_tracked_satellites_outside_the_group_without_listing_t
     copy = {"fetched_at": "2026-11-08T08:15:00Z", "rows": [IRNSS_1B], "outside_group": [qzs7]}
     monkeypatch.setattr(requests, "get", lambda url, timeout, **kwargs: Reply(copy))
 
+    monkeypatch.setattr(celestrak, "copy_rows", COPY_ROWS)
     found, listed, _ = FETCH_COPY([39635, 100270])
 
     assert set(found) == {39635, 100270}   # the hosted dashboard gets QZS-7's orbit as a direct fetch would
@@ -245,6 +248,7 @@ def test_with_no_copy_either_a_refusal_keeps_what_is_held(monkeypatch):
 def test_a_copy_that_is_not_one_is_ignored(monkeypatch):
     monkeypatch.setattr(celestrak, "fetch", refused)
     monkeypatch.setattr(celestrak, "fetch_copy", FETCH_COPY)
+    monkeypatch.setattr(celestrak, "copy_rows", COPY_ROWS)
     monkeypatch.setattr(requests, "get", lambda url, timeout, **kwargs: Reply(["not", "a", "copy"]))
     assert celestrak.refresh([39635], NOW)["copy_at"] is None
 

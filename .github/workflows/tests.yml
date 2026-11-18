@@ -27,10 +27,10 @@ permissions:
   contents: read
 
 # A newer push to the same pull request stops the run it replaces, so superseded runs stop costing minutes.
-# The group is per ref, so a pull request's run never cancels a run on main.
+# Only pull request runs are cancelled: a run on main (a merge, or a manual run on it) always finishes.
 concurrency:
   group: tests-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   pytest:

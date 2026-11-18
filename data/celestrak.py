@@ -95,15 +95,22 @@ def fetch_copy(norad_ids):
     The group, plus the tracked satellites it leaves out that the job asked for one by one (outside_group), as fetch()
     does; only the group counts as listed. No request per satellite from here. Raises as fetch() does.
     """
+    group, outside, taken = copy_rows()
+    wanted = set(norad_ids)
+    listed = {int(row["NORAD_CAT_ID"]) for row in group}
+    found = {int(row["NORAD_CAT_ID"]): as_history_row(row) for row in [*outside, *group]
+             if int(row["NORAD_CAT_ID"]) in wanted}
+    return found, listed, taken
+
+
+def copy_rows():
+    """(the GNSS group's rows, the tracked satellites' rows the group leaves out, when the copy was first fetched) as
+    CelesTrak wrote them, from the archive job's copy. Raises as fetch_copy() does."""
     reply = requests.get(COPY_URL, timeout=TIMEOUT)
     reply.raise_for_status()
     copy = reply.json()
     taken = datetime.fromisoformat(copy["fetched_at"].replace("Z", "+00:00"))
-    wanted, group = set(norad_ids), copy["rows"]
-    listed = {int(row["NORAD_CAT_ID"]) for row in group}
-    found = {int(row["NORAD_CAT_ID"]): as_history_row(row) for row in [*copy.get("outside_group", []), *group]
-             if int(row["NORAD_CAT_ID"]) in wanted}
-    return found, listed, taken if taken.tzinfo else taken.replace(tzinfo=timezone.utc)
+    return copy["rows"], copy.get("outside_group", []), taken if taken.tzinfo else taken.replace(tzinfo=timezone.utc)
 
 
 def catalogue_entry(norad):

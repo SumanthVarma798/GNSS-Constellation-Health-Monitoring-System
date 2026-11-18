@@ -8,7 +8,7 @@ from pathlib import Path
 import requests
 
 from data.spacetrack import LoginRefused
-from evidence.archive import read_runs
+from evidence.archive import log_run, read_runs
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import orbit_ages  # noqa: E402
@@ -128,3 +128,20 @@ def test_celestrak_failure_is_not_fatal(monkeypatch, tmp_path):
     run_line = read_runs(tmp_path, "orbit-ages")[0]
     assert run_line["result"] == "success"
     assert "CelesTrak copy failed:" in run_line["changed"]
+
+
+def test_the_copy_note_follows_when_the_archive_last_checked_not_when_the_copy_last_changed(monkeypatch, tmp_path):
+    track(monkeypatch)
+    monkeypatch.setattr(orbit_ages.celestrak, "fetch_copy", lambda norads: ({}, set(), NOW - timedelta(days=1)))   # unchanged for a day
+    monkeypatch.setattr(orbit_ages.spacetrack, "fetch", lambda username, password, norads: {})
+    env = {"SPACETRACK_USERNAME": "u", "SPACETRACK_PASSWORD": "p"}
+    log_run(tmp_path, "archive", "archive orbital", (NOW - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            NOW.strftime("%Y-%m-%dT%H:%M:%SZ"), "ok", "nothing")
+
+    orbit_ages.run(tmp_path, tmp_path / "a.json", now=NOW, env=env)
+    assert "last checked" not in read_runs(tmp_path, "orbit-ages")[0]["changed"]   # current but unchanged: no note
+
+    log_run(tmp_path, "archive", "archive orbital", (NOW - timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            NOW.strftime("%Y-%m-%dT%H:%M:%SZ"), "ok; 1 skipped: asked less than the site's minimum gap ago", "nothing")
+    orbit_ages.run(tmp_path, tmp_path / "b.json", now=NOW + timedelta(hours=5), env=env)   # last real check 6 h ago
+    assert "CelesTrak copy last checked" in read_runs(tmp_path, "orbit-ages")[1]["changed"]

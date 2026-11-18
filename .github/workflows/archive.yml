@@ -23,7 +23,8 @@ on:
     - cron: '15 */2 * * *'  # orbital: every 2 hours from 00:15 UTC = 05:45 India time; CelesTrak allows one download per 2 hours
     #   Every 2 hours because CelesTrak updates its GP data only that often. This is the ONLY schedule that downloads
     #   from CelesTrak (orbit-ages and rinex-check read this run's copy on orbit-data instead), so CelesTrak sees at most
-    #   one download per 2 hours. Minute 15 is free of every other line below.
+    #   one download per 2 hours. Minute 15 is free of every other line below. A run, scheduled or by hand, that finds
+    #   the run log showing CelesTrak was asked less than 2 hours (less 10 minutes' start jitter) ago skips the download.
     - cron: '50 */3 * * *'  # news: every 3 hours from 00:50 UTC = 06:20 India time; first, to measure how often feeds change (issue 13)
     - cron: '40 1 * * *'  # social: once a day, 01:40 UTC = 07:10 India time; Reddit refuses requests in quick succession
     - cron: '55 */6 * * *'  # x: every 6 hours from 00:55 UTC; each read is paid (twitterapi.io), one page per account
