@@ -1,0 +1,2 @@
+satellite,design_life_years,budget_m_s,source_name,source_link,confidence
+# Columns: spacecraft id, design-life assumption, station-keeping budget estimate (m/s), citation name, citation URL, confidence note.
