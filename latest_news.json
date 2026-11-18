@@ -1,6 +1,23 @@
 {
- "generated_at": "2026-11-17T16:33:22Z",
+ "generated_at": "2026-11-18T01:21:58Z",
  "items": [
+  {
+   "address": "https://news.google.com/rss/articles/CBMiggFBVV95cUxON2hHOFliYmljVGZ4X2diUGExZ3hIcjRyNHZBUFdDVS1WN3VDbFV5WFlxRVhxZy1aa3ZTaUxCLUo0NGNfRmM4YWFMZXd0RjFTOFJjZEhJTXFRQm5LckVMTWd1UWVraWx6UlE2bkZoY3BOaTlPd1M2NmhYSm9OMDNvcEF3?oc=5",
+   "category": "other",
+   "constellations": [
+    "BeiDou-3"
+   ],
+   "fetched_at": "2026-11-18T01:21:16Z",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
+   "outlet": "China Daily Global Edition",
+   "published_at": "2026-11-18T00:59:56Z",
+   "source_id": "global.chinadaily.com.cn",
+   "summary": "",
+   "title": "Beidou sees growing use across industries",
+   "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
   {
    "address": "https://www.gsc-europa.eu/notice-advisory-to-galileo-users-nagu-2026048",
    "category": "other",
@@ -3312,6 +3329,22 @@
    "summary": "",
    "title": "Thales Alenia Space wins contract for two further Galileo satellites",
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiswFBVV95cUxPeEVacS1DUElDaVhBaFFZZ05MN3pjXzBKb1ZfOWdRN19sY3FaaFFvT2s4bUYybmtvRV93TkNERlVfTVRwb0x3WV9Mb1Y1QlVBX2t1MEprbEhhRnBnbm5hMTRtdUg0Y3VFTDZUZW9BTkNkNjBfMG9mUm1BUFE3NVhzWDBIS09pMl9BLTBla1ZPNnBkS2N1Ymk3S1ZxOXhfMi1EWGdCU1FIa0gzdzhIbVlJaTlhZ9IBuAFBVV95cUxQRXRNRTRvZkJzQ3ZBd1A3T0tGTXRGU2I0WjlTMFZwaWhkYnF1eW9Cc1pWRXJSUkoyNG9udjVwUkdhTVF4VmNpMFRzSk1tNG5fSWRDd1Q4Vm4tYXVzOXc0SVVzNUE4bWg5SWZGVDBLX2o2VXpfRi04NExjQXpER2hSbjktcHozRWlkNGdscDBTWUJ5RERxajZ6ZS1PMzlSd191a0lnWWg4RFZQSnNXX25RR2pEUFNJM2tq?oc=5",
+   "category": "launch",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-11-18T01:20:55Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "India TV News",
+   "published_at": "2026-10-30T10:29:38Z",
+   "source_id": "indiatvnews.com",
+   "summary": "",
+   "title": "ISRO's NVS-03 launch: All about India's indigenous GPS, NavIC and why it needs revival",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMixwFBVV95cUxNNnRIZ2lHUndCY3NzS0xxSXZ3eEVwV2YzLVJKLTNpbTNHUEVaS1ZYREx5b0tnTE90aVVFWXUzQzB2NDdiaS1Ecml4eWJqTjNTRjBKekk1Ymd3Y1hraFJNVEZrUGd4MEgyS0w1anVhQ3RvbnNkSVFaVE0tVHVLb1VxQ3loOWU5NEVLMFBkdVp2a2l6bDNsQkZYYmM1cFROODZfOVk5T2NmNVVhaTdUVTlZQXpsb3htWU5JekFMbjZfV2IxTThrRWFB0gHUAUFVX3lxTFBSckZySjRySnFPWUNYbl9ZQ2swNVBwUVZaaUc2OGZDcmpBMmVpMENEY3J0YVloNzQxX2pMd0UyZFhKdGd4eldPYk1ZbUJIQ2dENDJSVTMtV2RvbDUxWEFCQnlYTi05dW1JcUpJZjRCZzFpVHU1MmZOX3JMbUdMZjQ4VzVHeW8ydDRnVkoxa2RXdzhOSFJHdUo0cG5DSVo3VlR5RHIzQmM5dm1aQ1FBTFN1MXFGbXhrOG40eDFUSmI4NTVqRUwwZFBsdkJHOUdpWjVIaHd6?oc=5",
@@ -7378,23 +7411,6 @@
    "source_id": "business-standard.com",
    "summary": "",
    "title": "Isro's NavIC down to 3 satellites: What it means for India's GPS ambition",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMiugFBVV95cUxQX0p1NXJDR3VadEdFbndUeHFBY3lrLUZaaGpBQW1CZ3VOdnlFWHhZRkxLNkpXbVZEOGN4Y19FNkh2ZkI4czZYMTRDRV92dG5lZ1pKZHRSVlQ0SkFzU29qX3lvdk5YNGMtUFV4MTQ1QUhZQng4UnJVX1VNcU1WREFfcC1lVHM5bWwySWEtUGNLV2tocnpZSkZuTER5d1U0YkZSdDVfem5LZW5PVnB0TFMzU0J6NFAyYkh3SXfSAcABQVVfeXFMTl9razhVT3lvNFdxb2ZERFZPQmRiaDMxeV91cE5ncUVWZ3NvSlRETFJWbXNXTURJbHlFTmJ0V1ozdGo5c1dzdmR0cFdFQzk4VFlRdzJIaXhVaGtEeERNZnVTbTFXa0QwUDgzT1lQSU9ZSG9waUt0VlpfRXlOZ1Jxd3E2ZmtMWmwzU29DTTY3SXBSNkJzNUdadlpsaURKYU5lZGR4NGxRLUpLbTRxYktaUU93Z0t0UXZna2tweUk4U1JE?oc=5",
-   "category": "other",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "F",
-   "grade_from": "record",
-   "grade_standing": "provisional",
-   "outlet": "The Indian Express",
-   "published_at": "2026-03-16T07:00:00Z",
-   "source_id": "indianexpress.com",
-   "summary": "",
-   "title": "NavIC satellite loses its atomic clock: What this means for India’s bid for its own GPS",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
