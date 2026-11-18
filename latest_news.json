@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-18T01:21:58Z",
+ "generated_at": "2026-11-18T12:19:32Z",
  "items": [
   {
    "address": "https://news.google.com/rss/articles/CBMiggFBVV95cUxON2hHOFliYmljVGZ4X2diUGExZ3hIcjRyNHZBUFdDVS1WN3VDbFV5WFlxRVhxZy1aa3ZTaUxCLUo0NGNfRmM4YWFMZXd0RjFTOFJjZEhJTXFRQm5LckVMTWd1UWVraWx6UlE2bkZoY3BOaTlPd1M2NmhYSm9OMDNvcEF3?oc=5",
@@ -2270,6 +2270,40 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMizgFBVV95cUxPZDFlT1JSSldqVGRXeTVybkF1dzR5UVpCNW9HSDVLZVl1NDRYRE9IaGpKRm9YQ1N6ZjZtOGIwdzZlOW5jWVNtSlRITUhVWEx3bTJ2WHJYWklxTVNzUkd3OW9MNUJWZWpyY0RUbTYyc195ZndpazNLVnl2dHZKNi1iNE1HUnRvdFdxeG5sZXRMcWJrc21XLU1pSVBhZTJCSFFYVXVIeUhDd2RUbEtpZ3dGYlFRYXFOMnlmNk1CNEFGVkF1RHp4TWVYTk9IdnZ6Zw?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-18T12:18:30Z",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
+   "outlet": "NDTV Profit",
+   "published_at": "2026-10-31T07:00:00Z",
+   "source_id": "ndtvprofit.com",
+   "summary": "",
+   "title": "ISRO's GSLV Rocket Successfully Places NVS-03 Satellite Into 'Designated' Orbit, PM Modi Reacts",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxOSzVYeWQ4djlTR0RLNzhpMklGVW5uNkw1eHFzanNCaFJFRDNjUm5SQ1lpOWRPcDBmcHVnRW9SWHN2eGlTcUdFRW0wenB5NExVWE1CRjhqNzJueWtaOG9sMGdkZ1ZqSjJheHB6bVVFS2dBSGhRYWxRRzhzZklwMnV4bGFVaEhXYWZ6NnllSXl6eDBmTjdYS3dnTzFHdVFQSHBORzllajJ2OWnSAa4BQVVfeXFMTUxvbjdmTWVGeEI3Q2F2YlFhX3JYWTJibjRueDF6WFVjbmZlMmdvbENncXM5QmlBY2tFNHByWWk0aDhydERtNWd6eUZXZUV1NDItRGZ4MzFMb3pJN0hiNnRpZTltQldFRDV0eGVla3QybWJnclJiVDFBdi1kNmpoWGZLTEdLclhoZzhOWWhLZldBbFdZXzJvTlJVdTFXbndpaGZIZUpkMTJfSmlQbm13?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-18T12:18:30Z",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
+   "outlet": "WION",
+   "published_at": "2026-10-31T07:00:00Z",
+   "source_id": "wionews.com",
+   "summary": "",
+   "title": "ISRO launches NVS-03 to enhance India's satellite navigation",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMijwFBVV95cUxNOV9MOWhweTd1clh4STRlZDJ5ZHJoQnRBZnlDN3ZCR3JEVS1tTTF0UEs1QnhlbGlTdHh3aGxKNUtrdkljaUlCX19nQlRkRkFxVlN6SGFpQXdmRVBWMXNkRS10cWdMUlNaeTgtY3oxcDVkd1c4amR4THhqU1l3dTNPQkFjMzJ6UjZGZ1FBNE5VMA?oc=5",
    "category": "launch",
    "constellations": [
@@ -2987,23 +3021,6 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMizgFBVV95cUxPZDFlT1JSSldqVGRXeTVybkF1dzR5UVpCNW9HSDVLZVl1NDRYRE9IaGpKRm9YQ1N6ZjZtOGIwdzZlOW5jWVNtSlRITUhVWEx3bTJ2WHJYWklxTVNzUkd3OW9MNUJWZWpyY0RUbTYyc195ZndpazNLVnl2dHZKNi1iNE1HUnRvdFdxeG5sZXRMcWJrc21XLU1pSVBhZTJCSFFYVXVIeUhDd2RUbEtpZ3dGYlFRYXFOMnlmNk1CNEFGVkF1RHp4TWVYTk9IdnZ6Z9IB1gFBVV95cUxNSVFqY0VJWHNGZDdqTVY1cU4tU2ZkUnVYbElhOUJKU0xESlRrSUlDUVpaODJhcFVGa1FYZHRxMTZTZVNyNzNuZElvTFFxdW1EVzdqU1UwT0Nvc0NTUnVVWlMtSFVKNEk0dGpFeFJ4N2V4T0ZOR0thdnJMaGZBN0pTclpGTzJnU0pwR3ZJT3BCRzlPSkplbDY2Z3ZoTW9YR2lHanVtMjQ2VGhTdGVLcHEtRG1MOUJsQ3I1NzRDWG9rbUlCSzZuWk5QNXZ1a0NNNEF3OVdNWnln?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-11-07T17:53:23Z",
-   "grade": "F",
-   "grade_from": "record",
-   "grade_standing": "provisional",
-   "outlet": "NDTV Profit",
-   "published_at": "2026-10-31T02:51:57Z",
-   "source_id": "ndtvprofit.com",
-   "summary": "",
-   "title": "ISRO's GSLV Rocket Successfully Places NVS-03 Satellite Into 'Designated' Orbit, PM Modi Reacts",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMiugFBVV95cUxQMEpJZHJjUVlHN0Z3bnJULWxfUkNkVzhqaldDdTdDZFNTV0JxTC1WdGZwSmttSkc4ekZNLXBzQ1pDZ0dacEZteUJIemV0blAzSHFZR0Y4NmJMazJqTFBoYnVqMFU2c09xbXRWa0I3YzNZSWJEaWdzOUpCM3hNZjltWm5QQXZLYTU5ajdPZTVQOEZrbkwxajg4ZXBYUTk5dnVsV0VrUzl3MnloTFRwaDJ2S2N2Z0hPWDVFMFHSAccBQVVfeXFMTlRJWjU4WVBYcmdOZXVSaFEyMXlhSEF3QlRTQVRqcnJwSFRaeFVCckR0Y21iTWtROXFpd1VnQ3Zfc29vdGhELVg4aHJDWEdwUWdESkJQeE9VYjljWUpVV053aFdUOFloVEJNSXhudHdOZElvWG1BSDhtY2JIclVwanJ5WXNTT2NpUmN6NENXZmpKM3RzYXZSRGI3MEVrOXRHdWxuWVpaVU5WVVY1N3JFYU5ndU80YjJuYmIzQ1ZZdGZmX2lSaWVCWQ?oc=5",
    "category": "launch",
    "constellations": [
@@ -3164,23 +3181,6 @@
    "source_id": "twaslnews1.twaslnews.com",
    "summary": "",
    "title": "ISRO’s GSLV-F18 launch success revives NAVIC, but there’s a catch…",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxQTldiaGdTd292c1FvNTBzdVotQW5odGVINHcxQ202ME9yUHpnUnczNXF2cDExMHdPbFI2dVFKazJxU3g5MWhjVXR5enkwUi14WEdIdkZwaDlLT3ZmZkNOM2dGelkwNmdhVlRBN1d6MFZ5bXJxX0p6ZkxTNkFrS0xqRDczRWJzazNhNjdMdS1NaTk3Q0d3TV9EV0tsaVV3MmtWQXdBS2ZZdXIxTm12dlJYYUxIOWFURUZsRWxBVGxkbUJZbGFoQTNVc2dRWVJGOWpU0gHWAUFVX3lxTFBZT0tDcl8zVGtsTGJ5MmR3QUtPWm5CRkE5RGxsVE5LOGZ5V3l3QWlpcEhDdWJoVktyN3NZSVJtWVB2a21VQUVNQTRmV2h2MWJ0TFFpVU0xODZsb24tNkt3OVMwRVM1Vi03eXNENjc5bHhsWGwwU1NzNlptb0pyTGFKcm9PM1pldmtjX0hMOGhYZ0Y3RnYyWmpOZXNrdUNTeVk0cDVEOFNxMV9iUUhaeGZ2TlVzNF9lZ3lkRWo4ZFJKbTIyQ3FTdU1kemdla3N4Tl91ZW5XVmc?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-31T09:59:34Z",
-   "grade": "F",
-   "grade_from": "record",
-   "grade_standing": "provisional",
-   "outlet": "India Today",
-   "published_at": "2026-10-31T02:09:19Z",
-   "source_id": "indiatoday.in",
-   "summary": "",
-   "title": "ISRO Launches NVS-03 via GSLV-F18 to Boost NavIC Regional Navigation - India Today",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -8184,22 +8184,6 @@
    "summary": "",
    "title": "Wrapping up 2025 with a Galileo launch!",
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMisgFBVV95cUxPR0gwbU5ZdmJyODlOMTlycFdUckxLZ2pnMTk2RHVnMURJcnBRMm5pck44V25aNGZGWHVrNEd2bFhjOG1meEVZOTR5QThBeWJtYkFGQ3ZDbE5aVVd0OHZlOGpwc0MzZWNoZUU5dzdjbTZHQ0lpUDZsbFA2NGlSRXhSbVNrY2xGWE1PYld1UXpXOHdSOG5Zb2o0d2NTY0pxS3lJM2JqYWRERzFCN1RaTDVSR0NB?oc=5",
-   "category": "other",
-   "constellations": [
-    "GLONASS"
-   ],
-   "fetched_at": "2026-10-19T22:40:50Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "The Jamestown Foundation",
-   "published_at": "2025-11-18T06:06:21Z",
-   "source_id": "jamestown.org",
-   "summary": "",
-   "title": "GLONASS satellite (Source: Reuters)",
-   "via": "https://news.google.com/rss/search?q=GLONASS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   }
  ],
  "rules": {
@@ -9405,15 +9389,6 @@
    "graded_by": "",
    "kind": "",
    "name": "jagranjosh.com",
-   "note": "",
-   "reason": ""
-  },
-  "jamestown.org": {
-   "grade": "",
-   "grade_standing": "not graded",
-   "graded_by": "",
-   "kind": "",
-   "name": "jamestown.org",
    "note": "",
    "reason": ""
   },
