@@ -6,32 +6,38 @@ outside files, so they are escaped. No Streamlit and no clock: the numbers come 
 """
 import json
 import math
+from datetime import timedelta, timezone
 from functools import cache
 from html import escape
 
+import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 from analysis.dop_calculations import assess_dop_quality
+from ui import geometry_data as gd
 from ui import geometry_settings as gs
 from ui import palette, surfaces, type_scale
 from ui.figures.orbits_3d import LAND_FILE
-from ui.tooltip import PLOTLY_HOVER, plotly_label_backing, plotly_line, plotly_template
+from ui.tooltip import PLOTLY_HOVER, tip_html, plotly_label_backing, plotly_line, plotly_template
 
 CLEAR = "rgba(0,0,0,0)"
 AXIS = {"linecolor": palette.TRACK, "tickcolor": palette.TRACK, "gridcolor": palette.WELL, "zeroline": False}
 DOP_LINES = {"GDOP": (palette.ACCENT, "solid", 3), "PDOP": (palette.INK, "solid", 1.5),
              "HDOP": (palette.MUTED, "solid", 1.5), "VDOP": (palette.MUTED, "dot", 1.5)}
 BAND_LINES = [("Excellent", palette.OK), ("Good", palette.WARN), ("Moderate", palette.BAD)]
-TREND_ROW_PX = 120      # each measure's strip in a satellite's trends
+TREND_ROW_PX = 150      # each measure's strip in a satellite's trends
+TREND_PAD_PX = 110       # a trend picture's height beyond its strips: the line's room, the time axis, the margins
 TREND_FORMAT = {"altitude_km": ",.1f"}   # hover numbers: km to a tenth, the rest to three places
 MAP_PAD_DEG = 12
 MAP_MIN_WIDE = 1.6     # the map is at least this many times as wide as it is tall
+MAP_ASPECT = 2.0       # the city map's width over its height: the whole world fits it exactly (360 by 180 degrees)
 MAP_PX = 500
+LANE_PX = 30            # each satellite's lane in the timeline: tall enough to read and to touch on a phone
 
 
 def _layout(fig, height, **extra):
-    fig.update_layout(height=height, paper_bgcolor=CLEAR, plot_bgcolor=CLEAR, font={"color": palette.INK},
+    fig.update_layout(**({"height": height} if height else {}), paper_bgcolor=CLEAR, plot_bgcolor=CLEAR, font={"color": palette.INK},
                       hoverlabel=PLOTLY_HOVER, **extra)
     return fig
 
@@ -84,7 +90,7 @@ def dop_key():
         f'<li><b>{key}</b> <span>{escape(name)}: {escape(meaning)}.</span>'
         f'<span class="muted">{"Should be " + should_be(key) + "." if should_be(key) else "No set target."}</span></li>'
         for key, name, meaning in gs.DOP_MEASURES)
-    return (f'<p>{escape(gs.DOP_INTRO)}</p><ul class="geo-key">{lines}</ul>'
+    return (f'<p>{escape(gs.DOP_LINE)}</p><ul class="geo-key">{lines}</ul>'
             f'<p class="muted">{escape(gs.SEEN_WORDS)} {escape(gs.DOP_SOURCE)}</p>')
 
 
@@ -105,6 +111,248 @@ def dop_grid(rows):
                      f'<span class="gc {seen}"><b class="num">{row["seen"]}</b></span>'
                      + "".join(_cell(key, row[key], row["seen"]) for key, _, _ in gs.DOP_MEASURES) + "</div>")
     return surfaces.raised(f'<div class="geo-grid" style="--n:{len(gs.DOP_MEASURES) + 1}">{"".join(lines)}</div>')
+
+
+def metres_words(metres):
+    """'12 m', '6.5 m' (a tenth below 10 m), or 'no position' without one."""
+    if metres is None:
+        return "no position"
+    return f"{metres:.1f} m" if metres < 10 else f"{metres:,.0f} m"
+
+
+def band_rows():
+    """[(band word, its PDOP range, its position error in metres, what that is like)] from the configured PDOP bands,
+    each edge times gs.UERE_M. The metres are to the band's upper edge; the last has none."""
+    rows = []
+    for band, (low, high) in gs.DOP_BANDS["PDOP"].items():
+        dop = f"{low:g} to {high:g}" if high != float("inf") else f"over {low:g}"
+        metres = (f"{low * gs.UERE_M:g} to {high * gs.UERE_M:g} m" if high != float("inf") else f"over {low * gs.UERE_M:g} m")
+        rows.append((band, dop, metres, gs.BAND_LIKE[band]))
+    return rows
+
+
+def band_table():
+    """The quality bands in metres: band, DOP, metres, and what that length is like."""
+    lines = "".join(f'<div class="br"><b>{escape(band)}</b><span class="num">{dop}</span><span class="num">{metres}</span>'
+                    f'<span>{escape(like)}</span></div>' for band, dop, metres, like in band_rows())
+    head = '<div class="br hd"><span>Band</span><span>PDOP</span><span>Error</span><span>About as long as</span></div>'
+    return f'<div class="geo-bands">{head}{lines}</div>'
+
+
+def dop_steps_html():
+    """First principles, one step at a time, then the four DOPs in a line each and the bands in metres."""
+    steps = "".join(f"<li>{escape(step)}</li>" for step in gs.DOP_STEPS)
+    plain = "".join(f"<li><b>{key}</b> {escape(words)}</li>" for key, words in gs.PLAIN_DOP)
+    return (f'<ol class="geo-steps">{steps}</ol><ul class="geo-key">{plain}</ul>'
+            f'<p class="small">{escape(gs.UERE_WORDS)}</p>{band_table()}<p class="small">{escape(gs.DOP_SOURCE)}</p>')
+
+
+def _error_class(row):
+    return quality("PDOP", row["PDOP"], row["seen"])
+
+
+def place_card(label, row):
+    """One place's card: its name and where it is, the satellites in view, and the position error in metres."""
+    word, status = _error_class(row)
+    metres = metres_words(row["metres"])
+    fix = "no position: fewer than 4 in view" if row["PDOP"] is None and row["seen"] < 4 else (
+        "no position: layout too poor" if row["PDOP"] is None else f"{word}")
+    return (f'<div class="geo-place {status}"><small>{escape(label)}</small><b class="gp">{escape(row["place"])}</b>'
+            f'<small>{latlon_words(row["lat"], row["lon"])}</small>'
+            f'<span class="geo-metres num {status}">{"&asymp; " if row["metres"] is not None else ""}{escape(metres)}</span>'
+            f'<small>expected position error</small>'
+            f'<span>{row["seen"]} satellite{"" if row["seen"] == 1 else "s"} in view {surfaces.chip(fix, status)}</span></div>')
+
+
+def compare_words(you, other):
+    """One line: how the two places' position error compare, in plain words."""
+    a, b = you["metres"], other["metres"]
+    if a is None or b is None:
+        return "At least one of the two places has no position now, so they cannot be compared."
+    if round(a) == round(b):
+        return f"{you['place']} and {other['place']} are about equally well pinned down."
+    better, worse = (you, other) if a < b else (other, you)
+    return (f"{better['place']} is pinned down about {worse['metres'] / better['metres']:.1f} times more tightly "
+            f"than {worse['place']}.")
+
+
+def place_cards(you, other):
+    """The two places side by side (one under the other on a phone), and the line that compares them."""
+    cards = place_card(gs.YOU_LABEL, you) + place_card(gs.COMPARE_LABEL, other)
+    return f'<div class="geo-places">{cards}</div><p class="geo-say">{escape(compare_words(you, other))}</p>'
+
+
+def quality_legend():
+    """[(status, symbol, words)]: what each dot's colour and shape say, from the PDOP bands in metres."""
+    bands = gs.DOP_BANDS["PDOP"]
+    ok, warn = bands["Good"][1] * gs.UERE_M, bands["Moderate"][1] * gs.UERE_M
+    return [("ok", "circle", f"under {ok:g} m"), ("warn", "diamond", f"{ok:g} to {warn:g} m"),
+            ("bad", "square", f"over {warn:g} m, or no position")]
+
+
+def quality_map(rows, you, other, ranges):
+    """The land, each city a dot coloured (and shaped) by its position error now, and the two chosen places ringed and
+    named beside the ring on a backing, towards the nearer edge so they stay off the dots. rows: gd.dop_rows for the
+    cities shown. ranges: (x_range, y_range) from map_ranges, in the card's shape (MAP_ASPECT), so land fills the plot."""
+    land_x, land_y = _land()
+    fig = go.Figure(go.Scatter(x=land_x, y=land_y, mode="lines", fill="toself", fillcolor=palette.FILL, opacity=0.6,
+                               line={"color": palette.TRACK, "width": 0.5}, hoverinfo="skip", showlegend=False))
+    for status, symbol, words in quality_legend():
+        mine = [r for r in rows if _error_class(r)[1] == status]
+        fig.add_trace(go.Scatter(
+            x=[r["lon"] for r in mine], y=[r["lat"] for r in mine], mode="markers", name=words, showlegend=False,
+            marker={"symbol": symbol, "size": 11, "color": {"ok": palette.OK, "warn": palette.WARN, "bad": palette.BAD}[status],
+                    "line": {"color": palette.PLATFORM, "width": 1}},
+            customdata=[[escape(r["place"]), r["seen"], metres_words(r["metres"]), _error_class(r)[0]] for r in mine],
+            hovertemplate=plotly_template("%{customdata[0]}", ("In view", "%{customdata[1]} satellites"),
+                                          ("Expected error", "%{customdata[2]}"), ("Quality", "%{customdata[3]}"))))
+    middle = [(ranges[0][0] + ranges[0][1]) / 2, (ranges[1][0] + ranges[1][1]) / 2]
+    for label, row, line in ((gs.YOU_LABEL, you, palette.ACCENT), (gs.COMPARE_LABEL, other, palette.INK)):
+        fig.add_trace(go.Scatter(x=[row["lon"]], y=[row["lat"]], mode="markers", name=label, hoverinfo="skip",
+                                 showlegend=False, marker={"symbol": "circle-open", "size": 22, "color": line, "line": {"width": 3}}))
+        left, up = row["lon"] < middle[0], row["lat"] >= middle[1]   # the label goes outwards, away from the middle
+        fig.add_annotation(x=row["lon"], y=row["lat"], text=f"<b>{escape(gs.city_short(row['place']))}</b>", showarrow=False,
+                           xanchor="right" if left else "left", yanchor="bottom" if up else "top",
+                           xshift=-16 if left else 16, yshift=10 if up else -10,
+                           font={"color": line, "size": type_scale.LEVELS["small"][1]}, **plotly_label_backing())
+    fig.update_xaxes(range=ranges[0], ticksuffix="°", showgrid=True, **AXIS)
+    fig.update_yaxes(range=ranges[1], ticksuffix="°", showgrid=True, scaleanchor="x", constrain="domain", **AXIS)
+    return _layout(fig, None, margin={"l": 40, "r": 4, "t": 4, "b": 24}, hovermode="closest", dragmode=False, showlegend=False)
+
+
+def quality_legend_html():
+    """What the map's marks mean, in a row above it that wraps on a phone: each mark as the map draws it, with its words."""
+    marks = [(palette.css({"ok": palette.OK, "warn": palette.WARN, "bad": palette.BAD}[status]), words, symbol)
+             for status, symbol, words in quality_legend()]
+    marks += [(palette.css(palette.ACCENT), gs.YOU_LABEL, "ring"), (palette.css(palette.INK), gs.COMPARE_LABEL, "ring")]
+    shape = {"circle": "swatch", "diamond": "swatch diamond", "square": "swatch square", "ring": "swatch ring"}
+    items = "".join(f'<li><span class="{shape[mark]}" style="--c:{colour};background:{colour}"></span>{escape(words)}</li>'
+                    for colour, words, mark in marks)
+    return f'<ul class="geo-legend" aria-label="Map key">{items}</ul>'
+
+
+def map_ranges(key_points, picks):
+    """(x_range, y_range) for the map: wide enough for the key places and the picks with a margin, and exactly
+    MAP_ASPECT times as wide as tall, so with equal degrees on both axes the land fills the plot to its edges. The
+    whole world when the places spread over more than half of it. Kept inside -180 to 180 and -90 to 90."""
+    lats = [lat for lat, _ in [*key_points, *picks]]
+    lons = [lon for _, lon in [*key_points, *picks]]
+    pad = gs.MAP_REGION_PAD_DEG
+    width = max(max(lons) - min(lons) + 2 * pad, (max(lats) - min(lats) + 2 * pad) * MAP_ASPECT, gs.MAP_MIN_SPAN_DEG)
+    if width >= 360 * 0.6:
+        return [-180, 180], [-90, 90]
+    height = width / MAP_ASPECT
+    def fit(low, high, span, limit):
+        start = (low + high) / 2 - span / 2
+        start = max(-limit, min(limit - span, start))
+        return [start, start + span]
+    return fit(min(lons), max(lons), width, 180), fit(min(lats), max(lats), height, 90)
+
+
+def quality_map_deeper():
+    """What the map's colours stand for, in metres, and where the cities are drawn."""
+    ok, warn = (gs.DOP_BANDS["PDOP"][band][1] * gs.UERE_M for band in ("Good", "Moderate"))
+    return (f'<p>Colour and shape are always together, so neither is the only signal: a circle is under {ok:g} m, a diamond '
+            f'{ok:g} to {warn:g} m, a square over {warn:g} m or no position. The error is the position quality (PDOP) of '
+            f'the satellites above the elevation mask now, times {gs.UERE_M:g} m. The two rings are your places. The map '
+            f'shows the cities that fall in the constellation\'s area; a constellation with satellites all round the '
+            f'world shows them everywhere.</p>')
+
+
+def _satellite(angle, size):
+    return size * math.cos(math.radians(angle)), size * math.sin(math.radians(angle))
+
+
+def _crossing(first, second, r1, r2):
+    """The point nearer the origin where the circle of radius r1 about `first` meets the one of radius r2 about `second`."""
+    (x1, y1), (x2, y2) = first, second
+    d = math.hypot(x2 - x1, y2 - y1)
+    a = (r1 ** 2 - r2 ** 2 + d ** 2) / (2 * d)
+    h = math.sqrt(max(r1 ** 2 - a ** 2, 0))
+    mid_x, mid_y = x1 + a * (x2 - x1) / d, y1 + a * (y2 - y1) / d
+    points = [(mid_x + h * (y2 - y1) / d, mid_y - h * (x2 - x1) / d), (mid_x - h * (y2 - y1) / d, mid_y + h * (x2 - x1) / d)]
+    return min(points, key=lambda p: math.hypot(*p))
+
+
+def where_you_could_be(angles, size=2.0, spread_m=0.16):
+    """The patch where the receiver could be: the four corners where the edges of two satellites' distance rings
+    (each `spread_m` either side of its distance, `size`) cross, in order round the patch."""
+    first, second = (_satellite(angle, size) for angle in angles)
+    return [_crossing(first, second, size + one, size + other) for one, other in
+            ((spread_m, spread_m), (spread_m, -spread_m), (-spread_m, -spread_m), (-spread_m, spread_m))]
+
+
+def overlap_area(angles):
+    """The patch's area, by the shoelace formula: smaller is a tighter position."""
+    corners = where_you_could_be(angles)
+    return abs(sum(x1 * y2 - x2 * y1 for (x1, y1), (x2, y2) in zip(corners, corners[1:] + corners[:1]))) / 2
+
+
+def _ring(angle, size, spread_m, steps=60):
+    """One satellite's ring of distance as a polygon: the arc of radius size - spread_m to size + spread_m about it,
+    for 60 degrees either side of the direction to the receiver."""
+    cx, cy = _satellite(angle, size)
+    turns = [math.radians(angle + 180 + 60 * (2 * i / steps - 1)) for i in range(steps + 1)]
+    outer = [(cx + (size + spread_m) * math.cos(t), cy + (size + spread_m) * math.sin(t)) for t in turns]
+    inner = [(cx + (size - spread_m) * math.cos(t), cy + (size - spread_m) * math.sin(t)) for t in reversed(turns)]
+    return outer + inner + outer[:1]
+
+
+def spread_sketch(angles, size=2.0, spread_m=0.16):
+    """Two satellites at these angles above the horizon, each with its ring of distance (the measurement's error as
+    the ring's width), the receiver on the ground at the middle, and the patch where the rings cross lit up: where the
+    receiver could be. Drawn as filled shapes, so the browser's theme reaches them."""
+    fig = go.Figure()
+    for angle in angles:
+        ring = _ring(angle, size, spread_m)
+        fig.add_trace(go.Scatter(x=[x for x, _ in ring], y=[y for _, y in ring], mode="lines", fill="toself",
+                                 fillcolor=palette.TRACK, line={"width": 0}, opacity=0.8, hoverinfo="skip", showlegend=False))
+    corners = where_you_could_be(angles, size, spread_m)
+    fig.add_trace(go.Scatter(x=[x for x, _ in corners + corners[:1]], y=[y for _, y in corners + corners[:1]], mode="lines",
+                             fill="toself", fillcolor=palette.WARN, line={"color": palette.WARN, "width": 2},
+                             hoverinfo="skip", showlegend=False))
+    fig.add_shape(type="line", x0=-size * 1.2, x1=size * 1.2, y0=0, y1=0, line={"color": palette.MUTED, "width": 1})
+    for n, angle in enumerate(angles, 1):
+        x, y = _satellite(angle, size)
+        fig.add_shape(type="line", x0=0, y0=0, x1=x, y1=y, line={"color": palette.MUTED, "width": 1, "dash": "dot"})
+        fig.add_trace(go.Scatter(x=[x], y=[y], mode="markers+text", text=[f"satellite {n}"],
+                                 textposition="top right" if x >= 0 else "top left", showlegend=False, hoverinfo="skip",
+                                 textfont={"color": palette.INK, "size": 11},
+                                 marker={"symbol": "diamond", "size": 12, "color": palette.ACCENT}))
+    fig.add_trace(go.Scatter(x=[0], y=[0], mode="markers+text", text=["receiver"], textposition="bottom center",
+                             showlegend=False, hoverinfo="skip", textfont={"color": palette.INK, "size": 11},
+                             marker={"symbol": "circle", "size": 9, "color": palette.INK}))
+    fig.update_xaxes(visible=False, range=[-size * 1.2, size * 1.2], constrain="domain", fixedrange=True)
+    fig.update_yaxes(visible=False, range=[-size * 0.4, size * 1.2], scaleanchor="x", fixedrange=True)
+    return _layout(fig, 250, margin={"l": 4, "r": 4, "t": 4, "b": 4}, dragmode=False, showlegend=False)
+
+
+def spread_words():
+    """The sketches' one line, with the sizes of their patches worked out: how many times bigger the patch is bunched."""
+    times = overlap_area(gs.BUNCHED_ANGLES) / overlap_area(gs.SPREAD_ANGLES)
+    return f"{gs.SPREAD_LINE} Here the patch is about {times:.0f} times bigger when they are bunched."
+
+
+def too_few_line(constellation, names, choice, more=False):
+    """When the satellites counted number fewer than the 4 a position needs, one line saying so for the whole
+    constellation, the count's names in a tooltip. '' with 4 or more. choice: gs.SATELLITE_CHOICES' word; more: satellites are set aside that All would add."""
+    if len(names) >= gs.MIN_FOR_FIX:
+        return ""
+    count = f"{len(names)} satellite{'' if len(names) == 1 else 's'}"
+    kind = "in service" if choice == gs.SATELLITE_CHOICES[0] else "counted"
+    listed = tip_html(escape(count), "<br>".join(escape(n) for n in names) or "none", key=constellation)
+    hint = f" {gs.CHOOSE_ALL}" if more and choice == gs.SATELLITE_CHOICES[0] else ""
+    return (f'<p class="geo-say">{escape(constellation)} has {listed} {kind} now, and a position needs {gs.MIN_FOR_FIX}, '
+            f'so no place gets a position from {escape(constellation)} alone today.{escape(hint)}</p>')
+
+
+def place_line(row):
+    """One place's state in a line: satellites in view, the error in metres and its band."""
+    word, _ = _error_class(row)
+    if row["PDOP"] is None:
+        return f"{row['place']}: {row['seen']} in view now, " + ("fewer than the 4 a position needs." if row["seen"] < 4
+                                                                  else "but spread too poorly for a position.")
+    return f"{row['place']}: {row['seen']} in view now, position error about {metres_words(row['metres'])} ({word})."
 
 
 def gdop_summary(series):
@@ -169,49 +417,78 @@ def clock_words(when, zone):
     return f"{local.day} {local:%b %H:%M} {local.tzname()} · {utc}"
 
 
-def _after(when, now):
-    minutes = round((when - now).total_seconds() / 60)
-    hours, minutes = divmod(minutes, 60)
-    return f"in {hours} h {minutes} min" if hours else f"in {minutes} min"
-
-
-def next_words(row, orbit, now, zone, hours=gs.NEXT_HOURS):
-    """(now: 'in view' or 'not in view', status, when: until when, or when next, in plain words) for one row of
-    geometry_data.next_visible. A geostationary satellite stays at one point in the sky, so it says so."""
-    state, status = ("in view", "ok") if row["in_view"] else ("not in view", "idle")
-    if row["change"] is not None:
-        verb = "until" if row["in_view"] else "next in view"
-        return state, status, f"{verb} {clock_words(row['change'], zone)}, {_after(row['change'], now)}"
-    if orbit == "GEO":
-        return state, status, ("always in view: geostationary, it stays at one point in the sky" if row["in_view"] else
-                               "never in view from here: geostationary, it stays below the elevation mask")
-    return state, status, (f"in view for all of the next {hours} hours" if row["in_view"] else
-                           f"not in the next {hours} hours")
-
-
-def next_order(rows):
-    """In view first (leaving soonest first), then the rest by when they come into view; never last."""
-    far = max((r["change"] for r in rows if r["change"] is not None), default=None)
-    return sorted(rows, key=lambda r: (not r["in_view"], r["change"] is None, r["change"] or far))
-
-
-def next_table(rows, types, now, zone):
-    """One line per satellite: in view now or not, and until when or when next."""
-    lines = ['<div class="nr hd"><span>Satellite</span><span>Now</span><span>Until, or next in view</span></div>']
-    for row in next_order(rows):
-        orbit = types.get(row["satellite"], gs.OTHER_ORBIT)
-        state, status, when = next_words(row, orbit, now, zone)
-        lines.append(f'<div class="nr"><b>{escape(row["satellite"])}<small>{escape(gs.ORBIT_WORDS.get(orbit, orbit))}</small></b>'
-                     f'<span>{surfaces.chip(state, status)}</span><span>{escape(when)}</span></div>')
-    return f'<div class="geo-next">{"".join(lines)}</div>'
-
-
 def next_summary(rows, now, zone):
-    """The section's one line: how many are in view now and the next to come into view."""
+    """The timeline's one line: how many are in view now and the next to come into view."""
     seen = sum(r["in_view"] for r in rows)
-    rising = [r for r in next_order(rows) if not r["in_view"] and r["change"] is not None]
-    soonest = (f" · next: {short(rising[0]['satellite'])} {clock_words(rising[0]['change'], zone)}" if rising else "")
+    rising = sorted(((gd.next_rise(r), r) for r in rows if not r["in_view"] and r["windows"]), key=lambda pair: pair[0])
+    soonest = f" · next: {short(rising[0][1]['satellite'])} {clock_words(rising[0][0], zone)}" if rising else ""
     return f"{seen} of {len(rows)} in view now{soonest}"
+
+
+def _wall(when, zone):
+    """The clock time in the viewer's zone as a plain datetime: Plotly's axis shows its numbers as written."""
+    return when.astimezone(zone).replace(tzinfo=None)
+
+
+def _utc(when):
+    """A moment on the timeline's axis: UTC without a zone, so every bar's start and length agree across a clock change
+    in the reader's zone (only the axis labels are written in that zone)."""
+    return when.astimezone(timezone.utc).replace(tzinfo=None)
+
+
+def _lane_names(rows):
+    names = [short(r["satellite"]) for r in rows]
+    return [r["satellite"] if names.count(n) > 1 else n for r, n in zip(rows, names)]
+
+
+def view_timeline(rows, types, now, zone, hours=gs.NEXT_HOURS):
+    """One lane per satellite, a bar for each stretch above the elevation mask over the next `hours`, the rise time
+    written at the start of each bar, a line for now. Lanes in gd.timeline_order: in view now first, then the next rise.
+    Each lane is LANE_PX tall, so the picture grows with the number of satellites and the page scrolls."""
+    rows = gd.timeline_order(rows)
+    # each lane names its orbit too, so colour is never the only sign of it
+    lanes = [f"{lane} · {types.get(row['satellite'], gs.OTHER_ORBIT)}" for row, lane in zip(rows, _lane_names(rows))]
+    start, end = _utc(now), _utc(now + timedelta(hours=hours))
+    bars = {"y": [], "base": [], "x": [], "text": [], "colour": [], "hover": []}
+    for row, lane in zip(rows, lanes):
+        orbit = types.get(row["satellite"], gs.OTHER_ORBIT)
+        for rise, set_ in row["windows"]:
+            a, b = _wall(rise, zone), _wall(set_, zone)
+            now_up = rise == now
+            bars["y"].append(lane)
+            bars["base"].append(_utc(rise))   # placed in UTC; the words on it are the reader's clock (a)
+            # elapsed time (right across a clock change), never under one step, so a pass seen once still shows
+            bars["x"].append(max((set_ - rise).total_seconds(), gs.NEXT_STEP_MINUTES * 60) * 1000)
+            bars["text"].append("in view" if now_up else f"{a:%H:%M}")
+            bars["colour"].append(colour(orbit))
+            bars["hover"].append([escape(row["satellite"]), gs.ORBIT_WORDS.get(orbit, orbit),
+                                  "now" if now_up else f"{a:%d %b %H:%M}",
+                                  f"{b:%d %b %H:%M}" + (" or later" if set_ >= now + timedelta(hours=hours) else "")])
+    fig = go.Figure(go.Bar(
+        orientation="h", y=bars["y"], base=bars["base"], x=bars["x"], text=bars["text"], customdata=bars["hover"],
+        marker={"color": bars["colour"], "line": {"width": 0}}, textposition="inside", insidetextanchor="start",
+        constraintext="none", textfont={"color": palette.PLATFORM, "size": type_scale.LEVELS["small"][1]},
+        showlegend=False,
+        hovertemplate=plotly_template("%{customdata[0]}", ("Kind", "%{customdata[1]}"), ("Rises", "%{customdata[2]}"),
+                                      ("Sets", "%{customdata[3]}"))))
+    empty = [lane for row, lane in zip(rows, lanes) if not row["windows"]]
+    if empty:   # a lane without a bar says so, instead of looking forgotten
+        fig.add_trace(go.Scatter(x=[start + (end - start) / 2] * len(empty), y=empty, mode="text", hoverinfo="skip",
+                                 text=["below the mask all day"] * len(empty), showlegend=False,
+                                 textfont={"color": palette.MUTED, "size": type_scale.LEVELS["small"][1]}))
+    fig.add_shape(type="line", x0=start, x1=start, y0=0, y1=1, yref="paper",
+                  line={"color": palette.ACCENT, "width": 2})
+    fig.add_annotation(text="now", x=start, y=1, yref="paper", xanchor="left", yanchor="bottom", showarrow=False,
+                       font={"color": palette.ACCENT, "size": type_scale.LEVELS["small"][1]})
+    ticks = [start + timedelta(hours=h) for h in range(0, hours + 1, 6)]
+    # one step past the end, so a pass first seen at the last step still draws inside the axis
+    fig.update_xaxes(type="date", range=[start, end + timedelta(minutes=gs.NEXT_STEP_MINUTES)], side="top", tickvals=ticks,
+                     ticktext=[f"{_wall(t.replace(tzinfo=timezone.utc), zone):%H:%M<br>%d %b}" for t in ticks],
+                     fixedrange=True, showgrid=True, **AXIS)
+    fig.update_yaxes(autorange="reversed", categoryorder="array", categoryarray=lanes, fixedrange=True, showgrid=False,
+                     tickfont={"size": type_scale.LEVELS["small"][1]}, **{k: v for k, v in AXIS.items() if k != "gridcolor"})
+    return _layout(fig, LANE_PX * len(rows) + 70, bargap=0.25, dragmode=False, hovermode="closest",
+                   margin={"l": 8, "r": 12, "t": 46, "b": 8, "autoexpand": True})
 
 
 # ---- ground tracks ----
@@ -254,8 +531,10 @@ def click_cells(x_range, y_range, step=gs.CLICK_GRID_DEG):
     return [(w, s) for w in wests for s in souths]
 
 
-def ground_map(tracks, here, types, places, chosen=None):
+def ground_map(tracks, here, types, places, chosen=None, marked=()):
     """Each satellite's ground track, where it is now, the key places, and the chosen place (name, lat, lon).
+
+    marked: [(label, lat, lon)], other places the reader chose, ringed and named on the map.
 
     Hovering a track says which satellite, when, the point on the ground under it and its height. A click anywhere
     on the map picks that point, to the nearest square of CLICK_GRID_DEG (Plotly reports clicks on drawn things only)."""
@@ -290,7 +569,7 @@ def ground_map(tracks, here, types, places, chosen=None):
                              text=[escape(p) for p in places], mode="markers", name="key places", selected=keep, unselected=keep,
                              marker={"symbol": "x-thin", "size": 10, "color": palette.MUTED, "line": {"color": palette.MUTED, "width": 2}},
                              hovertemplate=plotly_template("%{text}", ("Click", "to see its sky"))))
-    picked = [chosen[1:]] if chosen else []
+    picked = ([chosen[1:]] if chosen else []) + [(lat, lon) for _, lat, lon in marked]
     lons = [x for t in tracks.values() for x in t["lon"]] + [lon for _, lon in [*places.values(), *picked]]
     lats = [y for t in tracks.values() for y in t["lat"]] + [lat for lat, _ in [*places.values(), *picked]]
     x_range, y_range = _ranges(lats, lons)
@@ -301,6 +580,12 @@ def ground_map(tracks, here, types, places, chosen=None):
                          width=gs.CLICK_GRID_DEG, customdata=[[s + half, w + half] for w, s in cells], name="click",
                          marker={"opacity": 0, "line": {"width": 0}}, selected=hidden, unselected=hidden,
                          hoverinfo="none", showlegend=False))
+    if marked:
+        fig.add_trace(go.Scatter(x=[lon for _, _, lon in marked], y=[lat for _, lat, _ in marked], mode="markers+text",
+                                 name="your places", hoverinfo="skip", text=[escape(label) for label, _, _ in marked],
+                                 textposition="bottom center", textfont={"color": palette.INK, "size": 11},
+                                 marker={"symbol": "circle-open", "size": 16, "color": palette.INK, "line": {"width": 2}},
+                                 selected=keep, unselected=keep, showlegend=False))
     if chosen:
         fig.add_trace(go.Scatter(x=[chosen[2]], y=[chosen[1]], mode="markers", name="chosen place", hoverinfo="skip",
                                  marker={"symbol": "circle-open", "size": 18, "color": palette.ACCENT, "line": {"width": 3}},
@@ -338,12 +623,12 @@ def outside(values, band):
     return (values < band[0]) | (values > band[1])
 
 
-def satellite_trends(series, name, orbit, bands, start, end, measures=gs.TRENDS):
+def satellite_trends(series, name, bands, start, end, measures=gs.TRENDS):
     """One satellite's measures (TRENDS), one strip each over one shared time axis, to be read at a glance: the line
     in ink, what it should be as a quiet pressed-in band, readings outside the band marked in the bad colour, and the
-    latest reading written at the line's end (in the bad colour, and named under the title, when outside). Each
+    latest reading written at the right of its name (in the bad colour, and named above the strips, when outside). Each
     strip's name and unit sit above it. Hovering any strip reads all of them at that time, with a line down through
-    every strip. Fixed side margins keep every satellite's strips on the same time scale, side by side.
+    every strip. Fixed side margins keep every satellite's strips on the same time scale, one under another.
 
     series: {history column: table with satellite, EPOCH and that column}. bands: {column: (low, high)}. measures: the
     strips drawn (gs.MEO_TRENDS for a MEO system)."""
@@ -381,32 +666,69 @@ def satellite_trends(series, name, orbit, bands, start, end, measures=gs.TRENDS)
         late_out = bool(outside(last[column], band))
         if late_out:
             now_outside.append(label)
-        fig.add_annotation(text=f"{last[column]:{number}}", xref="paper", x=1, xshift=6, xanchor="left", yref=yaxis,
-                           y=last[column], showarrow=False,
+        fig.add_annotation(text=f"now {last[column]:{number}}", xref="paper", x=1, yref="paper", y=top, xanchor="right",
+                           yanchor="bottom", showarrow=False,
                            font={"family": palette.FONT_NUMBERS, "size": small["size"],
                                  "color": palette.BAD if late_out else palette.INK})
     fig.update_xaxes(type="date", range=[start, end], anchor=f"y{count}", showgrid=False, tickfont=small, nticks=4,
                      hoverformat="<b>%d %b %Y %H:%M UTC</b>", showspikes=True, spikemode="across", spikesnap="cursor",
                      spikecolor=palette.MUTED, spikethickness=1, spikedash="solid",
                      linecolor=palette.TRACK, tickcolor=palette.TRACK)
-    title = f"<b>{escape(name)}</b>  <span style='color:{palette.MUTED}'>{escape(gs.ORBIT_WORDS.get(orbit, orbit))}</span>"
-    extra = 20 if now_outside else 0
-    if now_outside:   # a line of its own between the title and the first strip's name
+    if now_outside:   # a line of its own, right under the card's own line
         fig.add_annotation(text=f"now outside: {escape(', '.join(now_outside))}", xref="paper", yref="paper", x=0, y=1,
-                           xanchor="left", yanchor="bottom", yshift=extra + 2, showarrow=False, font={**small, "color": palette.BAD})
-    return _layout(fig, TREND_ROW_PX * count + 90 + extra, hovermode="x unified", hoversubplots="axis", spikedistance=-1,
-                   margin={"l": 52, "r": 76, "t": 64 + extra, "b": 30, "autoexpand": False},
-                   title={"text": title, "font": {"size": type_scale.LEVELS["side"][1], "color": palette.INK},
-                          "x": 0, "xref": "paper", "y": 1, "yref": "container", "yanchor": "top", "pad": {"t": 4}})
+                           xanchor="left", yanchor="bottom", yshift=26, showarrow=False, font={**small, "color": palette.BAD})
+    # the card's height is the same for every satellite of a constellation (room for the line is always kept), the
+    # strips take the rest, and the side margins are slim so a phone gives the lines nearly its whole width
+    return _layout(fig, TREND_ROW_PX * count + TREND_PAD_PX, hovermode="x unified", hoversubplots="axis", spikedistance=-1,
+                   margin={"l": 56, "r": 12, "t": 56, "b": 30, "autoexpand": False})
+
+
+def _clause(column, own, band):
+    """One measure in words: steady within its span, or rising or falling by so much over the readings' days; 'now outside its
+    range' when the latest reading is. '' with no readings."""
+    word, unit, steady, decimals = gs.TREND_WORDS[column]
+    own = own.sort_values("EPOCH")
+    values = own[column].dropna()
+    if values.empty:
+        return ""
+    span = values.max() - values.min()
+    if len(values) < 2:
+        text = f"{word} {values.iloc[-1]:.{decimals}f}{unit}"
+    elif span <= steady:
+        text = f"{word} steady within {span:.{decimals}f}{unit}"
+    else:
+        epochs = own.loc[values.index, "EPOCH"]
+        days_apart = (epochs - epochs.iloc[0]).dt.total_seconds() / 86400
+        days = max(round(days_apart.iloc[-1]), 1)
+        change = np.polyfit(days_apart, values, 1)[0] * days_apart.iloc[-1]   # the fitted line's own rise or fall
+        if abs(change) < steady:
+            text = f"{word} steady within {span:.{decimals}f}{unit}"
+        else:
+            text = f"{word} {'rising' if change > 0 else 'falling'} {abs(change):.{decimals}f}{unit} over {days} days"
+    return text + (", now outside its range" if outside(values.iloc[-1], band) else "")
+
+
+def trend_line(series, name, bands, days, measures=gs.TRENDS):
+    """What a satellite's trends say right now, in one line: 'Over the last 90 days: height steady within 1.2 km; tilt
+    falling 0.12° over 90 days.' series and bands as for satellite_trends. '' when there are no readings."""
+    clauses = []
+    for column, *_ in measures:
+        table = series.get(column)
+        if table is not None:
+            clause = _clause(column, table[table["satellite"] == name], bands.get(column))
+            if clause:
+                clauses.append(clause)
+    return f"Over the last {days} days: " + "; ".join(clauses) + "." if clauses else ""
 
 
 def trends_key():
     """What each trend column means, and how the picture marks a reading out of bounds."""
     lines = "".join(f'<li><b>{escape(name)}</b> <span>{escape(meaning)}.</span></li>' for _, name, _, meaning in gs.TRENDS)
-    return (f'<ul class="geo-key">{lines}</ul><p class="muted">Pressed-in band: what it should be, where a target is set. '
-            "A reading outside it is marked red; each line's latest reading is written at its end.</p>"
-            '<p class="muted">MEO systems show tilt and height only: drift and centre are measured against one turn '
-            "a day over one longitude, and a MEO satellite circles the globe.</p>")
+    return (f'<ul class="geo-key">{lines}</ul><p class="muted">Each line is one measure over the window, one reading '
+            "per element set. The pressed-in band is what it should be, where a target is set; a reading outside it is "
+            "marked red. The number at the right of a name is the latest reading. Hover to read every strip at one time.</p>"
+            '<p class="muted">Medium-orbit constellations show tilt and height only: drift and centre are measured against one turn '
+            "a day over one longitude, and a medium-orbit satellite circles the globe.</p>")
 
 
 # ---- orbit plane spacing ----
