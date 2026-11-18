@@ -28,9 +28,10 @@ from evidence.registry_settings import (
 from evidence.registry_tables import read_table, registry_name
 from ui import library, reveal, shelf, surfaces, systems
 from ui.components.citation import citation_frame
+from ui.components.copy_buttons import copy_buttons_frame
 from ui.components.lifecycle import lifecycle_frame
 from ui.session_keys import LIBRARY_JUMP
-from ui.shelf_settings import (COLLEAGUES, DASHBOARD_CITATION, OTHERS, OURS, OUTSIDE_CITATIONS, SHELVES,
+from ui.shelf_settings import (COLLEAGUES, DASHBOARD_CITATION, DATASET_CITATION_NOTE, OTHERS, OURS, OUTSIDE_CITATIONS, SHELVES,
                                STORIES_SHOWN)
 
 JUMP = LIBRARY_JUMP
@@ -76,7 +77,7 @@ surfaces.show(shelf.CSS)
 
 # ---- the shelves at a glance: each tile opens its shelf and goes to it ----
 tiles = {"stories": (len(told), "Stories"), "satellites": (sum(r["launched"] for r in constellations), "Satellites launched"),
-         "datasets": (len(OURS), "Our datasets"), "cite": (len(OURS) + 1 + len(OUTSIDE_CITATIONS), "How to cite")}
+         "datasets": (len(OURS), "Our datasets"), "cite": (1 + len(OUTSIDE_CITATIONS), "How to cite")}
 with st.container(key="shop_map"):
     for key, (number, words) in tiles.items():
         st.button(f"**{number}**\n\n{words}", key=f"tile_{key}", on_click=jump_to, args=(key,), use_container_width=True)
@@ -131,6 +132,11 @@ def draw_ours():
             with st.container(key=f"item_{key}"):
                 st.html(shelf.card_html(key, content, fresh, problem))
                 if content is not None:
+                    shown = datetime.now(timezone.utc)
+                    words = shelf.dataset_citations(key, content, shown)
+                    accessed = shown.strftime("%Y-%m-%d %H:%M")
+                    long_words = words["long"].replace(f"Accessed {accessed} UTC.", "Accessed {accessed} UTC.")
+                    copy_buttons_frame({"Copy short citation": words["short"], "Copy long citation": long_words})
                     name = shelf.file_name(key)
                     st.download_button(f"Download {name}", content, file_name=name, key=f"dl_{key}", on_click="ignore",
                                        mime="text/csv" if name.endswith(".csv") else "application/json",
@@ -151,13 +157,7 @@ surfaces.show(shelf.shelf_sign("cite"))
 
 def draw_citations():
     with st.container(key="shelfbody_cite"):
-        st.html('<p class="small">Our datasets</p>')
-        for key, item in OURS.items():
-            words = shelf.dataset_citations(key, states[key][0], datetime.now(timezone.utc))
-            st.html(f'<p class="small"><b>{escape(item["name"])}</b> short citation</p>')
-            st.code(words["short"], language=None, wrap_lines=True)
-            st.html(f'<p class="small"><b>{escape(item["name"])}</b> long citation</p>')
-            st.code(words["long"], language=None, wrap_lines=True)
+        st.html(f'<p class="small">{escape(DATASET_CITATION_NOTE)}</p>')
         st.html(f'<p class="small"><b>{escape(DASHBOARD_CITATION["title"])}</b> short and long citation</p>')
         citation_frame()
         st.html('<p class="small">Each outside source, as its owner asks</p>')

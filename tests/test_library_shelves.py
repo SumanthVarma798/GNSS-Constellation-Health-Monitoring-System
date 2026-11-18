@@ -151,3 +151,14 @@ def test_the_dashboard_citation_frame_is_filled_and_left_live_for_the_browser():
     assert "OpenGNSS GNSS Health Monitor" in page and "CC BY 4.0" in page
     assert "{accessed}" in page and "{year}" in page   # filled in the browser at the moment of copying
     assert "__ROOT__" not in page and "__FONT__" not in page and "__DATA__" not in page
+
+
+def test_dataset_copy_buttons_frame_is_filled_and_keeps_accessed_for_the_browser():
+    from ui.components.copy_buttons import copy_buttons_html
+
+    page = copy_buttons_html({"Copy short citation": "OpenGNSS (2026). Orbit record check. https://example.test",
+                              "Copy long citation": "OpenGNSS (2026). Orbit record check. Accessed {accessed} UTC."})
+    assert "Copy short citation" in page and "Copy long citation" in page
+    assert "Orbit record check" in page
+    assert "{accessed}" in page
+    assert "__ROOT__" not in page and "__FONT__" not in page and "__DATA__" not in page and "__PLACEHOLDER__" not in page
