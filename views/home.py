@@ -11,7 +11,7 @@ from html import escape
 import streamlit as st
 import streamlit.components.v1 as components
 
-from ui import (data, findings, home_data, icons, marks, palette, reveal, shell, surfaces, three_measures, time_range,
+from ui import (data, findings, home_data, icons, marks, next_step, palette, reveal, shell, surfaces, three_measures, time_range,
                 tooltip)
 from config.config import MEO_SATS
 from ui.home_settings import CAVEATS, CONTACT_ADDRESS, FINDINGS_SHOWN, HOW, HOW_LINKS, RULES, SYSTEMS
@@ -123,7 +123,7 @@ def _burns_tile(system):
 
 
 
-def _row(system, unread=None, index=0):
+def _row(system, unread=None, index=0, steps=""):
     """One constellation as a card. Closed: its score in a ring of its satellites' states, its name, who runs it,
     the states counted in words, and how the score is made. Opened (a click anywhere on it, no page reload): the
     three measures in the score, what is shown beside it, notes, and under it the button to its own pages (page()).
@@ -152,7 +152,7 @@ def _row(system, unread=None, index=0):
             f'<div class="dots mixw small">{counted}</div>'
             f'<span class="small">{_how_scored(system, index)}</span></div>'
             f'{_gauge(system, split)}<span class="sys-go" aria-hidden="true">&rsaquo;</span></summary>'
-            f'<div class="card-more"><h4>Key health attributes</h4>{three_measures.score_sum(system)}'
+            f'<div class="card-more">{steps}<h4>Key health attributes</h4>{three_measures.score_sum(system)}'
             f'{three_measures.part_scores(system)}{three_measures.record_line(name)}'
             f'<div class="tiles in">{in_score}</div>'
             f'<div class="tiles seen">{seen}</div>'
@@ -160,6 +160,19 @@ def _row(system, unread=None, index=0):
                + "</div>" if notes else "")
             + (f'<div class="dots mixw small card-key">{key}</div>' if key else "")
             + "</div></details>")
+
+
+def _steps(names, window_days, counted):
+    """The card's "what should happen next": one short line for each part of the system that was counted. A part of a
+    system with several is named, as a line about "the plane" would not say which part it means."""
+    out = []
+    for name in names:
+        line = home_data.next_line(name, window_days) if name in counted else None
+        if line:
+            text, tone, as_of = line
+            out.append(next_step.line_html((f"{part_name(name)}: {text}" if len(names) > 1 and part_name(name)
+                                            and not text.startswith(name) else text, tone, as_of), short=True))
+    return "".join(out)
 
 
 def _failed(name, error):
@@ -374,7 +387,8 @@ def page():
                 wholes[system] = whole(system, [parts[name] for name in names if name in parts])
             with slots[index].container(key=f"home_card_{index}"):
                 unread = {part_name(name) or name: failed[name] for name in names if name in failed}
-                st.html(_row(wholes[system], unread, index) if system in wholes else _failed(system, failed[names[0]]))
+                st.html(_row(wholes[system], unread, index, _steps(names, window_days, parts))
+                        if system in wholes else _failed(system, failed[names[0]]))
                 # shown only while the card is open (ui/theme.css), as the way on to the constellation's own pages
                 st.button(f"Explore {system} further", key=f"home_explore_{index}", type="primary",
                           icon=":material/arrow_forward:", on_click=shell.open_system,
