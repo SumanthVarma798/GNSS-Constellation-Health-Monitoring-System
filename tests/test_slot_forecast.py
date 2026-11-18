@@ -125,3 +125,42 @@ def test_fuel_band_has_label_and_uncertainty_spread():
     nominal_budget = 15 * FUEL_PRIOR_M_S_PER_YEAR * FUEL_PRIOR_RESERVE
     nominal_years = max(0.0, (nominal_budget - 120) / 40.0)
     assert low < nominal_years < high
+
+
+
+def test_a_burn_row_gives_delta_a_with_its_sign():
+    """+0.0475 °/day of drift (towards the east) needs a LOWER orbit: Δa ≈ -3.7 km, 0.135 m/s."""
+    from analysis.slot_forecast import _burn_row
+
+    row = _burn_row("ideal", None, 0.0475, "")
+    assert row["delta_a_km"] == pytest.approx(-3.70, abs=0.05) and row["delta_v_m_s"] == pytest.approx(0.135, rel=0.03)
+
+
+def test_the_constant_in_use_is_the_one_derived_from_j22():
+    from analysis.forecast_settings import TRIAX_K
+
+    assert TRIAX_K == pytest.approx(_derived_triax_k_deg_per_day2(), rel=0.05)
+
+
+def test_turning_back_heads_against_the_pull_and_stops_at_the_far_edge():
+    from analysis.slot_forecast import _turn_back, position
+
+    acc, own = -0.00157, 0.09                      # NVS-01: pulled west
+    delta = _turn_back(-0.5, -0.04, acc, own)       # drifting west at the west edge
+    v_new = -0.04 + delta
+    assert v_new > 0                                # now heading east, against the pull
+    t_stop = -v_new / acc
+    assert position(t_stop, -0.5, v_new, acc) == pytest.approx(own, abs=1e-6)   # stops at the far (east) edge
+    east = _turn_back(0.3, 0.0, 0.001, own)          # pulled east, east of its box: sent west to stop at the west edge
+    assert east < 0 and position(-east / 0.001, 0.3, east, 0.001) == pytest.approx(-own, abs=1e-6)
+
+
+def test_the_fuel_band_keeps_back_the_end_of_life_raise():
+    from analysis.forecast_settings import EOL_RAISE_M_S
+    from analysis.fuel_use import remaining_band
+
+    low, high, label = remaining_band(15, 336, 42)   # 15-year design life, 336 m/s used, 42 m/s a year
+    budget = 15 * 50 * 1.1
+    assert low == pytest.approx((budget * 0.65 - 336 - EOL_RAISE_M_S[1]) / 42)
+    assert high == pytest.approx((budget * 1.35 - 336 - EOL_RAISE_M_S[0]) / 42)
+    assert "not public" in label and remaining_band(15, 336, 0)[0] == float("inf")

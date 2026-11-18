@@ -6,6 +6,7 @@ import math
 
 from analysis.forecast_settings import (
     A_GEO_KM,
+    EOL_RAISE_M_S,
     FUEL_BUDGET_CONFIDENCE,
     FUEL_PRIOR_M_S_PER_YEAR,
     FUEL_PRIOR_RESERVE,
@@ -55,7 +56,7 @@ def remaining_band(
     prior=FUEL_PRIOR_M_S_PER_YEAR,
     reserve=FUEL_PRIOR_RESERVE,
 ):
-    """Return conservative and optimistic years remaining under +/-35% budget uncertainty."""
+    """Return conservative and optimistic years remaining under +/-35% budget uncertainty, less the end-of-life raise."""
     if rate_m_s_per_year <= 0:
         return (float("inf"), float("inf"), FUEL_BUDGET_CONFIDENCE)
 
@@ -63,6 +64,7 @@ def remaining_band(
     low_budget = nominal_budget * 0.65
     high_budget = nominal_budget * 1.35
 
-    low_years = max(0.0, (low_budget - used_m_s) / rate_m_s_per_year)
-    high_years = max(0.0, (high_budget - used_m_s) / rate_m_s_per_year)
+    # the end-of-life raise to the graveyard orbit is kept back: not station-keeping fuel
+    low_years = max(0.0, (low_budget - used_m_s - EOL_RAISE_M_S[1]) / rate_m_s_per_year)
+    high_years = max(0.0, (high_budget - used_m_s - EOL_RAISE_M_S[0]) / rate_m_s_per_year)
     return (low_years, high_years, FUEL_BUDGET_CONFIDENCE)

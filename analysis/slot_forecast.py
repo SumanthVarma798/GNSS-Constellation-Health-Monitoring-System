@@ -100,8 +100,18 @@ def _heading_out(x0, v0, half_width):
     return _sign(v0) == _sign(x0)
 
 
+def _turn_back(x, v, acc, own_half_width):
+    """The signed drift change that sends a satellite at `x` drifting at `v` to stop at the edge of its own box on the
+    side away from the pull (`acc`), so the pull itself stops it there: a speed w towards that edge, against the pull,
+    with w² = 2·|acc|·distance. If that edge lies on the pull's side, w is 0: stopping it is enough, the pull brings it back."""
+    target = -(_sign(acc) or 1.0) * own_half_width
+    w = math.sqrt(max(0.0, -2.0 * acc * (target - x)))
+    return -math.copysign(w, acc) - v
+
+
 def _burn_row(kind, when, delta_lambda_dot, reason):
-    delta_a_km = None if delta_lambda_dot is None else -(delta_lambda_dot / DRIFT_PER_KM)
+    # DRIFT_PER_KM is negative (a lower orbit drifts east): +0.0475 °/day of drift needs Δa ≈ -3.7 km
+    delta_a_km = None if delta_lambda_dot is None else delta_lambda_dot / DRIFT_PER_KM
     delta_v_m_s = None if delta_lambda_dot is None else abs(delta_lambda_dot) / DRIFT_PER_MS
     return {
         "kind": kind,
@@ -152,12 +162,8 @@ def forecast(x0, v0, acc, own_half_width, dashboard_half_width, today):
         t_last = max(t_dashboard - PLANNING_LEAD_DAYS, 0.0)
         x_last = position(t_last, x0, v0, acc)
         v_last = v0 + (acc * t_last)
-        outward_sign = _sign(v_last) or _sign(x_last) or _sign(acc) or 1.0
-        target_apex = -outward_sign * own_half_width
-        distance = abs(target_apex - x_last)
-        w = math.sqrt(max(0.0, 2.0 * abs(acc) * distance))
-        desired_velocity = _sign(target_apex - x_last) * w
-        delta = desired_velocity - v_last
+        delta = _turn_back(x_last, v_last, acc, own_half_width)
+        desired_velocity = v_last + delta
 
         new_time_to_dashboard = time_to_edge(x_last, desired_velocity, acc, dashboard_half_width)
         base_remaining = max(t_dashboard - t_last, 0.0)
@@ -179,7 +185,7 @@ def forecast(x0, v0, acc, own_half_width, dashboard_half_width, today):
 
     # Too late: once outside dashboard edge, re-entry needs larger change.
     if abs(acc) <= EPS:
-        delta_too_late = abs(v0)
+        delta_too_late = -v0   # no pull: stopping it is the recovery
         t_too_late = 0.0
         x_too_late = x0
     else:
@@ -194,14 +200,13 @@ def forecast(x0, v0, acc, own_half_width, dashboard_half_width, today):
                 t_too_late = t_dashboard + PLANNING_LEAD_DAYS
             x_too_late = position(t_too_late, x0, v0, acc)
             v_too_late = v0 + (acc * t_too_late)
-        apex = -(_sign(x_too_late) or _sign(v_too_late) or 1.0) * own_half_width
-        delta_too_late = abs(v_too_late) + math.sqrt(2.0 * abs(acc) * abs(x_too_late - apex))
+        delta_too_late = _turn_back(x_too_late, v_too_late, acc, own_half_width)
 
     rows.append(
         _burn_row(
             "too_late",
             _offset_date(today, t_too_late),
-            (_sign(-v0) or 1.0) * delta_too_late,
+            delta_too_late,
             "After dashboard exit, recovery burn rises quickly with both drift rate and distance.",
         )
     )
