@@ -151,3 +151,30 @@ def test_the_dashboard_citation_frame_is_filled_and_left_live_for_the_browser():
     assert "OpenGNSS GNSS Health Monitor" in page and "CC BY 4.0" in page
     assert "{accessed}" in page and "{year}" in page   # filled in the browser at the moment of copying
     assert "__ROOT__" not in page and "__FONT__" not in page and "__DATA__" not in page
+
+
+def test_dataset_copy_buttons_frame_is_filled_and_keeps_accessed_for_the_browser():
+    from ui.components.copy_buttons import copy_buttons_html
+
+    page = copy_buttons_html({"Copy short citation": "OpenGNSS (2026). Orbit record check. https://example.test",
+                              "Copy long citation": "OpenGNSS (2026). Orbit record check. Accessed {accessed} UTC."})
+    assert "Copy short citation" in page and "Copy long citation" in page
+    assert "Orbit record check" in page
+    assert "{accessed}" in page
+    assert "__ROOT__" not in page and "__FONT__" not in page and "__DATA__" not in page and "__PLACEHOLDER__" not in page
+
+
+def test_a_copied_long_citation_says_utc_once():
+    """The copy buttons fill {accessed} with a bare time; the long form's own words add "UTC" once."""
+    from ui.components.copy_buttons import PAGE_FILE
+
+    words = shelf.dataset_citations("lifecycles", b"at_utc\n2026-11-13T00:00:00Z\n", accessed="{accessed}")
+    assert words["long"].count("UTC") == 1 and "Accessed {accessed} UTC." in words["long"]
+    assert '+ " UTC"' not in PAGE_FILE.read_text(encoding="utf-8")
+
+
+def test_citation_text_cannot_end_the_frames_script():
+    from ui.components.copy_buttons import copy_buttons_html
+
+    page = copy_buttons_html({"Copy short citation": 'A </script><script>alert(1)</script> "B"'})
+    assert "</script><script>alert" not in page and "\\u003c/script\\u003e" in page
