@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from config import config  # noqa: E402
 from data import celestrak, spacetrack  # noqa: E402
-from evidence.archive import SKIPPED_WORDS, log_run, read_runs  # noqa: E402
+from evidence.archive import REFUSAL_WORDS, SKIPPED_WORDS, log_run, read_runs  # noqa: E402
 from evidence.settings import ORBIT_AGE_COLUMNS, ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS  # noqa: E402
 
 
@@ -110,7 +110,8 @@ def _old_list(rows):
 def _last_orbital_check(archive):
     """When an orbital run of the archive job last asked CelesTrak (run log runs/archive.csv), or None."""
     asked = [datetime.fromisoformat(row["started"].replace("Z", "+00:00")) for row in read_runs(archive, "archive")
-             if row["job"] in ("archive orbital", "archive all") and SKIPPED_WORDS not in row["result"]]
+             if row["job"] in ("archive orbital", "archive all")
+             and SKIPPED_WORDS not in row["result"] and REFUSAL_WORDS not in row["result"]]
     return max(asked, default=None)
 
 
@@ -132,7 +133,9 @@ def run(archive, outcome, now=None, env=None):
         # The copy's own time is when its content last CHANGED, so it says nothing about a copy that is current but
         # unchanged. What shows the archive's orbital runs have stopped is the time of their last check.
         checked = _last_orbital_check(archive)
-        if checked and now - checked > 2 * celestrak.EVERY:
+        if checked is None:
+            notes.append("no orbital check of CelesTrak recorded in the archive's run log")
+        elif now - checked > 2 * celestrak.EVERY:
             notes.append(f"CelesTrak copy last checked {checked:%Y-%m-%d %H:%MZ}, over 4 hours ago")
     except (requests.RequestException, ValueError, KeyError, TypeError, AttributeError) as error:
         notes.append(f"CelesTrak copy failed: {_short_reason(error)}")

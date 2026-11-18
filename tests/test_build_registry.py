@@ -193,7 +193,7 @@ def fresh_orbit_copy(monkeypatch):
     monkeypatch.setattr(build_registry, "_COPY", {})   # the copy is read once per run: not across tests
 
 
-def test_orbit_records_come_from_our_copy_and_celestrak_is_asked_only_for_a_satellite_it_lacks(monkeypatch, capsys):
+def test_orbit_records_come_from_our_copy_and_celestrak_is_never_asked_for_them(monkeypatch, capsys):
     row = {"NORAD_CAT_ID": "100744", "OBJECT_NAME": "N"}
     asked = []
     monkeypatch.setattr(build_registry.celestrak, "copy_rows", lambda: ([row], [], None))
@@ -202,8 +202,8 @@ def test_orbit_records_come_from_our_copy_and_celestrak_is_asked_only_for_a_sate
 
     assert build_registry.celestrak_read("100744")["orbit_row"] == row and asked == []
 
-    read = build_registry.celestrak_read("100745")   # the copy lacks it: one direct request, said in the log
-    assert asked == [{"CATNR": 100745, "empty_text": "No GP data found"}] and read["orbit_status"] == "none"
+    read = build_registry.celestrak_read("100745")   # the copy lacks it: no request (only the archive asks), said in the log
+    assert asked == [] and read["orbit_status"] == "none"
     assert "100745 is not in our orbit copy" in capsys.readouterr().err
 
 
@@ -229,7 +229,7 @@ def test_celestrak_read_handles_no_orbit_record_and_read_failures(monkeypatch):
                         lambda **kwargs: (_ for _ in ()).throw(requests.Timeout("down")))
     read = build_registry.celestrak_read("100744")
 
-    assert read["catalogue_status"] == "error" and read["orbit_status"] == "error"
+    assert read["catalogue_status"] == "error" and read["orbit_status"] == "none"   # orbit records come from the copy
 
 
 def test_finding_news_reads_archive_and_reports_errors(monkeypatch):

@@ -145,3 +145,16 @@ def test_the_copy_note_follows_when_the_archive_last_checked_not_when_the_copy_l
             NOW.strftime("%Y-%m-%dT%H:%M:%SZ"), "ok; 1 skipped: asked less than the site's minimum gap ago", "nothing")
     orbit_ages.run(tmp_path, tmp_path / "b.json", now=NOW + timedelta(hours=5), env=env)   # last real check 6 h ago
     assert "CelesTrak copy last checked" in read_runs(tmp_path, "orbit-ages")[1]["changed"]
+
+
+def test_a_run_that_only_waited_out_a_refusal_is_not_a_check(monkeypatch):
+    from scripts import orbit_ages as ages
+
+    rows = [{"job": "archive orbital", "started": "2026-11-19T00:15:00Z", "result": "ok"},
+            {"job": "archive orbital", "started": "2026-11-19T02:15:00Z", "result": "ok; 1 waiting out a refusal"},
+            {"job": "archive orbital", "started": "2026-11-19T04:15:00Z",
+             "result": "ok; 1 skipped: asked less than the site's minimum gap ago"}]
+    monkeypatch.setattr(ages, "read_runs", lambda archive, log: rows)
+    assert ages._last_orbital_check("archive").hour == 0
+    monkeypatch.setattr(ages, "read_runs", lambda archive, log: [])
+    assert ages._last_orbital_check("archive") is None   # run() then notes that no check is recorded

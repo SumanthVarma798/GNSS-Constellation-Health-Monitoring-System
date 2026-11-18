@@ -217,7 +217,12 @@ def test_a_run_started_within_celestraks_two_hours_of_the_last_skips_the_downloa
     skipped = read_runs(tmp_path, "archive")[1]
     assert skipped["result"].startswith("ok; 1 skipped") and skipped["changed"] == "nothing"
 
-    with time_machine.travel(RUN_TIME + timedelta(hours=1, minutes=55), tick=False):   # a run a few minutes early
+    with time_machine.travel(RUN_TIME + timedelta(hours=1, minutes=55), tick=False):   # a run a few minutes early: skipped too
+        monkeypatch.setattr(sys, "argv", ["archive_sources.py", "--archive", str(tmp_path), "--group", "orbital"])
+        archive_sources.main()
+    assert len(asked) == 1   # the full 2 hours: CelesTrak's rule is strict
+
+    with time_machine.travel(RUN_TIME + timedelta(hours=2), tick=False):
         monkeypatch.setattr(sys, "argv", ["archive_sources.py", "--archive", str(tmp_path), "--group", "orbital"])
         archive_sources.main()
     assert len(asked) == 2   # the skipped runs did not move the clock: counted from the run that asked

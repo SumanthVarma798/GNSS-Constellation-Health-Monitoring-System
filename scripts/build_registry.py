@@ -231,14 +231,13 @@ def celestrak_read(catalogue_no):
         return read
     row = copy[0].get(catnr)
     if row is None:
-        print(f"Catalogue number {catnr} is not in our orbit copy: asking CelesTrak directly.", file=sys.stderr)
-        try:
-            rows = celestrak._get(CATNR=catnr, empty_text="No GP data found")
-        except (requests.RequestException, ValueError, KeyError, TypeError):
-            read["orbit_status"] = "error"
-            return read
-        row = rows[0] if rows else None
-    read["orbit_status"] = "ok" if row else "none"
+        # Not asked of CelesTrak here: only the archive's orbital runs ask it, once per 2 hours at most.
+        # The copy holds CelesTrak's whole GNSS group and every tracked satellite outside it, so one missing from it has no
+        # orbit record we can use.
+        print(f"Catalogue number {catnr} is not in our orbit copy: no orbit record this run.", file=sys.stderr)
+        read["orbit_status"] = "none"
+        return read
+    read["orbit_status"] = "ok"
     read["orbit_row"] = row
     return read
 

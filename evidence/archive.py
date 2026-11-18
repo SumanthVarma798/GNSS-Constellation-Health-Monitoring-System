@@ -250,6 +250,7 @@ def read_runs(archive, log):
 
 
 SKIPPED_WORDS = "skipped: asked less than the site's minimum gap ago"   # in a run's result; such a run asked nobody
+REFUSAL_WORDS = "waiting out a refusal"   # in a run's result: it may not have reached the site, so it is not a check
 
 
 def asked_lately(archive, address, jobs, now):
