@@ -481,7 +481,8 @@ def view_timeline(rows, types, now, zone, hours=gs.NEXT_HOURS):
     fig.add_annotation(text="now", x=start, y=1, yref="paper", xanchor="left", yanchor="bottom", showarrow=False,
                        font={"color": palette.ACCENT, "size": type_scale.LEVELS["small"][1]})
     ticks = [start + timedelta(hours=h) for h in range(0, hours + 1, 6)]
-    fig.update_xaxes(type="date", range=[start, end], side="top", tickvals=ticks,
+    # one step past the end, so a pass first seen at the last step still draws inside the axis
+    fig.update_xaxes(type="date", range=[start, end + timedelta(minutes=gs.NEXT_STEP_MINUTES)], side="top", tickvals=ticks,
                      ticktext=[f"{_wall(t.replace(tzinfo=timezone.utc), zone):%H:%M<br>%d %b}" for t in ticks],
                      fixedrange=True, showgrid=True, **AXIS)
     fig.update_yaxes(autorange="reversed", categoryorder="array", categoryarray=lanes, fixedrange=True, showgrid=False,

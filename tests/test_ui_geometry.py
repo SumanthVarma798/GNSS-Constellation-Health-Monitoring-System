@@ -649,10 +649,28 @@ def test_a_measure_without_a_range_is_never_called_outside_it():
 
 def test_a_pass_seen_only_at_the_last_step_still_has_a_bar():
     rows = [{"satellite": "late", "in_view": False, "windows": [(WHEN + timedelta(hours=24), WHEN + timedelta(hours=24))]}]
-    bars = gf.view_timeline(rows, {}, WHEN, INDIA).data[0]
+    fig = gf.view_timeline(rows, {}, WHEN, INDIA)
+    bars = fig.data[0]
     assert bars.x[0] == gs.NEXT_STEP_MINUTES * 60 * 1000
+    right = fig.layout.xaxis.range[1]
+    right = datetime.fromisoformat(right) if isinstance(right, str) else right
+    assert bars.base[0] + timedelta(milliseconds=bars.x[0]) <= right   # inside the axis, not clipped
 
 
 def test_the_timeline_axis_is_labelled_in_the_viewers_clock():
     fig = gf.view_timeline([{"satellite": "up", "in_view": True, "windows": [(WHEN, WHEN + timedelta(hours=2))]}], {}, WHEN, INDIA)
     assert fig.layout.xaxis.ticktext[0].startswith(f"{WHEN.astimezone(INDIA):%H:%M}")
+
+
+def test_a_bar_keeps_its_length_across_a_clock_change():
+    """New York leaves daylight saving at 06:00 UTC on 1 Nov 2026: a 4-hour pass across it is still 4 hours long and
+    starts where it does in UTC; only the labels are in the viewer's clock."""
+    from zoneinfo import ZoneInfo
+
+    now = datetime(2026, 11, 1, 3, 0, tzinfo=timezone.utc)
+    rows = [{"satellite": "up", "in_view": False, "windows": [(datetime(2026, 11, 1, 4, 0, tzinfo=timezone.utc),
+                                                             datetime(2026, 11, 1, 8, 0, tzinfo=timezone.utc))]}]
+    fig = gf.view_timeline(rows, {}, now, ZoneInfo("America/New_York"))
+    bars = fig.data[0]
+    assert bars.x[0] == 4 * 3600 * 1000 and bars.base[0] == datetime(2026, 11, 1, 4, 0)
+    assert list(bars.text) == ["00:00"]   # 04:00 UTC is midnight in New York, still on daylight time
