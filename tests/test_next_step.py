@@ -80,13 +80,24 @@ def test_already_outside_our_box_is_said_without_blame():
     assert N.tile_line(f, NOW) == ("Outside its box", "warn")
 
 
-def test_held_off_its_slot_is_not_a_fault():
-    frame, _ = history(NAME, station=-1.98, x0=0.0, v0=0.0)
+def test_parked_steadily_off_the_slot_in_our_table_is_a_slot_to_confirm_not_a_fault():
+    frame, _ = history(NAME, station=-1.98, x0=0.0, days=100, kink=0.01)   # parked on it
     f = N.satellite_forecast(NAME, frame, NO_BURNS, NOW, constellation="NavIC")
+    assert f["confirm"] and f["station_lon"] == pytest.approx(81.02, abs=0.05)
     text, tone, _ = N.satellite_line(f, NOW)
-    assert text.startswith(f"{NAME} is held 2.0° west of its slot, outside the ±0.5° box")
-    assert tone == "idle" and N.tile_line(f, NOW) is None
-    assert "held outside" in N.constellation_line([f], NOW)[0]
+    assert text.startswith(f"{NAME} is kept at 81.0° E, 2.0° west of the 83° E in our slot table; "
+                           "the table may be out of date (to confirm). Its next east-west burn")
+    assert "outside" not in text and "last chance" not in text and tone == "idle"
+    assert N.geometry_line(f, NOW).endswith("(to confirm).")
+    assert N.burn_cells(f, NOW)[1][1] == "slot to confirm"
+    line = N.constellation_line([f], NOW)[0]
+    assert "slot to confirm" in line and "outside" not in line
+
+
+def test_off_the_slot_for_less_than_90_days_is_still_outside_the_box():
+    frame, _ = history(NAME, station=-1.98, x0=0.0, days=20, kink=0.01)
+    f = N.satellite_forecast(NAME, frame, NO_BURNS, NOW, constellation="NavIC")
+    assert not f["confirm"] and "outside the ±0.5° box" in N.satellite_line(f, NOW)[0]
 
 
 def test_too_few_routine_burns_assume_a_share_of_our_box_and_three_give_its_own():

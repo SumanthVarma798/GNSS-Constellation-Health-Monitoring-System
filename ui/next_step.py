@@ -90,6 +90,13 @@ def satellite_forecast(name, history, classes, now, tolerance=1.0, constellation
     # position = x0 + v0 t + acc t^2 / 2 about its station; the acc term is taken out, so a straight line fits the rest
     v0, x0 = np.polyfit(t[use], pos[use] - station - 0.5 * acc * t[use] ** 2, 1)
 
+    # parked steadily (90 days, nearly all of it within a box of its station) more than a box from the slot in OUR table:
+    # more likely the table is out of date than the satellite off its slot, so it is judged about its own station
+    parked = kept & (t >= -N.STATION_DAYS)
+    confirm = bool(abs(station) > box and parked.sum() >= N.STATION_MIN_RECORDS
+                   and t[parked].min() <= -(N.STATION_DAYS - N.CONFIRM_SPAN_SLACK_DAYS)
+                   and np.mean(np.abs(pos[parked] - station) < box) >= N.CONFIRM_SHARE_NEAR)
+    out.update(confirm=confirm, slot=float(slot), station_lon=float((slot + station) % 360))
     weak = abs(acc) < S.LON_ACCEL_MIN
     routine = (east_west[(east_west["burn_class"] == burn_classes.ROUTINE_EW)
                          & (pd.to_datetime(east_west["when"]) > as_of - pd.Timedelta(days=365))]
@@ -97,12 +104,13 @@ def satellite_forecast(name, history, classes, now, tolerance=1.0, constellation
     own_known = len(routine) >= N.MIN_ROUTINE_BURNS and not weak
     half = (own_box_half_width(float(np.median(np.abs(routine["delta_a_km"]))) * abs(DRIFT_PER_KM), acc)
             if own_known else N.OWN_BOX_FALLBACK_SHARE * box)
-    out.update(status="weak" if weak else "ok", station=station, pos=station + float(x0), x0=float(x0), v0=float(v0),
+    out.update(status="weak" if weak else "ok", station=station, pos=float(x0) if confirm else station + float(x0),
+               x0=float(x0), v0=float(v0),
                acc=float(acc), box=box, own_half=half, own_known=own_known, orbit_type=orbit_type,
                inclination=inclination,
-               edge_days=time_to_edge(float(x0) + station, float(v0), 0.0 if weak else acc, box))
+               edge_days=time_to_edge(float(x0) if confirm else float(x0) + station, float(v0), 0.0 if weak else acc, box))
     out["rows"] = None if weak else {r["kind"]: r for r in forecast(
-        float(x0), float(v0), acc, half, box, as_of.to_pydatetime(), dashboard_center=-station)}
+        float(x0), float(v0), acc, half, box, as_of.to_pydatetime(), dashboard_center=0.0 if confirm else -station)}
     if orbit_type == "GEO":
         target = burn_classes.inclination_target(name, orbit_type)
         if np.isfinite(target):
@@ -199,9 +207,17 @@ def _edge_days(f, now):
     return max(0, round(f["edge_days"] - (pd.Timestamp(now).tz_localize(None) - f["as_of"]).total_seconds() / 86400))
 
 
+def _confirm_words(f):
+    """For a satellite kept steadily off the slot in our table: where it is kept and what the table says ('' otherwise)."""
+    if not f.get("confirm"):
+        return ""
+    return (f"{f['name']} is kept at {f['station_lon']:.1f}° E, {abs(f['station']):.1f}° {_side(f['station'])} of the "
+            f"{f['slot']:g}° E in our slot table; the table may be out of date (to confirm).")
+
+
 def satellite_line(f, now):
     """(text, tone, as_of) for one satellite_forecast. Tones: ok nothing due, accent a burn soon or in the plan,
-    warn a last chance or an edge close, idle held outside or not worked out."""
+    warn a last chance or an edge close, idle a slot to confirm or not worked out."""
     name = f["name"]
     status = f["status"]
     as_of = _day(f["as_of"]) if f.get("as_of") is not None else ""
@@ -213,8 +229,8 @@ def satellite_line(f, now):
         return (f"{name} burned on {_day(f['last_burn'])}; its next step follows once about "
                 f"{N.FIT_MIN_SPAN_DAYS:g} days of orbit data have come in.", "accent", as_of)
     box = f"±{f['box']:g}°"
-    where = f"{abs(f['pos']):.1f}° {_side(f['pos'])} of its slot"
-    held = abs(f["station"]) > f["box"]
+    where = f"{abs(f['pos']):.1f}° {_side(f['pos'])} of {'its station' if f['confirm'] else 'its slot'}"
+    to_confirm = _confirm_words(f)
     assumed = "" if f["own_known"] else " Its own box is not yet known from its burns, so 0.8 of ours is assumed."
     edge = _edge_days(f, now)
     if status == "weak":
@@ -227,9 +243,8 @@ def satellite_line(f, now):
     if ideal["delta_v_m_s"] is None:
         return f"No burn is due for {name} on its present path: it stays inside the {box} box." + assumed, "ok", as_of
     dv = f"about {ideal['delta_v_m_s']:.2f} m/s"
-    if held:
-        return (f"{name} is held {where}, outside the {box} box; its next east-west burn is expected {when} ({dv})."
-                + assumed, "idle", as_of)
+    if to_confirm:   # judged about its own station: its next burn only, no last chance against a box it is not centred on
+        return f"{to_confirm} Its next east-west burn is expected {when} ({dv})." + assumed, "idle", as_of
     if abs(f["pos"]) > f["box"]:
         back = last["delta_v_m_s"]
         return (f"{name} is {where}, outside the {box} box"
@@ -250,9 +265,12 @@ def satellite_line(f, now):
 
 
 def tile_line(f, now):
-    """A few words for a satellite's tile, or None when nothing is due or it is held away by choice: (text, tone)."""
-    if f["status"] != "ok" or abs(f["station"]) > f["box"]:
+    """A few words for a satellite's tile, or None when nothing is due: (text, tone)."""
+    if f["status"] != "ok":
         return None
+    if f["confirm"]:
+        ideal = _row_days(f, "ideal", now)
+        return (f"Next burn {_range(f['rows']['ideal']['date'], now)}", "accent") if ideal is not None and ideal <= N.SOON_DAYS else None
     if abs(f["pos"]) > f["box"]:
         return "Outside its box", "warn"
     edge, last = _edge_days(f, now), _row_days(f, "last_chance", now)
@@ -267,8 +285,10 @@ def tile_line(f, now):
 
 def geometry_line(f, now):
     """What happens to a satellite's place in the layout, from satellite_forecast: '' when nothing is worked out."""
-    if f["status"] not in ("ok", "weak") or abs(f["station"]) > f["box"]:
+    if f["status"] not in ("ok", "weak"):
         return ""
+    if f["confirm"]:
+        return _confirm_words(f)
     name, box = f["name"], f"{f['box']:g}°"
     if abs(f["pos"]) > f["box"]:
         return f"{name} is {abs(f['pos']):.1f}° {_side(f['pos'])} of its slot, beyond {box}."
@@ -293,12 +313,13 @@ def constellation_line(forecasts, now):
     as_of = _day(max(f["as_of"] for f in worked))
     boxes = {f["box"] for f in worked}
     box = f"±{boxes.pop():g}°" if len(boxes) == 1 else "longitude"
-    held = [f["name"] for f in worked if abs(f["station"]) > f["box"]]
-    out = [f["name"] for f in worked if f["name"] not in held and abs(f["pos"]) > f["box"]]
-    free = [f for f in worked if f["name"] not in held and f["name"] not in out]
+    confirm = [f["name"] for f in worked if f["confirm"]]
+    out = [f["name"] for f in worked if not f["confirm"] and abs(f["pos"]) > f["box"]]
+    free = [f for f in worked if f["name"] not in out and not f["confirm"]]   # judged against our box
+    due = [f for f in worked if f["name"] not in out]                          # burns due, a slot to confirm included
     edge = sorted((e, f["name"]) for f in free if (e := _edge_days(f, now)) is not None
                   and (f["status"] == "weak" or (_row_days(f, "last_chance", now) or 0) <= N.NEAR_DAYS))
-    soon = sorted((d, f["name"]) for f in free if f["status"] == "ok" and (d := _row_days(f, "ideal", now)) is not None
+    soon = sorted((d, f["name"]) for f in due if f["status"] == "ok" and (d := _row_days(f, "ideal", now)) is not None
                   and d <= N.NEAR_DAYS)
     parts, tone = [], "ok"
     if out:
@@ -311,14 +332,14 @@ def constellation_line(forecasts, now):
     elif soon:
         parts.append("Next east-west burns expected: "
                      + _list(f"{n} {_range(f['rows']['ideal']['date'], now)}" for _, n in soon
-                             for f in free if f["name"] == n) + f". Nothing reaches the {box} box edge within {N.NEAR_DAYS} days.")
+                             for f in due if f["name"] == n) + f". Nothing reaches the {box} box edge within {N.NEAR_DAYS} days.")
         tone = "accent" if soon[0][0] <= N.SOON_DAYS and tone == "ok" else tone
     elif not out:
-        later = sorted((f["rows"]["ideal"]["date"], f["name"]) for f in free if f["status"] == "ok" and f["rows"]["ideal"]["delta_v_m_s"] is not None)
+        later = sorted((f["rows"]["ideal"]["date"], f["name"]) for f in due if f["status"] == "ok" and f["rows"]["ideal"]["delta_v_m_s"] is not None)
         parts.append(f"Nothing due in {N.NEAR_DAYS} days across {reveal_count(len(worked), 'satellite')}."
                      + (f" Next: {later[0][1]} {_range(later[0][0], now)}." if later else ""))
-    if held:
-        parts.append(f"{_list(held)} {'is' if len(held) == 1 else 'are'} held outside the {box} box.")
+    if confirm:
+        parts.append(f"{_list(confirm)}: slot to confirm (kept steadily off the slot in our table).")
     return " ".join(parts), tone, as_of
 
 
@@ -385,8 +406,8 @@ def burn_cells(f, now):
         days = _in_days(row["date"], now)
         if kind == "ideal":
             out.append((_range(row["date"], now), size, "accent" if days <= N.SOON_DAYS else "ok"))
-        elif abs(f["station"]) > f["box"]:
-            out.append(("–", "held outside our box", "idle"))
+        elif f["confirm"]:
+            out.append(("–", "slot to confirm", "idle"))
         elif abs(f["pos"]) > f["box"]:
             out.append(("passed", "outside our box", "idle"))
         else:

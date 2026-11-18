@@ -12,6 +12,8 @@ FIT_MIN_SPAN_DAYS = 1.5         # ... spread over at least this long, else the l
 STALE_ORBIT_DAYS = 10           # newest element set older than this: no look ahead
 STATION_DAYS = 90               # its station: the median position over this many days while parked (drift under 0.25 deg/day)
 STATION_MIN_RECORDS = 5
+CONFIRM_SPAN_SLACK_DAYS = 10    # "parked 90 days": the records cover at least STATION_DAYS less this
+CONFIRM_SHARE_NEAR = 0.8        # and this share of them lie within a box of its station: steady, not drifting past
 
 # Its own box, from its routine east-west burns (analysis/burn_classes.py)
 MIN_ROUTINE_BURNS = 3           # routine east-west burns in the last year needed to infer it
