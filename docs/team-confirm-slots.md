@@ -12,7 +12,7 @@ Where the table lives: `config/config.py`, `NAVIK_SERVICE_REQUIREMENTS` (NavIC),
 
 | Satellite | Station | Slot in our table | Kept from the table | To confirm |
 |---|---|---|---|---|
-| NVS-01 | 129.5° E | 131.5° E | 2.0° west | ISRO placed NVS-01 at 129.5° E, which is IRNSS-1G's longitude in our table: is 131.5° E right? |
+| NVS-01 | 129.5° E | 131.5° E | 2.0° west | Its element sets keep it at 129.5° E, which is IRNSS-1G's longitude in our table. Is 131.5° E right, or has NVS-01 taken that slot? |
 | QZS-1R (Michibiki-1R) | 134.9° E | 148° E | 13.1° west | Which position did QZS-1R take over, and is 148° E (QZS-1's old slot) still the one to judge it against? |
 
 The rule found no other satellite of NavIC, QZSS or BeiDou-3. The next largest are BeiDou-2 IGSO-6 (2.5° east of its
