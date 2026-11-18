@@ -149,7 +149,7 @@ def _station(sat, kind, labels):
 def _care(sat):
     if sat.get("care") is None:
         return _cell("not judged", "idle", note="fewer than " + str(limits.CARE_MIN_JUDGED) + " judged burns in 365 days")
-    return _cell("regular" if sat["care"] else "irregular", "ok" if sat["care"] else "warn",
+    return _cell("passes" if sat["care"] else "irregular burns", "ok" if sat["care"] else "warn",
                  should=f"no irregular burn in {limits.CARE_RECENT_DAYS} days, at most {limits.CARE_MAX_SHARE:.0%} in 365")
 
 

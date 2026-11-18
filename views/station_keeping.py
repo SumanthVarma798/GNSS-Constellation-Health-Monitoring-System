@@ -15,6 +15,8 @@ from ui.figures.burns import EAST_WEST, burn_timeline, rhythm
 from ui.picker import chosen_constellations
 
 PATTERN_STATUS = {"regular": "ok", "irregular": "warn", "too few": "idle"}
+# What the rhythm chip says: "irregular" is kept for kinds of burn (the burn record), so the rhythm has its own words.
+PATTERN_WORDS = {"regular": "steady rhythm", "irregular": "uneven rhythm", "too few": "too few"}
 CHART = {"use_container_width": True, "config": {"displayModeBar": False}}
 
 
@@ -55,7 +57,7 @@ def _rhythm(rows):
                  f'<b class="num">{row["median_days"]:.0f} days</b>')
         north_south = f'<span class="num">{row["ns_count"]}</span>' if row["ns_count"] else '<span class="muted">&ndash;</span>'
         lines.append(f'<div class="rh"><b>{escape(row["satellite"])}</b>'
-                     f'<span class="ev">{every}{surfaces.chip(row["pattern"], PATTERN_STATUS[row["pattern"]])}</span>'
+                     f'<span class="ev">{every}{surfaces.chip(PATTERN_WORDS[row["pattern"]], PATTERN_STATUS[row["pattern"]])}</span>'
                      f'{_cycle(row)}<span class="due {status}">{words}</span>{north_south}</div>')
     return surfaces.raised('<div class="rhythm">' + "".join(lines) + "</div>")
 

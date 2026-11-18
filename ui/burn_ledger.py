@@ -89,7 +89,7 @@ def satellites(table, names, now=None):
         verdict = {True: "passes", False: "does not pass", None: "not judged"}[care.get(name)]
         marks = "".join(_mark(row) for row in own.to_dict("records"))
         rows.append(f'<div class="lm-row"><b>{escape(name)}</b><span class="lm-marks">{marks}</span>'
-                    f'<span class="lm-sum small"><span class="num">{irregular} of {len(judged)} irregular</span>'
+                    f'<span class="lm-sum small"><span class="num">{f"{irregular} of {len(judged)} irregular" if len(judged) else "no judged burns"}</span>'
                     f'<span>{verdict}</span></span></div>')
     shape = ('<div class="lb-key small"><span><i class="bm ew shape" aria-hidden="true"></i>east-west</span>'
              '<span><i class="bm ns shape" aria-hidden="true"></i>north-south</span></div>')
