@@ -45,8 +45,9 @@ def score_sum(summary):
     words = ", ".join(f"{names[key]} {rate:.0f}% of its {weight:.0%} share: {rate * weight:.1f} points"
                       for key, rate, weight in rates)
     words += f"; score {score} out of 100, weighed for a {mission} constellation"
-    if len(rates) < len(MEASURES):
-        words += f"; {len(MEASURES) - len(rates)} not read today, so the others count for its share"
+    applies = len(_read(summary))   # the burn record applies only where burns were found
+    if len(rates) < applies:
+        words += f"; {applies - len(rates)} not read today, so the others count for its share"
     # each part as wide as its weight, its weight said over it; filled as far as its pass rate; the points it adds under
     parts = "".join(
         f'<div class="ss-seg" style="flex:{weight:.4f}"><span class="ss-head"><span class="ss-name">'
@@ -147,6 +148,8 @@ def _station(sat, kind, labels):
 
 
 def _care(sat):
+    if sat.get("group") == "set aside":
+        return _cell("not judged", "idle", note="set aside: not judged")
     if sat.get("care") is None:
         return _cell("not judged", "idle", note="fewer than " + str(limits.CARE_MIN_JUDGED) + " judged burns in 365 days")
     return _cell("passes" if sat["care"] else "irregular burns", "ok" if sat["care"] else "warn",

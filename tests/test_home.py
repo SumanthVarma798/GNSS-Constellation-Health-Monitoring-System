@@ -564,3 +564,32 @@ def test_a_constellation_of_two_parts_has_one_score_shown_alike_everywhere_with_
     assert 'class="ps-box here ok"><small>MEO</small><b class="num">100</b>' in shown
     assert "BeiDou-3&#x27;s score counts every satellite of its parts once" in shown
     assert three_measures.part_scores(system_summary.whole("NavIC", [part("NavIC", 3, 1)])) == ""
+
+
+def test_summary_counts_the_burn_record_over_the_satellites_it_judged():
+    summary = system_summary.summary("NavIC", data.load("NavIC", 90))
+    judged = [sat["care"] for sat in summary["sats"] if sat["care"] is not None]
+
+    assert summary["care"] == (sum(judged), len(judged)) and len(judged) > 0
+    assert summary["burn_record"] and all(sat["care"] is None for sat in summary["sats"] if sat["group"] == "set aside")
+
+
+def test_a_constellation_without_a_burn_record_counts_three_measures_and_says_nothing_of_it():
+    from ui import three_measures
+    from views import home
+    rates = [("clock", 100.0, .4), ("orbit", 90.0, .35), ("station", 80.0, .25)]
+    system = {"name": "Galileo", "score": 94, "score_parts": rates, "burn_record": None}
+
+    assert "not read" not in three_measures.score_sum(system) and "Burn" not in three_measures.score_sum(system)
+    assert [key for key, _ in three_measures._read(system)] == ["orbit", "station", "clock"]
+    tip = home._how_scored(system, 0)
+    assert "3 measures" in tip and "Burn record" not in tip and "could not be read" not in tip and "Clock steady 40%" in tip
+    # where burns are found but the burn record could not be read, it is counted as not read
+    both = {**system, "burn_record": {**dict.fromkeys(burn_groups.COUNT_KEYS, 0), "routine": 9}}
+    assert "1 not read today" in three_measures.score_sum(both) and "From 3 of 4 today" in home._how_scored(both, 0)
+
+
+def test_a_set_aside_satellite_says_why_it_has_no_burn_record():
+    from ui import three_measures
+    assert three_measures._care({"group": "set aside", "care": None})["note"] == "set aside: not judged"
+    assert "fewer than 3 judged burns" in three_measures._care({"group": "GEO", "care": None})["note"]

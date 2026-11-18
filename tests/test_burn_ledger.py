@@ -48,9 +48,21 @@ def test_the_timeline_fills_each_mark_by_what_the_burn_was_and_leaves_those_not_
 
     east_west = next(trace for trace in figure.data if trace.name == "East-west" and trace.showlegend is not True and trace.x[0] is not None)
     assert list(east_west.marker.color) == [palette.OK, palette.BAD, palette.INK, palette.IDLE]   # routine, response, not judged, planned
-    assert list(east_west.marker.symbol) == ["circle", "circle", "circle-open", "circle"]
+    # shape says it too: filled, crossed, open with a dot (not judged), open (planned)
+    assert list(east_west.marker.symbol) == ["circle", "circle-x", "circle-open-dot", "circle-open"]
+    legend = [trace.name for trace in figure.data if trace.showlegend is not False and trace.x[0] is None]
+    assert legend == ["East-west", "North-south", "routine", "planned moves", "response", "off pattern", "not judged"]
     assert "response (counted: irregular)" in east_west.hovertext[1] and "Test" in east_west.hovertext[1]
     # without the classes the marks are drawn as before: ink, a dot and an open diamond
     plain = figures.burn_timeline(burns, ["A"], NOW - pd.Timedelta(days=200), NOW)
     assert [trace.marker.symbol for trace in plain.data] == ["circle", "diamond-open"]
     assert burn_groups.group_of("artefact", False) == "artefact"
+
+
+def test_a_constellation_with_only_neutral_burns_has_nothing_judged_and_is_too_few_to_rate():
+    rows = _table()[_table()["burn_class"].isin(["relocation", "unexplained"])]
+    record = burn_record.record_of(rows, NOW)
+
+    assert record["decided"] == 0 and record["low"] == 0.0 and record["high"] == 0.0   # no interval, no NaN
+    assert burn_record.words(record) == "too few to rate (no judged burns)"
+    assert not burn_record.rated(record)

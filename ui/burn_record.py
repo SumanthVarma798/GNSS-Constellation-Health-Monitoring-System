@@ -72,7 +72,7 @@ def record_of(table, now=None):
 def _with_share(counts):
     decided = counts[ROUTINE] + counts[RESPONSE] + counts[OFF]
     irregular = counts[RESPONSE] + counts[OFF]
-    low, high = wilson(irregular, decided)
+    low, high = wilson(irregular, decided) if decided else (0.0, 0.0)   # nothing judged: no interval to work out
     return {**counts, "decided": decided, "irregular": irregular, "low": float(low), "high": float(high)}
 
 
@@ -93,8 +93,10 @@ def rated(record):
 
 def words(record):
     """'3 of 41 burns irregular (7%, 2–20%)', or 'too few to rate' (with how many there were); '' with no record."""
-    if not record or not record["decided"]:
+    if not record:
         return ""
+    if not record["decided"]:
+        return "too few to rate (no judged burns)"
     count = f"{record['irregular']} of {record['decided']} burns irregular"
     if not rated(record):
         return f"too few to rate ({count})"

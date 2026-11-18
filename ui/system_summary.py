@@ -145,10 +145,11 @@ def summary(name, result, gap=None):
         sat["clock_steady"] = None if step is None else step <= limits.CLOCK_STEADY_NS
     checked = [sat for sat in sats if sat["broadcast"] is not None]
     flagged = [sat for sat in checked if sat["broadcast"] in ("ok", "bad")]
+    record = _burn_record(name, result, sats)   # sets sat["care"]: must run before _measures() counts it
     return {"name": name, "sats": sats, "healthy": sum(sat["ok"] for sat in sats), "total": len(sats),
             # the operator's own word against our check: its flag says healthy exactly where we count it healthy
             "flag_agrees": (sum((sat["broadcast"] == "ok") == sat["ok"] for sat in flagged), len(flagged)),
-            "burn_record": _burn_record(name, result, sats),
+            "burn_record": record,
             "settling": {new: _when_scored(result, new, first) for new, first in (result.get("moving") or {}).items()},
             "planes": plane_drift(name, result["rows"]) if by_plane else {},
             "in_file": sum(sat["broadcast"] != "silent" for sat in checked) if checked else None,

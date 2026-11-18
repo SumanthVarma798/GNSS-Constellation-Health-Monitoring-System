@@ -23,7 +23,7 @@ import plotly.graph_objects as go
 
 from ui.figures import burns_settings
 from ui import palette
-from ui.burn_groups import COLOURS, CONFIDENCE_WORDS, VERDICT, group_of
+from ui.burn_groups import COLOURS, CONFIDENCE_WORDS, GROUPS, GROUP_SYMBOL, VERDICT, group_of
 from ui.tooltip import PLOTLY_HOVER, plotly_card
 
 EAST_WEST = "east-west"
@@ -154,18 +154,23 @@ def burn_timeline(burns, satellites, start, end, kinds=None):
         rows = b[(b["kind"] == kind) & b["satellite"].isin(satellites)]
         marker = {"symbol": KIND_SYMBOL[kind], "size": MARK_PX, "color": palette.INK,
                   "line": {"color": palette.INK, "width": 1.5}}
-        if kinds is not None:   # filled by what the burn was; an outline when it was not judged (or not in the table)
-            shapes = KIND_SYMBOL[kind].replace("-open", "")
-            fills = [COLOURS.get(g) for g in rows["group"]]
-            marker.update(symbol=[shapes if f else shapes + "-open" for f in fills],
-                          color=[f or palette.INK for f in fills], line={"color": [f or palette.INK for f in fills], "width": 1.5})
+        if kinds is not None:   # shape and fill both say what the burn was (GROUP_SYMBOL, COLOURS)
+            shape = KIND_SYMBOL[kind].replace("-open", "")
+            ink = [COLOURS.get(g) or palette.INK for g in rows["group"]]
+            marker.update(symbol=[shape + GROUP_SYMBOL.get(g, "-open") for g in rows["group"]], color=ink,
+                          line={"color": ink, "width": 1.5})
             fig.add_trace(go.Scatter(x=[None], y=[None], mode="markers", name=KIND_LABEL[kind], hoverinfo="skip",
-                                     marker={"symbol": KIND_SYMBOL[kind], "size": MARK_PX, "color": palette.INK,
-                                             "line": {"color": palette.INK, "width": 1.5}}, legendgroup=kind))
+                                     marker={"symbol": shape, "size": MARK_PX, "color": palette.INK}, legendgroup=kind))
         fig.add_trace(go.Scatter(
             x=rows["middle"], y=[row_of[s] for s in rows["satellite"]], mode="markers", name=KIND_LABEL[kind],
             cliponaxis=False, hoverinfo="text", hovertext=[_mark_hover(r) for r in rows.itertuples()],
             showlegend=kinds is None, legendgroup=kind, marker=marker))
+    if kinds is not None:   # the legend: each group's mark (drawn here as an east-west one) with its word
+        for group, words in GROUPS:
+            fig.add_trace(go.Scatter(
+                x=[None], y=[None], mode="markers", name=words, hoverinfo="skip", legendgroup=group,
+                marker={"symbol": "circle" + GROUP_SYMBOL[group], "size": MARK_PX, "color": COLOURS.get(group) or palette.INK,
+                        "line": {"color": COLOURS.get(group) or palette.INK, "width": 1.5}}))
     for r in rhythm(burns, satellites, end):
         y, late = row_of[r["satellite"]], bool(r["late"])
         fig.add_shape(type="line", x0=start, x1=end, y0=y, y1=y, line={"color": palette.TRACK, "width": 1}, layer="below")
@@ -179,7 +184,8 @@ def burn_timeline(burns, satellites, start, end, kinds=None):
                            hovertext=_since_hover(r), hoverlabel={k: v for k, v in PLOTLY_HOVER.items() if k != "align"})
     axis = {"fixedrange": True, "zeroline": False, "automargin": True}
     fig.update_layout(
-        height=ROW_PX * max(len(satellites), 1) + FRAME_PX, margin={"l": 8, "r": END_PX, "t": 8, "b": 8},
+        height=ROW_PX * max(len(satellites), 1) + FRAME_PX + 24 * (kinds is not None),
+        margin={"l": 8, "r": END_PX, "t": 8 + 24 * (kinds is not None), "b": 8},
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font={"color": palette.INK, "family": palette.FONT},
         dragmode=False, hoverlabel=PLOTLY_HOVER,
         legend={"orientation": "h", "x": 0, "y": 1, "yanchor": "bottom", "itemwidth": 30, "bgcolor": "rgba(0,0,0,0)",
