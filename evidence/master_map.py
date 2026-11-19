@@ -14,6 +14,7 @@ import re
 from datetime import date
 from pathlib import Path
 
+from evidence.registry_settings import SIGNAL_ID_MOVE_DAYS, SIGNAL_ID_SWAP_DAYS
 from evidence.settings import (GCAT_MISSION_FAILED, GCAT_STILL_OPERATING, IDENTITY_AGREE, IDENTITY_DIFFER,
                                IDENTITY_ONE_SOURCE, MAP_ACCENT, MAP_IDLE, MAP_OK, MAP_WARN, NOT_RECORDED, NOT_YET_KNOWN,
                                ORBIT_FEED_FILES, SCHEME_COSPAR, SCHEME_DASHBOARD, SCHEME_GCAT, SCHEME_ISSUERS,
@@ -88,6 +89,56 @@ def holders_of(signal_id, signal_ids, satellites, catalogue, tracked):
         holders.append({"label": f"{svn}, {name}", "svn": svn, "start": _day(row["valid_from"]),
                         "end": _day(row["valid_to"]), "current": not row["valid_to"]})
     return holders
+
+
+def _days(earlier, later):
+    return (date.fromisoformat(later) - date.fromisoformat(earlier)).days
+
+
+def _change_kind(old, new, periods):
+    """("swap" | "replaced" | "reassigned" | "unknown", the signal ID the old holder took next or "") for one signal ID
+    passing from period `old` to period `new`; periods is {svn: signal_ids_of(svn)}. Only what the table shows."""
+    if not old["end"]:
+        return "unknown", ""   # the table never ends the old holder's stretch: nothing to read
+    after = [p for p in periods[old["svn"]] if p["start"] >= old["end"]]
+    before = [p for p in periods[new["svn"]] if p["end"] and p["end"] <= new["start"]]
+    then = after[0] if after else None
+    # the old holder took the new one's last ID, and that ID is another one (not this ID handed back and forth)
+    traded = then and before and then["label"] == before[-1]["label"] != new["label"]
+    if traded and abs(_days(then["start"], new["start"])) <= SIGNAL_ID_SWAP_DAYS \
+            and _days(before[-1]["end"], new["start"]) <= SIGNAL_ID_SWAP_DAYS:
+        return "swap", then["label"]
+    if not after:
+        return "replaced", ""
+    if _days(old["end"], then["start"]) <= SIGNAL_ID_MOVE_DAYS and then["label"] != new["label"]:
+        return "reassigned", then["label"]
+    return "unknown", then["label"]
+
+
+def signal_id_changes(signal_ids):
+    """Every signal ID more than one spacecraft has held, ordered by the ID, each as {"signal_id", "periods", "changes"}.
+
+    periods: each stretch, oldest first, as {"svn", "label", "start", "end", "current", "note"} (the note is the table's own).
+    changes: each time the ID passed to another spacecraft, as {"on", "from", "to", "ended", "kind", "then"} ("ended":
+    the day the old holder's stretch ended, "" when the table leaves it open): kind is what
+    _change_kind reads from the table, "then" the signal ID the old holder took next ("" when none).
+    """
+    rows = sorted(signal_ids, key=lambda row: row["valid_from"])
+    periods = {svn: signal_ids_of(svn, signal_ids) for svn in {row["svn"] for row in rows}}
+    found = []
+    for signal_id in sorted({row["signal_id"] for row in rows}):
+        held = [{"svn": row["svn"], "label": signal_id, "start": _day(row["valid_from"]), "end": _day(row["valid_to"]),
+                 "current": not row["valid_to"], "note": row["note"]} for row in rows if row["signal_id"] == signal_id]
+        if len({p["svn"] for p in held}) < 2:
+            continue
+        changes = []
+        for old, new in zip(held, held[1:]):
+            if old["svn"] != new["svn"]:
+                kind, then = _change_kind(old, new, periods)
+                changes.append({"on": new["start"], "from": old["svn"], "to": new["svn"], "ended": old["end"],
+                                "kind": kind, "then": then})
+        found.append({"signal_id": signal_id, "periods": held, "changes": changes})
+    return found
 
 
 def _feed_remark(feed_name, periods):

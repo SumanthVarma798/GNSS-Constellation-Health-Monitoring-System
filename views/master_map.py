@@ -9,7 +9,8 @@ from datetime import datetime, timezone
 import streamlit as st
 
 from data import celestrak
-from ui import data, master_map_page as mm, reveal, shell, surfaces, systems
+from evidence.master_map import signal_id_changes
+from ui import data, master_map_page as mm, reveal, shell, signal_id_history as sih, surfaces, systems
 from ui.components.master_map import master_map_canvas, master_map_records
 from ui.pages_data import load_master_map_data, with_live_feed
 from ui.session_keys import LIBRARY_JUMP
@@ -46,6 +47,22 @@ def _links(index, summary):
         st.button(f"{name} lifecycles in the Library", key=f"mm_lib_{index}", on_click=_lifecycles, args=(name,))
 
 
+def _signal_ids(tables, records, focus, today):
+    """Signal IDs that changed spacecraft: the count of each kind of change, the cases brought forward as larger
+    cards, then every one behind the shared reveal. A constellation chosen for the map narrows them too."""
+    constellations = {r["svn"]: r["constellation"] for r in records}
+    names = {r["svn"]: r["name"] for r in records}
+    items = [item for item in sih.with_notices(signal_id_changes(tables["signal_ids"]))
+             if not focus or constellations.get(item["periods"][0]["svn"]) == focus]
+    surfaces.show(surfaces.group_head("Signal IDs that changed spacecraft",
+                                      "tap a bar for who held it, a round mark for why it passed on"))
+    cards = "".join(sih.card(item, why, names, constellations, today) for item, why in sih.featured(items))
+    surfaces.show(f'<div class="sx">{sih.key(items)}<div class="sx-cards">{cards}</div></div>')
+    reveal.section("mm_ids", "Every signal ID that changed spacecraft",
+                   f"{len(items)} timelines, by constellation, each change marked",
+                   f'<div class="sx">{sih.listing(items, names, constellations, today)}</div>')
+
+
 def page():
     now = datetime.now(timezone.utc)
     tables = with_live_feed(load_master_map_data(), celestrak.state)
@@ -68,6 +85,7 @@ def page():
     if focus:
         st.button("Show all constellations", key="mm_all", icon=":material/zoom_out_map:", on_click=_focus, args=(None,))
     master_map_canvas(tables, focus, records)
+    _signal_ids(tables, records, focus, now.date())
 
     surfaces.show(surfaces.group_head("Where this comes from", "and how fresh each part is"))
     surfaces.show(mm.sources(mm.freshness(tables, celestrak.state, now)))
