@@ -326,8 +326,11 @@ def constellation_line(forecasts, now):
         parts.append(f"{_list(out)} {'is' if len(out) == 1 else 'are'} outside the {box} box.")
         tone = "warn"
     if edge:
-        parts.append(f"{len(edge)} of {len(worked)} satellites {'reaches' if len(edge) == 1 else 'reach'} the {box} box edge within "
-                     f"{N.NEAR_DAYS} days if not corrected: " + _list(f"{n} in {e} days" for e, n in edge) + ".")
+        # chosen by last chance (the edge less the lead), so an edge can fall a little past NEAR_DAYS
+        one = len(edge) == 1
+        parts.append(f"{len(edge)} of {len(worked)} satellites {'needs' if one else 'need'} an east-west burn within {N.NEAR_DAYS} days "
+                     f"to stay inside the {box} box; not corrected, {'it reaches' if one else 'they reach'} its edge: "
+                     + _list(f"{n} in {e} days" for e, n in edge) + ".")
         tone = "warn" if edge[0][0] <= N.SOON_DAYS else "accent" if tone == "ok" else tone
     elif soon:
         parts.append("Next east-west burns expected: "

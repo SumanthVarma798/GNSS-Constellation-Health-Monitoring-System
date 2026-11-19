@@ -66,7 +66,7 @@ def test_due_soon_says_when_it_reaches_the_edge_and_the_last_chance():
     text, tone, _ = N.satellite_line(f, NOW)
     assert f"{NAME} reaches the ±0.5° box edge in 1" in text and "last chance" in text
     assert tone in ("warn", "accent")
-    assert "1 of 1 satellites reaches the ±0.5° box edge within 30 days" in N.constellation_line([f], NOW)[0]
+    assert "1 of 1 satellites needs an east-west burn within 30 days to stay inside the ±0.5° box" in N.constellation_line([f], NOW)[0]
     short = N.tile_line(f, NOW)
     assert short and short[0].startswith("Box edge in")
 
