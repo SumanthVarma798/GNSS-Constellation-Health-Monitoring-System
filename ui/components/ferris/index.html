@@ -151,7 +151,8 @@ body { padding: 3px; color: var(--ink); font-family: system-ui, sans-serif; }   
   }, { passive: false });
   field.addEventListener("keydown", (ev) => {
     const keys = { ArrowDown: () => step(1), ArrowUp: () => step(-1),
-      Home: () => { open(); active = -1; step(1); }, End: () => { open(); active = 0; step(-1); },
+      Home: () => { open(); active = Math.max(0, off.indexOf(false)); draw(); },   // first and last option that can be picked
+      End: () => { open(); active = Math.max(0, off.lastIndexOf(false)); draw(); },
       Enter: () => (isOpen ? pick(active) : open()), " ": () => (isOpen ? pick(active) : open()),
       Escape: () => close() };
     if (keys[ev.key]) { ev.preventDefault(); keys[ev.key](); }
@@ -210,9 +211,11 @@ body { padding: 3px; color: var(--ink); font-family: system-ui, sans-serif; }   
     document.getElementById("label").textContent = a.label || "";
     field.setAttribute("aria-label", a.label || "Choose one");
     const key = JSON.stringify([a.labels, a.disabled, a.placeholder]);
-    if (key !== lastKey) { lastKey = key; labels = a.labels; off = a.disabled; hint = a.placeholder; build(); }
+    const rebuilt = key !== lastKey;
+    if (rebuilt) { lastKey = key; labels = a.labels; off = a.disabled; hint = a.placeholder; build(); }
     committed = a.index;
-    if (!isOpen) active = Math.max(committed, 0);
+    // new options while open: the old position would point at another option, so start again from the chosen one
+    if (!isOpen || rebuilt) active = Math.max(committed, 0);
     draw();
   });
 
