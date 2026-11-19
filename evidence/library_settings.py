@@ -98,10 +98,6 @@ LIBRARY_COLUMN_HELP = {
                  ("database", "From", "the end date GCAT gives.")], ""),
     "operating": ("GCAT believes it is still operating.",
                   [("broadcast", "Read as", "the catalogue author's latest word, not a live status: he updates it patchily.")], ""),
-    "launch_success": ("Share of launches that put the spacecraft in orbit.",
-                       [("calculator", "Worked out", "(launched - failed at launch) / launched.")], ""),
-    "orbit_success": ("Share of spacecraft in orbit that did not fail early.",
-                      [("calculator", "Worked out", "(reached orbit - failed in orbit) / reached orbit.")], ""),
     "satellite_years": ("Years in service, added up over the satellites.",
                         [("power", "Retired", "launch to the end of regular operations."),
                          ("broadcast", "Operating", "launch to GCAT's update date."),
@@ -112,3 +108,11 @@ LIBRARY_COLUMN_HELP = {
     "money": ("Only figures a public source states, each with its source.",
               [("coin", "Not compared", "they cover different things, in different years and currencies.")], ""),
 }
+
+# ---- Money (ui/library.py costs) ----
+# A stated amount's scale word, so figures in one currency share one axis ("1.6 billion" and "246 million" US dollars).
+# Only the scale is applied: a currency is never converted into another.
+AMOUNT_SCALES = {"billion": 1e9, "million": 1e6, "crore": 1e7}
+# How sure a figure is: its publisher's reliability grade in evidence/source_grades.csv (matched on the address's
+# domain), shown as a status colour (ui/surfaces.py STATUSES). A publisher with no grade there is "not graded".
+GRADE_STATUS = {"A": "ok", "B": "ok", "C": "warn", "D": "warn", "E": "bad", "F": "bad"}

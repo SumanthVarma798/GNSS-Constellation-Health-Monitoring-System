@@ -14,8 +14,8 @@ import streamlit as st
 
 from evidence import jobs
 from evidence.console_settings import JOBS, WORKFLOWS_DIR
-from ui import icons, marks, surfaces
-from ui.shelf_settings import CITATION_FORMATS, FITTED, JOB_NAMES, ORBIT_GAP, OUR_CREDIT, OUR_LICENCE, OURS, SHELVES
+from ui import icons, marks, tooltip
+from ui.shelf_settings import CITATION_FORMATS, FITTED, JOB_NAMES, ORBIT_GAP, OUR_LICENCE, OURS, SHELVES
 
 ROOT = Path(__file__).resolve().parent.parent
 _DAY = re.compile(r"\d{4}-\d{2}-\d{2}")
@@ -47,20 +47,15 @@ CSS = """<style>
 [class*="st-key-item_"] > [data-testid="stElementContainer"]:has([data-testid="stDownloadButton"]) { margin-top: auto; }
 .obj { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; align-items: start; align-content: start; }
 .obj .lbl { min-width: 0; }
-.obj .lbl b { display: block; font-size: var(--fs-side); line-height: 1.25; }
+.obj .lbl > b { display: block; font-size: var(--fs-side); line-height: 1.25; }
 .obj .lbl p { margin: 4px 0 0; font-size: var(--fs-body); }
-.obj .facts { grid-column: 1 / -1; display: grid; gap: 4px; font-size: var(--fs-small); color: var(--fc-small); }
-.obj .facts span { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 8px; align-items: baseline; }
-.obj .facts i { font-style: normal; color: var(--muted); }
-.obj .facts code { font-size: var(--fs-small); overflow-wrap: anywhere; white-space: normal; }
+.obj .facts { grid-column: 1 / -1; display: grid; gap: 6px; font-size: var(--fs-small); color: var(--fc-small); }
+.obj .facts > span { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 8px; align-items: baseline; }
+.obj .facts i { display: inline-flex; align-items: center; gap: 7px; font-style: normal; color: var(--muted); }
+.obj .facts .ic { width: 15px; height: 15px; flex: none; align-self: center; }
+.obj .facts .dot { width: 10px; height: 10px; margin: 0 2.5px; border-radius: 50%; flex: none; align-self: center; }
+.obj .facts .dot.warn { border-radius: 2px; transform: rotate(45deg) scale(.82); } .obj .facts .dot.bad { border-radius: 2px; }
 .obj a { color: var(--accent); overflow-wrap: anywhere; }
-/* how to use a dataset: closed until asked for */
-.obj details { grid-column: 1 / -1; min-width: 0; overflow-wrap: anywhere; border-radius: 12px; background: var(--well); box-shadow: var(--pressed); }
-.obj summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; padding: 0 12px; font-weight: 600; }
-.obj details > div { padding: 0 12px 12px; font-size: var(--fs-small); display: grid; gap: 6px; }
-.obj details dl { margin: 0; display: grid; gap: 4px; } .obj details dt { font-family: var(--font-numbers, monospace); color: var(--accent); }
-.obj details dd { margin: 0 0 4px; }
-.obj details p { margin: 0; }
 .story-obj .lbl b { font-size: var(--fs-body); }
 .story-about { display: flex; flex-wrap: wrap; gap: 2px 12px; }
 .people h4 { margin: 14px 0 6px; }
@@ -121,7 +116,7 @@ def _repo_file(path):
 
 
 def item_state(key, files):
-    """(bytes or None, freshness words, problem) for one of OURS. files: published()."""
+    """(bytes or None, the date the file carries or None, problem) for one of OURS. files: published()."""
     item = OURS[key]
     kind, where = item["file"]
     if kind == "repo":
@@ -130,17 +125,34 @@ def item_state(key, files):
     else:
         payload, problem = files[where]
         content = json.dumps(payload, indent=1).encode("utf-8") if payload else None
-    day = ""
+    day = None
     if item["date"] and content is not None:
         how, name = item["date"]
         if how == "column":
             values = [row.get(name, "") for row in csv.DictReader(io.StringIO(content.decode("utf-8")))]
-            day = _day_words(max((v for v in values if _DAY.match(v or "")), default=""))
-            day = day and f"newest entry {day}"
+            day = _as_iso_day(max((v for v in values if _DAY.match(v or "")), default=""))
         else:
-            day = _day_words(str(files[where][0].get(name, "")))
-            day = day and f"made {day}"
-    return content, (day or "the file carries no date") + " · " + job_words(item["job"]), problem
+            day = _as_iso_day(str(files[where][0].get(name, "")))
+    return content, (date.fromisoformat(day) if day else None), problem
+
+
+def cadence(job):
+    """How often a file changes, short: 'daily 06:00 UTC', or 'by hand, as reviewed pull requests'."""
+    return "by hand, as reviewed pull requests" if job == "hand" else job_words(job).removeprefix("updated by us ")
+
+
+def freshness(key, day, problem, today=None):
+    """(status, words) for one of OURS: how old the file is, and whether that is late for its fresh_days."""
+    if problem:
+        return "bad", f"cannot be read right now: {problem}"
+    if day is None:
+        return "idle", "the file carries no date"
+    item, age = OURS[key], ((today or datetime.now(timezone.utc).date()) - day).days
+    ago = "today" if age <= 0 else "1 day ago" if age == 1 else f"{age} days ago"
+    words = f"{'newest entry' if item['date'][0] == 'column' else 'made'} {day.day} {day:%b %Y} · {ago}"
+    if item["fresh_days"] is None:
+        return "idle", words
+    return ("ok", words + " · on time") if age <= item["fresh_days"] else ("warn", words + " · late")
 
 
 def size_words(size):
@@ -202,34 +214,45 @@ def dataset_citations(key, content, now=None, accessed=None):
     return {"short": CITATION_FORMATS["short"].format(**fields), "long": CITATION_FORMATS["long"].format(**fields)}
 
 
-def card_html(key, content, fresh, problem):
-    """One of our datasets: what it is, how it is made, how fresh, size, its stable address, licence,
-    and, opened on request, how to use it: each field, an example, what not to use it for, how to cite it."""
+def _mark(icon):
+    """An icon in ui/icons.py MASKED, or "dot:<status>" for a dot in that status's colour."""
+    if icon.startswith("dot:"):
+        return f'<span class="dot {icon[4:]}" style="background: var(--{icon[4:]})"></span>'
+    return icons.mask(icon)
+
+
+def _facts(rows):
+    """Icon-and-label rows: (icon for _mark, label, value markup)."""
+    return ('<span class="facts">' + "".join(f"<span><i>{_mark(icon)}{label}</i><span>{value}</span></span>"
+                                             for icon, label, value in rows) + "</span>")
+
+
+def card_html(key, content, day, problem, today=None):
+    """One of our datasets, at a glance: its name (which opens what it is, each field, an example and what not to use
+    it for), one line of purpose, then source, update cadence, freshness, licence and format."""
     item = OURS[key]
-    state = surfaces.chip("cannot be read right now", "warn") + f" {escape(problem)}" if problem else escape(fresh)
-    rows = [("Fresh", state), ("Size", escape(size_words(len(content))) if content is not None else "&ndash;"),
-            ("Address", f"<code>{_link(item['address'])}</code>"),
-            ("Licence", _link(OUR_LICENCE[1], OUR_LICENCE[0]))]
-    facts = "".join(f"<span><i>{label}</i>{value}</span>" for label, value in rows)
-    fields = "".join(f"<dt>{escape(name)}</dt><dd>{escape(meaning)}</dd>" for name, meaning in item["fields"])
-    cite = f"OpenGNSS, {item['name']}, {OUR_CREDIT}, licensed CC BY 4.0, {item['address']}"
-    use = (f'<details><summary>How to use it</summary><div><dl>{fields}</dl>'
-           f'<p><b>Example</b> {escape(item["example"])}</p><p><b>Not for</b> {escape(item["not_for"])}</p>'
-           f'<p><b>Cite</b> {escape(cite)}</p></div></details>')
+    status, fresh = freshness(key, day, problem, today)
+    name = file_name(key)
+    size = f" · {size_words(len(content))}" if content is not None else ""
+    more = tooltip.glance(item["what"], [("", field, meaning) for field, meaning in item["fields"]]
+                          + [("", "Example", item["example"]), ("", "Not for", item["not_for"])], item["made"])
+    rows = [("database", "Source", escape(item["source"])), ("hourglass", "Updates", escape(cadence(item["job"]))),
+            (f"dot:{status}", "Fresh", escape(fresh)), ("quote", "Licence", _link(OUR_LICENCE[1], OUR_LICENCE[0])),
+            ("download", "Format", f"{name.rsplit('.', 1)[-1].upper()}{size} · {_link(item['address'], 'stable address')}")]
     return (f'<div class="obj"><span class="plinth">{icons.mask(item["icon"])}</span>'
-            f'<span class="lbl"><b>{escape(item["name"])}</b><p>{escape(item["what"])}</p>'
-            f'<p class="small">{escape(item["made"])}</p></span><span class="facts">{facts}</span>{use}</div>')
+            f'<span class="lbl"><b>{tooltip.tip_html(escape(item["name"]), more, key=key)}</b>'
+            f'<p>{escape(item["purpose"])}</p></span>{_facts(rows)}</div>')
 
 
 def others_html(others):
-    """The others' data we use: whose it is, what we use it for, how fresh our copy is, and a link to its owner."""
+    """The others' data we use: whose it is, what we use it for, how often we read it, and a link to its owner."""
     cards = ""
     for name, icon, link, used_for, job in others:
-        read = "a copy comes with the code" if job == "hand" else "we read it " + job_words(job).removeprefix("updated by us ")
-        go = _link(link, "Go to " + name) if link else "Read each on its publisher's site, linked from the News page."
+        read = "a copy comes with the code" if job == "hand" else cadence(job)
+        go = _link(link, name) if link else "each publisher's own site, linked from the News page"
         cards += (f'<div class="obj"><span class="plinth">{icons.mask(icon)}</span><span class="lbl"><b>{escape(name)}</b>'
-                  f'<p>We use it for: {escape(used_for)}</p></span><span class="facts"><span><i>Fresh</i>kept by its '
-                  f'owner · {escape(read)}</span><span><i>Get it</i>{go}</span></span></div>')
+                  f'<p>{escape(used_for)}</p></span>'
+                  + _facts([("hourglass", "We read it", escape(read)), ("click", "Get it", go)]) + "</div>")
     return f'<div class="shelf-grid">{cards}</div>'
 
 
