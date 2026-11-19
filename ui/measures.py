@@ -158,7 +158,7 @@ def eccentricity(now, need, kind=None):
         return cell(f"{now:.5f}", "no limit set", note=note)
     within = now < limit
     return cell(f"{now:.5f}", _outside(f"under {limit:.5g}" + (f" (±{limits.ecc_swing_km(limit):,.0f} km)" if kind == "GEO" else ""), within),
-                "ok" if within else "warn", note, {"value": now, "low": 0.0, "high": limit, "floor": True})
+                "ok" if within else "warn", note, {"value": now, "low": 0.0, "high": limit, "floor": True, "strict": True})
 
 
 def height(health):
@@ -169,7 +169,8 @@ def height(health):
     gone = now >= limits.SET_ASIDE_HEIGHT_KM
     return cell(f"{now:,.1f} km", should, "bad" if gone else "idle",
                 f"{now - limits.NOMINAL_HEIGHT_KM:+,.1f} km from nominal" + (" · graveyard orbit" if gone else ""),
-                {"value": now, "low": None, "high": limits.SET_ASIDE_HEIGHT_KM, "tick": limits.NOMINAL_HEIGHT_KM})
+                {"value": now, "low": None, "high": limits.SET_ASIDE_HEIGHT_KM, "tick": limits.NOMINAL_HEIGHT_KM,
+                  "strict": True})
 
 
 def upkeep(health):

@@ -10,7 +10,12 @@ config/meo_nominal.py.
 from html import escape
 from datetime import datetime, timezone
 
-from analysis.meo_geometry import EXTENDED, NO_PLANE, part_score, plane_drift
+from analysis.meo_geometry import EXTENDED, NO_PLANE, WEIGHTS, part_score, plane_drift
+
+# a medium-orbit satellite's score parts (analysis/meo_geometry.py WEIGHTS), in the state bar's "how a score is made"
+MEO_SCORE_WEIGHTS = [(term, round(100 * WEIGHTS[key])) for key, term in (
+    ("spacing", "along-track spacing"), ("plane", "RAAN offset"), ("inclination", "inclination"),
+    ("height", "semi-major axis"), ("eccentricity", "eccentricity"))]
 from analysis.score_rules import STATUS_FROM
 from config.config import TRACKED_NOT_IN_REGISTRY
 from evidence.registry_tables import left_out_notice, new_on_dashboard
@@ -225,7 +230,7 @@ def page(name, result, measured):
     today = datetime.now(timezone.utc).date()
     surfaces.show(three_measures.header(measured, healthy, len(shown), "healthy and in step",
                                         official_html=official_status.line(name))
-                  + three_measures.states(result["health"]))
+                  + three_measures.states(result["health"], MEO_SCORE_WEIGHTS))
     surfaces.show(surfaces.notice(result["history_note"], "idle"))
     orbit_age.show(name, result)
     signals_view.show(name)

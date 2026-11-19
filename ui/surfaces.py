@@ -131,7 +131,7 @@ def group_head(title, line, extra_html=""):
             f'{extra_html}</div>')
 
 
-def gauge(value, low, high, status, floor=False, tick=None):
+def gauge(value, low, high, status, floor=False, tick=None, strict=False):
     """(markup, outside) for a small bar: the allowed range shaded in the middle half of its scale (the scale runs half
     a range past each end; from `low` itself when the quantity cannot go under it, `floor`), the value a dot in its
     status colour. low None: no lower limit, the scale mirrored about `tick` (a nominal value, drawn as a line).
@@ -146,7 +146,7 @@ def gauge(value, low, high, status, floor=False, tick=None):
 
     where = at(value)
     side = " hi" if where > 100 else " lo" if where < 0 else ""
-    outside = not (low is None or low <= value) or value > high
+    outside = not (low is None or low <= value) or (value >= high if strict else value > high)   # strict: the limit itself is out
     band_left = 0.0 if low is None else at(low)
     line = f'<b style="left:{at(tick):.1f}%"></b>' if tick is not None else ""
     return (f'<span class="gg {status}{" out" if outside else ""}" aria-hidden="true">'

@@ -99,7 +99,7 @@ def header(summary, healthy, total, words, meta_html="", official_html=""):
             + (score_sum(summary, total=False) if score is not None else ""))
 
 
-def states(health):
+def states(health, weights=None):
     """The satellites' scores as one stacked bar: how many are healthy, fair, degraded and critical, the count in each
     part and in the key (Critical hatched, so shape tells it from Degraded). How a score is made opens from its title."""
     counts = status_counts(health)
@@ -112,7 +112,7 @@ def states(health):
                   f'<b class="num">{n}</b></span>' for word, n in counts)
     how = tooltip.tip_html("Satellite scores", tooltip.glance(
         "Each satellite's score out of 100, from its parts:",
-        [("", PART_TERMS.get(label, label), f"{weight}%") for label, weight in limits.SCORE_WEIGHTS],
+        [("", PART_TERMS.get(label, label), f"{weight}%") for label, weight in (weights or limits.SCORE_WEIGHTS)],
         note=" · ".join(f"{word} from {low}" if low else f"{word} under {limits.STATUS_FROM[i - 1][1]}"
                         for i, (word, low) in enumerate(limits.STATUS_FROM))), key="overview_states")
     return (f'<div class="lb ovs"><div class="lb-head"><b>{how}</b></div>'

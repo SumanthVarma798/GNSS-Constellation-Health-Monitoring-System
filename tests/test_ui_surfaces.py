@@ -160,3 +160,19 @@ def test_a_picture_is_made_twice_its_light_copy_in_the_light_themes_colours():
     dark, light = re.findall(r'<img class="pic-(dark|light)"', html), re.findall(r"base64,([^\"]+)", html)
     assert dark == ["dark", "light"] and 'alt="a dot"' in html
     assert palette.LIGHT["ink"] in base64.b64decode(light[1]).decode() and palette.INK in base64.b64decode(light[0]).decode()
+
+
+def test_a_limit_that_is_itself_out_reads_outside_on_its_gauge():
+    from ui import measures, surfaces
+    assert surfaces.gauge(0.01, 0.0, 0.01, "warn", floor=True, strict=True)[1]
+    assert not surfaces.gauge(0.01, 0.0, 0.01, "ok", floor=True)[1]
+    cell = measures.eccentricity(0.01, {"ecc_max": 0.01}, "IGSO")
+    assert "outside" in surfaces.measure(cell, "X")
+
+
+def test_medium_orbit_state_bar_names_its_own_score_parts():
+    import pandas as pd
+    from ui import meo_overview, three_measures
+    health = pd.DataFrame({"Health Status": ["Healthy"], "Overall Score": [95.0]})
+    html = three_measures.states(health, meo_overview.MEO_SCORE_WEIGHTS)
+    assert "along-track spacing" in html and "RAAN offset" in html
