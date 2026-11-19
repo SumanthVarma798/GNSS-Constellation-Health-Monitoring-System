@@ -99,16 +99,16 @@ def test_item_html_uses_distinct_tooltip_ids_per_item_key():
     assert card_one != card_two
 
 
-def test_category_body_html_uses_get_for_source_id():
+def test_impact_body_html_uses_get_for_source_id():
     row = _item()
     row.pop("source_id")
     row["_new"] = False
-    html = news_ui.category_body_html([row], {"example.com": {"name": "Example"}})
+    html = news_ui.impact_body_html([row], {"example.com": {"name": "Example"}})
 
     assert "news-list" in html
 
 
-def test_filter_items_applies_category_grade_date_and_new_only():
+def test_filter_items_applies_impact_grade_date_and_new_only():
     now = datetime(2026, 10, 20, 12, 0, tzinfo=timezone.utc)
     seen = datetime(2026, 10, 20, 9, 0, tzinfo=timezone.utc)
     rows = [
@@ -122,23 +122,23 @@ def test_filter_items_applies_category_grade_date_and_new_only():
               published_at="2025-01-01T08:00:00Z", fetched_at="2025-01-01T08:05:00Z"),
     ]
 
-    kept = news_ui.filter_items(rows, "QZSS", {"launch", "signal and service", "programme and policy"},
+    kept = news_ui.filter_items(rows, "QZSS", {"changes the constellation", "affects service now", "plans and policy"},
                                 {"confirmed", "provisional", "not graded"}, "all", False, seen, now)
     assert len(kept) == 4
 
-    kept = news_ui.filter_items(rows, "QZSS", {"launch"}, {"confirmed", "provisional", "not graded"},
+    kept = news_ui.filter_items(rows, "QZSS", {"changes the constellation"}, {"confirmed", "provisional", "not graded"},
                                 "all", False, seen, now)
     assert [row["title"] for row in kept] == ["Launch one", "Old launch"]
 
-    kept = news_ui.filter_items(rows, "QZSS", {"launch", "signal and service"}, {"confirmed"},
+    kept = news_ui.filter_items(rows, "QZSS", {"changes the constellation", "affects service now"}, {"confirmed"},
                                 "all", False, seen, now)
     assert [row["title"] for row in kept] == ["Launch one", "Old launch"]
 
-    kept = news_ui.filter_items(rows, "QZSS", {"launch", "signal and service", "programme and policy"},
+    kept = news_ui.filter_items(rows, "QZSS", {"changes the constellation", "affects service now", "plans and policy"},
                                 {"confirmed", "provisional", "not graded"}, "30 days", False, seen, now)
     assert [row["title"] for row in kept] == ["Launch one", "Signal two"]
 
-    kept = news_ui.filter_items(rows, "QZSS", {"launch", "signal and service", "programme and policy"},
+    kept = news_ui.filter_items(rows, "QZSS", {"changes the constellation", "affects service now", "plans and policy"},
                                 {"confirmed", "provisional", "not graded"}, "all", True, seen, now)
     assert [row["title"] for row in kept] == []
 
@@ -166,7 +166,7 @@ def test_one_story_lists_each_source_with_what_it_said_and_what_was_taken():
     rows = [_item(source_id="a.com", outlet="A News", title="Japan launches QZS-7 satellite", _new=False),
             _item(source_id="b.com", outlet="B Times", title="QZS-7 lifts off on H3", grade="B",
                   address="https://b.com/x", summary="", _new=True)]
-    html = news_ui.category_body_html(rows, {"a.com": {"name": "A"}, "b.com": {"name": "B"}})
+    html = news_ui.impact_body_html(rows, {"a.com": {"name": "A"}, "b.com": {"name": "B"}})
 
     assert html.count('class="news-item') == 3               # the story and its two sources
     assert "2 sources · B Times, A News" in html and "1 new" in html

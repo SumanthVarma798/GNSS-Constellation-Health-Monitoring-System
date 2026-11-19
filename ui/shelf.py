@@ -65,13 +65,10 @@ CSS = """<style>
 .story-about { display: flex; flex-wrap: wrap; gap: 2px 12px; }
 .people h4 { margin: 14px 0 6px; }
 .people ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
-[class*="st-key-item_"] [data-testid="stDownloadButton"] button,
-[class*="st-key-shelfbody_"] [data-testid="stPageLink-NavLink"] { min-height: 44px; }
+[class*="st-key-item_"] [data-testid="stDownloadButton"] button { min-height: 44px; }
 /* a shelf drawn inside a section (ui/reveal.py hides only an HTML body or a frame): padded like one, and gone while
    the section is closed */
 [class*="st-key-shelfbody_"] { padding: 0 20px 16px; }
-[class*="st-key-shelfbody_"] [data-testid="stPageLink-NavLink"] { width: auto; max-width: 100%; }
-[class*="st-key-shelfbody_"] [data-testid="stPageLink-NavLink"] p { white-space: normal; }
 [class*="st-key-shelfbody_"] pre, [class*="st-key-shelfbody_"] pre code { white-space: pre-wrap; overflow-wrap: anywhere; }
 [class*="st-key-rv_"]:not(:has([class*="st-key-rvx_"] input:checked)) [class*="st-key-shelfbody_"] { display: none; }
 </style>"""
@@ -252,7 +249,7 @@ def sign(title, icon):
 
 
 def story_html(story):
-    """One story on the shelf: its headline, category, how many sources told it, when, and the newest link."""
+    """One story on the shelf: its headline, impact, how many sources told it, when, and the newest link."""
     items = story["items"]
     newest = max((item.get("published_at") or item.get("fetched_at") or "" for item in items), default="")
     constellations = sorted({name for item in items for name in item.get("constellations", [])})
@@ -261,7 +258,7 @@ def story_html(story):
     told = f'{len(items)} source{"" if len(items) == 1 else "s"}'
     return (f'<div class="obj story-obj"><span class="plinth">{icons.mask("broadcast")}</span>'
             f'<span class="lbl"><b>{head}</b><p class="small story-about">{"".join(marks.named(name) for name in constellations)}</p></span>'
-            f'<span class="facts"><span><i>Kind</i>{escape(story["category"])}</span><span><i>Told by</i>{told}</span>'
+            f'<span class="facts"><span><i>Impact</i>{escape(story["impact"])}</span><span><i>Told by</i>{told}</span>'
             f'<span><i>Latest</i>{escape(_day_words(newest) or "date not given")}</span></span></div>')
 
 

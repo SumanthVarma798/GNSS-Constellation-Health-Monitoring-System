@@ -81,10 +81,56 @@ NEWS_CATEGORIES = OrderedDict([
     ("other", ()),
 ])
 
+# Impact on health and service: how the News page groups items (evidence/news_stories.py impact()). Word rules, no model.
+# Each impact's words are its own below plus every word of the categories it names (NEWS_CATEGORIES). Checked in
+# IMPACT_CHECK_ORDER on the headline, then on the feed text; the first impact with a matching whole word wins. A
+# headline that matches nothing but names a satellite or mission (NVS-03, SV10, QZS-7; not a notice number) takes
+# IMPACT_OF_AN_ID. Anything else is background.
+NEWS_IMPACTS = OrderedDict([
+    ("affects service now", {
+        "categories": ("satellite status and outages", "signal and service"),
+        "words": ("NAGU", "NANU", "notice advisory", "advisory", "health", "healthy", "restore", "restores", "restored",
+                  "revive", "revives", "revived", "reviving", "revival", "slips", "setback", "blackout",
+                  "no longer working", "in-orbit upgrade", "in-orbit upgrades")}),
+    ("changes the constellation", {
+        "categories": ("launch",),
+        "words": ("in orbit", "to orbit", "reaches orbit", "intended orbit", "geosynchronous orbit", "orbit raising",
+                  "orbit-raising", "manoeuvre", "manoeuvres", "maneuver", "maneuvers", "enter service", "enters service",
+                  "join the fleet", "joins the fleet", "deploys", "deployed", "places", "activated", "commissioned",
+                  "decommissioned", "retired", "retires", "end of life", "slot", "spare", "spares", "refuel", "refuels",
+                  "refuelled", "refueled", "new satellites")}),
+    ("plans and policy", {
+        "categories": ("programme and policy",),
+        "words": ("order", "orders", "ordered", "procures", "contracted", "funds", "second generation",
+                  "second-generation", "G2", "next generation", "next-generation", "white paper", "summit", "ownership",
+                  "takes over", "spectrum", "FCC", "GAO", "talks", "replacement")}),
+    ("background", {"categories": ("other",), "words": ()}),
+])
+# A launch or a retirement changes the constellation before it changes the service, so it is checked first.
+IMPACT_CHECK_ORDER = ("changes the constellation", "affects service now", "plans and policy")
+IMPACT_OF_AN_ID = "changes the constellation"
+
+# State news agencies, graded only by how the stories already in the news file quote them (evidence/news_stories.py
+# agency_ledger()). Their sites are never opened or added as sources: a story quotes one when a report in it comes from
+# one of its hosts (as Google News or another feed already pointed to it) or names it in its headline, feed text or outlet.
+# {agency: (country, words named, hosts)}. Add a provincial outlet here when one appears.
+STATE_AGENCIES = OrderedDict([
+    ("Xinhua", ("China", ("Xinhua",), ("news.cn", "xinhuanet.com"))),
+    ("CGTN", ("China", ("CGTN",), ("cgtn.com",))),
+    ("China Daily", ("China", ("China Daily",), ("chinadaily.com.cn",))),
+    ("Global Times", ("China", ("Global Times",), ("globaltimes.cn",))),
+    ("People's Daily", ("China", ("People's Daily", "People’s Daily"), ("people.cn", "people.com.cn"))),
+    ("China News Service", ("China", ("China News Service", "ECNS"), ("ecns.cn", "chinanews.com.cn"))),
+    ("CCTV", ("China", ("CCTV",), ("cctv.com",))),
+    ("TASS", ("Russia", ("TASS",), ("tass.com", "tass.ru"))),
+    ("RIA Novosti", ("Russia", ("RIA Novosti",), ("ria.ru",))),
+    ("Roscosmos statements", ("Russia", ("Roscosmos",), ("roscosmos.ru",))),
+])
+
 # Stories on the News page: items that say the same thing are shown once, with every source that said it
 # (evidence/news_stories.py). Two headlines tell one story when they share a mission or satellite ID (NVS-03,
 # GSLV-F18, SV10), or share at least STORY_SHARED_WORDS words that are not common in that constellation's news,
-# making up at least STORY_SHARE of the shorter headline. Items in a story share a category, and each is
+# making up at least STORY_SHARE of the shorter headline. Items in a story share an impact, and each is
 # published within STORY_DAYS of one already in it.
 STORY_DAYS = 10
 STORY_SHARE = 0.5
@@ -100,10 +146,6 @@ STORY_HEADLINE_CHARACTERS = 120
 STORY_STOP_WORDS = frozenset(
     "a an the and or of to in on for with by from at as is are be its it this that new into over after says say "
     "will has have how why what who more than up out about via amid".split())
-
-# Category rules: checked in order on the headline first; if none match there, checked in order on the summary.
-CATEGORY_RULE_WORDS = ('Categories are checked in order: first the headline is checked against every category; only when '
-                       'none matches, the feed text is checked in the same order; no match is "other".')
 
 # X accounts (kind "X account" in source_candidates.csv), read through twitterapi.io (key: TWITTERAPI_IO_KEY).
 X_API_URL = "https://api.twitterapi.io/twitter/tweet/advanced_search"

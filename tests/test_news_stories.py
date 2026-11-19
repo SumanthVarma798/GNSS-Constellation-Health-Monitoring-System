@@ -21,10 +21,10 @@ def test_items_sharing_a_mission_id_are_one_story_with_the_most_shared_headline(
     assert found[0]["headline"] == "PM congratulates ISRO on NVS-03 launch"   # as many shared words, better grade
 
 
-def test_different_ids_categories_or_far_apart_days_stay_apart():
+def test_different_ids_impacts_or_far_apart_days_stay_apart():
     shown = [item("Notice advisory to Galileo users (NAGU) 2026047", category="satellite status and outages"),
              item("Notice advisory to Galileo users (NAGU) 2026046", category="satellite status and outages"),
-             item("ISRO completes orbit raising of NVS-03", category="other"),
+             item("NVS-03 in good health, says ISRO", category="other"),
              item("ISRO launches NVS-03", day="2026-11-01"),
              item("ISRO launches NVS-03 again", day="2026-12-01")]
 
@@ -40,7 +40,7 @@ def test_shared_words_tie_headlines_without_an_id():
 
 def test_taken_from_says_the_rule_word_and_the_claim():
     lines = news_stories.taken_from(item("ISRO launches NVS-03"), "a.com")
-    assert lines[0] == 'Sorted under launch because it says "launches".'
+    assert lines[0] == 'Under changes the constellation: it says "launches".'
     assert lines[1] == "Listed under NavIC: the headline names it."
     assert "launch claim for NavIC" in lines[2] and "a.com's grade" in lines[2]
     assert "No claim is taken" in news_stories.taken_from(item("A plan", category="programme and policy"), "a.com")[2]
@@ -74,6 +74,7 @@ def _registry(monkeypatch, satellites, tracked=()):
     tables = {"satellites.csv": satellites, "sightings.csv": [], "dashboard_satellites.csv": list(tracked)}
     monkeypatch.setattr(news_stories, "read_table", lambda name: tables[name])
     news_stories.aliases.cache_clear()
+    news_stories.satellite_ids.cache_clear()
     monkeypatch.setattr(news_stories, "aliases", news_stories.aliases)   # cleared again after the test
     return news_stories
 
@@ -118,3 +119,39 @@ def test_a_satellites_other_name_is_marked_like_its_story_word(monkeypatch):
 
     assert "<mark>IRNSS-1L</mark>" in html and "<mark>GSLV</mark>" not in html
     stories_module.aliases.cache_clear()
+
+
+def test_impact_from_headline_words_then_category_words_then_a_satellite_id_then_background():
+    assert news_stories.impact(item("NOTICE ADVISORY TO GALILEO USERS (NAGU) 2026048", category="other")) == (
+        "affects service now", "NOTICE ADVISORY")
+    assert news_stories.impact(item("Two Galileo satellites launched")) == ("changes the constellation", "launched")
+    # a launch changes the constellation before it changes the service
+    assert news_stories.impact(item("ISRO places NVS-03 in orbit to revive NavIC"))[0] == "changes the constellation"
+    assert news_stories.impact(item("ESA orders four more Galileo satellites", category="other")) == ("plans and policy", "orders")
+    assert news_stories.impact(item("A plain headline", summary="GPS jamming over the Baltic", category="other")) == (
+        "affects service now", "jamming")
+    assert news_stories.impact(item("The NVS-03 Satellite", category="other")) == ("changes the constellation", "NVS-03")
+    assert news_stories.impact(item("BeiDou-3 receivers market to 2035", category="other")) == ("background", "")   # a family
+
+
+def test_agency_ledger_counts_stories_quoting_each_agency_and_those_a_confirmed_a_or_b_source_reported():
+    shown = [item("China launches BeiDou satellite on CZ-3B", source="english.news.cn"),   # Xinhua's own host
+             item("CZ-3B launch puts BeiDou satellite up", source="operator.example", grade="A", day="2026-11-03"),
+             item("China expands BeiDou industry, Xinhua says", source="press.example", day="2026-11-20"),
+             item("China expands BeiDou industry", source="other.example", grade="B", day="2026-11-20",
+                  summary="As Xinhua reported")]   # quotes the agency itself: not a confirmation
+    for row in shown:
+        row["constellations"], row["grade_standing"] = ["BeiDou-3"], "confirmed" if row["grade"] else "not graded"
+
+    ledger = {row["agency"]: row for row in news_stories.agency_ledger(shown)}
+
+    assert (ledger["Xinhua"]["stories"], ledger["Xinhua"]["confirmed"]) == (2, 1)
+    assert ledger["TASS"] == {"agency": "TASS", "country": "Russia", "stories": 0, "confirmed": 0}
+
+
+def test_styled_letters_and_undated_reports_are_handled():
+    from evidence import news_stories
+    assert news_stories.impact({"title": "𝐈𝐒𝐑𝐎 𝐥𝐚𝐮𝐧𝐜𝐡𝐞𝐬 satellite", "summary": ""})[0] == \
+        news_stories.impact({"title": "ISRO launches satellite", "summary": ""})[0]
+    assert news_stories._quotes({"title": "𝐗𝐢𝐧𝐡𝐮𝐚 reports launch", "source_id": "other.com"}, "Xinhua")
+    assert not news_stories._dated({"published_at": "", "fetched_at": ""})
