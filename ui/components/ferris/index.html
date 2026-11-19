@@ -31,8 +31,8 @@ body { padding: 3px; color: var(--ink); font-family: system-ui, sans-serif; }   
   transition: transform 250ms cubic-bezier(.22,.61,.36,1), opacity 250ms ease; }
 .car.d0 { opacity: 1; font-weight: 600; transform: translateY(-50%); }
 .open .car.d0 { color: var(--accent); pointer-events: auto; }
-.open .car.dm1 { opacity: .6; transform: translateY(calc(-50% - 34px)) rotateX(28deg) scale(.86); pointer-events: auto; }
-.open .car.dp1 { opacity: .6; transform: translateY(calc(-50% + 34px)) rotateX(-28deg) scale(.86); pointer-events: auto; }
+.open .car.dm1 { opacity: .85; transform: translateY(calc(-50% - 34px)) rotateX(24deg) scale(.92); pointer-events: auto; }
+.open .car.dp1 { opacity: .85; transform: translateY(calc(-50% + 34px)) rotateX(-24deg) scale(.92); pointer-events: auto; }
 .open .car.dm2 { opacity: .25; transform: translateY(calc(-50% - 60px)) rotateX(48deg) scale(.72); pointer-events: auto; }
 .open .car.dp2 { opacity: .25; transform: translateY(calc(-50% + 60px)) rotateX(-48deg) scale(.72); pointer-events: auto; }
 .car.off { text-decoration: line-through; cursor: not-allowed; }
@@ -157,6 +157,9 @@ body { padding: 3px; color: var(--ink); font-family: system-ui, sans-serif; }   
     if (keys[ev.key]) { ev.preventDefault(); keys[ev.key](); }
   });
   field.addEventListener("blur", () => { if (!hovered) close(); });
+  // A click elsewhere on the page, or another tab, closes it unpicked, so the page is not left pushed down.
+  window.addEventListener("blur", () => { hovered = false; close(); });
+  document.addEventListener("visibilitychange", () => { if (document.hidden) { hovered = false; close(); } });
   // The frame focused from outside (Tab, a panel): focus the field, unless a click is already doing so (no ring then).
   window.addEventListener("focus", () => requestAnimationFrame(() => {
     if (document.activeElement === document.body) field.focus({ preventScroll: true });
