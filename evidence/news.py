@@ -283,7 +283,7 @@ def _source_grade(source_id, confirmed, provisional, record_rows, today):
     row = provisional.get(source_id, {})
     if row.get("proposed_grade"):
         return row["proposed_grade"], "provisional", row.get("grade_reason", ""), "", ""
-    if record_rows:
+    if source_record.score(record_rows, today).claims:   # no checked claim (only "could not check") is no grade, never F
         grade = source_record.record_grade(record_rows, "", today)
         return grade, "provisional", "From the checked-claims record, waiting for approval.", "", "record"
     return "", "not graded", "", "", ""
