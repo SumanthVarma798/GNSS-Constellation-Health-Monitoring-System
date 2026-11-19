@@ -16,7 +16,7 @@ from analysis.commissioning import SETTLING_DAYS
 from config.config import TRACKED_NOT_IN_REGISTRY
 from evidence.registry_tables import judged_by_plane, left_out_notice, new_on_dashboard
 from ui import (checks, data, limits, measures, meo_overview, official_status, orbit_age, orbit_section,
-                marks, palette, reveal, shell, signals_view, surfaces, systems, three_measures, time_range, tooltip)
+                marks, next_step_data, palette, reveal, shell, signals_view, surfaces, systems, three_measures, time_range, tooltip)
 from ui.data import SATELLITES
 from ui.figures.constellation_3d import slot_legend
 from ui.figures.slot_rows import as_number, slot_words
@@ -188,11 +188,23 @@ def _system_line(name, window_days, params):
             + three_measures.part_scores(both, systems.part_name(name)))
 
 
+def _next_step(name, result, params):
+    """Show the constellation's "what should happen next" line; return {satellite: tile line} for the tiles. The look
+    ahead is extra: when it fails the page stands without it and the inbox says so."""
+    try:
+        surfaces.show(next_step_data.outlook_html(name, result, params))
+        return next_step_data.tile_tags(name, result, params)
+    except Exception as error:
+        surfaces.notice(f"Next steps could not be worked out: {type(error).__name__}: {error}", "warn")
+        return {}
+
+
 def constellation(name, window_days, params):
     """One constellation: the count, the tiles per orbit type, the slot picture, then the details: each orbit type's
     table, what the checks found, how each satellite was classed."""
     result = data.load(name, window_days, params)
     surfaces.show(_system_line(name, window_days, params))
+    ahead = _next_step(name, result, params)   # what should happen next, under the system line
     measured = summary(name, result, data.orbit_gap())
     surfaces.show(three_measures.strip(measured))   # the three measures, declared before the count
     if judged_by_plane(name):   # judged by orbital plane, not longitude slot
@@ -203,6 +215,8 @@ def constellation(name, window_days, params):
     window = measures.in_window(result["history"], window_days, today)
     classes = measures.classified(window, name)
     tags = orbit_age.tags(name, result)
+    for satellite, html in ahead.items():   # a short line on the tile of each satellite with something due soon
+        tags[satellite] = tags.get(satellite, "") + html
     tiles, rows = _tiles(result, tags)
     healthy = sum(healthy for _, healthy, _ in tiles.values())
     surfaces.show(f'<div class="head"><span class="big num">{healthy} of {len(tiles) - len(result.get("moving", {}))}</span>'

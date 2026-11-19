@@ -12,7 +12,7 @@ import requests
 import streamlit as st
 
 from data import celestrak
-from ui import data, system_summary, systems
+from ui import data, next_step_data, system_summary, systems
 from ui.home_settings import SNAPSHOT_MAX_AGE, SNAPSHOT_URL
 
 # What Home reads from each part's summary; a published part missing any of them is counted here instead.
@@ -45,16 +45,50 @@ def _snapshot():
     return payload if isinstance(payload, dict) else {}
 
 
-def published(window_days, now=None):
-    """(the time it was counted, {part: summary}) from the published file, or (None, {}) when it cannot stand in for
-    counting here: missing, older than SNAPSHOT_MAX_AGE, or counted over another time range. The file comes from
-    outside the server, so a part not in the expected shape is left out and counted here."""
+def _fresh(window_days, now=None):
+    """(the time it was counted, the published payload) while it can stand in, else (None, {})."""
     payload = _snapshot()
     try:
         made = datetime.strptime(payload["made"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
     except (KeyError, TypeError, ValueError):
         return None, {}
     if payload.get("window_days") != window_days or (now or datetime.now(timezone.utc)) - made > SNAPSHOT_MAX_AGE:
+        return None, {}
+    return made, payload
+
+
+def next_figures(name, window_days):
+    """The look ahead's figures for one part's card (ui/outlook.py figures): from the published file while it is fresh,
+    else worked out here from the part's assessment. '' when it cannot be."""
+    figures = _fresh(window_days)[1].get("next_figures")
+    html = figures.get(name) if isinstance(figures, dict) else None
+    if isinstance(html, str):
+        return html
+    try:
+        return next_step_data.outlook_html(name, data.load(name, window_days), compact=True)
+    except Exception:   # the card stands without it
+        return ""
+
+
+def next_line(name, window_days):
+    """(text, tone, as_of) of one part's "what should happen next": from the published file while it is fresh, else
+    worked out here from the part's assessment (ui/next_step_data.py), which is kept between runs. None when it cannot be."""
+    steps = _fresh(window_days)[1].get("next_steps")
+    line = steps.get(name) if isinstance(steps, dict) else None
+    if isinstance(line, list) and len(line) == 3 and all(isinstance(part, str) for part in line):
+        return tuple(line)
+    try:
+        return next_step_data.constellation_line(name, data.load(name, window_days))
+    except Exception:   # the card stands without it
+        return None
+
+
+def published(window_days, now=None):
+    """(the time it was counted, {part: summary}) from the published file, or (None, {}) when it cannot stand in for
+    counting here: missing, older than SNAPSHOT_MAX_AGE, or counted over another time range. The file comes from
+    outside the server, so a part not in the expected shape is left out and counted here."""
+    made, payload = _fresh(window_days, now)
+    if made is None:
         return None, {}
     parts = payload.get("parts") if isinstance(payload.get("parts"), dict) else {}
     kept = {name: part for name, part in parts.items()
