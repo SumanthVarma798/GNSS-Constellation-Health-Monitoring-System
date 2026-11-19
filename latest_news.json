@@ -1,6 +1,23 @@
 {
- "generated_at": "2026-11-19T02:51:57Z",
+ "generated_at": "2026-11-19T12:15:38Z",
  "items": [
+  {
+   "address": "https://news.google.com/rss/articles/CBMidkFVX3lxTFBCNnUtZm5MR1VSVmxGR04tbEFvdWktMm56NU9EOFBDVVYwM0ZTYUpWUEZNUUQtU0pBT0d1d2F5RzRia3FkQmI3Q25jR01NWUdkdTBOcDI0Qjk2aUtaVDEwdW9LZ1k1cFV1QUJvTnNQTVVMTEZVcFE?oc=5",
+   "category": "other",
+   "constellations": [
+    "QZSS"
+   ],
+   "fetched_at": "2026-11-19T12:13:33Z",
+   "grade": "F",
+   "grade_from": "record",
+   "grade_standing": "provisional",
+   "outlet": "BigGo Finance",
+   "published_at": "2026-11-19T03:55:00Z",
+   "source_id": "finance.biggo.com",
+   "summary": "",
+   "title": "Japan's Elecom to Sell Antennas for Michibiki-Compatible Domestically Made Drones in FY2027, Weighs Airframe Manufacturing",
+   "via": "https://news.google.com/rss/search?q=QZSS+OR+Michibiki+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
   {
    "address": "https://news.google.com/rss/articles/CBMiggFBVV95cUxON2hHOFliYmljVGZ4X2diUGExZ3hIcjRyNHZBUFdDVS1WN3VDbFV5WFlxRVhxZy1aa3ZTaUxCLUo0NGNfRmM4YWFMZXd0RjFTOFJjZEhJTXFRQm5LckVMTWd1UWVraWx6UlE2bkZoY3BOaTlPd1M2NmhYSm9OMDNvcEF3?oc=5",
    "category": "other",
@@ -8103,23 +8120,6 @@
    "source_id": "esa.int",
    "summary": "",
    "title": "Galileo to take its first flight on Ariane 6 on 17 December",
-   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMijwFBVV95cUxOQm5WTGdaTE1PalFIRjFuYkVpM2FxMUJMTkhtMzIwYmtPSnplNUtKeVlvZXM3R2ZqWlZic25uY29oSjliVElGM3YtSDBRelR0bUdacGNITEtmZWozbzJOMTdkaTk1REN4OEdFWllsazBYVzZRLXgyZUhLXzVLV0NuT3ZPWk5sMUxOMG9maXVzZw?oc=5",
-   "category": "launch",
-   "constellations": [
-    "Galileo"
-   ],
-   "fetched_at": "2026-10-19T22:40:40Z",
-   "grade": "F",
-   "grade_from": "record",
-   "grade_standing": "provisional",
-   "outlet": "defence-industry-space.ec.europa.eu",
-   "published_at": "2025-11-19T08:00:00Z",
-   "source_id": "defence-industry-space.ec.europa.eu",
-   "summary": "",
-   "title": "Wrapping up 2025 with a Galileo launch!",
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   }
  ],
