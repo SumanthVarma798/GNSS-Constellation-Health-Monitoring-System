@@ -622,3 +622,22 @@ def test_one_article_under_several_titles_is_kept_once_but_another_outlets_short
 
     assert all(same_title(_title_key(a), _title_key(b)) for a, b in same)
     assert not any(same_title(_title_key(a), _title_key(b)) for a, b in apart)
+
+
+def test_a_source_with_no_checked_claims_is_not_graded_never_f(monkeypatch):
+    """Xinhua, CGTN, China Daily and SCMP showed F with 0 of 3 claims checked (19 Nov 2026): only "could not check"
+    rows in the record. No checked claim is no grade."""
+    monkeypatch.setattr(news, "read_source_grades", lambda: [])
+    monkeypatch.setattr(news, "candidate_rows", lambda: [])
+    monkeypatch.setattr(news.source_record, "read_record", lambda: [
+        {"source_id": "english.news.cn", "address": "https://english.news.cn/one", "published_at": "2026-10-20",
+         "claim": "launch", "constellation": "BeiDou-3", "satellite": "", "checked_on": "2026-11-19",
+         "result": "could not check", "weight": "", "weight_reason": "", "evidence": "", "evidence_link": ""}])
+    items = [{"source_id": "english.news.cn", "address": "https://english.news.cn/story", "title": "BeiDou launch",
+              "summary": "", "outlet": "Xinhua", "published_at": "2026-10-20T10:00:00Z",
+              "fetched_at": "2026-10-20T10:10:00Z", "via": "https://news.google.com/rss", "social": False}]
+
+    latest = news.latest_news(items)
+
+    assert latest["items"][0]["grade"] == "" and latest["items"][0]["grade_standing"] == "not graded"
+    assert "record_line" not in latest["sources"]["english.news.cn"]
