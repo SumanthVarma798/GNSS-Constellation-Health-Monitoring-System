@@ -92,12 +92,21 @@ def _offset_date(today, days):
     return today
 
 
-def _heading_out(x0, v0, half_width):
-    if abs(x0) >= half_width:
-        return True
-    if abs(x0) <= EPS:
-        return False
-    return _sign(v0) == _sign(x0)
+def time_to_outbound_edge(x0, v0, acc, half_width):
+    """Smallest non-negative time at which the satellite is on an edge of the box and moving out through it, else None.
+
+    Inside its box and heading to an edge, the pull may stop it there (it turns round at the edge, as a routine cycle
+    does), so only a crossing with speed still outward counts."""
+    found = []
+    for target in (-half_width, half_width):
+        c = x0 - target
+        if abs(acc) <= EPS:
+            roots = [] if abs(v0) <= EPS else [-c / v0]
+        else:
+            d = v0 * v0 - 2.0 * acc * c
+            roots = [] if d < 0 else [(-v0 - math.sqrt(d)) / acc, (-v0 + math.sqrt(d)) / acc]
+        found += [t for t in roots if t >= 0 and (v0 + acc * t) * target > 1e-9]
+    return min(found) if found else None
 
 
 def _turn_back(x, v, acc, own_half_width):
@@ -125,20 +134,28 @@ def _burn_row(kind, when, delta_lambda_dot, reason):
     }
 
 
-def forecast(x0, v0, acc, own_half_width, dashboard_half_width, today):
-    """Build ideal, last-chance, and too-late correction rows."""
+def forecast(x0, v0, acc, own_half_width, dashboard_half_width, today, dashboard_center=0.0):
+    """Build ideal, last-chance, and too-late correction rows.
+
+    x0 is measured from the centre of the satellite's own box (its station). The dashboard box is centred
+    `dashboard_center` from there (its designated slot, when the station is not on it)."""
     rows = []
 
-    # Ideal: burn as soon as own box is breached or heading outward.
-    t_ideal = 0.0 if _heading_out(x0, v0, own_half_width) else time_to_edge(x0, v0, acc, own_half_width)
+    # Ideal: burn as soon as own box is breached, else where it next leaves it.
+    t_ideal = 0.0 if abs(x0) >= own_half_width else time_to_outbound_edge(x0, v0, acc, own_half_width)
     if t_ideal is None or abs(acc) <= EPS:
         rows.append(_burn_row("ideal", today, None, "No outward forcing; no ideal burn from this model."))
     else:
         x_ideal = position(t_ideal, x0, v0, acc)
         v_ideal = v0 + (acc * t_ideal)
         outward = _sign(v_ideal) or _sign(x_ideal) or _sign(acc) or 1.0
-        delta_mag = 4.0 * math.sqrt(abs(acc) * own_half_width)
-        delta = -outward * delta_mag
+        if acc * outward > 0:
+            # pulled outward: send it back with the speed whose parabola peaks at the far edge, 2√(|a|h), whatever
+            # speed it arrives with (on the routine parabola it arrives at that speed, so Δλ̇ = 4√(|a|h))
+            delta = -outward * 2.0 * math.sqrt(abs(acc) * own_half_width) - v_ideal
+        else:
+            # pulled inward but still leaving: stop it at the edge, and the pull brings it back across its box
+            delta = -v_ideal
         rows.append(
             _burn_row(
                 "ideal",
@@ -148,7 +165,7 @@ def forecast(x0, v0, acc, own_half_width, dashboard_half_width, today):
             )
         )
 
-    t_dashboard = time_to_edge(x0, v0, acc, dashboard_half_width)
+    t_dashboard = time_to_edge(x0 - dashboard_center, v0, acc, dashboard_half_width)
 
     # Last chance: planning lead before dashboard edge, steer to opposite own edge.
     if t_dashboard is None or abs(acc) <= EPS:
@@ -167,7 +184,7 @@ def forecast(x0, v0, acc, own_half_width, dashboard_half_width, today):
         delta = _turn_back(x_last, v_last, acc, own_half_width)
         desired_velocity = v_last + delta
 
-        new_time_to_dashboard = time_to_edge(x_last, desired_velocity, acc, dashboard_half_width)
+        new_time_to_dashboard = time_to_edge(x_last - dashboard_center, desired_velocity, acc, dashboard_half_width)
         base_remaining = max(t_dashboard - t_last, 0.0)
         if new_time_to_dashboard is None:
             buys = None
@@ -193,7 +210,7 @@ def forecast(x0, v0, acc, own_half_width, dashboard_half_width, today):
         t_too_late = 0.0
         x_too_late = x0
     else:
-        if abs(x0) > dashboard_half_width:
+        if abs(x0 - dashboard_center) > dashboard_half_width:
             t_too_late = 0.0
             x_too_late = x0
             v_too_late = v0

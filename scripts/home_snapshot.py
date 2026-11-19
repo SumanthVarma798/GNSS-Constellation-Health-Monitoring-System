@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 warnings.filterwarnings("ignore")      # Streamlit warns that it runs without a page; the counting does not need one
 logging.disable(logging.WARNING)
 
-from ui import data, systems, system_summary, time_range  # noqa: E402
+from ui import data, next_step_data, systems, system_summary, time_range  # noqa: E402
 
 
 def _plain(value):
@@ -32,17 +32,26 @@ def _plain(value):
 
 
 def snapshot(now):
-    """{"made", "window_days", "parts": {part: summary}} for every part of every constellation that could be counted."""
+    """{"made", "window_days", "parts": {part: summary}, "next_steps": {part: [text, tone, as_of]},
+    "next_figures": {part: html}} for every part of every constellation that could be counted."""
     data.refresh()
     gap = data.orbit_gap()
-    parts = {}
+    parts, steps, figures = {}, {}, {}
     for names in systems.SYSTEMS.values():
         for name in names:
             try:
-                parts[name] = system_summary.summary(name, data.load(name, time_range.DEFAULT_DAYS), gap)
+                result = data.load(name, time_range.DEFAULT_DAYS)
+                parts[name] = system_summary.summary(name, result, gap)
             except Exception as error:   # one that fails is counted live by Home, as before; the others are kept
                 print(f"{name} not counted: {type(error).__name__}: {error}", file=sys.stderr)
-    return {"made": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "window_days": time_range.DEFAULT_DAYS, "parts": parts}
+                continue
+            try:   # "what should happen next": left out when it fails, and Home works it out itself
+                steps[name] = list(next_step_data.constellation_line(name, result))
+                figures[name] = next_step_data.outlook_html(name, result, compact=True)
+            except Exception as error:
+                print(f"{name} next step not worked out: {type(error).__name__}: {error}", file=sys.stderr)
+    return {"made": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "window_days": time_range.DEFAULT_DAYS, "parts": parts,
+            "next_steps": steps, "next_figures": figures}
 
 
 def main():

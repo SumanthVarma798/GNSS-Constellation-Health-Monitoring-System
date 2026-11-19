@@ -18,7 +18,7 @@ from skyfield.api import EarthSatellite
 
 from analysis.raan_analysis import analyze_raan_spacing
 from evidence.registry_tables import judged_by_plane
-from ui import limits, data, reveal, shell, surfaces, tooltip
+from ui import limits, data, next_step, next_step_data, reveal, shell, surfaces, tooltip
 from ui import geometry_data as gd
 from ui import geometry_settings as gs
 from ui.components.sky_view import sky_view
@@ -229,7 +229,7 @@ def _sky_and_ground(constellation, satellites, own, types, now, mask, window, re
     _spacing(constellation, satellites, result)
 
 
-def _trends(constellation, result, names, types, now):
+def _trends(constellation, result, names, types, now, ahead=None):
     window_days = st.session_state["window_days"]
     params = _params(constellation)
     since = pd.Timestamp((now - timedelta(days=window_days)).date())
@@ -250,7 +250,8 @@ def _trends(constellation, result, names, types, now):
             surfaces.show(f'<div class="geo-card-head"><b>{escape(name)}</b> <span class="muted">'
                           f'{escape(gs.ORBIT_WORDS.get(orbit, orbit))}</span>'
                           f'{tooltip.tip_html("What you are looking at", gf.trends_key(), pill=True, key=name)}</div>'
-                          f'<p class="geo-say">{escape(line)}</p>')
+                          f'<p class="geo-say">{escape(line)}</p>'
+                          + (next_step.line_html(ahead[name]) if ahead and name in ahead else ""))
             st.plotly_chart(gf.satellite_trends(series, name, bands, since, end, measures), **CHART)
 
 
@@ -278,6 +279,16 @@ def _spacing(constellation, satellites, result):
             st.plotly_chart(gf.spacing_wheel(group), **CHART)
 
 
+def _next_step(name, result):
+    """{satellite: geometry line} for the trend cards (the constellation's outlook is drawn on Overview and
+    Station-keeping, not repeated here). The look ahead is extra: when it fails the page stands without it."""
+    try:
+        return next_step_data.geometry_lines(name, result, st.session_state["params"])
+    except Exception as error:
+        surfaces.notice(f"Next steps could not be worked out: {type(error).__name__}: {error}", "warn")
+        return {}
+
+
 def constellation(name, picks, section, choice, mask, window, now):
     """One constellation's part of the page. `picks` limits the satellite-by-satellite pictures (None: all)."""
     if name not in gs.PLACES:   # every system on the chips has places (gs.GLOBAL_PLACES for the MEO ones); a new one may not
@@ -295,12 +306,13 @@ def constellation(name, picks, section, choice, mask, window, now):
     satellites = gd.satellites_from_history(result["history"], counted)
     types = gd.orbit_types(result["health"], result["history"])
     own = [n for n in counted if picks is None or n in picks]
+    ahead = _next_step(name, result)   # under the heading: what should happen next to the layout
     if section == "Position quality":
         _position_quality(name, satellites, now, mask, choice, bool(left_out))
     elif section == "Sky and ground":
         _sky_and_ground(name, satellites, own, types, now, mask, window, result)
     else:
-        _trends(name, result, own, types, now)
+        _trends(name, result, own, types, now, ahead)
 
 
 st.html(f"<style>{CSS.read_text(encoding='utf-8')}</style>")
