@@ -39,7 +39,8 @@ ORBIT_TYPES = {
     "MEO": "Medium Earth orbit: about 20,000 km up, goes round about twice a day",
 }
 
-# The three things that keep a navigation satellite useful, and what shows each (ui/system_summary.py).
+# The things that keep a navigation satellite useful, and what shows each (ui/system_summary.py); the burn record, the
+# fourth, is below.
 #   orbit    it is on the orbit it should be on: every part listed scores in the top band (80 or more)
 #   station  it is being held there: it is in its slot or in step in its plane, and the part listed is in the top band
 #   clock    no clock message that day landed further than CLOCK_STEADY_NS from what the one before predicted
@@ -49,19 +50,30 @@ ORBIT_TYPES = {
 MEASURES = {"orbit": {"slot": ("Inclination",), "plane": ("plane", "inclination", "height", "eccentricity")},
             "station": {"slot": ("Drift",), "plane": ("spacing",)}}
 BURN_PARTS = ("Upkeep", "Regularity")   # a slot satellite's burns: on time, and evenly spaced
-BURN_DAYS = 90   # Home counts the burns found in this many days of orbit records, the default time range
+# The burn record, the score's fourth measure ("care"): how regularly the satellite is looked after, from the kind of each
+# burn (analysis/burn_classes.py; its thresholds are in analysis/burn_class_settings.py). OUR CHOICE, for the team to confirm.
+#   A satellite passes when it made no irregular burn (a response, or off its pattern, at medium confidence or better)
+#   in the last CARE_RECENT_DAYS days AND its irregular share of the judged burns of the last 365 days is at most
+#   CARE_MAX_SHARE. With fewer than CARE_MIN_JUDGED judged burns it is not judged. Relocations and end-of-life burns are
+#   planned: neutral, in neither count.
+CARE_RECENT_DAYS = 90
+CARE_MAX_SHARE = 0.25
+CARE_MIN_JUDGED = 3
 CLOCK_STEADY_NS = 30.0   # our choice: 30 ns is 9 m of range, far past a steady clock's steps (about 1 ns)
 # The clock score judges only the satellites in service today, so a constellation whose clocks have failed in orbit
 # can still score high: the record of those that failed (registry/clock_record.csv) is said beside it.
 CLOCK_RECORD = ("Clock record: {lost} of {launched} {name} satellites launched are reported to have lost atomic clocks in orbit.",
                 "The score above judges only the satellites in service today. Sources:")
 
-# A constellation's score (ui.system_summary.score_of) weighs its three measures by what a failure costs its users,
+# A constellation's score (ui.system_summary.score_of) weighs its four measures by what a failure costs its users,
 # which depends on the mission. Our choice, for the team to confirm; Need help reading this page? gives the reasons
 # (ui/home_settings.py HOW, "Weights"). A regional constellation has 7 or 8 satellites, none spare, all in every
 # user's sky: a bad clock corrupts every fix in its service area with nothing to stand in, and a satellite off its
 # station moves coverage off the region. A global one has 24 to 35, 8 to 12 in view: a receiver can leave out one bad
 # clock, a neighbour covers one satellite out of step, and the planes and spacing set the coverage everywhere.
 MISSION = {"NavIC": "regional", "QZSS": "regional"}   # every other constellation is global
-MEASURE_WEIGHTS = {"regional": {"clock": 0.5, "station": 0.3, "orbit": 0.2},
-                   "global": {"clock": 0.4, "orbit": 0.35, "station": 0.25}}
+# The burn record ("care") weighs 10% for every mission, taken in proportion from the other three (clock, station, orbit):
+# our choice, for the team to confirm. A constellation with no burn history (the medium-orbit ones) has no burn record
+# to read, and the other three are scaled back up to 100%, so its score is what it was.
+MEASURE_WEIGHTS = {"regional": {"clock": 0.45, "station": 0.27, "orbit": 0.18, "care": 0.10},
+                   "global": {"clock": 0.36, "orbit": 0.315, "station": 0.225, "care": 0.10}}

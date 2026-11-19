@@ -246,7 +246,7 @@ def burns(df_all_full, p, moving=()):
 
 
 def burn_classes_of(result, constellation):
-    """What kind each burn in assess_constellation's `result` was (analysis/burn_classes.classify). Not used by any score."""
+    """What kind each burn in assess_constellation's `result` was (analysis/burn_classes.classify). Read by the burn record in the constellation score (ui/burn_record.py), not by the per-satellite score."""
     return classify(result['burns_detailed'], result['history'], constellation)
 
 
@@ -262,8 +262,8 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
     the newest of those rows places the satellite for the longitude step.
 
     Returns {'health', 'set_aside', 'moving', 'history', 'burns', 'burns_detailed', 'data_time', 'warnings'};
-    `burns_detailed` is `burns` with the detector's before and after medians, for burn_classes_of (not run here: no page
-    shows the kinds yet, and the free host's CPU is slow). `moving` is {satellite: day of
+    `burns_detailed` is `burns` with the detector's before and after medians, for burn_classes_of (not run here: the pages that need
+    the kinds run it once and keep it, ui/burn_record.py). `moving` is {satellite: day of
     its first orbit record} for each new one still being moved to its slot (analysis/commissioning.py): left out of the scores.
     Raises ValueError for an unknown constellation, no bundled data, or no records in the window.
     """

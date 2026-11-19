@@ -739,7 +739,7 @@ details.sys.card { display: block; padding: 0; }
 .wbar span { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0;
              padding: 3px 2px; text-align: center; }
 .wbar span small { font-size: 12px; font-weight: 800; color: inherit; }   /* the bar's own text colour, not the page's muted */
-.wbar .accent { background: var(--accent); } .wbar .ok { background: var(--ok); } .wbar .warn { background: var(--warn); }
+.wbar .idle { background: var(--idle); } .wbar .accent { background: var(--accent); } .wbar .ok { background: var(--ok); } .wbar .warn { background: var(--warn); }
 /* the score opened into its parts (ui/three_measures.py score_sum), in pictures only: one bar of 100 cut into each
    attribute's share, each filled as far as its pass rate, its name over it and its points under it (outside the fill,
    so they read whatever the colour), and the score in a box at the end */
@@ -764,6 +764,7 @@ details.sys.card { display: block; padding: 0; }
   .ss-eq { margin-left: auto; }
   .ss-head { flex-direction: column; align-items: flex-start; gap: 2px; }
   .ss-name { overflow: visible; }
+  .ss-w { padding: 0 3px; }
 }
 .ss-slot { position: relative; height: 22px; background: var(--well); box-shadow: var(--pressed); border-radius: 7px; overflow: hidden; }
 .ss-slot i { position: absolute; inset: 0 auto 0 0; background: var(--idle); }
@@ -893,3 +894,34 @@ details.sys.card { display: block; padding: 0; }
 
 /* Signals heard (ui/signals_view.py): the chips of one satellite wrap in their own cell */
 .sig-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ---- burn ledger (ui/burn_ledger.py): a 100% bar of what the burns were, and a row of marks per satellite.
+   Fill says what the burn was; planned moves are hatched and burns not judged are outlined and empty, so colour is never alone. ---- */
+.lb { display: grid; gap: 8px; }
+.lb-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; }
+.lb-bar { display: flex; gap: 2px; height: 30px; border-radius: 8px; overflow: hidden; background: var(--well); box-shadow: var(--pressed); }
+.lb-seg { display: grid; place-items: center; min-width: 0; overflow: hidden; color: var(--platform); font-size: var(--fs-small); font-weight: 700; }
+.lb-seg b { padding: 0 3px; border-radius: 6px; }
+.lb-seg.routine, .lb-sw.routine, .bm.routine { background: var(--ok); }
+.lb-seg.response, .lb-sw.response, .bm.response { background: var(--bad); }
+.lb-seg.off, .lb-sw.off, .bm.off { background: var(--warn); }
+.lb-seg.planned, .lb-sw.planned, .bm.planned { background: repeating-linear-gradient(45deg, var(--idle) 0 3px, var(--platform) 3px 5px); }
+.lb-seg.planned { color: var(--ink); } .lb-seg.planned b { background: var(--platform); }
+.lb-seg.open, .lb-sw.open, .bm.open { background: transparent; box-shadow: inset 0 0 0 1.5px var(--muted); }
+.lb-seg.open { color: var(--ink); }
+.lb-key { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; color: var(--muted); }
+.lb-key span { display: inline-flex; align-items: center; gap: 6px; } .lb-key b { color: var(--ink); }
+.lb-sw { display: inline-block; flex: none; width: 16px; height: 10px; border-radius: 3px; }
+.lm { display: grid; gap: 2px; margin-top: 8px; }
+.lm-row { display: grid; grid-template-columns: minmax(110px, 1fr) minmax(0, 4fr) minmax(150px, 1.2fr); gap: 4px 14px; align-items: center; padding: 6px 0; }
+.lm-row + .lm-row { border-top: 1px solid var(--edge); }
+.lm-marks { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.lm-marks .tt-trigger { display: inline-flex; padding: 3px; text-decoration: none; cursor: help; }
+.lm-sum { display: grid; color: var(--muted); text-align: right; }
+.bm { display: inline-block; flex: none; width: 11px; height: 11px; border-radius: 50%; box-sizing: border-box; }
+.bm.ns { width: 9px; height: 9px; margin: 1px; border-radius: 1px; transform: rotate(45deg); }
+.bm.shape { background: var(--ink); }
+.bm.planned { box-shadow: inset 0 0 0 1.5px var(--idle); }
+@media (max-width: 639.98px) {
+  .lm-row { grid-template-columns: 1fr; } .lm-sum { text-align: left; }
+}

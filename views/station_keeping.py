@@ -9,12 +9,14 @@ from html import escape
 import pandas as pd
 import streamlit as st
 
-from ui import data, forecast_explainer, measures, next_step, next_step_data, reveal, surfaces, time_range, tooltip
-from ui.figures import forecast_marks
+from ui import burn_ledger, burn_record, data, forecast_explainer, measures, next_step, next_step_data, reveal, surfaces, time_range, tooltip
+from ui.figures import burns as burn_figures, forecast_marks
 from ui.figures.burns import EAST_WEST, burn_timeline, rhythm
 from ui.picker import chosen_constellations
 
 PATTERN_STATUS = {"regular": "ok", "irregular": "warn", "too few": "idle"}
+# What the rhythm chip says: "irregular" is kept for kinds of burn (the burn record), so the rhythm has its own words.
+PATTERN_WORDS = {"regular": "steady rhythm", "irregular": "uneven rhythm", "too few": "too few"}
 CHART = {"use_container_width": True, "config": {"displayModeBar": False}}
 
 
@@ -50,7 +52,7 @@ def _rhythm(rows, cells):
                  f'<b class="num">{row["median_days"]:.0f} days</b>')
         north_south = f'<span class="num">{row["ns_count"]}</span>' if row["ns_count"] else '<span class="muted">&ndash;</span>'
         lines.append(f'<div class="rh"><b>{escape(row["satellite"])}</b>'
-                     f'<span class="ev">{every}{surfaces.chip(row["pattern"], PATTERN_STATUS[row["pattern"]])}</span>'
+                     f'<span class="ev">{every}{surfaces.chip(PATTERN_WORDS[row["pattern"]], PATTERN_STATUS[row["pattern"]])}</span>'
                      f'{_cycle(row)}{_burn_cell(ideal, "Ideal burn")}{_burn_cell(last, "Last chance")}{north_south}</div>')
     return surfaces.raised('<div class="rhythm">' + "".join(lines) + "</div>")
 
@@ -82,10 +84,29 @@ def _counts(results, chosen, window_days, today):
 # cache_resource, not cache_data: a pickled Plotly figure is checked over again as it is read back, which costs what
 # building it did. The figure is never changed after it is made.
 @st.cache_resource(show_spinner=False, max_entries=16)
-def _timeline(burns, satellites, start, end):
+def _timeline(burns, satellites, start, end, kinds=None):
     """The burn timeline, made once per set of burns: on Render's share of a CPU it takes seconds to build."""
-    return burn_timeline(burns, satellites, start, end)
+    return burn_timeline(burns, satellites, start, end, kinds)
 
+
+def _kinds(tables):
+    """The classified burns of every constellation shown as one table, for the timeline to colour its marks by."""
+    found = [table[burn_figures.KIND_COLUMNS] for table in tables.values() if table is not None]
+    return pd.concat(found, ignore_index=True) if found else None
+
+
+def _ledger(results, chosen):
+    """Each constellation's burn record: the 100% bar of what its burns were, then a row of marks per satellite. The burns
+    are classified once (ui/burn_record.py) and kept. (classified table per constellation, its html)"""
+    tables, parts = {}, []
+    for name, result in results.items():
+        table = tables[name] = burn_record.classified(name, result)
+        if table is None:
+            continue
+        mine = chosen[name] or list(dict.fromkeys(result["history"]["satellite"]))
+        parts.append(burn_ledger.bar(burn_record.record_of(table), f"{name}: burn record, last 365 days")
+                     + burn_ledger.satellites(table, mine))
+    return tables, "".join(parts)
 
 
 def _events(recent, satellites, rhythm_rows):
@@ -148,9 +169,13 @@ start, end = min(e.min() for e in epochs), max(e.max() for e in epochs)
 window_days = st.session_state["window_days"]
 counts, recent = _counts(results, chosen, window_days, pd.Timestamp(datetime.now(timezone.utc).date()))
 
+tables, ledger = _ledger(results, chosen)
+shares = [(f"{name}: " if len(tables) > 1 else "") + burn_record.words(burn_record.record_of(table))
+          for name, table in tables.items() if table is not None]
 surfaces.show(surfaces.group_head(time_range.words(window_days),
                                   f"{len(recent)} burns: {(recent['kind'] == EAST_WEST).sum()} east-west, "
-                                  f"{(recent['kind'] != EAST_WEST).sum()} north-south",
+                                  f"{(recent['kind'] != EAST_WEST).sum()} north-south"
+                                  + (" · burn record, 365 days: " + "; ".join(shares) if shares else ""),
                                   _detection(measures.thresholds(None, st.session_state["params"]))))
 rhythm_rows = rhythm(burns, satellites, end)
 try:
@@ -167,9 +192,11 @@ for name, result in results.items():   # what should happen next, once for each 
         text, tone, as_of = next_step.constellation_line(list(ahead[name]["forecasts"].values()), now)
         surfaces.show(next_step.line_html((f"{name}: {text}" if len(results) > 1 else text, tone, as_of)))
 surfaces.show(_rhythm(rhythm_rows, forecast_cells))
-st.plotly_chart(forecast_marks.add_expected(_timeline(burns, satellites, start, end),
+st.plotly_chart(forecast_marks.add_expected(_timeline(burns, satellites, start, end, _kinds(tables)),
                                             next_step.expected_burns({n: forecasts[n] for n in satellites if n in forecasts}, now)
                                             if now is not None else [], satellites, end), **CHART)
+if ledger:
+    surfaces.show(surfaces.raised(ledger))
 late = sum(any(c["status"] == "warn" for c in cells) for _, cells in counts)
 reveal.section("burns_per_satellite", "Burns per satellite",
                f"{reveal.count(len(counts), 'satellite')} · " + (f"{late} overdue" if late else "none overdue"),
