@@ -100,6 +100,11 @@ def same_story(a, b, common):
     return len(shared) >= STORY_SHARED_WORDS and len(shared) / shorter >= STORY_SHARE
 
 
+def _dated(item):
+    """True when the item carries a date _when can read (else _when falls back to the earliest possible time)."""
+    return _when(item) != datetime.min.replace(tzinfo=timezone.utc)
+
+
 def _when(item):
     for key in ("published_at", "fetched_at"):
         try:
@@ -172,7 +177,7 @@ def impact(item):
     """(impact, the word or ID that decided it, as the item says it; "" for background). The rules are NEWS_IMPACTS in
     evidence/news_settings.py: impact words on the headline, then on the feed text; then a satellite or mission ID."""
     for field in ("title", "summary"):
-        text = item.get(field) or ""
+        text = unicodedata.normalize("NFKC", item.get(field) or "")   # styled letters (𝐈𝐒𝐑𝐎) read as plain ones
         for name, pattern in _impact_words().items():
             if found := pattern.search(text):
                 return name, found.group(0)
@@ -192,7 +197,8 @@ def _quotes(item, agency):
     _, words, hosts = STATE_AGENCIES[agency]
     host = item.get("source_id", "")
     return (any(host == name or host.endswith("." + name) for name in hosts)
-            or bool(_whole_words(words).search(" | ".join(item.get(key) or "" for key in ("title", "summary", "outlet")))))
+            or bool(_whole_words(words).search(unicodedata.normalize(
+                "NFKC", " | ".join(item.get(key) or "" for key in ("title", "summary", "outlet"))))))
 
 
 def agency_ledger(items):
@@ -208,8 +214,11 @@ def agency_ledger(items):
             if not quotes:
                 continue
             quoting += 1
-            first = min(_when(item) for item in quotes)
-            confirmed += any(item.get("grade") in CORROBORATING_GRADES and item.get("grade_standing") == "confirmed"
+            dated = [_when(item) for item in quotes if _dated(item)]
+            if not dated:   # no date on any quoting report: nothing can be shown to have come after it
+                continue
+            first = min(dated)
+            confirmed += any(_dated(item) and item.get("grade") in CORROBORATING_GRADES and item.get("grade_standing") == "confirmed"
                              and not any(_quotes(item, other) for other in STATE_AGENCIES)
                              and first <= _when(item) <= first + timedelta(days=CORROBORATION_DAYS)
                              for item in story["items"])

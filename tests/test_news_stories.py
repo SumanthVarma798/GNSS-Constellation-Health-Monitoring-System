@@ -147,3 +147,11 @@ def test_agency_ledger_counts_stories_quoting_each_agency_and_those_a_confirmed_
 
     assert (ledger["Xinhua"]["stories"], ledger["Xinhua"]["confirmed"]) == (2, 1)
     assert ledger["TASS"] == {"agency": "TASS", "country": "Russia", "stories": 0, "confirmed": 0}
+
+
+def test_styled_letters_and_undated_reports_are_handled():
+    from evidence import news_stories
+    assert news_stories.impact({"title": "𝐈𝐒𝐑𝐎 𝐥𝐚𝐮𝐧𝐜𝐡𝐞𝐬 satellite", "summary": ""})[0] == \
+        news_stories.impact({"title": "ISRO launches satellite", "summary": ""})[0]
+    assert news_stories._quotes({"title": "𝐗𝐢𝐧𝐡𝐮𝐚 reports launch", "source_id": "other.com"}, "Xinhua")
+    assert not news_stories._dated({"published_at": "", "fetched_at": ""})

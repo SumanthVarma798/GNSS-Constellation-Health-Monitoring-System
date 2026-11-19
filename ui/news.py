@@ -326,7 +326,7 @@ def sorting_rules_html():
     rules = "".join(
         f"<li><b>{escape(impact)}:</b> "
         f"{escape(', '.join(rule['words'] + tuple(word for category in rule['categories'] for word in NEWS_CATEGORIES[category])))}"
-        f"</li>" for impact, rule in NEWS_IMPACTS.items() if impact in IMPACT_CHECK_ORDER)
+        f"</li>" for impact, rule in ((name, NEWS_IMPACTS[name]) for name in IMPACT_CHECK_ORDER))
     return (
         f"<p>Impact, checked in this order on the headline, then on the feed text; the first whole word that matches "
         f"decides: {escape(' → '.join(IMPACT_CHECK_ORDER))}.</p><ul>{rules}</ul>"
