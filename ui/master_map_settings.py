@@ -63,3 +63,23 @@ HOW = [
          "changed, once our weekly update records that."),
     ]),
 ]
+
+# Signal IDs that changed spacecraft (ui/signal_id_history.py). Each kind of change evidence/master_map.py
+# signal_id_changes reads from the IGS satellite metadata file, as (mark drawn at the change, words, what it means).
+CHANGE_KINDS = {
+    "swap": ("⇄", "swap", "Two spacecraft traded signal IDs within a week: each took the other's."),
+    "replaced": ("↻", "retired and replaced", "The old holder has no signal ID after this in the IGS satellite "
+                 "metadata file; another spacecraft took its ID."),
+    "reassigned": ("→", "reassignment", "The old holder kept working under another signal ID within a month, or a "
+                   "notice records the ID being moved to another spacecraft."),
+    "unknown": ("?", "reason not recorded", "The IGS satellite metadata file and our notices give no reason for this "
+                "change."),
+}
+# Notices (ui/changes.py CHANGES, by id) that bear on a change, matched by the month of the change and by signal ID or
+# SVN. "kind" is the reason the notice gives, which then stands over what the table alone shows; without one, the
+# notice is only quoted in the change's tooltip.
+ID_NOTICES = {
+    "beidou3-signal-ids": {"month": "2026-04", "signal_ids": ("C01", "C02", "C03", "C04"), "kind": "reassigned"},
+    "beidou3-slot-swap": {"month": "2026-04", "svns": ("C217", "C231")},   # BeiDou-3 G1 and G4
+}
+FEATURED_MAX = 4   # cards brought forward: most spacecraft on one ID, a swap, a notice, then the most per constellation
