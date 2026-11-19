@@ -101,11 +101,11 @@ CENTRAL_LON_STEP_MINUTES = 15      # ...as app.py's historical central longitude
 
 # Dilution of precision. (key, name, what it means in one plain line). TDOP has no band in config, so no "should be".
 DOP_MEASURES = [
-    ("GDOP", "All together", "your 3D position and the receiver's clock"),
+    ("GDOP", "Geometric", "your 3D position and the receiver's clock"),
     ("PDOP", "Position", "where you are in 3D"),
-    ("HDOP", "Along the ground", "where you are north-south and east-west"),
-    ("VDOP", "Height", "how high you are, up and down"),
-    ("TDOP", "Clock", "the receiver's own clock"),
+    ("HDOP", "Horizontal", "where you are north-south and east-west"),
+    ("VDOP", "Vertical", "where you are up and down"),
+    ("TDOP", "Time", "the receiver's own clock"),
 ]
 # What a distance measurement is worth. ASSUMPTION, ours: about 5 m (one standard deviation) of error in each
 # satellite's measured distance for a single-frequency civil receiver. Its size is in the few-metre range of the user
@@ -116,7 +116,7 @@ UERE_WORDS = (f"{UERE_M:g} m is our assumption for the error of one distance mea
               "single-frequency civil receiver): the few-metre budgets in Kaplan and Hegarty, Understanding GPS/GNSS, "
               "and GPS.gov's 4.9 m (95 %) for a phone in the open sky. A two-frequency receiver does better.")
 DOP_LINE = ("DOP says how much the satellites' layout multiplies the error of one distance measurement: "
-            f"position error is about PDOP × {UERE_M:g} m (HDOP × {UERE_M:g} m along the ground), and 1 is the best layout there can be.")
+            f"position error is about PDOP × {UERE_M:g} m (HDOP × {UERE_M:g} m horizontally), and 1 is the best layout there can be.")
 # From first principles, one step at a time (the first is the line always shown, the rest one step deeper).
 DOP_STEPS = [
     "A receiver times a radio signal from each satellite; time × the speed of light is its distance from that satellite.",
@@ -134,8 +134,8 @@ SPREAD_LINE = ("Same distance error each time; the highlighted patch is where th
 # What each band's metres are like, to the upper edge of the band (roughly: 5 m a car, 10 m a bus, 25 m a swimming pool).
 BAND_LIKE = {"Ideal": "a large car", "Excellent": "a bus", "Good": "a swimming pool", "Moderate": "an Olympic pool",
              "Fair": "a football pitch", "Poor": "more than a football pitch"}
-PLAIN_DOP = [("GDOP", "all of it: position and clock"), ("PDOP", "3D position: along the ground and in height"),
-             ("HDOP", "position on the ground"), ("VDOP", "height")]
+PLAIN_DOP = [("GDOP", "all of it: position and clock"), ("PDOP", "3D position: horizontal and vertical"),
+             ("HDOP", "horizontal position"), ("VDOP", "vertical position")]
 DOP_BANDS = DOP_QUALITY_THRESHOLDS
 SEEN_WORDS = "Satellites in view: above the elevation mask. A position needs at least 4."
 DOP_SOURCE = "Bands from Isik and others (2020), Robotics 9(3) 66."
@@ -171,8 +171,8 @@ SKY_LINE = ("The sky as you would see it lying on your back at this place: the m
 SKY_DEEPER = ("A satellite near the middle is high and its signal crosses little air; near the edge it is low and "
               "less reliable. The dotted ring is the elevation mask: a satellite below it is not counted. The count "
               "above the picture is how many are in view and the DOP they give at that moment. Press play to run "
-              "the next 24 hours, or drag the line. Hover or tap a mark for the satellite's name and its height in "
-              "the sky.")
+              "the next 24 hours, or drag the line. Hover or tap a mark for the satellite's name and its "
+              "elevation.")
 TIMELINE_LINE = ("One row per satellite: a bar is a stretch of the next 24 hours when it is above the elevation mask, "
                  "and the time on a bar is when it rises.")
 TIMELINE_DEEPER = ("The line marked now is the present. Rows are sorted: satellites in view now first (the ones "
@@ -195,7 +195,7 @@ SPACING_STATUS = {"Ideal": "ok", "Good": "ok", "Moderate": "warn", "Poor": "bad"
 TRENDS = [
     ("INCLINATION", "Tilt", "degrees", "inclination: the angle between the orbit and the equator"),
     ("altitude_km", "Height", "km", "average height above Earth"),
-    ("LonDrift_deg_per_day", "Drift", "degrees a day", "how fast the satellite slides east or west"),
+    ("LonDrift_deg_per_day", "Drift", "degrees a day", "longitude drift rate, east or west"),
     ("central_lon", "Centre", "degrees east", "central longitude: the middle of its ground track over a day"),
 ]
 # Drift and centre are measured against one turn a day over one longitude: they say nothing about a MEO satellite,

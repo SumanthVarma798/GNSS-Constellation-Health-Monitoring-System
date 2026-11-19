@@ -48,7 +48,7 @@ SETTING_SENTENCES = {
     "MAX_COPY_BYTES": "Largest raw copy size accepted before a fetch is stopped.",
     "MERGE_METHOD": "GitHub merge method used when an approved pull request is merged.",
     "MIN_GAP_BETWEEN_DOWNLOADS": "Per-site minimum wait between two requests to the same site (a named host or any host under it).",
-    "NAVIGATION_ORBITS": "Orbit shapes (period and tilt) that count as a navigation satellite's when picking new payloads out of Space-Track's list.",
+    "NAVIGATION_ORBITS": "Orbit classes (period and inclination) that count as a navigation satellite's when picking new payloads out of Space-Track's list.",
     "NEVER_FETCH": "Host-name fragments the archive fetcher refuses before any request, including redirects to them.",
     "ORBIT_ALERT_DAYS": "Age in days from which an orbit record is marked as alert.",
     "ORBIT_STALE_DAYS": "Age in days from which an orbit record is marked as stale.",

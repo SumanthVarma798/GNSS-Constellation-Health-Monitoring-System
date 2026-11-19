@@ -234,7 +234,7 @@ def satellite_line(f, now):
     assumed = "" if f["own_known"] else " Its own deadband is not yet known from its manoeuvres, so 0.8 of ours is assumed."
     edge = _edge_days(f, now)
     if status == "weak":
-        text = (f"{name} sits where the Earth's pull is weak, so it drifts slowly ({f['v0']:+.3f}° a day); "
+        text = (f"{name} sits where the longitude acceleration (J₂₂) is weak, so it drifts slowly ({f['v0']:+.3f}° a day); "
                 + (f"it reaches the {box} deadband edge in {edge} days uncorrected." if edge is not None
                    else f"it stays inside the {box} deadband on this drift."))
         return text, "warn" if edge is not None and edge <= N.SOON_DAYS else "ok", as_of

@@ -24,27 +24,27 @@ BY_PLANE = ("{name} is judged by orbital plane. Its scoring limits come from its
 SETTINGS = [
     {"key": "z_threshold", "group": BURNS, "label": "How unusual a step must be", "also": "Z-score threshold",
      "low": 1.0, "high": 10.0, "step": 0.5, "format": "%.1f",
-     "what": "Each change in orbit size or tilt from one record to the next is compared with that satellite's usual "
+     "what": "Each change in semi-major axis or inclination from one record to the next is compared with that satellite's usual "
              "changes. A step counts only when it is this many times larger than usual.",
      "raise": "Fewer, surer burns. A small burn can be missed.",
      "lower": "More burns found. Ordinary noise in the orbit records can be taken for one.",
      "when": "Raise it when a satellite with noisy records shows burns it did not make. Lower it when a burn you "
              "know of is not listed."},
-    {"key": "sma_threshold", "group": BURNS, "label": "Smallest change in orbit size (km)", "also": "SMA change",
+    {"key": "sma_threshold", "group": BURNS, "label": "Smallest change in semi-major axis (km)", "also": "SMA change",
      "low": 0.1, "high": 5.0, "step": 0.1, "format": "%.1f",
-     "what": "The orbit's size (its semi-major axis) must change by at least this much, and stay changed, to count "
+     "what": "The semi-major axis must change by at least this much, and stay changed, to count "
              "as an east-west burn.",
      "raise": "Only larger east-west burns count.",
      "lower": "Smaller burns count, and so does more tracking noise.",
      "when": "Lower it for satellites held in place with small, frequent burns. Raise it when tracking noise of "
              "about a kilometre is being listed as burns."},
-    {"key": "inc_threshold", "group": BURNS, "label": "Smallest change in tilt (°)", "also": "Inclination change",
+    {"key": "inc_threshold", "group": BURNS, "label": "Smallest change in inclination (°)", "also": "Inclination change",
      "low": 0.001, "high": 0.1, "step": 0.001, "format": "%.3f",
-     "what": "The orbit's tilt (its inclination) must change by at least this much, and stay changed, to count as a "
+     "what": "The inclination must change by at least this much, and stay changed, to count as a "
              "north-south burn.",
      "raise": "Only larger north-south burns count.",
-     "lower": "Smaller tilt corrections count, and so does more noise.",
-     "when": "Lower it to see small tilt corrections. Raise it when slow natural tilt change is being listed as "
+     "lower": "Smaller inclination corrections count, and so does more noise.",
+     "when": "Lower it to see small inclination corrections. Raise it when slow natural inclination change is being listed as "
              "burns."},
     {"key": "persist_window", "group": BURNS, "label": "How long a step must last (records)",
      "also": "Persistence window", "low": 1, "high": 10, "step": 1, "format": "%d",
@@ -53,17 +53,17 @@ SETTINGS = [
      "raise": "A change must hold for longer: fewer false burns, but two burns close together can be missed.",
      "lower": "A step is accepted sooner: one odd record is more likely to count as a burn.",
      "when": "Raise it when single odd records are being listed as burns."},
-    {"key": "inclination_tolerance", "group": SCORING, "label": "Tilt allowed from the target (°)",
+    {"key": "inclination_tolerance", "group": SCORING, "label": "Inclination allowed from the target (°)",
      "also": "Inclination tolerance", "low": 0.1, "high": 5.0, "step": 0.1, "format": "%.1f",
-     "what": "How far a satellite's tilt may sit from its target before the tilt part of its score falls.",
-     "raise": "More forgiving: a satellite whose tilt has wandered still scores well.",
+     "what": "How far a satellite's inclination may sit from its target before the inclination part of its score falls.",
+     "raise": "More forgiving: a satellite whose inclination has wandered still scores well.",
      "lower": "Stricter: a small departure costs points.",
-     "when": "Raise it for a constellation that lets tilt wander by design (QZSS starts at 4°). Lower it to see which "
+     "when": "Raise it for a constellation that lets inclination wander by design (QZSS starts at 4°). Lower it to see which "
              "satellites are held most tightly."},
     {"key": "drift_tolerance_gso", "group": SCORING, "label": "Drift allowed for a geostationary satellite (°/day)",
      "also": "GEO drift tolerance", "low": 0.01, "high": 0.5, "step": 0.01, "format": "%.2f",
      "what": "How fast a geostationary satellite may drift east or west before the drift part of its score falls. "
-             "Satellites on tilted orbits are allowed a fixed 2° a day.",
+             "Satellites on inclined orbits are allowed a fixed 2° a day.",
      "raise": "Slow, deliberate moves between slots are not marked down.",
      "lower": "A satellite starting to leave its slot is caught sooner.",
      "when": "Lower it to watch for early drift. Raise it while a satellite is being moved on purpose."},

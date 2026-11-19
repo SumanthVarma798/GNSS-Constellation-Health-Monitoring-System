@@ -52,8 +52,8 @@ def _rhythm(rows):
 def _detection(p):
     """How a burn is found, with the thresholds in use, behind a pill."""
     return tooltip.tip("How a burn is found",
-                       f"A burn is found where the orbit's size jumps by {p['sma_threshold']:g} km or more "
-                       f"(east-west) or its tilt by {p['inc_threshold']:g}° or more (north-south), standing out at a "
+                       f"A burn is found where the semi-major axis jumps by {p['sma_threshold']:g} km or more "
+                       f"(east-west) or the inclination by {p['inc_threshold']:g}° or more (north-south), standing out at a "
                        f"z-score of {p['z_threshold']:g} and holding for {int(p['persist_window'])} element sets.",
                        pill=True)
 
@@ -108,7 +108,7 @@ def _events(recent, satellites, rhythm_rows):
     kind of burn makes is set in bold, the other muted."""
     late = {r["satellite"]: r["late"] for r in rhythm_rows}
     lines = ['<div class="bl-row bl-hd"><span>Kind</span><span>Found at (UTC)<small>End of the window it fell in</small>'
-             '</span><span>Size change<small>Semi-major axis</small></span><span>Tilt change<small>Inclination</small>'
+             '</span><span>Δa<small>Semi-major axis</small></span><span>Δi<small>Inclination</small>'
              '</span></div>']
     for name in satellites:
         own = recent[recent["satellite"] == name].sort_values("window_end", ascending=False)

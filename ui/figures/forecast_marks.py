@@ -34,7 +34,7 @@ def add_expected(fig, expected, satellites, end):
         out.add_trace(go.Scatter(
             x=[e[2] for e in mine], y=[rows[e[0]] for e in mine], mode="markers", name=WORDS[kind], cliponaxis=False,
             hoverinfo="text", hovertext=[plotly_card(f"{e[0]} · {WORDS[kind].lower()}", ("When", f"{e[2].day} {e[2]:%b %Y}"),
-                                                     ("Size", f"about {e[3]:.2f} m/s"), ("Means", MEANS[kind]),
+                                                     ("Δv", f"about {e[3]:.2f} m/s"), ("Means", MEANS[kind]),
                                                      ("Caveat", "it changes if the operator manoeuvres")) for e in mine],
             marker={"symbol": symbol, "size": 11, "color": COLOUR[kind], "line": {"color": COLOUR[kind], "width": 2}}))
     out.update_xaxes(range=[out.layout.xaxis.range[0], max(max(e[2] for e in expected), pd.Timestamp(end)) + pd.Timedelta(days=2)])
