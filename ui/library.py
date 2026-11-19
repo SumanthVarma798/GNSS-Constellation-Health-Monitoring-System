@@ -176,7 +176,7 @@ def upkeep_answer(counts):
     if not rows:
         return "nothing counted"
     clean = [row["system"] for row in rows if not failures(row)]
-    worst = rows[-1]
+    worst = max(rows, key=lambda row: (failures(row), failure_share(row)))   # the most failures, not the last in order
     first = f"none failed: {_and(clean)}" if clean else f"fewest failures per launch: {rows[0]['system']}"
     return first + (f" · most: {worst['system']}, {failures(worst)} of {worst['launched']}" if failures(worst) else "")
 
@@ -295,14 +295,16 @@ def amount(figure):
     """(the stated amount with its scale word applied, its currency): ("1.6", "billion US dollars") gives
     (1.6e9, "US dollars"). The currency is never converted."""
     scale, _, currency = figure["unit"].partition(" ")
+    value = float(str(figure["value"]).replace(",", "").strip())   # a hand-kept "1,420" reads as 1420
     if scale in AMOUNT_SCALES:
-        return float(figure["value"]) * AMOUNT_SCALES[scale], currency
-    return float(figure["value"]), figure["unit"]
+        return value * AMOUNT_SCALES[scale], currency or "currency not stated"
+    return value, figure["unit"] or "currency not stated"
 
 
 def grade_of(figure, grades):
     """The figure's publisher's reliability grade (A to F) from grades {domain: grade}, or "" when not graded."""
-    return grades.get(urlparse(figure["source_link"]).netloc.removeprefix("www."), "")
+    host = urlparse(figure["source_link"]).netloc
+    return grades.get(host) or grades.get(host.removeprefix("www.")) or grades.get("www." + host, "")
 
 
 def costs_answer(figures):

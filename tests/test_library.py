@@ -211,3 +211,11 @@ def test_each_generation_bar_carries_its_counts_for_hover_and_no_zero_part():
     launched = next(row["launched"] for row in counts if row["programme"] == "GPS IIF")   # 12 in Oct 2026
     assert f"<b>{launched}</b>" in bar and f'aria-label="{launched} launched: ' in bar
     assert "retired" not in bar.split("aria-label")[1].split('"')[1]               # a zero part is not drawn
+
+
+def test_library_review_edge_cases():
+    from ui import library
+    assert library.amount({"value": "1,420", "unit": "million US dollars"}) == (1.42e9, "US dollars")
+    assert library.amount({"value": "5", "unit": "crore"})[1] == "currency not stated"
+    assert library.grade_of({"source_link": "https://www.space-track.org/x"}, {"www.space-track.org": "B"}) == "B"
+    assert library.grade_of({"source_link": "https://www.spacenews.com/x"}, {"spacenews.com": "C"}) == "C"
