@@ -225,8 +225,9 @@ def satellite_line(f, now):
     if status in ("no_data", "stale"):
         return f"{name}: too little recent orbit data to look ahead.", "idle", as_of
     if status == "settling":
-        return (f"{name} manoeuvred on {_day(f['last_burn'])}; its next step follows once about "
-                f"{N.FIT_MIN_SPAN_DAYS:g} days of orbit data have come in.", "accent", as_of)
+        since = f"{name} manoeuvred on {_day(f['last_burn'])}; its" if f.get("last_burn") is not None else f"{name}:"
+        return (f"{since} next step follows once about {N.FIT_MIN_SPAN_DAYS:g} days of orbit data have come in.",
+                "accent", as_of)
     box = f"±{f['box']:g}°"
     where = f"{abs(f['pos']):.1f}° {_side(f['pos'])} of {'its station' if f['confirm'] else 'its slot'}"
     to_confirm = _confirm_words(f)
@@ -317,7 +318,7 @@ def constellation_line(forecasts, now):
     free = [f for f in worked if f["name"] not in out and not f["confirm"]]   # judged against our box
     due = [f for f in worked if f["name"] not in out]                          # burns due, a slot to confirm included
     edge = sorted((e, f["name"]) for f in free if (e := _edge_days(f, now)) is not None
-                  and (f["status"] == "weak" or (_row_days(f, "last_chance", now) or 0) <= N.NEAR_DAYS))
+                  and ((e <= N.NEAR_DAYS) if f["status"] == "weak" else (_row_days(f, "last_chance", now) or 0) <= N.NEAR_DAYS))
     soon = sorted((d, f["name"]) for f in due if f["status"] == "ok" and (d := _row_days(f, "ideal", now)) is not None
                   and d <= N.NEAR_DAYS)
     parts, tone = [], "ok"
@@ -398,5 +399,6 @@ def expected_burns(forecast_by_satellite, now):
 def line_html(line, short=False):
     """(text, tone, as_of) as a line on the page, with its standing caveat (short: only "as of <date>", for a card)."""
     text, tone, as_of = line
+    tone = tone if tone in ("ok", "accent", "warn", "idle") else "idle"   # a published line's tone is only ever a class name
     caveat = (f"as of {as_of}" if short else f"as of {as_of}, {CAVEAT}") if as_of else "worked out from the latest element sets"
     return f'<div class="nx {tone}"><span>{escape(text)}</span> <span class="small">{escape(caveat)}</span></div>'

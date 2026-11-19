@@ -187,3 +187,23 @@ def test_the_end_of_life_raise_is_a_range():
     from analysis.forecast_settings import EOL_RAISE_M_S
 
     assert 0 < EOL_RAISE_M_S[0] < EOL_RAISE_M_S[1]
+
+
+def test_ideal_manoeuvre_is_target_speed_less_arrival_speed():
+    import math
+    from datetime import date
+    from analysis.slot_forecast import forecast, position, time_to_outbound_edge
+    a, h = 0.001, 0.25
+    # pulled outward (acc east, leaving east): send it back at 2√(|a|h) whatever it arrives with
+    x0, v0 = 0.0, 0.03
+    t = time_to_outbound_edge(x0, v0, a, h)
+    arrive = v0 + a * t
+    ideal = forecast(x0, v0, a, h, 0.5, date(2026, 1, 1))[0]
+    assert ideal["delta_lambda_dot_deg_per_day"] == pytest.approx(-2 * math.sqrt(a * h) - arrive, rel=1e-6)
+    # at its edge now, leaving at the routine speed 2√(|a|h): the classic 4√(|a|h)
+    ideal = forecast(h, 2 * math.sqrt(a * h), a, h, 0.5, date(2026, 1, 1))[0]
+    assert abs(ideal["delta_lambda_dot_deg_per_day"]) == pytest.approx(4 * math.sqrt(a * h), rel=1e-3)
+    # pulled inward but leaving fast: stop it at the edge
+    ideal = forecast(0.0, 0.1, -a, h, 0.5, date(2026, 1, 1))[0]
+    t = time_to_outbound_edge(0.0, 0.1, -a, h)
+    assert ideal["delta_lambda_dot_deg_per_day"] == pytest.approx(-(0.1 - a * t), rel=1e-6)

@@ -33,8 +33,13 @@ def _summary(forecasts, now):
     """(due, soonest, confirm): satellites whose last chance falls within NEAR_DAYS, the soonest deadband edge as
     (days, name), the satellites whose slot is to confirm."""
     worked = [f for f in forecasts if f["status"] in ("ok", "weak") and not f["confirm"]]
-    due = [f for f in worked if f["status"] == "ok" and (d := next_step._row_days(f, "last_chance", now)) is not None
-           and d <= N.NEAR_DAYS]
+    def is_due(f):
+        if f["status"] == "weak":   # no manoeuvre worked out: due when its edge is near (or it is already past it)
+            edge = next_step._edge_days(f, now)
+            return abs(f["pos"]) > f["box"] or (edge is not None and edge <= N.NEAR_DAYS)
+        last = next_step._row_days(f, "last_chance", now)
+        return abs(f["pos"]) > f["box"] or (last is not None and last <= N.NEAR_DAYS)
+    due = [f for f in worked if is_due(f)]
     edges = sorted((e, f["name"]) for f in worked if (e := next_step._edge_days(f, now)) is not None)
     return due, (edges[0] if edges else None), [f["name"] for f in forecasts if f.get("confirm")]
 
