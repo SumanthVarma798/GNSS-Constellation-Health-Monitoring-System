@@ -1,6 +1,6 @@
-"""Library: the newest stories, the satellites and their lives (counts per constellation, lifecycles, generations,
-money), the datasets (ours, offered to everyone; others' that we use; and others who collect and share GNSS data),
-and how to cite. A tile per shelf opens that shelf and brings it into view.
+"""Library: the newest stories, the satellites and their lives (four comparisons, each a question answered by a
+picture (ui/library.py), and the lifecycles), the datasets (ours, offered to everyone; others' that we use; and
+others who collect and share GNSS data), and how to cite. A tile per shelf opens that shelf and brings it into view.
 
 What each shelf holds is in ui/shelf_settings.py; the cards are built in ui/shelf.py. Details sit in sections
 (ui/reveal.py), all closed but the first shelf's, so the page opens on the tiles and the stories.
@@ -17,6 +17,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 from evidence import news_stories
+from evidence.confidence import read_source_grades
 from evidence.library_settings import (LIBRARY_COUNTS_FILE, LIBRARY_FIGURES_FILE, LIBRARY_MATCHING_FILE,
                                        LIFECYCLE_EVENTS_FILE)
 from evidence.registry_settings import (
@@ -60,10 +61,10 @@ if jump_shelf:
 counts, figures, matched, lifecycle_rows, satellites, signal_ids, catalogue, tracked = load()
 registry = {"satellites": satellites, "signal_ids": signal_ids, "catalogue": catalogue, "tracked": tracked}
 constellations = library.system_rows(counts)
-stated = sum(figure["value"] != library.NOT_KNOWN for figure in figures)
+grades = {row["source_id"]: row["reliability"] for row in read_source_grades()}
 
 files = shelf.published()
-states = {key: shelf.item_state(key, files) for key in OURS}   # (bytes, freshness, problem)
+states = {key: shelf.item_state(key, files) for key in OURS}   # (bytes, date, problem)
 news_file, news_problem = files["news"]
 told = sorted(news_stories.stories(news_file.get("items", [])) if not news_problem else [],
               key=lambda story: max(item.get("published_at") or item.get("fetched_at") or "" for item in story["items"]),
@@ -101,18 +102,19 @@ else:
 
 # ---- Satellites and their lives ----
 surfaces.show(shelf.shelf_sign("satellites"))
-reveal.section("library_systems", "Count per constellation",
-               f"{reveal.count(len(constellations), 'constellation')} · {sum(r['launched'] for r in constellations)} launched · "
-               f"{sum(r['operating'] for r in constellations)} operating", library.scoreboard(counts, figures))
+reveal.section("library_systems", "Who maintains their constellation best?", library.upkeep_answer(counts),
+               library.upkeep(counts))
+reveal.section("library_experience", "Who has done this longest, and how well?", library.experience_answer(counts),
+               library.experience(counts))
 detailed = sorted({row["satellite"] for row in lifecycle_rows})
 lifecycle_constellation = registry_name(jump_constellation) if jump_section == "library_lifecycles" else None
 reveal.section("library_lifecycles", "Lifecycles",
                f"every satellite in the IGS satellite metadata file, from launch to end of service · {' · '.join(detailed)} step by step",
                lambda: lifecycle_frame(lifecycle_rows, datetime.now(timezone.utc), registry, lifecycle_constellation))
-reveal.section("library_generations", "By design generation", reveal.count(len(counts), "generation"),
+reveal.section("library_generations", "Did one design generation keep failing?", library.generations_answer(counts),
                library.generations(counts))
-reveal.section("library_money", "Money stated by public sources",
-               f"{reveal.count(stated, 'figure')} stated · {len(figures) - stated} not known", library.costs(figures))
+reveal.section("library_money", "What do public sources say each constellation cost?", library.costs_answer(figures),
+               library.costs(figures, grades))
 surfaces.show(surfaces.notice(library.matching(matched), "idle"))
 lag = library.registry_lag_note(matched, satellites)
 if lag:
@@ -125,9 +127,9 @@ surfaces.show(shelf.shelf_sign("datasets"))
 def draw_ours():
     with st.container(key="shelfbody_ours"), st.container(key="shelf_ours"):
         for key in OURS:
-            content, fresh, problem = states[key]
+            content, day, problem = states[key]
             with st.container(key=f"item_{key}"):
-                st.html(shelf.card_html(key, content, fresh, problem))
+                st.html(shelf.card_html(key, content, day, problem))
                 if content is not None:
                     words = shelf.dataset_citations(key, content, accessed="{accessed}")   # filled at the click
                     copy_buttons_frame({"Copy short citation": words["short"], "Copy long citation": words["long"]})
