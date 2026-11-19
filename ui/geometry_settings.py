@@ -165,7 +165,7 @@ GROUND_LINE = ("Each line is where one satellite passes over the ground; its dot
 GROUND_DEEPER = ("A geostationary satellite hangs over one point of the equator, so its track is a dot. An inclined "
                  "geosynchronous or quasi-zenith satellite goes round once a day and traces a figure of eight "
                  "north and south of the equator. The crosses are the constellation's key places. Click anywhere "
-                 "on the map to see the sky from there. Hover a track for the time, the point under it and its height.")
+                 "on the map to see the sky from there. Hover a track for the time, the point under it and its altitude.")
 SKY_LINE = ("The sky as you would see it lying on your back at this place: the middle is straight overhead, the edge "
             "is the horizon, and each mark is a satellite.")
 SKY_DEEPER = ("A satellite near the middle is high and its signal crosses little air; near the edge it is low and "
@@ -193,8 +193,8 @@ SPACING_STATUS = {"Ideal": "ok", "Good": "ok", "Moderate": "warn", "Poor": "bad"
 
 # Orbit trends: one row per satellite, one column per measure. (column in the history, name, unit, what it means).
 TRENDS = [
-    ("INCLINATION", "Tilt", "degrees", "inclination: the angle between the orbit and the equator"),
-    ("altitude_km", "Height", "km", "average height above Earth"),
+    ("INCLINATION", "Inclination", "degrees", "the angle between the orbit plane and the equator"),
+    ("altitude_km", "Altitude", "km", "mean altitude above the Earth's surface"),
     ("LonDrift_deg_per_day", "Drift", "degrees a day", "longitude drift rate, east or west"),
     ("central_lon", "Centre", "degrees east", "central longitude: the middle of its ground track over a day"),
 ]
@@ -204,7 +204,7 @@ GEOSYNCHRONOUS_ONLY = ("LonDrift_deg_per_day", "central_lon")
 MEO_TRENDS = [trend for trend in TRENDS if trend[0] not in GEOSYNCHRONOUS_ONLY]
 # How a trend is put in a sentence: (column in the history: what it is called, its unit, the span under which it counts
 # as steady, decimals). Our choice of "steady": about what the figure moves by from one element set to the next.
-TREND_WORDS = {"INCLINATION": ("tilt", "°", 0.05, 2), "altitude_km": ("height", " km", 2.0, 1),
+TREND_WORDS = {"INCLINATION": ("inclination", "°", 0.05, 2), "altitude_km": ("altitude", " km", 2.0, 1),
                "LonDrift_deg_per_day": ("drift", "° a day", 0.02, 3), "central_lon": ("centre", "°", 0.05, 2)}
 DRIFT_TOLERANCE_IGSO = DRIFT_TOLERANCE_TILTED   # degrees a day: analysis.health_assessment's default for inclined orbits
 

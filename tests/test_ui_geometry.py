@@ -331,7 +331,7 @@ def test_the_map_holds_land_tracks_now_places_a_click_grid_and_the_chosen_place(
     assert [t.name for t in fig.data[-3:]] == ["key places", "click", "chosen place"]
     assert len(fig.data) == 1 + len(tracks) + 4 and len(fig.data[-3].x) == len(CHINA_KEY_POINTS)
     track = fig.data[1]
-    assert "Height</span>  %{customdata[2]:,.0f} km" in track.hovertemplate and track.customdata[0][0].endswith("UTC")
+    assert "Altitude</span>  %{customdata[2]:,.0f} km" in track.hovertemplate and track.customdata[0][0].endswith("UTC")
     cells, step = fig.data[-2], gs.CLICK_GRID_DEG
     x_range, y_range = fig.layout.xaxis.range, fig.layout.yaxis.range
     assert min(cells.x) - step / 2 <= x_range[0] and max(cells.x) + step / 2 >= x_range[1]
@@ -358,8 +358,8 @@ def test_one_satellites_trends_share_one_time_axis_so_a_hover_reads_them_all():
     assert fig.layout.hovermode == "x unified" and fig.layout.hoversubplots == "axis"
     assert {t.xaxis or "x" for t in fig.data} == {"x"} and fig.layout.xaxis.showspikes
     lines = [t for t in fig.data if t.hoverinfo != "skip"]
-    assert [t.name for t in lines] == ["Tilt", "Height"] and list(lines[1].y) == [35786.0]
-    assert "(should be 28 to 30)" in lines[0].hovertemplate and "Height</span>  %{y:,.1f}" in lines[1].hovertemplate
+    assert [t.name for t in lines] == ["Inclination", "Altitude"] and list(lines[1].y) == [35786.0]
+    assert "(should be 28 to 30)" in lines[0].hovertemplate and "Altitude</span>  %{y:,.1f}" in lines[1].hovertemplate
     assert sum(t.fill == "toself" for t in fig.data) == 1 and sum(1 for t in fig.data if t.line.dash == "dash") == 1
     labels = [a.text.split("  ")[0] for a in fig.layout.annotations if a.x == 0]
     assert labels == [name for _, name, _, _ in gs.TRENDS]          # each strip named, with its unit, above it
@@ -376,11 +376,11 @@ def test_trends_mark_readings_outside_the_band_and_name_them_when_the_latest_is_
     fig = gf.satellite_trends(series, "A", bands, epochs[0], epochs[-1])
 
     off = [t for t in fig.data if t.name and t.name.endswith("outside")]
-    assert [t.name for t in off] == ["Tilt outside"] and list(off[0].y) == [31.0, 30.5]
+    assert [t.name for t in off] == ["Inclination outside"] and list(off[0].y) == [31.0, 30.5]
     assert off[0].marker.color == palette.BAD and off[0].hoverinfo == "skip"
     ends = {a.text: a.font.color for a in fig.layout.annotations if a.x == 1}
     assert ends == {"now 30.500": palette.BAD, "now 55.000": palette.INK}
-    assert any(a.text == "now outside: Tilt" and a.font.color == palette.BAD for a in fig.layout.annotations)
+    assert any(a.text == "now outside: Inclination" and a.font.color == palette.BAD for a in fig.layout.annotations)
 
 
 # ---- when each satellite is in view ----
@@ -486,7 +486,7 @@ def test_the_trend_line_says_steady_rising_or_falling_and_when_outside_its_range
 
     line = gf.trend_line(series, "A", {"central_lon": (59.5, 60.5)}, 90, measures)
 
-    assert line == ("Over the last 90 days: tilt rising 0.15° over 21 days; height steady within 0.5 km; "
+    assert line == ("Over the last 90 days: inclination rising 0.15° over 21 days; altitude steady within 0.5 km; "
                     "centre falling 0.96° over 21 days, now outside its range.")
     assert gf.trend_line(series, "B", {}, 90, measures) == ""
 
