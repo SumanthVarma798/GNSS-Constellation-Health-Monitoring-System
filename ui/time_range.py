@@ -11,7 +11,7 @@ Bounds, worked out from the data held each time the bar is drawn:
   latest    now: there are no records from the future, so the range always ends today.
   shortest  MIN_DAYS, below.
   longest   everything held, from the earliest record.
-A preset longer than what is held is greyed, and its tip says how much is held.
+A preset longer than what is held is struck through on the wheel, and the panel says how much is held.
 """
 from datetime import datetime, timedelta, timezone
 from html import escape
@@ -20,6 +20,7 @@ import pandas as pd
 import streamlit as st
 
 from ui import data
+from ui.components.ferris import ferris
 
 # Quick choices, in days up to today, with their words.
 PRESETS = {30: "30 days", 90: "90 days", 182: "6 months", 365: "1 year"}
@@ -65,7 +66,7 @@ def held_days(first, today):
 
 
 def too_long(days, held, names):
-    """Why a preset is greyed (more days than are held), or None when it can be chosen."""
+    """Why a preset is struck through (more days than are held), or None when it can be chosen."""
     if days <= held:
         return None
     held_words = f"Only {words(held)} of orbit records are" if held else "No orbit records are yet"
@@ -80,10 +81,6 @@ def from_bounds(first, today):
 
 def _day(value):
     return f"{value.day} {value:%b %Y}"
-
-
-def _choose(days):
-    st.session_state["window_days"] = days
 
 
 def _from_date(today):
@@ -102,13 +99,11 @@ def control(names, params):
     with st.container(key="range"):
         label = f"Last {words(window_days)}" if held >= MIN_DAYS else ("Only " + words(held) if held else "No records yet")
         with st.popover(label, icon=":material/date_range:"):
-            st.html('<p class="range-title">Time range, ending now</p>')
-            with st.container(key="range_presets"):
-                for days, label in PRESETS.items():
-                    short = [n for n, f in first_of.items() if held_days(f, today) < days]   # who lacks it
-                    reason = too_long(days, held, short or names)
-                    st.button(label, key=f"window_{days}", disabled=reason is not None, help=reason,
-                              type="primary" if days == window_days else "secondary", on_click=_choose, args=(days,))
+            # The panel focuses its title on opening (data-autofocus), not the date box, whose calendar would open
+            st.html('<p class="range-title" tabindex="-1" data-autofocus>Time range, ending now</p>')
+            if held >= MIN_DAYS:   # a preset longer than what is held is struck through; the note below says how much is held
+                unheld = [days for days in PRESETS if too_long(days, held, names)]
+                ferris("Last", sorted({*PRESETS, window_days}), key="window_days", format_func=words, disabled=unheld)
             bounds = from_bounds(first, today)
             if bounds:
                 earliest, latest = bounds
