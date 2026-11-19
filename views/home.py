@@ -11,11 +11,10 @@ from html import escape
 import streamlit as st
 import streamlit.components.v1 as components
 
-from ui import (data, findings, home_data, icons, marks, palette, reveal, shell, surfaces, three_measures, time_range,
+from ui import (burn_record, data, findings, home_data, icons, marks, palette, reveal, shell, surfaces, three_measures, time_range,
                 tooltip)
-from config.config import MEO_SATS
 from ui.home_settings import CAVEATS, CONTACT_ADDRESS, FINDINGS_SHOWN, HOW, HOW_LINKS, RULES, SYSTEMS
-from ui.limits import BURN_DAYS, MEASURE_WEIGHTS, MISSION
+from ui.limits import CARE_MAX_SHARE, CARE_RECENT_DAYS, MEASURE_WEIGHTS, MISSION
 from ui.system_summary import whole
 from ui.systems import SYSTEMS as SYSTEMS_PARTS, part_name
 
@@ -60,20 +59,23 @@ def _gauge(system, split):
 
 MEASURE_WORDS = {"clock": ("Clock steady", "no clock step past 30 ns in the day"),
                  "orbit": ("Orbit kept", "on the orbit it should be on"),
-                 "station": ("Station held", "held in its slot, or in step with its plane")}
+                 "station": ("Station held", "held in its slot, or in step with its plane"),
+                 "care": ("Burn record", f"no irregular burn in {CARE_RECENT_DAYS} days, at most {CARE_MAX_SHARE:.0%} in a year")}
 
 
 def _how_scored(system, index):
     """'how this is scored', dotted, with a card that says it in a few lines: each measure with how much it counts
     for this constellation's mission (ui/limits.py MEASURE_WEIGHTS), heaviest first."""
     used, mission = len(system["score_parts"]), MISSION.get(system["name"], "global")
-    weights = sorted(MEASURE_WEIGHTS[mission].items(), key=lambda item: -item[1])
+    # a constellation with no burn record (a medium-orbit one) has three measures, the weights scaled back up to 100%
+    applies = {key: weight for key, weight in MEASURE_WEIGHTS[mission].items() if key != "care" or system.get("burn_record")}
+    weights = sorted(((key, weight / sum(applies.values())) for key, weight in applies.items()), key=lambda item: -item[1])
     return tooltip.tip_html('how this is scored', tooltip.glance(
-        f"Three measures, weighed for a {mission} constellation", [
+        f"{len(weights)} measures, weighed for a {mission} constellation", [
             ("", f"{MEASURE_WORDS[key][0]} {weight:.0%}", MEASURE_WORDS[key][1]) for key, weight in weights],
-        note=("Each is the share of satellites that pass. " if used == 3
+        note=("Each is the share of satellites that pass. " if used == len(weights)
               else "None could be read today, so there is no score. " if not used
-              else f"From {used} of 3 today: {reveal.count(3 - used, 'measure')} could not be read, so the others "
+              else f"From {used} of {len(weights)} today: {reveal.count(len(weights) - used, 'measure')} could not be read, so the others "
                    "count for its share. ")
         + "Why these weights: Need help reading this page?"), key=f"score_{index}")
 
@@ -112,21 +114,22 @@ def _tile(words, count, of):
 
 
 def _burns_tile(system):
-    """The burns found in the last BURN_DAYS days: how many and by how many satellites (none for most medium orbits:
-    too little history to find them)."""
-    burns = system["burns"]
-    if burns:
-        value = f'<b class="num">{burns[0]} <small>by {reveal.count(burns[1], "satellite")}</small></b>'
+    """The burn record's other half, for a constellation where burns were found: how many of the burns judged in the
+    last 365 days were irregular, with the interval the count allows, or "too few to rate"."""
+    rec = system["burn_record"]
+    if not rec["decided"]:
+        value = '<b class="idle">too few to rate</b>'
     else:
-        value = f'<b class="idle">{"too little history" if system["name"] in MEO_SATS else "none found"}</b>'
-    return f'<div class="tile"><span class="small">{_explained("burns")} in {BURN_DAYS} days</span>{value}</div>'
-
+        share = f'{round(100 * rec["irregular"] / rec["decided"])}% ({round(100 * rec["low"])}–{round(100 * rec["high"])}%)'
+        value = (f'<b class="num">{rec["irregular"]} <small>of {rec["decided"]} burns irregular</small></b>'
+                 f'<span class="small">{share if burn_record.rated(rec) else "too few to rate"}</span>')
+    return (f'<div class="tile"><span class="small">{_explained("irregular burns")}, 365 days</span>{value}</div>')
 
 
 def _row(system, unread=None, index=0):
     """One constellation as a card. Closed: its score in a ring of its satellites' states, its name, who runs it,
     the states counted in words, and how the score is made. Opened (a click anywhere on it, no page reload): the
-    three measures in the score, what is shown beside it, notes, and under it the button to its own pages (page()).
+    four measures in the score, what is shown beside it, notes, and under it the button to its own pages (page()).
     For a system of several parts each part's count is a note, and a part in `unread` ({part's name: the error})
     says why it is missing."""
     name = system["name"]
@@ -141,11 +144,12 @@ def _row(system, unread=None, index=0):
     # in the card's head nothing is a link, so a click there always opens the card; the words link once it is open
     counted = "".join(f'<span><i class="{kind}"></i>{count} {escape(meaning)}</span>' for kind, meaning, count in split)
     key = "".join(f'<span><i class="{kind}"></i>{_explained(meaning)}</span>' for kind, meaning, _ in split)
-    # the score's three measures raised, the rest pressed in: what counts and what is only seen, told apart by shape
+    # the score's four measures raised, the rest pressed in: what counts and what is only seen, told apart by shape
     in_score = "".join(_tile(*line) for line in [
-        ("orbit kept", *system["orbit"]), ("station held", *system["station"]), ("clock steady", *system["clock"])])
+        ("orbit kept", *system["orbit"]), ("station held", *system["station"]), ("clock steady", *system["clock"]),
+        *[("burn record", *system["care"])] * bool(system["burn_record"])])   # not where no burns were found
     seen = (_tile("says healthy", system["flagged_healthy"], system["checked"])
-            + _tile("flag matches our check", *system["flag_agrees"]) + _burns_tile(system))
+            + _tile("flag matches our check", *system["flag_agrees"]) + (_burns_tile(system) if system["burn_record"] else ""))
     return (f'<details class="sys card {surfaces.band(system["score"]) if system["score"] is not None else "idle"}">'
             f'<summary><div class="sys-id"><b>{marks.mark(name)}{escape(name)}</b>'
             f'<span class="small">{escape(" · ".join(filter(None, [who, where])))}</span>'
@@ -218,7 +222,7 @@ def _open(key, part):
     st.button(f"Open {part}'s overview", key=key, on_click=shell.open_system, args=(part,))
 
 
-WEIGHT_TONES = {"clock": "accent", "orbit": "ok", "station": "warn"}   # one colour per attribute in the weight bars
+WEIGHT_TONES = {"clock": "accent", "orbit": "ok", "station": "warn", "care": "idle"}   # one colour per attribute in the weight bars
 
 
 def _picture(name):

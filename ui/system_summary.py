@@ -2,14 +2,12 @@
 broadcast themselves as healthy. The counts are the ones the system's own Overview shows as its headline, made by
 the same rules (in_slot_and_healthy here, meo_overview.healthy for the systems judged by plane).
 """
-from datetime import datetime, timedelta, timezone
-
 from analysis import commissioning
 from analysis.meo_geometry import plane_drift
 from statistics import median
 
 from evidence.registry_tables import judged_by_plane
-from ui import limits, meo_overview, orbit_age, orbit_section, palette, systems
+from ui import burn_record, limits, meo_overview, orbit_age, orbit_section, palette, systems
 from ui.figures.slot_rows import as_number
 
 HEALTHY_FROM = meo_overview.HEALTHY_FROM   # one top band for both kinds of system
@@ -65,21 +63,21 @@ def _plane_satellites(result):
 
 def score_of(counts, system):
     """(the constellation's score out of 100, [(measure, its pass rate in %, its weight)]): the weighted average of
-    the pass rates of orbit kept, station held and clock steady that could be read, weighed by the constellation's
+    the pass rates of orbit kept, station held, clock steady and the burn record that could be read, weighed by the constellation's
     mission (ui.limits MISSION, MEASURE_WEIGHTS), heaviest first. A measure not read is left out and the others'
     weights are scaled up to add to 1. (None, []) when none could be read."""
     owner = next((name for name, parts in systems.SYSTEMS.items() if system in parts), system)   # a part's system
     weights = limits.MEASURE_WEIGHTS[limits.MISSION.get(owner, "global")]
     read = [(key, 100 * passed / judged) for key, weight in sorted(weights.items(), key=lambda item: -item[1])
-            for passed, judged in [counts[key]] if judged]
+            for passed, judged in [counts.get(key, (0, 0))] if judged]
     total = sum(weights[key] for key, _ in read)
     parts = [(key, rate, weights[key] / total) for key, rate in read]
     return (round(sum(rate * weight for _, rate, weight in parts)) if parts else None), parts
 
 
 def _measures(sats, system):
-    """{"orbit", "station", "clock": (how many pass, how many were judged), "clock_typical_ns", "score",
-    "score_parts"} over `sats`: the three measures counted, the middle of the satellites' typical clock steps (None
+    """{"orbit", "station", "clock", "care": (how many pass, how many were judged), "clock_typical_ns", "score",
+    "score_parts"} over `sats`: the four measures counted ("care" is the burn record), the middle of the satellites' typical clock steps (None
     when no clock was heard), and the score made from them (score_of())."""
     def count(key):
         judged = [sat[key] for sat in sats if sat.get(key) is not None]
@@ -88,7 +86,7 @@ def _measures(sats, system):
     typical = [sat["clock"]["typical_step_ns"] for sat in sats
                if sat.get("clock") and sat["clock"].get("typical_step_ns") is not None]
     counts = {"orbit": count("orbit"), "station": count("station"), "clock": count("clock_steady"),
-              "clock_typical_ns": median(typical) if typical else None}
+              "care": count("care"), "clock_typical_ns": median(typical) if typical else None}
     counts["score"], counts["score_parts"] = score_of(counts, system)
     return counts
 
@@ -110,22 +108,23 @@ def _when_scored(result, name, first):
         return _stage(result, name)
 
 
-def _recent_burns(burns, now=None):
-    """(burns, satellites that made them) found in the last BURN_DAYS of orbit records, or None when none were found:
-    the systems judged by plane mostly have too little history to find any (analysis/meo_run.py)."""
-    if burns is None or not len(burns):
-        return None
-    since = (now or datetime.now(timezone.utc)).replace(tzinfo=None) - timedelta(days=limits.BURN_DAYS)
-    recent = burns[burns["window_end"] >= since]
-    return len(recent), int(recent["satellite"].nunique())
+def _burn_record(name, result, sats):
+    """The constellation's burn record (ui/burn_record.py record_of), with each satellite's pass of the burn record
+    set in `sats` as "care" (True, False, or None: not judged, set aside, or no burns found). None when no burns were
+    found: the systems judged by plane mostly have too little history to find any (analysis/meo_run.py)."""
+    table = burn_record.classified(name, result)
+    care = burn_record.care_of(table) if table is not None else {}
+    for sat in sats:
+        sat["care"] = None if sat["group"] == "set aside" else care.get(sat["name"])
+    return burn_record.record_of(table)
 
 
 def summary(name, result, gap=None):
     """{name, sats, healthy, total, settling, planes, in_file, flagged_healthy, broadcast_day} for one system.
 
-    Also the three measures counted (_measures). sats: {name, group, score, state, ok, parts, orbit, station,
-    broadcast, clock, clock_steady} per satellite counted, where orbit, station and clock_steady are True, False or
-    None (not judged: ui/limits.py MEASURES), clock is the day's clock figures, and broadcast is "ok" (flagged
+    Also the four measures counted (_measures) and burn_record (the burns by kind over 365 days, or None). sats:
+    {name, group, score, state, ok, parts, orbit, station, broadcast, clock, clock_steady, care} per satellite counted,
+    where orbit, station, clock_steady and care are True, False or None (not judged: ui/limits.py MEASURES), clock is the day's clock figures, and broadcast is "ok" (flagged
     healthy), "bad" (flagged unhealthy), "silent" (not in the day's file) or None (no broadcast check to read).
     settling: {satellite: which stage it is at} for the new satellites not scored yet, which are not counted. planes: plane_drift's rows for a
     system judged by plane, else {}. `gap` is ui.data.orbit_gap()'s payload.
@@ -146,10 +145,11 @@ def summary(name, result, gap=None):
         sat["clock_steady"] = None if step is None else step <= limits.CLOCK_STEADY_NS
     checked = [sat for sat in sats if sat["broadcast"] is not None]
     flagged = [sat for sat in checked if sat["broadcast"] in ("ok", "bad")]
+    record = _burn_record(name, result, sats)   # sets sat["care"]: must run before _measures() counts it
     return {"name": name, "sats": sats, "healthy": sum(sat["ok"] for sat in sats), "total": len(sats),
             # the operator's own word against our check: its flag says healthy exactly where we count it healthy
             "flag_agrees": (sum((sat["broadcast"] == "ok") == sat["ok"] for sat in flagged), len(flagged)),
-            "burns": _recent_burns(result.get("burns")),
+            "burn_record": record,
             "settling": {new: _when_scored(result, new, first) for new, first in (result.get("moving") or {}).items()},
             "planes": plane_drift(name, result["rows"]) if by_plane else {},
             "in_file": sum(sat["broadcast"] != "silent" for sat in checked) if checked else None,
@@ -165,10 +165,9 @@ def whole(system, parts):
     (the part's name, its own score) beside them. The system's score counts every satellite of every part once,
     so it lies between its parts' scores and is the same number on Home and on each part's page."""
     checked = sum(part["checked"] for part in parts)
-    burns = [part["burns"] for part in parts if part["burns"]]
     return {"name": system, "sats": [sat for part in parts for sat in part["sats"]],
             "flag_agrees": tuple(map(sum, zip(*(part["flag_agrees"] for part in parts)))) if parts else (0, 0),
-            "burns": tuple(map(sum, zip(*burns))) if burns else None,
+            "burn_record": burn_record.combine(part["burn_record"] for part in parts),
             "healthy": sum(part["healthy"] for part in parts), "total": sum(part["total"] for part in parts),
             "settling": {name: stage for part in parts for name, stage in part["settling"].items()}, "checked": checked,
             "flagged_healthy": sum(part["flagged_healthy"] or 0 for part in parts) if checked else None,

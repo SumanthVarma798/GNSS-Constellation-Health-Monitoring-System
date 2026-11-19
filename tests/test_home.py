@@ -1,12 +1,13 @@
 """The Home page: a row per system with the count its Overview shows, and the "Worth a look" rules. No network."""
 import re
 
+import pandas as pd
 import pytest
 
 from test_dashboard_shell import (celestrak_answers_with_nothing_new, htmls, run,  # noqa: F401 (fixtures)
                                   segmented_controls_rerun)
 from test_meo_pages import celestrak_answers_with_two_galileo_satellites, scope  # noqa: F401 (a fixture)
-from ui import data, findings, home_data, home_settings, palette, shell, system_summary, systems
+from ui import burn_groups, data, findings, home_data, home_settings, limits, palette, shell, system_summary, systems
 
 COUNT = re.compile(r"(\d+ of \d+) satellites healthy and in place")   # said with a card's score
 HEADLINE = re.compile(r"(\d+ of \d+)</span>")   # a constellation's own page leads with it
@@ -57,7 +58,7 @@ def test_a_system_with_no_satellites_draws_no_empty_split(monkeypatch):
         "name": name, "sats": [], "healthy": 0, "total": 0, "settling": {}, "planes": {}, "in_file": None,
         "flagged_healthy": None, "checked": 0, "broadcast_day": None, "orbit": (0, 0), "station": (0, 0),
         "clock": (0, 0), "clock_typical_ns": None, "score": None, "score_parts": [], "flag_agrees": (0, 0),
-        "burns": None})
+        "care": (0, 0), "burn_record": None})
 
     counted = [row for row in rows(run()) if COUNT.search(row)]
 
@@ -235,7 +236,7 @@ def test_the_words_a_row_explains_are_links_to_the_point_in_how_to_read_that_exp
     links = re.findall(r'<a class="how-link" href="#([^"]+)"[^>]*>([^<]+)</a>', navic)
     # opened: the measures in the score, then what is shown beside it, then the states, each landing on its point
     assert links[:6] == [("how-" + words.replace(" ", "-"), words) for words in (
-        "orbit kept", "station held", "clock steady", "says healthy", "flag matches our check", "burns")]
+        "orbit kept", "station held", "clock steady", "burn record", "says healthy", "flag matches our check")]
     assert ("how-needs-a-look", "needs a look") in links and ("how-set-aside", "set aside") in links
     assert {target for target, _ in links} <= targets
 
@@ -251,7 +252,8 @@ def test_how_to_read_says_it_in_short_bullets_with_a_picture_for_each_term():
     assert re.search(r'id="how-clock-steady"><span class="how-pic"><span class="ic"', measured)
     assert 'id="how-score"><span class="how-pic"><span class="gauge mini"' in measured
     # the mission weights as bars, from ui/limits.py, and words in bullets rather than paragraphs
-    assert '<div class="wbars">' in measured and "Clock<small>50%</small>" in measured and "Clock<small>40%</small>" in measured
+    assert '<div class="wbars">' in measured and "Clock<small>45%</small>" in measured and "Clock<small>36%</small>" in measured
+    assert "Burn<small>10%</small>" in measured
     assert measured.count("<li>") >= 8
     # what is not done yet is framed as what we are working towards, open to working together
     assert "Working together" in how and "What is left out" not in how
@@ -309,8 +311,11 @@ def test_an_open_card_shows_the_scores_measures_raised_then_what_is_only_seen_pr
         ("station held", re.findall(tile, in_score)[1][1].replace("<small>", "").replace("</small>", "")),
         ("clock steady", "not read")]   # no broadcast check in tests
     assert re.fullmatch(r"\d+ of 7", re.sub(r"<[^>]+>", "", re.findall(tile, in_score)[0][1]))   # 7 scored
-    assert [words for words, _ in re.findall(tile, seen)] == ["says healthy", "flag matches our check", "burns"]
+    assert [words for words, _ in re.findall(tile, seen)] == ["says healthy", "flag matches our check", "irregular burns"]
     assert "too little history" not in seen   # NavIC is held by slot: its burns are found
+    # the burn record: as a measure of the score (satellites that pass) and, seen, how many of the burns were irregular
+    assert re.search(r'burn record</a></span><b class="num[^"]*">\d+ <small>of \d+</small>', in_score)
+    assert re.search(r"\d+ <small>of \d+ burns irregular</small></b><span class=\"small\">(\d+% \(\d+–\d+%\)|too few to rate)", seen)
 
 
 def test_clock_stepped_fires_for_a_step_past_the_line_and_not_for_steady_clocks():
@@ -407,18 +412,30 @@ def test_the_job_writes_every_part_it_can_count_in_the_shape_home_reads(monkeypa
 # --- one score per constellation ---
 
 def test_the_score_weighs_the_measures_by_mission_and_shares_out_one_not_read():
-    counts = {"orbit": (2, 7), "station": (6, 7), "clock": (3, 3)}
+    counts = {"orbit": (2, 7), "station": (6, 7), "clock": (3, 3), "care": (7, 7)}
+    no_care = {key: value for key, value in counts.items() if key != "care"}
     regional, global_ = system_summary.score_of(counts, "NavIC"), system_summary.score_of(counts, "Galileo")
-    no_clock = system_summary.score_of({"orbit": (31, 32), "station": (18, 24), "clock": (0, 0)}, "GPS")
+    no_clock = system_summary.score_of({"orbit": (31, 32), "station": (18, 24), "clock": (0, 0), "care": (0, 0)}, "GPS")
 
-    # NavIC is regional: clock 50%, station 30%, orbit 20%; Galileo global: clock 40%, orbit 35%, station 25%
-    assert regional == (round(100 * .5 + 600 / 7 * .3 + 200 / 7 * .2),
-                        [("clock", 100.0, .5), ("station", 600 / 7, .3), ("orbit", 200 / 7, .2)])
-    assert global_[0] == round(100 * .4 + 200 / 7 * .35 + 600 / 7 * .25) and global_[0] < regional[0]
+    # NavIC is regional: clock 45%, station 27%, orbit 18%, burn record 10%; Galileo global: clock 36%, orbit 31.5%,
+    # station 22.5%, burn record 10% (the burn record takes a tenth of each of the other three's old weight)
+    assert regional[0] == round(100 * .45 + 600 / 7 * .27 + 200 / 7 * .18 + 100 * .10)
+    assert [(key, rate, pytest.approx(weight)) for key, rate, weight in regional[1]] == [
+        ("clock", 100.0, pytest.approx(.45)), ("station", 600 / 7, pytest.approx(.27)),
+        ("orbit", 200 / 7, pytest.approx(.18)), ("care", 100.0, pytest.approx(.10))]
+    assert global_[0] == round(100 * .36 + 200 / 7 * .315 + 600 / 7 * .225 + 100 * .10) and global_[0] < regional[0]
+    for weights in limits.MEASURE_WEIGHTS.values():
+        assert abs(sum(weights.values()) - 1) < 1e-9
     # a part takes its constellation's weights; a measure not read is left out and the rest scaled up to add to 1
     assert system_summary.score_of(counts, "BeiDou-3 MEO") == system_summary.score_of(counts, "BeiDou-3")
-    assert no_clock == (round(100 * 31 / 32 * .35 / .6 + 75 * .25 / .6), [("orbit", 100 * 31 / 32, .35 / .6),
-                                                                          ("station", 75.0, .25 / .6)])
+    assert no_clock[0] == round(100 * 31 / 32 * .315 / .54 + 75 * .225 / .54)
+    assert [(key, weight) for key, _, weight in no_clock[1]] == [("orbit", pytest.approx(.315 / .54)), ("station", pytest.approx(.225 / .54))]
+    # no burn record read (a medium-orbit constellation, or counts made before it existed): the old three, as they were
+    # (clock 40%, orbit 35%, station 25% for a global one), so its score is unchanged
+    old = system_summary.score_of(no_care, "Galileo")
+    assert old[0] == round(100 * .4 + 200 / 7 * .35 + 600 / 7 * .25)
+    assert [(key, rate, pytest.approx(weight)) for key, rate, weight in old[1]] == [
+        ("clock", 100.0, pytest.approx(.4)), ("orbit", 200 / 7, pytest.approx(.35)), ("station", 600 / 7, pytest.approx(.25))]
     assert system_summary.score_of({"orbit": (0, 0), "station": (0, 0), "clock": (0, 0)}, "GPS") == (None, [])
 
 
@@ -431,11 +448,11 @@ def test_each_card_leads_with_its_score_and_its_how_scored_tip_says_when_it_is_f
                       r'and in place"><b class="num (ok|warn|bad)">\1</b><small>/ 100</small></div><span class="sys-go"', head)
     assert head.index('class="sys-id"') < head.index('class="gauge"')
     assert score and f'<details class="sys card {score.group(2)}">' in navic   # the card's edge in the score's colour
-    # no broadcast check in tests, so no clock: the tip on "how this is scored" says the score is from 2 of 3
+    # no broadcast check in tests, so no clock: the tip on "how this is scored" says the score is from 3 of 4 (the burn record is read)
     assert 'tabindex="0" aria-describedby="tt-' in head and ">how this is scored</span>" in head
-    assert "From 2 of 3 today: 1 measure could not be read, so the others count for its share." in head
+    assert "From 3 of 4 today: 1 measure could not be read, so the others count for its share." in head
     # the tip names the weights for NavIC's mission, heaviest first
-    assert re.search(r"weighed for a regional constellation.*Clock steady 50%.*Station held 30%.*Orbit kept 20%", head)
+    assert re.search(r"weighed for a regional constellation.*Clock steady 45%.*Station held 27%.*Orbit kept 18%.*Burn record 10%", head)
     assert "Shown beside" not in body
 
 
@@ -444,31 +461,68 @@ def test_a_constellations_page_opens_up_its_score_into_its_sum():
 
     strip = next(body for body in bodies if 'class="measures"' in body)
     # in pictures, with a short key: each attribute's name and its weight over its share of the bar, the points it
-    # adds under it, the score in a box at the end. Clock not read: its 50% shared out, so station weighs 60%, orbit 40%
+    # adds under it, the score in a box at the end. Clock not read: its 45% shared out, so station weighs 49%, orbit 33%, the burn record 18%
     assert re.search(r"Score \d+ of 100</span>", strip)
-    assert re.search(r'<span class="ss-name">Station</span><span class="ss-w num">60%</span>.*?<span class="ss-pts">\+<b '
-                     r'class="num">\d+</b></span>.*?<span class="ss-name">Orbit</span><span class="ss-w num">40%</span>', strip)
+    assert re.search(r'<span class="ss-name">Station</span><span class="ss-w num">49%</span>.*?<span class="ss-pts">\+<b '
+                     r'class="num">\d+</b></span>.*?<span class="ss-name">Orbit</span><span class="ss-w num">33%</span>.*?'
+                     r'<span class="ss-name">Burn</span><span class="ss-w num">18%</span>', strip)
     assert re.search(r'<div class="ss-total (ok|warn|bad)" aria-hidden="true"><b class="num">\d+</b><small>/100', strip)
     assert "width: its weight" in strip and "filled: satellites that pass" in strip
     # read aloud in full instead
-    assert re.search(r'aria-label="Station held \d+% of its 60% share: [\d.]+ points, Orbit kept \d+% of its 40% share: '
-                     r'[\d.]+ points; score \d+ out of 100, weighed for a regional constellation; 1 not read today', strip)
+    assert re.search(r'aria-label="Station held \d+% of its 49% share: [\d.]+ points, Orbit kept \d+% of its 33% share: '
+                     r'[\d.]+ points, Burn record \d+% of its 18% share: [\d.]+ points; score \d+ out of 100, weighed for a regional constellation; 1 not read today', strip)
 
 
-def test_burns_are_counted_over_the_last_90_days_and_a_flag_matches_where_it_says_what_we_count():
-    import pandas as pd
-    from datetime import datetime, timezone
-    now = datetime(2026, 11, 16, tzinfo=timezone.utc)
-    burns = pd.DataFrame({"satellite": ["A", "A", "B", "C"],
-                          "window_end": pd.to_datetime(["2026-11-10", "2026-09-01", "2026-08-01", "2026-05-01"])})
+def _burn(satellite, days_ago, burn_class, now, counted=True):
+    return {"satellite": satellite, "when": now - pd.Timedelta(days=days_ago), "burn_class": burn_class, "counted": counted}
 
-    assert system_summary._recent_burns(burns, now) == (2, 1)   # 10 Nov and 1 Sep are inside 90 days; the rest not
-    assert system_summary._recent_burns(burns.iloc[0:0], now) is None and system_summary._recent_burns(None) is None
 
-    parts = [{"flag_agrees": (2, 3), "burns": (2, 1)}, {"flag_agrees": (5, 5), "burns": None}]
+def test_a_satellite_passes_the_burn_record_with_no_irregular_burn_in_90_days_and_at_most_a_quarter_in_a_year():
+    from ui import burn_record
+    now = pd.Timestamp("2026-11-16")
+    rows = ([_burn("steady", d, "routine east-west", now) for d in (20, 80, 140, 200)]
+            + [_burn("recent", d, "routine east-west", now) for d in (200, 150, 100, 60)] + [_burn("recent", 30, "response", now)]
+            + [_burn("old", d, "routine east-west", now) for d in (20, 60, 100)] + [_burn("old", 200, "off pattern", now)]
+            + [_burn("many", d, "routine east-west", now) for d in (20, 60)] + [_burn("many", d, "response", now) for d in (150, 200)]
+            + [_burn("few", d, "routine east-west", now) for d in (20, 60)]
+            + [_burn("guess", d, "response", now, counted=False) for d in (10, 20, 30)]   # low confidence: not counted
+            + [_burn("moved", d, "relocation", now, counted=False) for d in (10, 20, 30)]   # planned: neutral
+            + [_burn("past", 400, "routine east-west", now)] * 4)   # outside 365 days
+    care = burn_record.care_of(pd.DataFrame(rows), now)
+
+    assert care["steady"] is True                 # no irregular burn at all
+    assert care["recent"] is False                # one in the last 90 days, though 1 of 5 is under a quarter
+    assert care["old"] is True                    # 1 of 4 is exactly a quarter, and 200 days ago: passes
+    assert care["many"] is False                  # 2 of 4 irregular, both older than 90 days
+    assert care["few"] is None                    # 2 judged burns: not judged
+    assert care.get("guess") is None and care.get("moved") is None and "past" not in care
+
+
+def test_the_burn_record_counts_what_the_burns_were_and_says_too_few_to_rate_under_8():
+    from ui import burn_record
+    now = pd.Timestamp("2026-11-16")
+    rows = ([_burn("A", d, "routine east-west", now) for d in range(10, 330, 40)] + [_burn("A", 5, "response", now)]
+            + [_burn("A", 50, "relocation", now, counted=False), _burn("A", 70, "artefact", now, counted=False),
+               _burn("A", 90, "unexplained", now, counted=False)])
+    record = burn_record.record_of(pd.DataFrame(rows), now)
+
+    assert (record["routine"], record["response"], record["off"], record["planned"], record["open"], record["artefact"]) == (8, 1, 0, 1, 1, 1)
+    assert (record["decided"], record["irregular"]) == (9, 1)
+    assert burn_record.words(record) == "1 of 9 burns irregular (11%, 2–44%)"
+    small = burn_record.record_of(pd.DataFrame(rows[:3] + rows[8:9]), now)
+    assert burn_record.words(small).startswith("too few to rate (1 of 4 burns irregular")
+    assert burn_record.words(None) == "" and burn_record.record_of(None) is None
+    both = burn_record.combine([record, small, None])
+    assert both["decided"] == 13 and both["irregular"] == 2 and both["routine"] == 11
+
+
+def test_a_flag_matches_where_it_says_what_we_count_and_a_constellations_burn_record_adds_its_parts_up():
+    parts = [{"flag_agrees": (2, 3), "burn_record": {**dict.fromkeys(burn_groups.COUNT_KEYS, 0), "routine": 9, "response": 1}},
+             {"flag_agrees": (5, 5), "burn_record": None}]
     whole = system_summary.whole("BeiDou-3", [{**system_summary.summary("NavIC", data.load("NavIC", 90)), **part}
                                               for part in parts])
-    assert whole["flag_agrees"] == (7, 8) and whole["burns"] == (2, 1)
+    assert whole["flag_agrees"] == (7, 8)
+    assert (whole["burn_record"]["decided"], whole["burn_record"]["irregular"]) == (10, 1)
 
 
 def test_an_opened_card_goes_to_the_top_after_any_opened_before_it_and_a_closed_one_goes_back():
@@ -498,7 +552,7 @@ def test_a_constellation_of_two_parts_has_one_score_shown_alike_everywhere_with_
 
     def part(name, good, bad):
         sats = [sat(True)] * good + [sat(False)] * bad
-        return {"name": name, "sats": sats, "checked": 0, "burns": None, "flag_agrees": (0, 0), "healthy": good,
+        return {"name": name, "sats": sats, "checked": 0, "burn_record": None, "flag_agrees": (0, 0), "healthy": good,
                 "total": good + bad, "settling": {}, "flagged_healthy": None,
                 **system_summary._measures(sats, name)}
 
@@ -510,3 +564,32 @@ def test_a_constellation_of_two_parts_has_one_score_shown_alike_everywhere_with_
     assert 'class="ps-box here ok"><small>MEO</small><b class="num">100</b>' in shown
     assert "BeiDou-3&#x27;s score counts every satellite of its parts once" in shown
     assert three_measures.part_scores(system_summary.whole("NavIC", [part("NavIC", 3, 1)])) == ""
+
+
+def test_summary_counts_the_burn_record_over_the_satellites_it_judged():
+    summary = system_summary.summary("NavIC", data.load("NavIC", 90))
+    judged = [sat["care"] for sat in summary["sats"] if sat["care"] is not None]
+
+    assert summary["care"] == (sum(judged), len(judged)) and len(judged) > 0
+    assert summary["burn_record"] and all(sat["care"] is None for sat in summary["sats"] if sat["group"] == "set aside")
+
+
+def test_a_constellation_without_a_burn_record_counts_three_measures_and_says_nothing_of_it():
+    from ui import three_measures
+    from views import home
+    rates = [("clock", 100.0, .4), ("orbit", 90.0, .35), ("station", 80.0, .25)]
+    system = {"name": "Galileo", "score": 94, "score_parts": rates, "burn_record": None}
+
+    assert "not read" not in three_measures.score_sum(system) and "Burn" not in three_measures.score_sum(system)
+    assert [key for key, _ in three_measures._read(system)] == ["orbit", "station", "clock"]
+    tip = home._how_scored(system, 0)
+    assert "3 measures" in tip and "Burn record" not in tip and "could not be read" not in tip and "Clock steady 40%" in tip
+    # where burns are found but the burn record could not be read, it is counted as not read
+    both = {**system, "burn_record": {**dict.fromkeys(burn_groups.COUNT_KEYS, 0), "routine": 9}}
+    assert "1 not read today" in three_measures.score_sum(both) and "From 3 of 4 today" in home._how_scored(both, 0)
+
+
+def test_a_set_aside_satellite_says_why_it_has_no_burn_record():
+    from ui import three_measures
+    assert three_measures._care({"group": "set aside", "care": None})["note"] == "set aside: not judged"
+    assert "fewer than 3 judged burns" in three_measures._care({"group": "GEO", "care": None})["note"]

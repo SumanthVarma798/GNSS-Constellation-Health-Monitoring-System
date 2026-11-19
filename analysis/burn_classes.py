@@ -1,6 +1,6 @@
 """What kind of burn each detected manoeuvre was: planned, routine, a response, off its pattern, or not a burn at all.
 
-Pure analysis: no score reads this yet and no page shows it. Input is the detector's burns table
+Pure analysis; the constellation score's burn record and the burn ledger pages read it (ui/burn_record.py). Input is the detector's burns table
 (analysis/bundled_run.burns_detailed) and the bundled history; every threshold is named in
 analysis/burn_class_settings.py. Rules run in order and the first match wins; each result carries a confidence and the
 tests it passed or failed.
