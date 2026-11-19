@@ -94,9 +94,6 @@ else:
             for n, story in enumerate(told[:STORIES_SHOWN]):
                 with st.container(key=f"item_story_{n}"):
                     st.html(shelf.story_html(story))
-        with st.container(key="shelfbody_stories_link"):
-            st.page_link("views/news.py", label="Every story, and who told it, on the News page",
-                         icon=":material/arrow_forward:")
 
     scope = f" about {jump_constellation}" if story_parts else ""
     reveal.section("library_stories", "Newest stories",
