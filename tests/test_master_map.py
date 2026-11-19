@@ -6,7 +6,7 @@ import pytest
 
 from data.tle_cache import DATA_DIR
 from evidence.master_map import (agreement, display_name, holders_of, identifiers, orbit_feed_checked, orbit_feed_names,
-                                 signal_ids_of, summary)
+                                 signal_id_changes, signal_ids_of, summary)
 from evidence.registry_tables import read_table
 from evidence.settings import (
     MAP_ACCENT,
@@ -256,6 +256,33 @@ def test_holders_of_a_signal_id_nobody_held_is_empty():
     assert holders_of("C99", HISTORY, [], [], []) == []
 
 
+# --- signal_id_changes ---
+
+def _kinds(rows):
+    return {(item["signal_id"], c["from"], c["to"]): (c["kind"], c["then"])
+            for item in signal_id_changes(rows) for c in item["changes"]}
+
+
+def test_signal_id_changes_reads_a_swap_a_retirement_a_reassignment_and_no_reason():
+    rows = [period("A", "C59", "2018-11-01", "2026-03-31"), period("A", "C62", "2026-03-31"),        # A and B swap
+            period("B", "C62", "2023-05-17", "2026-03-31"), period("B", "C59", "2026-03-31"),
+            period("D", "C01", "2010-01-16", "2020-03-31"), period("E", "C01", "2020-03-31"),        # D retires
+            period("F", "C18", "2019-05-23", "2020-03-01"), period("F", "C40", "2020-03-20"),        # F moves on
+            period("G", "C18", "2020-03-02"),
+            period("H", "G04", "2015-01-01", "2016-01-01"), period("H", "G04", "2017-01-01"),       # H returns later
+            period("J", "G04", "2016-02-01", "2016-09-01"),
+            period("K", "C30", "2007-04-13", "2012-06-30")]                                          # never changed
+    assert _kinds(rows) == {("C59", "A", "B"): ("swap", "C62"), ("C62", "B", "A"): ("swap", "C59"),
+                            ("C01", "D", "E"): ("replaced", ""), ("C18", "F", "G"): ("reassigned", "C40"),
+                            ("G04", "H", "J"): ("unknown", "G04"), ("G04", "J", "H"): ("replaced", "")}
+    assert "C30" not in {item["signal_id"] for item in signal_id_changes(rows)}
+
+
+def test_signal_id_changes_skips_an_id_one_spacecraft_held_twice():
+    rows = [period("A", "C19", "2017-11-05", "2018-06-13"), period("A", "C19", "2018-11-15")]
+    assert signal_id_changes(rows) == []
+
+
 # --- agreement ---
 
 def line_for(sat, catalogue_row):
@@ -456,3 +483,13 @@ def test_real_text_has_no_dash_characters_or_emoji(real):
                   if k in ("scheme", "remark")]
     shown += [line["remark"] for line in agreement(real["satellites"], real["catalogue"])]
     assert not [text for text in shown if "–" in text or "—" in text or not text.isascii()]
+
+
+def test_an_id_handed_back_and_forth_is_not_a_swap():
+    from evidence.master_map import signal_id_changes
+    rows = [{"svn": "B", "signal_id": "X", "valid_from": "2026-03-01", "valid_to": "2026-03-28", "note": ""},
+            {"svn": "A", "signal_id": "X", "valid_from": "2026-03-29", "valid_to": "2026-03-30", "note": ""},
+            {"svn": "B", "signal_id": "X", "valid_from": "2026-03-31", "valid_to": "", "note": ""},
+            {"svn": "A", "signal_id": "X", "valid_from": "2026-03-31", "valid_to": "", "note": ""}]
+    kinds = [c["kind"] for found in signal_id_changes(rows) for c in found["changes"]]
+    assert "swap" not in kinds

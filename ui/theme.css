@@ -933,6 +933,47 @@ details.sys.card { display: block; padding: 0; }
   .mm-sys .sys-id { flex-basis: 100%; }
   .head.mm-head:has(.right) .muted { flex-basis: 100%; order: 3; }
 }
+/* Signal IDs that changed spacecraft (ui/signal_id_history.py): a timeline per signal ID, a bar per stretch a spacecraft
+   held it in the constellation's colour (--c), and a round mark ending where it passed on. Each kind of change has its own
+   glyph; "reason not recorded" is a ring, not a disc, so colour is never alone. */
+.sx .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.sx-key { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.sx-k { display: flex; }
+.sx-k > .tt, .sx-k.total { flex: 1; }
+.sx-k .tt-trigger, .sx-k.total { display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; height: 100%; padding: 10px 14px;
+  border-radius: var(--r); background: var(--platform); box-shadow: var(--raised-sm); text-decoration: none; }
+.sx-k.total { flex-direction: column; align-items: flex-start; justify-content: center; }
+.sx-k b.num { font-size: var(--fs-section); line-height: 1.1; }
+.sx-g { display: inline-grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--ink);
+  color: var(--platform); font-size: 12px; font-weight: 700; line-height: 1; }
+.unknown .sx-g { background: var(--platform); color: var(--muted); box-shadow: inset 0 0 0 1.5px var(--muted); }
+.sx-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); align-items: start; gap: 16px; margin-bottom: 18px; }
+.sx-card { display: flex; flex-direction: column; gap: 14px; padding: 16px 18px; }
+.sx-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.sx-tallies { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-left: auto; color: var(--muted); font-size: var(--fs-small); }
+.sx-tally { display: inline-flex; align-items: center; gap: 5px; } .sx-tally b { color: var(--ink); }
+.sx-tally .sx-g { width: 16px; height: 16px; font-size: 10px; }
+.sx-lanes { display: grid; grid-template-columns: minmax(56px, max-content) minmax(0, 1fr); gap: 6px 12px; align-items: center; }
+.sx-lane { display: contents; }
+.sx-who { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.sx-who .small { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sx-track { position: relative; height: 22px; border-radius: 8px; background: var(--well); box-shadow: var(--pressed); }
+.sx-at { position: absolute; top: 0; bottom: 0; }
+.sx-at > .tt, .sx-at .tt-trigger { display: block; width: 100%; height: 100%; text-decoration: none; }
+.sx-bar { top: 5px; bottom: 5px; }
+.sx-bar .tt-trigger { border-radius: 6px; background: var(--c); }
+.sx-bar.alt .tt-trigger { opacity: .5; }
+/* The mark sits just before the change, so the new holder's bar, however short, stays in view after it. */
+.sx-mk { z-index: 1; width: 20px; margin-left: -21px; top: 1px; bottom: 1px; }
+.sx-mk .tt-trigger { display: grid; place-items: center; border-radius: 50%; }
+.sx-axis { position: relative; height: 16px; color: var(--muted); font-size: var(--fs-small); }
+.sx-axis span { position: absolute; top: 0; transform: translateX(-50%); } .sx-axis .end { right: 0; transform: none; }
+.sx-list { display: grid; gap: 22px; }
+.sx-gh { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+@media (max-width: 479.98px) {
+  .sx-card { padding: 14px; } .sx-tallies { margin-left: 0; } .sx-k.total { grid-column: 1 / -1; }
+  .sx-card .sx-who .small { display: none; }
+}
 /* ==== end Master map ==== */
 
 /* ==== Contact form (ui/contact.py): inside a section (ui/reveal.py), padded like its body, closed to nothing ==== */

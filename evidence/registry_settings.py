@@ -14,6 +14,11 @@ REGISTRY_SATELLITE_COLUMNS = ["svn", "constellation", "block", "cospar_id", "cat
 
 REGISTRY_SIGNAL_IDS_FILE = "signal_ids.csv"
 REGISTRY_SIGNAL_ID_COLUMNS = ["svn", "signal_id", "valid_from", "valid_to", "note"]
+# How a signal ID passing to another spacecraft is told apart (evidence/master_map.py signal_id_changes): two
+# spacecraft that each take the other's signal ID within SWAP_DAYS of the change swapped them; an old holder that takes
+# another signal ID within MOVE_DAYS was reassigned; one that holds none afterwards was retired and replaced.
+SIGNAL_ID_SWAP_DAYS = 7
+SIGNAL_ID_MOVE_DAYS = 30
 
 # Built by scripts/build_registry.py: satellites CelesTrak's GNSS group lists before the IGS file does, in
 # satellites.csv's columns, each under a stand-in SVN (system letter, "-", catalogue number). A row leaves when the
