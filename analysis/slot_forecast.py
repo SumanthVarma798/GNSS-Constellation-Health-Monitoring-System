@@ -149,8 +149,13 @@ def forecast(x0, v0, acc, own_half_width, dashboard_half_width, today, dashboard
         x_ideal = position(t_ideal, x0, v0, acc)
         v_ideal = v0 + (acc * t_ideal)
         outward = _sign(v_ideal) or _sign(x_ideal) or _sign(acc) or 1.0
-        delta_mag = 4.0 * math.sqrt(abs(acc) * own_half_width)
-        delta = -outward * delta_mag
+        if acc * outward > 0:
+            # pulled outward: send it back with the speed whose parabola peaks at the far edge, 2√(|a|h), whatever
+            # speed it arrives with (on the routine parabola it arrives at that speed, so Δλ̇ = 4√(|a|h))
+            delta = -outward * 2.0 * math.sqrt(abs(acc) * own_half_width) - v_ideal
+        else:
+            # pulled inward but still leaving: stop it at the edge, and the pull brings it back across its box
+            delta = -v_ideal
         rows.append(
             _burn_row(
                 "ideal",

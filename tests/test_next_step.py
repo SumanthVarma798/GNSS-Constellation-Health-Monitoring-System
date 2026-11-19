@@ -206,3 +206,17 @@ def test_outlook_draws_a_due_satellite_with_its_edge_and_counts_it():
     assert 'class="ol-edge"' in html and 'class="ol-ideal"' in html and 'class="ol-last"' in html
     assert '<b class="num">1</b><span>E-W manoeuvres due' in outlook.figures([f], NOW)
     assert "box" not in html.lower().replace("box-", "")
+
+
+def test_a_weak_satellite_far_from_its_edge_is_not_due():
+    from ui import outlook
+    f = {"name": NAME, "status": "weak", "pos": 0.1, "box": 0.5, "edge_days": 200, "as_of": NOW, "confirm": False}
+    assert "1 of 1" not in N.constellation_line([f], NOW)[0]
+    assert '<b class="num">0</b><span>E-W manoeuvres due' in outlook.figures([f], NOW)
+    past = {**f, "pos": 0.6, "edge_days": 0}
+    assert '<b class="num">1</b><span>E-W manoeuvres due' in outlook.figures([past], NOW)
+
+
+def test_settling_without_a_recorded_manoeuvre_still_has_a_line():
+    text, tone, _ = N.satellite_line({"name": NAME, "status": "settling", "as_of": NOW}, NOW)
+    assert text.startswith(f"{NAME}: next step follows") and tone == "accent"
