@@ -979,3 +979,48 @@ details.sys.card { display: block; padding: 0; }
 @media (max-width: 639.98px) {
   .lm-row { grid-template-columns: 1fr; } .lm-sum { text-align: left; }
 }
+
+/* ---- the Overview's header (ui/three_measures.py header): the score large, the count beside it, small chips ---- */
+.ovh { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; margin: 8px 0 16px; }
+.ovh-score { flex: none; display: grid; justify-items: center; min-width: 92px; padding: 10px 14px; border-radius: 18px;
+             background: var(--platform); border: 1px solid var(--edge); box-shadow: var(--raised-sm); }
+.ovh-score b { font-size: 36px; line-height: 1; } .ovh-score small { color: var(--muted); font-size: var(--fs-small); }
+.ovh-score span { margin-top: 2px; color: var(--muted); font-size: 11px; }
+.ovh-score.ok b { color: var(--ok); } .ovh-score.warn b { color: var(--warn); } .ovh-score.bad b { color: var(--bad); } .ovh-score.idle b { color: var(--idle); }
+.ovh-main { display: grid; gap: 8px; flex: 1 1 200px; min-width: 0; }
+.ovh-count { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; }
+.ovh-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.ovh-meta .tt-trigger { text-decoration: none; }
+.chip .ic { width: 14px; height: 14px; }
+.chip.clk b { color: inherit; }
+a.chip.ext { text-decoration: none; cursor: pointer; }
+a.chip.ext:is(:hover, :focus-visible) { background: var(--platform); box-shadow: var(--raised-sm); }
+.clk-mark { display: inline-flex; margin-left: 6px; vertical-align: -3px; color: var(--muted); } .clk-mark .ic { width: 16px; height: 16px; }
+.tile .n .tt-trigger, .tile .low .tt-trigger { text-decoration: none; }
+.tile .low .chip { white-space: normal; max-width: 100%; }   /* a long term wraps inside a narrow tile */
+.lb.ovs { margin: 18px 0 16px; }
+.lb-seg.st.ok, .lb-sw.st.ok { background: var(--ok); } .lb-seg.st.warn, .lb-sw.st.warn { background: var(--warn); }
+.lb-seg.st.bad, .lb-sw.st.bad { background: var(--bad); }
+.lb-seg.st.crit, .lb-sw.st.crit { background: repeating-linear-gradient(45deg, var(--bad) 0 4px, var(--platform) 4px 6px); }
+.lb-seg.st.crit b { background: var(--bad); }
+.card-chips { display: flex; flex-wrap: wrap; gap: 6px; } .card-chips .tt-trigger { text-decoration: none; }
+/* a measure over its gauge (ui/surfaces.py gauge): the allowed range shaded, the value a dot in its status colour; past
+   the scale an arrow pointing out. The figures behind it open in the shared tooltip. */
+table.grid td .tt-trigger { display: block; text-decoration: none; }
+.gc { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; }
+.gc small { color: var(--muted); font-size: 11px; font-weight: 600; }
+.gg { --c: var(--idle); position: relative; display: block; width: 100%; min-width: 84px; max-width: 150px; height: 10px; margin-top: 6px;
+      border-radius: 999px; background: var(--well); box-shadow: var(--pressed); outline: 1px solid var(--edge); }
+.gg.ok { --c: var(--ok); } .gg.warn { --c: var(--warn); } .gg.bad { --c: var(--bad); } .gg.idle { --c: var(--ink); }
+.gg em { position: absolute; top: 2px; bottom: 2px; border-radius: 999px; background: color-mix(in srgb, var(--ok) 35%, transparent); }
+.gg b { position: absolute; top: 1px; bottom: 1px; width: 1px; background: var(--muted); }
+.gg i { position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--c); }
+.gg i.hi, .gg i.lo { width: 0; height: 0; border-radius: 0; background: none; border-top: 6px solid transparent; border-bottom: 6px solid transparent; margin-top: -6px; }
+.gg i.hi { margin-left: -9px; border-left: 9px solid var(--c); } .gg i.lo { margin-left: 0; border-right: 9px solid var(--c); }
+/* the flat slot belt's spots (ui/figures/slot_belt.py): over each ring and dot, each opens the shared tooltip */
+.sbelt-scroll { overflow-x: auto; } .sbelt { position: relative; min-width: 620px; }
+.sbelt-spot { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; }   /* no transform: it would hold the fixed card inside it */
+.sbelt-spot .tt-trigger { display: block; width: 100%; height: 100%; border-radius: 50%; text-decoration: none; }
+.sbelt-spot .tt-trigger:hover { box-shadow: 0 0 0 2px var(--accent); }
+/* a picture's two copies (ui/surfaces.py picture): the one in the page's theme shows */
+img.pic-dark { display: var(--pic-dark, block); } img.pic-light { display: var(--pic-light, none); }

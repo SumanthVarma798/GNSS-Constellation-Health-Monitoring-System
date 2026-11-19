@@ -18,6 +18,7 @@ from config.meo_nominal import MEANINGS, NOMINAL, PLANE_MEANINGS
 from ui import official_status, orbit_age, orbit_section, palette, reveal, shell, signals_view, surfaces, tooltip
 from ui.data import SATELLITES
 from ui.figures.plane_strip import plane_strip
+from ui.overview_settings import PART_TERMS
 
 HEALTHY_FROM = STATUS_FROM[0][1]
 VIEWS = ["Planes", "Satellites"]   # the switch over the planes, kept in session_state["meo_view"]
@@ -84,21 +85,37 @@ def _value(measure, value):
     return f"{value:+.1f}°" if measure == "plane" else f"{value:.1f}°"
 
 
-def _should_be_table(rows):
-    """Every measure of every satellite against its limit, each coloured by its part's band."""
-    head = "".join(f"<th>{tooltip.tip(LABELS[m], MEANINGS[m])}</th>" for m in LABELS)
+# Each measure's tolerance in config/meo_nominal.py NOMINAL (the spacing check allows twice its tolerance), for the gauges.
+TOLERANCE = {"plane": ("plane_tolerance_deg", 1), "spacing": ("spacing_tolerance_deg", 2),
+             "inclination": ("inclination_tolerance_deg", 1), "height": ("semi_major_axis_tolerance_km", 1)}
+
+
+def _gauge_cell(system, row, measure, check):
+    """One measure as a ui.measures cell: the value over a gauge of its allowed range, the limit in the tooltip."""
+    _, should, value, _, score = check
+    status = surfaces.band(score)
+    if measure == "eccentricity" and row["plane"] != EXTENDED:
+        band, limit = {"low": 0.0, "high": should, "floor": True}, f"≤ {_value(measure, should)}"
+    else:
+        key, times = (("extended_eccentricity_tolerance", 1) if measure == "eccentricity" else TOLERANCE[measure])
+        tol = NOMINAL[system][key].value * times
+        band, limit = {"low": should - tol, "high": should + tol}, f"{_value(measure, should)} ± {_value(measure, tol).lstrip('+')}"
+    return {"now": _value(measure, value), "should": limit, "status": status, "note": f"part score {score:.0f} of 100",
+            "gauge": {"value": value, **band}}
+
+
+def _should_be_table(system, rows):
+    """Every measure of every satellite as its value over a gauge of its allowed range, coloured by its part's band;
+    each heading is the technical term, defined in the shared tooltip."""
+    columns = [("Satellite", "")] + [(PART_TERMS[LABELS[m]].capitalize() if m != "plane" else PART_TERMS["Plane"],
+                                      MEANINGS[m].split(": ", 1)[-1]) for m in LABELS]
     lines = []
     for row in rows:
         checks = {check[0]: check for check in row["checks"]}
-        cells = "".join(
-            '<td class="idle">&ndash;</td>' if m not in checks else
-            f'<td class="{surfaces.band(checks[m][4])}">{_value(m, checks[m][2])}'
-            f'<span class="muted"> / {"≤ " if m == "eccentricity" and row["plane"] != EXTENDED else ""}'
-            f'{_value(m, checks[m][1])}</span></td>' for m in LABELS)
-        name = f'{escape(row["name"])} <span class="muted">{escape(row["signal_id"])}</span>'
-        lines.append(f"<tr><th>{name}</th>{cells}</tr>")
-    return (f'<p class="small">Each cell: the measured value, then its limit.</p>'
-            f'<div class="sb-wrap"><table class="sb"><tr><th></th>{head}</tr>{"".join(lines)}</table></div>')
+        lines.append((f'{row["name"]} {row["signal_id"]}',
+                      [_gauge_cell(system, row, m, checks[m]) if m in checks else {"now": "–", "should": "",
+                       "status": "idle", "note": ""} for m in LABELS]))
+    return surfaces.table(columns, lines, head_tips=True)
 
 
 def _diagnostics_table(rows):
@@ -197,18 +214,18 @@ def _plane_card(plane, members, drift):
                            title=f"Plane {plane} · {len(members)}")
 
 
-def page(name, result):
-    """The count, the history line, the planes (cards or tiles, by the switch), the 3D view, then measured against
-    limits in its section, open."""
+def page(name, result, measured):
+    """The header (the score, the count, the scores' bar), the history line, the planes (cards or tiles, by the
+    switch), the 3D view, then measured against limits in its section, open. measured: ui.system_summary's summary."""
+    from ui import three_measures   # it reads this module's labels
+
     tags = orbit_age.tags(name, result)
     shown = tiles(result, tags)
     healthy = sum(ok for _, ok, _ in shown.values())
     today = datetime.now(timezone.utc).date()
-    surfaces.show(f'<div class="head"><span class="big num">{healthy} of {len(shown)}</span>'
-                  '<span class="muted">healthy and in step</span></div>')
-    official = official_status.line(name)
-    if official:
-        surfaces.show(official)
+    surfaces.show(three_measures.header(measured, healthy, len(shown), "healthy and in step",
+                                        official_html=official_status.line(name))
+                  + three_measures.states(result["health"]))
     surfaces.show(surfaces.notice(result["history_note"], "idle"))
     orbit_age.show(name, result)
     signals_view.show(name)
@@ -232,7 +249,7 @@ def page(name, result):
     reveal.section("meo_should_be", "Measured against limits, every satellite",
                    f"{reveal.count(len(in_order), 'satellite')} · "
                    + (f"{look} need{'s' if look == 1 else ''} a look" if look else "all within limits"),
-                   _should_be_table(in_order) + f'<ul class="small meanings">{_sources(name)}</ul>', open=True)
+                   _should_be_table(name, in_order) + f'<ul class="small meanings">{_sources(name)}</ul>', open=True)
     fastest = max(in_order, key=lambda row: abs(row["along_track_km_day"]))
     reveal.section("meo_diagnostics", "Along-track and tilt, every satellite",
                    f"diagnostics, not scored · fastest along-track: {fastest['name']} "

@@ -15,20 +15,21 @@ import streamlit as st
 from analysis.commissioning import SETTLING_DAYS
 from config.config import TRACKED_NOT_IN_REGISTRY
 from evidence.registry_tables import judged_by_plane, left_out_notice, new_on_dashboard
-from ui import (checks, data, limits, measures, meo_overview, official_status, orbit_age, orbit_section,
+from ui import (burn_ledger, checks, data, limits, measures, meo_overview, official_status, orbit_age, orbit_section,
                 marks, next_step_data, palette, reveal, shell, signals_view, surfaces, systems, three_measures, time_range, tooltip)
 from ui.data import SATELLITES
 from ui.figures.constellation_3d import slot_legend
 from ui.figures.slot_rows import as_number, slot_words
 from ui.orbit_section import CHIP_STATUS, PARTS
+from ui.overview_settings import SLOT_CONFIRM, SLOT_CONFIRM_WHY
 from ui.picker import picker
 from ui.system_summary import _stage, in_slot_and_healthy, summary, whole
-STATUS_CHIP = {"Healthy": "ok", "Fair": "warn", "Degraded": "bad", "Critical": "bad"}
-CLASS_COLUMNS = [("Satellite", ""), ("Type", "From the mean tilt"), ("Mean inclination", "In the window"),
-                 ("Mean height", "In the window"), ("Drift now", "Per day")]
+CLASS_COLUMNS = [("Satellite", ""), ("Type", "From the mean inclination: GEO under 10°"),
+                 ("Mean inclination", "Over the window"), ("Mean altitude", "Over the window"),
+                 ("Longitude drift rate", "Newest, degrees a day")]
 
 
-def _tile(health, slot, age_html=""):
+def _tile(health, slot, age_html="", name_html="", confirm=False):
     """(tile html, whether it counts as healthy and in its slot) for one health row and its slot row."""
     score = as_number(health.get("Overall Score"))
     scored = [(label, as_number(health.get(column))) for label, column in PARTS]
@@ -37,33 +38,36 @@ def _tile(health, slot, age_html=""):
     html = surfaces.tile(
         str(health["Satellite"]), str(health.get("Type", "")), score,
         re.sub(r"^[^A-Za-z]+", "", str(health.get("Health Status", ""))),
-        slot_words(slot), CHIP_STATUS[state], min(scored, key=lambda part: part[1]) if scored else None,
-        age_html=age_html)
+        SLOT_CONFIRM if confirm else slot_words(slot), "idle" if confirm else CHIP_STATUS[state],
+        min(scored, key=lambda part: part[1]) if scored else None, age_html=age_html, name_html=name_html)
     return html, in_slot_and_healthy(score, state)
 
 
-def _tiles(result, tags=None):
+def _tiles(result, tags=None, name_marks=None, confirm=()):
     """Everything the page draws from one constellation's result.
 
     Returns {name: (tile html, counts as healthy, health row or None)} in the order shown, and the slot rows
-    (with the satellites set aside) for the picture. Satellites set aside have no health row.
+    (with the satellites set aside) for the picture. Satellites set aside have no health row. name_marks:
+    {satellite: a mark after its name} (the clock record's); confirm: the satellites whose slot is to confirm, said so
+    on their tile and in the slot picture instead of "off its slot".
     """
     positions_rows = orbit_section.attempt("slot rows", orbit_section.positions_and_rows, result["health"],
                                            result["set_aside"], orbit_section.designated_longitude, result["history"])
-    rows = positions_rows[1] if positions_rows else []
+    rows = [{**row, "confirm": row["name"] in confirm} for row in (positions_rows[1] if positions_rows else [])]
     slots = {row["name"]: row for row in rows}
-    tags = tags or {}
+    tags, name_marks = tags or {}, name_marks or {}
     tiles = {}
     for health in result["health"].to_dict("records"):
-        html, healthy = _tile(health, slots.get(str(health["Satellite"])), tags.get(str(health["Satellite"]), ""))
-        tiles[str(health["Satellite"])] = (html, healthy, health)
+        name = str(health["Satellite"])
+        tiles[name] = (*_tile(health, slots.get(name), tags.get(name, ""), name_marks.get(name, ""), name in confirm),
+                       health)
     for name in result["set_aside"]:
         html = surfaces.tile(name, slot=palette.SLOT_LEFT, slot_status=CHIP_STATUS[palette.SLOT_LEFT],
-                             age_html=tags.get(name, ""))
+                             age_html=tags.get(name, ""), name_html=name_marks.get(name, ""))
         tiles[name] = (html, False, None)
     for name in result.get("moving", {}):
         html = surfaces.tile(name, slot=_stage(result, name), slot_status="accent", unscored="new, not scored yet",
-                             age_html=tags.get(name, ""))
+                             age_html=tags.get(name, ""), name_html=name_marks.get(name, ""))
         tiles[name] = (html, False, None)
     return tiles, rows
 
@@ -102,21 +106,17 @@ def _unplaced(health):
             if as_number(h.get("Designated Lon (°)")) is not None and as_number(h.get("Lon Deviation Score")) is None]
 
 
-def _period(result, window, window_days, today):
-    """Status counts, the window and its records, the year the scores read, and how the score is made."""
-    chips = "".join(surfaces.chip(f"{n} {word.lower()}", STATUS_CHIP[word])
-                    for word, n in measures.status_counts(result["health"]))
+def _meta(result, window, window_days, today):
+    """A small muted chip for the window ("90 d · 1,381 records"), its dates and the year the scores read in the shared
+    tooltip."""
     start = today - pd.Timedelta(days=window_days)
     spans = [str(p).split(" to ") for p in result["health"].get("Pattern Analysis Period", []) if " to " in str(p)]
-    year = (f'<span>scores read {_day(min(a for a, _ in spans))} to {_day(max(b for _, b in spans))}</span>'
-            if spans else "")
     shown = window[~window["satellite"].isin([*result["set_aside"], *result.get("moving", {})])]
-    legend = tooltip.legend(
-        [("var(--fill)", f"{label} {weight}%") for label, weight in limits.SCORE_WEIGHTS]
-        + [(f"var(--{STATUS_CHIP[word]})", f"{word} from {low}" if low else f"{word} under {limits.STATUS_FROM[i - 1][1]}")
-           for i, (word, low) in enumerate(limits.STATUS_FROM)], label="How the score is made")
-    surfaces.show(f'<div class="facts">{chips}<span>{time_range.words(window_days)}: {_day(start)} to {_day(today)}</span>'
-                  f'<span>{len(shown):,} orbit records</span>{year}{legend}</div>')
+    items = [("", "Window", f"{_day(start)} to {_day(today)}"), ("", "Orbit records", f"{len(shown):,}")]
+    if spans:
+        items.append(("", "Scores read", f"{_day(min(a for a, _ in spans))} to {_day(max(b for _, b in spans))}"))
+    return tooltip.tip_html(surfaces.chip(f"{window_days} d · {len(shown):,} records", "idle"),
+                            tooltip.glance(time_range.words(window_days), items), key="overview_meta")
 
 
 def _day(value):
@@ -131,11 +131,21 @@ def _types(names, result, classes):
     return {n: of.get(n) or by_tilt.get(n, "Unclassified") for n in names}
 
 
-def _table_rows(chosen, params, window):
-    """(name, cells) for each (constellation, result, health row), with the drift spread over the window."""
-    spread = measures.spreads(window)
-    return [(str(h["Satellite"]), measures.row(h, c, params, r["history"], spread.get(str(h["Satellite"]))))
-            for c, r, h in chosen]
+def _table_rows(chosen, params, window, confirm=None):
+    """(name, cells) for each (constellation, result, health row), with the drift spread over the window. confirm:
+    {satellite: degrees kept from the slot in our table} for those whose slot is to confirm: their mean longitude says
+    so instead of "outside"."""
+    spread, confirm = measures.spreads(window), confirm or {}
+    out = []
+    for c, r, h in chosen:
+        name = str(h["Satellite"])
+        cells = measures.row(h, c, params, r["history"], spread.get(name))
+        if name in confirm:
+            lon = cells[2]
+            cells[2] = {**lon, "status": "idle", "word": "to confirm",
+                        "note": " · ".join(filter(None, [lon["note"], SLOT_CONFIRM_WHY.format(off=confirm[name])]))}
+        out.append((name, cells))
+    return out
 
 
 def _measures(key, rows, title="Measured against limits"):
@@ -144,7 +154,8 @@ def _measures(key, rows, title="Measured against limits"):
     look = sum(any(c["status"] in ("warn", "bad") for c in cells) for _, cells in rows)
     summary = f"{reveal.count(len(rows), 'satellite')} · " + (f"{look} need{'s' if look == 1 else ''} a look" if look
                                                               else "all within limits")
-    reveal.section(key, title, summary, surfaces.table([("Satellite", "")] + measures.COLUMNS, rows), open=True)
+    reveal.section(key, title, summary, surfaces.table([("Satellite", "")] + measures.COLUMNS, rows, head_tips=True),
+                   open=True)
 
 
 def _classes_table(classes):
@@ -153,7 +164,7 @@ def _classes_table(classes):
                               cell("–" if c["tilt"] is None else f"{c['tilt']:.3f}°"),
                               cell("–" if c["height"] is None else f"{c['height']:,.1f} km"),
                               cell("–" if c["drift"] is None else f"{c['drift']:+.4f}°")]) for c in classes]
-    return surfaces.table(CLASS_COLUMNS, rows)
+    return surfaces.table(CLASS_COLUMNS, rows, head_tips=True)
 
 
 def _slot_picture(rows, result, name):
@@ -162,7 +173,8 @@ def _slot_picture(rows, result, name):
     with switch:
         view = shell.segment("slot_view", ["Flat", "3D"], label="View")
     if view == "Flat":   # the 3D view carries its own key under the picture
-        legend.html(f'<div class="right">{tooltip.legend(slot_legend(), "Slot legend")}</div>')
+        confirm = [(palette.IDLE, f"{SLOT_CONFIRM}: kept steadily off the slot in our table; drawn with a ?")]
+        legend.html(f'<div class="right">{tooltip.legend(slot_legend() + confirm, "Slot legend")}</div>')
     orbit_section.render_belt(rows, view, result["history"], result["health"], name)
 
 
@@ -189,26 +201,30 @@ def _system_line(name, window_days, params):
 
 
 def _next_step(name, result, params):
-    """Show the constellation's "what should happen next" line; return {satellite: tile line} for the tiles. The look
-    ahead is extra: when it fails the page stands without it and the inbox says so."""
+    """Show the constellation's "what should happen next" line; return ({satellite: tile line} for the tiles,
+    {satellite: degrees kept from its table slot} for those whose slot is to confirm). The look ahead is extra: when it
+    fails the page stands without it and the inbox says so."""
     try:
         surfaces.show(next_step_data.outlook_html(name, result, params))
-        return next_step_data.tile_tags(name, result, params)
+        forecasts = next_step_data.look_ahead(name, result, params).get("forecasts", {})
+        confirm = {n: abs((f["station_lon"] - f["slot"] + 180) % 360 - 180)
+                   for n, f in forecasts.items() if f.get("confirm")}
+        return next_step_data.tile_tags(name, result, params), confirm
     except Exception as error:
         surfaces.notice(f"Next steps could not be worked out: {type(error).__name__}: {error}", "warn")
-        return {}
+        return {}, {}
 
 
 def constellation(name, window_days, params):
-    """One constellation: the count, the tiles per orbit type, the slot picture, then the details: each orbit type's
-    table, what the checks found, how each satellite was classed."""
+    """One constellation: one header (the score, the count, the scores' bar, the burn record), the tiles per orbit
+    type, the slot picture, then the details: each orbit type's table, what the checks found, how each satellite was
+    classed."""
     result = data.load(name, window_days, params)
     surfaces.show(_system_line(name, window_days, params))
-    ahead = _next_step(name, result, params)   # what should happen next, under the system line
+    ahead, confirm = _next_step(name, result, params)   # what should happen next, under the system line
     measured = summary(name, result, data.orbit_gap())
-    surfaces.show(three_measures.strip(measured))   # the three measures, declared before the count
     if judged_by_plane(name):   # judged by orbital plane, not longitude slot
-        meo_overview.page(name, result)
+        meo_overview.page(name, result, measured)
         three_measures.section(measured)
         return
     today = pd.Timestamp(datetime.now(timezone.utc).date())
@@ -217,14 +233,12 @@ def constellation(name, window_days, params):
     tags = orbit_age.tags(name, result)
     for satellite, html in ahead.items():   # a short line on the tile of each satellite with something due soon
         tags[satellite] = tags.get(satellite, "") + html
-    tiles, rows = _tiles(result, tags)
+    tiles, rows = _tiles(result, tags, three_measures.clock_marks(name), confirm)
     healthy = sum(healthy for _, healthy, _ in tiles.values())
-    surfaces.show(f'<div class="head"><span class="big num">{healthy} of {len(tiles) - len(result.get("moving", {}))}</span>'
-                  '<span class="muted">healthy and in their slot</span></div>')
-    official = official_status.line(name)
-    if official:
-        surfaces.show(official)
-    _period(result, window, window_days, today)
+    surfaces.show(three_measures.header(measured, healthy, len(tiles) - len(result.get("moving", {})),
+                                        "healthy and in their slot", _meta(result, window, window_days, today),
+                                        official_status.line(name))
+                  + three_measures.states(result["health"]) + burn_ledger.bar(measured.get("burn_record")))
     orbit_age.show(name, result)
     signals_view.show(name)
     _gaps(name, result, today.date())
@@ -238,7 +252,8 @@ def constellation(name, window_days, params):
     for kind, names in groups.items():
         scored = [(name, result, tiles[n][2]) for n in names if tiles[n][2] is not None]
         if scored:
-            _measures(f"overview_measures_{kind}", _table_rows(scored, params, window), f"Measured against limits: {kind}")
+            _measures(f"overview_measures_{kind}", _table_rows(scored, params, window, confirm),
+                      f"Measured against limits: {kind}")
     grouped = checks.by_outcome(result["health"])
     reveal.section("overview_checks", "What the checks found", checks.summary(grouped, len(result["health"])),
                    checks.body(grouped))

@@ -80,4 +80,8 @@ def test_a_constellation_with_lost_clocks_says_so_and_others_say_nothing():
     line = three_measures.record_line("NavIC")
     assert f"{len(lost)} of {launched} NavIC satellites launched are reported to have lost atomic clocks in orbit" in line
     assert all(link in line for link in {row["source_link"] for row in lost})
-    assert clock_record("GPS") is None and three_measures.record_line("GPS") == ""
+    assert "lost clocks" in line and "SpectraTime" in line and "as widely reported" in line   # one figure, sources in its tooltip
+    marks = three_measures.clock_marks("NavIC")   # a quiet mark on each affected satellite's tile
+    assert set(marks) == {row["name"] for row in lost} and all("lost atomic clocks" in mark for mark in marks.values())
+    assert "cheap" not in line.lower()
+    assert clock_record("GPS") is None and three_measures.record_line("GPS") == "" and three_measures.clock_marks("GPS") == {}

@@ -3,6 +3,7 @@
 These drive the real script without a browser, with the clock frozen as tests/test_dashboard_notices.py does.
 """
 import json
+import re
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -145,9 +146,11 @@ def test_qzss_has_its_quasi_zenith_satellites_in_their_own_group():
 
 
 def test_the_overview_says_the_window_and_the_status_counts():
-    body = next(b for b in htmls(run()) if 'class="facts"' in b)
+    body = next(b for b in htmls(run()) if 'class="ovh"' in b)
 
-    assert "90 days: " in body and "orbit records" in body and "scores read" in body
+    # the window in a small chip, its dates and the year the scores read in its tooltip; the states as one bar
+    assert re.search(r"90 d · [\d,]+ records", body) and "90 days" in body and "Scores read" in body
+    assert 'aria-label="Satellite scores: ' in body
     assert all(word in body for word in ("healthy", "fair", "degraded", "critical"))
 
 
@@ -325,7 +328,7 @@ def test_a_custom_start_sets_the_range_to_now_on_every_page():
     at = run(lambda at: at.date_input(key="_window_from").set_value(date(2026, 8, 20)))
 
     assert at.session_state["window_days"] == 47
-    assert any("47 days: 20 Aug 2026 to 6 Oct 2026" in body for body in htmls(at))
+    assert any("47 days" in body and "20 Aug 2026 to 6 Oct 2026" in body for body in htmls(at))
     at.session_state["page"] = "Station-keeping"
     at.run()
     assert not at.exception and any("47 days" in body for body in htmls(at))
@@ -335,7 +338,7 @@ def test_a_preset_button_sets_the_range():
     at = run(lambda at: at.button(key="window_182").click())
 
     assert at.session_state["window_days"] == 182
-    assert any("6 months: " in body for body in htmls(at))
+    assert any("6 months" in body and "182 d · " in body for body in htmls(at))
 
 
 def test_the_constellations_are_set_apart_from_the_pages_across_all_of_them_by_one_word():

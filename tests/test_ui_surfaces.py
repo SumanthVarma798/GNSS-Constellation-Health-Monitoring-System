@@ -99,9 +99,10 @@ def test_score_bands(score, band):
 def test_tile_says_everything_in_words():
     html = surfaces.tile("IRNSS-1B", "IGSO", 88.94, "Healthy", "in slot", "ok", ("Inclination", 73.2))
 
-    for words in ("IRNSS-1B", "IGSO", "88.9", "Healthy", "in slot", "Weakest: Inclination 73"):
+    for words in ("IRNSS-1B", "IGSO", "88.9", "Healthy", "in slot", "weakest: inclination", "inclination, 73 of 100"):
         assert words in html
     assert 'class="chip ok">Healthy' in html and 'class="chip ok">in slot' in html
+    assert "weakest" not in surfaces.tile("A", "GEO", 99.0, "Healthy", "in slot", "ok", ("Drift", 100.0))
 
 
 def test_tile_set_aside_reads_so_and_has_no_score():
@@ -109,7 +110,7 @@ def test_tile_set_aside_reads_so_and_has_no_score():
 
     assert "set aside" in html and "left its slot" in html
     assert 'class="tile bad"' in html
-    assert "Weakest" not in html and 'class="chip bad">left its slot' in html
+    assert "weakest" not in html and 'class="chip bad">left its slot' in html
 
 
 def test_tile_appends_age_html_after_the_state_chips_and_defaults_to_nothing():
@@ -148,3 +149,14 @@ def test_compare_grid_puts_tiles_and_matrix_in_the_same_columns():
 def test_the_stylesheet_has_no_angle_bracket():
     # st.html drops a whole style block with a raw "<" in it, and the page loses its look (seen in issue 92).
     assert "<" not in theme_css()
+
+
+def test_a_picture_is_made_twice_its_light_copy_in_the_light_themes_colours():
+    import base64
+    import re
+
+    from ui import palette
+    html = surfaces.picture(f'<svg aria-label="a dot"><circle fill="{palette.INK}"/></svg>')
+    dark, light = re.findall(r'<img class="pic-(dark|light)"', html), re.findall(r"base64,([^\"]+)", html)
+    assert dark == ["dark", "light"] and 'alt="a dot"' in html
+    assert palette.LIGHT["ink"] in base64.b64decode(light[1]).decode() and palette.INK in base64.b64decode(light[0]).decode()

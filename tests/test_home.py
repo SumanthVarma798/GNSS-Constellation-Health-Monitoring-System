@@ -73,7 +73,7 @@ def test_each_rows_count_is_the_headline_of_that_systems_overview_added_up_over_
         healthy = total = 0
         for part in parts:
             bodies = htmls(run(scope(part)))
-            headline = next((HEADLINE.search(body) for body in bodies if 'class="head"' in body), None)
+            headline = next((HEADLINE.search(body) for body in bodies if 'class="ovh"' in body), None)
             if headline is None:   # no orbit data in the test's copy: the part's own page says so
                 assert any(f"No orbit data for {part} yet" in body for body in bodies), part
                 continue
@@ -334,13 +334,12 @@ def test_a_constellations_own_page_declares_the_three_measures_and_lists_every_s
     for name, station_words in (("NavIC", "in its slot and not drifting"), ("Galileo", "in step with its plane")):
         bodies = htmls(run(scope(name)))
 
-        strip = next(body for body in bodies if 'class="measures"' in body)
-        assert re.search(r"Orbit kept \d+ of \d+", strip) and re.search(r"Station held \d+ of \d+", strip)
-        assert "Clock steady: not read" in strip and "Says healthy: not read" in strip   # no broadcast check in tests
+        strip = next(body for body in bodies if 'class="ovh"' in body)   # the header declares the measures in its sum
+        assert re.search(r"Orbit kept \d+% of its", strip) and re.search(r"Station held \d+% of its", strip)
+        assert "says healthy: not read" in strip   # no broadcast check in tests
         table = next(body for body in bodies if "Orbit kept<small>" in body)
         assert station_words in table and "Clock steady<small>no step past 30 ns in the day" in table
-        headline = next(body for body in bodies if 'class="head"' in body)
-        counted = int(HEADLINE.search(headline).group(1).split(" of ")[1])
+        counted = int(HEADLINE.search(strip).group(1).split(" of ")[1])
         assert table.count("<tr>") - 1 == counted   # a line per satellite the page counts
 
 
@@ -459,14 +458,14 @@ def test_each_card_leads_with_its_score_and_its_how_scored_tip_says_when_it_is_f
 def test_a_constellations_page_opens_up_its_score_into_its_sum():
     bodies = htmls(run(scope("NavIC")))
 
-    strip = next(body for body in bodies if 'class="measures"' in body)
+    strip = next(body for body in bodies if 'class="ovh"' in body)
     # in pictures, with a short key: each attribute's name and its weight over its share of the bar, the points it
-    # adds under it, the score in a box at the end. Clock not read: its 45% shared out, so station weighs 49%, orbit 33%, the burn record 18%
-    assert re.search(r"Score \d+ of 100</span>", strip)
+    # adds under it; the score once, large, in the header. Clock not read: its 45% shared out, so station weighs 49%, orbit 33%, the burn record 18%
+    assert re.search(r'<div class="ovh-score (ok|warn|bad)" role="img" aria-label="score \d+ of 100"><b class="num">\d+</b>', strip)
     assert re.search(r'<span class="ss-name">Station</span><span class="ss-w num">49%</span>.*?<span class="ss-pts">\+<b '
                      r'class="num">\d+</b></span>.*?<span class="ss-name">Orbit</span><span class="ss-w num">33%</span>.*?'
                      r'<span class="ss-name">Burn</span><span class="ss-w num">18%</span>', strip)
-    assert re.search(r'<div class="ss-total (ok|warn|bad)" aria-hidden="true"><b class="num">\d+</b><small>/100', strip)
+    assert "ss-total" not in strip   # not said twice
     assert "width: its weight" in strip and "filled: satellites that pass" in strip
     # read aloud in full instead
     assert re.search(r'aria-label="Station held \d+% of its 49% share: [\d.]+ points, Orbit kept \d+% of its 33% share: '
@@ -593,3 +592,10 @@ def test_a_set_aside_satellite_says_why_it_has_no_burn_record():
     from ui import three_measures
     assert three_measures._care({"group": "set aside", "care": None})["note"] == "set aside: not judged"
     assert "fewer than 3 judged burns" in three_measures._care({"group": "GEO", "care": None})["note"]
+
+
+def test_a_new_satellite_is_a_small_chip_with_the_day_it_is_scored_from_and_its_stage_in_the_tooltip():
+    from views import home
+    chip = home._new_chip("NVS-03", "at its slot since 13 Nov 2026, scored from 13 Dec 2026", 0)
+    assert "NVS-03 · new · scored from 13 Dec</span>" in chip and "at its slot since 13 Nov 2026" in chip
+    assert "NVS-03 · new · not scored yet</span>" in home._new_chip("NVS-03", "on its way", 0)
