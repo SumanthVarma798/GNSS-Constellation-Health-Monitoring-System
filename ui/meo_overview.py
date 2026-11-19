@@ -131,7 +131,7 @@ def _diagnostics_table(rows):
         name = f'{escape(row["name"])} <span class="muted">{escape(row["signal_id"])}</span>'
         lines.append(f'<tr><th>{name}</th><td>{row["along_track_km_day"]:+,.1f} km/day</td>'
                      f'<td>{"&ndash;" if tilt is None else f"{tilt:.2f}°"}</td></tr>')
-    head = (f'<th>{tooltip.tip("Along-track", "How fast it gains (+) or loses (-) its place along the orbit against a satellite at the nominal height: 2π a₀ (n − n₀), from its mean motion.")}</th>'
+    head = (f'<th>{tooltip.tip("Along-track", "How fast it gains (+) or loses (-) its place along the orbit against a satellite at the nominal semi-major axis a₀: 2π a₀ (n − n₀), from its mean motion.")}</th>'
             f'<th>{tooltip.tip("Plane offset", "The angle between its orbit plane and the mean plane of the other satellites in the same plane: its node and inclination differences in one number.")}</th>')
     return ('<p class="small">Diagnostics, not part of the score, as the team\'s static MEO app '
             '(ElectricPlant19/Static_MEO_GNSS_Monitor) shows them. A circular-orbit approximation from each '
