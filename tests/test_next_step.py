@@ -64,11 +64,11 @@ def test_due_soon_says_when_it_reaches_the_edge_and_the_last_chance():
     frame, _ = history(NAME, x0=0.0, v0=-0.04)    # about 12 days to the edge
     f = N.satellite_forecast(NAME, frame, NO_BURNS, NOW, constellation="NavIC")
     text, tone, _ = N.satellite_line(f, NOW)
-    assert f"{NAME} reaches the ±0.5° box edge in 1" in text and "last chance" in text
+    assert f"{NAME} reaches the ±0.5° deadband edge in 1" in text and "last chance" in text
     assert tone in ("warn", "accent")
-    assert "1 of 1 satellites needs an east-west burn within 30 days to stay inside the ±0.5° box" in N.constellation_line([f], NOW)[0]
+    assert "1 of 1 satellites needs an east-west manoeuvre within 30 days to stay inside the ±0.5° deadband" in N.constellation_line([f], NOW)[0]
     short = N.tile_line(f, NOW)
-    assert short and short[0].startswith("Box edge in")
+    assert short and short[0].startswith("Deadband edge in")
 
 
 def test_already_outside_our_box_is_said_without_blame():
@@ -76,8 +76,8 @@ def test_already_outside_our_box_is_said_without_blame():
     f = N.satellite_forecast(NAME, frame, NO_BURNS, NOW, constellation="NavIC")
     assert abs(f["station"]) < 0.05 and f["pos"] == pytest.approx(-0.8, abs=0.1)
     text, tone, _ = N.satellite_line(f, NOW)
-    assert f"{NAME} is 0.8° west of its slot, outside the ±0.5° box; a correction of about" in text and tone == "warn"
-    assert N.tile_line(f, NOW) == ("Outside its box", "warn")
+    assert f"{NAME} is 0.8° west of its slot, outside the ±0.5° deadband; a correction of about" in text and tone == "warn"
+    assert N.tile_line(f, NOW) == ("Outside its deadband", "warn")
 
 
 def test_parked_steadily_off_the_slot_in_our_table_is_a_slot_to_confirm_not_a_fault():
@@ -86,10 +86,11 @@ def test_parked_steadily_off_the_slot_in_our_table_is_a_slot_to_confirm_not_a_fa
     assert f["confirm"] and f["station_lon"] == pytest.approx(81.02, abs=0.05)
     text, tone, _ = N.satellite_line(f, NOW)
     assert text.startswith(f"{NAME} is kept at 81.0° E, 2.0° west of the 83° E in our slot table; "
-                           "the table may be out of date (to confirm). Its next east-west burn")
+                           "the table may be out of date (to confirm). Its next east-west manoeuvre")
     assert "outside" not in text and "last chance" not in text and tone == "idle"
     assert N.geometry_line(f, NOW).endswith("(to confirm).")
-    assert N.burn_cells(f, NOW)[1][1] == "slot to confirm"
+    assert "slot to confirm" in outlook_html([f])
+    assert [m[1] for m in N.expected_burns({NAME: f}, NOW)] == ["ideal"]
     line = N.constellation_line([f], NOW)[0]
     assert "slot to confirm" in line and "outside" not in line
 
@@ -97,7 +98,7 @@ def test_parked_steadily_off_the_slot_in_our_table_is_a_slot_to_confirm_not_a_fa
 def test_off_the_slot_for_less_than_90_days_is_still_outside_the_box():
     frame, _ = history(NAME, station=-1.98, x0=0.0, days=20, kink=0.01)
     f = N.satellite_forecast(NAME, frame, NO_BURNS, NOW, constellation="NavIC")
-    assert not f["confirm"] and "outside the ±0.5° box" in N.satellite_line(f, NOW)[0]
+    assert not f["confirm"] and "outside the ±0.5° deadband" in N.satellite_line(f, NOW)[0]
 
 
 def test_too_few_routine_burns_assume_a_share_of_our_box_and_three_give_its_own():
@@ -124,11 +125,9 @@ def test_old_orbit_data_gives_no_look_ahead():
     assert f["status"] == "stale" and "too little recent orbit data" in N.satellite_line(f, NOW)[0]
 
 
-def test_burn_cells_and_the_ghost_marks():
+def test_the_ghost_marks():
     frame, _ = history(NAME, x0=0.0, v0=-0.04)
     f = N.satellite_forecast(NAME, frame, NO_BURNS, NOW, constellation="NavIC")
-    ideal, last = N.burn_cells(f, NOW)
-    assert "m/s" in ideal[1] and "Δa" in ideal[1] and last[2] in ("warn", "ok")
     marks = N.expected_burns({NAME: f}, NOW)
     assert {m[1] for m in marks} == {"ideal", "last chance"}
     import plotly.graph_objects as go
@@ -153,17 +152,17 @@ def test_a_plane_s_years_to_its_limit():
     assert "about 6 months" in text and tone == "warn"
 
 
-def test_fuel_words_say_what_is_a_guess():
-    words = N.fuel_line({"rate": 3.2, "years": (12.2, 18.7), "from_budget": False})
-    assert words == ("about 3.2 m/s a year; about 12–19 more years at this rate "
-                     "(typical for this class; the operator's real budget is not public).")
-    assert "more than 30 more years" in N.fuel_line({"rate": 0.5, "years": (40.0, 90.0), "from_budget": False})
-    assert N.fuel_line(None) == ""
+def test_fuel_draws_rate_and_years_band_and_says_what_is_a_guess():
+    from ui import outlook
+    f = {"status": "ok"}
+    html = outlook.fuel({NAME: f}, {NAME: {"rate": 3.2, "years": (12.2, 18.7), "from_budget": False}}, NOW)
+    assert ">3.2<" in html and ">12–19<" in html and "typical for this class" in html
+    assert ">&gt; 30<" in outlook.fuel({NAME: f}, {NAME: {"rate": 0.5, "years": (40.0, 90.0), "from_budget": False}}, NOW)
 
 
 def test_the_line_always_says_as_of():
     html = N.line_html(("x", "ok", "15 Nov"))
-    assert "as of 15 Nov" in html and "it changes if the operator burns" in html
+    assert "as of 15 Nov" in html and "it changes if the operator manoeuvres" in html
     assert N.line_html(("x", "ok", "15 Nov"), short=True).count("as of 15 Nov") == 1
 
 
@@ -171,7 +170,7 @@ def test_the_explainer_is_one_line_a_picture_and_its_sources():
     from ui import forecast_explainer as E
     assert E.diagram().count("<polyline") == 4 and "<svg" in E.diagram()
     body = E.body()
-    assert "Soop, Handbook of Geostationary Orbits" in body and "What we cannot know" in body
+    assert "Soop, Handbook of Geostationary Orbits" in body and "Not knowable" in body and "box" not in body
 
 
 def test_a_real_constellation_gets_a_line_per_satellite_and_for_the_constellation():
@@ -192,3 +191,18 @@ def test_home_reads_the_published_line_while_the_copy_is_fresh(monkeypatch):
     assert home_data.next_line("NavIC", 90) == ("Nothing due.", "ok", "17 Nov")
     assert home_data.next_line("NavIC", 30) != ("Nothing due.", "ok", "17 Nov")   # another time range: worked out here
 
+
+
+def outlook_html(forecasts):
+    from ui import outlook
+    return outlook.outlook(forecasts, NOW)
+
+
+def test_outlook_draws_a_due_satellite_with_its_edge_and_counts_it():
+    from ui import outlook
+    frame, _ = history(NAME, x0=0.0, v0=-0.04)    # about 12 days to the edge
+    f = N.satellite_forecast(NAME, frame, NO_BURNS, NOW, constellation="NavIC")
+    html = outlook.outlook([f], NOW, "as of 17 Nov")
+    assert 'class="ol-edge"' in html and 'class="ol-ideal"' in html and 'class="ol-last"' in html
+    assert '<b class="num">1</b><span>E-W manoeuvres due' in outlook.figures([f], NOW)
+    assert "box" not in html.lower().replace("box-", "")

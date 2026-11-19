@@ -16,7 +16,7 @@ from analysis.commissioning import SETTLING_DAYS
 from config.config import TRACKED_NOT_IN_REGISTRY
 from evidence.registry_tables import judged_by_plane, left_out_notice, new_on_dashboard
 from ui import (checks, data, limits, measures, meo_overview, official_status, orbit_age, orbit_section,
-                marks, next_step, next_step_data, palette, reveal, shell, signals_view, surfaces, systems, three_measures, time_range, tooltip)
+                marks, next_step_data, palette, reveal, shell, signals_view, surfaces, systems, three_measures, time_range, tooltip)
 from ui.data import SATELLITES
 from ui.figures.constellation_3d import slot_legend
 from ui.figures.slot_rows import as_number, slot_words
@@ -192,7 +192,7 @@ def _next_step(name, result, params):
     """Show the constellation's "what should happen next" line; return {satellite: tile line} for the tiles. The look
     ahead is extra: when it fails the page stands without it and the inbox says so."""
     try:
-        surfaces.show(next_step.line_html(next_step_data.constellation_line(name, result, params)))
+        surfaces.show(next_step_data.outlook_html(name, result, params))
         return next_step_data.tile_tags(name, result, params)
     except Exception as error:
         surfaces.notice(f"Next steps could not be worked out: {type(error).__name__}: {error}", "warn")

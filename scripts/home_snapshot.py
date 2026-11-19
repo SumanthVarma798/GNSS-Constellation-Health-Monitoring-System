@@ -32,10 +32,11 @@ def _plain(value):
 
 
 def snapshot(now):
-    """{"made", "window_days", "parts": {part: summary}, "next_steps": {part: [text, tone, as_of]}} for every part of every constellation that could be counted."""
+    """{"made", "window_days", "parts": {part: summary}, "next_steps": {part: [text, tone, as_of]},
+    "next_figures": {part: html}} for every part of every constellation that could be counted."""
     data.refresh()
     gap = data.orbit_gap()
-    parts, steps = {}, {}
+    parts, steps, figures = {}, {}, {}
     for names in systems.SYSTEMS.values():
         for name in names:
             try:
@@ -46,10 +47,11 @@ def snapshot(now):
                 continue
             try:   # "what should happen next": left out when it fails, and Home works it out itself
                 steps[name] = list(next_step_data.constellation_line(name, result))
+                figures[name] = next_step_data.outlook_html(name, result, compact=True)
             except Exception as error:
                 print(f"{name} next step not worked out: {type(error).__name__}: {error}", file=sys.stderr)
     return {"made": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "window_days": time_range.DEFAULT_DAYS, "parts": parts,
-            "next_steps": steps}
+            "next_steps": steps, "next_figures": figures}
 
 
 def main():

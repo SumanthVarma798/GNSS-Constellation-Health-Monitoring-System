@@ -13,7 +13,7 @@ from analysis import score_rules
 from analysis.bundled_run import burn_classes_of
 from analysis.meo_geometry import plane_drift
 from evidence.registry_tables import judged_by_plane
-from ui import next_step
+from ui import next_step, outlook
 
 
 def _hour():
@@ -78,3 +78,16 @@ def geometry_lines(constellation, result, params=None):
             _, tone, as_of = next_step.satellite_line(f, ahead["now"])
             out[name] = (text, tone, as_of)
     return out
+
+
+def outlook_html(constellation, result, params=None, compact=False):
+    """The look ahead drawn (ui/outlook.py): a slot-keeping constellation's east-west outlook, or a medium-orbit one's
+    planes; compact: the figures alone, for a card. '' when nothing is worked out."""
+    ahead = look_ahead(constellation, result, params)
+    if "drift" in ahead:
+        return outlook.planes(constellation, ahead["drift"], ahead["as_of"], compact=compact)
+    forecasts = list(ahead["forecasts"].values())
+    if compact:
+        return outlook.figures(forecasts, ahead["now"])
+    dated = [f["as_of"] for f in forecasts if f.get("as_of") is not None]
+    return outlook.outlook(forecasts, ahead["now"], f"as of {next_step._day(max(dated))}" if dated else "")

@@ -373,7 +373,7 @@ button:focus-visible, [role="tab"]:focus-visible, summary:focus-visible, .tt-tri
 }
 
 /* station-keeping rhythm: one line per satellite */
-.rh { display: grid; grid-template-columns: minmax(120px, 1.3fr) minmax(150px, 1.4fr) minmax(140px, 2fr) 150px 150px 90px; gap: 16px; align-items: center; padding: 10px 0; font-size: var(--fs-body); }
+.rh { display: grid; grid-template-columns: minmax(120px, 1.3fr) minmax(150px, 1.4fr) minmax(140px, 2.4fr) 90px; gap: 16px; align-items: center; padding: 10px 0; font-size: var(--fs-body); }
 .rh + .rh { border-top: 1px solid var(--edge); }
 .rh.hd { color: var(--fc-small); font-size: var(--fs-small); font-weight: 500; padding-top: 0; }
 .rh .ev { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -833,6 +833,60 @@ details.sys.card { display: block; padding: 0; }
 .nx .small { display: block; margin-top: 2px; }
 .tile .nx { margin: 2px 0 0; flex: 1 0 100%; padding: 4px 8px; font-size: var(--fs-small); box-shadow: none; }
 .sys .nx { margin: 0 0 12px; box-shadow: none; }
+/* ---- the look ahead drawn (ui/outlook.py): figures, then a track per satellite or a gauge per plane ---- */
+.ol { margin: 0 0 18px; padding: 14px 16px 10px; border-radius: var(--r); background: var(--platform); border: 1px solid var(--edge); box-shadow: var(--raised); }
+.sys .ol { box-shadow: none; border: 0; padding: 0; background: none; margin: 0 0 12px; }
+/* how the forecasts are made (ui/forecast_explainer.py): the picture at its own size, then a tile per rule */
+.fx-pic { max-width: 640px; margin: 0 0 12px; }
+.fx-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.fx-tile { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 14px; background: var(--well); box-shadow: var(--pressed); font-size: var(--fs-small); }
+.fx-tile b { color: var(--accent); } .fx-tile span { font-variant-numeric: tabular-nums; line-height: 1.45; }
+.fx-src { margin: 10px 0 0; font-size: 11px; color: var(--muted); }
+.ol-title { display: block; margin: 4px 0 6px; font-size: var(--fs-side); font-weight: var(--fw-side); }
+.ol > .ol-title { margin-top: 0; }
+.ol-figs { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 12px; }
+.ol-fig { flex: 1 1 140px; min-width: 0; display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; border-radius: 14px; background: var(--well); box-shadow: var(--pressed); }
+.ol-fig b { font-size: 22px; line-height: 1.1; color: var(--ink); } .ol-fig span { font-size: var(--fs-small); color: var(--muted); }
+.ol-fig.ok b { color: var(--ok); } .ol-fig.warn b { color: var(--warn); } .ol-fig.accent b { color: var(--accent); } .ol-fig.idle b { color: var(--idle); }
+.ol-head { display: grid; grid-template-columns: minmax(84px, 9em) minmax(0, 1fr) auto; align-items: end; gap: 10px; margin: 0 0 4px; }
+.ol-head .ol-axis { grid-column: 2; } .ol-head .tt { grid-column: 3; justify-self: end; }
+.ol-axis { position: relative; height: 16px; font-size: 11px; color: var(--muted); }
+.ol-axis span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.ol-axis span:first-child { transform: none; } .ol-axis span:last-child { transform: translateX(-100%); }
+.ol-row { display: grid; grid-template-columns: minmax(84px, 9em) minmax(0, 1fr) 6.5em; align-items: center; gap: 10px; padding: 5px 0; border-top: 1px solid var(--edge); }
+.ol-name { font-weight: 600; font-size: var(--fs-small); min-width: 0; overflow-wrap: anywhere; }
+.ol-val { font-variant-numeric: tabular-nums; font-size: var(--fs-small); text-align: right; color: var(--muted); }
+.ol-row.warn .ol-val { color: var(--warn); } .ol-row.accent .ol-val { color: var(--accent); } .ol-row.ok .ol-val { color: var(--ok); }
+.ol-track, .ol-gauge { position: relative; height: 14px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); }
+.ol-drift { position: absolute; left: 0; top: 5px; bottom: 5px; border-radius: 999px; background: linear-gradient(90deg, transparent, var(--muted)); }
+.ol-drift.far { background: linear-gradient(90deg, transparent, var(--track)); }
+.ol-row.warn .ol-drift { background: linear-gradient(90deg, transparent, var(--warn)); }
+.ol-ideal { position: absolute; top: 1px; bottom: 1px; border-radius: 999px; background: var(--accent); opacity: .85; min-width: 6px; }
+.ol-last { position: absolute; top: -3px; bottom: -3px; width: 3px; margin-left: -1px; border-radius: 2px; background: var(--warn); }
+.ol-edge { position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; transform: rotate(45deg); background: var(--bad); border-radius: 2px; }
+.ol-row.idle .ol-track { background: repeating-linear-gradient(90deg, var(--well) 0 6px, transparent 6px 10px); }
+.ol-gauge::before { content: ""; position: absolute; left: 50%; top: 2px; bottom: 2px; width: 1px; background: var(--track); }
+.ol-gauge i { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--fill);
+              font-style: normal; font-size: 10px; line-height: 14px; text-align: center; color: var(--platform); }
+.ol-row.ok .ol-gauge i { background: var(--ok); } .ol-row.accent .ol-gauge i { background: var(--accent); } .ol-row.warn .ol-gauge i { background: var(--warn); }
+.ol-asof { display: block; margin-top: 8px; font-size: 11px; color: var(--muted); }
+/* Δv, years left and north-south per satellite (ui/outlook.py fuel) */
+.fu-row { display: grid; grid-template-columns: minmax(84px, 9em) repeat(3, minmax(0, 1fr)); align-items: center; gap: 12px; padding: 6px 0; border-top: 1px solid var(--edge); font-size: var(--fs-small); }
+.fu-row.hd { border-top: 0; color: var(--muted); font-size: 11px; }
+.fu-cell { display: grid; grid-template-columns: minmax(0, 1fr) 4.2em; align-items: center; gap: 8px; min-width: 0; }
+.fu-cell .num, .fu-cell .muted { text-align: right; } .fu-cell .tt { display: contents; } .fu-cell .tt-trigger { display: contents; }
+.fu-bar, .fu-gauge { position: relative; height: 10px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); }
+.fu-bar i { position: absolute; left: 0; top: 2px; bottom: 2px; border-radius: 999px; background: var(--accent); }
+.fu-bar.band em { position: absolute; top: 2px; bottom: 2px; border-radius: 999px; background: var(--ok); }
+.fu-gauge em { position: absolute; left: 25%; width: 50%; top: 2px; bottom: 2px; border-radius: 999px; background: color-mix(in srgb, var(--ok) 35%, transparent); }
+.fu-gauge i { position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--ok); }
+.fu-gauge.out i { background: var(--warn); }
+@media (max-width: 640px) {
+  .ol-row, .ol-head { grid-template-columns: minmax(64px, 6.5em) minmax(0, 1fr) 4.8em; gap: 8px; }
+  .ol-axis span:nth-child(2), .ol-axis span:nth-child(4) { display: none; }
+  .fu-row { grid-template-columns: minmax(64px, 6em) repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .fu-cell { grid-template-columns: minmax(0, 1fr); } .fu-cell .num { text-align: left; }
+}
 .sysline b { font-size: var(--fs-section); font-weight: var(--fw-section); }
 .sysline .num { font-size: var(--fs-section); font-weight: var(--fw-num); color: var(--accent); }
 

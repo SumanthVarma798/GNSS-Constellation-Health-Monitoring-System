@@ -167,15 +167,17 @@ def _row(system, unread=None, index=0, steps=""):
 
 
 def _steps(names, window_days, counted):
-    """The card's "what should happen next": one short line for each part of the system that was counted. A part of a
-    system with several is named, as a line about "the plane" would not say which part it means."""
+    """The card's "what should happen next", drawn: the look ahead's figures for each part of the system that was
+    counted (a part of a system with several is named), or its line where only a line was published."""
     out = []
     for name in names:
-        line = home_data.next_line(name, window_days) if name in counted else None
-        if line:
-            text, tone, as_of = line
-            out.append(next_step.line_html((f"{part_name(name)}: {text}" if len(names) > 1 and part_name(name)
-                                            and not text.startswith(name) else text, tone, as_of), short=True))
+        if name not in counted:
+            continue
+        label = f'<b class="ol-title">{escape(part_name(name))}</b>' if len(names) > 1 and part_name(name) else ""
+        if figures := home_data.next_figures(name, window_days):
+            out.append(label + figures)
+        elif line := home_data.next_line(name, window_days):
+            out.append(label + next_step.line_html(line, short=True))
     return "".join(out)
 
 

@@ -57,6 +57,19 @@ def _fresh(window_days, now=None):
     return made, payload
 
 
+def next_figures(name, window_days):
+    """The look ahead's figures for one part's card (ui/outlook.py figures): from the published file while it is fresh,
+    else worked out here from the part's assessment. '' when it cannot be."""
+    figures = _fresh(window_days)[1].get("next_figures")
+    html = figures.get(name) if isinstance(figures, dict) else None
+    if isinstance(html, str):
+        return html
+    try:
+        return next_step_data.outlook_html(name, data.load(name, window_days), compact=True)
+    except Exception:   # the card stands without it
+        return ""
+
+
 def next_line(name, window_days):
     """(text, tone, as_of) of one part's "what should happen next": from the published file while it is fresh, else
     worked out here from the part's assessment (ui/next_step_data.py), which is kept between runs. None when it cannot be."""

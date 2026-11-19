@@ -9,7 +9,7 @@ from html import escape
 import pandas as pd
 import streamlit as st
 
-from ui import burn_ledger, burn_record, data, forecast_explainer, measures, next_step, next_step_data, reveal, surfaces, time_range, tooltip
+from ui import burn_ledger, burn_record, data, forecast_explainer, measures, next_step, next_step_data, outlook, reveal, surfaces, time_range, tooltip
 from ui.figures import burns as burn_figures, forecast_marks
 from ui.figures.burns import EAST_WEST, burn_timeline, rhythm
 from ui.picker import chosen_constellations
@@ -24,12 +24,6 @@ def _days(value):
     return f"{abs(value):.0f} d"
 
 
-def _burn_cell(cell, label):
-    """One of the table's two forecast cells: the date, then the size of the change."""
-    words, detail, tone = cell
-    return f'<span class="due {tone}" data-l="{label}">{words}' + (f'<small class="muted">{detail}</small>' if detail else "") + "</span>"
-
-
 def _cycle(row):
     """How far the satellite is into its cycle: elapsed fill, the usual window (middle half of intervals) as a band,
     the median as a tick. The fill turns amber once the usual window has passed."""
@@ -41,19 +35,17 @@ def _cycle(row):
             f'<i style="width:{at(row["since_days"])}"></i><b style="left:{at(row["median_days"])}"></b></span>')
 
 
-def _rhythm(rows, cells):
-    """One line per satellite, soonest due first: its usual interval, where it is in this cycle, its ideal burn and its
-    last chance (ui/next_step.py burn_cells, from today's elements)."""
-    lines = ['<div class="rh hd"><span></span><span>East-west, every</span><span>This cycle</span>'
-             '<span>Ideal burn</span><span>Last chance</span><span>North-south</span></div>']
+def _rhythm(rows):
+    """One line per satellite, soonest due first: its usual east-west interval and how even it is, where it is in this
+    cycle, and its north-south manoeuvres. What comes next is drawn above it (ui/outlook.py)."""
+    lines = ['<div class="rh hd"><span></span><span>East-west, every</span><span>This cycle</span><span>North-south</span></div>']
     for row in sorted(rows, key=lambda r: (r["due_in_days"] is None, r["due_in_days"] or 0)):
-        ideal, last = cells.get(row["satellite"], [("–", "", "idle")] * 2)
         every = ('<span class="muted">&ndash;</span>' if row["median_days"] is None else
                  f'<b class="num">{row["median_days"]:.0f} days</b>')
         north_south = f'<span class="num">{row["ns_count"]}</span>' if row["ns_count"] else '<span class="muted">&ndash;</span>'
         lines.append(f'<div class="rh"><b>{escape(row["satellite"])}</b>'
                      f'<span class="ev">{every}{surfaces.chip(PATTERN_WORDS[row["pattern"]], PATTERN_STATUS[row["pattern"]])}</span>'
-                     f'{_cycle(row)}{_burn_cell(ideal, "Ideal burn")}{_burn_cell(last, "Last chance")}{north_south}</div>')
+                     f'{_cycle(row)}{north_south}</div>')
     return surfaces.raised('<div class="rhythm">' + "".join(lines) + "</div>")
 
 
@@ -170,12 +162,9 @@ window_days = st.session_state["window_days"]
 counts, recent = _counts(results, chosen, window_days, pd.Timestamp(datetime.now(timezone.utc).date()))
 
 tables, ledger = _ledger(results, chosen)
-shares = [(f"{name}: " if len(tables) > 1 else "") + burn_record.words(burn_record.record_of(table))
-          for name, table in tables.items() if table is not None]
 surfaces.show(surfaces.group_head(time_range.words(window_days),
                                   f"{len(recent)} burns: {(recent['kind'] == EAST_WEST).sum()} east-west, "
-                                  f"{(recent['kind'] != EAST_WEST).sum()} north-south"
-                                  + (" · burn record, 365 days: " + "; ".join(shares) if shares else ""),
+                                  f"{(recent['kind'] != EAST_WEST).sum()} north-south",
                                   _detection(measures.thresholds(None, st.session_state["params"]))))
 rhythm_rows = rhythm(burns, satellites, end)
 try:
@@ -186,12 +175,11 @@ except Exception as error:   # the look ahead is extra: the page's own tables an
 forecasts = {n: f for a in ahead.values() for n, f in a.get("forecasts", {}).items()}
 fuel = {n: f for a in ahead.values() for n, f in a.get("fuel", {}).items()}
 now = next((a["now"] for a in ahead.values()), None)
-forecast_cells = {n: next_step.burn_cells(f, now) for n, f in forecasts.items()}
-for name, result in results.items():   # what should happen next, once for each constellation shown
+for name, result in results.items():   # what should happen next, drawn once for each constellation shown
     if name in ahead and "forecasts" in ahead[name]:
-        text, tone, as_of = next_step.constellation_line(list(ahead[name]["forecasts"].values()), now)
-        surfaces.show(next_step.line_html((f"{name}: {text}" if len(results) > 1 else text, tone, as_of)))
-surfaces.show(_rhythm(rhythm_rows, forecast_cells))
+        surfaces.show((f'<b class="ol-title">{escape(name)}</b>' if len(results) > 1 else "")
+                      + next_step_data.outlook_html(name, result, st.session_state["params"]))
+surfaces.show(_rhythm(rhythm_rows))
 st.plotly_chart(forecast_marks.add_expected(_timeline(burns, satellites, start, end, _kinds(tables)),
                                             next_step.expected_burns({n: forecasts[n] for n in satellites if n in forecasts}, now)
                                             if now is not None else [], satellites, end), **CHART)
@@ -207,10 +195,7 @@ if len(recent):
                    f"{reveal.count(len(recent), 'burn')} · newest {newest.day} {newest:%b %Y}", _events(recent, satellites, rhythm_rows))
 
 if forecasts:
-    lines = "".join(f'<li><b>{escape(n)}</b> {escape(next_step.fuel_line(fuel.get(n)) or "no yearly use worked out: too little history")}'
-                    + (f'<br><span class="small">{escape(ns)}</span>' if (ns := next_step.north_south_line(forecasts[n], now)) else "")
-                    + "</li>" for n in satellites if n in forecasts)
-    reveal.section("fuel_per_satellite", "Fuel and north-south, per satellite",
-                   f"{reveal.count(sum(n in forecasts for n in satellites), 'satellite')} · yearly use, and years left typical for the class",
-                   f'<ul class="small meanings">{lines}</ul>')
+    reveal.section("fuel_per_satellite", "Δv, years left and north-south, per satellite",
+                   f"{reveal.count(sum(n in forecasts for n in satellites), 'satellite')} · Δv per year, years left typical for the class",
+                   outlook.fuel({n: forecasts[n] for n in satellites if n in forecasts}, fuel, now))
 reveal.section("forecast_how", "How these forecasts are made", forecast_explainer.ONE_LINE, forecast_explainer.body())

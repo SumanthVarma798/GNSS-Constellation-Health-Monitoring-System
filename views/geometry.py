@@ -280,10 +280,9 @@ def _spacing(constellation, satellites, result):
 
 
 def _next_step(name, result):
-    """Show the constellation's "what should happen next" line; return {satellite: geometry line} for the trend cards.
-    The look ahead is extra: when it fails the page stands without it and the inbox says so."""
+    """{satellite: geometry line} for the trend cards (the constellation's outlook is drawn on Overview and
+    Station-keeping, not repeated here). The look ahead is extra: when it fails the page stands without it."""
     try:
-        surfaces.show(next_step.line_html(next_step_data.constellation_line(name, result, st.session_state["params"])))
         return next_step_data.geometry_lines(name, result, st.session_state["params"])
     except Exception as error:
         surfaces.notice(f"Next steps could not be worked out: {type(error).__name__}: {error}", "warn")

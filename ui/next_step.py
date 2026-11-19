@@ -33,8 +33,7 @@ from ui import next_step_settings as N
 
 BUDGETS = Path(__file__).resolve().parent.parent / "registry" / "bus_budgets.csv"
 EAST_WEST = "east-west"
-CAVEAT = "from the latest element sets; it changes if the operator burns"
-FUEL_CAVEAT = "typical for this class; the operator's real budget is not public"
+CAVEAT = "from the latest element sets; it changes if the operator manoeuvres"
 
 
 # ---- working it out ----------------------------------------------------------------------------------------------
@@ -226,40 +225,40 @@ def satellite_line(f, now):
     if status in ("no_data", "stale"):
         return f"{name}: too little recent orbit data to look ahead.", "idle", as_of
     if status == "settling":
-        return (f"{name} burned on {_day(f['last_burn'])}; its next step follows once about "
+        return (f"{name} manoeuvred on {_day(f['last_burn'])}; its next step follows once about "
                 f"{N.FIT_MIN_SPAN_DAYS:g} days of orbit data have come in.", "accent", as_of)
     box = f"±{f['box']:g}°"
     where = f"{abs(f['pos']):.1f}° {_side(f['pos'])} of {'its station' if f['confirm'] else 'its slot'}"
     to_confirm = _confirm_words(f)
-    assumed = "" if f["own_known"] else " Its own box is not yet known from its burns, so 0.8 of ours is assumed."
+    assumed = "" if f["own_known"] else " Its own deadband is not yet known from its manoeuvres, so 0.8 of ours is assumed."
     edge = _edge_days(f, now)
     if status == "weak":
         text = (f"{name} sits where the Earth's pull is weak, so it drifts slowly ({f['v0']:+.3f}° a day); "
-                + (f"it reaches the {box} box edge in {edge} days if not corrected." if edge is not None
-                   else f"it stays inside the {box} box on this drift."))
+                + (f"it reaches the {box} deadband edge in {edge} days uncorrected." if edge is not None
+                   else f"it stays inside the {box} deadband on this drift."))
         return text, "warn" if edge is not None and edge <= N.SOON_DAYS else "ok", as_of
     ideal, last = f["rows"]["ideal"], f["rows"]["last_chance"]
     when = _range(ideal["date"], now)
     if ideal["delta_v_m_s"] is None:
-        return f"No burn is due for {name} on its present path: it stays inside the {box} box." + assumed, "ok", as_of
+        return f"No manoeuvre is due for {name} on its present drift: it stays inside the {box} deadband." + assumed, "ok", as_of
     dv = f"about {ideal['delta_v_m_s']:.2f} m/s"
     if to_confirm:   # judged about its own station: its next burn only, no last chance against a box it is not centred on
-        return f"{to_confirm} Its next east-west burn is expected {when} ({dv})." + assumed, "idle", as_of
+        return f"{to_confirm} Its next east-west manoeuvre is expected {when} ({dv})." + assumed, "idle", as_of
     if abs(f["pos"]) > f["box"]:
         back = last["delta_v_m_s"]
-        return (f"{name} is {where}, outside the {box} box"
+        return (f"{name} is {where}, outside the {box} deadband"
                 + (f"; a correction of about {back:.2f} m/s turns it back." if back is not None
-                   else "; no single burn brings it back.") + assumed, "warn", as_of)
+                   else "; no single manoeuvre brings it back.") + assumed, "warn", as_of)
     ideal_days, last_days = _row_days(f, "ideal", now), _row_days(f, "last_chance", now)
     if edge is not None and last_days is not None and last_days <= N.NEAR_DAYS:
-        text = (f"{name} reaches the {box} box edge in {edge} days if not corrected. Ideal: burn {when} ({dv}); "
+        text = (f"{name} reaches the {box} deadband edge in {edge} days uncorrected. Ideal manoeuvre {when} ({dv}); "
                 f"last chance {_day(last['date'])}.")
         tone = "warn" if last_days <= N.SOON_DAYS else "accent"
     elif ideal_days is not None and ideal_days <= N.NEAR_DAYS:
-        text = f"{name}'s next east-west burn is expected {when} ({dv}). Nothing else due in {N.NEAR_DAYS} days."
+        text = f"{name}'s next east-west manoeuvre is expected {when} ({dv}). Nothing else due in {N.NEAR_DAYS} days."
         tone = "accent" if ideal_days <= N.SOON_DAYS else "ok"
     else:
-        text = f"Nothing due for {name} in {N.NEAR_DAYS} days; its next east-west burn is expected {when} ({dv})."
+        text = f"Nothing due for {name} in {N.NEAR_DAYS} days; its next east-west manoeuvre is expected {when} ({dv})."
         tone = "ok"
     return text + assumed, tone, as_of
 
@@ -270,16 +269,16 @@ def tile_line(f, now):
         return None
     if f["confirm"]:
         ideal = _row_days(f, "ideal", now)
-        return (f"Next burn {_range(f['rows']['ideal']['date'], now)}", "accent") if ideal is not None and ideal <= N.SOON_DAYS else None
+        return (f"Next E-W manoeuvre {_range(f['rows']['ideal']['date'], now)}", "accent") if ideal is not None and ideal <= N.SOON_DAYS else None
     if abs(f["pos"]) > f["box"]:
-        return "Outside its box", "warn"
+        return "Outside its deadband", "warn"
     edge, last = _edge_days(f, now), _row_days(f, "last_chance", now)
     if edge is not None and last is not None and last <= N.NEAR_DAYS:
-        return f"Box edge in {edge} d · last chance {_day(f['rows']['last_chance']['date'])}", \
+        return f"Deadband edge in {edge} d · last chance {_day(f['rows']['last_chance']['date'])}", \
             "warn" if last <= N.SOON_DAYS else "accent"
     ideal = _row_days(f, "ideal", now)
     if ideal is not None and ideal <= N.SOON_DAYS:
-        return f"Next burn {_range(f['rows']['ideal']['date'], now)}", "accent"
+        return f"Next E-W manoeuvre {_range(f['rows']['ideal']['date'], now)}", "accent"
     return None
 
 
@@ -323,19 +322,19 @@ def constellation_line(forecasts, now):
                   and d <= N.NEAR_DAYS)
     parts, tone = [], "ok"
     if out:
-        parts.append(f"{_list(out)} {'is' if len(out) == 1 else 'are'} outside the {box} box.")
+        parts.append(f"{_list(out)} {'is' if len(out) == 1 else 'are'} outside the {box} deadband.")
         tone = "warn"
     if edge:
         # chosen by last chance (the edge less the lead), so an edge can fall a little past NEAR_DAYS
         one = len(edge) == 1
-        parts.append(f"{len(edge)} of {len(worked)} satellites {'needs' if one else 'need'} an east-west burn within {N.NEAR_DAYS} days "
-                     f"to stay inside the {box} box; not corrected, {'it reaches' if one else 'they reach'} its edge: "
+        parts.append(f"{len(edge)} of {len(worked)} satellites {'needs' if one else 'need'} an east-west manoeuvre within {N.NEAR_DAYS} days "
+                     f"to stay inside the {box} deadband; uncorrected, {'it reaches' if one else 'they reach'} its edge: "
                      + _list(f"{n} in {e} days" for e, n in edge) + ".")
         tone = "warn" if edge[0][0] <= N.SOON_DAYS else "accent" if tone == "ok" else tone
     elif soon:
-        parts.append("Next east-west burns expected: "
+        parts.append("Next east-west manoeuvres expected: "
                      + _list(f"{n} {_range(f['rows']['ideal']['date'], now)}" for _, n in soon
-                             for f in due if f["name"] == n) + f". Nothing reaches the {box} box edge within {N.NEAR_DAYS} days.")
+                             for f in due if f["name"] == n) + f". Nothing reaches the {box} deadband edge within {N.NEAR_DAYS} days.")
         tone = "accent" if soon[0][0] <= N.SOON_DAYS and tone == "ok" else tone
     elif not out:
         later = sorted((f["rows"]["ideal"]["date"], f["name"]) for f in due if f["status"] == "ok" and f["rows"]["ideal"]["delta_v_m_s"] is not None)
@@ -377,61 +376,6 @@ def meo_line(system, drift, as_of, years_cap=N.MEO_YEARS_CAP):
             "ok" if years >= 5 else "accent" if years >= 1 else "warn", as_of)
 
 
-def fuel_line(fuel):
-    """The fuel words for one fuel_forecast, or ''."""
-    if not fuel:
-        return ""
-    words = f"about {fuel['rate']:.1f} m/s a year"
-    if fuel["years"] is None:
-        return f"{words}; no launch date to say how much is left ({FUEL_CAVEAT})."
-    low, high = fuel["years"]
-    cap = N.YEARS_CAP
-    more = (f"more than {cap} more years" if low >= cap else
-            f"about {low:.0f} to more than {cap} more years" if high > cap else
-            f"about {low:.0f}–{high:.0f} more years" if round(low) != round(high) else f"about {low:.0f} more years")
-    return f"{words}; {more} at this rate ({'from its budget' if fuel['from_budget'] else FUEL_CAVEAT})."
-
-
-def burn_cells(f, now):
-    """[(words, detail, tone), (words, detail, tone)] for a satellite's ideal burn and its last chance (the table's two
-    cells): the date, then the size of the change. Tone: warn when the last chance is within SOON_DAYS, accent for an
-    ideal burn that near, idle when nothing is worked out."""
-    none = ("–", "", "idle")
-    if f["status"] not in ("ok",) or not f.get("rows"):
-        return [none, none]
-    out = []
-    for kind in ("ideal", "last_chance"):
-        row = f["rows"][kind]
-        if row["delta_lambda_dot_deg_per_day"] is None:
-            out.append(("none due", "stays in its box", "ok"))
-            continue
-        size = f"Δa {row['delta_a_km']:+.1f} km · {row['delta_v_m_s']:.2f} m/s"
-        days = _in_days(row["date"], now)
-        if kind == "ideal":
-            out.append((_range(row["date"], now), size, "accent" if days <= N.SOON_DAYS else "ok"))
-        elif f["confirm"]:
-            out.append(("–", "slot to confirm", "idle"))
-        elif abs(f["pos"]) > f["box"]:
-            out.append(("passed", "outside our box", "idle"))
-        else:
-            out.append((_day(max(pd.Timestamp(row["date"]), pd.Timestamp(now).tz_localize(None))), size,
-                        "warn" if days <= N.SOON_DAYS else "ok"))
-    return out
-
-
-def north_south_line(f, now):
-    """The north-south words for a GEO satellite whose tilt is held (satellite_forecast's ns), or ''."""
-    ns = f.get("ns")
-    if not ns:
-        return ""
-    days = _in_days(ns["reach_date"], now)
-    held = f"tilt {f['inclination']:.2f}° against a target of {f['target']:g}° ±{f['tolerance']:g}°"
-    when = ("already past that tolerance" if abs(f["inclination"] - f["target"]) > f["tolerance"] else
-            f"reaches the tolerance in about {days / 365.25:.1f} years" if days > 365 else
-            f"reaches the tolerance in about {days} days")
-    return (f"North-south: {held}, {when}; correcting it takes about {ns['correction_delta_v_m_s']:.0f} m/s, "
-            f"and each day of delay costs about {ns['delay_cost_m_s_per_day']:.2f} m/s.")
-
 def expected_burns(forecast_by_satellite, now):
     """[(satellite, 'ideal' or 'last chance', date)] inside the ghost marks' horizon, for the burn timeline."""
     now = pd.Timestamp(now).tz_localize(None)
@@ -440,6 +384,8 @@ def expected_burns(forecast_by_satellite, now):
         if f["status"] != "ok" or abs(f["pos"]) > f["box"]:
             continue
         for kind, label in (("ideal", "ideal"), ("last_chance", "last chance")):
+            if kind == "last_chance" and f.get("confirm"):   # no last chance against a deadband it is not centred on
+                continue
             row = f["rows"][kind]
             if row["delta_lambda_dot_deg_per_day"] is None:
                 continue
