@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-18T20:57:31Z",
+ "generated_at": "2026-11-19T02:51:57Z",
  "items": [
   {
    "address": "https://news.google.com/rss/articles/CBMiggFBVV95cUxON2hHOFliYmljVGZ4X2diUGExZ3hIcjRyNHZBUFdDVS1WN3VDbFV5WFlxRVhxZy1aa3ZTaUxCLUo0NGNfRmM4YWFMZXd0RjFTOFJjZEhJTXFRQm5LckVMTWd1UWVraWx6UlE2bkZoY3BOaTlPd1M2NmhYSm9OMDNvcEF3?oc=5",
@@ -439,6 +439,22 @@
    "summary": "",
    "title": "Russia’s GLONASS-K2 vs K1: What Has Changed in Its New Navigation Satellites?",
    "via": "https://news.google.com/rss/search?q=GLONASS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMixgFBVV95cUxQYmdLT2lsY1RraVg5NWxCNE42Nmh5V2dTNzJVdEpPTkNIQmhQQ3k2Y1hFb0lHNjBkOHpPNjJjbVU5elRxUGFra0Q0bEFPU0NTdHZPTHF2X0RKUHdyY2FYTVdzclZkaDJtSU42bzlmbFVLaDFGdlNIX3pCY1FIRGo3aU9IZmV0aEdFbk9JUzJ4anJMRURVUXdObFd4NnVhT05OZHdOMHFGakxfbThfZnRRVWREY2t2SnpvSmhERXVMMjZMajd0Smc?oc=5",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-19T02:51:57Z",
+   "grade": "B",
+   "grade_standing": "confirmed",
+   "outlet": "ESA",
+   "published_at": "2026-11-07T20:05:21Z",
+   "source_id": "esa.int",
+   "summary": "",
+   "title": "Galileo satellites and constellation",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://x.com/RussianSpaceWeb/status/2119090480558506095",
