@@ -1,6 +1,7 @@
 """The Library's shelves: only the project's own data is offered, each with how to get, use and cite it; others' data
 is credited and linked; a jump opens a shelf; and the page still draws when a published file cannot be read."""
 import json
+from datetime import date
 from html import escape
 from pathlib import Path
 
@@ -24,12 +25,13 @@ FILES = {ORBIT_GAP: ({"day": "2026-11-13", "satellites": []}, ""), FITTED: ({}, 
 
 def test_every_dataset_of_ours_says_how_to_get_use_and_cite_it():
     for key, item in OURS.items():
-        content, fresh, problem = shelf.item_state(key, FILES)
-        html = shelf.card_html(key, content, fresh, problem)
-        for words in ("<i>Fresh</i>", "<i>Address</i>", "CC BY 4.0", "How to use it", "<b>Example</b>", "<b>Not for</b>",
-                      "<b>Cite</b>", item["address"]):
+        content, day, problem = shelf.item_state(key, FILES)
+        html = shelf.card_html(key, content, day, problem)
+        for words in ("Source</i>", "Updates</i>", "Fresh</i>", "Licence</i>", "Format</i>", "CC BY 4.0", "stable address",
+                      "<b>Example</b>", "<b>Not for</b>", escape(item["purpose"]), item["address"]):
             assert words in html, (key, words)
         assert item["address"].startswith("https://raw.githubusercontent.com/")
+        assert len(item["purpose"]) <= 110   # one line of purpose; the rest opens from the name
 
 
 def test_dataset_citations_have_short_and_long_forms_with_the_key_fields():
@@ -53,15 +55,18 @@ def test_only_our_own_files_are_offered_and_others_are_linked_to_their_owners():
     assert "indianspaceflight.in" in shelf.colleagues_html(COLLEAGUES)
 
 
-def test_a_file_that_cannot_be_read_says_so_and_freshness_says_when_we_update_it():
-    content, fresh, problem = shelf.item_state("fitted", FILES)
-    assert content is None and "cannot be read right now" in shelf.card_html("fitted", content, fresh, problem)
-    content, fresh, problem = shelf.item_state("orbit_gap", FILES)
-    assert not problem and json.loads(content)["day"] == "2026-11-13"
-    assert fresh.startswith("made 13 Nov 2026 · updated by us daily 06:00 UTC")
-    assert "updated by us Sundays 02:00 UTC" in shelf.item_state("sources", FILES)[1]
+def test_a_file_that_cannot_be_read_says_so_and_freshness_says_how_old_it_is():
+    content, day, problem = shelf.item_state("fitted", FILES)
+    assert content is None and "cannot be read right now" in shelf.card_html("fitted", content, day, problem)
+    assert shelf.freshness("fitted", day, problem)[0] == "bad"
+    content, day, problem = shelf.item_state("orbit_gap", FILES)
+    assert not problem and json.loads(content)["day"] == "2026-11-13" and day == date(2026, 11, 13)
+    assert shelf.freshness("orbit_gap", day, "", today=date(2026, 11, 14)) == ("ok", "made 13 Nov 2026 · 1 day ago · on time")
+    assert shelf.freshness("orbit_gap", day, "", today=date(2026, 11, 19))[0] == "warn"
+    assert shelf.freshness("lifecycles", date(2026, 11, 1), "", today=date(2026, 11, 19))[0] == "idle"   # kept by hand
+    assert shelf.cadence(OURS["sources"]["job"]) == "Sundays 02:00 UTC"
+    assert shelf.cadence("hand").startswith("by hand")
     assert "counts" not in OURS   # launched, lost and kept: published widely, so not offered as ours
-    assert "kept by hand" in shelf.item_state("lifecycles", FILES)[1]
 
 
 @pytest.fixture

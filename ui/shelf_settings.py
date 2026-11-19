@@ -29,10 +29,14 @@ ORBIT_GAP, FITTED = "orbit_gap", "fitted"   # files read from the orbit-checks b
 # launched/lost/kept counts are left out: GCAT and others publish the same; the Library still shows them.)
 # file: ("repo", path in the repository) or ("published", ORBIT_GAP or FITTED). date: ("column", name) the newest value
 # in a CSV column, ("json", key), or None. job: (workflow, schedule group) or "hand". fields: (name, what it means).
+# On the card: purpose (one line) and source; fresh_days: the age in days past which the file is late (None: no
+# expected age, as for a file kept by hand). what, made, fields, example and not_for open from the name as a tooltip.
 OURS = {
     "orbit_gap": {
         "name": "Orbit record check", "icon": "map", "file": ("published", ORBIT_GAP), "date": ("json", "day"),
         "job": ("rinex-check.yml", ""), "address": RAW + "orbit-checks/orbit_gap.json",
+        "purpose": "Daily distance between each satellite's newest GP record (TLE/OMM) and its broadcast ephemeris.",
+        "source": 'CelesTrak and Space-Track GP records; IGS broadcast ephemeris (BKG)', "fresh_days": 2,
         "what": "Every day, how far each followed satellite's newest public orbit record is from the positions the "
                 "satellite broadcasts itself.",
         "made": "Every day, the newest public orbit records (CelesTrak, Space-Track) compared with the positions in the "
@@ -51,6 +55,8 @@ OURS = {
     "fitted": {
         "name": "Orbits fitted to broadcast positions", "icon": "planet", "file": ("published", FITTED),
         "date": ("json", "day"), "job": ("rinex-check.yml", ""), "address": RAW + "orbit-checks/fitted_orbits.json",
+        "purpose": "A daily orbit fitted to each satellite's broadcast ephemeris, as an OMM record for SGP4.",
+        "source": 'IGS broadcast ephemeris (BKG)', "fresh_days": 2,
         "what": "An orbit fitted to a day of each satellite's own broadcast positions, ready for the SGP4 propagator.",
         "made": "Made here from IGS broadcast navigation files; it stands in when a satellite's public record is days old.",
         "fields": [("day", "the UTC day the broadcast positions are from"),
@@ -64,6 +70,8 @@ OURS = {
     "lifecycles": {
         "name": "Satellite lifecycles", "icon": "rocket", "file": ("repo", "registry/lifecycle_events.csv"),
         "date": ("column", "at_utc"), "job": "hand", "address": RAW + "main/registry/lifecycle_events.csv",
+        "purpose": "Each satellite's life events, from launch to disposal, each with its public source.",
+        "source": 'Operator mission pages, Space-Track GP history, press reports', "fresh_days": None,
         "what": "Each step of a satellite's life, from built and launched to service ended, with a public source for "
                 "every step.",
         "made": "Gathered by hand from the operators' mission pages and updates.",
@@ -79,6 +87,8 @@ OURS = {
     "sources": {
         "name": "News sources and their grades", "icon": "search", "file": ("repo", "evidence/source_grades.csv"),
         "date": ("column", "graded_on"), "job": ("source-record.yml", ""), "address": RAW + "main/evidence/source_grades.csv",
+        "purpose": 'Every news source the dashboard reads, with a reliability grade from A to F.',
+        "source": 'The team, checked weekly against the claim record', "fresh_days": None,
         "what": "Every news source the dashboard reads, with a reliability grade from A (the operator) to F (unattributed).",
         "made": "Graded by the team and checked each week against the record of claims that held or failed.",
         "fields": [("source_id, name", "the source's address and name"),
@@ -90,6 +100,8 @@ OURS = {
     "tracked": {
         "name": "Satellites this dashboard follows", "icon": "radar", "file": ("repo", "registry/dashboard_satellites.csv"),
         "date": ("column", "added"), "job": "hand", "address": RAW + "main/registry/dashboard_satellites.csv",
+        "purpose": 'The satellites the dashboard scores, by SVN, with its name for each.',
+        "source": 'The team, checked against the IGS satellite metadata file', "fresh_days": None,
         "what": "The satellites the dashboard scores, and its name for each.",
         "made": "The team's choice, checked by a test against the IGS satellite metadata file so no satellite with a "
                "signal ID today is missed without a reason.",
@@ -101,6 +113,8 @@ OURS = {
     "figures": {
         "name": "Money stated by public sources", "icon": "coin", "file": ("repo", "registry/library_figures.csv"),
         "date": None, "job": "hand", "address": RAW + "main/registry/library_figures.csv",
+        "purpose": 'Programme costs as public sources state them, in their own currency and year.',
+        "source": 'Public sources, gathered by hand', "fresh_days": None,
         "what": "What public sources say each programme cost, in their own currency and year, each with its source.",
         "made": "Gathered by hand; nothing is converted or estimated.",
         "fields": [("system, programme", "the constellation and the part of it the figure is for"),
@@ -118,7 +132,7 @@ OTHERS = [
     ("IGS satellite metadata file", "satellite", "https://files.igs.org/pub/station/general/",
      "Which satellite is which, signal IDs over time, and launch dates.", ("registry-update.yml", "")),
     ("IGS broadcast navigation files, via BKG", "broadcast", "https://igs.bkg.bund.de/",
-     "The positions satellites broadcast, for the orbit record check.", ("rinex-check.yml", "")),
+     "The broadcast ephemeris, for the orbit record check.", ("rinex-check.yml", "")),
     ("CelesTrak's orbit records", "satellite", "https://celestrak.org/",
      "The newest public orbit record of each satellite.", ("archive.yml", "orbital")),
     ("Space-Track.org's orbit records", "hourglass", "https://www.space-track.org/",
