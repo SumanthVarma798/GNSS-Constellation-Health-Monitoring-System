@@ -14,15 +14,20 @@ from ui import limits, surfaces
 from ui.figures.burns import EAST_WEST, NORTH_SOUTH
 from ui.figures.slot_rows import as_number
 
-# (heading, one plain line) for each column of the Overview table, after the satellite's name.
+# (technical term, its definition for the shared tooltip) for each column of the Overview table, after the name.
 COLUMNS = [
-    ("Drift per day", "Degrees of longitude it slides east or west each day"),
-    ("Inclination", "Tilt of the orbit against the equator (0° is over the equator)"),
-    ("Longitude", "Its average longitude over the last day, against its own slot"),
-    ("Eccentricity", "How far the orbit is from a perfect circle (0 is a circle). A geostationary satellite on an oval one "
-                     "speeds up and slows down each day, so it swings east and west of its slot by about 2 × e × 42,164 km"),
-    ("Height", "Distance above the Earth's surface at the equator"),
-    ("Upkeep", "Days since its last thruster burn, against how often it usually burns"),
+    ("Longitude drift rate", "How fast its mean longitude moves east (+) or west (−), in degrees a day. East-west "
+                             "station-keeping manoeuvres hold it near 0."),
+    ("Inclination", "The angle between its orbit plane and the equator: 0° is an equatorial orbit. North-south "
+                    "station-keeping manoeuvres hold it."),
+    ("Mean longitude", "Its longitude averaged over the last day, against its own slot and that slot's longitude "
+                       "deadband."),
+    ("Eccentricity", "How far the orbit is from a circle (0 is a circle). A geosynchronous satellite of eccentricity e "
+                     f"swings east and west of its mean longitude by about 2 × e × {limits.GEO_RADIUS_KM:,.0f} km a day."),
+    ("Altitude", f"Height above the equator: {limits.NOMINAL_HEIGHT_KM:,.0f} km is geostationary; from "
+                 f"{limits.SET_ASIDE_HEIGHT_KM:,.0f} km is the graveyard orbit."),
+    ("Last manoeuvre", f"Days since its last station-keeping manoeuvre, against its usual interval; overdue after "
+                       f"{limits.OVERDUE_AFTER:g} times it."),
 ]
 # The Station-keeping table's columns: burns in the window, then the year the score reads.
 BURN_COLUMNS = [
@@ -34,8 +39,11 @@ BURN_COLUMNS = [
 ]
 
 
-def cell(now, should="", status="idle", note=""):
-    return {"now": now, "should": should, "status": status, "note": note}
+def cell(now, should="", status="idle", note="", gauge=None):
+    """gauge, when given, is surfaces.gauge's {value, low, high} (and optionally floor, tick): the value drawn inside
+    its allowed range."""
+    out = {"now": now, "should": should, "status": status, "note": note}
+    return {**out, "gauge": gauge} if gauge else out
 
 
 def requirement(name):
@@ -94,12 +102,13 @@ def _outside(should, within):
 def drift(health, p, spread=None):
     now = as_number(health.get("Current Drift (°/day)"))
     allowed = p["drift_tolerance_gso"] if health.get("Type") == "GEO" else limits.DRIFT_ALLOWED_TILTED
-    note = "" if spread is None else f"±{spread:.4f} spread"
+    note = "" if spread is None else f"spread ±{spread:.4f}°/day over the window"
     if now is None:
-        return cell("not known", f"allowed ±{allowed:g}°/day", note=note)
-    way = " east" if now > 0 else " west" if now < 0 else ""
+        return cell("not known", f"±{allowed:g}°/day", note=note)
+    way = "drifting east" if now > 0 else "drifting west" if now < 0 else ""
     within = abs(now) <= allowed
-    return cell(f"{now:+.4f}°{way}", _outside(f"allowed ±{allowed:g}°/day", within), "ok" if within else "warn", note)
+    return cell(f"{now:+.4f}°/d", _outside(f"±{allowed:g}°/day", within), "ok" if within else "warn",
+                " · ".join(filter(None, [way, note])), {"value": now, "low": -allowed, "high": allowed})
 
 
 def inclination(health, need, p):
@@ -109,14 +118,16 @@ def inclination(health, need, p):
     if "inclination" not in need and "inclination_target_deg_range" in need:
         low, high = need["inclination_target_deg_range"]
         should, within = (f"under {high:g}°" if low <= 0 else f"{low:g} to {high:g}°"), off == 0
+        band = {"low": max(low, 0.0), "high": high, "floor": low <= 0}
     else:
         target = as_number(health.get("Target Incl. (°)"))
         if target is None:
             return cell("not known" if now is None else f"{now:.2f}°", "no target set")
         should, within = f"{target:g}° ±{tol:g}°", off is not None and off <= tol
+        band = {"low": target - tol, "high": target + tol}
     if now is None:
         return cell("not known", should)
-    return cell(f"{now:.2f}°", _outside(should, within), "ok" if within else "warn")
+    return cell(f"{now:.2f}°", _outside(should, within), "ok" if within else "warn", gauge={"value": now, **band})
 
 
 def longitude(health):
@@ -129,7 +140,9 @@ def longitude(health):
         return cell("not known", should, note="scored without this part")
     off = as_number(health.get("Lon Slot Deviation (°)"))
     within = as_number(health.get("Lon Deviation Score")) == 100
-    return cell(_lon(now), _outside(should, within), "ok" if within else "warn", f"{off:+.2f}° from its slot")
+    gauge = None if off is None else {"value": slot + off, "low": slot - allowed, "high": slot + allowed}
+    return cell(_lon(now), _outside(should, within), "ok" if within else "warn",
+                "" if off is None else f"{off:+.2f}° from its slot", gauge)
 
 
 def eccentricity(now, need, kind=None):
@@ -144,17 +157,20 @@ def eccentricity(now, need, kind=None):
     if limit is None:
         return cell(f"{now:.5f}", "no limit set", note=note)
     within = now < limit
-    return cell(f"{now:.5f}", _outside(f"under {limit:g}" + (f" (±{limits.ecc_swing_km(limit):,.0f} km)" if kind == "GEO" else ""), within),
-                "ok" if within else "warn", note)
+    return cell(f"{now:.5f}", _outside(f"under {limit:.5g}" + (f" (±{limits.ecc_swing_km(limit):,.0f} km)" if kind == "GEO" else ""), within),
+                "ok" if within else "warn", note, {"value": now, "low": 0.0, "high": limit, "floor": True, "strict": True})
 
 
 def height(health):
     now = as_number(health.get("Altitude (km)"))
-    should = f"{limits.NOMINAL_HEIGHT_KM:,.0f} nominal"
+    should = f"under {limits.SET_ASIDE_HEIGHT_KM:,.0f} km (graveyard orbit); {limits.NOMINAL_HEIGHT_KM:,.0f} km nominal"
     if now is None:
         return cell("not known", should)
     gone = now >= limits.SET_ASIDE_HEIGHT_KM
-    return cell(f"{now:,.1f} km", should + (" · graveyard height" if gone else ""), "bad" if gone else "idle")
+    return cell(f"{now:,.1f} km", should, "bad" if gone else "idle",
+                f"{now - limits.NOMINAL_HEIGHT_KM:+,.1f} km from nominal" + (" · graveyard orbit" if gone else ""),
+                {"value": now, "low": None, "high": limits.SET_ASIDE_HEIGHT_KM, "tick": limits.NOMINAL_HEIGHT_KM,
+                  "strict": True})
 
 
 def upkeep(health):
@@ -162,8 +178,11 @@ def upkeep(health):
     every, since = as_number(health.get("Expected Interval (days)")), as_number(health.get("Days Since Last"))
     score = as_number(health.get("_maintenance_score"))
     status = "idle" if score is None else surfaces.band(score)
-    counts = f"{health.get('EW Maneuvers', 0)} east-west, {health.get('NS Maneuvers', 0)} north-south"
-    return cell("no burns" if since is None else f"{since:.0f} d ago", _every(every, since), status, counts)
+    counts = (f"{health.get('EW Maneuvers', 0)} east-west and {health.get('NS Maneuvers', 0)} north-south manoeuvres in "
+              "the window")
+    gauge = (None if every is None or since is None
+             else {"value": since, "low": 0.0, "high": every * limits.OVERDUE_AFTER, "floor": True, "tick": every})
+    return cell("none" if since is None else f"{since:.0f} d ago", _every(every, since), status, counts, gauge)
 
 
 def _every(every, since):

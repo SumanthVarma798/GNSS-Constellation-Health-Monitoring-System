@@ -96,9 +96,8 @@ def test_belt_draws_that_slot_as_an_idle_hollow_ring_labelled_unknown_never_empt
     assert "whose position is not known" in ring.find("{*}title").text
     texts = {t.text: t.get("fill") for t in svg.iter("text")}
     idle = palette.SLOT_COLOURS[palette.SLOT_UNKNOWN]
-    assert texts["32.5, slot of IRNSS-1F, position not known"] == idle
-    assert texts["IRNSS-1F: position not known"] == idle
-    assert not any("empty slot of IRNSS-1F" in text for text in texts)
+    assert texts["32.5"] == idle   # the label is the longitude; who owns it and where it is open in its tooltip
+    assert "<b>IRNSS-1F</b> position not known" in slot_belt(navic)
 
 
 def test_last_known_position_of_irnss_1d():
@@ -160,9 +159,9 @@ def test_belt_has_one_svg_with_a_spoken_description(navic):
         assert words in label
 
 
-def test_belt_notes_the_satellite_that_left_beside_its_empty_slot(navic):
+def test_belt_says_in_its_tooltip_that_the_satellite_left_its_empty_slot(navic):
     svg = drawn(navic)
-    assert "IRNSS-1D gone from this slot" in "".join(t.text for t in svg.iter("text"))
+    assert "<b>IRNSS-1D</b> gone from this slot" in slot_belt(navic)
     assert not find(svg, "circle", **{"data-sat": "IRNSS-1D"})   # -25.1 is outside the drawn range
     assert find(svg, "circle", **{"data-slot-lon": "111.75", "data-owner": "IRNSS-1D"})[0].get("data-empty") == "true"
 
@@ -170,13 +169,37 @@ def test_belt_notes_the_satellite_that_left_beside_its_empty_slot(navic):
 def test_belt_says_when_a_position_is_not_known(navic):
     svg = drawn(navic)
     assert not find(svg, "circle", **{"data-sat": "IRNSS-1F"})
-    assert "IRNSS-1F: position not known" in "".join(t.text for t in svg.iter("text"))
+    assert "IRNSS-1F</b> position not known" in slot_belt(navic)
 
 
 def test_belt_merges_labels_of_satellites_at_the_same_spot(navic):
     texts = [t.text for t in drawn(navic).iter("text")]
     assert "IRNSS-1I, IRNSS-1B" in texts
-    assert "NVS-01 (off its slot), IRNSS-1G" in texts
+    assert "NVS-01, IRNSS-1G" in texts   # the state is in each mark's shape and tooltip, not the label
+
+
+def test_belt_labels_never_overlap(navic):
+    svg = drawn(navic)
+    boxes = [(float(t.get("x")), float(t.get("y")), len(t.text) * 7.4) for t in svg.iter("text") if t.get("font-size") == "12"]
+    for i, (x, y, w) in enumerate(boxes):
+        for x2, y2, w2 in boxes[i + 1:]:
+            assert y != y2 or abs(x - x2) >= (w + w2) / 2, (x, y, x2, y2)
+
+
+def test_belt_shows_an_offset_by_an_ideal_ring_and_an_arrow_and_a_slot_to_confirm_by_a_question_mark(navic):
+    svg = drawn(navic)   # 2° off: the ideal ring sits beside the dot, too close for an arrow
+    assert find(svg, "circle", **{"data-ideal": "NVS-01"}) and not find(svg, "polygon", **{"data-arrow": "NVS-01"})
+    far = drawn(slot_rows(MADE_UP))   # A is 20° off its slot: an arrow from its ideal ring to it
+    assert find(far, "circle", **{"data-ideal": "A"}) and find(far, "polygon", **{"data-arrow": "A"})
+    belt = slot_belt([{**row, "confirm": row["name"] == "NVS-01"} for row in navic])
+    svg = svg_of(belt)
+    dot = find(svg, "circle", **{"data-sat": "NVS-01"})[0]
+    assert dot.get("data-state") == "slot to confirm" and dot.get("fill") == palette.IDLE
+    assert "?" in [t.text for t in svg.iter("text")]
+    ring = find(svg, "circle", **{"data-slot-lon": "131.5"})[0]
+    assert ring.get("data-empty") == "false" and ring.get("stroke") == palette.IDLE   # never called empty
+    assert not find(svg, "polygon", **{"data-arrow": "NVS-01"})
+    assert "NVS-01: slot to confirm" in svg.get("aria-label") and "<b>State</b> slot to confirm" in belt
 
 
 def test_belt_range_comes_from_the_slots():
