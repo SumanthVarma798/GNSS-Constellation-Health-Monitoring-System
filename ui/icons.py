@@ -43,6 +43,8 @@ TABLER = {
     "download": ['M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2', 'M7 11l5 5l5 -5', 'M12 4l0 12'],
     "quote": ['M10 11h-4a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1h3a1 1 0 0 1 1 1v6c0 2.667 -1.333 4.333 -4 5',
               'M19 11h-4a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1h3a1 1 0 0 1 1 1v6c0 2.667 -1.333 4.333 -4 5'],
+    "clock-x": ['M20.926 13.15a9 9 0 1 0 -7.835 7.784', 'M12 7v5l2 2', 'M22 22l-5 -5', 'M17 22l5 -5'],
+    "external-link": ['M12 6h-6a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-6', 'M11 13l9 -9', 'M15 4h5v5'],
     "mail": ['M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z', 'M3 7l9 6l9 -6'],
 }
 
@@ -61,7 +63,9 @@ MASKED = ("bell", "check", *dict.fromkeys(STATUS_ICONS.values()), "map", "click"
           # the Library's column help (evidence/library_settings.py LIBRARY_COLUMN_HELP)
           "rocket", "power", "broadcast", "calculator", "hourglass", "coin", "database",
           # the Library's shelves (ui/shelf_settings.py)
-          "satellite", "search", "download", "quote", "tool", "mail")
+          "satellite", "search", "download", "quote", "tool", "mail",
+          # the Overview: the clock record's mark, the operator's status link
+          "clock-x", "external-link")
 
 
 def mask_url(name):

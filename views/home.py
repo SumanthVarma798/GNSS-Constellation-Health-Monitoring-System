@@ -126,6 +126,18 @@ def _burns_tile(system):
     return (f'<div class="tile"><span class="small">{_explained("irregular burns")}, 365 days</span>{value}</div>')
 
 
+_SCORED_FROM = re.compile(r"scored from (\d{1,2} \w{3})")
+
+
+def _new_chip(name, stage, index):
+    """A new satellite not scored yet as a small chip, "NVS-03 · new · scored from 13 Dec", its stage in full in the
+    shared tooltip (analysis/commissioning.py when_scored)."""
+    when = _SCORED_FROM.search(stage)
+    words = f"{name} · new" + (f" · scored from {when.group(1)}" if when else " · not scored yet")
+    return tooltip.tip_html(surfaces.chip(words, "accent"),
+                            escape(f"{name} is new and not scored yet: {stage}."), key=f"new_{index}_{name}")
+
+
 def _row(system, unread=None, index=0, steps=""):
     """One constellation as a card. Closed: its score in a ring of its satellites' states, its name, who runs it,
     the states counted in words, and how the score is made. Opened (a click anywhere on it, no page reload): the
@@ -135,12 +147,11 @@ def _row(system, unread=None, index=0, steps=""):
     name = system["name"]
     who, where = SYSTEMS.get(name, ("", ""))
     split = _split(system)
-    notes = [f"{escape(new)} is new and {_explained('not scored yet')}: {escape(stage)}"   # each note is markup
-             for new, stage in system["settling"].items()]
+    chips = ([surfaces.chip(f"{label} {count} of {of}", surfaces.share_tone(100 * count / of) if of else "idle")
+              for label, count, of in system["parts"]]
+             + [_new_chip(new, stage, index) for new, stage in system["settling"].items()])
+    notes = [escape(f"{label} could not be read just now: {_why(error)}") for label, error in (unread or {}).items()]
     notes += [escape(CAVEATS[name])] if name in CAVEATS else []
-    notes = ([escape(" · ".join(f"{label} {count} of {of}" for label, count, of in system["parts"]))] * bool(system["parts"])
-             + [escape(f"{label} could not be read just now: {_why(error)}") for label, error in (unread or {}).items()]
-             + notes)
     # in the card's head nothing is a link, so a click there always opens the card; the words link once it is open
     counted = "".join(f'<span><i class="{kind}"></i>{count} {escape(meaning)}</span>' for kind, meaning, count in split)
     key = "".join(f'<span><i class="{kind}"></i>{_explained(meaning)}</span>' for kind, meaning, _ in split)
@@ -160,7 +171,8 @@ def _row(system, unread=None, index=0, steps=""):
             f'{three_measures.part_scores(system)}{three_measures.record_line(name)}'
             f'<div class="tiles in">{in_score}</div>'
             f'<div class="tiles seen">{seen}</div>'
-            + (f'<div class="card-notes">' + "".join(f'<div class="small">{note}</div>' for note in notes)
+            + (f'<div class="card-chips">{"".join(chips)}</div>' if chips else "")
+            + ('<div class="card-notes">' + "".join(f'<div class="small">{note}</div>' for note in notes)
                + "</div>" if notes else "")
             + (f'<div class="dots mixw small card-key">{key}</div>' if key else "")
             + "</div></details>")

@@ -62,8 +62,16 @@ CARE_MIN_JUDGED = 3
 CLOCK_STEADY_NS = 30.0   # our choice: 30 ns is 9 m of range, far past a steady clock's steps (about 1 ns)
 # The clock score judges only the satellites in service today, so a constellation whose clocks have failed in orbit
 # can still score high: the record of those that failed (registry/clock_record.csv) is said beside it.
-CLOCK_RECORD = ("Clock record: {lost} of {launched} {name} satellites launched are reported to have lost atomic clocks in orbit.",
-                "The score above judges only the satellites in service today. Sources:")
+# Drawn as one figure ("6 of 11 lost clocks") and a clock mark on each satellite's tile; the words open in the tooltip.
+CLOCK_RECORD = ("{lost} of {launched} {name} satellites launched are reported to have lost atomic clocks in orbit.",
+                "The score judges only the satellites in service today.")
+# Who supplied the clocks, only as the sources report it: (words, [(source name, link), ...]).
+CLOCK_SUPPLIER = {
+    "NavIC": ("The first-generation satellites each carried three rubidium clocks from SpectraTime, a Swiss maker, as "
+              "widely reported.",
+              [("GPS World, 30 Jan 2017", "https://www.gpsworld.com/3-atomic-clocks-fail-on-1-indian-satellite-replacement-prepped/"),
+               ("Swarajya, 11 Apr 2026", "https://swarajyamag.com/technology/navics-clock-crisis-and-the-indian-clocks-that-could-fix-it")]),
+}
 
 # A constellation's score (ui.system_summary.score_of) weighs its four measures by what a failure costs its users,
 # which depends on the mission. Our choice, for the team to confirm; Need help reading this page? gives the reasons
