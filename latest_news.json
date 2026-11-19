@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-19T12:15:38Z",
+ "generated_at": "2026-11-19T21:03:25Z",
  "items": [
   {
    "address": "https://news.google.com/rss/articles/CBMidkFVX3lxTFBCNnUtZm5MR1VSVmxGR04tbEFvdWktMm56NU9EOFBDVVYwM0ZTYUpWUEZNUUQtU0pBT0d1d2F5RzRia3FkQmI3Q25jR01NWUdkdTBOcDI0Qjk2aUtaVDEwdW9LZ1k1cFV1QUJvTnNQTVVMTEZVcFE?oc=5",
@@ -66,6 +66,22 @@
    "summary": "",
    "title": "China’s GPS rival BeiDou expands reach with 27% rise in compatible devices",
    "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxNYTRIMGZmR2tKUjZFTV9pLVRZUjJVTHFEbUMxYmJIRF9XRG04RUdLUGFJSEx2T1dDaEprUUlDMmdIcllSRWtKbFFNRFBMakJCSUY1T3hZNXhwSHdBOC0wSzQxb3JYSHFpMV9rbFc0R1Zaa3pnVGRUYk10aWEwcl9TX0J6blZnclg5ZGFCTFlwUlFqVWx3VUZGSko2RHRUUkJxTWVvQ25DaEEzcmFyZi1RNlMzaVZhMzNtUHJncG11dmI1dw?oc=5",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-19T21:02:54Z",
+   "grade": "B",
+   "grade_standing": "confirmed",
+   "outlet": "ESA",
+   "published_at": "2026-11-17T08:00:00Z",
+   "source_id": "esa.int",
+   "summary": "",
+   "title": "What is Galileo?",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMiYkFVX3lxTE13S1h1bjAxN2VINXFYNVR6cE5za1JwVFNlMmVMQ3FtajMyS2RabUl4SVFLemlHbEdaMjVLSmYxdzR0bGlMa3E5Vl8ydFRuZWYtTWlTTFNzSmJGVlVIVV81MGdR?oc=5",
@@ -3351,6 +3367,22 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMiXkFVX3lxTE5ZM3o4Q1ZYV3g3cGJXdkVSMWVBcHUwRHZDVW14ZnhiSjY1NmJ2U0Q0c2duc2JzMFJkNXQtMDVia3kyc2hocXlNaVM4NlBVVVFiM1lpR011Z2FzT3BibFE?oc=5",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-19T21:02:54Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "SpaceQ",
+   "published_at": "2026-10-30T07:00:00Z",
+   "source_id": "spaceq.ca",
+   "summary": "",
+   "title": "Canada-EU summit opens talks on Galileo and IRIS² access",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMixwFBVV95cUxNNnRIZ2lHUndCY3NzS0xxSXZ3eEVwV2YzLVJKLTNpbTNHUEVaS1ZYREx5b0tnTE90aVVFWXUzQzB2NDdiaS1Ecml4eWJqTjNTRjBKekk1Ymd3Y1hraFJNVEZrUGd4MEgyS0w1anVhQ3RvbnNkSVFaVE0tVHVLb1VxQ3loOWU5NEVLMFBkdVp2a2l6bDNsQkZYYmM1cFROODZfOVk5T2NmNVVhaTdUVTlZQXpsb3htWU5JekFMbjZfV2IxTThrRWFB0gHUAUFVX3lxTFBSckZySjRySnFPWUNYbl9ZQ2swNVBwUVZaaUc2OGZDcmpBMmVpMENEY3J0YVloNzQxX2pMd0UyZFhKdGd4eldPYk1ZbUJIQ2dENDJSVTMtV2RvbDUxWEFCQnlYTi05dW1JcUpJZjRCZzFpVHU1MmZOX3JMbUdMZjQ4VzVHeW8ydDRnVkoxa2RXdzhOSFJHdUo0cG5DSVo3VlR5RHIzQmM5dm1aQ1FBTFN1MXFGbXhrOG40eDFUSmI4NTVqRUwwZFBsdkJHOUdpWjVIaHd6?oc=5",
    "category": "launch",
    "constellations": [
@@ -3881,6 +3913,22 @@
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMiogFBVV95cUxOYUlqclVGcGVuSmVyaDFqcWFYNXd6Mmp5WjVWUGtaUWdFbXZTX3dMeHdJd1lHUGVaMUh2elBVWHV3amhYX2tTamdYSU0tRnFsNVRKUTEtNlVFSHRGckN6SVBkV1h4Tk9jWnprUTg0aWV2RlRpNHBwWFNzTExKWGw4TDRNOEtWUXVqY0hJelZpX0hpWDJuSHRLXzd4am9yR2MtY3c?oc=5",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-19T21:02:54Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "ASDNews",
+   "published_at": "2026-10-27T10:00:00Z",
+   "source_id": "asdnews.com",
+   "summary": "",
+   "title": "ESA Procures 4 New Galileo 2nd Generation Satellites",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMivwFBVV95cUxOSzJ1UUczaV9uQTRiZzA4UnhJbWstNXg4amo3WFk5dFhzZzhEbVlUb2xVdEMwaE5VdE52bkwySzZkYWozVjItc2FxMVRYazN3a3kwVU1QY2gzWDVKcFRUU085amJxTVB6SDZ6LWRIZjJKZEtENFFmeUVmUGxxVG9xakd5WmZGdnp0bkp4Z1hiU0FnRFdMSDlqNENhelROUmhjY2NXTU5ITmhYOTNsSlhhYUQ3R1lGaTFNVzlDanlTb9IBxAFBVV95cUxPczI4amUwMzJjT1VWcXNpYThYd2U5TS1QOFVYZjRUYWhjSGZiOVV4UVhISGVlNXV1aHc3RGpYRTFLOUo0end4cWFFeWtfOEt4eWJqOUdsUGY3QklaVXZiUXh5OHcwdG5nU3Q3N1FlcFEwMkFuS0plMDNlSHhwRWh1UC1yMFBLTzFVRldieE93TFY4dzhLUUZQVXphYXVoXzRNXzctbVdMVmYtYXpFWnlFQ3U2ckViS0NmOHFQaEZzRU1kN241?oc=5",
    "category": "launch",
    "constellations": [
@@ -3911,6 +3959,22 @@
    "summary": "",
    "title": "3 days to ISRO's NVS-03 launch, but can this satellite revive India's GPS alternative? Know what will...",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMipgFBVV95cUxOOTNaQm9vLVlsVHFKZ0ttanN1eWVzWG9uRGF4dHBISXR5VWhBWGQ5QTc3QVRFRlp5ZmVXSjZXMGJWVnpDZjRvc2c1RlUzNXZNd1hHcnFTM1pDbGVFMklXTFltVkh0TkFPV0NFM1U3UElvbGdMUWtNckdYMmM2bTNPeWt0X1lZVFpHTjVHVTVYeExIRmhIWUhfUXEtZHRXWjlyYlVjbGNn?oc=5",
+   "category": "programme and policy",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-19T21:02:54Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "ASDNews",
+   "published_at": "2026-10-26T23:00:00Z",
+   "source_id": "asdnews.com",
+   "summary": "",
+   "title": "Airbus Awarded Contract for 2 Additional Galileo Satellites",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://rntfnd.org/2026/10/26/highway-thieves-are-spoofing-gps-to-steal-millions-in-data-center-bound-cargo-ars-technica/",
@@ -7151,6 +7215,22 @@
    "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMif0FVX3lxTE1udWZlV0R5WTVCQmVib215QXRsX0xPNzM4OEJrWElUdnR4c2pyTUVybzFhcUNpSEpxU2laSEJGRFc5SDgyVnJlV29mU0F4ejlDbXpEci1DMVI2QjkzT0tZZmZjeERfLTREcXJXNTZYZy1RNHF6dUdmMkdBNzhxXzQ?oc=5",
+   "category": "other",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-11-19T21:02:54Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "El Mundo America",
+   "published_at": "2026-03-23T07:00:00Z",
+   "source_id": "mundoamerica.com",
+   "summary": "",
+   "title": "Celeste, a Satellite Network to Strengthen Europe's 'GPS': \"We Want to Reduce Dependence on Foreign Systems\"",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMinAFBVV95cUxOR2JaUVBvY3hEYS03ZlhlaXhHbFF3b3A0aG5PamNoTElNUDR5d1hfcWNTNE84OF9ienVPUzlWZmR0bWgtbmc2dURWRHIxeE54VW5hMVpaaHBYRTh4dktxalk5VlA4djMyTElXSEpXNklqazV1c2d1dkF5bkNKX3hXWHpGWWFBZEtUbWoyWUlNUURwQVVxeWxiMk4zV18?oc=5",
    "category": "launch",
    "constellations": [
@@ -7358,22 +7438,6 @@
    "source_id": "indiatoday.in",
    "summary": "",
    "title": "Isro's NavIC is down: What is an atomic clock that has put India's desi GPS in danger",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMizgFBVV95cUxQR2lwRUdWUWljb2xZNVBZYTRINEpIRFl3S21SenNSby1rbHRvTFJ5Qy1zYjkxOUhLcjJpejFlc05lWVpmbFB0UkhJQmlaMTdCaHVqczJNbzk0ME0zWmV3US05UHNTNVExczZ3S0VEQUo3T0ZnU2xFcHR6cWJHaXJVYkZnM1hBOV9mZGdpMG5PNENrakhIdkhMMHJrRXFNanBzZXYwdjUyanZ2RW9jcTgzRHVTME9xVVFEVG16Yjl4eGNuRzlaUXBlWFkwRXI3d9IB0wFBVV95cUxPamx4NURGcnNlczhaaGNuc3RkRmRTUW05UHdERE5vZk5DMDdsSFJ4eHFMUGV4SEhTbkg2TEpsTzNhMHRpQTRxS2lPemZTa1RncFpkUVp5VG5mOWx3bXVWMm93VlJDT0Z2cUdPcmZoY3p5a3g2VHFJTjd4bzNGdmp4WU94T19iZ2FuanljVkNpbWJ0TGZjNHFvQjUxNnNyTnpweUtPX3hqMHBNWXN3SjN2WTNxNGVjQmN5eElqMlhMY0FWOWg1R0tqSjdZOTlDOFotRHFz?oc=5",
-   "category": "other",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Business Standard",
-   "published_at": "2026-03-16T07:00:00Z",
-   "source_id": "business-standard.com",
-   "summary": "",
-   "title": "Isro's NavIC down to 3 satellites: What it means for India's GPS ambition",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -7762,6 +7826,22 @@
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMibEFVX3lxTE1EREtFaGpUay1kbjV2U3VLSVQ3bUZpM0FEZmFSWnNBQjM3aG5Mc21jRlFaRVpkSGdiTGhiTXE4VkwtLVpQZFpTaWhtTnBTbHNSMmlydU01NmV1QVdNTnFBVjg3MElBWUtfb2NQWQ?oc=5",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-19T21:02:54Z",
+   "grade": "C",
+   "grade_standing": "confirmed",
+   "outlet": "GPS World",
+   "published_at": "2026-01-08T08:00:00Z",
+   "source_id": "gpsworld.com",
+   "summary": "",
+   "title": "ESA celebrates 30 years of Galileo",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMigAFBVV95cUxNa1dIUTgyY0RqZl9DWDNlTTNmcVI4SUI1NFpHQzAzNE5KX0kwbXZ0OGtNNVJ0TGxSalp3QllOZWVWUGxYSDFQWk1QTTVJLXI5REZDMmZWS1hmY1VmLXZPNTJraUdqVElaczItY20wOEE5anVWSE9QbmJjaXpqS3YwSdIBhwFBVV95cUxPdmluY20wdDBldmhlLXBTSzU1b1h3QnhXeFJyQzRPWHppc3pXT2NWbUNjYmdrU1dUdzl2bXQtTlNzT0lkYW9qdlpQcjFpQUY2d0dLcm0yTUZjMU9vbWtnTnhuVWdXallvLXNGQTMwZksxc0ZkaUl2b0RNaWlRS1ZFQU8wdktBa00?oc=5",
    "category": "other",
    "constellations": [
@@ -7776,6 +7856,38 @@
    "summary": "",
    "title": "The making of Galileo",
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiZkFVX3lxTE5rZmNWb2ZOYUZFRTNZZGdlUkJiSVl5a3ctc3NJVDQ4OGwyZlRFd2RqSUVtN19XZ19mbVF3YmM2M2p2T2c4dENWS0ZzbWZ6a0VmYnM4ZTJqREFRUER5OUg3bERWNDdlQQ?oc=5",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-19T21:00:22Z",
+   "grade": "C",
+   "grade_standing": "confirmed",
+   "outlet": "GPS World",
+   "published_at": "2025-12-28T06:50:13Z",
+   "source_id": "gpsworld.com",
+   "summary": "",
+   "title": "Galileo",
+   "via": "https://news.google.com/rss/search?q=site%3Agpsworld.com&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE9BUDhYVlFqUDNDVi13UmFVazYxWEExOFhMR1Bja1c4SWJpOXBOang1V2ZwOHNIUTRfRXNLNDQ1Q1hxNzhoSEItS1lkRXM2UnVjb2pMS3ZPYTZyMDBnNUEtM1RCQWI?oc=5",
+   "category": "other",
+   "constellations": [
+    "BeiDou-3"
+   ],
+   "fetched_at": "2026-11-19T21:00:22Z",
+   "grade": "C",
+   "grade_standing": "confirmed",
+   "outlet": "GPS World",
+   "published_at": "2025-12-24T23:53:02Z",
+   "source_id": "gpsworld.com",
+   "summary": "",
+   "title": "BeiDou",
+   "via": "https://news.google.com/rss/search?q=site%3Agpsworld.com&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMisAFBVV95cUxNN1A0cWV4cEpxQThZTnhNbWNyLXlMVFVveFdDODYtdkJHV1ViVW9nNDM2Z25NNi13VHdRNDZOd3ZiUXpkU182dno3N3UwaE1SQjF0R2hwSDlfX0JvNDZHLW9qaGs0bUU3cVVQRnVQYVNZcWVnMzNsNjM1N3c2TDN2U0pUdG80OFpLNng1LXBhMUZLZkNjWWZNUWVzOFJWVXJ1RlhXTHhVR1RkWlVvNkVEMg?oc=5",
@@ -7991,6 +8103,22 @@
    "source_id": "aerotime.aero",
    "summary": "",
    "title": "Ariane 6 successfully launches two Galileo satellites from Kourou",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE9UQ3JmMmpCSmFvM0VYcXlhWHRyUjhMcndSU2tZemYxNUhqWTl6bEt1Nk5VT2Nza1VRZ2R1d0d1V2x5dmZERVJCRlQxQkVYd2J6djlLZmZmQnZ6ekdCQWRLLUo1R0U1LVRR?oc=5",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-19T21:02:54Z",
+   "grade": "C",
+   "grade_standing": "confirmed",
+   "outlet": "GPS World",
+   "published_at": "2025-12-17T08:00:00Z",
+   "source_id": "gpsworld.com",
+   "summary": "",
+   "title": "Galileo adds two new satellites",
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -8301,6 +8429,15 @@
    "graded_by": "",
    "kind": "",
    "name": "aninews.in",
+   "note": "",
+   "reason": ""
+  },
+  "asdnews.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "asdnews.com",
    "note": "",
    "reason": ""
   },
@@ -9516,6 +9653,15 @@
    "note": "",
    "reason": ""
   },
+  "mundoamerica.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "mundoamerica.com",
+   "note": "",
+   "reason": ""
+  },
   "myanmaritv.com": {
    "grade": "F",
    "grade_from": "record",
@@ -10028,6 +10174,15 @@
    "name": "SpaceNews",
    "note": "",
    "reason": "Specialist space press"
+  },
+  "spaceq.ca": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "spaceq.ca",
+   "note": "",
+   "reason": ""
   },
   "spacewatch.global": {
    "grade": "",
