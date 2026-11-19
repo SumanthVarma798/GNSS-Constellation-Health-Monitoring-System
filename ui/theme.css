@@ -11,7 +11,7 @@ html, body, .stApp, [data-testid="stApp"] { background: var(--platform); color: 
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .45s; }
 /* A frame whose colour scheme differs from its own page's is drawn opaque (a box behind the clock). Streamlit sets
    normal on frames, and dark on its wrappers, so the frames take the page's from --look (ui/theme.py). */
-.stApp iframe { color-scheme: var(--look); }
+.stApp iframe, [data-testid="stPopoverBody"] iframe { color-scheme: var(--look); }   /* a panel sits outside .stApp */
 [data-testid="stHeader"] { background: var(--platform); }
 [data-testid="stMain"], [data-testid="stMain"] p, [data-testid="stMain"] li, [data-testid="stMarkdownContainer"] { color: var(--ink); }
 /* 1560px wide at most, centred: a table or a row of four tiles still reads as one block on a
@@ -520,14 +520,7 @@ table.grid .nt { margin-top: 2px; color: var(--idle); font-size: var(--fs-small)
 /* the time range's panel: the presets in a pressed track, the chosen one raised in the accent colour; a greyed preset
    is longer than the orbit records held. Then a date of the reader's own to now, and what bounds the range. */
 .range-title { margin: 0 0 8px; font-size: var(--fs-small); font-weight: 600; color: var(--fc-small); }
-.st-key-range_presets { flex-direction: row; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); width: max-content; max-width: 100%; }
-.st-key-range_presets > div { width: auto !important; }
-.st-key-range_presets button { padding: 4px 13px; min-height: 0; font-size: var(--fs-small); background: transparent; color: var(--muted); border-color: transparent; box-shadow: none; }
-.st-key-range_presets button:hover { color: var(--accent); border-color: transparent; }
-.st-key-range_presets button[data-testid="stBaseButton-secondary"]:focus:not(:focus-visible) { box-shadow: none; }   /* the panel focuses its first preset on opening */
-.st-key-range_presets button[data-testid="stBaseButton-primary"] { background: var(--platform); color: var(--accent); border-color: var(--edge); box-shadow: var(--raised-sm); }
-.st-key-range_presets button:disabled { opacity: .4; cursor: not-allowed; }
-.st-key-range_presets button :is(p, span) { color: inherit; }
+.range-title:focus { outline: none; }
 .st-key-range_custom { flex-direction: row; align-items: flex-end; gap: 10px; margin-top: 12px; }
 .st-key-range_custom > div { width: auto !important; }
 .range-to { display: block; padding-bottom: 10px; font-size: var(--fs-small); color: var(--fc-small); white-space: nowrap; }

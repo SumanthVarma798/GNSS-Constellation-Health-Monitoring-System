@@ -21,6 +21,7 @@ from evidence.registry_tables import judged_by_plane
 from ui import limits, data, next_step, next_step_data, reveal, shell, surfaces, tooltip
 from ui import geometry_data as gd
 from ui import geometry_settings as gs
+from ui.components.ferris import ferris
 from ui.components.sky_view import sky_view
 from ui.figures import geometry as gf
 from ui.picker import chosen_constellations
@@ -62,13 +63,13 @@ def _chosen_places(constellation):
 def _place_pickers(constellation):
     """Your place and a second place to compare it with, from the list of world cities. No location is asked of the browser."""
     you, vs = _chosen_places(constellation)
-    st.session_state.setdefault(f"geo_you_{constellation}", you)   # Streamlit forgets the inputs while another section is shown
+    st.session_state.setdefault(f"geo_you_{constellation}", you)   # the pickers start at the places kept
     st.session_state.setdefault(f"geo_vs_{constellation}", vs)
     left, right = st.columns(2)
     for column, who, label in ((left, "you", gs.YOU_LABEL), (right, "vs", gs.COMPARE_LABEL)):
         with column:
-            st.selectbox(label, sorted(gs.CITIES), key=f"geo_{who}_{constellation}", on_change=_remember_place,
-                         args=(constellation, who))
+            ferris(label, sorted(gs.CITIES), key=f"geo_{who}_{constellation}", on_change=_remember_place,
+                   args=(constellation, who))
     return _chosen_places(constellation)
 
 
@@ -187,10 +188,10 @@ def _clicked(constellation):
 
 def _place_controls(constellation):
     """A city or key place, or a latitude and longitude typed in. The map takes clicks as well."""
-    pick, typed = st.columns([1, 1], vertical_alignment="bottom")
+    pick, typed = st.columns([1, 1])   # top: the wheel opens downward without moving the other input
     with pick:
-        st.selectbox("City or key place", list(_choices(constellation)), key=f"geo_pick_{constellation}",
-                     placeholder="Choose a city or key place", on_change=_picked, args=(constellation,))
+        ferris("City or key place", list(_choices(constellation)), key=f"geo_pick_{constellation}",
+               placeholder="Choose a city or key place", on_change=_picked, args=(constellation,))
     with typed:
         st.text_input("Or a latitude, longitude", key=f"geo_coords_{constellation}", placeholder=gs.PLACE_EXAMPLE,
                       help=gs.PLACE_HELP, on_change=_typed, args=(constellation,))

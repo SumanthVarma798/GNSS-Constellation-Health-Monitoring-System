@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style id="root"></style>
+<style>
+/* The ferris-wheel picker (ui/components/ferris.py). The theme's :root rules arrive with each render (#root). */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; background: transparent; overflow: hidden; }
+body { padding: 3px; color: var(--ink); font-family: system-ui, sans-serif; }   /* 3px: room for the focus ring */
+.label { margin: 0 0 6px; font-size: var(--fs-small); color: var(--muted); }
+.label:empty { display: none; }
+.field {
+  position: relative; height: 44px; padding: 0 44px 0 14px; outline: none; overflow: hidden; cursor: pointer;
+  background: var(--well); border: 1px solid var(--edge); border-radius: 14px; box-shadow: var(--pressed);
+  transition: height 250ms cubic-bezier(.22,.61,.36,1); touch-action: pan-y; user-select: none; -webkit-user-select: none;
+  -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+}
+.field:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.field.open { height: 152px; touch-action: none; }
+/* The middle seat: a raised chip behind the option a click, a tap or Enter would pick. */
+.seat { position: absolute; left: 6px; right: 6px; top: 50%; height: 32px; transform: translateY(-50%); border-radius: 10px;
+  background: var(--platform); border: 1px solid var(--edge); box-shadow: var(--raised-sm); opacity: 0; transition: opacity 160ms ease; }
+.open .seat { opacity: 1; }
+.wheel { position: absolute; left: 14px; right: 44px; top: 0; bottom: 0; perspective: 600px; }
+/* Each car sits on the wheel by its distance from the middle: symmetric steps of 34px then 28px, each a line high at
+   its own scale, so neighbours never touch (the prototype's crowding came from an off-centre middle). */
+.car { position: absolute; left: 0; right: 0; top: 50%; line-height: 20px; font-size: var(--fs-body); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; transform-origin: left center; color: var(--ink); opacity: 0; pointer-events: none;
+  transform: translateY(-50%) scale(.8);
+  transition: transform 250ms cubic-bezier(.22,.61,.36,1), opacity 250ms ease; }
+.car.d0 { opacity: 1; font-weight: 600; transform: translateY(-50%); }
+.open .car.d0 { color: var(--accent); pointer-events: auto; }
+.open .car.dm1 { opacity: .85; transform: translateY(calc(-50% - 34px)) rotateX(24deg) scale(.92); pointer-events: auto; }
+.open .car.dp1 { opacity: .85; transform: translateY(calc(-50% + 34px)) rotateX(-24deg) scale(.92); pointer-events: auto; }
+.open .car.dm2 { opacity: .25; transform: translateY(calc(-50% - 60px)) rotateX(48deg) scale(.72); pointer-events: auto; }
+.open .car.dp2 { opacity: .25; transform: translateY(calc(-50% + 60px)) rotateX(-48deg) scale(.72); pointer-events: auto; }
+.car.off { text-decoration: line-through; cursor: not-allowed; }
+.open .car.off { opacity: .2; }
+.car.hint { color: var(--muted); font-weight: 400; }
+.arrows { position: absolute; right: 0; top: 0; bottom: 0; width: 44px; }
+.arrow { position: absolute; left: 0; width: 44px; height: 22px; display: grid; place-items: center; opacity: .5;
+  transition: opacity 160ms ease, transform 250ms cubic-bezier(.22,.61,.36,1); }
+.arrow::before { content: ""; width: 8px; height: 8px; border-right: 2px solid var(--ink); border-bottom: 2px solid var(--ink); }
+.arrow.up { top: calc(50% - 22px); }
+.arrow.up::before { transform: translateY(3px) rotate(-135deg); }
+.arrow.down { top: 50%; }
+.arrow.down::before { transform: translateY(-3px) rotate(45deg); }
+.open .arrow { opacity: .95; }
+.open .arrow.up { transform: translateY(-14px); }
+.open .arrow.down { transform: translateY(14px); }
+.open .arrow:hover::before { border-color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .field, .seat, .car, .arrow { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="label" id="label"></div>
+<div class="field" id="field" tabindex="0" role="listbox" aria-labelledby="label">
+  <div class="seat" aria-hidden="true"></div>
+  <div class="wheel" id="wheel"></div>
+  <div class="arrows" aria-hidden="true"><div class="arrow up" data-step="-1"></div><div class="arrow down" data-step="1"></div></div>
+</div>
+<script>
+// Hover (or press and hold on touch) opens the wheel at the current option; the mouse wheel, a swipe, the arrows or
+// the arrow keys turn it; a click, a tap or Enter picks; Escape, leaving or moving focus away closes it unpicked.
+// Talks to Streamlit by its component messages: componentReady, setFrameHeight, setComponentValue.
+(() => {
+  "use strict";
+  const send = (type, data) => parent.postMessage(Object.assign({ isStreamlitMessage: true, type }, data), "*");
+  const field = document.getElementById("field"), wheel = document.getElementById("wheel");
+  let labels = [], off = [], hint = "", committed = -1, active = 0, isOpen = false, hovered = false, cars = [];
+  let wheelSum = 0, holdTimer = null, touch = null;
+
+  const usable = (i) => i >= 0 && i < labels.length && !off[i];
+  const around = (i, len) => { let d = i - active; if (d > len / 2) d -= len; if (d < -len / 2) d += len; return d; };
+
+  function draw() {
+    const len = labels.length;
+    cars.forEach((car, i) => {
+      const d = around(i, len);
+      car.className = "car" + (off[i] ? " off" : "");
+      if (!isOpen) car.classList.toggle("d0", i === committed);
+      else if (Math.abs(d) <= 2) car.classList.add(d < 0 ? "dm" + -d : d > 0 ? "dp" + d : "d0");
+      car.setAttribute("aria-selected", String(i === (isOpen ? active : committed)));
+    });
+    const hintCar = wheel.querySelector(".hint-car");
+    if (hintCar) hintCar.className = "car hint hint-car" + (!isOpen && committed < 0 ? " d0" : "");
+    const shown = isOpen ? active : committed;
+    if (shown >= 0) field.setAttribute("aria-activedescendant", "opt-" + shown);
+    else field.removeAttribute("aria-activedescendant");
+    field.classList.toggle("open", isOpen);
+  }
+
+  function build() {
+    wheel.textContent = "";
+    cars = labels.map((text, i) => {
+      const car = document.createElement("div");
+      car.id = "opt-" + i;
+      car.setAttribute("role", "option");
+      if (off[i]) car.setAttribute("aria-disabled", "true");
+      car.textContent = text;
+      car.addEventListener("click", (ev) => { if (isOpen) { ev.stopPropagation(); pick(i); } });   // not reopened by the field
+      wheel.append(car);
+      return car;
+    });
+    if (hint) {   // shown in the middle while nothing is picked yet
+      const car = document.createElement("div");
+      car.setAttribute("aria-hidden", "true");
+      car.textContent = hint;
+      wheel.append(car);
+      car.className = "car hint hint-car";
+    }
+  }
+
+  function open() {
+    if (isOpen || !labels.length) return;
+    isOpen = true;
+    active = usable(committed) ? committed : Math.max(0, off.indexOf(false));
+    draw();
+  }
+  function close() { if (!isOpen) return; isOpen = false; wheelSum = 0; draw(); }
+  function step(dir) {
+    if (!isOpen) open();
+    const len = labels.length;
+    for (let n = 1; n < len; n += 1) {   // past the options that cannot be chosen
+      const next = (((active + dir * n) % len) + len) % len;
+      if (usable(next)) { active = next; break; }
+    }
+    draw();
+  }
+  function pick(i) {
+    if (!usable(i)) return;
+    const changed = i !== committed;
+    committed = active = i;
+    close();
+    if (changed) send("streamlit:setComponentValue", { value: { i, n: Date.now() }, dataType: "json" });
+  }
+
+  field.addEventListener("mouseenter", () => { hovered = true; open(); });
+  field.addEventListener("mouseleave", () => { hovered = false; close(); });
+  field.addEventListener("click", (ev) => { if (!isOpen && !ev.target.closest(".arrow")) open(); });
+  field.querySelectorAll(".arrow").forEach((arrow) => arrow.addEventListener("click", (ev) => {
+    ev.stopPropagation(); step(Number(arrow.dataset.step));
+  }));
+  field.addEventListener("wheel", (ev) => {
+    if (!hovered && !isOpen) return;
+    ev.preventDefault();
+    const delta = ev.deltaY * (ev.deltaMode === 1 ? 33 : 1);   // lines (Firefox) to pixels
+    wheelSum = Math.abs(delta) >= 50 ? delta : wheelSum + delta;   // a mouse notch is one step; a trackpad adds up to one
+    if (Math.abs(wheelSum) >= 50) { step(Math.sign(wheelSum)); wheelSum = 0; }
+  }, { passive: false });
+  field.addEventListener("keydown", (ev) => {
+    const keys = { ArrowDown: () => step(1), ArrowUp: () => step(-1),
+      Home: () => { open(); active = Math.max(0, off.indexOf(false)); draw(); },   // first and last option that can be picked
+      End: () => { open(); active = Math.max(0, off.lastIndexOf(false)); draw(); },
+      Enter: () => (isOpen ? pick(active) : open()), " ": () => (isOpen ? pick(active) : open()),
+      Escape: () => close() };
+    if (keys[ev.key]) { ev.preventDefault(); keys[ev.key](); }
+  });
+  field.addEventListener("blur", () => { if (!hovered) close(); });
+  // A click elsewhere on the page, or another tab, closes it unpicked, so the page is not left pushed down.
+  window.addEventListener("blur", () => { hovered = false; close(); });
+  document.addEventListener("visibilitychange", () => { if (document.hidden) { hovered = false; close(); } });
+  // The frame focused from outside (Tab, a panel): focus the field, unless a click is already doing so (no ring then).
+  window.addEventListener("focus", () => requestAnimationFrame(() => {
+    if (document.activeElement === document.body) field.focus({ preventScroll: true });
+  }));
+
+  // Touch: hold to open (a quick tap opens too); swipe to turn; tap an option to pick it.
+  field.addEventListener("contextmenu", (ev) => ev.preventDefault());
+  field.addEventListener("touchstart", (ev) => {
+    if (ev.touches.length !== 1) return;
+    const y = ev.touches[0].clientY;
+    touch = { y, last: y, moved: false, wasOpen: isOpen, target: ev.target };
+    clearTimeout(holdTimer);
+    if (!isOpen) holdTimer = setTimeout(() => { open(); field.focus({ preventScroll: true }); }, 350);
+  }, { passive: true });
+  field.addEventListener("touchmove", (ev) => {
+    if (!touch || ev.touches.length !== 1) return;
+    const y = ev.touches[0].clientY;
+    if (Math.abs(y - touch.y) > 6) touch.moved = true;
+    if (!isOpen) { if (touch.moved) clearTimeout(holdTimer); return; }   // the page scrolls
+    ev.preventDefault();
+    while (Math.abs(y - touch.last) >= 22) {   // a finger moving up brings the next options up
+      const dir = y < touch.last ? 1 : -1;
+      step(dir);
+      touch.last -= dir * 22;
+    }
+  }, { passive: false });
+  field.addEventListener("touchend", (ev) => {
+    clearTimeout(holdTimer);
+    if (!touch) return;
+    const { moved, wasOpen, target } = touch;
+    touch = null;
+    if (moved) { if (isOpen) ev.preventDefault(); return; }
+    ev.preventDefault();   // no mouse events after a tap: the touch has been handled here
+    const arrow = target.closest && target.closest(".arrow"), car = target.closest && target.closest("[role=option]");
+    if (!wasOpen) { open(); field.focus({ preventScroll: true }); }
+    else if (arrow) step(Number(arrow.dataset.step));
+    else if (car) pick(cars.indexOf(car));
+    else pick(active);
+  }, { passive: false });
+  field.addEventListener("touchcancel", () => { clearTimeout(holdTimer); touch = null; });
+
+  let lastKey = "";
+  window.addEventListener("message", (ev) => {
+    if (!ev.data || ev.data.type !== "streamlit:render") return;
+    const a = ev.data.args;
+    if (a.css !== document.getElementById("root").textContent) document.getElementById("root").textContent = a.css;
+    document.body.style.fontFamily = a.font;
+    document.getElementById("label").textContent = a.label || "";
+    field.setAttribute("aria-label", a.label || "Choose one");
+    const key = JSON.stringify([a.labels, a.disabled, a.placeholder]);
+    const rebuilt = key !== lastKey;
+    if (rebuilt) { lastKey = key; labels = a.labels; off = a.disabled; hint = a.placeholder; build(); }
+    committed = a.index;
+    // new options while open: the old position would point at another option, so start again from the chosen one
+    if (!isOpen || rebuilt) active = usable(committed) ? committed : Math.max(0, off.indexOf(false));
+    draw();
+  });
+
+  // A hidden frame (in a closed panel) measures 0; it takes a label and a field's height instead (72px), so it is
+  // already focusable when the panel opens, and fits itself on being shown.
+  const fit = () => send("streamlit:setFrameHeight", { height: Math.ceil(document.body.getBoundingClientRect().height) || 72 });
+  new ResizeObserver(fit).observe(document.body);
+  send("streamlit:componentReady", { apiVersion: 1 });
+})();
+</script>
+</body>
+</html>
