@@ -215,7 +215,7 @@ body { padding: 3px; color: var(--ink); font-family: system-ui, sans-serif; }   
     if (rebuilt) { lastKey = key; labels = a.labels; off = a.disabled; hint = a.placeholder; build(); }
     committed = a.index;
     // new options while open: the old position would point at another option, so start again from the chosen one
-    if (!isOpen || rebuilt) active = Math.max(committed, 0);
+    if (!isOpen || rebuilt) active = usable(committed) ? committed : Math.max(0, off.indexOf(false));
     draw();
   });
 
