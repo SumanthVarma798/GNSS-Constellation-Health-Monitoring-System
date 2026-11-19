@@ -63,6 +63,7 @@ def featured(items):
 
 def _axis(start, today):
     """(x(day) -> percent along the track, the tick marks' HTML) for start .. today."""
+    start = start or f"{today.year - 1}-01-01"   # a row with no start date: draw the last year, never fail the page
     t0, t1 = date.fromisoformat(start).toordinal(), today.toordinal()
     span = max(1, t1 - t0)
     x = lambda day: (date.fromisoformat(day).toordinal() - t0) / span * 100 if day else 100.0

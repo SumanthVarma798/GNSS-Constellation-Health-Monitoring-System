@@ -21,3 +21,10 @@ def test_brought_forward_most_holders_then_a_swap_then_a_notice_then_another_con
     picked = [(item["signal_id"], why) for item, why in sih.featured(_items())]
     assert picked[:3] == [("G04", "7 spacecraft"), ("C59", "swap"), ("C01", "notice")]
     assert picked[3][0][0] == "R" and len(picked) == 4   # C62, C59's pair, is not shown again
+
+
+def test_a_row_with_no_start_date_does_not_fail_the_axis():
+    from datetime import date
+    from ui import signal_id_history
+    x, ticks = signal_id_history._axis("", date(2026, 11, 19))
+    assert 0 <= x("2026-06-01") <= 100

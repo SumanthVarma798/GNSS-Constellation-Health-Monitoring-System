@@ -103,7 +103,8 @@ def _change_kind(old, new, periods):
     after = [p for p in periods[old["svn"]] if p["start"] >= old["end"]]
     before = [p for p in periods[new["svn"]] if p["end"] and p["end"] <= new["start"]]
     then = after[0] if after else None
-    traded = then and before and then["label"] == before[-1]["label"]   # the old holder took the new one's last ID
+    # the old holder took the new one's last ID, and that ID is another one (not this ID handed back and forth)
+    traded = then and before and then["label"] == before[-1]["label"] != new["label"]
     if traded and abs(_days(then["start"], new["start"])) <= SIGNAL_ID_SWAP_DAYS \
             and _days(before[-1]["end"], new["start"]) <= SIGNAL_ID_SWAP_DAYS:
         return "swap", then["label"]

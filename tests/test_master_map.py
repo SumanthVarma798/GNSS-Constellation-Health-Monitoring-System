@@ -483,3 +483,13 @@ def test_real_text_has_no_dash_characters_or_emoji(real):
                   if k in ("scheme", "remark")]
     shown += [line["remark"] for line in agreement(real["satellites"], real["catalogue"])]
     assert not [text for text in shown if "–" in text or "—" in text or not text.isascii()]
+
+
+def test_an_id_handed_back_and_forth_is_not_a_swap():
+    from evidence.master_map import signal_id_changes
+    rows = [{"svn": "B", "signal_id": "X", "valid_from": "2026-03-01", "valid_to": "2026-03-28", "note": ""},
+            {"svn": "A", "signal_id": "X", "valid_from": "2026-03-29", "valid_to": "2026-03-30", "note": ""},
+            {"svn": "B", "signal_id": "X", "valid_from": "2026-03-31", "valid_to": "", "note": ""},
+            {"svn": "A", "signal_id": "X", "valid_from": "2026-03-31", "valid_to": "", "note": ""}]
+    kinds = [c["kind"] for found in signal_id_changes(rows) for c in found["changes"]]
+    assert "swap" not in kinds
