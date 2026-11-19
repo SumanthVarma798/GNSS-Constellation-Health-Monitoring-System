@@ -13,7 +13,7 @@ from analysis.raan_analysis import analyze_raan_spacing
 from config.config import BEIDOU3_SATS, CHINA_KEY_POINTS, R_EARTH
 from data.tle_cache import load_bundled_tles
 from test_dashboard_shell import (_compare, _on, celestrak_answers_with_nothing_new, htmls,  # noqa: F401 (fixtures)
-                                  run, segmented_controls_rerun)
+                                  run, segmented_controls_rerun, wheel)
 from ui import geometry_data as gd
 from ui import geometry_settings as gs
 from ui import palette, shell
@@ -584,7 +584,7 @@ def test_a_typed_place_moves_the_sky_there_and_a_bad_one_says_why():
     wrong = run(typed("120, 80"))
 
     assert _heads(moved)[0] == '<div class="geo-head">The sky above 12.50° N, 80.25° E</div>'
-    assert moved.selectbox(key="geo_pick_NavIC").value is None
+    assert moved.session_state["geo_pick_NavIC"] is None and wheel(moved, "geo_pick_NavIC")["index"] == -1   # the placeholder
     assert any("Latitude must be between -90 and 90" in body for body in htmls(wrong))
     assert _heads(wrong)[0] == '<div class="geo-head">The sky above Hyderabad, India</div>'
 
@@ -596,7 +596,8 @@ def test_coming_back_to_the_section_the_inputs_show_the_place_still_chosen():
 
     at = run(setup)
 
-    assert at.selectbox(key="geo_pick_BeiDou-3").value == "Westernmost (Wuqia, Xinjiang)"
+    args = wheel(at, "geo_pick_BeiDou-3")
+    assert args["labels"][args["index"]] == "Westernmost (Wuqia, Xinjiang)"
     assert at.text_input(key="geo_coords_BeiDou-3").value == "39.7, 75.3"
 
 

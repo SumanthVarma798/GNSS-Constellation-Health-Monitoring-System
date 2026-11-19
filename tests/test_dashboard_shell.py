@@ -62,6 +62,12 @@ def htmls(at):
     return [part.proto.body for part in at.get("html")]
 
 
+def wheel(at, key):
+    """What a ferris-wheel picker (ui/components/ferris.py) was drawn with, or None when it was not drawn."""
+    found = [json.loads(e.proto.json_args) for e in at.get("component_instance") if e.proto.component_name.endswith("ferris")]
+    return next((args for args in found if args["key"] == f"{key}__wheel"), None)
+
+
 def tiles(at):
     return [h for body in htmls(at) for h in body.split('<div class="tile ')[1:]]
 
@@ -306,17 +312,17 @@ def test_the_range_presets_and_custom_dates_are_bounded_by_the_records_held():
 def test_the_range_offers_every_preset_for_navics_year_and_a_custom_start_inside_it():
     at = run()
 
-    assert not any(at.button(key=f"window_{days}").disabled for days in time_range.PRESETS)
+    assert wheel(at, "window_days")["labels"] == ["30 days", "90 days", "6 months", "1 year"]
+    assert not any(wheel(at, "window_days")["disabled"]) and wheel(at, "window_days")["index"] == 1   # 90 days
     start = at.date_input(key="_window_from")
     assert (start.min, start.max) == (date(2025, 10, 4), date(2026, 9, 22))   # oldest record held; 14 days before today
     assert start.value == date(2026, 7, 8)                                     # the 90 days chosen
 
 
-def test_a_constellation_with_no_records_held_greys_every_preset_and_says_why():
+def test_a_constellation_with_no_records_held_offers_no_preset_and_says_why():
     at = run(lambda at: at.session_state.__setitem__("scope", "GPS"))
 
-    assert all(at.button(key=f"window_{days}").disabled for days in time_range.PRESETS)
-    assert at.button(key="window_30").help == "No orbit records are yet held for GPS."
+    assert wheel(at, "window_days") is None
     assert not at.get("date_input")
     assert any("No orbit records are held yet." in body for body in htmls(at))
 
@@ -331,10 +337,10 @@ def test_a_custom_start_sets_the_range_to_now_on_every_page():
     assert not at.exception and any("47 days" in body for body in htmls(at))
 
 
-def test_a_preset_button_sets_the_range():
-    at = run(lambda at: at.button(key="window_182").click())
+def test_a_preset_picked_on_the_wheel_sets_the_range():
+    at = run(lambda at: at.session_state.__setitem__("window_days", 182))   # as the wheel's pick does (tests/test_ferris.py)
 
-    assert at.session_state["window_days"] == 182
+    assert wheel(at, "window_days")["index"] == 2
     assert any("6 months: " in body for body in htmls(at))
 
 
