@@ -60,12 +60,7 @@ def head(rows):
     tracked, look = sum(r["tracked"] for r in rows), sum(r["look"] for r in rows)
     return (f'<div class="head mm-head"><span class="big num">{total}</span>'
             f'<span class="muted">navigation spacecraft on record across {len(rows)} constellations · '
-            f'{now} with a signal ID today · {tracked} followed on the other pages · {look} worth a look</span></div>'
-            '<p class="lede small">Everything up there that has ever been part of a navigation constellation, launched '
-            'or retired, one dot per spacecraft. Each goes by several names: a launch designator, a catalogue number, '
-            'a signal ID that can pass to a newer satellite. The map below keeps them apart, and marks where the IGS '
-            'satellite metadata file, GCAT (J. McDowell\'s catalogue of space objects) and CelesTrak\'s orbit feed '
-            'disagree.</p>')
+            f'{now} with a signal ID today · {tracked} followed on the other pages · {look} worth a look</span></div>')
 
 
 def _figure(value, words, status=""):

@@ -554,7 +554,7 @@ def ground_map(tracks, here, types, places, chosen=None, marked=()):
                                  selected=hidden, unselected=hidden, name=orbit, legendgroup=orbit,
                                  showlegend=orbit not in shown,
                                  hovertemplate=plotly_template(name, ("When", "%{customdata[0]}"), ("Over", "%{customdata[1]}"),
-                                                               ("Height", "%{customdata[2]:,.0f} km"))))
+                                                               ("Altitude", "%{customdata[2]:,.0f} km"))))
         shown.add(orbit)
     now = [(n, *here[n]) for n in tracks if n in here]
     keep = {"marker": {"opacity": 1}}
@@ -727,7 +727,7 @@ def trends_key():
     return (f'<ul class="geo-key">{lines}</ul><p class="muted">Each line is one measure over the window, one reading '
             "per element set. The pressed-in band is what it should be, where a target is set; a reading outside it is "
             "marked red. The number at the right of a name is the latest reading. Hover to read every strip at one time.</p>"
-            '<p class="muted">Medium-orbit constellations show tilt and height only: drift and centre are measured against one turn '
+            '<p class="muted">Medium-orbit constellations show inclination and altitude only: drift and centre are measured against one turn '
             "a day over one longitude, and a medium-orbit satellite circles the globe.</p>")
 
 

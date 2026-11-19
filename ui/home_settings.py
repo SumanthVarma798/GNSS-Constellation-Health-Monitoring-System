@@ -79,8 +79,8 @@ HOW = [
                        ("Counted?", "in the total, never judged")], "mark:bad"),
         "Key health attributes",
         ("Orbit kept", [("Means", "the satellite is on the orbit it was placed in"),
-                        ("Passes when", "every part of its orbit scores 80 or more of 100: its tilt for one held over a "
-                                        "longitude; its plane, tilt, height and shape for one in a medium orbit"),
+                        ("Passes when", "every part of its orbit scores 80 or more of 100: its inclination for one held over a "
+                                        "longitude; its plane, inclination, semi-major axis and eccentricity for one in a medium orbit"),
                         ("Why it matters", "a receiver's sums assume that orbit")], "planet"),
         ("Station held", [("Means", "the satellite stays at its own place among the others"),
                           ("Passes when", "it is in its slot and not drifting along the belt, or keeps its spacing in "
@@ -111,7 +111,7 @@ HOW = [
                                               "graveyard orbit at the end of life is planned, and a burn made because "
                                               "the satellite had already strayed, in a cluster, or out of its usual "
                                               "size or direction is a sign the rhythm was missed"),
-                         ("Irregular", "a response (made after it was off its box or drift limit, in a cluster, or "
+                         ("Irregular", "a response (made after it was outside its longitude deadband or drift limit, in a cluster, or "
                                        "reversed at once) or off its pattern, judged at medium confidence or better; "
                                        "planned moves count neither way"),
                          ("Passes when", "no irregular burn in the last 90 days and at most 25% of its judged burns "

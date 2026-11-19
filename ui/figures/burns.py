@@ -113,7 +113,7 @@ def _mark_hover(row):
     """One burn: when (the window it fell in), how much it changed the orbit, and the gap since the one before."""
     when = (f"{_when(row.window_start)} – {_when_after(row.window_start, row.window_end)} UTC "
             f"({_width_words(row.window_end - row.window_start)})")
-    change = f"orbit height {row.d_sma_km:+.2f} km" if row.kind == EAST_WEST else f"tilt {row.d_inc_deg:+.3f}°"
+    change = f"semi-major axis {row.d_sma_km:+.2f} km" if row.kind == EAST_WEST else f"inclination {row.d_inc_deg:+.3f}°"
     gap = "first in view" if pd.isna(row.gap_days) else f"{_days(row.gap_days)} after the one before"
     if not pd.isna(row.usual_days):
         gap += f", usually {_days(row.usual_days)}"

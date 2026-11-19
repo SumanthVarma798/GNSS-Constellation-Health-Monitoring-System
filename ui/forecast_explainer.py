@@ -11,7 +11,7 @@ ONE_LINE = ("J₂₂ longitude acceleration bends each satellite's drift into a 
 
 # (term, formula or rule): one short line each, drawn as tiles under the picture
 POINTS = [
-    ("Longitude acceleration", "λ̈ ≈ −0.0017 sin 2(λ − 75.1°) °/d²: J₂₂ pulls towards 75° E or 105° W (Soop)"),
+    ("Longitude acceleration", "λ̈ ≈ −0.0017 sin 2(λ − 75.1°) °/d²: J₂₂ has stable points at 75° E and 105° W (Soop)"),
     ("Drift parabola", "λ = λ₀ + λ̇t + ½λ̈t²; one manoeuvre per cycle, Δλ̇ ≈ 4√(|λ̈|·h) for half-width h"),
     ("Last chance", "deadband edge − 2 d planning; past the edge the correction Δv grows with drift and distance"),
     ("Inputs", "mean longitudes of element sets since the last manoeuvre, λ̈ removed; never the mean-motion formula (J₂ bias)"),

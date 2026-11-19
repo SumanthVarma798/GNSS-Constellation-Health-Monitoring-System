@@ -363,11 +363,11 @@ def _test_direction(t, i):
         return None, "T3 direction: drift before too small to give a direction"
     reverses = _sign(row["delta_a_km"]) == _sign(drift)       # a lower orbit drifts east: it reverses a westward drift
     if not np.isfinite(row["pos_from_station"]):
-        return None, "T3 direction: no position to put it in its box"
+        return None, "T3 direction: no position to place it in its deadband"
     inside = bool(abs(row["pos_from_station"]) <= _box(row["orbit_type"]))
     words = (f"T3 direction: {'pass' if reverses and inside else 'fail'}, drift before {drift:+.3f} degrees/day, "
              f"{'reverses it' if reverses else 'does not reverse it'}, "
-             f"{'inside' if inside else 'outside'} its box")
+             f"{'inside' if inside else 'outside'} its deadband")
     return bool(reverses and inside), words
 
 

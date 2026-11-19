@@ -131,8 +131,8 @@ def _diagnostics_table(rows):
         name = f'{escape(row["name"])} <span class="muted">{escape(row["signal_id"])}</span>'
         lines.append(f'<tr><th>{name}</th><td>{row["along_track_km_day"]:+,.1f} km/day</td>'
                      f'<td>{"&ndash;" if tilt is None else f"{tilt:.2f}°"}</td></tr>')
-    head = (f'<th>{tooltip.tip("Along-track", "How fast it gains (+) or loses (-) its place along the orbit against a satellite at the nominal height: 2π a₀ (n − n₀), from its mean motion.")}</th>'
-            f'<th>{tooltip.tip("Tilt against its plane", "The angle between its orbit plane and the mean plane of the other satellites in the same plane: its node and inclination differences in one number.")}</th>')
+    head = (f'<th>{tooltip.tip("Along-track", "How fast it gains (+) or loses (-) its place along the orbit against a satellite at the nominal semi-major axis a₀: 2π a₀ (n − n₀), from its mean motion.")}</th>'
+            f'<th>{tooltip.tip("Plane offset", "The angle between its orbit plane and the mean plane of the other satellites in the same plane: its node and inclination differences in one number.")}</th>')
     return ('<p class="small">Diagnostics, not part of the score, as the team\'s static MEO app '
             '(ElectricPlant19/Static_MEO_GNSS_Monitor) shows them. A circular-orbit approximation from each '
             "satellite's newest mean elements.</p>"
@@ -256,6 +256,6 @@ def page(name, result, measured):
                    + (f"{look} need{'s' if look == 1 else ''} a look" if look else "all within limits"),
                    _should_be_table(name, in_order) + f'<ul class="small meanings">{_sources(name)}</ul>', open=True)
     fastest = max(in_order, key=lambda row: abs(row["along_track_km_day"]))
-    reveal.section("meo_diagnostics", "Along-track and tilt, every satellite",
+    reveal.section("meo_diagnostics", "Along-track rate and plane offset, every satellite",
                    f"diagnostics, not scored · fastest along-track: {fastest['name']} "
                    f"{fastest['along_track_km_day']:+,.0f} km/day", _diagnostics_table(in_order))

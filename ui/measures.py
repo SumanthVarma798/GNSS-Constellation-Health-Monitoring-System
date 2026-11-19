@@ -32,7 +32,7 @@ COLUMNS = [
 # The Station-keeping table's columns: burns in the window, then the year the score reads.
 BURN_COLUMNS = [
     ("East-west", "Burns that hold the longitude"),
-    ("North-south", "Burns that hold the tilt"),
+    ("North-south", "Burns that hold the inclination"),
     ("Days observed", "In the window"),
     ("East-west pattern", "Over the year scored"),
     ("North-south pattern", "Over the year scored"),

@@ -78,7 +78,7 @@ __TIP__
 </head>
 <body>
 <div class="card">
-  <canvas id="orbits" role="img" aria-label="Each satellite's orbit around Earth. Drag to turn, scroll or pinch to zoom. Click an orbit or a satellite to turn its plane toward you, with its node, inclination and height drawn; click empty space or press Escape to go back. Click Earth to face that place, double-click for the whole view."></canvas>
+  <canvas id="orbits" role="img" aria-label="Each satellite's orbit around Earth. Drag to turn, scroll or pinch to zoom. Click an orbit or a satellite to turn its plane toward you, with its node, inclination and altitude drawn; click empty space or press Escape to go back. Click Earth to face that place, double-click for the whole view."></canvas>
   <div class="top">
     <div class="seg" id="mode" role="group" aria-label="Which satellites">
       <button type="button" data-mode="all" aria-pressed="true">All</button><button type="button" data-mode="service" aria-pressed="false">In service</button>
@@ -399,7 +399,7 @@ function geometry(A) {   // the node, the inclination, the height and the slot, 
   if (hi - lo < 50) {   // round: one height, a line from the ground up to the satellite
     const u = unit(s.at);
     ctx.setLineDash([3, 4]); path([P(u), P(s.at)]); ctx.setLineDash([]);
-    marks.push([P(s.at), `Height ${km(Math.hypot(...s.at) * KM - KM)}`]);
+    marks.push([P(s.at), `Altitude ${km(Math.hypot(...s.at) * KM - KM)}`]);
   } else for (const [h, words] of [[lo, "Perigee"], [hi, "Apogee"]]) {
     const q = P(f.loop[f.heights.indexOf(h)]);
     spot(q); marks.push([q, `${words} ${km(h)}`]);
