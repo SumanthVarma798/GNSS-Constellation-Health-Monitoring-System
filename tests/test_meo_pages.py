@@ -169,6 +169,6 @@ def test_the_meo_page_shows_along_track_and_tilt_diagnostics_without_scoring_the
     bodies = htmls(at)
 
     labels = [str(e.label) for e in at.checkbox]
-    assert any("and tilt, every satellite" in label and "not scored" in label for label in labels)   # labels escape "-"
+    assert any("and plane offset, every satellite" in label and "not scored" in label for label in labels)   # labels escape "-"
     assert any("km/day</td>" in body and "GSAT0101" in body for body in bodies)
     assert "along_track" not in WEIGHTS and "tilt" not in " ".join(WEIGHTS)   # shown, never scored

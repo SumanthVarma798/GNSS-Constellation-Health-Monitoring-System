@@ -33,9 +33,9 @@ GEO_ECC_MAX = math.radians(SLOT_ALLOWED["GEO"]) / 2
 
 # Orbit types in the order the Overview groups them, each with one plain line. A tilt under 10 degrees is GEO.
 ORBIT_TYPES = {
-    "GEO": "Geostationary: holds one longitude over the equator, tilt under 10°",
-    "IGSO": "Inclined geosynchronous: tilted 10° or more, traces a figure of eight over one longitude",
-    "QZO": "Quasi-zenith: QZSS's tilted geosynchronous orbit, high over Japan",
+    "GEO": "Geostationary: holds one longitude over the equator, inclination under 10°",
+    "IGSO": "Inclined geosynchronous: inclination 10° or more, traces a figure of eight over one longitude",
+    "QZO": "Quasi-zenith: QZSS's inclined, eccentric geosynchronous orbit, high over Japan",
     "MEO": "Medium Earth orbit: about 20,000 km up, goes round about twice a day",
 }
 

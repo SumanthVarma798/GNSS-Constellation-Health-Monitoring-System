@@ -180,7 +180,7 @@ def _cell(now, status, should="", note=""):
 
 
 def _weakest(sat, parts, labels):
-    """'tilt scores 55' for the lowest of `parts` that has a score, or ''."""
+    """'inclination scores 55' for the lowest of `parts` that has a score, or ''."""
     scored = [(sat["parts"][part], part) for part in parts if sat["parts"].get(part) is not None]
     if not scored:
         return ""
@@ -228,7 +228,7 @@ def _clock(sat):
 def table(summary):
     """Every satellite against the three measures and its own flag, with the figure behind each."""
     kind = "plane" if judged_by_plane(summary["name"]) else "slot"
-    labels = meo_overview.LABELS if kind == "plane" else {"Inclination": "tilt", "Drift": "drift"}
+    labels = meo_overview.LABELS if kind == "plane" else {"Inclination": "inclination", "Drift": "drift"}
     columns = [("Satellite", ""), ("Orbit kept", "on the orbit it should be on"),
                ("Station held", STATION_LINE[kind]),
                ("Clock steady", f"no step past {limits.CLOCK_STEADY_NS:g} ns in the day"),
