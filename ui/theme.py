@@ -24,6 +24,7 @@ SCHEMES = {"system": ":material/brightness_auto: System", "light": ":material/li
 VARIABLES = {
     **palette.THEMED_DARK,   # the surfaces, text, statuses and each constellation's colour (--sys-gps and the rest)
     "edge": EDGE,
+    "pic-dark": "block", "pic-light": "none",   # which copy of a picture shows (ui/surfaces.py picture)
     "raised": "-6px -6px 14px var(--lift), 7px 7px 16px var(--sink)",
     "raised-sm": "-3px -3px 8px var(--lift), 4px 4px 10px var(--sink)",
     "pressed": "inset -3px -3px 7px var(--lift), inset 4px 4px 9px var(--sink)",
@@ -36,7 +37,7 @@ VARIABLES = {
 }
 
 
-LIGHT_VARIABLES = {**palette.THEMED_LIGHT, "edge": LIGHT_EDGE}
+LIGHT_VARIABLES = {**palette.THEMED_LIGHT, "edge": LIGHT_EDGE, "pic-dark": "none", "pic-light": "block"}
 
 
 def chosen_scheme():

@@ -5,7 +5,9 @@ figure behind it. What counts for each measure is in ui/limits.py (MEASURES, CLO
 from html import escape
 
 from evidence.registry_tables import clock_record, judged_by_plane
-from ui import burn_ledger, limits, meo_overview, palette, reveal, surfaces, systems, tooltip
+from ui import icons, limits, meo_overview, palette, reveal, surfaces, systems, tooltip
+from ui.measures import status_counts
+from ui.overview_settings import PART_TERMS, STATE_CLASS
 
 # (key in ui.system_summary's counts, the words on the page), in the order shown everywhere.
 MEASURES = [("orbit", "Orbit kept"), ("station", "Station held"), ("clock", "Clock steady"), ("care", "Burn record")]
@@ -31,11 +33,11 @@ def _whole_points(rates, score):
     return whole
 
 
-def score_sum(summary):
+def score_sum(summary, total=True):
     """The score opened into its parts, so it can be checked: one bar of 100 cut into each attribute's share (its
     weight for the constellation's mission), each share filled as far as its pass rate, so the filled length is the
     score; under it each attribute's pass rate × weight = its points, adding up to the score. Home's open card and the
-    constellation's own page show the same."""
+    constellation's own page show the same; the page leaves out the total (total=False), its header shows the score."""
     score, rates = summary["score"], summary["score_parts"]
     if score is None:
         return '<p class="small">No score: none of the attributes could be read today.</p>'
@@ -57,10 +59,10 @@ def score_sum(summary):
         for (key, rate, weight), points in zip(rates, _whole_points(rates, score)))
     key = ('<div class="ssum-key small" aria-hidden="true"><span><b class="k-width">↔</b>width: its weight</span>'
            '<span><i class="k-fill"></i>filled: satellites that pass</span><span><b>+</b> points it adds</span></div>')
+    total_html = (f'<span class="ss-eq" aria-hidden="true">=</span><div class="ss-total {surfaces.band(score)}" '
+                  f'aria-hidden="true"><b class="num">{score}</b><small>/100</small></div>') if total else ""
     return (f'<div class="ssum-wrap" role="img" aria-label="{escape(words)}">{key}<div class="ssum">'
-            f'<div class="ssum-bar" aria-hidden="true">{parts}</div><span class="ss-eq" aria-hidden="true">=</span>'
-            f'<div class="ss-total {surfaces.band(score)}" aria-hidden="true"><b class="num">{score}</b>'
-            f'<small>/100</small></div></div></div>')
+            f'<div class="ssum-bar" aria-hidden="true">{parts}</div>{total_html}</div></div>')
 
 
 PARTS_WORDS = "{system}'s score counts every satellite of its parts once, so it sits between their own scores"
@@ -79,19 +81,43 @@ def part_scores(system, current=""):
             f'<p class="small">{escape(PARTS_WORDS.format(system=system["name"]))}</p></div>')
 
 
-def strip(summary):
-    """The score and its sum, then the three counts and the constellation's own flag, as chips: declared before
-    anything else on the page. Home's score for this constellation is opened up here; every satellite's result is in
-    the section under the page (section())."""
-    part = systems.part_name(summary["name"])   # on one part's page the chip names the part, never the whole
-    label = f"{part} score" if part else "Score"
-    lead = (surfaces.chip(f"{label} {summary['score']} of 100", surfaces.band(summary["score"]))
-            if summary["score"] is not None else surfaces.chip(f"{label}: not read", "idle"))
-    chips = [_chip(words, *summary[key]) for key, words in _read(summary)]
-    chips.append(_chip("Says healthy", summary["flagged_healthy"], summary["checked"]))
-    return (f'<div class="measures" role="group" aria-label="Score, orbit, station-keeping and clock">{lead}'
-            f'{"".join(chips)}</div>{score_sum(summary) if summary["score"] is not None else ""}'
-            f'{record_line(summary["name"])}{burn_ledger.bar(summary.get("burn_record"))}')
+def header(summary, healthy, total, words, meta_html="", official_html=""):
+    """The page's one header: the score large in its band's colour, the count beside it ("2 of 8 healthy and in their
+    slot"), then small chips (its own flag, the clock record, the window) and the operator's status link; under it
+    the score's sum (score_sum, without its total). Every satellite's result is in the section under the page."""
+    part = systems.part_name(summary["name"])   # on one part's page the score names the part, never the whole
+    score = summary["score"]
+    band = surfaces.band(score) if score is not None else "idle"
+    flag = _chip("says healthy", summary["flagged_healthy"], summary["checked"])
+    label = f"{part} score" if part else "score"
+    return (f'<div class="ovh"><div class="ovh-score {band}" role="img" aria-label="{escape(label)} '
+            f'{score if score is not None else "not read"} of 100"><b class="num">{score if score is not None else "–"}</b>'
+            f'<small>/100</small><span>{escape(label)}</span></div>'
+            f'<div class="ovh-main"><div class="ovh-count"><span class="big num">{healthy} of {total}</span>'
+            f'<span class="muted">{escape(words)}</span></div>'
+            f'<div class="ovh-meta">{flag}{record_line(summary["name"])}{meta_html}{official_html}</div></div></div>'
+            + (score_sum(summary, total=False) if score is not None else ""))
+
+
+def states(health, weights=None):
+    """The satellites' scores as one stacked bar: how many are healthy, fair, degraded and critical, the count in each
+    part and in the key (Critical hatched, so shape tells it from Degraded). How a score is made opens from its title."""
+    counts = status_counts(health)
+    if not sum(n for _, n in counts):
+        return ""
+    said = ", ".join(f"{n} {word.lower()}" for word, n in counts)
+    segments = "".join(f'<span class="lb-seg st {STATE_CLASS[word]}" style="flex:{n}"><b class="num">{n}</b></span>'
+                       for word, n in counts if n)
+    key = "".join(f'<span><i class="lb-sw st {STATE_CLASS[word]}" aria-hidden="true"></i>{word.lower()} '
+                  f'<b class="num">{n}</b></span>' for word, n in counts)
+    how = tooltip.tip_html("Satellite scores", tooltip.glance(
+        "Each satellite's score out of 100, from its parts:",
+        [("", PART_TERMS.get(label, label), f"{weight}%") for label, weight in (weights or limits.SCORE_WEIGHTS)],
+        note=" · ".join(f"{word} from {low}" if low else f"{word} under {limits.STATUS_FROM[i - 1][1]}"
+                        for i, (word, low) in enumerate(limits.STATUS_FROM))), key="overview_states")
+    return (f'<div class="lb ovs"><div class="lb-head"><b>{how}</b></div>'
+            f'<div class="lb-bar" role="img" aria-label="Satellite scores: {escape(said)}">{segments}</div>'
+            f'<div class="lb-key small">{key}</div></div>')
 
 
 def _read(summary):
@@ -100,20 +126,53 @@ def _read(summary):
     return [(key, words) for key, words in MEASURES if key != "care" or summary.get("burn_record")]
 
 
+def _evidence(row, when=True):
+    """One satellite's clock evidence for a card: what failed, when, and the source as a link. In the constellation's
+    list (when=False) the date is left out and the source is its publisher; each tile's mark gives both in full."""
+    said = f' ({escape(row["when"])})' if when else ""
+    return (f'<span class="tt-item"><span></span><span><b>{escape(row["name"])}</b> {escape(row["what"])}{said}; '
+            f'<a class="tt-src" href="{escape(row["source_link"], quote=True)}" target="_blank" '
+            f'rel="noopener noreferrer">{escape(row["source_name"] if when else row["source_name"].split(",")[0])}</a></span></span>')
+
+
+def _supplier(name):
+    words, sources = limits.CLOCK_SUPPLIER.get(name, ("", []))
+    if not words:
+        return ""
+    links = "; ".join(f'<a class="tt-src" href="{escape(link, quote=True)}" target="_blank" rel="noopener noreferrer">'
+                      f'{escape(source)}</a>' for source, link in sources)
+    return f" {escape(words)} ({links})"
+
+
 def record_line(name):
-    """The constellation's clock track record beside its clock score: how many of the satellites it launched lost
-    atomic clocks in orbit, with the sources in a tip. "" when the registry holds no entry for it."""
+    """The constellation's clock track record as one figure, "6 of 11 lost clocks", with a clock mark: how many of the
+    satellites it launched lost atomic clocks in orbit, each with its source, in the shared tooltip. "" when the
+    registry holds no entry for it. Each affected satellite's tile carries the same mark (clock_marks)."""
     found = clock_record(name)
     if not found:
         return ""
     lost, launched = found
-    words, tip = limits.CLOCK_RECORD
-    sources = "".join(
-        f'<span>{escape(row["name"])}: {escape(row["what"])} ({escape(row["when"])}); '
-        f'<a class="tt-src" href="{escape(row["source_link"], quote=True)}" target="_blank" rel="noopener noreferrer">'
-        f'{escape(row["source_name"])}</a></span><br>' for row in lost)
-    return (f'<p class="small clock-record">{escape(words.format(lost=len(lost), launched=launched, name=name))} '
-            f'{tooltip.tip_html("Sources", escape(tip) + "<br>" + sources, key=name)}</p>')
+    words, note = limits.CLOCK_RECORD
+    body = (f'<span class="tt-lead">{escape(words.format(lost=len(lost), launched=launched, name=name))}</span>'
+            f'<span class="tt-items">{"".join(_evidence(row, when=False) for row in lost)}</span>'
+            f'<span class="tt-note">{escape(note)}{_supplier(name)}</span>')
+    figure = (f'<span class="chip bad clk">{icons.mask("clock-x")}<b class="num">{len(lost)} of {launched}</b>'
+              f' lost clocks</span>')
+    return tooltip.tip_html(figure, body, key=f"clock_{name}")
+
+
+def clock_marks(name):
+    """{satellite: a clock mark for its tile} for each satellite of the constellation reported to have lost atomic
+    clocks in orbit; the mark opens what failed, when, and the source."""
+    found = clock_record(name)
+    if not found:
+        return {}
+    words, note = limits.CLOCK_RECORD
+    return {row["name"]: tooltip.tip_html(
+        f'<span class="clk-mark" role="img" aria-label="lost atomic clocks">{icons.mask("clock-x")}</span>',
+        f'<span class="tt-lead">{escape(row["name"])}: atomic clocks</span><span class="tt-items">{_evidence(row)}</span>'
+        f'<span class="tt-note">{escape(note)}{_supplier(name)}</span>', key=f"clk_{row['name']}")
+        for row in found[0]}
 
 
 def _cell(now, status, should="", note=""):

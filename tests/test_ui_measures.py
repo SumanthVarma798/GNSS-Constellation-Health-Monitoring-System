@@ -14,10 +14,11 @@ P = measures.thresholds("NavIC", {})
 
 
 def test_drift_is_judged_against_the_gear_for_geo_and_two_degrees_for_tilted_orbits():
-    assert measures.drift(GEO, P) == measures.cell("-0.0203° west", "allowed ±0.05°/day", "ok")
+    assert measures.drift(GEO, P) == measures.cell("-0.0203°/d", "±0.05°/day", "ok", "drifting west",
+                                                   {"value": -0.0203, "low": -0.05, "high": 0.05})
     fast = measures.drift({**GEO, "Current Drift (°/day)": 0.08}, P)
     assert fast["status"] == "warn" and fast["should"].endswith("outside")
-    assert measures.drift({**GEO, "Type": "IGSO", "Current Drift (°/day)": 0.08}, P)["should"] == "allowed ±2°/day"
+    assert measures.drift({**GEO, "Type": "IGSO", "Current Drift (°/day)": 0.08}, P)["should"] == "±2°/day"
     assert measures.drift(GEO, measures.thresholds("NavIC", {"drift_tolerance_gso": 0.01}))["status"] == "warn"
 
 
@@ -36,7 +37,8 @@ def test_qzss_takes_its_wider_tolerance_unless_the_gear_moves_it():
 
 
 def test_longitude_is_in_its_slot_only_with_the_full_longitude_score():
-    assert measures.longitude(GEO) == measures.cell("82.64°E", "slot 83.00°E ±0.5°", "ok", "-0.36° from its slot")
+    assert measures.longitude(GEO) == measures.cell("82.64°E", "slot 83.00°E ±0.5°", "ok", "-0.36° from its slot",
+                                                    {"value": 82.64, "low": 82.5, "high": 83.5})
     assert measures.longitude({**GEO, "Lon Deviation Score": 42.3})["status"] == "warn"
     assert measures.longitude({**GEO, "Type": "IGSO"})["should"] == "slot 83.00°E ±5°"
     unknown = measures.longitude({**GEO, "Current Mean Lon (°)": "N/A"})
@@ -89,6 +91,26 @@ def test_the_table_escapes_its_words_and_sets_figures_in_the_number_face():
     html = surfaces.table([("<b>", "<i>")], [("<script>", [measures.cell("1.5°", "&"), measures.cell("set aside")])])
     assert "<script>" not in html and "&lt;b&gt;" in html and "&amp;" in html
     assert '<b class="num idle">1.5°</b>' in html and '<b class="idle">set aside</b>' in html
+
+
+def test_a_gauge_shades_the_allowed_range_in_its_middle_half_and_points_out_past_its_scale():
+    inside, out = surfaces.gauge(0.0, -0.05, 0.05, "ok")
+    assert not out and 'left:25.0%;width:50.0%' in inside and 'class="" style="left:50.0%"' in inside
+    past, out = surfaces.gauge(0.3, -0.05, 0.05, "warn")   # far past the scale: an arrow at its end
+    assert out and 'class="hi" style="left:100.0%"' in past and "gg warn out" in past
+    under, out = surfaces.gauge(-0.07, -0.05, 0.05, "warn")   # outside but on the scale: a dot past the band
+    assert out and 'class="" style="left:15.0%"' in under
+    floor, out = surfaces.gauge(0.001, 0.0, 0.004, "ok", floor=True)   # eccentricity starts at 0
+    assert 'left:0.0%;width:66.7%' in floor
+    height, out = surfaces.gauge(35794.0, None, 35986.0, "idle", tick=35786.0)   # no lower limit, nominal ticked
+    assert not out and '<b style="left:33.3%">' in height and 'left:0.0%;width:66.7%' in height
+
+
+def test_a_measured_cell_says_outside_in_words_and_opens_its_limit_in_the_tooltip():
+    html = surfaces.table([("Satellite", ""), ("Inclination", "the angle")],
+                          [("IRNSS-1C", [measures.inclination(GEO, measures.requirement("IRNSS-1C"), P)])], head_tips=True)
+    assert "<small>outside</small>" in html and "IRNSS-1C · Inclination" in html and "Allowed" in html
+    assert '<small>the angle</small>' not in html and 'tt-card' in html   # the heading's definition is in the tooltip
 
 
 def test_eccentricity_in_km_and_the_geostationary_limit():
