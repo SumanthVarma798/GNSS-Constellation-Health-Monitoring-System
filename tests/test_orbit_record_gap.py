@@ -186,7 +186,7 @@ def test_no_source_giving_the_file_says_what_each_one_answered(monkeypatch, tmp_
     import requests
     _one_source(monkeypatch, tmp_path)
     monkeypatch.setattr(requests, "get", lambda url, timeout: _Reply(404))
-    with pytest.raises(RuntimeError, match="First: no file for 2026-11-18 yet"):
+    with pytest.raises(RuntimeError, match="for 2026-11-18. First: no such file yet"):
         orbit_record_gap.navigation_text(date(2026, 11, 18))
     assert orbit_record_gap.broadcast_source(date(2026, 10, 1)) == "First"   # a copy saved before sources were noted
 

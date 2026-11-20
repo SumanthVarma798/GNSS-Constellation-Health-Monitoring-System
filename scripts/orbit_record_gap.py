@@ -58,17 +58,17 @@ def _saved(day, suffix=""):
     return SAVED / f"BRDC00IGS_R_{day.year}{doy:03d}0000_01D_MN.rnx.gz{suffix}"
 
 
-def _get(address):
+def _get(address, timeout=60):
     """The file's bytes, or None when the source answers that it has no such file (yet)."""
     if address.startswith("ftp://"):
         try:
-            with urllib.request.urlopen(address, timeout=60) as reply:
+            with urllib.request.urlopen(address, timeout=timeout) as reply:
                 return reply.read()
         except urllib.error.URLError as error:
             if "550" in str(error.reason):   # FTP: no such file
                 return None
             raise
-    reply = requests.get(address, timeout=60)
+    reply = requests.get(address, timeout=timeout)
     if reply.status_code == 404:
         return None
     reply.raise_for_status()
@@ -82,30 +82,39 @@ def _no_answer(error):
     return isinstance(error, (requests.ConnectionError, requests.Timeout, ConnectionError, TimeoutError, socket.gaierror))
 
 
-def download(day):
-    """Save the day's file from the first of BROADCAST_SOURCES that gives it, with that source's name beside it, and
-    return the name. A source that did not answer is not asked again in this run. Raises when none gave the file."""
-    doy = day.timetuple().tm_yday
+def fetch_first(sources, timeout=60, **fields):
+    """(name, bytes) from the first of `sources`, [(name, address with {fields})], that gives the file. A source that
+    did not answer is not asked again in this run. Raises RuntimeError saying what each one answered."""
     said = []
-    for name, address in BROADCAST_SOURCES:
+    for name, address in sources:
         if name in _UNREACHABLE:
             said.append(f"{name}: not asked again, it did not answer earlier in this run")
             continue
         try:
-            content = _get(address.format(year=day.year, doy=doy))
+            content = _get(address.format(**fields), timeout)
         except (requests.RequestException, OSError) as error:
             if _no_answer(error):
                 _UNREACHABLE.add(name)
             said.append(f"{name}: {error}")
             continue
         if content is None:
-            said.append(f"{name}: no file for {day.isoformat()} yet")
+            said.append(f"{name}: no such file yet")
             continue
-        SAVED.mkdir(parents=True, exist_ok=True)
-        _saved(day).write_bytes(content)
-        _saved(day, ".source").write_text(name + "\n", encoding="utf-8")
-        return name
-    raise RuntimeError(f"No source gave the IGS broadcast file for {day.isoformat()}. " + "; ".join(said))
+        return name, content
+    raise RuntimeError("; ".join(said))
+
+
+def download(day):
+    """Save the day's file from the first of BROADCAST_SOURCES that gives it, with that source's name beside it, and
+    return the name. Raises RuntimeError when none gave it."""
+    try:
+        name, content = fetch_first(BROADCAST_SOURCES, year=day.year, doy=day.timetuple().tm_yday)
+    except RuntimeError as error:
+        raise RuntimeError(f"No source gave the IGS broadcast file for {day.isoformat()}. {error}") from None
+    SAVED.mkdir(parents=True, exist_ok=True)
+    _saved(day).write_bytes(content)
+    _saved(day, ".source").write_text(name + "\n", encoding="utf-8")
+    return name
 
 
 def broadcast_source(day, file=None):

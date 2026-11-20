@@ -336,7 +336,8 @@ def test_a_custom_start_sets_the_range_to_now_on_every_page():
     assert at.session_state["window_days"] == 47
     assert any("47 days" in body and "20 Aug 2026 to 6 Oct 2026" in body for body in htmls(at))
     at.session_state["page"] = "Station-keeping"
-    at.run()
+    with time_machine.travel(FROZEN, tick=False):   # the same frozen now as run(): the range ends at now
+        at.run()
     assert not at.exception and any("47 days" in body for body in htmls(at))
 
 

@@ -122,7 +122,7 @@ GCAT_CITATION = "data from GCAT (J. McDowell, planet4589.org/space/gcat)"
 # every tooltip that names it links to it.
 SOURCE_LINKS = {"GCAT": "https://planet4589.org/space/gcat/", "CelesTrak": "https://celestrak.org/",
                 "Space-Track": "https://www.space-track.org/", "IGS": "https://igs.org/",
-                "BKG": "https://igs.bkg.bund.de/", "ESA GSSC": "https://gssc.esa.int/", "Natural Earth": "https://www.naturalearthdata.com/"}
+                "BKG": "https://igs.bkg.bund.de/", "Natural Earth": "https://www.naturalearthdata.com/"}
 
 # --- Confidence: the grades, the bar and the labels ---
 

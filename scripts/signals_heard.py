@@ -17,23 +17,24 @@ import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from analysis.observed_signals import combine, read_observations  # noqa: E402
-from scripts.orbit_record_gap import newest_day, tracked  # noqa: E402
-from ui.signal_settings import FILES, FOLDER, SAMPLE_EVERY, STATIONS  # noqa: E402
+from scripts.orbit_record_gap import fetch_first, newest_day, tracked  # noqa: E402
+from ui.signal_settings import FILE_SOURCES, FOLDER, SAMPLE_EVERY, STATIONS  # noqa: E402
 
 SAVED = Path.home() / ".cache" / "gnss-health-monitor" / "observations"   # one copy per station and day, outside the repository
 
 
 def observation_text(code, day):
-    """(the station's file for `day` as RINEX text, its download size in bytes): the saved copy, or BKG's (then saved)."""
-    url = FILES.format(year=day.year, doy=day.timetuple().tm_yday, code=code)
-    saved = SAVED / url.rsplit("/", 1)[1]
+    """(the station's file for `day` as RINEX text, its download size in bytes, the source that served it): the saved
+    copy (noted "saved copy"), or the first of FILE_SOURCES that gives it (then saved)."""
+    doy = day.timetuple().tm_yday
+    saved = SAVED / f"{code}_R_{day.year}{doy:03d}0000_01D_30S_MO.crx.gz"
+    source = "saved copy"
     if not saved.exists():
-        reply = requests.get(url, timeout=120)
-        reply.raise_for_status()
+        source, content = fetch_first(FILE_SOURCES, timeout=120, year=day.year, doy=doy, code=code)
         saved.parent.mkdir(parents=True, exist_ok=True)
-        saved.write_bytes(reply.content)
+        saved.write_bytes(content)
     raw = saved.read_bytes()
-    return hatanaka.decompress(raw).decode("ascii", "replace"), len(raw)
+    return hatanaka.decompress(raw).decode("ascii", "replace"), len(raw), source
 
 
 def measure(day, now=None):
@@ -43,10 +44,10 @@ def measure(day, now=None):
     for code, (short, place, _) in STATIONS.items():
         entry = {"code": code, "name": short, "place": place}
         try:
-            text, size = observation_text(code, day)
+            text, size, source = observation_text(code, day)
             by_station[short] = read_observations(text)
-            entry |= {"read": True, "megabytes": round(size / 1e6, 1)}
-        except (requests.RequestException, hatanaka.HatanakaException, OSError, ValueError) as error:
+            entry |= {"read": True, "megabytes": round(size / 1e6, 1), "from": source}
+        except (requests.RequestException, hatanaka.HatanakaException, OSError, ValueError, RuntimeError) as error:
             entry |= {"read": False, "problem": str(error)[:120]}
         stations.append(entry)
     if not by_station:

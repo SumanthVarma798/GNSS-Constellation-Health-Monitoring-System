@@ -76,7 +76,9 @@ def test_combine_lists_stations_per_signal_in_a_fixed_order():
 def test_every_station_has_its_why_and_a_bkg_address():
     for code, (short, place, why) in signal_settings.STATIONS.items():
         assert code.startswith(short) and place and why
-    assert signal_settings.FILES.format(year=2026, doy=320, code="IISC00IND").endswith("IISC00IND_R_20263200000_01D_30S_MO.crx.gz")
+    assert [name for name, _ in signal_settings.FILE_SOURCES] == ["BKG", "ESA GSSC"]
+    for _, address in signal_settings.FILE_SOURCES:
+        assert address.format(year=2026, doy=320, code="IISC00IND").endswith("/2026/320/IISC00IND_R_20263200000_01D_30S_MO.crx.gz")
 
 
 def test_measure_leaves_out_a_station_it_cannot_read_and_fails_when_none_can_be_read(monkeypatch):
@@ -85,12 +87,13 @@ def test_measure_leaves_out_a_station_it_cannot_read_and_fails_when_none_can_be_
     def text(code, day):
         if code.startswith("WTZR"):
             raise OSError("no file")
-        return FILE, 1_000_000
+        return FILE, 1_000_000, "ESA GSSC" if code.startswith("IISC") else "BKG"
 
     monkeypatch.setattr(signals_heard, "observation_text", text)
     monkeypatch.setattr(signals_heard, "tracked", lambda day: [("x", "GPS BIIF-3", 1, "G05"), ("y", "NVS-03", 2, None)])
     payload = signals_heard.measure(date(2026, 11, 16))
     assert [s["read"] for s in payload["stations"]].count(False) == 1
+    assert payload["stations"][0]["from"] == "ESA GSSC"   # which source served each station's file
     assert payload["satellites"][0]["signals"]["L1 C/A"] == sorted(s[0] for c, s in signal_settings.STATIONS.items() if not c.startswith("WTZR"))
     assert signals_heard.summary(payload) == "1 of 2 satellites heard by 5 of 6 stations"
     json.dumps(payload)
