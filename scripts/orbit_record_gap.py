@@ -19,6 +19,7 @@ import csv
 import gzip
 import json
 import math
+import re
 import socket
 import statistics
 import sys
@@ -65,7 +66,7 @@ def _get(address, timeout=60):
             with urllib.request.urlopen(address, timeout=timeout) as reply:
                 return reply.read()
         except urllib.error.URLError as error:
-            if "550" in str(error.reason):   # FTP: no such file
+            if re.search(r"\b550\b", str(error.reason)):   # FTP reply 550: no such file
                 return None
             raise
     reply = requests.get(address, timeout=timeout)
