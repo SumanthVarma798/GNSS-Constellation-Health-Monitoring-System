@@ -1,6 +1,86 @@
 {
- "generated_at": "2026-11-20T02:41:11Z",
+ "generated_at": "2026-11-20T12:15:35Z",
  "items": [
+  {
+   "address": "https://www.gsc-europa.eu/news/orbfix-first-galileo-has-onboard-processing-capable-gnss-receiver-successfully-demonstrated-in",
+   "category": "signal and service",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-20T12:13:37Z",
+   "grade": "B",
+   "grade_standing": "confirmed",
+   "outlet": "European GNSS Service Centre: news",
+   "published_at": "2026-11-20T11:20:48Z",
+   "source_id": "gsc-europa.eu",
+   "summary": "OrbFIX - First Galileo HAS onboard processing-capable GNSS receiver successfully demonstrated in space garcial 20 November 2026 Fri, 11/20/2026 - 11:20 OrbFIX, aboard EMISAR CubeSat, validates the use of the operational Galileo High Accuracy Service (HAS) in Low Earth Orbit, paving the way for more…",
+   "title": "OrbFIX - First Galileo HAS onboard processing-capable GNSS receiver successfully demonstrated in space",
+   "via": "https://www.gsc-europa.eu/rss.xml"
+  },
+  {
+   "address": "https://www.gsc-europa.eu/node/7860",
+   "category": "programme and policy",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-20T12:13:37Z",
+   "grade": "B",
+   "grade_standing": "confirmed",
+   "outlet": "European GNSS Service Centre: news",
+   "published_at": "2026-11-20T11:19:34Z",
+   "source_id": "gsc-europa.eu",
+   "summary": "New contracts to modernise Galileo ground segment for next generation garcial 20 November 2026 Fri, 11/20/2026 - 11:19 On 27 October 2026, Indra Space celebrated the signature of two contracts with the European Space Agency, European Commission and EU Agency for the Space Programme to develop new…",
+   "title": "New contracts to modernise Galileo ground segment for next generation",
+   "via": "https://www.gsc-europa.eu/rss.xml"
+  },
+  {
+   "address": "https://www.gsc-europa.eu/node/7859",
+   "category": "programme and policy",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-20T12:13:37Z",
+   "grade": "B",
+   "grade_standing": "confirmed",
+   "outlet": "European GNSS Service Centre: news",
+   "published_at": "2026-11-20T11:19:14Z",
+   "source_id": "gsc-europa.eu",
+   "summary": "ESA procures four new Galileo Second Generation satellites garcial 20 November 2026 Fri, 11/20/2026 - 11:19 The European Space Agency (ESA) has extended ongoing contracts to build four additional Galileo Second Generation (G2) satellites, ensuring the long-term continuity of the constellation and…",
+   "title": "ESA procures four new Galileo Second Generation satellites",
+   "via": "https://www.gsc-europa.eu/rss.xml"
+  },
+  {
+   "address": "https://www.gsc-europa.eu/node/7858",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-20T12:13:37Z",
+   "grade": "B",
+   "grade_standing": "confirmed",
+   "outlet": "European GNSS Service Centre: news",
+   "published_at": "2026-11-20T11:18:56Z",
+   "source_id": "gsc-europa.eu",
+   "summary": "The director’s take: telling Galileo’s story through film garcial 20 November 2026 Fri, 11/20/2026 - 11:18 In 2025, to celebrate thirty years of satellite navigation in Europe, the European Space Agency (ESA) commissioned a documentary to capture the history of Galileo, Europe’s satellite navigation…",
+   "title": "The director’s take: telling Galileo’s story through film",
+   "via": "https://www.gsc-europa.eu/rss.xml"
+  },
+  {
+   "address": "https://www.gsc-europa.eu/node/7857",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-20T12:13:37Z",
+   "grade": "B",
+   "grade_standing": "confirmed",
+   "outlet": "European GNSS Service Centre: news",
+   "published_at": "2026-11-20T11:18:07Z",
+   "source_id": "gsc-europa.eu",
+   "summary": "ESA and the EU partner with Museo Galileo on new exhibition garcial 20 November 2026 Fri, 11/20/2026 - 11:18 The European Space Agency (ESA), Italy’s Museo Galileo - Institute and Museum of the History of Science, and the European Commission (EC) have partnered to uncover the surprising and…",
+   "title": "ESA and the EU partner with Museo Galileo on new exhibition",
+   "via": "https://www.gsc-europa.eu/rss.xml"
+  },
   {
    "address": "https://x.com/Stellarixorine/status/2123459751703109955",
    "category": "other",
@@ -3623,22 +3703,6 @@
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMiwAFBVV95cUxPdWVhd1JzUEZla1B2eS0wZnZWZ2Y3N1hHNFh4a01QelN4Z1JKOGdnUnlWNGcyUERLbUZUN3prZTdmc0NBVDZTVk8xVW1ZV1EtVzFITnIxbmJlQnB2eWZmdU1sQWwweVlVbElvMXpvSTJVV3V4NmJCLU1VdFFfWldIbnRpa0Q0QkZOS3k3SndHX2FmZlFBVWdraENzUmNEV1lwZlR0cEx3b2RYaUc5eEU2Q1g3dm8yV2M5UXBtbGVKcXg?oc=5",
-   "category": "programme and policy",
-   "constellations": [
-    "Galileo"
-   ],
-   "fetched_at": "2026-10-28T20:37:01Z",
-   "grade": "B",
-   "grade_standing": "confirmed",
-   "outlet": "European Space Agency",
-   "published_at": "2026-10-28T13:21:31Z",
-   "source_id": "esa.int",
-   "summary": "",
-   "title": "New contracts to modernise Galileo ground segment for next generation",
-   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMigAFBVV95cUxQVDFOWHJFcUxhN0tURnlOeElQU3l5Ym12UWJEVkpMbUFzVUlJVVBFR0NMYkhkQTkzdlhTTnFjY1loMERkMmpmUU9jUUhPdkN6RmlPXzg2VzV2UVVfa0hGUnNveWFRNi1OWEo4enlXaUNlc2dMSGt4cnEtYWJkcTlEdA?oc=5",
    "category": "programme and policy",
    "constellations": [
@@ -3732,22 +3796,6 @@
    "source_id": "aviationbusinessme.com",
    "summary": "",
    "title": "Airbus Wins Contract For Two More Galileo Satellites",
-   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMijwFBVV95cUxNS3ZPbEtmcXZEUHZjMGxvM3ZRMzJad2dMQVd6aWtJdjduY1lzZ3FubGVRaHdLMUtGMjdZWk50YUpjLXd5YnV2RXNEX2pKaHFGN0RGQ3pBWUd6XzUtYS1oTDZDaThQS0xpUnM4QS1DSWpRMXdscWZGMlRuRW5CTldydmMwNmJGajdnTEp6aTJodw?oc=5",
-   "category": "other",
-   "constellations": [
-    "Galileo"
-   ],
-   "fetched_at": "2026-10-28T00:47:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "space & defense",
-   "published_at": "2026-10-28T00:30:04Z",
-   "source_id": "spaceanddefense.io",
-   "summary": "",
-   "title": "ESA procures four new Galileo Second Generation satellites",
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -4430,22 +4478,6 @@
    "via": "https://insidegnss.com/feed/"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMirwFBVV95cUxPZFJmX3RDTVR4NmlvWFFyS281aEk2eHRPZU9FMmRjLTNhSGhsUWhNYkRQUE9XT1JXSHJqY1JSNEgtRVhsUExaYnVEdjFQbGU5TklfdXlkbWg2czF6Z1FJdE5La3FzREF2SVNCZXVHQjh2VEQwdklrN1BXSU5PWUVEQ1ZXQi1kWXhEZ3otN1l4Z1JtamUxY2JScWprVkFyd1hFdWlHbkF2YWxGNENaYW5R?oc=5",
-   "category": "other",
-   "constellations": [
-    "Galileo"
-   ],
-   "fetched_at": "2026-10-19T22:40:40Z",
-   "grade": "B",
-   "grade_standing": "confirmed",
-   "outlet": "European Space Agency",
-   "published_at": "2026-10-08T11:40:10Z",
-   "source_id": "esa.int",
-   "summary": "",
-   "title": "The director’s take: telling Galileo’s story through film",
-   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMivAFBVV95cUxQSGh5YXRualdacFBqTzB0MHZ0SW51VmM0dDZDTHpiejVibGxpcHdpRlZBdVJkUnFjN1ZIbHhldkhBNEhaTnRiN3B3LWJKalYxOTlfMzZmTDlTZHJINVUtVDhNTGpoVm1UaGFyX3kxLWk5RklmYlRpNW1acWNmTk5FTTFQZ0RaN0hoTkVjczc4SHctOXFET0VoYUY2RVNtaVpZQ19fZmZ6SlMtSHpEMU5zMHNpdmFGMEx0Unltcg?oc=5",
    "category": "other",
    "constellations": [
@@ -4669,22 +4701,6 @@
    "summary": "",
    "title": "Galileo satellite navigation constellation",
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://www.esa.int/Applications/Satellite_navigation/Galileo/ESA_and_the_EU_partner_with_Museo_Galileo_on_new_exhibition",
-   "category": "other",
-   "constellations": [
-    "Galileo"
-   ],
-   "fetched_at": "2026-10-19T22:39:45Z",
-   "grade": "B",
-   "grade_standing": "confirmed",
-   "outlet": "European Space Agency: navigation",
-   "published_at": "2026-09-25T09:00:00Z",
-   "source_id": "esa.int",
-   "summary": "The European Space Agency (ESA), Italy’s Museo Galileo - Institute and Museum of the History of Science, and the European Commission (EC) have partnered to uncover the surprising and far-reaching connections between the pioneer astronomer Galileo Galilei and Europe’s satellite navigation system…",
-   "title": "ESA and the EU partner with Museo Galileo on new exhibition",
-   "via": "https://www.esa.int/rssfeed/Our_Activities/Navigation"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMiigFBVV95cUxPMktvbGJoMzdld0p3OHVxWHdQSTFISU9fcDl1OVFJN3hLM2tZSllDTmF6c0swYmJsMUNqMWNyRU9EdThETjhzTVRkMjk4Snk4T1g5d256a0V0UHFyQXpyNkg5TlNxcmpoOUlJVFZJTGdidFRSanAzVmRJaU5HWGNxTVZYd01KenRmeFE?oc=5",
@@ -8265,22 +8281,6 @@
    "summary": "",
    "title": "Launch Postponement of MICHIBIKI No. 5, Quasi-Zenith Satellite System (QZS-5) aboard H3 Launch Vehicle flight No.8",
    "via": "https://news.google.com/rss/search?q=QZSS+OR+Michibiki+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMiswFBVV95cUxQem8xaDdqYURUR09xT054NTFiNTRhWXdTZEh6Slg3bHZkQmpBMzExbEJFQXdVZ1R2WHdfMTNSTWxCY01qMjZtNVB1NXhiUzNpSFJTeWhuTnhRQTYtajBhTzRRSWxZcHNOa1p3VENXX1VhcDB6WEFadHNhMmdjTGg0bzFkMjRQOVFZLVRBS1l3ZExNUy1JaDA2UDFGTXpOMmtERGI2enNGVEtrV1hLTDY4elUtTQ?oc=5",
-   "category": "launch",
-   "constellations": [
-    "Galileo"
-   ],
-   "fetched_at": "2026-10-19T22:40:40Z",
-   "grade": "B",
-   "grade_standing": "confirmed",
-   "outlet": "European Space Agency",
-   "published_at": "2025-11-20T09:35:17Z",
-   "source_id": "esa.int",
-   "summary": "",
-   "title": "Galileo to take its first flight on Ariane 6 on 17 December",
-   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   }
  ],
  "rules": {
@@ -10148,15 +10148,6 @@
    "name": "Space.com",
    "note": "Large feed (1.1 MB per read)",
    "reason": "Popular space news; often rewrites agency releases and wire copy"
-  },
-  "spaceanddefense.io": {
-   "grade": "",
-   "grade_standing": "not graded",
-   "graded_by": "",
-   "kind": "",
-   "name": "spaceanddefense.io",
-   "note": "",
-   "reason": ""
   },
   "spacecoastdaily.com": {
    "grade": "F",
