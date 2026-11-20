@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-19T21:04:31Z",
+ "generated_at": "2026-11-20T02:41:11Z",
  "items": [
   {
    "address": "https://x.com/Stellarixorine/status/2123459751703109955",
@@ -5104,6 +5104,22 @@
    "summary": "NOTICE ADVISORY TO GALILEO USERS (NAGU) 2026043 navaral 18 October 2026 Thu, 09/10/2026 - 13:52 DATE GENERATED (UTC): 2026-09-10 14:15 NAGU TYPE: GENERAL (END DATE) NAGU NUMBER: 2026043 NAGU SUBJECT: END DATE OF UNPLANNED OUTAGE NAGU REFERENCED TO: 2026042 START DATE EVENT (UTC): 2026-09-02 05:54…",
    "title": "NOTICE ADVISORY TO GALILEO USERS (NAGU) 2026043",
    "via": "https://www.gsc-europa.eu/rss.xml"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMif0FVX3lxTFA5RXRURXNzTUlzV3BmV2JaRHNsYXAya2QzMEo1eW5obWk1eGNOSGtNZUxiQmlvWWdnYXJWWnlYTmxwVHlQRXpodEhXLURPVUpiZVpHWTliM0JuOFItUl9XbUcyRTltb0pKMVYxekRXSGVGRHVweC1BVElNZWd2SUU?oc=5",
+   "category": "other",
+   "constellations": [
+    "GLONASS"
+   ],
+   "fetched_at": "2026-11-20T02:40:50Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "GIM International",
+   "published_at": "2026-09-09T05:24:28Z",
+   "source_id": "gim-international.com",
+   "summary": "",
+   "title": "Glonass: Dawn, Decline and Revival",
+   "via": "https://news.google.com/rss/search?q=GLONASS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMiYkFVX3lxTE9DZHY2cnl6YWhjT1B5aUktMnJISlp6cmlSeFNsQTBBQWxTVHgzMm5teGI1cW5tU0I5OGlrYWxMZVBxa0JkS29ERkVRY21IWVR1OUw0Mkt6cUdGd1lmYXI3QXp3?oc=5",
