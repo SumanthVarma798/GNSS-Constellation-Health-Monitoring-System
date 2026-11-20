@@ -8,7 +8,7 @@ record still leaves a usable one behind. GLONASS broadcasts a position every 30 
 so it is compared and fitted at those moments, not every 15 minutes.
 Prints a Markdown report. Read-only apart from the files it is told to write.
 
-    python scripts/orbit_record_gap.py                   # the newest day BKG has, from its copy of the IGS file
+    python scripts/orbit_record_gap.py                   # the newest day a source has the IGS file for (BKG, else ESA GSSC)
     python scripts/orbit_record_gap.py --day 2026-10-17 --file BRDC00IGS_R_20262900000_01D_MN.rnx
     python scripts/orbit_record_gap.py --fitted fitted.json --previous-fitted-dir archive/orbits/fitted
 
@@ -19,8 +19,11 @@ import csv
 import gzip
 import json
 import math
+import socket
 import statistics
 import sys
+import urllib.error
+import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -35,14 +38,13 @@ from analysis.broadcast_orbit import (FIT, nearest, position, read_glonass, read
 from analysis.broadcast_clock import clocks as broadcast_clocks  # noqa: E402
 from analysis.orbit_fit import fit as fit_orbit  # noqa: E402
 from data import celestrak  # noqa: E402
-from evidence.settings import ORBIT_FIT_MAX_KM, ORBIT_FIT_MIN_SAMPLES  # noqa: E402
+from evidence.settings import BROADCAST_SOURCES, ORBIT_FIT_MAX_KM, ORBIT_FIT_MIN_SAMPLES  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
-# The IGS merged navigation file for one day, as BKG serves it without a login (checked 19 Oct 2026).
-BKG = "https://igs.bkg.bund.de/root_ftp/IGS/BRDC/{year}/{doy:03d}/BRDC00IGS_R_{year}{doy:03d}0000_01D_MN.rnx.gz"
 SAVED = Path.home() / ".cache" / "gnss-health-monitor" / "broadcast"   # one copy per day, outside the repository
 STEP = timedelta(minutes=15)
 HISTORIES = ("navic", "qzss", "beidou3")
+_UNREACHABLE = set()   # names of the sources that did not answer in this run
 _ts = load.timescale()
 
 
@@ -50,33 +52,91 @@ def _iso_utc(moment):
     return moment.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _saved(day, suffix=""):
+    """The saved copy of the day's file; with suffix ".source", the note of which source served it."""
+    doy = day.timetuple().tm_yday
+    return SAVED / f"BRDC00IGS_R_{day.year}{doy:03d}0000_01D_MN.rnx.gz{suffix}"
+
+
+def _get(address):
+    """The file's bytes, or None when the source answers that it has no such file (yet)."""
+    if address.startswith("ftp://"):
+        try:
+            with urllib.request.urlopen(address, timeout=60) as reply:
+                return reply.read()
+        except urllib.error.URLError as error:
+            if "550" in str(error.reason):   # FTP: no such file
+                return None
+            raise
+    reply = requests.get(address, timeout=60)
+    if reply.status_code == 404:
+        return None
+    reply.raise_for_status()
+    return reply.content
+
+
+def _no_answer(error):
+    """True when the source did not answer at all (refused, timed out, name not found), not when it answered no."""
+    if isinstance(error, urllib.error.URLError):
+        error = error.reason
+    return isinstance(error, (requests.ConnectionError, requests.Timeout, ConnectionError, TimeoutError, socket.gaierror))
+
+
+def download(day):
+    """Save the day's file from the first of BROADCAST_SOURCES that gives it, with that source's name beside it, and
+    return the name. A source that did not answer is not asked again in this run. Raises when none gave the file."""
+    doy = day.timetuple().tm_yday
+    said = []
+    for name, address in BROADCAST_SOURCES:
+        if name in _UNREACHABLE:
+            said.append(f"{name}: not asked again, it did not answer earlier in this run")
+            continue
+        try:
+            content = _get(address.format(year=day.year, doy=doy))
+        except (requests.RequestException, OSError) as error:
+            if _no_answer(error):
+                _UNREACHABLE.add(name)
+            said.append(f"{name}: {error}")
+            continue
+        if content is None:
+            said.append(f"{name}: no file for {day.isoformat()} yet")
+            continue
+        SAVED.mkdir(parents=True, exist_ok=True)
+        _saved(day).write_bytes(content)
+        _saved(day, ".source").write_text(name + "\n", encoding="utf-8")
+        return name
+    raise RuntimeError(f"No source gave the IGS broadcast file for {day.isoformat()}. " + "; ".join(said))
+
+
+def broadcast_source(day, file=None):
+    """Which source served the day's file. A copy saved before sources were noted came from BKG, the only one then."""
+    if file:
+        return f"local file {Path(file).name}"
+    note = _saved(day, ".source")
+    return note.read_text(encoding="utf-8").strip() if note.exists() else BROADCAST_SOURCES[0][0]
+
+
 def navigation_text(day, file=None):
-    """The day's navigation file as text: the given file, the saved copy, or BKG's (then saved)."""
+    """The day's navigation file as text: the given file, the saved copy, or the first source's that has it (then saved)."""
     if file:
         return Path(file).read_text()
-    doy = day.timetuple().tm_yday
-    saved = SAVED / f"BRDC00IGS_R_{day.year}{doy:03d}0000_01D_MN.rnx.gz"
-    if not saved.exists():
-        reply = requests.get(BKG.format(year=day.year, doy=doy), timeout=60)
-        reply.raise_for_status()
-        saved.parent.mkdir(parents=True, exist_ok=True)
-        saved.write_bytes(reply.content)
-    return gzip.decompress(saved.read_bytes()).decode("ascii", "replace")
+    if not _saved(day).exists():
+        download(day)
+    return gzip.decompress(_saved(day).read_bytes()).decode("ascii", "replace")
 
 
 def newest_day(today):
-    """The newest day BKG has the IGS file for: yesterday, else up to three days back. The file for a day appeared
+    """The newest day a source has the IGS file for: yesterday, else up to three days back. The file for a day appeared
     about 25 hours after the day ended (checked 26 Oct 2026: 24 Oct's at 00:56 on 26 Oct), so yesterday's is often
-    not there yet. When none answers, yesterday, so the download says why."""
+    not there yet. The file found is saved, so it is fetched once. When none has it, yesterday, so the download says why."""
     for back in (1, 2, 3):
         day = today - timedelta(days=back)
-        doy = day.timetuple().tm_yday
-        if (SAVED / f"BRDC00IGS_R_{day.year}{doy:03d}0000_01D_MN.rnx.gz").exists():
+        if _saved(day).exists():
             return day
         try:
-            if requests.head(BKG.format(year=day.year, doy=doy), timeout=30).status_code == 200:
-                return day
-        except requests.RequestException:
+            download(day)
+            return day
+        except RuntimeError:
             continue
     return today - timedelta(days=1)
 
@@ -321,10 +381,12 @@ def _row_payload(row):
     return payload
 
 
-def json_payload(day, checked, rows, leap=None, time_corrections=None):
-    """Public JSON payload with the rows needed by the dashboard."""
+def json_payload(day, checked, rows, leap=None, time_corrections=None, source=None):
+    """Public JSON payload with the rows needed by the dashboard; source: which source served the broadcast file."""
     payload = {"day": day.isoformat(), "checked": checked,
                "satellites": [_row_payload(row) for row in rows]}
+    if source is not None:
+        payload["broadcast_from"] = source
     if leap is not None:
         payload["leap_seconds"] = leap
     if time_corrections is not None:
@@ -333,10 +395,10 @@ def json_payload(day, checked, rows, leap=None, time_corrections=None):
     return payload
 
 
-def write_json(path, day, checked, rows, leap=None, time_corrections=None):
+def write_json(path, day, checked, rows, leap=None, time_corrections=None, source=None):
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps(json_payload(day, checked, rows, leap, time_corrections)), encoding="utf-8")
+    target.write_text(json.dumps(json_payload(day, checked, rows, leap, time_corrections, source)), encoding="utf-8")
 
 
 def fitted_satellites(day, text, checked):
@@ -395,8 +457,8 @@ def report(day, file=None, now=None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--day", type=lambda s: datetime.strptime(s, "%Y-%m-%d").date(),
-                        help="the UTC day to check; default: the newest day BKG has the IGS file for")
-    parser.add_argument("--file", help="a local RINEX 3 navigation file instead of BKG's copy")
+                        help="the UTC day to check; default: the newest day a source has the IGS file for")
+    parser.add_argument("--file", help="a local RINEX 3 navigation file instead of a downloaded one")
     parser.add_argument("--json", help="where to write a JSON payload for this day")
     parser.add_argument("--summary-out", help="where to write one line that summarises the rows")
     parser.add_argument("--fitted", help="where to write the fitted orbit records for this day")
@@ -406,12 +468,14 @@ if __name__ == "__main__":
         or newest_day(datetime.now(timezone.utc).date())
     rows, leap, checked_at, corrections = rows_for_day(day, arguments.file,
                                                        previous_fitted_dir=arguments.previous_fitted_dir)
+    source = broadcast_source(day, arguments.file)
     print(markdown_report(day, leap, rows))
     if arguments.json:
-        write_json(arguments.json, day, checked_at, rows, leap, corrections)
+        write_json(arguments.json, day, checked_at, rows, leap, corrections, source)
     if arguments.fitted:
         checked = datetime.fromisoformat(checked_at.replace("Z", "+00:00"))
         satellites = fitted_rows_for_day(day, arguments.file, now=checked)
         write_fitted_json(arguments.fitted, day, checked_at, satellites)
     if arguments.summary_out:
-        Path(arguments.summary_out).write_text(summary(rows) + "\n", encoding="utf-8")
+        said = summary(rows) if source == BROADCAST_SOURCES[0][0] else f"{summary(rows)}; broadcast file from {source}"
+        Path(arguments.summary_out).write_text(said + "\n", encoding="utf-8")

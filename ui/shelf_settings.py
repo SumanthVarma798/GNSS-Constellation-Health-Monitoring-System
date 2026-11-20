@@ -36,12 +36,13 @@ OURS = {
         "name": "Orbit record check", "icon": "map", "file": ("published", ORBIT_GAP), "date": ("json", "day"),
         "job": ("rinex-check.yml", ""), "address": RAW + "orbit-checks/orbit_gap.json",
         "purpose": "Daily distance between each satellite's newest GP record (TLE/OMM) and its broadcast ephemeris.",
-        "source": 'CelesTrak and Space-Track GP records; IGS broadcast ephemeris (BKG)', "fresh_days": 2,
+        "source": 'CelesTrak and Space-Track GP records; IGS broadcast ephemeris (BKG or ESA GSSC)', "fresh_days": 2,
         "what": "Every day, how far each followed satellite's newest public orbit record is from the positions the "
                 "satellite broadcasts itself.",
         "made": "Every day, the newest public orbit records (CelesTrak, Space-Track) compared with the positions in the "
-                "IGS broadcast navigation files, via BKG.",
+                "IGS broadcast navigation files, via BKG, or ESA GSSC when BKG does not give the day's file.",
         "fields": [("day", "the UTC day checked"),
+                   ("broadcast_from", "which source served that day's broadcast navigation file: BKG or ESA GSSC"),
                    ("satellites[].satellite, signal_id", "the satellite and its signal ID that day"),
                    ("record_epoch", "the time of the public orbit record compared"),
                    ("typical_km, largest_km", "the median and the largest distance between the record and the broadcast "
@@ -56,7 +57,7 @@ OURS = {
         "name": "Orbits fitted to broadcast positions", "icon": "planet", "file": ("published", FITTED),
         "date": ("json", "day"), "job": ("rinex-check.yml", ""), "address": RAW + "orbit-checks/fitted_orbits.json",
         "purpose": "A daily orbit fitted to each satellite's broadcast ephemeris, as an OMM record for SGP4.",
-        "source": 'IGS broadcast ephemeris (BKG)', "fresh_days": 2,
+        "source": 'IGS broadcast ephemeris (BKG or ESA GSSC)', "fresh_days": 2,
         "what": "An orbit fitted to a day of each satellite's own broadcast positions, ready for the SGP4 propagator.",
         "made": "Made here from IGS broadcast navigation files; it stands in when a satellite's public record is days old.",
         "fields": [("day", "the UTC day the broadcast positions are from"),
@@ -133,6 +134,8 @@ OTHERS = [
      "Which satellite is which, signal IDs over time, and launch dates.", ("registry-update.yml", "")),
     ("IGS broadcast navigation files, via BKG", "broadcast", "https://igs.bkg.bund.de/",
      "The broadcast ephemeris, for the orbit record check.", ("rinex-check.yml", "")),
+    ("IGS broadcast navigation files, via ESA GSSC", "broadcast", "https://gssc.esa.int/",
+     "The same broadcast ephemeris, on a day BKG does not give it.", ("rinex-check.yml", "")),
     ("CelesTrak's orbit records", "satellite", "https://celestrak.org/",
      "The newest public orbit record of each satellite.", ("archive.yml", "orbital")),
     ("Space-Track.org's orbit records", "hourglass", "https://www.space-track.org/",

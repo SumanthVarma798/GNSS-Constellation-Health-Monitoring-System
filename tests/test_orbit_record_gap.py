@@ -68,23 +68,37 @@ def test_write_json_writes_the_public_payload(tmp_path):
     assert json.loads(out.read_text())["satellites"][0]["satellite"] == "QZS-2"
 
 
+ONE_SOURCE = (("First", "https://first.example/{year}/{doy:03d}/BRDC00IGS_R_{year}{doy:03d}0000_01D_MN.rnx.gz"),)
+
+
+class _Reply:
+    def __init__(self, status_code, content=b""):
+        self.status_code, self.content = status_code, content
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise __import__("requests").HTTPError(str(self.status_code))
+
+
+def _one_source(monkeypatch, tmp_path):
+    monkeypatch.setattr(orbit_record_gap, "SAVED", tmp_path)
+    monkeypatch.setattr(orbit_record_gap, "_UNREACHABLE", set())
+    monkeypatch.setattr(orbit_record_gap, "BROADCAST_SOURCES", ONE_SOURCE)
+
+
 def test_the_newest_day_falls_back_when_yesterdays_file_is_not_there_yet(monkeypatch, tmp_path):
     import requests
-    from datetime import date
-    monkeypatch.setattr(orbit_record_gap, "SAVED", tmp_path)
+    _one_source(monkeypatch, tmp_path)
     asked = []
 
-    class Reply:
-        def __init__(self, status_code):
-            self.status_code = status_code
-
-    def head(url, timeout):
+    def get(url, timeout):
         asked.append(url)
-        return Reply(404 if "2980000" in url else 200)
+        return _Reply(404) if "2980000" in url else _Reply(200, b"file")
 
-    monkeypatch.setattr(requests, "head", head)
+    monkeypatch.setattr(requests, "get", get)
     assert orbit_record_gap.newest_day(date(2026, 10, 26)) == date(2026, 10, 24)
     assert len(asked) == 2
+    assert orbit_record_gap._saved(date(2026, 10, 24)).read_bytes() == b"file"
 
 
 def test_rows_for_day_fills_every_field_the_report_json_and_dashboard_read(monkeypatch):
@@ -118,18 +132,63 @@ def test_rows_for_day_fills_every_field_the_report_json_and_dashboard_read(monke
 
 def test_a_probe_that_fails_tries_the_day_before(monkeypatch, tmp_path):
     import requests
-    monkeypatch.setattr(orbit_record_gap, "SAVED", tmp_path)
+    _one_source(monkeypatch, tmp_path)
 
-    class Reply:
-        status_code = 200
-
-    def head(url, timeout):
+    def get(url, timeout):
         if "2980000" in url:
-            raise requests.ConnectionError("blip")
-        return Reply()
+            raise requests.HTTPError("500 blip")
+        return _Reply(200, b"file")
 
-    monkeypatch.setattr(requests, "head", head)
+    monkeypatch.setattr(requests, "get", get)
     assert orbit_record_gap.newest_day(date(2026, 10, 26)) == date(2026, 10, 24)
+
+
+def test_the_file_comes_from_the_next_source_when_the_first_times_out(monkeypatch, tmp_path):
+    import gzip
+    import requests
+    monkeypatch.setattr(orbit_record_gap, "SAVED", tmp_path)
+    monkeypatch.setattr(orbit_record_gap, "_UNREACHABLE", set())
+    monkeypatch.setattr(orbit_record_gap, "BROADCAST_SOURCES", (
+        ("First", "https://first.example/{year}/{doy:03d}.gz"), ("Second", "ftp://second.example/{year}/{doy:03d}.gz")))
+    asked = []
+
+    def get(url, timeout):
+        asked.append(url)
+        raise requests.ConnectTimeout("Connection to first.example timed out. (connect timeout=60)")
+
+    class FtpReply:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+        def read(self):
+            return gzip.compress(b"     3.04           N: GNSS NAV DATA")
+
+    def urlopen(url, timeout):
+        asked.append(url)
+        return FtpReply()
+
+    monkeypatch.setattr(requests, "get", get)
+    monkeypatch.setattr(orbit_record_gap.urllib.request, "urlopen", urlopen)
+    day = date(2026, 11, 18)
+
+    assert orbit_record_gap.navigation_text(day) == "     3.04           N: GNSS NAV DATA"
+    assert orbit_record_gap.broadcast_source(day) == "Second"
+    assert orbit_record_gap.json_payload(day, "2026-11-19T06:00:00Z", [], source="Second")["broadcast_from"] == "Second"
+    orbit_record_gap.download(date(2026, 11, 17))   # the source that timed out is not asked again in this run
+    assert [url.split("/")[2] for url in asked] == ["first.example", "second.example", "second.example"]
+
+
+def test_no_source_giving_the_file_says_what_each_one_answered(monkeypatch, tmp_path):
+    import pytest
+    import requests
+    _one_source(monkeypatch, tmp_path)
+    monkeypatch.setattr(requests, "get", lambda url, timeout: _Reply(404))
+    with pytest.raises(RuntimeError, match="First: no file for 2026-11-18 yet"):
+        orbit_record_gap.navigation_text(date(2026, 11, 18))
+    assert orbit_record_gap.broadcast_source(date(2026, 10, 1)) == "First"   # a copy saved before sources were noted
 
 
 def test_fitted_json_payload_has_the_fitted_row_shape_for_one_satellite(monkeypatch):
