@@ -69,6 +69,17 @@ BACKOFF_LONGEST = timedelta(days=7)
 # the 17 Oct 2026 call. They may be malicious; what they show reaches us only through independent journalists.
 NEVER_FETCH = ("vimpel", "spacemapper")  # matched anywhere in a host name
 
+# Where the RINEX check (scripts/orbit_record_gap.py) gets the day's IGS merged broadcast navigation file, in this
+# order: the next one only when the one before did not give that day's file. A source that does not answer at all is
+# not asked again in the same run. Both serve it without a login; checked 20 Nov 2026, the same file byte for byte
+# once unzipped. BKG timed out from GitHub's runners on 17 and 18 Nov 2026. ESA's GSSC serves its data over anonymous
+# FTP (its https address is the website, not the data). Left out: CDDIS needs a login; IGN refused anonymous FTP (530)
+# and did not answer over https on 20 Nov 2026.
+BROADCAST_SOURCES = (
+    ("BKG", "https://igs.bkg.bund.de/root_ftp/IGS/BRDC/{year}/{doy:03d}/BRDC00IGS_R_{year}{doy:03d}0000_01D_MN.rnx.gz"),
+    ("ESA GSSC", "ftp://gssc.esa.int/gnss/data/daily/{year}/{doy:03d}/BRDC00IGS_R_{year}{doy:03d}0000_01D_MN.rnx.gz"),
+)
+
 # --- The raw-copy archive ---
 
 MAX_COPY_BYTES = 50 * 1024 * 1024  # GitHub refuses files over 100 MB; stop well short of that

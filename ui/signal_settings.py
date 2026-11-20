@@ -15,7 +15,12 @@ STATIONS = {
     "HRAO00ZAF": ("HRAO", "Hartebeesthoek, South Africa", "Africa and the southern hemisphere; tracks all six constellations"),
     "BOGT00COL": ("BOGT", "Bogota, Colombia", "the Americas: GPS, GLONASS, Galileo and BeiDou (its receiver does not track QZSS or NavIC)"),
 }
-FILES = "https://igs.bkg.bund.de/root_ftp/IGS/obs/{year}/{doy:03d}/{code}_R_{year}{doy:03d}0000_01D_30S_MO.crx.gz"
+# Where each station's file is fetched, in this order: the next only when the one before did not give it (the same
+# rule as BROADCAST_SOURCES in evidence/settings.py). ESA GSSC had all six stations' files for 18 Nov 2026 (checked 20 Nov).
+FILE_SOURCES = (
+    ("BKG", "https://igs.bkg.bund.de/root_ftp/IGS/obs/{year}/{doy:03d}/{code}_R_{year}{doy:03d}0000_01D_30S_MO.crx.gz"),
+    ("ESA GSSC", "ftp://gssc.esa.int/gnss/data/daily/{year}/{doy:03d}/{code}_R_{year}{doy:03d}0000_01D_30S_MO.crx.gz"),
+)
 FOLDER = "https://igs.bkg.bund.de/root_ftp/IGS/obs/{year}/{doy:03d}/"
 SAMPLE_EVERY = 20   # read one 30-second epoch in 20 (one in ten minutes). Our choice: a satellite in view stays in view for
                     # hours, so the day's signals are the same as from every epoch, for a twentieth of the reading.
