@@ -1,6 +1,22 @@
 {
- "generated_at": "2026-11-20T20:52:33Z",
+ "generated_at": "2026-11-20T20:53:56Z",
  "items": [
+  {
+   "address": "https://x.com/Stellarixorine/status/2123821554115252555",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-20T20:53:41Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "Stellarix (@Stellarixorine)",
+   "published_at": "2026-11-20T16:51:31Z",
+   "source_id": "x.com/Stellarixorine",
+   "summary": "ONE DAY, ONE SPACE AGENCY — Day 26 / 70+ 🚀✨ 🇧🇬 Bulgaria — Bulgarian Space Agency / Space Research and Technology Institute (SRTI-BAS) The Space Food & Greenhouse Pioneer 🥬🛰️ 🇧🇬--------------🇧🇬 📅 FORMED: 1969 — Space Research Group, SRTI founded 1987, Bulgarian Space Agency coordination 📍…",
+   "title": "ONE DAY, ONE SPACE AGENCY — Day 26 / 70+ 🚀✨ 🇧🇬 Bulgaria — Bulgarian Space Agency / Space Research and Technology…",
+   "via": "https://x.com/Stellarixorine"
+  },
   {
    "address": "https://www.gsc-europa.eu/notice-advisory-to-galileo-users-nagu-2026050",
    "category": "signal and service",
@@ -112,6 +128,22 @@
    "summary": "ESA and the EU partner with Museo Galileo on new exhibition garcial 20 November 2026 Fri, 11/20/2026 - 11:18 The European Space Agency (ESA), Italy’s Museo Galileo - Institute and Museum of the History of Science, and the European Commission (EC) have partnered to uncover the surprising and…",
    "title": "ESA and the EU partner with Museo Galileo on new exhibition",
    "via": "https://www.gsc-europa.eu/rss.xml"
+  },
+  {
+   "address": "https://x.com/ispaceflight_in/status/2123690303219753109",
+   "category": "signal and service",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-20T20:53:56Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "indianspaceflight.in (@iSpaceFlight_in)",
+   "published_at": "2026-11-20T08:09:59Z",
+   "source_id": "x.com/iSpaceFlight_in",
+   "summary": "NVS-03 has started broadcasting NavIC signals! Our NavIC status dashboard has been tracking a new satellite, PRN I12, in live broadcast navigation data from the GNSS station at Gadanki, near Tirupati, Andhra Pradesh, India (GDKG), via NASA CDDIS. How we know I12 is NVS-03: • Its orbit matches ISRO's…",
+   "title": "NVS-03 has started broadcasting NavIC signals! Our NavIC status dashboard has been tracking a new satellite, PRN I12,…",
+   "via": "https://x.com/iSpaceFlight_in"
   },
   {
    "address": "https://x.com/Stellarixorine/status/2123459751703109955",
@@ -3320,8 +3352,7 @@
    "address": "https://news.google.com/rss/articles/CBMi2wFBVV95cUxNV1RlMHIxWnVRU3NYN1hJOS1heC1OTGwta3FxVVIwYjZlZktwUlBJaGJwUkZTWGRmcnJJRGJ1d2VvLUpzSF9jYjZXa1RHVDJGTmtlZ3NEQ1VheGd0Ri1OcUlSeUlqZnRXRzdnVTZkaERKeldRQzVYcTRMM25lWk5oZTQ5NnRfdHRYSVBsU1pNQ2FFeWxNSnpZYW5GQThmR3hpcWpPdURFUk55M1RkWG5KS1p5aXdlTU5oajdHTEF5aF9Yc1R2YWFYY1FOTENLMlNtRlFDZFBNUVQ1MGvSAeABQVVfeXFMTnJPRElZSzFicHdBVUxnRmpDdlZRVlhpYU1hS0VrbTJDc3AzSHF4YWdCeTJ4WVI3d00xQ3AwakhjODBMajNWNENsRnFway0tNWpqVGpEeGtBTXZIZnN5V2VjTE1JdkNxaVk4RjNqZkNESTVFY1N0VnlTQWxEMVN2V0h0elFaSk9LbG1KeUhqSm5yd3R3MjRCcnFETjhwN21wX045S2JzdGJPaS1vMkJ5cGhIZ3psaGNnNWc5RUNsS3kwMGZERGxtYzNkOHFLNno3RkpPZ1hzT29EQlNadEwyY0c?oc=5",
    "category": "launch",
    "constellations": [
-    "GPS",
-    "NavIC"
+    "GPS"
    ],
    "fetched_at": "2026-11-07T22:20:52Z",
    "grade": "",
