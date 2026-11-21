@@ -64,7 +64,7 @@ Credentials only ever go in a git-ignored `.env` (copy [.env.example](.env.examp
 python -m pytest -q
 ```
 
-The same command runs on every pull request ([.github/workflows/tests.yml](.github/workflows/tests.yml)).
+The same command runs on every pull request that changes more than the README files ([.github/workflows/tests.yml](.github/workflows/tests.yml)).
 One test is marked `coverage_gate` (every broadcasting satellite is tracked or explained): the weekly registry job
 skips it so its proposal can show a new satellite, and merging that proposal still needs it ([pytest.ini](pytest.ini)).
 The world-map script test is skipped when Node.js is not installed.
@@ -123,24 +123,26 @@ https://raw.githubusercontent.com/SumanthVarma798/GNSS-Constellation-Health-Moni
 | `orbit-data` | `latest_gnss.json` | `archive.yml`, job `publish-orbits` ([scripts/latest_orbits.py](scripts/latest_orbits.py)) | After each orbit-records run (every 2 hours) that found a change | CelesTrak's |
 | `orbit-data` | `home_snapshot.json` | `archive.yml`, job `publish-home` ([scripts/home_snapshot.py](scripts/home_snapshot.py)) | After the orbit copy changes, and otherwise every 8 hours | Ours: Home's counts, made with the dashboard's own code |
 | `news-data` | `latest_news.json` | `archive.yml`, job `publish-news` ([scripts/news_items.py](scripts/news_items.py)) | After each news run (every 3 hours) and each X run (every 6 hours) | Headlines and excerpts: their publishers'. Categories and grades: ours |
-| `orbit-checks` | `orbit_gap.json` | `rinex-check.yml` ([scripts/orbit_record_gap.py](scripts/orbit_record_gap.py)) | Daily, for the day before | Ours, measured against IGS broadcast orbits |
-| `orbit-checks` | `fitted_orbits.json` | `rinex-check.yml` | Daily, for the day before | Ours: our own fit to IGS broadcast positions, not CelesTrak or Space-Track data |
-| `orbit-checks` | `signals_heard.json` | `rinex-check.yml` ([scripts/signals_heard.py](scripts/signals_heard.py)) | Daily, for the day before | Ours, measured from six IGS stations' observation files |
+| `orbit-checks` | `orbit_gap.json` | `rinex-check.yml` ([scripts/orbit_record_gap.py](scripts/orbit_record_gap.py)) | Daily, normally for the day before | Ours, measured against IGS broadcast orbits |
+| `orbit-checks` | `fitted_orbits.json` | `rinex-check.yml` | Daily, normally for the day before | Ours: our own fit to IGS broadcast positions, not CelesTrak or Space-Track data |
+| `orbit-checks` | `signals_heard.json` | `rinex-check.yml` ([scripts/signals_heard.py](scripts/signals_heard.py)) | Daily, normally for the day before | Ours, measured from six IGS stations' observation files |
 
-The IGS files behind `orbit-checks` come from BKG. When BKG does not give a day's file (it was unreachable on
+"Normally": when the day before's IGS file is not posted yet, the check takes the newest day up to three days
+back. The IGS files behind `orbit-checks` come from BKG. When BKG does not give a day's file (it was unreachable on
 17 and 18 Nov 2026, and posts the broadcast file about a day late), they come from ESA GSSC's copy of the
-same file. Each output records which source served it.
+same file. `orbit_gap.json` (`broadcast_from`) and `signals_heard.json` (each station's `from`) record which
+source served it.
 
 ### Formats
 
-All six are JSON. Times are ISO 8601 in UTC. The script that writes each file is the full reference.
+All six are JSON. Times are UTC, as ISO 8601; a time with no zone mark (`EPOCH` in an orbit record, `broadcast_newest`) is UTC too. The script that writes each file is the full reference.
 
 | File | Top level | One item |
 |---|---|---|
 | `latest_gnss.json` | `fetched_at`, `source` (the CelesTrak address), `rows`, `outside_group` | One CelesTrak GP record in its own field names (`OBJECT_NAME`, `NORAD_CAT_ID`, `EPOCH`, `MEAN_MOTION`, `ECCENTRICITY`, `INCLINATION`, ...). `outside_group` holds tracked satellites that CelesTrak's GNSS group leaves out, asked for one by one, kept apart so `rows` is the group as published |
 | `latest_news.json` | `generated_at`, `items`, `rules` (the words that put an item in each category), `sources` (each outlet's grade and why) | `title`, `summary`, `outlet`, `address`, `published_at`, `fetched_at`, `constellations`, `category`, `grade`, `grade_standing`, `source_id`, `via` (the feed it came through) |
 | `home_snapshot.json` | `made`, `window_days`, `parts` (the counts per constellation), `next_steps`, `next_figures` | (one object; `ui/home_data.py` reads it) |
-| `orbit_gap.json` | `day`, `checked`, `satellites`, `broadcast_from` (`BKG` or `ESA GSSC`), `leap_seconds`, `time_corrections` (from the navigation file's header) | Per satellite: `satellite`, `signal_id`, `record_epoch`, `typical_km` and `largest_km` (gap between its orbit record and its broadcast orbit over the day), `mostly` (along its path or off its plane), `fitted_km`, broadcast `health`, `accuracy_m` and `broadcast_newest`, `clock` (how steadily its clock ran), `note` |
+| `orbit_gap.json` | `day`, `checked`, `satellites`, `broadcast_from` (`BKG` or `ESA GSSC`), `leap_seconds`, `time_corrections` (from the navigation file's header) | Per satellite: `satellite`, `signal_id`, `record_epoch`, `typical_km` and `largest_km` (gap between its orbit record and its broadcast orbit over the day), `mostly` (which way the record is off: ahead of or behind the satellite on its path, off its orbit plane, higher or lower), `fitted_km`, broadcast `health`, `accuracy_m` and `broadcast_newest`, `clock` (how steadily its clock ran), `note` |
 | `fitted_orbits.json` | `day`, `checked`, `satellites` | `satellite`, `signal_id`, `norad`, `fit_km` (how closely the fit matches), `row` (the fitted record, in the same fields as a CelesTrak GP record) |
 | `signals_heard.json` | `day`, `checked`, `folder`, `sample_every`, `stations` (each: `code`, `name`, `place`, `read`, `megabytes`, `from`) | `satellite`, `signal_id`, `signals` (each signal heard, with the stations that heard it) |
 
@@ -148,13 +150,13 @@ All six are JSON. Times are ISO 8601 in UTC. The script that writes each file is
 
 | Path | What | Updated | Whose data |
 |---|---|---|---|
-| `registry/*.csv` | Which satellite is which: one row per satellite, signal-ID periods, sightings, the tracked list and why some are left out ([registry/README.md](registry/README.md)) | The built tables (`satellites.csv`, `signal_ids.csv`, `sightings.csv`, `unidentified.csv`) are proposed weekly by `registry-update.yml`; the rest (`constellations.csv`, `dashboard_satellites.csv`, `left_out.csv`, `lifecycle_events.csv`, `library_figures.csv`) are kept by a person. A person approves every change | Ours, built from the IGS satellite metadata file, except `catalogue.csv` below |
+| `registry/*.csv` | Which satellite is which: one row per satellite, signal-ID periods, sightings, the tracked list and why some are left out ([registry/README.md](registry/README.md)) | The built tables (`satellites.csv`, `signal_ids.csv`, `sightings.csv`, `unidentified.csv`) are proposed weekly by `registry-update.yml`; the rest (`constellations.csv`, `dashboard_satellites.csv`, `dashboard_systems.csv`, `left_out.csv`, `clock_record.csv`, `bus_budgets.csv`, `lifecycle_events.csv`, `library_figures.csv`) are kept by a person. A person approves every change | Ours, built from the IGS satellite metadata file, except `catalogue.csv` below |
 | `registry/catalogue.csv`, `library_counts.csv`, `library_matching.csv` | Owner and status of each satellite as GCAT states them, and counts made from GCAT | Weekly, with the registry | `catalogue.csv`: GCAT's. The two library tables: ours, counted from GCAT, so they carry GCAT's credit as well as ours ([NOTICE](NOTICE)) |
 | `evidence/*.csv` | Source candidates, grades and the checked-claims record | Proposed weekly by `source-record.yml`, or by hand | Ours |
 | `data/*_tles.json`, `data/*_gp_history.json` | Latest orbit records and orbit history per system, as `{constellation, timestamp, ..., satellites}` | Weekly by `update-tle-data.yml` | CelesTrak's and Space-Track.org's |
 | `ui/figures/land.json` | Land outlines for the maps | A fixed file | Natural Earth (public domain) |
 
-The raw copies behind all of this, and the run log of every scheduled job, are in a separate private
+The raw copies behind all of this, and the run logs of the scheduled jobs (all but `update-tle-data.yml`), are in a separate private
 repository. They are not published.
 
 ## Citing
@@ -179,7 +181,7 @@ the wording is an open question for the team.
 | Source | Used for | What the source states | Credit given today |
 |---|---|---|---|
 | [Space-Track.org](https://www.space-track.org/documentation#/user_agree) (US Space Command) | Orbit history in `data/*_gp_history.json`; recent launches | Its user agreement bars passing on data received from the site, including analysis of it, without prior express approval. A later section gives blanket approval to redistribute basic data (TLE and OMM orbit records, the satellite catalogue, decay data) on condition of "appropriate citation", and says published analysis also needs citation. It gives no citation wording. | "Orbits from CelesTrak and Space-Track" |
-| [CelesTrak](https://celestrak.org/usage-policy.php) | Orbit records: `latest_gnss.json`, `data/*_tles.json` | Its pages make the data freely available. Its usage policy limits how often to download. It states no licence, redistribution limit or credit requirement. | "Orbits from CelesTrak and Space-Track"; on the dashboard, "Orbits from CelesTrak, fetched (time)" |
+| [CelesTrak](https://celestrak.org/usage-policy.php) | Orbit records: `latest_gnss.json`, `data/*_tles.json` | Its pages make the data freely available. Its usage policy limits how often to download. It states no licence, redistribution limit or credit requirement. | "Orbits from CelesTrak and Space-Track"; on the dashboard, "Orbits from CelesTrak, newest copy from (time)" |
 | [International GNSS Service (IGS)](https://igs.org/wp-content/uploads/2020/09/IGS-Data-and-Product-Disclaimer-and-Terms-of-Use-200805.pdf) | The satellite metadata file behind `registry/satellites.csv` and `signal_ids.csv`; the daily broadcast navigation files; six stations' daily observation files | Its Data and Product Disclaimer and Terms of Use (5 Aug 2020) says users agree to cite and attribute IGS resources to their providers and sponsors and acknowledge the IGS and its contributing organisations. It also says IGS data and products should not be used for life-critical functions. The metadata file cites its own format description: Steigenberger P, Montenbruck O (2024), IGS Satellite Metadata File Description, version 1.10, doi:[10.57677/metadata-sinex](https://doi.org/10.57677/metadata-sinex). | "Navigation messages from the IGS, via BKG" |
 | [BKG GNSS Data Center](https://igs.bkg.bund.de/) | Where the broadcast navigation and station observation files are downloaded from | Its site states no licence or credit request of its own. It serves the files as an IGS data centre. | Named in "via BKG" |
 | [ESA GSSC](https://gssc.esa.int/) (GNSS Science Support Centre) | The same IGS files, on a day BKG does not give them | It serves the IGS files as a data centre, by anonymous FTP. Its terms of use were not read for this README. | Named in `broadcast_from` and each station's `from` in the published files; not in the footer |
