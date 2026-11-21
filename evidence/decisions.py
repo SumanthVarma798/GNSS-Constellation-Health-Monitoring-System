@@ -11,9 +11,7 @@ import requests
 
 from evidence.decision_settings import (AFTER_CHANGES, APPROVE, DECISION_MARKER, GROUPS, KINDS, LABEL_PREFIX,
                                         MERGE_METHOD, OTHER_GROUP, RAISED_BY, REJECT, REQUIRED_CHECK, WAIT_WARN_DAYS)
-from evidence.github_api import ask as _ask
-
-PAGE_SIZE = 100   # GitHub's largest page
+from evidence.github_api import PAGE_SIZE, ask as _ask, paged as _paged
 FINDING_DECISION_MARKER = "admin-finding-decision"
 _FINDINGS_BLOCK = re.compile(r"<!--\s*findings\s*\r?\n(.*?)\r?\n-->", re.DOTALL)
 _VALID_FID = re.compile(r"^[A-Za-z0-9_-]+$")
@@ -23,12 +21,7 @@ _FINDING_LINE = re.compile(rf"^<!-- {FINDING_DECISION_MARKER}: ({re.escape(APPRO
 
 def _fetch(token, state):
     """Pull requests in one GitHub state, as GitHub's JSON."""
-    rows, page = [], 1
-    while True:
-        rows += (got := _ask("GET", "/pulls", token, params={"state": state, "per_page": PAGE_SIZE, "page": page}))
-        if len(got) < PAGE_SIZE:
-            return rows
-        page += 1
+    return _paged(lambda page: _ask("GET", "/pulls", token, params={"state": state, "per_page": PAGE_SIZE, "page": page}))
 
 
 def fetch_open(token):
@@ -45,13 +38,8 @@ def fetch_recent_closed(token):
 
 def fetch_comments(token, number):
     """All comments on one pull request's issue thread, page by page."""
-    rows, page = [], 1
-    while True:
-        got = _ask("GET", f"/issues/{number}/comments", token, params={"per_page": PAGE_SIZE, "page": page})
-        rows += got
-        if len(got) < PAGE_SIZE:
-            return rows
-        page += 1
+    return _paged(lambda page: _ask("GET", f"/issues/{number}/comments", token,
+                                    params={"per_page": PAGE_SIZE, "page": page}))
 
 
 def kind_of(pr):
@@ -74,6 +62,11 @@ def findings_block(findings):
 def has_findings_block(body):
     """Whether a pull request body carries a findings block."""
     return bool(_FINDINGS_BLOCK.search(body or ""))
+
+
+def without_findings_block(body):
+    """A pull request body with its hidden findings block taken out, for reading."""
+    return _FINDINGS_BLOCK.sub("", body or "")
 
 
 def findings(body):
@@ -178,6 +171,18 @@ def tests_state(token, sha):
         return "not run"
     newest = max(runs, key=lambda run: run["id"])
     return "running" if newest["status"] != "completed" else "passed" if newest["conclusion"] == "success" else "failed"
+
+
+def review_reading(token, pr):
+    """What a reviewer needs from GitHub beyond the pull request itself: its changed files with their diffs, whether its
+    tests passed on its newest commit, and whether it can merge. GitHub leaves out the diff of a very large file."""
+    number, sha = pr["number"], (pr.get("head") or {}).get("sha")
+    # ponytail: one page of files (100); a registry update changes at most ten. Page on if a proposal ever has more.
+    files = _ask("GET", f"/pulls/{number}/files", token, params={"per_page": PAGE_SIZE})
+    return {"files": [{"path": f["filename"], "additions": f.get("additions", 0), "deletions": f.get("deletions", 0),
+                       "patch": f.get("patch")} for f in files],
+            "tests": tests_state(token, sha) if sha else "not run",
+            "mergeable": _ask("GET", f"/pulls/{number}", token).get("mergeable"), "sha": sha}
 
 
 def blocker(choice, item, reason, changes, state="open", tests=None, mergeable=None, sha=None):

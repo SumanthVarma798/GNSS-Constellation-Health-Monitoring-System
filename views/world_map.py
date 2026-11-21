@@ -1,4 +1,4 @@
-"""World map: every tracked satellite of all six systems on one map, coloured by broadcast health (work in progress)."""
+"""World map: every tracked satellite of all six constellations on one map, coloured by broadcast health (work in progress)."""
 from datetime import datetime, timezone
 
 import streamlit as st
@@ -6,7 +6,7 @@ import streamlit as st
 from data import celestrak
 from ui import surfaces, time_range
 from ui.components.world_view import world_view
-from ui.world_data import load
+from ui.world_data import by_constellation, load
 
 st.session_state.setdefault("window_days", time_range.DEFAULT_DAYS)
 st.session_state.setdefault("params", {})
@@ -18,4 +18,4 @@ entries, notices, gap, now = load(hour_key, str(celestrak.state.get("fetched")),
 surfaces.show(surfaces.notice("Work in progress", "idle"))
 for notice in notices:
     surfaces.show(surfaces.notice(notice, "idle"))
-world_view(entries, gap, now)
+world_view(by_constellation(entries), gap, now)

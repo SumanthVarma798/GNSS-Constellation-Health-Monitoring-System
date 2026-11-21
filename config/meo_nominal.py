@@ -132,11 +132,16 @@ NOMINAL = {
 
 # One line each: what a measure means, for the page.
 MEANINGS = {
-    "plane": "Plane: how far its orbit's node sits from where its plane should be",
+    "plane": "Plane: how far the point where its orbit crosses the equator going north (the node) sits from where "
+             "its plane should cross",
     "spacing": "Spacing: the gap to the next satellite along the plane, against the gap between their slots",
     "inclination": "Inclination: the tilt of its orbit to the equator",
-    "height": "Height: the size of its orbit (semi-major axis)",
-    "eccentricity": "Eccentricity: how far its orbit is from a circle",
+    "height": "Height: the orbit's average radius from the Earth's centre (the semi-major axis), not the height above "
+              "the ground",
+    "eccentricity": "Eccentricity: how far its orbit is from a perfect circle (0 is a circle). On a medium orbit it "
+                    "rises and falls by about e × the radius over each turn (0.01 on a 29,600 km orbit is ±296 km) "
+                    "and runs ahead of and behind its slot by about twice that, which squeezes and stretches the gaps "
+                    "to its neighbours in the plane",
 }
 
 # One line each: what a plane card's figures mean (ui/meo_overview.py, analysis/meo_geometry.plane_drift).
@@ -144,7 +149,8 @@ PLANE_MEANINGS = {
     "In step": "In step: the satellites whose gaps to their neighbours along the plane are within the limit of the "
                "gaps between their slots",
     "Need a look": "Need a look: the satellites with any measure well past its limit (a part score under 80)",
-    "Node": "Node: how far this plane's node sits from the pattern of equally spaced planes fitted to every satellite",
+    "Node": "Node: how far the point where this plane crosses the equator going north sits from the pattern of "
+            "equally spaced planes fitted to every satellite",
     "Drift": "Drift: how fast that distance changes, from the Earth's flattening acting on its satellites' tilt and "
              "height. Worked out from the newest orbits, not measured over time",
     "Gaps": "Gaps: the worst gap between neighbours in this plane, against the gap between their slots",

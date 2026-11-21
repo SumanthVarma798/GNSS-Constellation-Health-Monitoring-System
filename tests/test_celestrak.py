@@ -8,6 +8,7 @@ from skyfield.api import EarthSatellite
 from analysis.bundled_run import load_bundled_gp_as_dataframes
 from config.config import NAVIK_SATS
 from data import celestrak
+from evidence import settings
 
 # One row of a real reply from gp.php?CATNR=39635&FORMAT=json (IRNSS-1B), taken 15 Oct 2026.
 IRNSS_1B = {"OBJECT_NAME": "IRNSS-1B", "OBJECT_ID": "2014-017A", "EPOCH": "2026-10-07T23:09:31.463136",
@@ -16,6 +17,7 @@ IRNSS_1B = {"OBJECT_NAME": "IRNSS-1B", "OBJECT_ID": "2014-017A", "EPOCH": "2026-
             "EPHEMERIS_TYPE": 0, "CLASSIFICATION_TYPE": "U", "NORAD_CAT_ID": 39635, "ELEMENT_SET_NO": 999,
             "REV_AT_EPOCH": 4592, "BSTAR": 0, "MEAN_MOTION_DOT": 7.6e-07, "MEAN_MOTION_DDOT": 0}
 NOW = datetime(2026, 10, 15, 10, 42, tzinfo=timezone.utc)
+COPY_ROWS = celestrak.copy_rows
 FETCH_COPY = celestrak.fetch_copy   # the real one: conftest swaps in one that fails, so no test reads GitHub
 
 
@@ -95,7 +97,7 @@ def test_refresh_keeps_to_every_two_hours_and_a_click_retries_only_after_a_failu
     assert first["listed"] == {39635}
 
     celestrak.refresh([39635], NOW + timedelta(minutes=30), clicked=True)   # worked last time: no fetch
-    assert len(calls) == 1 and not celestrak.due(NOW + timedelta(minutes=119))
+    assert len(calls) == 1 and not celestrak.due(NOW + timedelta(minutes=119), direct=True)
 
     failed = celestrak.refresh([39635], NOW + timedelta(hours=2))            # due: fetches, and fails
     assert len(calls) == 2 and not failed["ok"] and failed["rows"][39635] and failed["fetched"] == NOW
@@ -213,6 +215,7 @@ def test_when_celestrak_refuses_the_archive_jobs_copy_fills_in_and_says_when_it_
 
     monkeypatch.setattr(celestrak, "fetch", refused)
     monkeypatch.setattr(celestrak, "fetch_copy", FETCH_COPY)
+    monkeypatch.setattr(celestrak, "copy_rows", COPY_ROWS)
     monkeypatch.setattr(requests, "get", get)
     after = celestrak.refresh([39635], NOW)
 
@@ -229,6 +232,7 @@ def test_the_copy_carries_tracked_satellites_outside_the_group_without_listing_t
     copy = {"fetched_at": "2026-11-08T08:15:00Z", "rows": [IRNSS_1B], "outside_group": [qzs7]}
     monkeypatch.setattr(requests, "get", lambda url, timeout, **kwargs: Reply(copy))
 
+    monkeypatch.setattr(celestrak, "copy_rows", COPY_ROWS)
     found, listed, _ = FETCH_COPY([39635, 100270])
 
     assert set(found) == {39635, 100270}   # the hosted dashboard gets QZS-7's orbit as a direct fetch would
@@ -244,6 +248,7 @@ def test_with_no_copy_either_a_refusal_keeps_what_is_held(monkeypatch):
 def test_a_copy_that_is_not_one_is_ignored(monkeypatch):
     monkeypatch.setattr(celestrak, "fetch", refused)
     monkeypatch.setattr(celestrak, "fetch_copy", FETCH_COPY)
+    monkeypatch.setattr(celestrak, "copy_rows", COPY_ROWS)
     monkeypatch.setattr(requests, "get", lambda url, timeout, **kwargs: Reply(["not", "a", "copy"]))
     assert celestrak.refresh([39635], NOW)["copy_at"] is None
 
@@ -288,7 +293,7 @@ def test_from_the_copy_a_click_always_reads_again_even_within_every(monkeypatch)
     assert after["tried"] == NOW + timedelta(minutes=1) and after["copy_at"] == taken
 
 
-def test_from_the_copy_without_a_click_a_second_read_waits_every(monkeypatch):
+def test_from_the_copy_without_a_click_a_second_read_waits_the_look_gap(monkeypatch):
     taken = NOW - timedelta(hours=3)
     calls = []
 
@@ -296,11 +301,17 @@ def test_from_the_copy_without_a_click_a_second_read_waits_every(monkeypatch):
                         lambda norads: (calls.append(norads),
                                         ({39635: celestrak.as_history_row(IRNSS_1B)}, {39635}, taken))[1])
     celestrak.refresh([39635], NOW, direct=False)
-    celestrak.refresh([39635], NOW + timedelta(minutes=119), direct=False)
-    assert len(calls) == 1
+    celestrak.refresh([39635], NOW + settings.COPY_LOOK_GAP - timedelta(minutes=1), direct=False)
+    assert len(calls) == 1 and not celestrak.due(NOW + settings.COPY_LOOK_GAP - timedelta(minutes=1))
 
-    celestrak.refresh([39635], NOW + timedelta(hours=2), direct=False)
+    assert celestrak.due(NOW + settings.COPY_LOOK_GAP)
+    celestrak.refresh([39635], NOW + settings.COPY_LOOK_GAP, direct=False)
     assert len(calls) == 2
+
+
+def test_a_copy_published_every_two_hours_is_seen_within_half_an_hour_and_celestrak_keeps_its_two_hours():
+    assert celestrak.LOOK_EVERY == settings.COPY_LOOK_GAP <= timedelta(minutes=30)   # the copy is on GitHub: cheap to read
+    assert celestrak.EVERY == timedelta(hours=2)   # direct downloads from celestrak.org keep to its rule
 
 
 def test_direct_reads_keep_the_click_retry_only_after_a_failure(monkeypatch):

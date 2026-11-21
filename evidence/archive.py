@@ -19,6 +19,7 @@ never used to name a file.
 import csv
 import hashlib
 import os
+import re
 import time
 from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
@@ -27,7 +28,7 @@ from urllib.parse import urljoin, urlsplit
 
 import requests
 
-from evidence.settings import (ARCHIVE_LIMIT_COLUMNS, ARCHIVE_LIMITS_FILE, ARCHIVE_OBJECTS_DIR, ARCHIVE_RUN_COLUMNS,
+from evidence.settings import (RUN_GATE_SLACK, RUN_GATED_SITES, ARCHIVE_LIMIT_COLUMNS, ARCHIVE_LIMITS_FILE, ARCHIVE_OBJECTS_DIR, ARCHIVE_RUN_COLUMNS,
                                ARCHIVE_RUNS_DIR, ARCHIVE_VERSION_COLUMNS, ARCHIVE_VERSIONS_FILE, BACKOFF_FIRST,
                                ARCHIVE_THIN_AFTER_DAYS, ARCHIVE_THIN_FROM_BYTES, BACKOFF_LONGEST, DEFAULT_MIN_GAP, DOWNLOAD_TRIES, GONE_STATUSES, MAX_COPY_BYTES,
                                MIN_GAP_BETWEEN_DOWNLOADS, NEVER_FETCH, REFUSAL_STATUSES, REQUEST_TIMEOUT_SECONDS,
@@ -247,3 +248,31 @@ def log_run(archive, log, job, started, ended, result, changed):
 def read_runs(archive, log):
     """Every line of one run log, oldest first; empty before its first run."""
     return _rows(Path(archive) / ARCHIVE_RUNS_DIR / f"{log}.csv")
+
+
+SKIPPED_WORDS = "skipped: asked less than the site's minimum gap ago"   # in a run's result; such a run asked nobody
+REFUSAL_WORDS = "waiting out a refusal"   # in a run's result: it may not have reached the site, so it is not a check
+_ASKED = re.compile(r"; asked: ([^;]*)")
+
+
+def asked_site(result, name):
+    """Whether a run with this run-log result asked the rate-limited site `name` (one of RUN_GATED_SITES). A run that
+    waited out a refusal or skipped an address writes "; asked: <sites>" (the gated sites it really asked, or "none");
+    any other run asked every address it had. An older line without the list counts as asking unless it skipped or
+    waited out a refusal."""
+    found = _ASKED.search(result or "")
+    if found:
+        return name in [part.strip() for part in found.group(1).split(",")]
+    return SKIPPED_WORDS not in result and REFUSAL_WORDS not in result
+
+
+def asked_lately(archive, address, jobs, now):
+    """When a run of one of `jobs` (run-log job names) last asked this address's site, if that is within the site's
+    minimum gap less RUN_GATE_SLACK of `now` and the site is in RUN_GATED_SITES; otherwise None. A run that skipped the
+    download (SKIPPED_WORDS in its result) asked nobody and does not count; a failed run did ask."""
+    if site(address) not in RUN_GATED_SITES:
+        return None
+    asked = [datetime.fromisoformat(row["started"].replace("Z", "+00:00")) for row in read_runs(archive, "archive")
+             if row["job"] in jobs and asked_site(row["result"], site(address))]
+    last = max(asked, default=None)
+    return last if last and now - last < min_gap(address) - RUN_GATE_SLACK else None

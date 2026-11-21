@@ -1,4 +1,5 @@
-"""The notices inbox: a round bell floating at the top right of every page, with a count on it while anything is unread.
+"""The notices inbox: a round bell at the top right of every page, with a count on it while anything is unread. With
+something unread it stays in view while the page scrolls; with nothing unread it keeps its place in the top bar.
 
 Pages say what is missing, late or left out with surfaces.notice(); those notices gather here instead of sitting in
 the page, and the bell shows how many are unread, in the colour of the worst. With nothing unread the bell is quiet:

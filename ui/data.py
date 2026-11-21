@@ -9,9 +9,10 @@ from analysis.bundled_run import assess_constellation
 from analysis.meo_run import assess_meo
 from config.config import BEIDOU3_SATS, GENERATIONS, MEO_SATS, NAVIK_SATS, QZSS_SATS
 from data import celestrak, spacetrack
-from data.tle_cache import bundle_key, load_bundled_gp_history
+from data.tle_cache import load_bundled_gp_history
 from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS
-from evidence.registry_tables import dashboard_registry_rows, generation_satellites
+from evidence.registry_tables import dashboard_registry_rows, generation_satellites, judged_by_plane
+from ui.age_rule import orbit_age_status
 
 SATELLITES = {"NavIC": NAVIK_SATS, "QZSS": QZSS_SATS, "BeiDou-3": BEIDOU3_SATS, **MEO_SATS}
 TRACKED = {name: [norad for norad in sats.values() if norad is not None] for name, sats in SATELLITES.items()}
@@ -26,6 +27,8 @@ ORBIT_GAP_URL = ("https://raw.githubusercontent.com/SumanthVarma798/"
                  "GNSS-Constellation-Health-Monitoring-System/orbit-checks/orbit_gap.json")
 FITTED_URL = ("https://raw.githubusercontent.com/SumanthVarma798/"
               "GNSS-Constellation-Health-Monitoring-System/orbit-checks/fitted_orbits.json")
+SIGNALS_URL = ("https://raw.githubusercontent.com/SumanthVarma798/"
+               "GNSS-Constellation-Health-Monitoring-System/orbit-checks/signals_heard.json")
 # Every registry satellite of the generation each constellation shows, tracked or not (the 3D view's "All").
 # A MEO system's is the satellites it tracks: CelesTrak's GNSS group holds them, and asking for each
 # retired one by itself would mean dozens of requests every refresh.
@@ -53,6 +56,16 @@ def fitted_orbits():
     return payload if isinstance(payload, dict) else {}
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
+def signals_heard():
+    """The published signals-heard JSON (scripts/signals_heard.py), or {} when it cannot be read."""
+    try:
+        payload = requests.get(SIGNALS_URL, timeout=8).json()
+    except (requests.RequestException, ValueError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
 def fitted_by_norad():
     """{norad: (row, fit_km)} for every published fitted record that carries a row."""
     out = {}
@@ -69,7 +82,7 @@ def fitted_by_norad():
 # 512 MB Render gives the dashboard within about a day awake. 24 holds every constellation at a few time ranges.
 @st.cache_data(show_spinner=False, max_entries=24)
 def _assess(constellation, window_days, params, now, fresh):
-    assess_any = assess_meo if constellation in MEO_SATS else assess_constellation
+    assess_any = assess_meo if judged_by_plane(constellation) else assess_constellation
     return assess_any(constellation, now, window_days, params, fresh)
 
 
@@ -79,7 +92,7 @@ def _bundled_newest():
     and Streamlit copies a cached result on every run."""
     newest = {}
     for constellation, satellites in SATELLITES.items():
-        bundled = (load_bundled_gp_history(bundle_key(constellation)) or {}).get("satellites") or {}
+        bundled = (load_bundled_gp_history(constellation) or {}).get("satellites") or {}
         for name, norad in satellites.items():
             if norad is not None and bundled.get(name):
                 newest[int(norad)] = max(row["EPOCH"] for row in bundled[name] if row.get("EPOCH"))
@@ -123,13 +136,7 @@ def _newest(rows):
 
 
 def _status(age_days):
-    if age_days is None:
-        return "idle"
-    if age_days >= ORBIT_STALE_DAYS:
-        return "bad"
-    if age_days >= ORBIT_ALERT_DAYS:
-        return "warn"
-    return "ok"
+    return orbit_age_status(age_days)
 
 
 def _fitted_rule(fitted_at, other_ats, now):

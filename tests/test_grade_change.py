@@ -84,4 +84,3 @@ def test_submit_opens_a_branch_pull_request_label_and_findings_block():
     found = decisions.findings(pr_body)
     assert found[0]["id"] == "grade-change-site-org"
     assert found[0]["category"] == "Source grade"
-    assert decisions.findings(pr_body) == decisions.findings(pr_body)

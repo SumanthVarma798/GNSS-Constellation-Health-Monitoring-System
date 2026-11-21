@@ -16,13 +16,13 @@ import pandas as pd
 
 from data import celestrak
 from ui import palette, surfaces
-from ui.components.master_map import embed
+from ui.components.frame import fill
 from ui.data import GENERATION
 from ui.figures.fleet import OTHER_GROUP, fleet_rows
 from ui.figures.orbits_3d import latest_elements, orbit_scene
 from ui.figures.slot_rows import as_number, slot_words
-from ui.orbit_section import CHIP_STATUS
 from ui.pages_data import load_master_map_data
+from ui.slot_status import CHIP_STATUS
 from ui.theme import root_block
 from ui.tooltip import CARD_CSS
 
@@ -95,12 +95,14 @@ def orbit_view_payload(rows, history, health_df, fleet=(), live=None):
 
 def orbit_view_html(rows, history, health_df, fleet=(), live=None):
     """The finished page: colours and fonts first, the data last so it is never searched for placeholders."""
-    page = PAGE_FILE.read_text(encoding="utf-8")
-    for placeholder, text in {"__ROOT__": root_block(), "__FONT__": palette.FONT,
-                              "__FONT_NUMBERS__": palette.FONT_NUMBERS, "__TIP__": CARD_CSS}.items():
-        page = page.replace(placeholder, text)
-    payload = orbit_view_payload(rows, history, health_df, fleet, live)
-    return page.replace("const DATA = __DATA__;", f"const DATA = {embed(payload)};", 1)
+    return fill(
+        PAGE_FILE.read_text(encoding="utf-8"),
+        orbit_view_payload(rows, history, health_df, fleet, live),
+        __ROOT__=root_block(),
+        __FONT__=palette.FONT,
+        __FONT_NUMBERS__=palette.FONT_NUMBERS,
+        __TIP__=CARD_CSS,
+    )
 
 
 def orbit_view(rows, history, health_df, constellation, height=680):

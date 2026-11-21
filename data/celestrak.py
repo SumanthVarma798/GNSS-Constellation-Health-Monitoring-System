@@ -6,10 +6,12 @@ meaning of "in service".
 The rows are held in memory only and merged onto the bundled history when it is read; the
 tracked data/*.json files are never rewritten. CelesTrak asks that unchanged data is not
 fetched more than every 2 hours (MIN_GAP_BETWEEN_DOWNLOADS in evidence/settings.py, shared with the archive job),
-so a fetch happens at most that often unless the last one failed.
+so a direct fetch happens at most that often unless the last one failed.
 The dashboard never contacts celestrak.org: it reads only the archive job's copy of the GNSS group
-(latest_gnss.json on branch orbit-data, written from GitHub, which CelesTrak still answers).
-The scripts that run on GitHub still fetch directly.
+(latest_gnss.json on branch orbit-data, written from GitHub, which CelesTrak still answers), looking for a newer
+copy every COPY_LOOK_GAP (evidence/settings.py): the copy is on GitHub, so CelesTrak's 2 hours do not apply to reading it.
+The scheduled jobs read that same copy (orbit-ages, rinex-check); only the archive job's orbital group
+(.github/workflows/archive.yml, every 2 hours) downloads from CelesTrak.
 The last state is also saved to a file outside the repository, so a restarted dashboard reads it instead of
 downloading again: restarts in a row once got this machine blocked (17 Oct 2026, issue 76).
 """
@@ -25,14 +27,15 @@ from sgp4 import exporter, omm
 from sgp4.api import Satrec
 
 from evidence.archive import min_gap
+from evidence.settings import COPY_LOOK_GAP, ORBIT_DATA_URL
 
 URL = "https://celestrak.org/NORAD/elements/gp.php"
 CATALOGUE_URL = "https://celestrak.org/satcat/records.php"
 # The archive job's newest copy of the GNSS group (scripts/latest_orbits.py), read when CelesTrak refuses.
-COPY_URL = ("https://raw.githubusercontent.com/SumanthVarma798/"
-            "GNSS-Constellation-Health-Monitoring-System/orbit-data/latest_gnss.json")
+COPY_URL = ORBIT_DATA_URL + "latest_gnss.json"
 TIMEOUT = 8          # seconds per request
-EVERY = min_gap(URL)
+EVERY = min_gap(URL)   # between two downloads from CelesTrak itself
+LOOK_EVERY = COPY_LOOK_GAP   # between two looks at the archive job's copy on GitHub
 # One saved copy per user, shared by every checkout and worktree on the machine, outside the repository.
 SAVED = Path.home() / ".cache" / "gnss-health-monitor" / "celestrak.json"
 MU = 398600.4418     # km^3/s^2: Space-Track's SEMIMAJOR_AXIS comes from the mean motion with this
@@ -92,15 +95,22 @@ def fetch_copy(norad_ids):
     The group, plus the tracked satellites it leaves out that the job asked for one by one (outside_group), as fetch()
     does; only the group counts as listed. No request per satellite from here. Raises as fetch() does.
     """
+    group, outside, taken = copy_rows()
+    wanted = set(norad_ids)
+    listed = {int(row["NORAD_CAT_ID"]) for row in group}
+    found = {int(row["NORAD_CAT_ID"]): as_history_row(row) for row in [*outside, *group]
+             if int(row["NORAD_CAT_ID"]) in wanted}
+    return found, listed, taken
+
+
+def copy_rows():
+    """(the GNSS group's rows, the tracked satellites' rows the group leaves out, when the copy was first fetched) as
+    CelesTrak wrote them, from the archive job's copy. Raises as fetch_copy() does."""
     reply = requests.get(COPY_URL, timeout=TIMEOUT)
     reply.raise_for_status()
     copy = reply.json()
     taken = datetime.fromisoformat(copy["fetched_at"].replace("Z", "+00:00"))
-    wanted, group = set(norad_ids), copy["rows"]
-    listed = {int(row["NORAD_CAT_ID"]) for row in group}
-    found = {int(row["NORAD_CAT_ID"]): as_history_row(row) for row in [*copy.get("outside_group", []), *group]
-             if int(row["NORAD_CAT_ID"]) in wanted}
-    return found, listed, taken if taken.tzinfo else taken.replace(tzinfo=timezone.utc)
+    return copy["rows"], copy.get("outside_group", []), taken if taken.tzinfo else taken.replace(tzinfo=timezone.utc)
 
 
 def catalogue_entry(norad):
@@ -138,8 +148,8 @@ def _load():
 
 
 def refresh(norad_ids, now, clicked=False, direct=True):
-    """Fetch when the last try is EVERY old, or on a click: always with `direct=False`, only after a failed try with
-    `direct=True`; otherwise keep what is held.
+    """Fetch when the last try is EVERY old (LOOK_EVERY with `direct=False`: a look at the copy), or on a click: always
+    with `direct=False`, only after a failed try with `direct=True`; otherwise keep what is held.
 
     With `direct` (the default, for the scripts that run on GitHub) the request goes to CelesTrak; a failure keeps
     the rows and the listing already held and sets ok to False; the archive job's copy then fills in what it can.
@@ -152,7 +162,7 @@ def refresh(norad_ids, now, clicked=False, direct=True):
         if state["tried"] is None:
             _load()
         tried = state["tried"]
-        due = tried is None or now - tried >= EVERY
+        due = tried is None or now - tried >= (EVERY if direct else LOOK_EVERY)
         if due or (clicked and (not direct or not state["ok"])):
             state["tried"] = now
             if direct:
@@ -203,6 +213,6 @@ def _merge(found):
             held.append(row)
 
 
-def due(now):
-    """Whether the next automatic fetch is due."""
-    return state["tried"] is None or now - state["tried"] >= EVERY
+def due(now, direct=False):
+    """Whether the next automatic try is due: a look at the copy (the dashboard) or, with `direct`, a download."""
+    return state["tried"] is None or now - state["tried"] >= (EVERY if direct else LOOK_EVERY)

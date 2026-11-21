@@ -7,7 +7,7 @@
 <style>
 __ROOT__
 *, *::before, *::after { box-sizing: border-box; }
-html, body { height: 100%; margin: 0; }
+html, body { margin: 0; }
 body { --mono: __FONT_NUMBERS__; background: var(--platform); color: var(--ink); font: var(--fs-body)/1.4 __FONT__; padding: 14px;
   display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
 button { font: inherit; color: inherit; }
@@ -41,13 +41,16 @@ button { font: inherit; color: inherit; }
 .clear[hidden] { display: none; }
 
 /* ---- the canvas ---- */
-.stage { position: relative; flex: 1; min-height: 0; border-radius: var(--r); background: var(--well); box-shadow: var(--pressed); overflow: hidden; }
+/* The canvas grows with the frame's width, within bounds; the frame then fits the page (fitFrame), so no gap is left. */
+.stage { position: relative; flex: none; height: clamp(380px, 60vw, 720px); border-radius: var(--r); background: var(--well); box-shadow: var(--pressed); overflow: hidden; }
 #map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
 #map.over { cursor: pointer; }
 #map.drag { cursor: grabbing; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .totals { position: absolute; left: 14px; bottom: 14px; margin: 0; padding: 5px 14px; border-radius: 999px; border: 1px solid var(--edge); background: var(--platform); box-shadow: var(--raised-sm); color: var(--fc-small); font-size: var(--fs-small); pointer-events: none; }
 .totals b { color: var(--ink); font-family: var(--mono); font-weight: 600; }
+.hint { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); margin: 0; padding: 6px 16px; border-radius: 999px; border: 1px solid var(--edge); background: var(--platform); box-shadow: var(--raised-sm); color: var(--ink); font-size: var(--fs-small); pointer-events: none; opacity: 0; transition: opacity 150ms ease; white-space: nowrap; max-width: calc(100% - 28px); overflow: hidden; text-overflow: ellipsis; }
+.hint.on { opacity: 1; }
 .mark { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--warn); color: var(--platform); font-size: 11px; font-weight: 700; vertical-align: -3px; }
 
 /* ---- the side panel: one spacecraft's signal IDs over time ---- */
@@ -72,7 +75,7 @@ button { font: inherit; color: inherit; }
 /* ---- the hover card: who an identifier belongs to and which sources hold it. Its look is the dashboard's one
    tooltip card (ui/tooltip.py CARD_CSS); this places it beside the pointer, inside the map ---- */
 __TIP__
-.tip { position: absolute; max-width: min(300px, calc(100% - 16px)); }
+.tip { position: absolute; max-width: min(380px, calc(100% - 16px)); }
 .tip h4 { margin: 0 0 8px; font-size: var(--fs-small); font-weight: 600; }
 .tip h4 b { margin-right: 8px; font-family: var(--mono); color: var(--accent); }
 .tip h4 span { color: var(--muted); font-weight: 400; }
@@ -87,11 +90,12 @@ __TIP__
 </style>
 </head>
 <body>
-<div class="bar" id="bar"><button type="button" class="clear" id="clear" hidden>Clear</button></div>
+<div class="bar" id="bar"><button type="button" class="clear" id="clear" title="Show all constellations" hidden>Show all constellations</button></div>
 <div class="stage" id="stage">
-  <canvas id="map" role="img" aria-label="Spacecraft identity cards. Drag to move, scroll or pinch to zoom; zoom in to read each card."></canvas>
+  <canvas id="map" role="img" aria-label="Spacecraft identity cards. Drag to move; hold Ctrl and scroll, or pinch, to zoom; zoom in to read each card."></canvas>
   <div class="sr" id="cards" role="list" aria-label="Spacecraft"></div>
   <p class="totals" id="totals" aria-live="polite"></p>
+  <p class="hint" id="hint" aria-hidden="true">Hold Ctrl (⌘ on a Mac) and scroll to zoom, or pinch</p>
   <div class="tip tt-card" id="tip" aria-hidden="true"></div>
   <aside class="side" id="side" role="dialog" aria-label="Spacecraft detail"><button type="button" class="close" id="close" aria-label="Close">&times;</button><div id="side-body"></div></aside>
 </div>
@@ -101,6 +105,7 @@ __TIP__
 "use strict";
 const DATA = JSON.parse(document.getElementById("map-data").textContent);
 const RECS = DATA.records;
+const HAS_CARD_FOCUS = !!DATA.focus;
 const $ = id => document.getElementById(id);
 const esc = v => String(v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -110,11 +115,15 @@ const canvas = $("map"), ctx = canvas.getContext("2d"), stage = $("stage");
 
 /* ---------- colours and type, all from the page's palette ---------- */
 const css = getComputedStyle(document.documentElement);
+// A colour sent as a theme variable (var(--ok), ui/palette.py css) is read from the page when drawn; under System a
+// change of the computer's light or dark setting redraws the frame in the other theme.
+const themed = c => (c && c.startsWith("var(--")) ? css.getPropertyValue(c.slice(4, -1)).trim() : c;
+matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => location.reload());
 const C = Object.fromEntries(["platform", "well", "track", "fill", "ink", "muted", "accent", "ok", "warn", "idle", "edge"].map(n => [n, css.getPropertyValue("--" + n).trim()]));
 const STATUS = { ok: C.ok, warn: C.warn, idle: C.idle, accent: C.accent };
 const SANS = getComputedStyle(document.body).fontFamily, MONO = getComputedStyle(document.body).getPropertyValue("--mono").trim();
 const F = { id: `700 15px ${SANS}`, name: `12px ${SANS}`, label: `600 9.5px ${SANS}`, value: `12px ${MONO}`, note: `9.5px ${SANS}`, small: `9px ${SANS}` };
-const hueOf = r => DATA.colours[r.constellation] || C.fill;
+const hueOf = r => themed(DATA.colours[r.constellation]) || C.fill;
 
 /* ---------- each card's lines, laid out once in plane units ---------- */
 const W = 220, PAD = 12, INDENT = 12, TEXT_W = W - 2 * PAD - INDENT;
@@ -211,7 +220,7 @@ fields.forEach(f => {
 });
 
 /* ---------- drawing: far is a chip, middle lists the identifiers, close adds who issued each and when we last checked ---------- */
-const KMIN = .04, KMAX = 5;
+const KMIN = .015, KMAX = 5;   // far enough out that every field fits a phone-wide canvas
 let view = { x: 0, y: 0, k: 1 }, flight = 0, queued = 0, dpr = 1;
 let state = new Map();   // svn -> "dim" | "hit"; absent means normal
 let current = null, focused = null, returning = false;   // returning: focus coming back from the side panel, so the view stays put
@@ -342,11 +351,14 @@ function showTip(e) {
       pairs.push(["Last checked", it.checked]);
       fillTip(it.value, it.scheme, pairs);
     } else {
-      const look = r.identifiers.filter(it => it.status === "warn").length;
-      const pairs = [["System", r.constellation], ["Signal ID today", r.signal_id],
-        ["Identifiers", `${r.identifiers.length} · ${look ? look + (look === 1 ? " needs" : " need") + " a look" : "none need a look"}`],
-        ["Sources", r.disagreement ? el("span", "warn", r.disagreement) : r.identity]];   // matches the card's "!" mark
-      if (r.sighting) pairs.push(["Registry", r.sighting]);
+      // What was counted and what was compared with what, each named; nothing is said about a check no one made.
+      const lines = list => { const f = document.createDocumentFragment(); list.forEach(t => f.append(el("span", "src", t))); return f; };
+      const pairs = [["Constellation", r.constellation], ["Signal ID today", r.signal_id],
+        ["Names on record", `${r.names.length}: ${r.names.join(", ")}`],
+        ["Compared", r.compared.length ? lines(r.compared) : "nothing: each of its names comes from one source only"]];
+      if (r.who) pairs.push(["Who it is", r.disagreement ? el("span", "warn", r.who) : r.who]);   // matches the card's "!" mark
+      if (r.sighting) pairs.push(["Listed by", r.sighting]);
+      pairs.push(["Click or tap", "opens its signal IDs over time"]);
       fillTip(r.svn, r.name, pairs);
     }
     tip.classList.add("on");
@@ -355,9 +367,9 @@ function showTip(e) {
   const x = px + 16 + w > b.width - 8 ? px - 16 - w : px + 16;   // flip to the pointer's left near the right edge
   tip.style.left = clamp(x, 8, b.width - w - 8) + "px"; tip.style.top = clamp(py + 16, 8, b.height - h - 8) + "px";
 }
-const pointers = new Map(); let travelled = 0, downOn = null;
+const pointers = new Map(); let travelled = 0, downOn = null, touched = false;   // touched: the reader has moved the view
 canvas.addEventListener("pointerdown", e => {
-  cancelAnimationFrame(flight); canvas.setPointerCapture(e.pointerId); hideTip();
+  touched = true; cancelAnimationFrame(flight); canvas.setPointerCapture(e.pointerId); hideTip();
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (pointers.size === 1) { travelled = 0; downOn = cardAt(e); canvas.classList.add("drag"); } else downOn = null;
 });
@@ -380,8 +392,15 @@ const lift = e => {
   if (!pointers.size) { canvas.classList.remove("drag"); if (e.type === "pointerup" && downOn && travelled < 6) select(downOn); downOn = null; }
 };
 canvas.addEventListener("pointerup", lift); canvas.addEventListener("pointercancel", lift); canvas.addEventListener("pointerleave", hideTip);
+// The map sits inside a page: a plain wheel scrolls the page (it passes on to it), and only Ctrl or ⌘ with the wheel,
+// or a trackpad pinch (which the browser sends as Ctrl + wheel), zooms the map. A plain wheel shows how to zoom.
+let hintTimer = 0;
 canvas.addEventListener("wheel", e => {
-  e.preventDefault(); cancelAnimationFrame(flight); hideTip();
+  if (!(e.ctrlKey || e.metaKey)) {
+    $("hint").classList.add("on"); clearTimeout(hintTimer); hintTimer = setTimeout(() => $("hint").classList.remove("on"), 1400);
+    return;
+  }
+  e.preventDefault(); touched = true; cancelAnimationFrame(flight); hideTip(); $("hint").classList.remove("on");
   const b = rect(), dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
   zoomAt(e.clientX - b.left, e.clientY - b.top, Math.exp(-dy * (e.ctrlKey ? .01 : .0015)));
 }, { passive: false });
@@ -389,7 +408,7 @@ canvas.addEventListener("wheel", e => {
 /* ---------- keyboard and screen readers: one hidden button per card, in registry order ---------- */
 $("cards").innerHTML = RECS.map(r => `<div role="listitem"><button type="button" data-svn="${esc(r.svn)}">${esc(r.svn + ", " + r.name + ". " + (r.sighting ? r.sighting + ". " : "")
   + r.identifiers.map(it => `${it.scheme}: ${it.value}${it.remark ? " (" + it.remark + ")" : ""}, from ${it.issuer}, last checked ${it.checked}`
-    + it.sources.map(s => `, ${s.source} ${s.note || "agrees"}`).join("")).join(". ")
+    + it.sources.map(s => `, ${s.source} ${s.note || "holds the same"}`).join("")).join(". ")
   + (r.disagreement ? ". " + r.disagreement : ""))}</button></div>`).join("");
 const buttons = new Map([...$("cards").querySelectorAll("button")].map(el => [el.dataset.svn, el]));
 $("cards").addEventListener("focusin", e => {
@@ -403,6 +422,8 @@ $("cards").addEventListener("click", e => { if (e.target.dataset.svn) select(e.t
 
 /* ---------- the dropdowns: each offers only what the other choices still allow ---------- */
 const FILTERS = [["constellation", "Constellation"], ["country", "Country"]];
+// Each pill says what a click does (the hover tip); the country is the owner GCAT records for the spacecraft.
+const TIPS = { constellation: "Click to show only some constellations; the map moves to them", country: "Click to show only spacecraft owned by some countries, as GCAT records the owner; the map moves to them" };
 const chosen = Object.fromEntries(FILTERS.map(([key]) => [key, new Set()]));
 const matches = (r, skip) => FILTERS.every(([key]) => key === skip || !chosen[key].size || chosen[key].has(r[key]));
 const menus = [];
@@ -438,7 +459,7 @@ function toggle(m, i) {
 FILTERS.forEach(([key, label]) => {
   const root = document.createElement("div");
   root.className = "dd";
-  root.innerHTML = `<button type="button" class="pill" aria-haspopup="listbox" aria-expanded="false" aria-controls="list-${key}"><span class="t">${label}</span><span class="n" hidden></span><i class="caret"></i></button>`
+  root.innerHTML = `<button type="button" class="pill" aria-haspopup="listbox" aria-expanded="false" aria-controls="list-${key}" title="${TIPS[key]}"><span class="t">${label}</span><span class="n" hidden></span><i class="caret"></i></button>`
     + `<ul class="panel" id="list-${key}" role="listbox" aria-multiselectable="true" aria-label="${label}" tabindex="-1"></ul>`;
   $("bar").insertBefore(root, $("clear"));
   const m = { key, root, pill: root.querySelector(".pill"), list: root.querySelector(".panel"), badge: root.querySelector(".n"), options: [], items: [], at: 0 };
@@ -468,7 +489,8 @@ function refresh(move) {
   state = new Map(filtered ? RECS.map(r => [r.svn, hitSet.has(r.svn) ? "hit" : "dim"]) : []);
   buttons.forEach((el, svn) => { el.tabIndex = !filtered || hitSet.has(svn) ? 0 : -1; });
   menus.forEach(m => { fill(m); const n = chosen[m.key].size; m.pill.classList.toggle("on", n > 0); m.badge.hidden = !n; m.badge.textContent = n; });
-  $("clear").hidden = !filtered;
+  // The page around the map shows its own back button when opened from a constellation card.
+  $("clear").hidden = HAS_CARD_FOCUS || !filtered;
   const look = hits.filter(r => card.get(r.svn).mark).length;
   $("totals").innerHTML = `<b>${hits.length}</b> / ${RECS.length} shown · <span class="mark" aria-hidden="true">!</span> <b>${look}</b> worth a look`;
   if (move) goTo(!filtered ? home() : hits.length ? fitTo(hits) : view);
@@ -511,14 +533,27 @@ function deselect() {
 $("close").addEventListener("click", deselect);
 document.addEventListener("keydown", e => { if (e.key === "Escape" && current) { e.preventDefault(); deselect(); } });
 
-/* ---------- start ---------- */
+/* ---------- start: a system chosen on the page around the map (DATA.focus) opens filtered to it ---------- */
+function fitFrame() {   // the frame takes the page's own height, so nothing scrolls inside it and no gap is left
+  if (!window.frameElement) return;
+  const parts = [...document.body.children].filter(e => e.tagName !== "SCRIPT");
+  window.frameElement.style.height = Math.ceil(Math.max(0, ...parts.map(e => e.getBoundingClientRect().bottom + window.scrollY))) + 14 + "px";
+}
+if (DATA.focus && RECS.some(r => r.constellation === DATA.focus)) {   // chosen from a row above: bring the map into view
+  chosen.constellation.add(DATA.focus);
+  const back = window.frameElement && (parent.document.querySelector(".st-key-mm_all") || window.frameElement);   // its "Show all constellations" button first
+  if (back) back.scrollIntoView({ behavior: reduce.matches ? "auto" : "smooth", block: "start" });
+}
 let started = false;
 new ResizeObserver(() => {
   resize();
-  if (!started || !(current || FILTERS.some(([key]) => chosen[key].size))) view = home();
-  started = true; draw();
+  const filtered = FILTERS.some(([key]) => chosen[key].size), hits = RECS.filter(r => matches(r));
+  // the frame's width settles after the first draw: until the reader moves the view, it keeps fitting everything in view
+  if (!started || !touched && !current) view = filtered && hits.length ? fitTo(hits) : home();
+  started = true; draw(); fitFrame();
 }).observe(stage);
 refresh(false);
+fitFrame();
 })();
 </script>
 </body>

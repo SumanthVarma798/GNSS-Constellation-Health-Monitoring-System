@@ -10,7 +10,7 @@ from pathlib import Path
 from evidence.library_settings import EVIDENCE_WORDS, WHEN_WORDS
 from evidence.lifecycle import timelines
 from ui import palette
-from ui.components.master_map import embed
+from ui.components.frame import fill
 from ui.icons import LIFECYCLE_STEP_ICONS, TABLER
 from ui.theme import root_block
 
@@ -39,23 +39,27 @@ def _shared(records):
     return records, texts, sources
 
 
-def lifecycle_html(rows, today, registry=None):
-    """The finished page. today is a timezone-aware datetime; registry holds the tables timelines() reads."""
-    page = PAGE_FILE.read_text(encoding="utf-8")
-    for placeholder, text in {"__ROOT__": root_block(), "__FONT__": palette.FONT, "__FONT_NUMBERS__": palette.FONT_NUMBERS}.items():
-        page = page.replace(placeholder, text)
+def lifecycle_html(rows, today, registry=None, constellation=None):
+    """The finished page. today is a timezone-aware datetime; registry holds the tables timelines() reads;
+    constellation, when given, is shown first (its first satellite listed) instead of FIRST_SHOWN."""
     satellites, texts, sources = _shared(timelines(rows, today, registry))
-    payload = {"satellites": satellites, "texts": texts, "sources": sources, "first": list(FIRST_SHOWN),
+    payload = {"satellites": satellites, "texts": texts, "sources": sources, "first": list(FIRST_SHOWN), "constellation": constellation,
                "max_compared": MAX_COMPARED,
-               "step_colours": palette.LIFECYCLE_STEP_COLOURS,
+               "step_colours": {step: palette.css(c) for step, c in palette.LIFECYCLE_STEP_COLOURS.items()},
                "icons": {step: TABLER[name] for step, name in LIFECYCLE_STEP_ICONS.items()}, "glyphs": {name: TABLER[name] for name in ("maximize", "info-circle", "chevron-down", "chevron-up", "search")},
                "today": today.strftime("%Y-%m-%dT%H:%M:%SZ"),   # whole seconds: every browser reads these
-               "when_words": WHEN_WORDS, "evidence_words": EVIDENCE_WORDS}
-    return page.replace("const DATA = __DATA__;", f"const DATA = {embed(payload)};", 1)
+               "when_words": WHEN_WORDS, "evidence_words": {**EVIDENCE_WORDS, "IGS file": "IGS satellite metadata file"}}
+    return fill(
+        PAGE_FILE.read_text(encoding="utf-8"),
+        payload,
+        __ROOT__=root_block(),
+        __FONT__=palette.FONT,
+        __FONT_NUMBERS__=palette.FONT_NUMBERS,
+    )
 
 
-def lifecycle_frame(rows, today, registry=None):
+def lifecycle_frame(rows, today, registry=None, constellation=None):
     """Show the timelines; the frame sets its own height."""
     from streamlit.components.v1 import html
 
-    html(lifecycle_html(rows, today, registry), height=900, scrolling=False)
+    html(lifecycle_html(rows, today, registry, constellation), height=900, scrolling=False)

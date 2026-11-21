@@ -1,7 +1,11 @@
 """Values a person may want to adjust, in one place.
 
-Addresses of outside sources live in evidence/sources.py. The system-letter
-mapping lives in registry/constellations.csv.
+Registry table names and columns live in evidence/registry_settings.py.
+News-only settings live in evidence/news_settings.py. Words only one dashboard
+page reads live beside that page (ui/orbit_age_settings.py,
+ui/official_status_settings.py, ui/figures/burns_settings.py, and
+ui/master_map_settings.py). Addresses of outside sources live in
+evidence/sources.py. The system-letter mapping lives in registry/constellations.csv.
 """
 from datetime import timedelta
 from pathlib import Path
@@ -31,6 +35,21 @@ MIN_GAP_BETWEEN_DOWNLOADS = {
     # Seven search feeds in a row; how often Google allows them is not stated (guess).
     "news.google.com": timedelta(seconds=10),
 }
+# How often the dashboard looks for a newer copy of CelesTrak's GNSS group on GitHub (latest_gnss.json on branch
+# orbit-data). Reading a raw GitHub file is cheap and CelesTrak is not asked, so this is not bound by the 2-hour gap
+# above. The archive job publishes a new copy every 2 hours, a few minutes after its run starts (archive.yml), so a
+# look every 20 minutes shows a published copy within about 20 minutes of its publication.
+COPY_LOOK_GAP = timedelta(minutes=20)
+# Where the archive job publishes what the dashboard reads (branch orbit-data), and how often Home's counts are made
+# anyway when the orbit copy has not changed (the orbit-checks files and the clock still move them).
+ORBIT_DATA_URL = "https://raw.githubusercontent.com/SumanthVarma798/GNSS-Constellation-Health-Monitoring-System/orbit-data/"
+HOME_COUNT_EVERY = timedelta(hours=8)
+# A scheduled or manual run does not download from these sites when the archive's run log shows a run asked them less
+# than the site's FULL minimum gap ago (no slack: CelesTrak's rule is strict, and it blocked us on 17 Oct). A scheduled run
+# that GitHub starts a few minutes early is skipped, and the next one, 2 hours later, fetches. This also keeps a manual
+# run of the orbital group from asking CelesTrak again right after a scheduled one.
+RUN_GATED_SITES = ("celestrak.org",)
+RUN_GATE_SLACK = timedelta(0)
 DEFAULT_MIN_GAP = timedelta(seconds=5)  # any other site: no stated limit, so a polite pause
 # The most one run of a group may spend waiting out gaps, so it ends well inside archive.yml's 30-minute fetch step.
 RUN_WAIT_BUDGET = timedelta(minutes=15)
@@ -49,6 +68,17 @@ BACKOFF_LONGEST = timedelta(days=7)
 # Never fetched, by any job or any person's script: the Russian and Chinese satellite-tracker sites named on
 # the 17 Oct 2026 call. They may be malicious; what they show reaches us only through independent journalists.
 NEVER_FETCH = ("vimpel", "spacemapper")  # matched anywhere in a host name
+
+# Where the RINEX check (scripts/orbit_record_gap.py) gets the day's IGS merged broadcast navigation file, in this
+# order: the next one only when the one before did not give that day's file. A source that does not answer at all is
+# not asked again in the same run. Both serve it without a login; checked 20 Nov 2026, the same file byte for byte
+# once unzipped. BKG timed out from GitHub's runners on 17 and 18 Nov 2026. ESA's GSSC serves its data over anonymous
+# FTP (its https address is the website, not the data). Left out: CDDIS needs a login; IGN refused anonymous FTP (530)
+# and did not answer over https on 20 Nov 2026.
+BROADCAST_SOURCES = (
+    ("BKG", "https://igs.bkg.bund.de/root_ftp/IGS/BRDC/{year}/{doy:03d}/BRDC00IGS_R_{year}{doy:03d}0000_01D_MN.rnx.gz"),
+    ("ESA GSSC", "ftp://gssc.esa.int/gnss/data/daily/{year}/{doy:03d}/BRDC00IGS_R_{year}{doy:03d}0000_01D_MN.rnx.gz"),
+)
 
 # --- The raw-copy archive ---
 
@@ -72,50 +102,7 @@ ARCHIVE_LIMITS_FILE = "limits.csv"
 ARCHIVE_LIMIT_COLUMNS = ["site", "refusals", "last_answer", "refused_at", "wait_until"]
 ARCHIVE_RUN_COLUMNS = ["job", "started", "ended", "result", "changed"]
 ORBIT_AGE_COLUMNS = ["day", "checked", "constellation", "satellite", "norad", "epoch", "source", "age_days", "status"]
-# Time-system correction codes from a RINEX header, in the order the orbit-age section reads them,
-# with the plain words the dashboard shows. Values are stored as seconds and shown as nanoseconds.
-TIME_CORRECTION_WORDS = {
-    "GPUT": "GPS−UTC",
-    "GAUT": "Galileo−UTC",
-    "GAGP": "Galileo−GPS",
-    "GLUT": "GLONASS−UTC",
-    "BDUT": "BeiDou−UTC",
-    "QZUT": "QZSS−UTC",
-}
-# QZSS broadcast health, IS-QZSS-PNT-005 section 4.1.2.3(4), Tables 4.1.2-5-1 and 4.1.2-5-2: six bits, one per
-# signal, and a set bit means that signal must not be used. L1C/A and L1C/B are never sent at once, so one of the
-# two is set on purpose when the other signal is sent.
-QZSS_HEALTH_BITS = {32: "L1", 16: "L1C/A", 8: "L2C", 4: "L5", 2: "L1C", 1: "L1C/B"}
-# The constellations whose overview carries an official operator status page. GLONASS and BeiDou
-# are deliberately absent: there is no single stable operator page we can point to today.
-OFFICIAL_STATUS_URLS = {
-    "Galileo": "https://www.gsc-europa.eu/system-service-status/constellation-information",
-    "GPS": "https://www.navcen.uscg.gov/gps-constellation",
-    "QZSS": "https://sys.qzss.go.jp/dod/en/constellation.html",
-    "NavIC": "https://www.isro.gov.in/IRNSS_Programme.html",
-}
-
 # --- The registry tables ---
-
-REGISTRY_DIR = Path(__file__).resolve().parent.parent / "registry"
-
-REGISTRY_SATELLITES_FILE = "satellites.csv"
-REGISTRY_SATELLITE_COLUMNS = ["svn", "constellation", "block", "cospar_id", "catalogue_no",
-                              "signal_id_now", "plane", "slot", "note"]
-
-REGISTRY_SIGNAL_IDS_FILE = "signal_ids.csv"
-REGISTRY_SIGNAL_ID_COLUMNS = ["svn", "signal_id", "valid_from", "valid_to", "note"]
-
-# Built by scripts/build_registry.py: satellites CelesTrak's GNSS group lists before the IGS file does, in
-# satellites.csv's columns, each under a stand-in SVN (system letter, "-", catalogue number). A row leaves when the
-# IGS file lists its catalogue number.
-REGISTRY_SIGHTINGS_FILE = "sightings.csv"
-# CelesTrak names that make a sighting, by system: how its GNSS group names each system's satellites today (GPS
-# "GPS BIII-9 (PRN 01)", GLONASS "COSMOS 2620 (709K)", Galileo "GSAT0234 (GALILEO 34)", BeiDou "BEIDOU-3 M23 (C45)", QZSS
-# "QZS-6 (QZSS/PRN 200)", NavIC "NVS-03 (IRNSS-1L)"). The augmentation satellites in the group (EGNOS, WAAS, GAGAN, SDCM)
-# belong to none of these and match none. The IGS file took weeks to list NVS-03; it can be as slow for any system.
-SIGHTING_NAMES = {"GPS": r"^GPS ", "GLONASS": r"^COSMOS \d+ \(", "Galileo": r"^GSAT0\d+", "BeiDou": r"^BEIDOU-",
-                  "QZSS": r"^QZS-", "NavIC": r"^(IRNSS|NVS)-"}
 
 # Space-Track lists a new payload as soon as it is tracked, weeks before the IGS file does. It says the object exists,
 # not that it is a navigation satellite or whose, so a payload launched in the last RECENT_LAUNCH_DAYS days is only
@@ -125,33 +112,7 @@ SIGHTING_NAMES = {"GPS": r"^GPS ", "GLONASS": r"^COSMOS \d+ \(", "Galileo": r"^G
 RECENT_LAUNCH_DAYS = 60
 NAVIGATION_ORBITS = (("medium Earth orbit", (670, 860), (50, 66)),
                      ("inclined geosynchronous orbit", (1380, 1450), (25, 60)))
-REGISTRY_UNIDENTIFIED_FILE = "unidentified.csv"   # payloads in a navigation orbit that no other registry table lists
-REGISTRY_UNIDENTIFIED_COLUMNS = ["catalogue_no", "name", "cospar_id", "launched", "orbit", "period_minutes",
-                                 "inclination_degrees"]
-
-REGISTRY_CONSTELLATIONS_FILE = "constellations.csv"  # kept by hand: system letter -> constellation
-# Kept by hand: which satellites the dashboard tracks, in display order, and its name for each.
-REGISTRY_DASHBOARD_SATELLITES_FILE = "dashboard_satellites.csv"
-REGISTRY_DASHBOARD_SATELLITE_COLUMNS = ["svn", "dashboard_name", "added"]
-# The tracked list that must stay in step with today's signal IDs when the registry is rebuilt.
-REGISTRY_DASHBOARD_TRACKED_SYSTEMS = ("GPS", "GLONASS", "Galileo")
-# Dashboard systems that are one orbit family of a registry constellation: {name: (constellation, block starts)}.
-# Their satellites are left out of the constellation's own name, so "BeiDou" is its GEO and IGSO satellites: BeiDou-3's,
-# plus the BeiDou-2 and BeiDou-3 test IGSO satellites still broadcasting. BDS-3SM are the two BeiDou-3 test MEO satellites.
-DASHBOARD_SYSTEMS_BY_BLOCK = {"BeiDou-3 MEO": ("BeiDou", ("BDS-3M", "BDS-3SM"))}
-# Kept by hand: satellites with a signal ID today that the dashboard leaves out on purpose, each with why and a source.
-# Every satellite with a signal ID is either tracked or listed here (tests/test_registry_coverage.py).
-REGISTRY_LEFT_OUT_FILE = "left_out.csv"
-REGISTRY_LEFT_OUT_COLUMNS = ["svn", "name", "reason", "source"]
-NEW_ON_DASHBOARD_DAYS = 30  # a tracked satellite is shown as "new" on the dashboard for this many days
-
 # Built from the General Catalog of Artificial Space Objects (GCAT): owner and status per satellite.
-REGISTRY_CATALOGUE_FILE = "catalogue.csv"
-# Our column name -> the catalogue's own column name. Values are kept exactly as the catalogue writes them.
-GCAT_OBJECT_COLUMNS = {"cospar_id": "Piece", "name": "PLName", "owner": "Owner", "state": "State",
-                       "status": "Status", "orbit_class": "OpOrbit"}                               # satcat.tsv
-GCAT_PAYLOAD_COLUMNS = {"last_known_active": "TLast", "operations_ended": "TOp", "mission_result": "Result"}  # psatcat.tsv
-REGISTRY_CATALOGUE_COLUMNS = ["svn", *GCAT_OBJECT_COLUMNS, *GCAT_PAYLOAD_COLUMNS]
 GCAT_STILL_OPERATING = "*"  # in operations_ended: "believed to be still operating"
 GCAT_MISSION_FAILED = "F"   # in mission_result: failed early in its mission
 # The catalogue is released under CC-BY. This citation goes wherever its data is shown.
@@ -162,18 +123,6 @@ GCAT_CITATION = "data from GCAT (J. McDowell, planet4589.org/space/gcat)"
 SOURCE_LINKS = {"GCAT": "https://planet4589.org/space/gcat/", "CelesTrak": "https://celestrak.org/",
                 "Space-Track": "https://www.space-track.org/", "IGS": "https://igs.org/",
                 "BKG": "https://igs.bkg.bund.de/", "Natural Earth": "https://www.naturalearthdata.com/"}
-
-# Column name -> how to say it to a reader who does not write software.
-REGISTRY_COLUMN_PLAIN_NAMES = {
-    "constellation": "constellation",
-    "block": "design generation",
-    "cospar_id": "launch designator",
-    "catalogue_no": "catalogue number",
-    "signal_id_now": "signal ID",
-    "plane": "plane",
-    "slot": "slot",
-    "note": "note",
-}
 
 # --- Confidence: the grades, the bar and the labels ---
 
@@ -199,45 +148,6 @@ CANDIDATE_WORKED = "200"         # check_status of a row whose feed or page answ
 CANDIDATE_FEED_TYPE = "feed"     # check_type starts with this when the answer was a feed a program can read
 CANDIDATE_X_KIND = "X account"  # an X account read through twitterapi.io (evidence/x_reader.py): its posts are its own
 CANDIDATE_SOCIAL_KIND = "social feed"  # kind of a social media feed: its posts count only for the link they hold
-# A social post's own platform. A link to one of these is not a link to the post's source.
-SOCIAL_PLATFORM_HOSTS = ("reddit.com", "redd.it", "redditmedia.com", "redditstatic.com")
-# Links in a post that are not an article to check: countdown clocks, image hosts, videos. Skipped when
-# looking for the post's source (an r/ISRO launch thread's first link was a countdown clock, 19 Oct 2026).
-NOT_AN_ARTICLE_HOSTS = ("timeanddate.com", "imgur.com", "youtube.com", "youtu.be", "twitch.tv",
-                        # another social post is a pointer too, never the source (r/roscosmos, 19 Oct 2026)
-                        "x.com", "twitter.com", "facebook.com", "instagram.com", "linkedin.com", "t.me")
-
-# One collected news item (issue 13): a pointer to an article, read from a feed. Not a claim; nothing here decides.
-# source_id: who published the article (for a discovery or social feed, the linked page's host, decision 5);
-# via: the feed it was read from; fetched_at: when our archive first held it.
-NEWS_ITEM_COLUMNS = ["source_id", "address", "title", "published_at", "fetched_at", "via"]
-
-# One row per archived feed, measured from the archive (issue 13): how often a copy changed per run of its group
-# (to set cadence), and the share of its items that name a navigation system (a first signal-to-noise measure,
-# until the hand-labelled set gives a better one). Measurements only: no grade or cadence changes by itself.
-FEED_REPORT_COLUMNS = ["via", "group", "runs", "copies", "copies_per_run", "items", "items_naming_a_system",
-                       "share_naming_a_system"]
-
-# The hand-labelled set for choosing a claim-extraction model (issue 15, week 1). Kept here, beside the
-# source lists, until the extraction step decides where its test data lives.
-LABELLING_SHEET_FILE = Path(__file__).resolve().parent / "labelling_sheet.csv"
-LABELLING_SHEET_COLUMNS = ["system", "title", "source_id", "published_at", "address", "claims_in_this_item", "none"]
-LABELLING_SHEET_SIZE = 30
-# For a new-satellite finding, a news item in the launch window counts only when its title also names the satellite
-# or says it launched (whole words, any case): naming the system alone matched unrelated articles (R809, 26 Oct 2026).
-NEWS_LAUNCH_WORDS = ("launch", "launched", "launches", "liftoff", "lifts off", "lifted off")
-
-# Words that put an item under a system, for spreading the sheet across all six. Matched as whole words,
-# any case. A cheap pointer, not the relevance filter: an item may name several systems or none.
-SYSTEM_WORDS = {
-    "GPS": ("GPS", "Navstar"),
-    "GLONASS": ("GLONASS",),
-    "Galileo": ("Galileo",),
-    "BeiDou": ("BeiDou", "Compass navigation"),
-    "QZSS": ("QZSS", "Michibiki", "QZS"),
-    "NavIC": ("NavIC", "IRNSS", "NVS-01", "NVS-02", "NVS-03"),
-}
-
 # Source reliability, from the Admiralty code. The grade belongs to the source.
 RELIABILITY_GRADES = {
     "A": "operator advisories and official documents",
@@ -264,11 +174,6 @@ LABEL_UNCONFIRMED = "unconfirmed"
 
 STORE_SCHEMA_FILE = Path(__file__).resolve().parent / "store_schema.sql"  # the evidence model, in one file
 STORE_FILE = Path(__file__).resolve().parent.parent / "data" / "evidence.sqlite3"  # rebuilt each run; git-ignored
-
-# --- The identity check ---
-
-# Satellite blocks the GEO/IGSO dashboard is meant to cover.
-DASHBOARD_BLOCKS = ("IRS-", "QZS-", "BDS-3G", "BDS-3I")
 
 # --- The master map: which spacecraft is which, under every identifier ---
 
@@ -299,12 +204,6 @@ SERVICE_NOT_IN_CATALOGUE = "not in the catalogue yet"
 
 ORBIT_FEED_FILES = "*_tles.json"  # in the bundled data folder: one file of element sets per system
 
-# --- Burns: how often a satellite's orbit is corrected ---
-
-# A FIRST PROPOSAL for the team to tune: how the cadence picture names a burn pattern.
-BURN_MIN_FOR_PATTERN = 3           # fewer burns of one kind than this: "too few" to call a pattern
-BURN_REGULAR_MAX_IQR_SHARE = 0.25  # "regular" when the spread (IQR) is at most this share of the median interval
-
 # --- The master map canvas ---
 
 # Who issues each kind of identifier, as a card says it when zoomed close.
@@ -326,11 +225,5 @@ SOURCE_ORBIT_FEED = "CelesTrak orbit feed"
 SOURCE_DASHBOARD = "our dashboard registry"
 SOURCE_SILENT = "does not carry it"
 SOURCE_SIGHTING = "CelesTrak GNSS group"  # where a sighting's (registry/sightings.csv) numbers come from
-# How a card marks a sighting, and what it says for a field only the IGS file gives.
-SIGHTING_NOTE = "Stand-in SVN: seen by CelesTrak, not yet in the IGS file"
+# What a card says for a field only the IGS file gives.
 NOT_YET_KNOWN = "not yet known"
-
-# The catalogue's state codes (who owns the spacecraft), said in full.
-COUNTRY_NAMES = {"IN": "India", "CN": "China", "US": "United States", "J": "Japan", "RU": "Russia",
-                 "SU": "Soviet Union", "I-EU": "European Union", "I-ESA": "European Space Agency"}
-COUNTRY_NOT_GIVEN = "not given"

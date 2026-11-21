@@ -3,24 +3,35 @@
 Each item is an open pull request labelled "decision: <kind>" (evidence/decisions.py). The decision is written on the
 pull request as a comment, then it is merged, left open or closed (decided 20 Oct 2026, issue 17).
 """
+from contextlib import contextmanager
 from html import escape
 
 import requests
 import streamlit as st
 
-from console import common
-from evidence import decisions
-from evidence.decision_settings import (ACTIONS, AFTER_CHANGES, APPROVE, CHOICES, FINDING_ACTIONS,
-                                        FINDING_CATEGORIES, OTHER_FINDINGS, REJECT, REPOSITORY)
+from console import common, pages
+from evidence import decisions, table_changes
+from evidence.decision_settings import (ACTIONS, AFTER_CHANGES, APPROVE, CHOICES, FINDING_ACTIONS, FINDING_CATEGORIES,
+                                        MERGE_WORDS, OTHER_FINDINGS, REJECT, REPOSITORY, TESTS_WORDS)
 from ui import admin, console
 
 FINDING_CHOICES = {APPROVE: "Approve", REJECT: "Reject"}
+PAGE = pages.APPROVALS
 
 
 def waiting(days):
     """How long an item has waited, as a status: decisions.waited gives (words, tone)."""
     words, tone = decisions.waited(days)
     return console.status(tone, words)
+
+
+@contextmanager
+def pr_card(item):
+    """One pull request as one framed card: its title band first, everything about it inside, so two never run together."""
+    words, _ = decisions.waited(item["waited_days"])
+    with st.container(key=f"prcard_{item['number']}"):
+        st.html(console.pr_banner(f"Pull request {item['number']}: {item['title']}", words))
+        yield
 
 
 def decide(item, config, who):
@@ -45,7 +56,7 @@ def decide(item, config, who):
             except requests.RequestException as error:
                 result = "bad", common.github_trouble(error)
             st.session_state["admin_result"] = (number, *result)
-            common.github.clear()   # read again: GitHub may have changed, whatever the outcome
+            common.clear_reading()   # read again: GitHub may have changed, whatever the outcome
             if result[0] == "ok":
                 for key in (f"choice_{number}", f"reason_{number}", f"changes_{number}"):
                     st.session_state.pop(key, None)
@@ -98,7 +109,7 @@ def finding_decide(item, finding, by_id, config, who):
         except requests.RequestException as error:
             result = "bad", common.github_trouble(error)
         st.session_state["admin_finding_result"] = ((number, finding_id), *result)
-        common.github.clear()
+        common.clear_reading()
         if result[0] == "ok":
             for key in (f"finding_choice_{number}_{finding_id}", f"finding_reason_{number}_{finding_id}"):
                 st.session_state.pop(key, None)
@@ -145,67 +156,137 @@ def finding_finish(item, by_id, all_approved, config, who):
         except requests.RequestException as error:
             result = "bad", common.github_trouble(error)
         st.session_state["admin_result"] = (number, *result)
-        common.github.clear()
+        common.clear_reading()
         st.rerun()
 
 
-def show_findings(items, comments, config, who):
-    rows = []
-    finish_rows = []
+def show_findings(items, comments, reviews, config, who):
+    """Each pull request is its own card: what it asks, its changes, then its findings by category, then one step deeper."""
     for item in items:
-        by_id = decisions.finding_decisions(comments.get(item["number"], []), item["sha"])
-        stale = decisions.finding_stale_ids(comments.get(item["number"], []), item["sha"])
+        number = item["number"]
+        by_id = decisions.finding_decisions(comments.get(number, []), item["sha"])
+        stale = decisions.finding_stale_ids(comments.get(number, []), item["sha"])
         decided_count = sum(finding["id"] in by_id for finding in item["findings"])
         finding_ids = [finding["id"] for finding in item["findings"]]
-        all_approved = finding_ids and all(by_id.get(fid) == APPROVE for fid in finding_ids)
-        all_rejected = finding_ids and all(by_id.get(fid) == REJECT for fid in finding_ids)
-        if all_approved or all_rejected:
-            finish_rows.append((item, by_id, all_approved))
-        for finding in item["findings"]:
-            rows.append({"item": item, "finding": finding, "by_id": by_id, "stale": stale, "decided_count": decided_count,
-                         "category": finding["category"] if finding["category"] in FINDING_CATEGORIES else OTHER_FINDINGS,
-                         "waiting": finding["id"] not in by_id})
-    for item, by_id, all_approved in finish_rows:
-        finding_finish(item, by_id, all_approved, config, who)
-    for category in [*FINDING_CATEGORIES, OTHER_FINDINGS]:
-        grouped = [row for row in rows if row["category"] == category]
-        if not grouped:
-            continue
-        waiting_count = sum(row["waiting"] for row in grouped)
-        st.html(console.section(category, console.list_view(
-            ["Finding", "Status"], [[escape(row["finding"]["statement"]),
-                                     finding_status(row["item"], row["by_id"], row["finding"]["id"])] for row in grouped]),
-                                right=f"{waiting_count} waiting", flush=True))
-        for row in grouped:
-            one_finding(row["item"], row["finding"], row["by_id"], row["stale"], row["decided_count"], config, who)
+        changes = changes_of(reviews.get(number))
+        look = table_changes.needs_a_look(changes)
+        with pr_card(item):
+            review_summary(item, reviews.get(number), changes, look)
+            changes_by_kind(item, changes, look)
+            if finding_ids and all(by_id.get(fid) == APPROVE for fid in finding_ids):
+                finding_finish(item, by_id, True, config, who)
+            elif finding_ids and all(by_id.get(fid) == REJECT for fid in finding_ids):
+                finding_finish(item, by_id, False, config, who)
+            for index, category in enumerate([*FINDING_CATEGORIES, OTHER_FINDINGS]):
+                grouped = [finding for finding in item["findings"]
+                           if (finding["category"] if finding["category"] in FINDING_CATEGORIES else OTHER_FINDINGS) == category]
+                if not grouped:
+                    continue
+                waiting_count = sum(finding["id"] not in by_id for finding in grouped)
+                st.html(console.section(category, console.list_view(
+                    ["Finding", "Status"], [[escape(finding["statement"]), finding_status(item, by_id, finding["id"])]
+                                            for finding in grouped]), right=f"{waiting_count} waiting", flush=True))
+                with st.container(key=f"prfind_{number}_{index}"):   # the decisions hang under the table they belong to
+                    for finding in grouped:
+                        one_finding(item, finding, by_id, stale, decided_count, config, who)
+            deeper(item, changes)
 
 
-def old_style_item(item, config, who):
-    opened = item["opened"]
-    if item["findings_unreadable"]:
-        st.html(console.notice("Its findings block could not be read, so it is shown as one item.", "warn"))
-    st.html(console.section(f"Pull request {item['number']}: {item['title']}", console.key_values([
-        ("What it says", admin.text_html(item["summary"]) if item["summary"] else "<span class='muted'>no summary</span>"),
-        ("Kind", escape(item["kind"])),
-        ("Raised by", f"{escape(item['raised_by'])}, {opened.day} {opened:%b %Y}"),
-        ("Waiting", waiting(item["waited_days"])),
-        ("On GitHub", f'<a href="{escape(item["link"], quote=True)}" target="_blank" rel="noopener noreferrer">'
-                      f'pull request {item["number"]}</a>')])))
-    with st.expander("What the pull request says, in full"):
-        st.html(admin.text_html(item["body"]))
-    decide(item, config, who)
+def source_html(settings):
+    name, link = settings["source"] if settings else ("–", "")
+    return finding_row(link, name) if link else escape(name)
+
+
+def changes_of(reading):
+    return [table_changes.table_change(f["path"], f["patch"], f["additions"], f["deletions"])
+            for f in (reading or {}).get("files", [])]
+
+
+def review_summary(item, reading, changes, look):
+    """What is asked and what it does, its checks, how much needs a look, then who raised it: one property sheet."""
+    opened, number = item["opened"], item["number"]
+    if reading:
+        asked = escape(table_changes.asked(item["raised_by"], changes))
+        checks = " ".join([console.status(*TESTS_WORDS.get(reading["tests"], TESTS_WORDS["not run"])),
+                           console.status(*MERGE_WORDS.get(reading["mergeable"], MERGE_WORDS[None]))])
+        unusual = (console.status("warn", f"{len(look)} thing{'' if len(look) == 1 else 's'}") if look
+                   else console.status("ok", "nothing unusual"))
+        rows = [("Asked", asked), ("If approved", escape(table_changes.shown_text(changes))), ("Checks", checks),
+                ("Needs a look", unusual)]
+    else:
+        rows = [("Asked", admin.text_html(item["summary"]) if item["summary"] else "<span class='muted'>no summary</span>"),
+                ("Checks", console.status("warn", "GitHub did not give its changes or checks: look on GitHub"))]
+    rows += [("Raised by", f"{escape(item['raised_by'])}, {opened.day} {opened:%b %Y}, {waiting(item['waited_days'])}"),
+             ("On GitHub", finding_row(item["link"], f"pull request {number}"))]
+    st.html(console.section("What it asks and does", console.key_values(rows)))
+
+
+def changes_by_kind(item, changes, look):
+    """The changes as a short list by kind, the routine ones apart, then what is unusual, separated from them."""
+    if changes:
+        rows = [[escape(kind), escape(change["settings"]["name"] if change["settings"] else change["path"]),
+                 escape(f"{count}: {said}" if count is not None else said), source_html(change["settings"])]
+                for kind, change, count, said in table_changes.by_kind(changes)]
+        st.html(console.section("Changes, by kind", console.list_view(["Kind", "Table", "Rows", "From"], rows),
+                                right=f"pull request {item['number']}", flush=True))
+    if look:
+        st.html(console.section("Needs a look", console.attention(look),
+                                right=f"pull request {item['number']}", flush=True))
+
+
+def each_change_html(change):
+    """One table's rows, old value beside new, routine rows folded away, and where they come from."""
+    settings = change["settings"]
+    rows = [[escape(table_changes.label(row, settings)), "added", "–", escape(table_changes.details(row, settings))]
+            for row in change["added"]]
+    rows += [[escape(table_changes.label(row["row"], settings)), escape(table_changes.words(column)), escape(was or "blank"),
+              escape(now or "blank")] for row in change["changed"] for column, was, now in row["differs"]]
+    rows += [[escape(table_changes.label(row, settings)), "removed", escape(table_changes.details(row, settings)), "–"]
+             for row in change["removed"]]
+    columns = ["Row", "What", "Was", "Now"]
+    html = console.list_view(columns, rows) if rows else ""
+    if routine := change["routine"]:
+        html += (f'<details class="c-more"><summary>{len(routine)} routine: '
+                 f'{escape(table_changes.ROUTINE_WORDS.get(change["path"], "routine"))}</summary>'
+                 + console.list_view(columns, [[escape(table_changes.label(row["row"], settings)),
+                                                escape(table_changes.words(column)), escape(was), escape(now)]
+                                               for row in routine for column, was, now in row["differs"]]) + "</details>")
+    return html + f'<p class="c-legend">From {source_html(settings)}</p>'
+
+
+def deeper(item, changes):
+    """One step deeper, on request: each change with its source, and the description by its headings."""
+    readable = [change for change in changes if change["readable"]]
+    if readable:
+        with st.expander("Each change: old and new value, and its source"):
+            for change in readable:
+                st.html(console.section(change["settings"]["name"], each_change_html(change), right=change["path"]))
+    with st.expander("The pull request's description, by heading"):
+        st.html(admin.description_html(decisions.without_findings_block(item["body"])))
+
+
+def old_style_item(item, reading, config, who):
+    changes = changes_of(reading)
+    look = table_changes.needs_a_look(changes)
+    with pr_card(item):
+        if item["findings_unreadable"]:
+            st.html(console.notice("Its findings block could not be read, so it is shown as one item.", "warn"))
+        review_summary(item, reading, changes, look)
+        changes_by_kind(item, changes, look)
+        decide(item, config, who)
+        deeper(item, changes)
 
 
 config = common.settings()
 email = st.user.get("email")
 who = st.user.get("name") or email
-seen = common.read()
+seen = common.read_page(PAGE.path)
 items = decisions.pending(seen["prs"], common.now())
 finding_items = [item for item in items if item["findings"] and not item["findings_unreadable"]]
 old_items = [item for item in items if item["findings_unreadable"] or not item["findings"]]
 
-body, actions = common.layout("approvals", "Approvals", "Changes the system proposes, and changes made from this "
-                                                        "console. Each is a pull request; approving merges it.")
+body, actions = common.layout(PAGE.path, "Changes the system proposes, and changes made from this console. Each is a "
+                                         "pull request; approving merges it.")
 with body:
     said = st.session_state.get("admin_result")
     if said and (said[1] == "ok" or said[0] not in {i["number"] for i in items}):   # its item has left the list
@@ -219,14 +300,14 @@ with body:
         st.html(console.notice(f"Nothing is waiting for a decision. GitHub lists {len(seen['prs'])} open pull "
                                f"request{'' if len(seen['prs']) == 1 else 's'}, none labelled for a decision.", "ok"))
     if finding_items:
-        show_findings(finding_items, seen.get("comments", {}), config, who)
+        show_findings(finding_items, seen.get("comments", {}), seen.get("reviews", {}), config, who)
     for group, its in decisions.grouped(old_items):
         st.html(console.section(group, console.list_view(
             ["Item", "Kind", "Raised by", "Waiting"],
             [[escape(i["title"]), escape(i["kind"]), escape(i["raised_by"]), waiting(i["waited_days"])]
              for i in its]), right=f"{len(its)} waiting, the longest first", flush=True))
         for item in its:
-            old_style_item(item, config, who)
+            old_style_item(item, seen.get("reviews", {}).get(item["number"]), config, who)
 
 with actions:
     common.refresh_action()

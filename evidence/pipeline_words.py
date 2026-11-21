@@ -2,6 +2,26 @@
 
 Each entry is keyed by the stage key from evidence/pipeline.py.
 """
+from evidence.console_settings import ARCHIVE_REPOSITORY, JOBS
+from evidence.decision_settings import REPOSITORY
+from evidence.sources import ARCHIVED_SOURCES
+
+_JOBS_BY_KEY = {job.key: job for job in JOBS}
+PROJECT_REPOSITORY = REPOSITORY
+ARCHIVE_REPOSITORY_NAME = ARCHIVE_REPOSITORY
+PROJECT_AND_ARCHIVE_REPOSITORIES = [PROJECT_REPOSITORY, ARCHIVE_REPOSITORY_NAME]
+PROJECT_REPOSITORY_ONLY = [PROJECT_REPOSITORY]
+ARCHIVE_REPOSITORY_ONLY = [ARCHIVE_REPOSITORY_NAME]
+
+
+def _workflow_file(stage_key):
+    job = _JOBS_BY_KEY.get(stage_key)
+    return f".github/workflows/{job.workflow}" if job else ""
+
+
+def _schedule_group(stage_key):
+    job = _JOBS_BY_KEY.get(stage_key)
+    return job.group if job else ""
 
 PLAIN_STATES = {
     "running now": "working now",
@@ -28,7 +48,7 @@ SETTING_SENTENCES = {
     "MAX_COPY_BYTES": "Largest raw copy size accepted before a fetch is stopped.",
     "MERGE_METHOD": "GitHub merge method used when an approved pull request is merged.",
     "MIN_GAP_BETWEEN_DOWNLOADS": "Per-site minimum wait between two requests to the same site (a named host or any host under it).",
-    "NAVIGATION_ORBITS": "Orbit shapes (period and tilt) that count as a navigation satellite's when picking new payloads out of Space-Track's list.",
+    "NAVIGATION_ORBITS": "Orbit classes (period and inclination) that count as a navigation satellite's when picking new payloads out of Space-Track's list.",
     "NEVER_FETCH": "Host-name fragments the archive fetcher refuses before any request, including redirects to them.",
     "ORBIT_ALERT_DAYS": "Age in days from which an orbit record is marked as alert.",
     "ORBIT_STALE_DAYS": "Age in days from which an orbit record is marked as stale.",
@@ -60,10 +80,10 @@ STAGES = {
         ],
         "why_it_matters": "This file is the main reference for which satellite is which.",
         "technical": {
-            "workflow_file": ".github/workflows/archive.yml",
+            "workflow_file": _workflow_file("archive_documents"),
             "workflow_job": "archive",
-            "schedule_group": "documents",
-            "commands": ["python scripts/archive_sources.py --archive archive --group documents"],
+            "schedule_group": _schedule_group("archive_documents"),
+            "commands": [f"python scripts/archive_sources.py --archive archive --group {_schedule_group('archive_documents')}"],
             "inputs": [
                 "Group 'documents' in evidence/sources.py",
                 "Source limits from evidence/settings.py",
@@ -72,10 +92,7 @@ STAGES = {
                 "Archive objects and versions in the private archive repository",
                 "Run log line in archive/runs/archive.csv",
             ],
-            "repositories": [
-                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System",
-                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive",
-            ],
+            "repositories": PROJECT_AND_ARCHIVE_REPOSITORIES,
             "settings": [
                 "REQUEST_TIMEOUT_SECONDS",
                 "DOWNLOAD_TRIES",
@@ -99,16 +116,16 @@ STAGES = {
     "archive_catalogues": {
         "plain_name": "Collect satellite catalogues",
         "what_happens": [
-            "Once a day, a program downloads two public satellite catalogue files.",
+            f"Once a day, a program downloads {len(ARCHIVED_SOURCES['catalogues'])} public satellite catalogue files.",
             "It saves a new copy only when a downloaded file changed.",
             "It records the run outcome in the archive run log.",
         ],
         "why_it_matters": "These files add owner and status details used in checks.",
         "technical": {
-            "workflow_file": ".github/workflows/archive.yml",
+            "workflow_file": _workflow_file("archive_catalogues"),
             "workflow_job": "archive",
-            "schedule_group": "catalogues",
-            "commands": ["python scripts/archive_sources.py --archive archive --group catalogues"],
+            "schedule_group": _schedule_group("archive_catalogues"),
+            "commands": [f"python scripts/archive_sources.py --archive archive --group {_schedule_group('archive_catalogues')}"],
             "inputs": [
                 "Group 'catalogues' in evidence/sources.py",
                 "Source limits from evidence/settings.py",
@@ -117,10 +134,7 @@ STAGES = {
                 "Archive objects and versions in the private archive repository",
                 "Run log line in archive/runs/archive.csv",
             ],
-            "repositories": [
-                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System",
-                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive",
-            ],
+            "repositories": PROJECT_AND_ARCHIVE_REPOSITORIES,
             "settings": [
                 "DOWNLOAD_TRIES",
                 "WAIT_BETWEEN_TRIES_SECONDS",
@@ -150,11 +164,11 @@ STAGES = {
         ],
         "why_it_matters": "These records are kept for archive history and later checks.",
         "technical": {
-            "workflow_file": ".github/workflows/archive.yml",
+            "workflow_file": _workflow_file("archive_orbital"),
             "workflow_job": "archive",
-            "schedule_group": "orbital",
-            "commands": ["python scripts/archive_sources.py --archive archive --group orbital",
-                         "python scripts/latest_orbits.py --archive archive --out orbit-data/latest_gnss.json"],
+            "schedule_group": _schedule_group("archive_orbital"),
+            "commands": [f"python scripts/archive_sources.py --archive archive --group {_schedule_group('archive_orbital')}",
+                         "python scripts/latest_orbits.py --archive archive --out latest_gnss.json --outside-group"],
             "inputs": [
                 "Group 'orbital' in evidence/sources.py",
                 "Source limits from evidence/settings.py",
@@ -164,10 +178,7 @@ STAGES = {
                 "Run log line in archive/runs/archive.csv",
                 "latest_gnss.json on branch orbit-data in the project repository",
             ],
-            "repositories": [
-                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System",
-                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive",
-            ],
+            "repositories": PROJECT_AND_ARCHIVE_REPOSITORIES,
             "settings": [
                 "REQUEST_TIMEOUT_SECONDS",
                 "MIN_GAP_BETWEEN_DOWNLOADS",
@@ -195,10 +206,10 @@ STAGES = {
         ],
         "why_it_matters": "This keeps a dated record of reports that can support later human review.",
         "technical": {
-            "workflow_file": ".github/workflows/archive.yml",
+            "workflow_file": _workflow_file("archive_news"),
             "workflow_job": "archive",
-            "schedule_group": "news",
-            "commands": ["python scripts/archive_sources.py --archive archive --group news"],
+            "schedule_group": _schedule_group("archive_news"),
+            "commands": [f"python scripts/archive_sources.py --archive archive --group {_schedule_group('archive_news')}"],
             "inputs": [
                 "Group 'news' in evidence/sources.py",
                 "Candidate-source list in evidence/source_candidates.csv",
@@ -208,10 +219,7 @@ STAGES = {
                 "Archive objects and versions in the private archive repository",
                 "Run log line in archive/runs/archive.csv",
             ],
-            "repositories": [
-                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System",
-                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive",
-            ],
+            "repositories": PROJECT_AND_ARCHIVE_REPOSITORIES,
             "settings": [
                 "DOWNLOAD_TRIES",
                 "WAIT_BETWEEN_TRIES_SECONDS",
@@ -243,10 +251,10 @@ STAGES = {
         ],
         "why_it_matters": "This helps catch new links early while treating social posts as pointers, not final proof.",
         "technical": {
-            "workflow_file": ".github/workflows/archive.yml",
+            "workflow_file": _workflow_file("archive_social"),
             "workflow_job": "archive",
-            "schedule_group": "social",
-            "commands": ["python scripts/archive_sources.py --archive archive --group social"],
+            "schedule_group": _schedule_group("archive_social"),
+            "commands": [f"python scripts/archive_sources.py --archive archive --group {_schedule_group('archive_social')}"],
             "inputs": [
                 "Group 'social' in evidence/sources.py",
                 "Source limits and back-off rules from evidence/settings.py",
@@ -255,10 +263,7 @@ STAGES = {
                 "Archive objects and versions in the private archive repository",
                 "Run log line in archive/runs/archive.csv",
             ],
-            "repositories": [
-                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System",
-                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive",
-            ],
+            "repositories": PROJECT_AND_ARCHIVE_REPOSITORIES,
             "settings": [
                 "REQUEST_TIMEOUT_SECONDS",
                 "MIN_GAP_BETWEEN_DOWNLOADS",
@@ -289,10 +294,10 @@ STAGES = {
         ],
         "why_it_matters": "Space-Track lists a new satellite weeks before the IGS file does, so this is how a launch is noticed early.",
         "technical": {
-            "workflow_file": ".github/workflows/archive.yml",
+            "workflow_file": _workflow_file("archive_launches"),
             "workflow_job": "archive",
-            "schedule_group": "launches",
-            "commands": ["python scripts/archive_sources.py --archive archive --group launches"],
+            "schedule_group": _schedule_group("archive_launches"),
+            "commands": [f"python scripts/archive_sources.py --archive archive --group {_schedule_group('archive_launches')}"],
             "inputs": [
                 "Group 'launches' in evidence/sources.py",
                 "The Space-Track login, from the SPACETRACK_USERNAME and SPACETRACK_PASSWORD secrets",
@@ -301,10 +306,7 @@ STAGES = {
                 "Archive objects and versions in the private archive repository",
                 "Run log line in archive/runs/archive.csv",
             ],
-            "repositories": [
-                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System",
-                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive",
-            ],
+            "repositories": PROJECT_AND_ARCHIVE_REPOSITORIES,
             "settings": [
                 "RECENT_LAUNCH_DAYS",
                 "NAVIGATION_ORBITS",
@@ -332,7 +334,7 @@ STAGES = {
         ],
         "why_it_matters": "The archive is the audit trail that lets people verify what was known and when.",
         "technical": {
-            "workflow_file": ".github/workflows/archive.yml",
+            "workflow_file": _workflow_file("archive_documents"),
             "workflow_job": "archive",
             "schedule_group": "",
             "commands": ["python scripts/archive_sources.py --archive archive"],
@@ -344,7 +346,7 @@ STAGES = {
                 "objects/ and versions.csv in the private archive repository",
                 "runs/archive.csv in the private archive repository",
             ],
-            "repositories": ["SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive"],
+            "repositories": ARCHIVE_REPOSITORY_ONLY,
             "settings": [
                 "ARCHIVE_OBJECTS_DIR",
                 "ARCHIVE_VERSIONS_FILE",
@@ -374,13 +376,14 @@ STAGES = {
         ],
         "why_it_matters": "This updates satellite identity data through review instead of direct edits to main.",
         "technical": {
-            "workflow_file": ".github/workflows/registry-update.yml",
+            "workflow_file": _workflow_file("registry_update"),
             "workflow_job": "propose",
-            "schedule_group": "",
+            "schedule_group": _schedule_group("registry_update"),
             "commands": [
                 "python scripts/build_registry.py --archive archive --report \"$RUNNER_TEMP/registry-changes.md\"",
                 "python scripts/build_catalogue_table.py --archive archive --report \"$RUNNER_TEMP/catalogue-changes.md\"",
                 "python scripts/build_library_table.py --archive archive",
+                "python scripts/describe_table_changes.py --report \"$RUNNER_TEMP/registry-changes.md\"",
                 "python -m pytest -q -m \"not coverage_gate\" (the coverage gate runs in the proposal's own Tests job)",
                 "gh pr edit registry-update --add-label \"decision: registry update\" --body-file \"$RUNNER_TEMP/registry-changes.md\" (when an open PR already exists)",
                 "gh pr create --base main --head registry-update --title \"Registry update from the IGS satellite metadata file\" --label \"decision: registry update\" --body-file \"$RUNNER_TEMP/registry-changes.md\" (when no open PR exists)",
@@ -396,24 +399,21 @@ STAGES = {
                 "Pull request from branch registry-update to main",
                 "Run log line in archive/runs/registry-update.csv",
             ],
-            "repositories": [
-                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System",
-                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive",
-            ],
+            "repositories": PROJECT_AND_ARCHIVE_REPOSITORIES,
             "settings": [
                 "REGISTRY_SATELLITES_FILE",
                 "REGISTRY_SIGNAL_IDS_FILE",
                 "REGISTRY_CONSTELLATIONS_FILE",
                 "REGISTRY_SIGHTINGS_FILE",
             ],
-            "settings_files": ["evidence/settings.py"],
+            "settings_files": ["evidence/registry_settings.py"],
             "paths": [
                 ".github/workflows/registry-update.yml",
                 "scripts/build_registry.py",
                 "registry/satellites.csv",
                 "registry/sightings.csv",
                 "registry/signal_ids.csv",
-                "evidence/settings.py",
+                "evidence/registry_settings.py",
             ],
             "limits": [
                 "If the IGS file layout changes, the build exits and no tables are written.",
@@ -430,12 +430,12 @@ STAGES = {
         ],
         "why_it_matters": "This gives a daily watch of record freshness across every tracked constellation.",
         "technical": {
-            "workflow_file": ".github/workflows/orbit-ages.yml",
+            "workflow_file": _workflow_file("orbit_ages"),
             "workflow_job": "run",
-            "schedule_group": "",
+            "schedule_group": _schedule_group("orbit_ages"),
             "commands": [
                 "python scripts/orbit_ages.py --archive archive --outcome \"$RUNNER_TEMP/orbit-ages.json\"",
-                "jq -r '.line // \"\"' \"$RUNNER_TEMP/orbit-ages.json\"",
+                "jq -r '.line // \"\"' \"$OUTCOME_FILE\" 2>/dev/null",
             ],
             "inputs": [
                 "Tracked NORAD IDs from config/config.py",
@@ -446,10 +446,7 @@ STAGES = {
                 "archive/runs/orbit-age-by-satellite.csv",
                 "Outcome JSON for Healthchecks.io pings",
             ],
-            "repositories": [
-                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System",
-                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive",
-            ],
+            "repositories": PROJECT_AND_ARCHIVE_REPOSITORIES,
             "settings": [
                 "ORBIT_ALERT_DAYS",
                 "ORBIT_STALE_DAYS",
@@ -479,12 +476,12 @@ STAGES = {
         ],
         "why_it_matters": "This checks daily whether orbit records still match broadcast orbits within expected kilometre gaps, and leaves behind a fresh fitted record when they do.",
         "technical": {
-            "workflow_file": ".github/workflows/rinex-check.yml",
+            "workflow_file": _workflow_file("rinex_check"),
             "workflow_job": "run",
-            "schedule_group": "",
+            "schedule_group": _schedule_group("rinex_check"),
             "commands": [
-                "python scripts/orbit_record_gap.py --json \"$RUNNER_TEMP/gap.json\" --fitted \"$RUNNER_TEMP/fitted.json\" --previous-fitted-dir archive/orbits/fitted --summary-out \"$RUNNER_TEMP/gap-summary.txt\" > \"$RUNNER_TEMP/gap.md\"",
-                "python scripts/log_run.py --archive . --log rinex-check --job \"rinex check\" --started \"$STARTED\" --result \"$RESULT\" --changed \"$CHANGED\"",
+                "python scripts/orbit_record_gap.py ${DAY_INPUT:+--day \"$DAY_INPUT\"} --json \"$RUNNER_TEMP/gap.json\" --fitted \"$RUNNER_TEMP/fitted.json\" --previous-fitted-dir archive/orbits/fitted --summary-out \"$RUNNER_TEMP/gap-summary.txt\" > \"$RUNNER_TEMP/gap.md\"",
+                "python ../scripts/log_run.py --archive . --log rinex-check --job \"rinex check\" --started \"$STARTED\" --result \"$RESULT\" --changed \"$CHANGED\"",
             ],
             "inputs": [
                 "Tracked satellites from registry tables",
@@ -498,10 +495,7 @@ STAGES = {
                 "orbit_gap.json on branch orbit-checks in the project repository",
                 "fitted_orbits.json on branch orbit-checks in the project repository",
             ],
-            "repositories": [
-                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System",
-                "SumanthVarma798/GNSS-Constellation-Health-Monitoring-System-archive",
-            ],
+            "repositories": PROJECT_AND_ARCHIVE_REPOSITORIES,
             "settings": [
                 "RUN_LOGS",
             ],
@@ -541,7 +535,7 @@ STAGES = {
             "outputs": [
                 "Queue of waiting items on console/approvals.py",
             ],
-            "repositories": ["SumanthVarma798/GNSS-Constellation-Health-Monitoring-System"],
+            "repositories": PROJECT_REPOSITORY_ONLY,
             "settings": [
                 "LABEL_PREFIX",
                 "KINDS",
@@ -582,7 +576,7 @@ STAGES = {
             "outputs": [
                 "Decision comment marker and pull-request state update in GitHub",
             ],
-            "repositories": ["SumanthVarma798/GNSS-Constellation-Health-Monitoring-System"],
+            "repositories": PROJECT_REPOSITORY_ONLY,
             "settings": [
                 "CHOICES",
                 "ACTIONS",
@@ -611,9 +605,9 @@ STAGES = {
         ],
         "why_it_matters": "This is the handoff from reviewed proposal to the live branch history.",
         "technical": {
-            "workflow_file": ".github/workflows/tests.yml",
+            "workflow_file": _workflow_file("tests"),
             "workflow_job": "pytest",
-            "schedule_group": "",
+            "schedule_group": _schedule_group("tests"),
             "commands": ["python -m pytest -q"],
             "inputs": [
                 "Merged commit on main",
@@ -623,7 +617,7 @@ STAGES = {
                 "GitHub check result on the merged commit",
                 "Tests run link in GitHub Actions",
             ],
-            "repositories": ["SumanthVarma798/GNSS-Constellation-Health-Monitoring-System"],
+            "repositories": PROJECT_REPOSITORY_ONLY,
             "settings": [
                 "REQUIRED_CHECK",
                 "MERGE_METHOD",
@@ -650,9 +644,9 @@ STAGES = {
         ],
         "why_it_matters": "It confirms that a reviewed and tested change is ready for users.",
         "technical": {
-            "workflow_file": ".github/workflows/tests.yml",
+            "workflow_file": _workflow_file("tests"),
             "workflow_job": "pytest",
-            "schedule_group": "",
+            "schedule_group": _schedule_group("tests"),
             "commands": ["python -m pytest -q"],
             "inputs": [
                 "Registry files in registry/",
@@ -662,16 +656,16 @@ STAGES = {
                 "Dashboard pages rendered from current repository data",
                 "Tests-on-main proof events in the live pipeline",
             ],
-            "repositories": ["SumanthVarma798/GNSS-Constellation-Health-Monitoring-System"],
+            "repositories": PROJECT_REPOSITORY_ONLY,
             "settings": [
                 "REGISTRY_DASHBOARD_SATELLITES_FILE",
                 "TESTS_WORKFLOW",
             ],
-            "settings_files": ["evidence/settings.py", "evidence/console_settings.py"],
+            "settings_files": ["evidence/registry_settings.py", "evidence/console_settings.py"],
             "paths": [
                 "dashboard.py",
                 "registry/dashboard_satellites.csv",
-                "evidence/settings.py",
+                "evidence/registry_settings.py",
                 "evidence/console_settings.py",
             ],
             "limits": [

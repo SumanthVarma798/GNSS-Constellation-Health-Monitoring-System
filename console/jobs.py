@@ -3,21 +3,22 @@ from html import escape
 
 import streamlit as st
 
-from console import common
+from console import common, pages
 from evidence import jobs
-from evidence.console_settings import JOBS, RELIABILITY_DAYS
+from evidence.console_settings import ARCHIVE_WORKFLOW, JOBS, RELIABILITY_DAYS
 from evidence.decision_settings import REPOSITORY
 from ui import console
 
 LOG_LINES = 15   # the newest lines of the run log shown
 STATE_TONE = {"Ready": "ok", "Running": "info", "Turned off": "idle"}
+PAGE = pages.JOBS
 
-seen = common.read()
+seen = common.read_page(PAGE.path)
 now = common.now()
 rows = jobs.job_rows(seen["workflows"], seen["runs"], seen["log"], common.workflow_texts(), now)
 
-body, actions = common.layout("jobs", "Jobs", "Every scheduled job: when it runs, whether it is running, and how each "
-                                              "run ended. Times in UTC.")
+body, actions = common.layout(PAGE.path, "Every scheduled job: when it runs, whether it is running, and how each run "
+                                         "ended. Times in UTC.")
 with body:
     for problem in seen["problems"]:
         st.html(console.notice(problem, "warn"))
@@ -30,7 +31,7 @@ with body:
           escape(console.when(r["last"])), console.status(*r["result"])] for r in rows]),
         right="GitHub often starts scheduled runs late", flush=True))
 
-    names = {"archive.yml": "Archive (all groups)", **{w: name for w, _, name, *_ in JOBS if w != "archive.yml"}}
+    names = {ARCHIVE_WORKFLOW: "Archive (all groups)", **{job.workflow: job.name for job in JOBS if job.workflow != ARCHIVE_WORKFLOW}}
     grid = jobs.reliability(seen["runs"], now)
     st.html(console.section("Reliability, day by day", console.reliability_grid(grid, names)
                             + '<div class="c-legend" style="margin-top:8px"><span><span class="m ok">✓</span> every run that day '

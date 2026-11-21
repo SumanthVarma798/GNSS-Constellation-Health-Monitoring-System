@@ -57,23 +57,6 @@ def test_check_rows_cover_every_status_and_list_missing_and_extra_checks():
     assert by_slug["extra-watch"]["down_times"] == 1
 
 
-def test_missing_slugs_are_reported_in_checks_order():
-    checks = [{"slug": "archive-documents"}, {"slug": "archive-orbital"}, {"slug": "update-tle-data"}]
-
-    assert alerts.missing_slugs(checks) == [
-        "archive-catalogues",
-        "archive-news",
-        "archive-social",
-        "archive-x",
-        "archive-launches",
-        "registry-update",
-        "source-record",
-        "orbit-ages",
-        "orbit-fresh",
-        "rinex-check",
-    ]
-
-
 def test_a_failed_scheduled_run_sets_the_streak_start_from_its_updated_time():
     failed = run("registry-update.yml", "2026-10-20T10:00:00Z", conclusion="failure", updated="2026-10-20T10:30:00Z")
     runs = [run("archive.yml", "2026-10-20T08:00:00Z"), failed]

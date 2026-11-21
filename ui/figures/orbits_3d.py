@@ -108,18 +108,25 @@ def _land_mask():
     return inside.astype(float)
 
 
-def _land_points(turn_deg):
-    """Land as points on a unit sphere, turned by sidereal time: every LAND_STEP-th grid point,
-    with fewer per row toward the poles so the dots lie evenly."""
-    mask, points = _land_mask(), []
+@cache
+def land_dots():
+    """Land as a matrix of dots: (latitude, longitude) in degrees of every LAND_STEP-th grid point on land, with fewer
+    per row toward the poles so the dots lie evenly. The Overview's 3D view draws these."""
+    mask, dots = _land_mask(), []
     for i in range(0, mask.shape[0], LAND_STEP):
-        lat = math.radians(-90 + i * GRID_DEG)
-        step = LAND_STEP * max(1, round(1 / max(math.cos(lat), 0.01)))
-        for j in range(0, mask.shape[1] - 1, step):   # the last column is -180 again
-            if mask[i, j]:
-                lon = math.radians(-180 + j * GRID_DEG + turn_deg)
-                points.append([round(math.cos(lat) * math.cos(lon), 3), round(math.cos(lat) * math.sin(lon), 3),
-                               round(math.sin(lat), 3)])
+        lat = -90 + i * GRID_DEG
+        step = LAND_STEP * max(1, round(1 / max(math.cos(math.radians(lat)), 0.01)))
+        dots += [(lat, -180 + j * GRID_DEG) for j in range(0, mask.shape[1] - 1, step) if mask[i, j]]   # the last column is -180 again
+    return tuple(dots)
+
+
+def _land_points(turn_deg):
+    """land_dots() as points on a unit sphere, turned by sidereal time."""
+    points = []
+    for lat_deg, lon_deg in land_dots():
+        lat, lon = math.radians(lat_deg), math.radians(lon_deg + turn_deg)
+        points.append([round(math.cos(lat) * math.cos(lon), 3), round(math.cos(lat) * math.sin(lon), 3),
+                       round(math.sin(lat), 3)])
     return points
 
 

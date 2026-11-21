@@ -1,0 +1,175 @@
+"""The Home page's words and choices, in one place. Change a value here by pull request; nothing else needs editing.
+
+The numbers marked "our choice" are not from a standard: they are named on the page, in "Need help reading this page?".
+"""
+from datetime import timedelta
+
+from evidence.settings import ORBIT_DATA_URL
+
+# Home's counts, made by the archive job when the orbit copy changes, and at least every 8 hours (HOME_COUNT_EVERY) (scripts/home_snapshot.py, .github/workflows/archive.yml).
+SNAPSHOT_URL = ORBIT_DATA_URL + "home_snapshot.json"
+# Older than this and Home counts again itself. Our choice: counts are made at least every 8 hours, so one missed
+# run is covered.
+SNAPSHOT_MAX_AGE = timedelta(hours=14)
+
+# Who runs each system and where it serves, for a reader new to them: {system (ui/systems.py): (who, where)}.
+SYSTEMS = {
+    "NavIC": ("India", "regional: India and 1,500 km around"),
+    "QZSS": ("Japan", "regional: Japan and Asia-Oceania"),
+    "BeiDou-3": ("China", "global"),
+    "GPS": ("United States", "global"),
+    "GLONASS": ("Russia", "global"),
+    "Galileo": ("European Union", "global"),
+}
+
+# What the page does not yet take into account for one system, said in its row: {name: one plain sentence}.
+CAVEATS = {}
+
+# "Worth a look": the rules, in the order their findings are listed. {rule: (name, what it compares)}.
+RULES = {
+    "silent": ("Tracked but silent", "the satellites we track against the IGS daily broadcast file"),
+    "disagree": ("Two sources disagree", "the operator's own health flag against our orbit check"),
+    "clock": ("Clock stepped", "each new clock message against what the one before it predicted"),
+    "plane": ("Plane out of step", "one orbital plane against its sister planes"),
+    "odd": ("Odd one out", "one satellite's score against the others in its constellation"),
+}
+ODD_SPREADS = 3.0        # a score this many spreads under its system's median is the odd one out. Our choice.
+ODD_SPREAD_FLOOR = 5.0   # the spread is never taken as less than this many points, so a system of all 100s does
+                         # not raise a 99. Our choice.
+ODD_NEEDS = 5            # fewer scored satellites than this is too few to call one odd
+FINDINGS_SHOWN = 5       # the rest sit in the expandable section
+
+# Findings that are known and expected, so they are counted but not listed first: {(rule, system, satellite or plane):
+# why}. Add or remove one by pull request, which is its approval record.
+EXPLAINED = {
+    ("disagree", "Galileo", "GSAT0201"): "launched into a wrong, eccentric orbit in 2014; flagged by Galileo itself",
+    ("disagree", "Galileo", "GSAT0202"): "launched into a wrong, eccentric orbit in 2014; flagged by Galileo itself",
+}
+
+# "Need help reading this page?": the same order the whole dashboard follows. (icon in ui/icons.py MASKED, heading,
+# [(term, words, picture)]). A plain string among the points starts a group under that small heading. words is one
+# short line or a list of short bullets. picture, drawn before the term, is an icon name (ui/icons.py MASKED), a
+# state's mark ("mark:ok", "mark:warn", "mark:bad", "mark:accent"), "gauge" (a small score ring) or "weights" (the
+# mission weights as bars, from ui/limits.py), or "" for none.
+HOW = [
+    ("radar", "What is measured", [
+        "The score",
+        ("Score", [("Means", "how healthy a constellation is today, from 0 to 100"),
+                   ("Made of", "the four key health attributes: each adds its share of satellites that pass, times "
+                               "its weight"),
+                   ("The ring", "the constellation's satellites, coloured by state")], "gauge"),
+        ("Weights", [("Means", "how much each attribute counts towards the 100; together they make 100%"),
+                     ("Set by", "what a failure costs the constellation's users (our choice, open to change)"),
+                     ("Burn record", "10% for every constellation, taken evenly from the other three, so clock, station "
+                                     "and orbit each give up a tenth of their weight (our choice, for the team to "
+                                     "confirm)"),
+                     ("Regional", "7 or 8 satellites, all in every user's sky, none spare: one bad clock spoils "
+                                  "every position fix"),
+                     ("Global", "8 to 12 satellites in view: a receiver can leave out one bad clock")], "weights"),
+        "The states round the score",
+        ("Healthy and in place", [("Means", "its orbit scores 80 or more of 100, and it is where it should be: in its "
+                                            "slot, or in step with its plane"),
+                                  ("Colours", "our line: green from 80, amber from 60")], "mark:ok"),
+        ("Needs a look", [("Means", "still counted, but its orbit scores under 80, or it has left its slot or fallen "
+                                    "out of step"),
+                          ("Is it a fault?", "not always: it is a reason to look closer, on its own page")],
+         "mark:warn"),
+        ("Set aside", [("Means", "retired: moved up to a graveyard orbit, above the working ones, after its service "
+                                 "ended"),
+                       ("Counted?", "in the total, never judged")], "mark:bad"),
+        "Key health attributes",
+        ("Orbit kept", [("Means", "the satellite is on the orbit it was placed in"),
+                        ("Passes when", "every part of its orbit scores 80 or more of 100: its inclination for one held over a "
+                                        "longitude; its plane, inclination, semi-major axis and eccentricity for one in a medium orbit"),
+                        ("Why it matters", "a receiver's sums assume that orbit")], "planet"),
+        ("Station held", [("Means", "the satellite stays at its own place among the others"),
+                          ("Passes when", "it is in its slot and not drifting along the belt, or keeps its spacing in "
+                                          "its plane"),
+                          ("Why it matters", "coverage depends on where each satellite is; how often it burns to stay "
+                                             "there is on its own page")], "satellite"),
+        ("Clock steady", [("Means", "the satellite's atomic clock keeps even time"),
+                          ("Passes when", "all day, each clock message lands within 30 ns of what the one before "
+                                          "predicted (30 ns is our line)"),
+                          ("Why it matters", "a position is worked out from time: 1 ns off is 30 cm off")],
+         "hourglass"),
+        "Extra details",
+        ("Says healthy", [("Means", "the health flag each satellite sends about itself"),
+                          ("From", "the IGS daily broadcast file, read every day; shown, not scored")], "broadcast"),
+        ("Flag matches our check", [("Means", "the operator's flag says healthy exactly where our orbit check does"),
+                                    ("Why it matters", "where they differ, one of the two needs a closer look")],
+         "circle-check"),
+        ("Signals heard", [("Means", "the signals that IGS receivers around the world recorded from each satellite on the latest day"),
+                           ("Measured by", "their 30-second observation files from BKG's IGS data centre, one reading in "
+                                           "ten minutes; heard by at least one station"),
+                           ("Limits", "heard means a receiver tracked it, not that the signal was good; a receiver that "
+                                      "does not track a signal (none of ours records NavIC's S band) cannot hear it; "
+                                      "shown, not scored")], "broadcast"),
+        ("Burn record", [("Means", "how regularly the operator looks after the satellite, read from what kind each of its "
+                                   "engine burns was"),
+                         ("First principles", "a satellite is kept in its slot by small burns on a rhythm the operator "
+                                              "sets; a burn on that rhythm is routine, a relocation or the raise to a "
+                                              "graveyard orbit at the end of life is planned, and a burn made because "
+                                              "the satellite had already strayed, in a cluster, or out of its usual "
+                                              "size or direction is a sign the rhythm was missed"),
+                         ("Irregular", "a response (made after it was outside its longitude deadband or drift limit, in a cluster, or "
+                                       "reversed at once) or off its pattern, judged at medium confidence or better; "
+                                       "planned moves count neither way"),
+                         ("Passes when", "no irregular burn in the last 90 days and at most 25% of its judged burns "
+                                         "in 365 days irregular; with fewer than 3 judged burns it is not judged"),
+                         ("From", "the burns found in CelesTrak and Space-Track tracking records; a burn is found "
+                                  "within the days between two records, so it is a kind judged from the orbit, not "
+                                  "an operator's log"),
+                         ("Limits", "our rule, for the team to confirm; medium orbits rarely show any burns yet: "
+                                    "their records are too short, so the other three count for its whole score")],
+         "rocket"),
+        ("Irregular burns", [("Means", "of the burns judged in 365 days, how many were irregular, with the range "
+                                      "that count allows (a 95% interval)"),
+                             ("Too few to rate", "under 8 judged burns: the share is shown only as a count"),
+                             ("Shown, with the score", "the same burns make the burn record that counts in the score")],
+         "rocket"),
+    ]),
+    ("calculator", "How", [
+        ("Two sources, never mixed", ["orbit and station: public tracking records from CelesTrak and Space-Track",
+                                      "clock and flag: the IGS daily broadcast file",
+                                      "where the two disagree, Worth a look says so"], "database"),
+        ("Counted ahead", ["Home's counts are made when the orbit data changes, and at least every 8 hours", "the headline says when they were made"],
+         "hourglass"),
+        ("Default limits", ["Home always uses the default limits",
+                            "limits moved on a constellation's page apply there only"], "tool"),
+        ("Findings by rule", ["each comes from a named rule, never a hand pick; the largest of each rule first",
+                              "odd one out: 3 spreads under the median (our line)"], "search"),
+    ]),
+    ("rocket", "What we are working towards", [
+        ("Signals against the declared list", ["whether each satellite sends every signal its operator declares",
+                                               "heard signals are measured now; the declared list to compare them with "
+                                               "(for example NavIC's L5 and S) is not read yet"], "broadcast"),
+        ("Measured accuracy", ["how accurate each signal and clock really are",
+                               "needs precise orbit and clock products we do not read yet"], "radar"),
+        ("New satellites", ["on its way to its slot, or there under 30 days", "named on its card, not yet scored"],
+         "satellite"),
+        ("Working together", ["open to working with anyone measuring these constellations",
+                              "data, methods, or a review of ours"], "quote"),
+    ]),
+]
+
+# Where to write to us, shown under "Working together". Mail to it goes to the console's Contact inbox through the
+# newsletters Worker (cloudflare/newsletters); live since 17 Nov 2026. Set it to "" to hide it if the routing ever stops.
+CONTACT_ADDRESS = "contact@opengnss.org"
+
+# The words on a row that "Need help reading this page?" explains: {words on the row: the heading of the card that explains
+# them}. On the row they are a link to that card, landing on the point itself when its term is the same words.
+HOW_LINKS = {
+    "score": "What is measured",
+    "flag matches our check": "What is measured",
+    "healthy and in place": "What is measured",
+    "needs a look": "What is measured",
+    "set aside": "What is measured",
+    "new, not scored yet": "What we are working towards",
+    "orbit kept": "What is measured",
+    "station held": "What is measured",
+    "clock steady": "What is measured",
+    "burn record": "What is measured",
+    "irregular burns": "What is measured",
+    "says healthy": "What is measured",
+    "not scored yet": "What we are working towards",
+}

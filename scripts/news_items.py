@@ -16,7 +16,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from evidence.news import collected_items, feed_report, labelling_sample, latest_news
-from evidence.settings import FEED_REPORT_COLUMNS, LABELLING_SHEET_COLUMNS, LABELLING_SHEET_FILE, NEWS_ITEM_COLUMNS
+from evidence.news_settings import (
+    FEED_REPORT_COLUMNS,
+    LABELLING_SHEET_COLUMNS,
+    LABELLING_SHEET_FILE,
+    NEWS_ITEM_COLUMNS
+)
 
 
 def main():

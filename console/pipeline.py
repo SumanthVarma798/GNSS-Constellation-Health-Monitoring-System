@@ -4,55 +4,29 @@ from html import escape
 import streamlit as st
 from streamlit.components.v1 import html as component_html
 
-from console import common
+from console import common, pages
 from evidence import pipeline
-from evidence.console_settings import PIPELINE_FEED_EVENTS, PIPELINE_LOOK_AHEAD_HOURS, PIPELINE_READ_EVERY_SECONDS
+from evidence.console_settings import (ARCHIVE_ALL_LOG, JOBS, PIPELINE_FEED_EVENTS, PIPELINE_LOOK_AHEAD_HOURS,
+                                       PIPELINE_READ_EVERY_SECONDS)
 from evidence.pipeline_words import PLAIN_STATES, STAGES
 from ui import console
 from ui.components.live_pipeline import (
+    _CHAIN,
+    _COLLECT,
     live_pipeline_html,
     overview_frame_height,
     panel_frame_height,
     payload as pipeline_payload,
 )
 
-_STATE_TONE = {"running now": "info", "done": "ok", "failed": "bad", "waiting": "warn", "off": "idle"}
-_EVENT_STAGE_KEY = {
-    "archive documents": "archive_documents",
-    "archive catalogues": "archive_catalogues",
-    "archive orbital": "archive_orbital",
-    "archive news": "archive_news",
-    "archive social": "archive_social",
-    "archive launches": "archive_launches",
-    "archive all": "archive",
-    "registry update": "registry_update",
-}
-
-
-def _link(url, words):
-    if not url:
-        return '<span class="muted">none</span>'
-    safe_url = escape(url, quote=True)
-    return f'<a href="{safe_url}" target="_blank" rel="noopener noreferrer">{escape(words)}</a>'
+PAGE = pages.PIPELINE
+# The run-log names of the stages the overview draws (archive groups and the registry job), to their stage keys.
+_EVENT_STAGE_KEY = {job.log_name: job.key for job in JOBS if job.log_name and job.key in (*_COLLECT, *_CHAIN)}
+_EVENT_STAGE_KEY[ARCHIVE_ALL_LOG] = "archive"
 
 
 def _proof_link_words(event):
-    words = (event.get("link_words") or "").strip()
-    if words:
-        lowered = words.lower()
-        if lowered == "run":
-            return "GitHub run"
-        if lowered == "commit":
-            return "GitHub commit"
-        if lowered in {"pull request", "pr"}:
-            return "GitHub pull request"
-        return words
-    happened = (event.get("words") or "").lower()
-    if "pull request" in happened:
-        return "GitHub pull request"
-    if "commit" in happened:
-        return "GitHub commit"
-    return "GitHub run"
+    return (event.get("link_words") or "").strip()
 
 
 def _plain_state(words):
@@ -102,7 +76,7 @@ def _event_words(event, stage_by_key):
 
 
 def _snapshot(workflow_texts):
-    seen = common.read()
+    seen = common.read_page(PAGE.path)
     now = common.now()
     stages = pipeline.stages(seen["workflows"], seen["runs"], seen["log"], seen["decision_prs"], workflow_texts, now,
                              seen.get("archive_commits", {}))
@@ -123,7 +97,7 @@ def _live_status_fragment(workflow_texts):
     with left:
         st.html(console.section("Running now", console.list_view(
             ["Stage", "State", "Started"],
-            [[_stage_cell(stage), console.status(_STATE_TONE[stage["state"]], _plain_state(stage["state"])),
+            [[_stage_cell(stage), console.status(console.PIPELINE_STATE_TONES[stage["state"]], _plain_state(stage["state"])),
               escape(console.when(stage.get("running_start") or (stage["last"] or {}).get("start")))] for stage in running], numeric=())
             if running else console.notice("No stage is running now.", "info"), flush=bool(running)))
     with right:
@@ -139,15 +113,14 @@ def _live_status_fragment(workflow_texts):
     st.html(console.section("Proof of work", console.list_view(
         ["Time (UTC)", "Event", "Link"],
         [[escape(console.when(event["time"])), _event_words(event, stage_by_key),
-          _link(event.get("link"), _proof_link_words(event))]
+          common.link(event.get("link"), _proof_link_words(event))]
          for event in feed], numeric=()) if feed else console.notice("No proof events yet.", "info"),
         right=f"newest {PIPELINE_FEED_EVENTS}", flush=bool(feed)))
 
 
 def live_page():
     body, actions = common.layout(
-        "pipeline",
-        "Live pipeline",
+        PAGE.path,
         "The pipeline from archive runs to approvals and dashboard, with what is running now, what happens next, and proof links.",
     )
     workflow_texts = common.workflow_texts()
@@ -157,7 +130,7 @@ def live_page():
     with body:
         for problem in seen["problems"]:
             st.html(console.notice(problem, "warn"))
-        tokens = console.token_css(st.session_state.get("console_scheme", "auto"))
+        tokens = console.token_css(st.session_state.get(common.CONSOLE_SCHEME_KEY, common.CONSOLE_SCHEME_DEFAULT))
         component_html(
             live_pipeline_html(tokens, console.FONT, component_data, mode="overview"),
             height=overview_frame_height(),
@@ -172,8 +145,8 @@ def live_page():
     with actions:
         common.refresh_action()
         st.html('<p class="c-actions-sub">Go to</p>')
-        st.page_link("console/jobs.py", label="Jobs", icon=":material/schedule:")
-        st.page_link("console/approvals.py", label="Approvals", icon=":material/task_alt:")
+        pages.page_link(pages.JOBS.path)
+        pages.page_link(pages.APPROVALS.path)
 
 
 live_page()

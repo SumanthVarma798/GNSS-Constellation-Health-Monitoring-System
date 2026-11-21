@@ -1,15 +1,12 @@
-"""Major changes readers should know about, shown in a strip under the top bar on every page.
+"""Major changes readers should know about, listed in the notices inbox behind the bell (ui/notices.py) on every
+page that shows the constellation.
 
 To announce a change, add an entry to CHANGES (newest first is not required; show() sorts). Each says in plain
 language what happened and what it means for the reader, and where it came from.
 """
 from dataclasses import dataclass
 from datetime import datetime
-from html import escape
-
-import streamlit as st
-
-from ui import surfaces
+from ui import notices
 
 STATUS = "accent"   # the notice colour (ui/palette.py ACCENT): news, not a fault
 
@@ -61,33 +58,14 @@ def _when(date):
             else datetime.strptime(date, "%Y-%m").strftime("%b %Y"))
 
 
-def _html(change):
-    """The strip entry: one line to read at a glance; a click opens what it means and where it came from."""
-    source = escape(change.source)
-    if change.link:
-        source = f'<a href="{escape(change.link, quote=True)}" target="_blank" rel="noopener">{source}</a>'
-    return (
-        f'<details class="notice {STATUS} change"><summary>'
-        f'<span class="when">{_when(change.date)}</span>{surfaces.chip(" · ".join(change.constellations), STATUS)}'
-        f'<span class="headline">{escape(change.headline)}</span><span class="more">What it means</span></summary>'
-        f'<p><b>What this means for you.</b> {escape(change.meaning)}</p><p class="small">Source: {source}</p></details>'
-    )
+def words(change):
+    """One change as a notice: when, for which systems, what happened, what it means for the reader, who said so."""
+    return (f"{_when(change.date)} · {', '.join(change.constellations)}: {change.headline} What it means: "
+            f"{change.meaning} Source: {change.source}" + (f" ({change.link})" if change.link else ""))
 
 
-def _dismiss(change_id):
-    st.session_state["dismissed_changes"].add(change_id)
-
-
-def show(names):
-    """Draw the strip for the constellations in view: nothing when none apply or all have been dismissed."""
-    dismissed = st.session_state.setdefault("dismissed_changes", set())
-    shown = [c for c in for_constellations(names) if c.id not in dismissed]
-    if not shown:
-        return
-    with st.container(key="changes"):
-        for change in shown:
-            with st.container(key=f"change_{change.id}"):
-                note, close = st.columns([1, 0.001], vertical_alignment="top")
-                note.html(_html(change))
-                close.button("Dismiss", key=f"dismiss_{change.id}", on_click=_dismiss, args=(change.id,),
-                             help="Hide this note until you reload the page")
+def post(names):
+    """Send the changes for the constellations in view to the notices inbox, as news; marked read there, one stays
+    read for the session."""
+    for change in for_constellations(names):
+        notices.post(words(change), STATUS)

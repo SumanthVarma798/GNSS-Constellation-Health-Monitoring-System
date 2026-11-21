@@ -8,7 +8,7 @@ material holds every other question's facts.
 import re
 
 from evidence.registry_tables import read_table
-from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE
+from evidence.registry_settings import REGISTRY_DASHBOARD_SATELLITES_FILE
 
 NOT_IN_MATERIAL = ("isn't in the project's material", "is not in the project's material")
 
@@ -16,7 +16,7 @@ QUESTIONS = [
     {"question": "How often is the news group fetched, and when does the first run of the day start?",
      "facts": [("every 3 hours", "every three hours"), ("00:50",)]},
     {"question": "When are orbit records archived each day?",
-     "facts": [("01:15",), ("four times",)]},
+     "facts": [("00:15",), ("every 2 hours", "every two hours")]},
     {"question": "What does the RINEX check job do, and where does it publish its results?",
      "facts": [("broadcast",), ("orbit-checks",)]},
     {"question": "At what time does the RINEX check run?",

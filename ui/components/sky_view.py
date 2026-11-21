@@ -13,7 +13,7 @@ from pathlib import Path
 
 from ui import geometry_settings as gs
 from ui import palette
-from ui.components.master_map import embed
+from ui.components.frame import fill
 from ui.figures import geometry as gf
 from ui.theme import root_block
 from ui.tooltip import CARD_CSS
@@ -37,18 +37,21 @@ def sky_payload(frames, paths, types, mask_deg, zone):
         "steps": [{"when": gf.clock_words(f["time"], zone), "tick": f"{f['time'].astimezone(zone):%H:%M}",
                    "seen": len(f["satellites"]), "gdop": gf.gdop_words(f["gdop"])} for f in frames],
         "satellites": [{"name": name, "label": gf.short(name), "orbit": gs.ORBIT_WORDS.get(orbit, orbit),
-                        "colour": gf._colour(orbit), "shape": shape[orbit], "az": _degrees(az), "el": _degrees(el)}
+                        "colour": palette.css(gf.colour(orbit)), "shape": shape[orbit], "az": _degrees(az), "el": _degrees(el)}
                        for name, (az, el) in paths.items() for orbit in [types.get(name, gs.OTHER_ORBIT)]],
-        "key": [{"shape": shape[o], "colour": gf._colour(o), "words": gs.ORBIT_WORDS.get(o, o)} for o in orbits],
+        "key": [{"shape": shape[o], "colour": palette.css(gf.colour(o)), "words": gs.ORBIT_WORDS.get(o, o)} for o in orbits],
     }
 
 
 def sky_view_html(frames, paths, types, mask_deg, zone):
     """The finished page: colours and fonts first, the data last so it is never searched for placeholders."""
-    page = PAGE_FILE.read_text(encoding="utf-8")
-    for placeholder, text in {"__ROOT__": root_block(), "__FONT__": palette.FONT, "__TIP__": CARD_CSS}.items():
-        page = page.replace(placeholder, text)
-    return page.replace("const DATA = __DATA__;", f"const DATA = {embed(sky_payload(frames, paths, types, mask_deg, zone))};", 1)
+    return fill(
+        PAGE_FILE.read_text(encoding="utf-8"),
+        sky_payload(frames, paths, types, mask_deg, zone),
+        __ROOT__=root_block(),
+        __FONT__=palette.FONT,
+        __TIP__=CARD_CSS,
+    )
 
 
 def sky_view(frames, paths, types, mask_deg, zone, height=560):

@@ -7,16 +7,17 @@ from pathlib import Path
 from typing import NamedTuple
 
 from evidence import decisions
+from evidence.registry_tables import launch_date
 from evidence.news_settings import (CHECK_GIVE_UP_DAYS, CORROBORATING_GRADES, CORROBORATION_DAYS, CORROBORATION_WEIGHT,
                                     DISAGREEMENT_MIN_CLAIMS, DISAGREEMENT_STEPS, GRADE_BARS, GRADE_DROP_MARGIN,
                                     GRADE_E_MIN_CLAIMS, LAUNCH_DAYS_AFTER, LAUNCH_DAYS_BEFORE, RECORD_GRADED_BY,
                                     RECORD_WINDOW_DAYS, REJECTED_WAIT_CLAIMS, SHORTLIST_FOR_A)
 from evidence.registry_tables import read_table
-from evidence.settings import REGISTRY_SATELLITES_FILE, SOURCE_RECORD_FILE
+from evidence.settings import SOURCE_RECORD_FILE
+from evidence.registry_settings import REGISTRY_SATELLITES_FILE
 
 RECORD_COLUMNS = ["source_id", "address", "published_at", "claim", "constellation", "satellite", "checked_on", "result",
                   "weight", "weight_reason", "evidence", "evidence_link"]
-LAUNCH_DATE = re.compile(r"\bLaunched (\d{4}-\d{2}-\d{2})\b")
 GRADE_ORDER = ("A", "B", "C", "D", "E", "F")
 CLAIM_CATEGORIES = {"launch": "launch", "satellite status and outages": "status"}
 
@@ -517,8 +518,8 @@ def _id_part(source_id):
 
 
 def _launch_day(row):
-    if found := LAUNCH_DATE.search(row.get("note", "")):
-        return found.group(1)
+    if found := launch_date(row.get("note", "")):
+        return found.isoformat()
     return ""
 
 

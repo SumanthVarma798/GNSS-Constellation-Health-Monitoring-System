@@ -10,15 +10,22 @@ config/meo_nominal.py.
 from html import escape
 from datetime import datetime, timezone
 
-from analysis.meo_geometry import EXTENDED, NO_PLANE, part_score, plane_drift
+from analysis.meo_geometry import EXTENDED, NO_PLANE, WEIGHTS, part_score, plane_drift
+
+# a medium-orbit satellite's score parts (analysis/meo_geometry.py WEIGHTS), in the state bar's "how a score is made"
+MEO_SCORE_WEIGHTS = [(term, round(100 * WEIGHTS[key])) for key, term in (
+    ("spacing", "along-track spacing"), ("plane", "RAAN offset"), ("inclination", "inclination"),
+    ("height", "semi-major axis"), ("eccentricity", "eccentricity"))]
+from analysis.score_rules import STATUS_FROM
 from config.config import TRACKED_NOT_IN_REGISTRY
 from evidence.registry_tables import left_out_notice, new_on_dashboard
 from config.meo_nominal import MEANINGS, NOMINAL, PLANE_MEANINGS
-from ui import official_status, orbit_age, orbit_section, palette, reveal, shell, surfaces, tooltip
+from ui import official_status, orbit_age, orbit_section, palette, reveal, shell, signals_view, surfaces, tooltip
 from ui.data import SATELLITES
 from ui.figures.plane_strip import plane_strip
+from ui.overview_settings import PART_TERMS
 
-HEALTHY_FROM = 80
+HEALTHY_FROM = STATUS_FROM[0][1]
 VIEWS = ["Planes", "Satellites"]   # the switch over the planes, kept in session_state["meo_view"]
 LABELS = {"plane": "Plane", "spacing": "Spacing", "inclination": "Inclination", "height": "Height",
           "eccentricity": "Eccentricity"}
@@ -26,7 +33,7 @@ LABELS = {"plane": "Plane", "spacing": "Spacing", "inclination": "Inclination", 
 PARTS = [("Plane", "_plane_score"), ("Spacing", "_spacing_score"), ("Height", "_height_score"),
          ("Eccentricity", "_ecc_score")]
 # The groups that are not a plane of slots, by their title; any other group is "Plane <name>".
-NOT_PLANES = {EXTENDED: "Eccentric orbit", NO_PLANE: "No plane in the registry"}
+NOT_PLANES = {EXTENDED: "Eccentric orbit", NO_PLANE: "No plane in the IGS satellite file"}
 
 
 def state_of(row):
@@ -44,13 +51,20 @@ def state_of(row):
     if row["plane"] == EXTENDED:
         return palette.SLOT_UNKNOWN, "own eccentric orbit", None
     if row["plane"] == NO_PLANE:
-        return palette.SLOT_UNKNOWN, "no plane in the registry", None
+        return palette.SLOT_UNKNOWN, "no plane in the IGS satellite file", None
+    if row.get("shares_slot"):
+        return palette.SLOT_UNKNOWN, f"shares slot {row['slot']}; the satellite nearer it is measured", None
     # left out of the gaps (analysis/meo_geometry.py): passing through at another height, or alone in its plane
     if "height" in checks and checks["height"][4] < 100:
         return palette.SLOT_UNKNOWN, "away from its working height", None
     if row["slot_at"] is not None:
         return palette.SLOT_UNKNOWN, "no neighbour to space against", None
     return palette.SLOT_UNKNOWN, f"slot {row['slot']} not listed" if row["slot"] else "no slot given", None
+
+
+def healthy(row):
+    """A satellite judged by plane counts when its score is in the top band and it is not off its plane or out of step."""
+    return row["score"] is not None and row["score"] >= HEALTHY_FROM and state_of(row)[0] != palette.SLOT_OFF
 
 
 def tiles(result, tags=None):
@@ -64,8 +78,7 @@ def tiles(result, tags=None):
         html = surfaces.tile(row["name"], row["signal_id"], row["score"], row["status"].split(" ", 1)[-1], words,
                              orbit_section.CHIP_STATUS[state], weakest if weakest and weakest[1] < 100 else None,
                              age_html=tags.get(row["name"], ""), unscored="no score")
-        healthy = row["score"] is not None and row["score"] >= HEALTHY_FROM and state != palette.SLOT_OFF
-        out[row["name"]] = (html, healthy, health[row["name"]])
+        out[row["name"]] = (html, healthy(row), health[row["name"]])
     return out
 
 
@@ -77,21 +90,37 @@ def _value(measure, value):
     return f"{value:+.1f}°" if measure == "plane" else f"{value:.1f}°"
 
 
-def _should_be_table(rows):
-    """Every measure of every satellite against its limit, each coloured by its part's band."""
-    head = "".join(f"<th>{tooltip.tip(LABELS[m], MEANINGS[m])}</th>" for m in LABELS)
+# Each measure's tolerance in config/meo_nominal.py NOMINAL (the spacing check allows twice its tolerance), for the gauges.
+TOLERANCE = {"plane": ("plane_tolerance_deg", 1), "spacing": ("spacing_tolerance_deg", 2),
+             "inclination": ("inclination_tolerance_deg", 1), "height": ("semi_major_axis_tolerance_km", 1)}
+
+
+def _gauge_cell(system, row, measure, check):
+    """One measure as a ui.measures cell: the value over a gauge of its allowed range, the limit in the tooltip."""
+    _, should, value, _, score = check
+    status = surfaces.band(score)
+    if measure == "eccentricity" and row["plane"] != EXTENDED:
+        band, limit = {"low": 0.0, "high": should, "floor": True}, f"≤ {_value(measure, should)}"
+    else:
+        key, times = (("extended_eccentricity_tolerance", 1) if measure == "eccentricity" else TOLERANCE[measure])
+        tol = NOMINAL[system][key].value * times
+        band, limit = {"low": should - tol, "high": should + tol}, f"{_value(measure, should)} ± {_value(measure, tol).lstrip('+')}"
+    return {"now": _value(measure, value), "should": limit, "status": status, "note": f"part score {score:.0f} of 100",
+            "gauge": {"value": value, **band}}
+
+
+def _should_be_table(system, rows):
+    """Every measure of every satellite as its value over a gauge of its allowed range, coloured by its part's band;
+    each heading is the technical term, defined in the shared tooltip."""
+    columns = [("Satellite", "")] + [(PART_TERMS[LABELS[m]].capitalize() if m != "plane" else PART_TERMS["Plane"],
+                                      MEANINGS[m].split(": ", 1)[-1]) for m in LABELS]
     lines = []
     for row in rows:
         checks = {check[0]: check for check in row["checks"]}
-        cells = "".join(
-            '<td class="idle">&ndash;</td>' if m not in checks else
-            f'<td class="{surfaces.band(checks[m][4])}">{_value(m, checks[m][2])}'
-            f'<span class="muted"> / {"≤ " if m == "eccentricity" and row["plane"] != EXTENDED else ""}'
-            f'{_value(m, checks[m][1])}</span></td>' for m in LABELS)
-        name = f'{escape(row["name"])} <span class="muted">{escape(row["signal_id"])}</span>'
-        lines.append(f"<tr><th>{name}</th>{cells}</tr>")
-    return (f'<p class="small">Each cell: the measured value, then its limit.</p>'
-            f'<div class="sb-wrap"><table class="sb"><tr><th></th>{head}</tr>{"".join(lines)}</table></div>')
+        lines.append((f'{row["name"]} {row["signal_id"]}',
+                      [_gauge_cell(system, row, m, checks[m]) if m in checks else {"now": "–", "should": "",
+                       "status": "idle", "note": ""} for m in LABELS]))
+    return surfaces.table(columns, lines, head_tips=True)
 
 
 def _diagnostics_table(rows):
@@ -102,8 +131,8 @@ def _diagnostics_table(rows):
         name = f'{escape(row["name"])} <span class="muted">{escape(row["signal_id"])}</span>'
         lines.append(f'<tr><th>{name}</th><td>{row["along_track_km_day"]:+,.1f} km/day</td>'
                      f'<td>{"&ndash;" if tilt is None else f"{tilt:.2f}°"}</td></tr>')
-    head = (f'<th>{tooltip.tip("Along-track", "How fast it gains (+) or loses (-) its place along the orbit against a satellite at the nominal height: 2π a₀ (n − n₀), from its mean motion.")}</th>'
-            f'<th>{tooltip.tip("Tilt against its plane", "The angle between its orbit plane and the mean plane of the other satellites in the same plane: its node and inclination differences in one number.")}</th>')
+    head = (f'<th>{tooltip.tip("Along-track", "How fast it gains (+) or loses (-) its place along the orbit against a satellite at the nominal semi-major axis a₀: 2π a₀ (n − n₀), from its mean motion.")}</th>'
+            f'<th>{tooltip.tip("Plane offset", "The angle between its orbit plane and the mean plane of the other satellites in the same plane: its node and inclination differences in one number.")}</th>')
     return ('<p class="small">Diagnostics, not part of the score, as the team\'s static MEO app '
             '(ElectricPlant19/Static_MEO_GNSS_Monitor) shows them. A circular-orbit approximation from each '
             "satellite's newest mean elements.</p>"
@@ -132,7 +161,7 @@ def _gaps(name, result, today):
         surfaces.show(surfaces.notice(text, "warn"))
 
 
-def _planes(rows):
+def by_plane(rows):
     """{plane name: rows in orbit order}, the nominal planes by name, then the eccentric pair and those with no plane."""
     planes = {}
     for row in sorted(rows, key=lambda r: r["u"]):
@@ -152,7 +181,7 @@ def _strip(members):
 def _counts(members):
     """(in step, need a look) among one plane's satellites."""
     return (sum(state_of(row)[0] == palette.SLOT_IN for row in members),
-            sum(any(check[4] < 80 for check in row["checks"]) for row in members))
+            sum(any(surfaces.band(check[4]) != "ok" for check in row["checks"]) for row in members))
 
 
 def _fact(name, words, status, plane=""):
@@ -164,7 +193,7 @@ def _against(value, limit):
     """'0.8° · within 5°' and its status: never ok over the limit, though its score still is up to 1.4 times it."""
     if abs(value) <= limit:
         return f"{abs(value):.1f}° · within {limit:g}°", "ok"
-    return f"{abs(value):.1f}° · over {limit:g}°", "bad" if part_score(value, limit) < 60 else "warn"
+    return f"{abs(value):.1f}° · over {limit:g}°", "bad" if surfaces.band(part_score(value, limit)) == "bad" else "warn"
 
 
 def _plane_card(plane, members, drift):
@@ -190,22 +219,23 @@ def _plane_card(plane, members, drift):
                            title=f"Plane {plane} · {len(members)}")
 
 
-def page(name, result):
-    """The count, the history line, the planes (cards or tiles, by the switch), the 3D view, then measured against
-    limits in its section, open."""
+def page(name, result, measured):
+    """The header (the score, the count, the scores' bar), the history line, the planes (cards or tiles, by the
+    switch), the 3D view, then measured against limits in its section, open. measured: ui.system_summary's summary."""
+    from ui import three_measures   # it reads this module's labels
+
     tags = orbit_age.tags(name, result)
     shown = tiles(result, tags)
     healthy = sum(ok for _, ok, _ in shown.values())
     today = datetime.now(timezone.utc).date()
-    surfaces.show(f'<div class="head"><span class="big num">{healthy} of {len(shown)}</span>'
-                  '<span class="muted">healthy and in step</span></div>')
-    official = official_status.line(name)
-    if official:
-        surfaces.show(official)
+    surfaces.show(three_measures.header(measured, healthy, len(shown), "healthy and in step",
+                                        official_html=official_status.line(name))
+                  + three_measures.states(result["health"], MEO_SCORE_WEIGHTS))
     surfaces.show(surfaces.notice(result["history_note"], "idle"))
     orbit_age.show(name, result)
+    signals_view.show(name)
     _gaps(name, result, today)
-    planes = _planes(result["rows"])
+    planes = by_plane(result["rows"])
     if shell.segment("meo_view", VIEWS, label="Show planes or satellites") == "Planes":
         drift = plane_drift(name, result["rows"])
         for plane, members in planes.items():
@@ -224,8 +254,8 @@ def page(name, result):
     reveal.section("meo_should_be", "Measured against limits, every satellite",
                    f"{reveal.count(len(in_order), 'satellite')} · "
                    + (f"{look} need{'s' if look == 1 else ''} a look" if look else "all within limits"),
-                   _should_be_table(in_order) + f'<ul class="small meanings">{_sources(name)}</ul>', open=True)
+                   _should_be_table(name, in_order) + f'<ul class="small meanings">{_sources(name)}</ul>', open=True)
     fastest = max(in_order, key=lambda row: abs(row["along_track_km_day"]))
-    reveal.section("meo_diagnostics", "Along-track and tilt, every satellite",
+    reveal.section("meo_diagnostics", "Along-track rate and plane offset, every satellite",
                    f"diagnostics, not scored · fastest along-track: {fastest['name']} "
                    f"{fastest['along_track_km_day']:+,.0f} km/day", _diagnostics_table(in_order))

@@ -1,11 +1,8 @@
-"""The World map page's settings, in one place: where the globe starts, the NavIC service area, and the colours
+"""The World map page's settings, in one place: the NavIC service area, and the colours
 for each system and broadcast-health state.
 """
 from ui import palette
-
-# The globe's home view: centred on India, so the systems whose service areas matter most are in the middle.
-HOME_LAT = 15.0
-HOME_LON = 80.0
+from evidence.registry_tables import registry_name
 
 # The service area of each regional system, drawn as a dashed outline while that system is the only one shown.
 # NavIC's extended service area: 30°S-50°N, 30°E-130°E.
@@ -18,8 +15,7 @@ SYSTEM_COLOURS = {
     "GPS": palette.CONSTELLATION_COLOURS["GPS"],
     "Galileo": palette.CONSTELLATION_COLOURS["Galileo"],
     "GLONASS": palette.CONSTELLATION_COLOURS["GLONASS"],
-    "BeiDou-3": palette.CONSTELLATION_COLOURS["BeiDou"],
-    "BeiDou-3 MEO": palette.CONSTELLATION_COLOURS["BeiDou"],
+    "BeiDou-3": palette.CONSTELLATION_COLOURS[registry_name("BeiDou-3")],
     "NavIC": palette.CONSTELLATION_COLOURS["NavIC"],
     "QZSS": palette.CONSTELLATION_COLOURS["QZSS"],
 }

@@ -154,3 +154,37 @@ def test_a_blank_health_or_a_negative_accuracy_is_not_known_not_healthy():
     napa = STATUS_FILE.replace("     2.000000000000E+00 0.000000000000E+00", "    -1.000000000000E+00 0.000000000000E+00", 1)
     assert read_status(blank)["R01"]["health"] is None
     assert read_status(napa)["I02"]["accuracy_m"] is None
+
+
+# --- how steadily a clock ran, from the same records (analysis/broadcast_clock.py) ---
+
+def _gps_record(hour, offset, drift=1e-11):
+    """One GPS record at `hour` on 17 Oct 2026 with the given clock offset (s) and drift (s/s); the orbit is G05's."""
+    first, *rest = FILE.splitlines()[3:11]
+    return "\n".join([f"G05 2026 10 17 {hour:02d} 00 00{offset: .12E}{drift: .12E} 0.000000000000E+00", *rest])
+
+
+def _file(*records):
+    return "\n".join([*FILE.splitlines()[:3], *records]) + "\n"
+
+
+def test_a_clock_that_follows_its_own_prediction_steps_by_nothing_and_a_reset_shows_as_a_large_step():
+    from analysis.broadcast_clock import clocks
+
+    drift = 1e-11                                   # 10 ps a second: 72 ns over two hours
+    steady = _file(_gps_record(10, 1e-4, drift), _gps_record(12, 1e-4 + drift * 7200, drift))
+    reset = _file(_gps_record(10, 1e-4, drift), _gps_record(12, 1e-4 + drift * 7200 + 42e-6, drift))
+
+    assert clocks(steady)["G05"] == {"records": 2, "drift_ns_per_day": 864.0, "typical_step_ns": 0.0, "largest_step_ns": 0.0}
+    assert clocks(reset)["G05"]["largest_step_ns"] == 42000.0   # a 42 microsecond jump
+
+
+def test_records_too_far_apart_are_not_compared_and_one_record_alone_gives_no_step():
+    from analysis.broadcast_clock import clocks
+
+    far = _file(_gps_record(2, 1e-4), _gps_record(12, 9e-4))   # ten hours apart: no prediction is asked to hold
+    assert clocks(far)["G05"]["largest_step_ns"] is None and clocks(far)["G05"]["records"] == 2
+    read = clocks(FILE)
+    assert read["G05"]["typical_step_ns"] is None and read["C01"]["records"] == 1
+    assert read["R01"] == {"records": 1, "drift_ns_per_day": round(9.094947017729e-13 * 86400e9, 3),
+                           "typical_step_ns": None, "largest_step_ns": None}   # GLONASS: read from its first line

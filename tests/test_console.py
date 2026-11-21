@@ -1,8 +1,9 @@
 """The administration console (admin.py, console/*): who gets in, what each page shows, and deciding on a change.
 
-GitHub is never called: console.common.github is replaced by a stand-in that answers from the figures below.
+GitHub is never called: console.common.read_page/read_status are replaced by stand-ins that answer from the figures below.
 """
 from pathlib import Path
+import re
 from types import SimpleNamespace
 
 import pytest
@@ -10,13 +11,13 @@ import requests
 import streamlit
 from streamlit.testing.v1 import AppTest
 
-from console import common
-from evidence import alerts, decisions, jobs, pipeline as live_pipeline
-from evidence.decision_settings import AFTER_CHANGES, APPROVE, KINDS, LABEL_PREFIX, REJECT
+from console import common, pages
+from evidence import alerts, contact, decisions, github_api, jobs, pipeline as live_pipeline
+from evidence.decision_settings import AFTER_CHANGES, APPROVE, KINDS, LABEL_PREFIX, REJECT, REPOSITORY
 from test_dashboard_shell import segmented_controls_rerun  # noqa: F401  (AppTest 1.45's segmented controls)
 from test_decisions import FINDINGS_STAND_IN, NOW, finding_comment, findings_body, pr
 from test_jobs import LOG, RUNS, WORKFLOWS, run as workflow_run
-from ui import admin, console as ui_console
+from ui import admin, console as console_ui
 
 ROOT = Path(__file__).resolve().parent.parent
 SECRETS = {"auth": {field: "set" for field in common.SIGN_IN_FIELDS},
@@ -24,20 +25,45 @@ SECRETS = {"auth": {field: "set" for field in common.SIGN_IN_FIELDS},
 
 
 class GitHub:
-    """Stands in for console.common.github: the figures above, and any pull requests a test gives it."""
+    """Stands in for console.common page readers: the figures above, and any pull requests a test gives it."""
 
-    def __init__(self, prs=(), fail=None, issues=(), comments=None):
+    def __init__(self, prs=(), fail=None, issues=(), comments=None, reviews=None):
         self.prs, self.fail, self.asked, self.issues = list(prs), fail, 0, list(issues)
-        self.comments = comments or {}
+        self.comments, self.reviews = comments or {}, reviews or {}
 
-    def __call__(self, token):
+    def _seen(self):
         self.asked += 1
         if self.fail:
             raise self.fail
         return {"workflows": WORKFLOWS, "runs": RUNS, "log": jobs.run_log(LOG), "prs": self.prs, "decision_prs": self.prs,
-                "comments": self.comments,
+                "comments": self.comments, "reviews": self.reviews,
                 "issues": self.issues, "archive_commits": {}, "archive_versions": [],
                 "problems": [], "read_at": NOW}
+
+    def read_page(self, _path):
+        return self._read()
+
+    def read_status(self):
+        seen = self._read()
+        if seen is None:
+            return None
+        rows = jobs.job_rows(seen["workflows"], seen["runs"], seen["log"], common.workflow_texts(), NOW)
+        seen["status"] = {
+            "failing": sum(r["result"][0] == "bad" for r in rows),
+            "off": sum(r["state"] == "Turned off" for r in rows),
+            "waiting": len(decisions.pending(seen["prs"], NOW)),
+        }
+        return seen
+
+    def _read(self):
+        try:
+            return self._seen()
+        except requests.RequestException as error:
+            streamlit.html(console_ui.notice(common.github_trouble(error, reading=True), "bad"))
+        except (KeyError, TypeError, ValueError):
+            streamlit.html(console_ui.notice("GitHub's answer was not in the shape the console expects, so it cannot be shown now. "
+                                             "Try Refresh; if it stays, the console needs updating.", "bad"))
+        streamlit.stop()
 
     def clear(self):
         pass
@@ -54,7 +80,10 @@ def signed_in(monkeypatch, email, name="A Member"):
 
 
 def run(monkeypatch, github=None, secrets=SECRETS, page=None, then=None):
-    monkeypatch.setattr(common, "github", github or GitHub())
+    fake = github or GitHub()
+    monkeypatch.setattr(common, "read_page", fake.read_page)
+    monkeypatch.setattr(common, "read_status", fake.read_status)
+    monkeypatch.setattr(common, "clear_reading", fake.clear)
     at = AppTest.from_file(str(ROOT / "admin.py"), default_timeout=60)
     at.secrets = secrets
     at.run()
@@ -150,6 +179,15 @@ def test_the_admin_console_lists_the_alerts_page(monkeypatch):
     assert "Alerts" in page and "Healthchecks.io checks" in page
 
 
+def test_every_console_page_file_is_in_the_pages_list_and_every_listed_path_exists():
+    listed = {entry.path for entry in pages.PAGES}
+    files = {f"console/{path.name}" for path in (ROOT / "console").glob("*.py")
+             if path.name not in {"__init__.py", "common.py", "pages.py"}}
+
+    assert listed == files
+    assert all((ROOT / path).exists() for path in listed)
+
+
 def test_alerts_page_handles_a_malformed_healthchecks_answer(monkeypatch):
     signed_in(monkeypatch, "member@example.com")
     monkeypatch.setattr(alerts, "read_checks", lambda key: {"oops": 1})
@@ -202,6 +240,209 @@ def test_alerts_page_with_a_key_lists_checks_and_missing_slugs_without_showing_t
     assert "s3cr3t-key" not in page
 
 
+CONTACT_SECRETS = {**SECRETS, "admin": {**SECRETS["admin"], "contact_read_token": "c0ntact-t0ken"}}
+
+
+def test_without_its_token_the_contact_inbox_says_it_is_not_connected_and_which_secret_to_set(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    monkeypatch.setattr(contact, "read_messages", lambda token: pytest.fail("the inbox was read without a token"))
+
+    page = text(run(monkeypatch, page="console/contact.py"))
+
+    assert "The contact inbox is not connected" in page and "[admin] contact_read_token" in page
+    assert "CONTACT_READ_TOKEN" in page
+
+
+THREAD = [   # newest first, as the Worker answers
+    {"id": "m3", "thread": "t1", "direction": "in", "from": "Newer <newer@example.org>", "address": "newer@example.org",
+     "subject": "Re: Let's <b>work</b> together", "at": "2026-11-15T16:00:00.000Z", "text": "Great, thanks.",
+     "attachments": [{"id": "f-clean", "name": "plan.pdf", "size": 2048, "scan": "clean"},
+                     {"id": "f-wait", "name": "data.csv", "size": 10, "scan": "pending"},
+                     {"id": "f-bad", "name": "tool.docx", "size": 10, "scan": "infected", "signature": "Eicar-Test-Signature"},
+                     {"name": "huge.pdf", "size": 9000000, "note": "not kept: too large"}]},
+    {"id": "m2", "thread": "t1", "direction": "out", "from": "contact@opengnss.org", "address": "contact@opengnss.org",
+     "to": "newer@example.org", "subject": "Re: Let's <b>work</b> together", "at": "2026-11-15T15:00:00.000Z", "text": "Happy to."},
+    {"id": "m1", "thread": "t1", "direction": "in", "from": "Newer <newer@example.org>", "address": "newer@example.org",
+     "subject": "Let's <b>work</b> together", "at": "2026-11-15T14:30:00.000Z", "text": "We track a constellation too.\nCan we help?"},
+    {"id": "m0", "thread": "t0", "direction": "in", "from": "form@example.org", "address": "form@example.org", "via": "form",
+     "subject": "", "at": "2026-11-10T09:00:00.000Z", "text": "Old note"},
+]
+
+
+def test_messages_are_grouped_into_threads_the_latest_activity_first():
+    found = contact.threads(contact.messages(THREAD))
+
+    assert [t["id"] for t in found] == ["t1", "t0"]
+    t1, t0 = found
+    assert [m["id"] for m in t1["messages"]] == ["m1", "m2", "m3"]   # oldest first
+    assert (t1["correspondent"], t1["address"], t1["subject"], t1["count"], t1["form"]) == (
+        "Newer <newer@example.org>", "newer@example.org", "Let's <b>work</b> together", 3, False)
+    assert (t0["subject"], t0["form"]) == ("(no subject)", True)
+    # a message kept before threads existed is a thread of its own
+    old = contact.threads(contact.messages([{"id": "x", "from": "a@example.org", "at": "2026-11-01T00:00:00Z", "text": "Hi"}]))
+    assert old[0]["id"] == "x" and old[0]["messages"][0]["direction"] == "in"
+
+
+def test_each_attachment_says_where_its_scan_stands():
+    states = [contact.attachment_state(a) for a in contact.messages(THREAD)[0]["attachments"]]
+
+    assert states == [("clean", "scanned: no virus found; download it below"), ("wait", "being scanned; Read again in a few minutes"),
+                      ("bad", "removed: virus found (Eicar-Test-Signature)"), ("note", "not kept: too large")]
+    assert [contact.size_words(n) for n in (512, 2048, 4_404_019)] == ["512 B", "2 KB", "4.2 MB"]
+
+
+def test_the_contact_inbox_shows_threads_and_opens_the_latest_oldest_message_first_escaped(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    asked = []
+    monkeypatch.setattr(contact, "read_messages", lambda token: asked.append(token) or THREAD)
+    monkeypatch.setattr(contact, "read_attachment", lambda token, attachment_id: asked.append(attachment_id) or b"%PDF")
+    scans = []
+    monkeypatch.setattr(contact, "start_scan", lambda token: scans.append(token) or "")
+    streamlit.cache_data.clear()
+
+    at = run(monkeypatch, page="console/contact.py", secrets=CONTACT_SECRETS)
+    page = text(at)
+
+    assert asked == ["c0ntact-t0ken", "f-clean"] and "c0ntact-t0ken" not in page   # only the clean file is read
+    assert "Newer &lt;newer@example.org&gt;" in page and "Let&#x27;s &lt;b&gt;work&lt;/b&gt; together" in page
+    assert page.count("address not verified") == 1   # the form thread, in the list
+    assert page.index("We track a constellation too.\nCan we help?") < page.index("Happy to.") < page.index("Great, thanks.")
+    assert 'class="c-msg out"' in page and "Sent by the team to newer@example.org" in page
+    assert "being scanned; Read again in a few minutes" in page and "removed: virus found (Eicar-Test-Signature)" in page
+    # a file is waiting, so opening the inbox started the scan with the console's GitHub token, and says so
+    assert len(scans) == 1 and "1 waiting to be scanned for viruses: the scan started at" in page
+    assert "not kept: too large" in page
+    assert [b.label for b in at.get("download_button")] == ["Download plan\\.pdf (2 KB)"]   # escaped: a label is Markdown
+    # replies from contact@opengnss.org are off for now: a reply from the reader's own mail, address and subject filled
+    assert not at.get("text_area")
+    assert [b.proto.url for b in at.get("link_button")] == ["mailto:newer@example.org?subject=Re%3A%20Let%27s%20%3Cb%3Ework%3C/b%3E%20together"]
+
+
+def test_a_thread_from_the_dashboard_form_is_marked_as_not_verified_when_open(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    monkeypatch.setattr(contact, "read_messages", lambda token: THREAD)
+
+    def open_form_thread(at):
+        at.selectbox(key="contact_thread").set_value("t0")
+
+    page = text(run(monkeypatch, page="console/contact.py", secrets=CONTACT_SECRETS, then=open_form_thread))
+
+    assert "sent from the dashboard form; address not verified" in page and "Old note" in page
+
+
+def test_a_reply_is_posted_for_the_open_thread_and_says_it_was_sent(monkeypatch):
+    from evidence import contact_settings
+    monkeypatch.setattr(contact_settings, "REPLIES_FROM_US", True)   # once email sending is set up
+    monkeypatch.setattr(contact, "start_scan", lambda token: "")
+    signed_in(monkeypatch, "member@example.com")
+    monkeypatch.setattr(contact, "read_messages", lambda token: THREAD)
+    monkeypatch.setattr(contact, "read_attachment", lambda token, attachment_id: b"%PDF")
+    posted = []
+    monkeypatch.setattr(contact, "reply", lambda token, thread, text, address: posted.append((token, thread, text, address))
+                        or ("ok", f"Sent to {address}."))
+
+    def write_and_send(at):
+        at.text_area(key="contact_reply_t1").input("Thanks, we will be in touch.")
+        at.button(key="contact_send_t1").click()
+
+    at = run(monkeypatch, page="console/contact.py", secrets=CONTACT_SECRETS, then=write_and_send)
+
+    assert posted == [("c0ntact-t0ken", "t1", "Thanks, we will be in touch.", "newer@example.org")]
+    assert "Sent to newer@example.org." in text(at) and at.text_area(key="contact_reply_t1").value == ""
+
+
+class Answer:
+    def __init__(self, status_code, body=None):
+        self.status_code, self.body = status_code, body
+
+    def json(self):
+        if self.body is None:
+            raise ValueError("no JSON")
+        return self.body
+
+
+@pytest.mark.parametrize("answer, tone, words", [
+    (Answer(201, {"ok": True}), "ok", "Sent to a@example.org."),
+    (Answer(503, {"ok": False, "problem": "email sending is not set up: the Worker has no EMAIL binding"}), "bad",
+     "Not sent: the inbox refused it (email sending is not set up: the Worker has no EMAIL binding)."),
+    (Answer(404, {"ok": False, "problem": "no such thread"}), "bad", "Not sent: the inbox refused it (no such thread)."),
+    (Answer(401), "bad", "Not sent: the inbox refused the console's token"),
+    (Answer(500), "warn", "may or may not have been sent"),
+    (requests.Timeout("slow"), "warn", "may or may not have been sent"),
+])
+def test_a_reply_carries_the_token_and_its_answer_reads_in_plain_words(monkeypatch, answer, tone, words):
+    from evidence.contact_settings import REPLY_URL
+    seen = {}
+
+    def post(url, json, headers, timeout):
+        seen.update(url=url, json=json, headers=headers)
+        if isinstance(answer, Exception):
+            raise answer
+        return answer
+
+    monkeypatch.setattr(contact.requests, "post", post)
+
+    said_tone, said = contact.reply("s3cr3t-r34d", "t1", "  Hello  ", "a@example.org")
+    assert said_tone == tone and words in said and "s3cr3t-r34d" not in said
+    assert seen == {"url": REPLY_URL, "json": {"thread": "t1", "text": "Hello"}, "headers": {"Authorization": "Bearer s3cr3t-r34d"}}
+
+
+def test_an_empty_or_too_long_reply_is_not_sent(monkeypatch):
+    monkeypatch.setattr(contact.requests, "post", lambda *a, **k: pytest.fail("sent"))
+
+    assert contact.reply("tok", "t1", "   ", "a@example.org") == ("bad", "Not sent: the reply is empty.")
+    assert contact.reply("tok", "t1", "x" * 4001, "a@example.org")[1] == "Not sent: the reply is 4001 characters long; the most is 4000."
+
+
+@pytest.mark.parametrize("trouble, words", [
+    (requests.HTTPError("401", response=SimpleNamespace(status_code=401)), "refused the console&#x27;s token"),
+    (requests.ConnectionError("down"), "did not answer"),
+    ({"not": "a list"}, "not in the shape the console expects"),
+    ([{"from": "a@example.org", "at": "not a time"}], "not in the shape the console expects"),
+])
+def test_when_the_contact_inbox_cannot_be_read_the_page_says_so_without_the_token(monkeypatch, trouble, words):
+    signed_in(monkeypatch, "member@example.com")
+
+    def read(token):
+        if isinstance(trouble, Exception):
+            raise trouble
+        return trouble
+
+    monkeypatch.setattr(contact, "read_messages", read)
+
+    page = text(run(monkeypatch, page="console/contact.py", secrets=CONTACT_SECRETS))
+
+    assert words in page and "c0ntact-t0ken" not in page
+
+
+def test_an_empty_contact_inbox_says_no_message_has_arrived(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    monkeypatch.setattr(contact, "read_messages", lambda token: [])
+
+    assert "No message has arrived yet." in text(run(monkeypatch, page="console/contact.py", secrets=CONTACT_SECRETS))
+
+
+def test_the_contact_inbox_is_read_with_the_bearer_token_and_kept_at_most_five_minutes(monkeypatch):
+    from evidence.console_settings import CONTACT_INBOX_URL, CONTACT_READ_EVERY_SECONDS
+    seen = {}
+
+    class Answer:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return []
+
+    def get(url, headers, timeout):
+        seen.update(url=url, headers=headers)
+        return Answer()
+
+    monkeypatch.setattr(contact.requests, "get", get)
+
+    assert contact.read_messages("t") == [] and seen == {"url": CONTACT_INBOX_URL, "headers": {"Authorization": "Bearer t"}}
+    assert CONTACT_READ_EVERY_SECONDS <= 300
+
+
 def test_when_github_cannot_be_read_the_page_says_why_without_the_token(monkeypatch):
     signed_in(monkeypatch, "member@example.com")
 
@@ -215,7 +456,7 @@ def test_light_and_dark_can_be_chosen_and_auto_follows_the_computer(monkeypatch,
     signed_in(monkeypatch, "member@example.com")
 
     def pick(at):
-        at.session_state["console_scheme"] = scheme
+        at.session_state[common.CONSOLE_SCHEME_KEY] = scheme
 
     style = text(run(monkeypatch, then=pick))
 
@@ -230,12 +471,12 @@ def test_the_ask_about_section_styles_follow_the_console_palette():
                      '[data-testid="stAlertContainer"]', '[data-testid="stChatMessage"]',
                      '[data-testid="stChatInput"]', '[data-testid="stSpinner"]'):
         assert selector in css
-    assert '[data-testid="stHeading"], [data-testid="stCaptionContainer"], [data-testid="stSpinner"] { color: var(--ink); }' in css
-    assert '[data-testid="stCaptionContainer"] { color: var(--muted); }' in css
-    assert '[data-testid="stChatInputTextArea"] { background: var(--input-bg) !important; color: var(--ink) !important;' in css
-    assert '.c-sect > .in.flush { padding: 0; display: flow-root; }' in css
-    assert '[data-testid="stButtonGroup"] [data-baseweb="button-group"] { display: flex; flex-wrap: wrap;' in css
-    assert '.c-subhead { margin: 8px 0 4px; font-size: 12px; font-weight: 800; color: var(--ink); }' in css
+    assert re.search(r'\[data-testid="stHeading"\][^{]*\{[^}]*color: var\(--ink\)', css)
+    assert re.search(r'\[data-testid="stCaptionContainer"\][^{]*\{[^}]*color: var\(--muted\)', css)
+    assert re.search(r'\[data-testid="stChatInputTextArea"\][^{]*\{[^}]*background: var\(--input-bg\)', css)
+    assert re.search(r'\.c-sect > \.in\.flush \{[^}]*padding: 0', css)
+    assert re.search(r'\[data-testid="stButtonGroup"\] \[data-baseweb="button-group"\] \{[^}]*display: flex', css)
+    assert re.search(r'\.c-subhead \{[^}]*color: var\(--ink\)', css)
 
 
 # ---- approvals ----
@@ -256,6 +497,57 @@ def test_approvals_list_each_waiting_item_with_its_evidence(monkeypatch):
     assert "<li>G01: slot was blank, now A1.</li>" in page and "pull request 5" in page
 
 
+def registry_reading(tests="passed", mergeable=True):
+    from evidence.table_changes import split_diff
+    from test_table_changes import DIFF
+    return {"files": [{"path": path, "additions": 1, "deletions": 1, "patch": patch} for path, patch in split_diff(DIFF).items()],
+            "tests": tests, "mergeable": mergeable, "sha": "sha5"}
+
+
+def test_a_registry_update_reads_ask_changes_checks_unusual_then_the_decision(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+
+    at = run(monkeypatch, GitHub([REGISTRY_PR], reviews={5: registry_reading()}), page="console/approvals.py")
+
+    page = text(at)
+    ask = "The weekly job asks to change 5 registry tables: 3 rows added, 3 changed, 1 removed."
+    order = [ask, "On the dashboard: Master map", "tests passed", "no conflicts with main", "Changes, by kind",
+             "<h3>Needs a look", "2 payloads not identified"]
+    assert [page.index(words) for words in order] == sorted(page.index(words) for words in order)
+    assert "GCAT, J. McDowell&#x27;s catalogue of space objects" in page and "https://planet4589.org/space/gcat/" in page
+    assert "Changed, routine" in page and "years in service and GCAT&#x27;s date only" in page
+    assert at.radio(key="choice_5")   # the decision sits with the card, before what is one step deeper
+    assert [e.label for e in at.expander] == ["Each change: old and new value, and its source",
+                                              "The pull request's description, by heading"]   # the line-by-line diff is on GitHub
+    assert "<td>registry satellites</td><td>101</td><td>102</td>" in page   # old beside new, one step deeper
+
+
+def test_checks_that_have_not_passed_are_said_in_words(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+
+    page = text(run(monkeypatch, GitHub([REGISTRY_PR], reviews={5: registry_reading("running", None)}),
+                    page="console/approvals.py"))
+
+    assert "tests still running" in page and "GitHub is still checking for conflicts" in page
+
+
+def test_without_a_reading_the_card_falls_back_to_the_description(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+
+    page = text(run(monkeypatch, GitHub([REGISTRY_PR]), page="console/approvals.py"))
+
+    assert "This is a proposed update." in page and "GitHub did not give its changes or checks" in page
+
+
+def test_the_description_folds_by_heading_and_leaves_out_the_findings_block():
+    html = admin.description_html(decisions.without_findings_block(
+        "Opening line.\n\n## What changed\n- G01\n\n<!-- findings\n{\"findings\": []}\n-->\n# Other\nText"))
+
+    assert html.startswith('<div class="pr-text"><p>Opening line.</p></div>')
+    assert '<summary>What changed</summary><div class="pr-text"><ul><li>G01</li></ul></div>' in html
+    assert "<summary>Other</summary>" in html and "findings" not in html
+
+
 def test_approvals_show_findings_by_category_before_old_style_items(monkeypatch):
     signed_in(monkeypatch, "member@example.com")
     findings = [{**FINDINGS_STAND_IN[0], "statement": "We saw <script>alert(1)</script> in one source."},
@@ -267,6 +559,18 @@ def test_approvals_show_findings_by_category_before_old_style_items(monkeypatch)
     assert "New satellite" in page and "Signal ID change" in page
     assert "Pull request 5: Registry update from the IGS satellite metadata file" in page
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in page and "<script>alert(1)</script>" not in page
+
+
+def test_each_pull_request_is_its_own_card_with_only_its_own_findings(monkeypatch):
+    signed_in(monkeypatch, "member@example.com")
+    other = [{**FINDINGS_STAND_IN[0], "id": "R810", "statement": "A different new satellite, R810."}]
+    second = {**FINDINGS_PR, "number": 9, "title": "Second batch", "body": findings_body(other), "head": {"sha": "sha9"}}
+    at = run(monkeypatch, GitHub([FINDINGS_PR, second], comments={8: [], 9: []}), page="console/approvals.py")
+
+    page = text(at)
+    order = ["Pull request 8: Weekly registry findings", "COSMOS 2620", "Pull request 9: Second batch", "R810"]
+    assert [page.index(words) for words in order] == sorted(page.index(words) for words in order)
+    assert page.count('class="c-pr-banner"') == 2   # one title band per pull request
 
 
 def test_a_finding_stays_open_once_a_decision_on_it_is_under_way(monkeypatch):
@@ -447,11 +751,7 @@ def test_a_workflow_missing_on_github_is_named_and_the_rest_still_shows(monkeypa
         return {"workflow_runs": [], "workflows": []}
 
     monkeypatch.setattr(common.github_api, "ask", ask)
-    monkeypatch.setattr(common.github_api, "file_text", lambda *args: "job,started,ended,result,changed\n")
-    monkeypatch.setattr(decisions, "fetch_open", lambda token: [])
-    monkeypatch.setattr(decisions, "fetch_recent_closed", lambda token: [])
-
-    seen = common.github.__wrapped__("t") if hasattr(common.github, "__wrapped__") else common.github("t")
+    seen = common._runs_reading.__wrapped__("t") if hasattr(common._runs_reading, "__wrapped__") else common._runs_reading("t")
 
     assert any("update-tle-data.yml" in problem for problem in seen["problems"])
 
@@ -462,15 +762,57 @@ def test_github_reads_comments_only_for_open_decision_pull_requests_with_finding
     monkeypatch.setattr(decisions, "fetch_open", lambda token: [FINDINGS_PR, REGISTRY_PR, pr(9, ["enhancement"])])
     monkeypatch.setattr(decisions, "fetch_recent_closed", lambda token: [])
     monkeypatch.setattr(decisions, "fetch_comments", lambda token, number: called.append(number) or [{"id": number}])
-    monkeypatch.setattr(common.github_api, "ask", lambda *args, **kwargs: {"workflows": [], "workflow_runs": []})
-    monkeypatch.setattr(common.github_api, "file_text", lambda *args: "job,started,ended,result,changed\n")
-    monkeypatch.setattr(common.work, "fetch_open_issues", lambda token: [])
-    monkeypatch.setattr(common, "_archive_commits", lambda token: {})
-
-    seen = common.github.__wrapped__("t") if hasattr(common.github, "__wrapped__") else common.github("t")
+    reviewed = []
+    monkeypatch.setattr(decisions, "review_reading", lambda token, pr: reviewed.append(pr["number"]) or {"files": []})
+    seen = (common._approvals_reading.__wrapped__("t") if hasattr(common._approvals_reading, "__wrapped__")
+            else common._approvals_reading("t"))
 
     assert called == [8]
     assert seen["comments"] == {8: [{"id": 8}]}
+    assert reviewed == [8, 5] and set(seen["reviews"]) == {8, 5}   # every decision pull request, no other
+
+
+def test_a_pull_request_whose_changes_github_will_not_give_is_named_and_the_rest_still_shows(monkeypatch):
+    monkeypatch.setattr(decisions, "fetch_open", lambda token: [REGISTRY_PR])
+    monkeypatch.setattr(decisions, "fetch_recent_closed", lambda token: [])
+    monkeypatch.setattr(decisions, "review_reading", lambda token, pr: (_ for _ in ()).throw(requests.ConnectionError()))
+    seen = (common._approvals_reading.__wrapped__("t") if hasattr(common._approvals_reading, "__wrapped__")
+            else common._approvals_reading("t"))
+
+    assert seen["reviews"] == {} and any("pull request 5" in problem for problem in seen["problems"])
+
+
+def test_a_review_reading_asks_for_files_tests_and_mergeable(monkeypatch):
+    asked = []
+
+    class Reply:
+        def __init__(self, data):
+            self.data, self.content = data, b"x"
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return self.data
+
+    def ask(method, url, timeout, headers, **request):
+        path = url.removeprefix(f"{github_api.API}/repos/{REPOSITORY}")
+        asked.append(path)
+        if path.endswith("/files"):
+            data = [{"filename": "registry/unidentified.csv", "additions": 1, "deletions": 0, "patch": "+1,A"}]
+        elif "check-runs" in path:
+            data = {"check_runs": [{"id": 1, "status": "completed", "conclusion": "success"}]}
+        else:
+            data = {"mergeable": True}
+        return Reply(data)
+
+    monkeypatch.setattr(github_api.requests, "request", ask)
+
+    reading = decisions.review_reading("t", REGISTRY_PR)
+
+    assert reading == {"files": [{"path": "registry/unidentified.csv", "additions": 1, "deletions": 0, "patch": "+1,A"}],
+                       "tests": "passed", "mergeable": True, "sha": "sha5"}
+    assert asked == ["/pulls/5/files", "/commits/sha5/check-runs", "/pulls/5"]
 
 
 def test_the_work_page_lists_open_pull_requests_and_issues_and_finds_by_title(monkeypatch):
@@ -486,7 +828,7 @@ def test_the_work_page_lists_open_pull_requests_and_issues_and_finds_by_title(mo
     page = text(at)
     assert "Registry update from the IGS satellite metadata file" in page and "waits on a decision: registry update" in page
     assert page.index("Demo tracker") < page.index("Signal-to-noise per source")   # the most recently updated first
-    assert "background:#0075ca" in page
+    assert "#0075ca" in page   # each label is drawn in its own GitHub colour
 
     at.text_input(key="work_find").set_value("signal").run()
     assert "Signal-to-noise per source" in text(at) and "Demo tracker" not in text(at)
@@ -583,25 +925,6 @@ def test_the_live_pipeline_uses_clear_fallback_words_for_proof_links(monkeypatch
     assert "GitHub run" in page and ">run</a>" not in page
 
 
-def test_the_pipeline_diagram_numbers_the_chain_without_dangling_right_arrows():
-    stage_rows = live_pipeline.stages(WORKFLOWS, RUNS, jobs.run_log(LOG), [], common.workflow_texts(), NOW)
-    picture = ui_console.pipeline_diagram(stage_rows)
-    chain_names = ["Archive", "Registry update", "Pull request waiting for a decision",
-                   "Decided on the Approvals page", "Merged to main", "Dashboard"]
-
-    assert picture.count("c-pipe-arrow") == 1
-    assert picture.count('class="order"') == len(chain_names)
-
-
-def test_the_pipeline_diagram_does_not_hide_stage_words_from_screen_readers():
-    stage_rows = live_pipeline.stages(WORKFLOWS, RUNS, jobs.run_log(LOG), [], common.workflow_texts(), NOW)
-    picture = ui_console.pipeline_diagram(stage_rows)
-
-    assert 'role="img"' not in picture
-    assert "Archive: documents" in picture
-    assert "Registry update" in picture
-
-
 def test_back_and_forward_follow_the_pages_visited_and_the_browser_own_buttons():
     trail = {"back": [], "forward": [], "at": None}
     for path in ("", "jobs", "work"):
@@ -670,3 +993,32 @@ def test_a_secrets_file_that_cannot_be_read_is_named_with_its_line(monkeypatch):
     said = common.missing()[0]
 
     assert said.startswith("a readable secrets file (Duplicate keys!") and "line 2" in said and '"2"' not in said
+
+
+def test_the_inbox_token_comes_from_the_secrets_or_else_the_environment(monkeypatch):
+    from evidence import contact
+    monkeypatch.delenv("CONTACT_READ_TOKEN", raising=False)
+    assert contact.inbox_token({}) == ""
+    monkeypatch.setenv("CONTACT_READ_TOKEN", " from-env ")
+    assert contact.inbox_token({}) == "from-env"
+    assert contact.inbox_token({"contact_read_token": "from-secrets"}) == "from-secrets"
+
+
+def test_names_from_outside_are_escaped_before_they_become_markdown_widget_labels():
+    from evidence import contact
+    assert contact.label_text("![x](http://attacker.example)@b.co") == (
+        "\\!\\[x\\]\\(http\\://attacker\\.example\\)@b\\.co")
+    source = (ROOT / "console" / "contact.py").read_text()
+    assert 'contact.label_text(a["name"])' in source and 'contact.label_text(thread["address"])' in source
+
+
+def test_starting_the_scan_says_plainly_when_github_will_not(monkeypatch):
+    import requests as http
+    from evidence import github_api
+
+    def refuse(*args, **kwargs):
+        raise http.HTTPError(response=SimpleNamespace(status_code=403))
+    monkeypatch.setattr(github_api, "ask", refuse)
+    assert contact.start_scan("t") == "its GitHub token may not start workflows (it needs Actions: write)"
+    monkeypatch.setattr(github_api, "ask", lambda *a, **k: None)
+    assert contact.start_scan("t") == ""

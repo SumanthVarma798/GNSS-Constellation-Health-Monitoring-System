@@ -11,7 +11,11 @@ from evidence.library import gcat_updated, library_tables, vague_date
 from evidence.library_settings import (LIBRARY_COUNTS_COLUMNS, OTHER_PROGRAMME, LIBRARY_COUNTS_FILE, LIBRARY_FIGURES_COLUMNS,
                                        LIBRARY_FIGURES_FILE, LIBRARY_MATCHING_COLUMNS, LIBRARY_MATCHING_FILE, SYSTEMS)
 from evidence.registry_tables import read_table
-from evidence.settings import GCAT_CITATION, REGISTRY_DIR, REGISTRY_SATELLITES_FILE
+from evidence.settings import GCAT_CITATION
+from evidence.registry_settings import (
+    REGISTRY_DIR,
+    REGISTRY_SATELLITES_FILE
+)
 from ui import library
 
 # Same shape as the real files: tab-separated, padded, a '#' header line and a '#' update line.
@@ -144,17 +148,39 @@ def test_every_figure_has_a_source_and_a_status():
             assert row["source_link"].startswith("https://") and row["unit"] and row["year_of_figure"]
 
 
-def test_the_scoreboard_shows_its_sources_and_cites_gcat():
-    counts, figures = read_table(LIBRARY_COUNTS_FILE), read_table(LIBRARY_FIGURES_FILE)
-    html = library.scoreboard(counts, figures)
-
-    assert GCAT_CITATION in html and "<sup>" not in html   # cited where shown; no footnote numbers
-    assert html.count('class="tt-card"') == 10              # each counted column opens what it means
-    assert "not known" in html                                                   # BeiDou has no stated cost
+def test_each_comparison_answers_its_question_and_cites_gcat():
+    counts = read_table(LIBRARY_COUNTS_FILE)
+    upkeep, experience = library.upkeep(counts), library.experience(counts)
+    for html in (upkeep, experience):
+        assert GCAT_CITATION in html and "<sup>" not in html
     rows = {row["system"]: row for row in library.system_rows(counts)}
     assert rows["GPS"]["launched"] >= 82   # GCAT is rebuilt weekly: only ever more launches
-    assert library.launch_success({"launched": 82, "failed_at_launch": 2}) == 80 / 82
-    assert library.orbit_success({"launched": 0, "failed_at_launch": 0, "failed_in_orbit": 0}) is None
+    order = [row["system"] for row in library.upkeep_order(counts)]
+    shares = [library.failure_share(rows[name]) for name in order]
+    assert shares == sorted(shares) and upkeep.index(f"{order[0]}</b>") < upkeep.index(f"{order[-1]}</b>")
+    sample = [{"system": "GPS", "programme": "A", "launched": "10", "failed_at_launch": "0", "failed_in_orbit": "0",
+               "retired": "4", "operating": "6", "status_not_recorded": "0", "years_retired": "40", "years_operating": "30",
+               "approximate_dates": "0", "first_launch": "1978", "last_launch": "1990", "gcat_updated": "2026-11-13"},
+              {"system": "NavIC", "programme": "B", "launched": "4", "failed_at_launch": "1", "failed_in_orbit": "1",
+               "retired": "0", "operating": "2", "status_not_recorded": "0", "years_retired": "0", "years_operating": "8",
+               "approximate_dates": "0", "first_launch": "2013", "last_launch": "2018", "gcat_updated": "2026-11-13"}]
+    assert library.upkeep_answer(sample) == "none failed: GPS · most: NavIC, 2 of 4"
+    assert library.experience_answer(sample) == ("longest: GPS, 70 satellite-years · longest-serving retired satellites: "
+                                                 "GPS, 10.0 years each (4 retired)")
+    assert library.generations_answer(sample) == "yes: B, 2 of 4 failed, more than every other generation together (0)"
+
+
+def test_money_keeps_each_currency_and_colours_by_the_publishers_grade():
+    figures = read_table(LIBRARY_FIGURES_FILE)
+    assert library.amount({"value": "1.6", "unit": "billion US dollars"}) == (1.6e9, "US dollars")
+    assert library.amount({"value": "1420", "unit": "crore Indian rupees"}) == (1420e7, "Indian rupees")
+    grades = {"insidegnss.com": "C"}
+    assert library.grade_of({"source_link": "https://www.insidegnss.com/x"}, grades) == "C"
+    assert library.grade_of({"source_link": "https://spacenews.com/x"}, grades) == ""
+    html = library.costs(figures, grades)
+    assert "not known" in html and "grade C" in html and "not graded" in html   # BeiDou has no stated cost
+    assert "US dollars</h4>" in html and "Yen</h4>" in html   # one group per currency, nothing converted
+    assert "BeiDou: none found" in library.costs_answer(figures)
 
 
 def test_the_library_note_says_when_the_registry_now_lists_more_satellites():
@@ -170,7 +196,7 @@ def test_the_library_note_says_when_the_registry_now_lists_more_satellites():
     registry = [{"constellation": "GLONASS"}] * 102
 
     note = library.registry_lag_note(matching, registry)
-    assert note == "The library was counted when the registry listed 101 GLONASS satellites; it now lists 102."
+    assert note == "These counts were made when the IGS satellite metadata file listed 101 GLONASS satellites; it now lists 102."
 
 
 
@@ -179,9 +205,17 @@ def test_each_generation_bar_carries_its_counts_for_hover_and_no_zero_part():
     html = library.generations(counts)
 
     assert GCAT_CITATION in html and "<sup>" not in html
-    assert html.count('class="gen-row"') == len(counts)
+    assert html.count('class="gen-row') == len(counts) and html.count("gen-row worst") == 1
     iif = html[html.index("<b>GPS IIF</b>"):]
     bar = iif[:iif.index("</div></div>")]
     launched = next(row["launched"] for row in counts if row["programme"] == "GPS IIF")   # 12 in Oct 2026
     assert f"<b>{launched}</b>" in bar and f'aria-label="{launched} launched: ' in bar
     assert "retired" not in bar.split("aria-label")[1].split('"')[1]               # a zero part is not drawn
+
+
+def test_library_review_edge_cases():
+    from ui import library
+    assert library.amount({"value": "1,420", "unit": "million US dollars"}) == (1.42e9, "US dollars")
+    assert library.amount({"value": "5", "unit": "crore"})[1] == "currency not stated"
+    assert library.grade_of({"source_link": "https://www.space-track.org/x"}, {"www.space-track.org": "B"}) == "B"
+    assert library.grade_of({"source_link": "https://www.spacenews.com/x"}, {"spacenews.com": "C"}) == "C"

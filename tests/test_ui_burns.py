@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 
 from analysis.maneuver_detection import detect_navik_maneuvers
-from evidence import settings
+from ui.figures import burns_settings
 from ui import palette
 from ui.figures import burns as B
 
@@ -79,10 +79,10 @@ def test_hover_card_gives_the_title_then_when_how_much_and_the_gap():
     last = marks(fig, "east-west").hovertext[3]                      # A's east-west burn on day 40
     assert last.startswith("<b>A · east-west burn</b>")
     assert last.index("When") < last.index("Change") < last.index("Gap")
-    assert "9 Feb 2026 00:00 – 11 Feb 00:00 UTC (2.0 days)" in last and "orbit height +2.00 km" in last
+    assert "9 Feb 2026 00:00 – 11 Feb 00:00 UTC (2.0 days)" in last and "semi-major axis +2.00 km" in last
     assert "30 d after the one before, usually 20 d" in last
     assert "first in view" in marks(fig, "east-west").hovertext[0]
-    assert "tilt +0.200°" in marks(fig, "north-south").hovertext[0]
+    assert "inclination +0.200°" in marks(fig, "north-south").hovertext[0]
 
 
 def test_row_end_gives_the_days_since_the_last_east_west_burn_in_the_warning_colour_only_when_late():
@@ -123,10 +123,10 @@ def test_summary_pattern_rule():
 
 
 def test_pattern_follows_the_stated_thresholds(monkeypatch):
-    monkeypatch.setattr(settings, "BURN_REGULAR_MAX_IQR_SHARE", 100)
+    monkeypatch.setattr(burns_settings, "BURN_REGULAR_MAX_IQR_SHARE", 100)
     scatter = frame(*[burn("A", "east-west", d) for d in (0, 10, 50, 60, 130, 140)])
     assert B.cadence_summary(scatter, ["A"])[0]["pattern"] == "regular"
-    monkeypatch.setattr(settings, "BURN_MIN_FOR_PATTERN", 99)
+    monkeypatch.setattr(burns_settings, "BURN_MIN_FOR_PATTERN", 99)
     assert B.cadence_summary(scatter, ["A"])[0]["pattern"] == "too few"
 
 

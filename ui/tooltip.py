@@ -91,13 +91,22 @@ def glance(lead, items, note=""):
             + (f'<span class="tt-note">{escape(note)}</span>' if note else ""))
 
 
+LEGEND_SHAPES = ("round", "diamond", "square", "ring")   # drawn by .swatch in ui/theme.css
+
+
 def legend(entries, label="Legend"):
-    """A pill that opens a list of colours and what each means. entries: (colour, meaning) pairs."""
+    """A pill that opens a list of colours and what each means. entries: (colour, meaning) pairs, or
+    (colour, meaning, shape) where the mark on the page is not round: "diamond", "square" or "ring" (LEGEND_SHAPES),
+    so the legend shows the mark as the page draws it."""
     rows = ""
-    for colour, text in entries:
+    for colour, text, *shape in entries:
         if not _SWATCH.fullmatch(colour):
             raise ValueError(f"legend colour {colour!r} must be a hex colour or a var(--name)")
-        rows += f'<li><span class="swatch" style="background:{colour}"></span>{escape(text)}</li>'
+        if shape and shape[0] not in LEGEND_SHAPES:
+            raise ValueError(f"legend shape {shape[0]!r} must be one of {', '.join(LEGEND_SHAPES)}")
+        cls = f"swatch {shape[0]}" if shape else "swatch"
+        colour = palette.css(colour)   # one that follows the theme, as its variable
+        rows += f'<li><span class="{cls}" style="--c:{colour};background:{colour}"></span>{escape(text)}</li>'
     return tip_html(escape(label), f'<ul class="tt-list">{rows}</ul>', pill=True)
 
 
@@ -106,6 +115,18 @@ def legend(entries, label="Legend"):
 # the card's order; ui/theme.css (".hoverlayer") adds the raised shadow, the padding and the rounded corners.
 PLOTLY_HOVER = {"bgcolor": palette.PLATFORM, "bordercolor": palette.PLATFORM, "align": "left",
                 "font": {"color": palette.INK, "family": palette.FONT, "size": type_scale.LEVELS["small"][1]}}
+
+
+# A word drawn over a chart gets the page's surface colour behind it, three-quarters solid: a line passing under the
+# word dims instead of cutting through it, and can still be seen and hovered.
+_BACKING_ALPHA = 0.75
+
+
+def plotly_label_backing(prefix=""):
+    """The keyword arguments that put the surface colour behind a label drawn over data. prefix "annotation_" gives
+    the names add_hline and add_vline take for their label; without it they suit add_annotation."""
+    red, green, blue = (int(palette.PLATFORM[i:i + 2], 16) for i in (1, 3, 5))
+    return {f"{prefix}bgcolor": f"rgba({red},{green},{blue},{_BACKING_ALPHA})", f"{prefix}borderpad": 3}
 
 
 def plotly_line(label, value):

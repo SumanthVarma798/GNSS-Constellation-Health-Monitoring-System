@@ -14,9 +14,8 @@ import plotly.graph_objects as go
 
 from ui import palette
 from ui.figures.slot_rows import group_by_position, state_words
-from ui.tooltip import PLOTLY_HOVER, plotly_card
+from ui.tooltip import PLOTLY_HOVER, plotly_card, plotly_label_backing
 
-EARTH_RADIUS = 1.0
 BELT_RADIUS = 6.62   # the geostationary belt, in Earth radii
 # Satellites that left the belt ride a ring this much further out. The real gap is far
 # smaller than this: it is exaggerated on purpose so the eye can see them apart.
@@ -131,7 +130,8 @@ def constellation_3d(rows, caption=""):
                "bgcolor": CLEAR, "camera": CAMERA})
     if caption:
         figure.add_annotation(text=escape(caption), xref="paper", yref="paper", x=0, y=0, showarrow=False,
-                              xanchor="left", yanchor="bottom", font={"color": palette.MUTED, "size": 12})
+                              xanchor="left", yanchor="bottom", font={"color": palette.MUTED, "size": 12},
+                              **plotly_label_backing())
     return figure
 
 

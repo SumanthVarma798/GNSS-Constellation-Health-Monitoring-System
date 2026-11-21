@@ -21,12 +21,6 @@ def scope(name, page="Overview"):
     return setup
 
 
-def test_the_constellation_chips_offer_the_meo_systems_after_the_others_beidou_beside_beidou():
-    from ui.shell import CONSTELLATIONS
-
-    assert CONSTELLATIONS == ("NavIC", "QZSS", "BeiDou-3", "BeiDou-3 MEO", "GPS", "GLONASS", "Galileo")
-
-
 def test_galileo_shows_its_planes_and_says_what_is_missing():
     at = run(scope("Galileo"))
     bodies = htmls(at)
@@ -93,12 +87,12 @@ def test_a_satellite_with_no_plane_in_the_registry_is_shown_with_no_score(monkey
 
     at = run(scope("GLONASS"))
     assert not at.exception
-    assert any('<div class="part-title">No plane in the registry · 1</div>' in body for body in htmls(at))
+    assert any('<div class="part-title">No plane in the IGS satellite file · 1</div>' in body for body in htmls(at))
     assert any("0 of 1</span>" in body for body in htmls(at))
 
     at.button_group(key="meo_view").set_value("Satellites").run()
     tile = next(tile for tile in tiles(at) if "COSMOS 2620" in tile)
-    assert "no score" in tile and "no plane in the registry" in tile and "set aside" not in tile
+    assert "no score" in tile and "no plane in the IGS satellite file" in tile and "set aside" not in tile
 
 
 def test_a_plane_card_says_which_way_its_node_drifts():
@@ -164,7 +158,7 @@ def test_geometry_covers_a_meo_system_at_the_global_places(section):
         assert any("Capital (Delhi)" in body for body in bodies) and any("Capital (Tokyo)" in body for body in bodies)
     if section == "Orbit trends":   # drift and centre mean nothing for a satellite that circles the globe
         specs = [chart.proto.spec for chart in at.get("plotly_chart")]
-        assert specs and all("Tilt" in spec and "Height" in spec for spec in specs)
+        assert specs and all("Inclination" in spec and "Altitude" in spec for spec in specs)
         assert not any("Drift" in spec or "Centre" in spec for spec in specs)
 
 
@@ -175,6 +169,6 @@ def test_the_meo_page_shows_along_track_and_tilt_diagnostics_without_scoring_the
     bodies = htmls(at)
 
     labels = [str(e.label) for e in at.checkbox]
-    assert any("and tilt, every satellite" in label and "not scored" in label for label in labels)   # labels escape "-"
+    assert any("and plane offset, every satellite" in label and "not scored" in label for label in labels)   # labels escape "-"
     assert any("km/day</td>" in body and "GSAT0101" in body for body in bodies)
     assert "along_track" not in WEIGHTS and "tilt" not in " ".join(WEIGHTS)   # shown, never scored

@@ -20,15 +20,24 @@ from evidence.confidence import read_source_grades
 from evidence import source_record
 from evidence.news_settings import (NEWS_CATEGORIES, NEWS_ITEMS_PER_SYSTEM, NEWS_MAX_AGE_DAYS, NEWS_SAME_TITLE_PREFIX,
                                     NEWS_SAME_TITLE_SHARE, NEWS_TEXT_MATCH_KINDS, SUMMARY_CHARACTERS)
-from evidence.settings import (CANDIDATE_FEED_TYPE, CANDIDATE_SOCIAL_KIND, FEED_REPORT_COLUMNS, LABELLING_SHEET_SIZE,
-                               NOT_AN_ARTICLE_HOSTS, SOCIAL_PLATFORM_HOSTS, SYSTEM_WORDS)
+from evidence.settings import (
+    CANDIDATE_FEED_TYPE,
+    CANDIDATE_SOCIAL_KIND
+)
+from evidence.news_settings import (
+    FEED_REPORT_COLUMNS,
+    LABELLING_SHEET_SIZE,
+    NOT_AN_ARTICLE_HOSTS,
+    SOCIAL_PLATFORM_HOSTS,
+    SYSTEM_WORDS
+)
 from evidence.sources import ARCHIVED_SOURCES, PROVISIONAL_GROUPS, candidate_rows, working_candidates
+from evidence.registry_tables import page_name
 
 ATOM = "{http://www.w3.org/2005/Atom}"
 LINK = re.compile(r"""href=["'](https?://[^"']+)["']""")
 POST_LINK = re.compile(r"""href=["'](https?://[^"']+)["'][^>]*>\s*\[link\]""")  # a Reddit post's own link
 TAGS = re.compile(r"<[^>]+>")
-DASHBOARD_SYSTEMS = {"BeiDou": "BeiDou-3"}
 
 
 def host_id(address):
@@ -214,7 +223,7 @@ def category_of(title, summary):
 
 def _dashboard_systems(title):
     named = systems_named(title)
-    return [DASHBOARD_SYSTEMS.get(system, system) for system in named]
+    return [page_name(system) for system in named]
 
 
 def _moment(text):
@@ -274,7 +283,7 @@ def _source_grade(source_id, confirmed, provisional, record_rows, today):
     row = provisional.get(source_id, {})
     if row.get("proposed_grade"):
         return row["proposed_grade"], "provisional", row.get("grade_reason", ""), "", ""
-    if record_rows:
+    if source_record.score(record_rows, today).claims:   # no checked claim (only "could not check") is no grade, never F
         grade = source_record.record_grade(record_rows, "", today)
         return grade, "provisional", "From the checked-claims record, waiting for approval.", "", "record"
     return "", "not graded", "", "", ""
@@ -306,7 +315,7 @@ def latest_news(items):
     for row in record:
         if row.get("source_id"):
             by_source.setdefault(row["source_id"], []).append(row)
-    counts = {DASHBOARD_SYSTEMS.get(system, system): 0 for system in SYSTEM_WORDS}
+    counts = {page_name(system): 0 for system in SYSTEM_WORDS}
     picked, used_sources = [], set()
     fetched = [_moment(item.get("fetched_at", "")) for item in items]
     newest_fetched = max((moment for moment in fetched if moment), default=None)

@@ -8,8 +8,12 @@ import pytest
 
 from config.config import MEO_SYSTEMS
 from evidence.registry_tables import constellation_names, dashboard_satellites, left_out, left_out_notice, read_table
-from evidence.settings import (REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_LEFT_OUT_FILE, REGISTRY_SATELLITES_FILE,
-                               REGISTRY_SIGHTINGS_FILE)
+from evidence.registry_settings import (
+    REGISTRY_DASHBOARD_SATELLITES_FILE,
+    REGISTRY_LEFT_OUT_FILE,
+    REGISTRY_SATELLITES_FILE,
+    REGISTRY_SIGHTINGS_FILE
+)
 
 PAGES = ("NavIC", "QZSS", "BeiDou", *MEO_SYSTEMS)
 
@@ -61,3 +65,23 @@ def test_every_tracked_regional_satellite_with_a_slot_has_its_targets():
         rows = dashboard_registry_rows(page)
         missing = [name for name in sats if name not in targets and rows.get(name, {}).get("slot")]
         assert missing == [], page
+
+
+def test_a_constellation_with_lost_clocks_says_so_and_others_say_nothing():
+    from evidence.registry_tables import clock_record
+    from ui import three_measures
+
+    lost, launched = clock_record("NavIC")
+    assert {row["name"] for row in lost} >= {"IRNSS-1A", "IRNSS-1F"} and len(lost) < launched
+    assert all(row["source_link"].startswith("https://") for row in lost)
+    # "launched" counts sightings too: a new satellite (NVS-03) is launched before the IGS file lists it
+    sightings = [row for row in read_table(REGISTRY_SIGHTINGS_FILE) if row["svn"].startswith("I")]
+    assert launched == sum(row["svn"].startswith("I") for row in read_table(REGISTRY_SATELLITES_FILE)) + len(sightings)
+    line = three_measures.record_line("NavIC")
+    assert f"{len(lost)} of {launched} NavIC satellites launched are reported to have lost atomic clocks in orbit" in line
+    assert all(link in line for link in {row["source_link"] for row in lost})
+    assert "lost clocks" in line and "SpectraTime" in line and "as widely reported" in line   # one figure, sources in its tooltip
+    marks = three_measures.clock_marks("NavIC")   # a quiet mark on each affected satellite's tile
+    assert set(marks) == {row["name"] for row in lost} and all("lost atomic clocks" in mark for mark in marks.values())
+    assert "cheap" not in line.lower()
+    assert clock_record("GPS") is None and three_measures.record_line("GPS") == "" and three_measures.clock_marks("GPS") == {}

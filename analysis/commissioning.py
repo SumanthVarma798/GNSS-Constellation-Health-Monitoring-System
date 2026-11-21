@@ -66,3 +66,32 @@ def commissioned_on(history, name):
     flags = [under_way(row) for _, row in sat.iterrows()]
     last_moving = max(i for i, moving in enumerate(flags) if moving)
     return sat["EPOCH"].iloc[last_moving + 1]
+
+
+ON_ITS_WAY = "on its way to its slot"
+NEWLY_PARKED = f"at its slot for under {SETTLING_DAYS} days"
+
+
+def _day(when):
+    return f"{when.day} {when:%b %Y}"
+
+
+def when_scored(history, name, first):
+    """When a satellite left out by moving_to_slot will be scored, in words, so its note says it ends on its own:
+    SETTLING_DAYS after it parked, or for one still on its way, SETTLING_DAYS after it parks, or from COMMISSIONING_DAYS
+    after its first record if it is still on its way then (a stranded one never parks). One that parks just before that
+    day is scored SETTLING_DAYS later, so that day is not promised as a deadline. `first` is its first orbit record, as
+    moving_to_slot gives it."""
+    parked = commissioned_on(history, name)
+    if parked is not None:
+        return f"at its slot since {_day(parked)}, scored from {_day(parked + pd.Timedelta(days=SETTLING_DAYS))}"
+    cutoff = pd.Timestamp(first) + pd.Timedelta(days=COMMISSIONING_DAYS)
+    return (f"{ON_ITS_WAY}, scored {SETTLING_DAYS} days after it parks, or from {_day(cutoff)} if it is still on its "
+            "way then")
+
+
+def stage(history, name):
+    """Which of the two a satellite left out by moving_to_slot is: still on its way (its newest record is in a transfer
+    orbit or drifting), or parked too lately for its records to be scored."""
+    sat = _records(history, name)
+    return ON_ITS_WAY if sat.empty or under_way(sat.iloc[-1]) else NEWLY_PARKED

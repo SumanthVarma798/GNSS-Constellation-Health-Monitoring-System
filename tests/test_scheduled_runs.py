@@ -1,8 +1,9 @@
 """Scheduled runs: a failed download is tried again, never faster than the source allows, and every run
 leaves one line in the run log. No network: replies are canned; the clock is frozen."""
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+import re
 
 import pytest
 import requests
@@ -148,18 +149,18 @@ def test_the_alert_ping_does_not_fail_for_a_missing_check_or_an_unset_key():
 
 
 def test_the_workflow_publishes_latest_news_on_its_own_branch_with_write_access_only_there():
-    assert "outputs:\n      group: ${{ steps.due.outputs.group }}" in ARCHIVE_WORKFLOW
+    assert re.search(r"outputs:\s*group:\s*\${{ steps\.due\.outputs\.group }}", ARCHIVE_WORKFLOW)
     assert "publish-news:" in ARCHIVE_WORKFLOW
     publish = ARCHIVE_WORKFLOW.split("publish-news:", 1)[1]
     assert "needs: archive" in publish
     assert ("if: github.repository == 'SumanthVarma798/GNSS-Constellation-Health-Monitoring-System' && always() && "
             "(needs.archive.outputs.group == 'news' || needs.archive.outputs.group == 'x' || needs.archive.outputs.group == 'all')") in publish
-    assert "permissions:\n      contents: write" in publish
+    assert re.search(r"permissions:\s*contents:\s*write", publish)
     assert "git add latest_news.json" in publish and "git diff --cached --quiet" in publish
     assert 'git commit --quiet -m "Latest news for the dashboard"' in publish and "git push" in publish
 
     archive_job = ARCHIVE_WORKFLOW.split("archive:", 1)[1].split("publish-news:", 1)[0]
-    assert "permissions:\n  contents: read" in ARCHIVE_WORKFLOW
+    assert re.search(r"permissions:\s*contents:\s*read", ARCHIVE_WORKFLOW)
     assert "contents: write" not in archive_job
 
 
@@ -201,3 +202,51 @@ def test_rinex_check_can_check_a_past_day_again_without_publishing_it():
     assert "DAY_INPUT: ${{ inputs.day }}" in workflow
     assert 'orbit_record_gap.py ${DAY_INPUT:+--day "$DAY_INPUT"} --json' in workflow
     assert "if: success() && !inputs.day" in workflow
+
+
+def test_a_run_started_within_celestraks_two_hours_of_the_last_skips_the_download_and_does_not_reset_the_clock(monkeypatch, tmp_path):
+    asked, _ = answers(monkeypatch, Reply(200, b"first"), Reply(200, b"second"))
+    run_job(monkeypatch, tmp_path, "orbital")                       # at RUN_TIME: asks CelesTrak
+    assert len(asked) == 1
+
+    for minutes in (30, 100):                                       # by hand, then a later one: both inside 2 h
+        with time_machine.travel(RUN_TIME + timedelta(minutes=minutes), tick=False):
+            monkeypatch.setattr(sys, "argv", ["archive_sources.py", "--archive", str(tmp_path), "--group", "orbital"])
+            archive_sources.main()
+    assert len(asked) == 1
+    skipped = read_runs(tmp_path, "archive")[1]
+    assert skipped["result"].startswith("ok; 1 skipped") and skipped["changed"] == "nothing"
+
+    with time_machine.travel(RUN_TIME + timedelta(hours=1, minutes=55), tick=False):   # a run a few minutes early: skipped too
+        monkeypatch.setattr(sys, "argv", ["archive_sources.py", "--archive", str(tmp_path), "--group", "orbital"])
+        archive_sources.main()
+    assert len(asked) == 1   # the full 2 hours: CelesTrak's rule is strict
+
+    with time_machine.travel(RUN_TIME + timedelta(hours=2), tick=False):
+        monkeypatch.setattr(sys, "argv", ["archive_sources.py", "--archive", str(tmp_path), "--group", "orbital"])
+        archive_sources.main()
+    assert len(asked) == 2   # the skipped runs did not move the clock: counted from the run that asked
+
+
+def test_only_celestrak_is_gated_other_sites_are_asked_every_run(monkeypatch, tmp_path):
+    asked, _ = answers(monkeypatch, Reply(200, b"a"), Reply(200, b"a"))
+    run_job(monkeypatch, tmp_path, "documents")
+    run_job(monkeypatch, tmp_path, "documents")
+    assert len(asked) == 2
+
+
+def test_the_tests_workflow_cancels_only_superseded_pull_request_runs():
+    workflow = (Path(__file__).resolve().parent.parent / ".github" / "workflows" / "tests.yml").read_text()
+
+    assert "group: tests-${{ github.ref }}" in workflow
+    assert "cancel-in-progress: ${{ github.event_name == 'pull_request' }}" in workflow
+
+
+def test_a_run_counts_as_a_celestrak_check_only_when_it_asked_celestrak():
+    from evidence.archive import asked_site
+
+    assert asked_site("ok", "celestrak.org") and asked_site("failed: 1 of 2 sources", "celestrak.org")
+    assert asked_site("ok; 1 waiting out a refusal; asked: celestrak.org", "celestrak.org")   # waited on another, asked it
+    assert not asked_site("ok; 1 waiting out a refusal; asked: none", "celestrak.org")         # an all run that asked others only
+    assert not asked_site("ok; 1 skipped: asked less than the site's minimum gap ago; asked: none", "celestrak.org")
+    assert not asked_site("ok; 1 waiting out a refusal", "celestrak.org")                     # an older line: cannot tell

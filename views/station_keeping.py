@@ -9,35 +9,19 @@ from html import escape
 import pandas as pd
 import streamlit as st
 
-from ui import data, measures, reveal, shell, surfaces, time_range, tooltip
+from ui import burn_ledger, burn_record, data, forecast_explainer, measures, next_step, next_step_data, outlook, reveal, surfaces, time_range, tooltip
+from ui.figures import burns as burn_figures, forecast_marks
 from ui.figures.burns import EAST_WEST, burn_timeline, rhythm
+from ui.picker import chosen_constellations
 
 PATTERN_STATUS = {"regular": "ok", "irregular": "warn", "too few": "idle"}
+# What the rhythm chip says: "irregular" is kept for kinds of burn (the burn record), so the rhythm has its own words.
+PATTERN_WORDS = {"regular": "steady rhythm", "irregular": "uneven rhythm", "too few": "too few"}
 CHART = {"use_container_width": True, "config": {"displayModeBar": False}}
-
-
-def _chosen():
-    """{constellation: [satellite, ...]} for the top bar's choice. Compare reuses the picks (ui.picker)."""
-    if not st.session_state["compare"]:
-        return {st.session_state["scope"]: None}
-    picks = st.session_state.get("compare_picks", {})
-    return {name: picks[name] for name in shell.CONSTELLATIONS if picks.get(name)}
 
 
 def _days(value):
     return f"{abs(value):.0f} d"
-
-
-def _next(row):
-    """(words, status) for when the next east-west burn is due."""
-    if row["due_in_days"] is None:
-        return ("last " + _days(row["since_days"]) + " ago", "idle") if row["since_days"] is not None else ("no burns", "idle")
-    guess = "~" if row["pattern"] != "regular" else ""
-    if row["late"]:
-        return f"{_days(row['due_in_days'])} late", "warn"
-    if round(row["due_in_days"]) <= 0:
-        return "due now", "accent"
-    return f"in {guess}{_days(row['due_in_days'])}", "ok" if guess == "" else "idle"
 
 
 def _cycle(row):
@@ -52,25 +36,24 @@ def _cycle(row):
 
 
 def _rhythm(rows):
-    """One line per satellite, soonest due first: its usual interval, where it is in this cycle, when the next is due."""
-    lines = ['<div class="rh hd"><span></span><span>East-west, every</span><span>This cycle</span>'
-             '<span>Next</span><span>North-south</span></div>']
+    """One line per satellite, soonest due first: its usual east-west interval and how even it is, where it is in this
+    cycle, and its north-south manoeuvres. What comes next is drawn above it (ui/outlook.py)."""
+    lines = ['<div class="rh hd"><span></span><span>East-west, every</span><span>This cycle</span><span>North-south</span></div>']
     for row in sorted(rows, key=lambda r: (r["due_in_days"] is None, r["due_in_days"] or 0)):
-        words, status = _next(row)
         every = ('<span class="muted">&ndash;</span>' if row["median_days"] is None else
                  f'<b class="num">{row["median_days"]:.0f} days</b>')
         north_south = f'<span class="num">{row["ns_count"]}</span>' if row["ns_count"] else '<span class="muted">&ndash;</span>'
         lines.append(f'<div class="rh"><b>{escape(row["satellite"])}</b>'
-                     f'<span class="ev">{every}{surfaces.chip(row["pattern"], PATTERN_STATUS[row["pattern"]])}</span>'
-                     f'{_cycle(row)}<span class="due {status}">{words}</span>{north_south}</div>')
+                     f'<span class="ev">{every}{surfaces.chip(PATTERN_WORDS[row["pattern"]], PATTERN_STATUS[row["pattern"]])}</span>'
+                     f'{_cycle(row)}{north_south}</div>')
     return surfaces.raised('<div class="rhythm">' + "".join(lines) + "</div>")
 
 
 def _detection(p):
     """How a burn is found, with the thresholds in use, behind a pill."""
     return tooltip.tip("How a burn is found",
-                       f"A burn is found where the orbit's size jumps by {p['sma_threshold']:g} km or more "
-                       f"(east-west) or its tilt by {p['inc_threshold']:g}° or more (north-south), standing out at a "
+                       f"A burn is found where the semi-major axis jumps by {p['sma_threshold']:g} km or more "
+                       f"(east-west) or the inclination by {p['inc_threshold']:g}° or more (north-south), standing out at a "
                        f"z-score of {p['z_threshold']:g} and holding for {int(p['persist_window'])} element sets.",
                        pill=True)
 
@@ -93,10 +76,29 @@ def _counts(results, chosen, window_days, today):
 # cache_resource, not cache_data: a pickled Plotly figure is checked over again as it is read back, which costs what
 # building it did. The figure is never changed after it is made.
 @st.cache_resource(show_spinner=False, max_entries=16)
-def _timeline(burns, satellites, start, end):
+def _timeline(burns, satellites, start, end, kinds=None):
     """The burn timeline, made once per set of burns: on Render's share of a CPU it takes seconds to build."""
-    return burn_timeline(burns, satellites, start, end)
+    return burn_timeline(burns, satellites, start, end, kinds)
 
+
+def _kinds(tables):
+    """The classified burns of every constellation shown as one table, for the timeline to colour its marks by."""
+    found = [table[burn_figures.KIND_COLUMNS] for table in tables.values() if table is not None]
+    return pd.concat(found, ignore_index=True) if found else None
+
+
+def _ledger(results, chosen):
+    """Each constellation's burn record: the 100% bar of what its burns were, then a row of marks per satellite. The burns
+    are classified once (ui/burn_record.py) and kept. (classified table per constellation, its html)"""
+    tables, parts = {}, []
+    for name, result in results.items():
+        table = tables[name] = burn_record.classified(name, result)
+        if table is None:
+            continue
+        mine = chosen[name] or list(dict.fromkeys(result["history"]["satellite"]))
+        parts.append(burn_ledger.bar(burn_record.record_of(table), f"{name}: burn record, last 365 days")
+                     + burn_ledger.satellites(table, mine))
+    return tables, "".join(parts)
 
 
 def _events(recent, satellites, rhythm_rows):
@@ -106,7 +108,7 @@ def _events(recent, satellites, rhythm_rows):
     kind of burn makes is set in bold, the other muted."""
     late = {r["satellite"]: r["late"] for r in rhythm_rows}
     lines = ['<div class="bl-row bl-hd"><span>Kind</span><span>Found at (UTC)<small>End of the window it fell in</small>'
-             '</span><span>Size change<small>Semi-major axis</small></span><span>Tilt change<small>Inclination</small>'
+             '</span><span>Δa<small>Semi-major axis</small></span><span>Δi<small>Inclination</small>'
              '</span></div>']
     for name in satellites:
         own = recent[recent["satellite"] == name].sort_values("window_end", ascending=False)
@@ -126,7 +128,7 @@ def _events(recent, satellites, rhythm_rows):
     return '<div class="bl">' + "".join(lines) + "</div>"
 
 
-chosen = _chosen()
+chosen = chosen_constellations()
 if not chosen:
     surfaces.show('<p class="small">Pick satellites on the Overview to compare.</p>')
     st.stop()
@@ -159,13 +161,30 @@ start, end = min(e.min() for e in epochs), max(e.max() for e in epochs)
 window_days = st.session_state["window_days"]
 counts, recent = _counts(results, chosen, window_days, pd.Timestamp(datetime.now(timezone.utc).date()))
 
+tables, ledger = _ledger(results, chosen)
 surfaces.show(surfaces.group_head(time_range.words(window_days),
                                   f"{len(recent)} burns: {(recent['kind'] == EAST_WEST).sum()} east-west, "
                                   f"{(recent['kind'] != EAST_WEST).sum()} north-south",
                                   _detection(measures.thresholds(None, st.session_state["params"]))))
 rhythm_rows = rhythm(burns, satellites, end)
+try:
+    ahead = {name: next_step_data.look_ahead(name, result, st.session_state["params"]) for name, result in results.items()}
+except Exception as error:   # the look ahead is extra: the page's own tables and timeline stand without it
+    ahead = {}
+    surfaces.show(surfaces.notice(f"Next steps could not be worked out: {type(error).__name__}: {error}", "warn"))
+forecasts = {n: f for a in ahead.values() for n, f in a.get("forecasts", {}).items()}
+fuel = {n: f for a in ahead.values() for n, f in a.get("fuel", {}).items()}
+now = next((a["now"] for a in ahead.values()), None)
+for name, result in results.items():   # what should happen next, drawn once for each constellation shown
+    if name in ahead and "forecasts" in ahead[name]:
+        surfaces.show((f'<b class="ol-title">{escape(name)}</b>' if len(results) > 1 else "")
+                      + next_step_data.outlook_html(name, result, st.session_state["params"]))
 surfaces.show(_rhythm(rhythm_rows))
-st.plotly_chart(_timeline(burns, satellites, start, end), **CHART)
+st.plotly_chart(forecast_marks.add_expected(_timeline(burns, satellites, start, end, _kinds(tables)),
+                                            next_step.expected_burns({n: forecasts[n] for n in satellites if n in forecasts}, now)
+                                            if now is not None else [], satellites, end), **CHART)
+if ledger:
+    surfaces.show(surfaces.raised(ledger))
 late = sum(any(c["status"] == "warn" for c in cells) for _, cells in counts)
 reveal.section("burns_per_satellite", "Burns per satellite",
                f"{reveal.count(len(counts), 'satellite')} · " + (f"{late} overdue" if late else "none overdue"),
@@ -174,3 +193,9 @@ if len(recent):
     newest = pd.Timestamp(recent["window_end"].max())
     reveal.section("every_burn", "Every burn in the window",
                    f"{reveal.count(len(recent), 'burn')} · newest {newest.day} {newest:%b %Y}", _events(recent, satellites, rhythm_rows))
+
+if forecasts:
+    reveal.section("fuel_per_satellite", "Δv, years left and north-south, per satellite",
+                   f"{reveal.count(sum(n in forecasts for n in satellites), 'satellite')} · Δv per year, years left typical for the class",
+                   outlook.fuel({n: forecasts[n] for n in satellites if n in forecasts}, fuel, now))
+reveal.section("forecast_how", "How these forecasts are made", forecast_explainer.ONE_LINE, forecast_explainer.body())

@@ -15,6 +15,9 @@ newest mean elements, all moved to one common time (the newest epoch among them)
                 satellite may be from its slot, so a gap, set by two satellites, is allowed twice that.
                 A satellite away from its working height (outside the height tolerance) is passing
                 through the plane, not holding a slot: it is left out of its neighbours' gaps.
+                Two satellites the registry puts in one slot (GPS keeps an older satellite near the slot a
+                newer one took over): the one nearer the slot holds it; the other, `shares_slot`, is left
+                out of the gaps too and is not judged on spacing.
   inclination   Tilt against the nominal.     height   Semi-major axis against the nominal.
   eccentricity  Against the most the system allows.
 
@@ -41,13 +44,13 @@ import math
 
 import numpy as np
 
+from analysis import score_rules
 from config.meo_nominal import NOMINAL
 
 MU = 398600.4418      # km^3/s^2
 EARTH_KM = 6378.137
 J2 = 1.08262668e-3
 WEIGHTS = {"plane": 0.20, "spacing": 0.30, "inclination": 0.20, "height": 0.15, "eccentricity": 0.15}
-BANDS = ((80, "🟢 Healthy"), (60, "🟡 Fair"), (40, "🟠 Degraded"), (-math.inf, "🔴 Critical"))
 EXTENDED = "Extended"   # the plane name for Galileo's eccentric-orbit pair
 NO_PLANE = "No plane"   # the plane name for a GPS or GLONASS satellite the registry gives no plane yet: no score
 
@@ -64,7 +67,8 @@ def part_score(error, tolerance):
 
 
 def status_of(score):
-    return next(words for floor, words in BANDS if score >= floor)
+    word = score_rules.status_word(score)
+    return f"{score_rules.STATUS_EMOJI[word]} {word}"
 
 
 def semi_major_axis_km(mean_motion_rev_day):
@@ -154,6 +158,18 @@ def _spacing(members, now, slots):
     return gaps
 
 
+def _holders(rows, working, slot_of):
+    """`working` without the satellites that share a listed slot with one nearer it, marking those `shares_slot`."""
+    by_slot = {}
+    for name in working:
+        if rows[name]["slot_at"] is not None:
+            by_slot.setdefault(_slot_key(slot_of[name]), []).append(name)
+    for names in by_slot.values():
+        for name in sorted(names, key=lambda n: abs(wrap(rows[n]["u"] - rows[n]["slot_at"])))[1:]:
+            rows[name]["shares_slot"] = True
+    return [name for name in working if not rows[name]["shares_slot"]]
+
+
 def _slot_positions(rows, working, now, slot_of, slots):
     """Set each row's "slot_at": where its own slot is now, in argument of latitude, or None without one.
 
@@ -172,7 +188,8 @@ def assess(system, elements, registry):
 
     elements: {name: newest element row, with EPOCH a datetime}. registry: {name: registry row (plane,
     slot, signal_id_now)}. Each row: name, signal_id, plane (from the orbit), registry_plane, plane_agrees,
-    slot (the registry's), u (argument of latitude now), slot_at (where its slot is now, or None),
+    slot (the registry's), u (argument of latitude now), slot_at (where its slot is now, or None), shares_slot
+    (another satellite nearer its slot holds it),
     node_rate (its node's drift from J2, degrees a day), checks ([(measure, should be, is, error, score)]),
     parts ({measure: score}), score, status. A GPS or GLONASS satellite the registry gives no plane yet has plane
     NO_PLANE, no checks, score None and status "": there is nothing to judge it against.
@@ -185,6 +202,7 @@ def assess(system, elements, registry):
     rows = {name: {"name": name, "signal_id": registry[name]["signal_id_now"], "u": now[name]["u"],
                    "registry_plane": plane_of[name], "slot": registry[name]["slot"], "slot_at": None,
                    "checks": [], "plane": EXTENDED if "extended" in nominal else NO_PLANE, "plane_agrees": True,
+                   "shares_slot": False,
                    "node_rate": _node_rate_deg_day(now[name]["a"], now[name]["e"], now[name]["i"],
                                                    float(elements[name]["MEAN_MOTION"]))} for name in names}
 
@@ -197,7 +215,10 @@ def assess(system, elements, registry):
                                          part_score(offset, nominal["plane_tolerance_deg"])))
         working = [name for name in in_planes
                    if abs(now[name]["a"] - nominal["semi_major_axis_km"]) <= nominal["semi_major_axis_tolerance_km"]]
-        _slot_positions(rows, working, now, {name: registry[name]["slot"] for name in in_planes}, nominal["slots"])
+        slot_of = {name: registry[name]["slot"] for name in in_planes}
+        _slot_positions(rows, working, now, slot_of, nominal["slots"])
+        working = _holders(rows, working, slot_of)
+        _slot_positions(rows, working, now, slot_of, nominal["slots"])   # placed again without the second in a slot
         for plane in set(plane_names.values()):
             members = [(name, registry[name]["slot"]) for name in working if rows[name]["plane"] == plane]
             for name, gaps in _spacing(members, now, nominal["slots"]).items():

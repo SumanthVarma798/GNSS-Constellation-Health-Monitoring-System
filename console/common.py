@@ -1,12 +1,13 @@
-"""What every console page shares: its settings, one cached reading of GitHub, plain words for GitHub's errors, and
-the page's layout (its header band, its body, and the Actions pane on the right)."""
+"""What every console page shares: settings, cached GitHub readers, plain error words, and the shared page layout."""
 import csv
 import io
 from datetime import datetime, timedelta, timezone
+from html import escape
 
 import requests
 import streamlit as st
 
+from console import pages
 from evidence import decisions, github_api, jobs, pipeline, work
 from evidence.console_settings import (ARCHIVE_REPOSITORY, JOBS, RELIABILITY_DAYS, RUN_LOGS, RUNS_READ, TESTS_WORKFLOW,
                                        WORKFLOWS_DIR)
@@ -21,14 +22,22 @@ NOT_SET_UP = ("This copy of the console is not set up. It needs Google sign-in, 
               "Render (see .streamlit/secrets.example.toml).")
 NEEDED_ADMIN = ("allowed", "github_token")
 REFRESH_PENDING = "console_refresh_pending"   # set when Refresh is pressed; cleared after the toast for the new reading
+CONSOLE_SCHEME_KEY = "console_scheme"
+CONSOLE_SCHEME_DEFAULT = "auto"
+CONSOLE_SCHEME_PICK_KEY = "console_scheme_pick"
+
+
+def secret_section(name):
+    """One secrets section as a dict; empty when secrets are absent on this copy."""
+    try:
+        return dict(st.secrets.get(name, {}))
+    except FileNotFoundError:
+        return {}
 
 
 def settings():
     """The [admin] settings; empty without a secrets file."""
-    try:
-        return dict(st.secrets.get(SECRETS_SECTION, {}))
-    except FileNotFoundError:
-        return {}
+    return secret_section(SECRETS_SECTION)
 
 
 def missing():
@@ -44,9 +53,7 @@ def missing():
 
 
 @st.cache_data(ttl=READ_EVERY_SECONDS, show_spinner="Reading GitHub…")
-def github(token):
-    """Everything the console reads from GitHub, kept for READ_EVERY_SECONDS. A run log that cannot be read is left
-    out and named in 'problems'; anything else GitHub refuses is raised, since nothing can be shown without it."""
+def _run_log_reading(token):
     problems, log = [], []
     for path in RUN_LOGS:
         try:
@@ -54,54 +61,207 @@ def github(token):
         except requests.RequestException:
             problems.append(f"The run log {path} could not be read from the archive repository: the token may not "
                             "have access to it. Jobs show GitHub's own record instead.")
-    runs = []
-    for workflow in dict.fromkeys(w for w, *_ in JOBS):
+    return {"log": log, "problems": problems, "read_at": now()}
+
+
+@st.cache_data(ttl=READ_EVERY_SECONDS, show_spinner="Reading GitHub…")
+def _runs_reading(token):
+    problems, runs = [], []
+    for workflow in dict.fromkeys(job.workflow for job in JOBS):
         try:
             runs += _runs(token, workflow)
         except requests.HTTPError as error:
             if getattr(error.response, "status_code", None) != 404:
                 raise
             problems.append(f"GitHub has no workflow {workflow}: it may have been renamed or removed.")
+    return {"runs": runs, "problems": problems, "read_at": now()}
+
+
+@st.cache_data(ttl=READ_EVERY_SECONDS, show_spinner="Reading GitHub…")
+def _workflows_reading(token):
+    return {"workflows": github_api.ask("GET", "/actions/workflows", token)["workflows"], "problems": [], "read_at": now()}
+
+
+@st.cache_data(ttl=READ_EVERY_SECONDS, show_spinner="Reading GitHub…")
+def _archive_commits_reading(token):
     try:
-        archive_commits = _archive_commits(token)
+        return {"archive_commits": _archive_commits(token), "problems": [], "read_at": now()}
     except requests.RequestException:
-        archive_commits = {}
-        problems.append("The archive's commits could not be read, so the Live pipeline cannot link each run's commit.")
+        return {"archive_commits": {},
+                "problems": ["The archive's commits could not be read, so the Live pipeline cannot link each run's commit."]}
+
+
+@st.cache_data(ttl=READ_EVERY_SECONDS, show_spinner="Reading GitHub…")
+def _archive_versions_reading(token):
     try:
         versions = list(csv.DictReader(io.StringIO(github_api.file_text(token, ARCHIVE_REPOSITORY, ARCHIVE_VERSIONS_FILE))))
+        return {"archive_versions": versions, "problems": [], "read_at": now()}
     except requests.RequestException:
-        versions = None
-        problems.append("The archive's versions.csv could not be read from the archive repository: the token may not "
-                        "have access to it. Last read times on Sources cannot be shown.")
-    open_prs = decisions.fetch_open(token)
-    comments = {}
-    for pr in open_prs:
-        if decisions.kind_of(pr) is None or not decisions.has_findings_block(pr.get("body") or ""):
+        return {"archive_versions": None,
+                "problems": ["The archive's versions.csv could not be read from the archive repository: the token may not "
+                             "have access to it. Last read times on Sources cannot be shown."]}
+
+
+@st.cache_data(ttl=READ_EVERY_SECONDS, show_spinner="Reading GitHub…")
+def _open_prs_reading(token):
+    return {"prs": decisions.fetch_open(token), "problems": [], "read_at": now()}
+
+
+@st.cache_data(ttl=READ_EVERY_SECONDS, show_spinner="Reading GitHub…")
+def _decision_prs_reading(token):
+    prs = _open_prs_reading(token)["prs"]
+    return {"prs": prs, "decision_prs": prs + decisions.fetch_recent_closed(token), "problems": [], "read_at": now()}
+
+
+@st.cache_data(ttl=READ_EVERY_SECONDS, show_spinner="Reading GitHub…")
+def _approvals_reading(token):
+    prs = _open_prs_reading(token)["prs"]
+    problems, comments, reviews = [], {}, {}
+    for pr in prs:
+        if decisions.kind_of(pr) is None:
             continue
-        comments[pr["number"]] = decisions.fetch_comments(token, pr["number"])
-    return {"workflows": github_api.ask("GET", "/actions/workflows", token)["workflows"], "runs": runs,
-            "log": log, "prs": open_prs,
-            "decision_prs": open_prs + decisions.fetch_recent_closed(token),
-            "comments": comments,
-            "issues": work.fetch_open_issues(token), "archive_commits": archive_commits, "archive_versions": versions,
-            "problems": problems, "read_at": datetime.now(timezone.utc)}
+        try:
+            reviews[pr["number"]] = decisions.review_reading(token, pr)
+        except requests.RequestException:
+            problems.append(f"GitHub did not give the changes or checks of pull request {pr['number']}, so Approvals "
+                            "shows its description only.")
+        if decisions.has_findings_block(pr.get("body") or ""):
+            comments[pr["number"]] = decisions.fetch_comments(token, pr["number"])
+    return {"prs": prs, "comments": comments, "reviews": reviews, "problems": problems, "read_at": now()}
+
+
+@st.cache_data(ttl=READ_EVERY_SECONDS, show_spinner="Reading GitHub…")
+def _issues_reading(token):
+    return {"issues": work.fetch_open_issues(token), "problems": [], "read_at": now()}
+
+
+def _merge(*readings):
+    """One page's reading from several cached ones; it was read when the oldest of them was."""
+    merged = {"problems": []}
+    for reading in readings:
+        merged["problems"] += reading.get("problems", [])
+        merged.update((key, value) for key, value in reading.items() if key not in ("problems", "read_at"))
+    merged["read_at"] = min((reading["read_at"] for reading in readings if "read_at" in reading), default=now())
+    return merged
+
+
+def _jobs_snapshot(token):
+    return _merge(_run_log_reading(token), _runs_reading(token), _workflows_reading(token))
+
+
+def _summary_snapshot(token):
+    status = _status_snapshot(token)
+    status.pop("status", None)
+    return status
+
+
+def _status_snapshot(token):
+    seen = _merge(_run_log_reading(token), _runs_reading(token), _workflows_reading(token), _open_prs_reading(token))
+    rows = jobs.job_rows(seen["workflows"], seen["runs"], seen["log"], workflow_texts(), now())
+    waiting = decisions.pending(seen["prs"], now())
+    seen["status"] = {
+        "failing": sum(r["result"][0] == "bad" for r in rows),
+        "off": sum(r["state"] == "Turned off" for r in rows),
+        "waiting": len(waiting),
+    }
+    return seen
+
+
+def _sources_snapshot(token):
+    return _merge(_run_log_reading(token), _archive_versions_reading(token), _open_prs_reading(token))
+
+
+def _pipeline_snapshot(token):
+    return _merge(_run_log_reading(token), _runs_reading(token), _workflows_reading(token), _decision_prs_reading(token),
+                  _archive_commits_reading(token))
+
+
+def _ask_snapshot(token):
+    return _merge(_decision_prs_reading(token), _issues_reading(token))
+
+
+def _design_snapshot(token):
+    return _merge(_open_prs_reading(token), _issues_reading(token))
+
+
+def _work_snapshot(token):
+    return _merge(_open_prs_reading(token), _issues_reading(token))
+
+
+def _approvals_snapshot(token):
+    return _merge(_approvals_reading(token))
+
+
+def _alerts_snapshot(token):
+    return _merge(_runs_reading(token))
+
+
+PAGE_READERS = {
+    pages.SUMMARY.path: _summary_snapshot,
+    pages.DESIGN.path: _design_snapshot,
+    pages.ASK.path: _ask_snapshot,
+    pages.SOURCES.path: _sources_snapshot,
+    pages.JOBS.path: _jobs_snapshot,
+    pages.PIPELINE.path: _pipeline_snapshot,
+    pages.ALERTS.path: _alerts_snapshot,
+    pages.WORK.path: _work_snapshot,
+    pages.APPROVALS.path: _approvals_snapshot,
+}
+
+_CACHED_READERS = (_run_log_reading, _runs_reading, _workflows_reading, _archive_commits_reading,
+                   _archive_versions_reading, _open_prs_reading, _decision_prs_reading, _approvals_reading,
+                   _issues_reading)
+
+
+def _read(reader):
+    """A reader's snapshot, or a plain notice and stop when GitHub cannot be read."""
+    try:
+        return reader(settings()["github_token"])
+    except requests.RequestException as error:
+        st.html(console.notice(github_trouble(error, reading=True), "bad"))
+    except (KeyError, TypeError, ValueError):   # GitHub answered, but not in the shape the console reads
+        st.html(console.notice("GitHub's answer was not in the shape the console expects, so it cannot be shown now. "
+                               "Try Refresh; if it stays, the console needs updating.", "bad"))
+    st.stop()
+
+
+def read_page(path):
+    """The reading for one console page path from console/pages.py."""
+    return _read(PAGE_READERS[path])
+
+
+def read_status():
+    """The status bar's reading: jobs and decision waiting counts."""
+    return _read(_status_snapshot)
+
+
+def read():
+    """Backward-compatible alias: the Summary page's reading."""
+    return read_page(pages.SUMMARY.path)
+
+
+def clear_reading():
+    """Clears every cached GitHub reader used by the console pages."""
+    for reader in _CACHED_READERS:
+        reader.clear()
+
+
+def request_refresh():
+    clear_reading()
+    st.session_state[REFRESH_PENDING] = True
 
 
 def _runs(token, workflow):
-    """A workflow's runs: the tests' runs on main (pull requests' runs would push them out of a page), every other
-    workflow's runs back to the start of the reliability grid, page by page."""
+    """A workflow's runs: the tests' runs on main, every other workflow page-by-page since the reliability window."""
     if workflow == TESTS_WORKFLOW:
         return github_api.ask("GET", f"/actions/workflows/{workflow}/runs", token,
                               params={"branch": "main", "event": "push", "per_page": 10})["workflow_runs"]
     since = _since()
-    runs, page = [], 1
-    while True:
-        got = github_api.ask("GET", f"/actions/workflows/{workflow}/runs", token,
-                             params={"per_page": RUNS_READ, "page": page, "created": f">={since}"})["workflow_runs"]
-        runs += got
-        if len(got) < RUNS_READ:
-            return runs
-        page += 1
+    return github_api.paged(
+        lambda page: github_api.ask("GET", f"/actions/workflows/{workflow}/runs", token,
+                                    params={"per_page": RUNS_READ, "page": page, "created": f">={since}"})["workflow_runs"],
+        page_size=RUNS_READ,
+    )
 
 
 def _since():
@@ -110,18 +270,17 @@ def _since():
 
 def _archive_commits(token):
     since = _since()
-    commits, page = [], 1
-    while True:
-        got = github_api.ask("GET", "/commits", token, ARCHIVE_REPOSITORY,
-                             params={"path": "runs/archive.csv", "since": since, "per_page": RUNS_READ, "page": page})
-        commits += got
-        if len(got) < RUNS_READ:
-            return pipeline.archive_commits(commits)
-        page += 1
+    commits = github_api.paged(
+        lambda page: github_api.ask("GET", "/commits", token, ARCHIVE_REPOSITORY,
+                                    params={"path": "runs/archive.csv", "since": since, "per_page": RUNS_READ, "page": page}),
+        page_size=RUNS_READ,
+    )
+    return pipeline.archive_commits(commits)
 
 
 def workflow_texts():
-    return {workflow: (WORKFLOWS_DIR / workflow).read_text(encoding="utf-8") for workflow in dict.fromkeys(w for w, *_ in JOBS)}
+    return {workflow: (WORKFLOWS_DIR / workflow).read_text(encoding="utf-8")
+            for workflow in dict.fromkeys(job.workflow for job in JOBS)}
 
 
 def github_trouble(error, reading=False):
@@ -137,21 +296,10 @@ def github_trouble(error, reading=False):
     return "GitHub did not answer, so it cannot be shown or changed now. Try again in a few minutes."
 
 
-def read():
-    """The cached reading, or a plain notice and a stop when GitHub cannot be read."""
-    try:
-        return github(settings()["github_token"])
-    except requests.RequestException as error:
-        st.html(console.notice(github_trouble(error, reading=True), "bad"))
-    except (KeyError, TypeError, ValueError):   # GitHub answered, but not in the shape the console reads
-        st.html(console.notice("GitHub's answer was not in the shape the console expects, so it cannot be shown now. "
-                               "Try Refresh; if it stays, the console needs updating.", "bad"))
-    st.stop()
-
-
-def layout(icon_name, title, line):
-    """Draw the page's header band; return (body, actions) containers."""
-    st.html(console.view_head(icon_name, title, line))
+def layout(page_path, line):
+    """Draws one page's header band from the central pages list; returns (body, actions) containers."""
+    page = pages.page(page_path)
+    st.html(console.view_head(page.icon_key, page.title, line))
     with st.container(key="console_page"):
         body, side = st.columns([4.2, 1])
     with side:
@@ -161,11 +309,17 @@ def layout(icon_name, title, line):
     return body, actions
 
 
+def link(url, words):
+    """A safe external link, or a muted 'none' when no URL is present."""
+    if not url:
+        return '<span class="muted">none</span>'
+    return f'<a href="{escape(url, quote=True)}" target="_blank" rel="noopener noreferrer">{escape(words)}</a>'
+
+
 def refresh_action():
     """The Actions pane's Refresh: read GitHub again now."""
     if st.button("Refresh", key="console_refresh_action", icon=":material/refresh:", help="Read everything again from GitHub"):
-        github.clear()
-        st.session_state[REFRESH_PENDING] = True
+        request_refresh()
         st.rerun()
 
 

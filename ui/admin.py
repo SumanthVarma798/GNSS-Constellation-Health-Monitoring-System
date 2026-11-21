@@ -16,6 +16,22 @@ def _inline(text):
     return _LINK.sub(r'<a href="\2" target="_blank" rel="noopener noreferrer">\1</a>', text)
 
 
+def description_html(markdown):
+    """A pull request's text folded by its top headings (# and ##): what comes before the first is shown open, each
+    part after one is a fold with that heading. Deeper headings stay inside their part."""
+    parts, heading, lines = [], None, []
+    for line in markdown.splitlines():
+        if line.startswith(("# ", "## ")):
+            parts.append((heading, lines))
+            heading, lines = line.lstrip("#").strip(), []
+        else:
+            lines.append(line)
+    parts.append((heading, lines))
+    return "".join(text_html("\n".join(lines)) if heading is None else
+                   f'<details class="c-more"><summary>{_inline(heading)}</summary>{text_html(chr(10).join(lines))}</details>'
+                   for heading, lines in parts if heading is not None or any(line.strip() for line in lines))
+
+
 def text_html(markdown):
     """A pull request's text as reading: headings, bullet lists, bold, links and indented lines. Nothing else in it is
     read as markup."""

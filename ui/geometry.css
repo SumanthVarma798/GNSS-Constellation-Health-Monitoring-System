@@ -27,14 +27,38 @@
 .geo-grid .gr > :first-child { position: sticky; left: 0; z-index: 1; background: var(--platform); align-self: stretch;
   display: flex; flex-direction: column; justify-content: center; }   /* full row height, so nothing shows through above it */
 .geo-grid .gr.hd > :first-child { justify-content: flex-end; }
-/* when each satellite is in view: satellite, now, until or next; on a phone the time goes under the other two */
-.geo-next .nr { display: grid; grid-template-columns: minmax(150px, 1.2fr) minmax(110px, .7fr) minmax(0, 2.6fr); gap: 12px;
-  align-items: center; padding: 9px 0; font-size: var(--fs-body); }
-.geo-next .nr + .nr { border-top: 1px solid var(--edge); }
-.geo-next .nr.hd { color: var(--fc-small); font-size: var(--fs-small); font-weight: 600; padding-top: 0; }
-.geo-next .nr b small { display: block; font-size: var(--fs-small); font-weight: var(--fw-small); color: var(--fc-small); }
+/* position quality by place: your place and the one to compare, side by side; a phone puts one under the other */
+.geo-places { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 4px 0 8px; }
+.geo-place { background: var(--platform); border-radius: 18px; box-shadow: var(--raised-sm); border: 1px solid var(--edge);
+  border-top: 3px solid var(--idle); padding: 14px 16px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.geo-place.ok { border-top-color: var(--ok); } .geo-place.warn { border-top-color: var(--warn); } .geo-place.bad { border-top-color: var(--bad); }
+.geo-place small { color: var(--fc-small); font-size: var(--fs-small); }
+.geo-place .gp { font-size: var(--fs-section); }
+.geo-metres { font-size: var(--fs-num); font-weight: var(--fw-num); line-height: 1.1; margin-top: 6px; }
+.geo-metres.ok { color: var(--ok); } .geo-metres.warn { color: var(--warn); } .geo-metres.bad { color: var(--bad); }
+.geo-place > span:last-child { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-top: 4px; }
+/* the one plain line under a picture or a card's head: what it says right now */
+.geo-say { margin: 4px 0 8px; font-size: var(--fs-body); color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
+.geo-head.tight { margin: 8px 0 0; }
+.geo-steps { margin: 8px 0; padding-left: 22px; display: grid; gap: 8px; }
+.geo-bands .br { display: grid; grid-template-columns: minmax(80px, 1fr) minmax(70px, 1fr) minmax(90px, 1.2fr) minmax(0, 2fr); gap: 10px;
+  padding: 7px 0; font-size: var(--fs-body); }
+.geo-bands .br + .br { border-top: 1px solid var(--edge); }
+.geo-bands .br.hd { color: var(--fc-small); font-size: var(--fs-small); font-weight: 600; padding-top: 0; }
+/* orbit trends: each satellite a card as wide as the page, all one height, the graph taking most of it */
+[class*="st-key-geo_card_"] { background: var(--platform); border-radius: var(--r); box-shadow: var(--raised); border: 1px solid var(--edge);
+  padding: 14px 18px 8px; margin-bottom: 18px; }
+.geo-card-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.geo-card-head b { font-size: var(--fs-section); }
+.geo-card-head .tt { margin-left: auto; }
 @media (max-width: 639.98px) {
-  .geo-next .nr { grid-template-columns: minmax(0, 1fr) auto; row-gap: 4px; }
-  .geo-next .nr > :last-child { grid-column: 1 / -1; }
-  .geo-next .nr.hd > :last-child { display: none; }
+  .geo-places { grid-template-columns: minmax(0, 1fr); }
+  [class*="st-key-geo_card_"] { padding: 12px 8px 4px; }
+  .geo-bands .br { grid-template-columns: minmax(70px, 1fr) minmax(0, 1fr) minmax(0, 1.2fr); }
+  .geo-bands .br > :last-child { grid-column: 1 / -1; color: var(--fc-small); }
+  .geo-bands .br.hd > :last-child { display: none; }
 }
+/* the city map is as wide as its card and half as tall, the shape its degrees are drawn in (MAP_ASPECT), so land fills it */
+.st-key-geo_qmap [data-testid="stPlotlyChart"], .st-key-geo_qmap .js-plotly-plot, .st-key-geo_qmap .plot-container { aspect-ratio: 2 / 1; height: auto !important; width: 100%; }
+.geo-legend { list-style: none; margin: 4px 0 6px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: var(--fs-small); color: var(--fc-small); }
+.geo-legend li { display: inline-flex; align-items: center; gap: 7px; }

@@ -80,7 +80,6 @@ def detect_navik_maneuvers(df, sma_col='SEMIMAJOR_AXIS', inc_col='INCLINATION',
             'SMA_candidate'
         ] = True
     
-    # E-W maneuver detection based on SMA changes only
     df2['EW_candidate'] = df2['SMA_candidate'].copy()
     
     df2['INC_candidate'] = False

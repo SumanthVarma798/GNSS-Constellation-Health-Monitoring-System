@@ -37,7 +37,17 @@ import numpy as np
 from skyfield.api import load
 
 IGSO_INCLINATION_THRESHOLD_DEG = 20.0
+# Satellites that go round once a sidereal day (1.0027 turns): the only ones that can share a ground track. A medium
+# orbit goes round about twice a day, so its ground track is a different line every pass and "co-located" means nothing.
 SIDEREAL_DAY_HOURS = 23.9344696
+SIDEREAL_TURNS_PER_DAY = 24 / SIDEREAL_DAY_HOURS   # 1.0027: once round while the Earth turns once under it
+GEOSYNCHRONOUS_TOLERANCE_TURNS = 0.01   # its ground track drifts at most 3.6° a day; a medium orbit makes about 2 turns
+
+
+def is_geosynchronous(turns_per_day):
+    """Whether an orbit of this many turns a day keeps (nearly) one ground track."""
+    return turns_per_day is not None and abs(turns_per_day - SIDEREAL_TURNS_PER_DAY) <= GEOSYNCHRONOUS_TOLERANCE_TURNS
+
 DEFAULT_LONGITUDE_TOL_DEG = 5.0
 
 _TS = None
@@ -58,6 +68,13 @@ def _inclination_deg(sat_obj):
         return None
 
 
+def _turns_per_day(sat_obj):
+    try:
+        return sat_obj.model.no_kozai * 1440 / (2 * math.pi)
+    except Exception:
+        return None
+
+
 def get_raan_deg(sat_obj):
     """RAAN (degrees, 0-360) from a Skyfield EarthSatellite."""
     try:
@@ -66,7 +83,7 @@ def get_raan_deg(sat_obj):
         return None
 
 
-def _circular_mean_deg(lons_deg):
+def circular_mean_deg(lons_deg):
     """Circular mean of longitudes (deg) in [0, 360)."""
     rad = np.deg2rad(np.asarray(lons_deg) % 360.0)
     mean = math.atan2(float(np.mean(np.sin(rad))), float(np.mean(np.cos(rad))))
@@ -97,7 +114,7 @@ def get_ground_track_central_longitude_deg(sat_obj, ts=None,
             [t.second + t.microsecond * 1e-6 for t in times],
         )
         lons = np.asarray(sat_obj.at(t_sf).subpoint().longitude.degrees)
-        return _circular_mean_deg(lons)
+        return circular_mean_deg(lons)
     except Exception:
         return None
 
@@ -191,6 +208,8 @@ def analyze_raan_spacing(satellites_dict, service_requirements=None,
         inc = _inclination_deg(sat_obj)
         if inc is None or inc < inclination_threshold_deg:
             continue
+        if not is_geosynchronous(_turns_per_day(sat_obj)):
+            continue   # a medium orbit shares no ground track: its planes are judged by analysis/meo_geometry.py
         raan = get_raan_deg(sat_obj)
         lon = get_ground_track_central_longitude_deg(sat_obj, ts=ts)
         if raan is None or lon is None:
@@ -240,7 +259,7 @@ def analyze_raan_spacing(satellites_dict, service_requirements=None,
         max_dev = float(np.max(np.abs(devs)))
         rms_dev = float(np.sqrt(np.mean(devs ** 2)))
 
-        cluster_lon = _circular_mean_deg([c["central_lon"] for c in cluster])
+        cluster_lon = circular_mean_deg([c["central_lon"] for c in cluster])
 
         results.append({
             "central_longitude_deg": round(cluster_lon, 2),

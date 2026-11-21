@@ -3,7 +3,14 @@ from datetime import datetime
 from html import escape
 
 from data import spacetrack
-from evidence.settings import ORBIT_ALERT_DAYS, ORBIT_STALE_DAYS, QZSS_HEALTH_BITS, TIME_CORRECTION_WORDS
+from evidence.settings import (
+    ORBIT_ALERT_DAYS,
+    ORBIT_STALE_DAYS
+)
+from ui.orbit_age_settings import (
+    QZSS_HEALTH_BITS,
+    TIME_CORRECTION_WORDS
+)
 from ui import data as dashboard_data
 from ui import measures, reveal, surfaces, tooltip
 
@@ -87,7 +94,7 @@ def health_words(status):
     health = (status or {}).get("health")
     if health is None:
         missing = (status or {}).get("note") == "not in the day's broadcast file"
-        return ("not in the day's file", "idle") if missing else ("-", "idle")
+        return ("not in the IGS broadcast file", "idle") if missing else ("-", "idle")
     if health == 0:
         return "healthy", "ok"
     signal_id = (status or {}).get("signal_id") or ""
@@ -155,7 +162,7 @@ def _missing_notice(gap, rows):
              and status.get("health") is None and status.get("note") == "not in the day's broadcast file"]
     if not names:
         return None
-    return f"Not in the day's broadcast file: {', '.join(names)}."
+    return f"Not in the IGS daily broadcast file: {', '.join(names)}."
 
 
 def _system_times_html(gap):
@@ -171,7 +178,7 @@ def _system_times_html(gap):
             parts.append(f"{words} {corrections[code]:.2f} ns")
     if not parts:
         return None
-    line = "System times from the broadcast file: " + " · ".join(parts)
+    line = "System times from the IGS daily broadcast file: " + " · ".join(parts)
     leap = gap.get("leap_seconds")
     if leap is not None:
         line += f" · {leap} leap seconds"

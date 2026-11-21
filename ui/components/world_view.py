@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 
 from ui import orbit_age, palette, world_settings
-from ui.components.master_map import embed
+from ui.components.frame import embed, fill
 from ui.theme import root_block
 from ui.tooltip import CARD_CSS
 
@@ -157,10 +157,9 @@ def payload(systems, gap=None, now=None):
             if not tracks.get(name) and "track" not in sat:
                 sat["track"] = {"lat": [], "lon": [], "height": []}
             records.append(_satellite_record(system, sat, tracks))
-        shown_systems.append({"name": system, "colour": world_settings.SYSTEM_COLOURS.get(system, palette.FILL),
+        shown_systems.append({"name": system, "colour": palette.css(world_settings.SYSTEM_COLOURS.get(system, palette.FILL)),
                               "satellites": records})
     return {
-        "home": {"lat": world_settings.HOME_LAT, "lon": world_settings.HOME_LON},
         "areas": world_settings.SERVICE_AREAS,
         "as_of": as_of,
         "day": day or "no IGS file",
@@ -168,28 +167,24 @@ def payload(systems, gap=None, now=None):
             {"words": "healthy", "status": "ok", "colour": world_settings.HEALTH_COLOURS["ok"]},
             {"words": "unhealthy", "status": "bad", "colour": world_settings.HEALTH_COLOURS["bad"]},
             {"words": "some signals off", "status": "warn", "colour": world_settings.HEALTH_COLOURS["warn"]},
-            {"words": "not in the day's file or unknown", "status": "idle", "colour": world_settings.HEALTH_COLOURS["idle"]},
+            {"words": "not in the IGS daily broadcast file, or unknown", "status": "idle", "colour": world_settings.HEALTH_COLOURS["idle"]},
         ],
-        "system_key": [{"name": system, "colour": world_settings.SYSTEM_COLOURS.get(system, palette.FILL)}
+        "system_key": [{"name": system, "colour": palette.css(world_settings.SYSTEM_COLOURS.get(system, palette.FILL))}
                        for system in world_settings.SYSTEM_COLOURS],
         "systems": shown_systems,
     }
 
 
-# The page's name follows the existing picture pattern; keep both names for callers.
+# The page's name follows the existing picture pattern.
 world_payload = payload
-build_payload = payload
 
 
 def world_view_html(systems, gap=None, now=None):
     """The finished page: colours and fonts first, the land and data last so they are never searched for placeholders."""
-    page = PAGE_FILE.read_text(encoding="utf-8")
-    fills = {"__ROOT__": root_block(), "__FONT__": palette.FONT, "__TIP__": CARD_CSS}
-    for placeholder, text in fills.items():
-        page = page.replace(placeholder, text)
+    page = fill(PAGE_FILE.read_text(encoding="utf-8"), __ROOT__=root_block(), __FONT__=palette.FONT, __TIP__=CARD_CSS)
     land = json.loads(LAND_FILE.read_text(encoding="utf-8"))["rings"]
     page = page.replace("const LAND = __LAND__;", f"const LAND = {embed(land)};", 1)
-    return page.replace("const DATA = __DATA__;", f"const DATA = {embed(payload(systems, gap, now))};", 1)
+    return fill(page, payload(systems, gap, now))
 
 
 def world_view(systems, gap=None, now=None, height=760):

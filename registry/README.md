@@ -16,10 +16,13 @@ International GNSS Service (IGS) satellite metadata file by `scripts/build_regis
 | `constellations.csv` | a person | Which system each SVN letter stands for |
 | `catalogue.csv` | its own build script | Owner and status of each satellite, as a second source states them |
 | `dashboard_satellites.csv` | a person | Which satellites the dashboard tracks, and its name for each |
+| `dashboard_systems.csv` | a person | Which dashboard page each system is, its registry name, block prefixes, orbit kind and order |
 | `left_out.csv` | a person | Satellites with a signal ID today that the dashboard leaves out on purpose, each with why and a source; every other one must be tracked (`tests/test_registry_coverage.py`) |
+| `clock_record.csv` | a person | Satellites that lost atomic clocks in orbit, with what failed, when and a named source; shown beside the clock score |
+| `bus_budgets.csv` | a person | Per satellite, when an operator has published it: design life (years), station-keeping budget (m/s), source name and link, and how sure; empty rows fall back to the typical figure in `analysis/forecast_settings.py` (the fuel forecast says which) |
 
 Code reads and writes these tables through `evidence/registry_tables.py`; file names
-and column names are written down once, in `evidence/settings.py`.
+and column names are written down once, in `evidence/registry_settings.py`.
 
 ## satellites.csv: one row per physical satellite
 
@@ -49,7 +52,7 @@ signal ID **and** the time, never on the signal ID alone.
 ## sightings.csv: satellites CelesTrak lists before the IGS file does
 
 The IGS file can take weeks to list a new satellite. Each week the build script also reads
-CelesTrak's GNSS group, and a satellite named as in `SIGHTING_NAMES` (`evidence/settings.py`;
+CelesTrak's GNSS group, and a satellite named as in `SIGHTING_NAMES` (`evidence/registry_settings.py`;
 every system) whose catalogue number the IGS file lacks is proposed here, in the
 columns of `satellites.csv`, under a stand-in SVN: the system letter, a dash and the catalogue
 number (`I-101228`). Approving it also adds it to `dashboard_satellites.csv`. Once the IGS file
@@ -122,6 +125,17 @@ to add or remove a satellite must say which scores move, and re-record them on a
 This table and `satellites.csv` are each approved by a person, at different times. If a
 row names an SVN that `satellites.csv` does not have, the dashboard runs without that
 satellite and shows a notice naming it. A test fails on any proposal that would cause it.
+
+## dashboard_systems.csv: one row per dashboard page
+
+| Column | Meaning |
+|---|---|
+| `page_name` | The system as the dashboard names it: NavIC, QZSS, BeiDou-3, BeiDou-3 MEO, GPS, GLONASS or Galileo. |
+| `registry_name` | The same system in `satellites.csv` and `constellations.csv`. BeiDou-3 and BeiDou-3 MEO are both `BeiDou`. |
+| `block_prefixes` | The registry `block` starts that pick out a part page's satellites. Blank means the page takes the whole constellation, except the blocks a part page takes. |
+| `orbit_kind` | `regional` for the GEO and IGSO pages, `global` for the MEO pages. |
+| `order` | The order the dashboard shows the systems in. |
+| `generation_prefix` | The registry `block` start for the 3D view's "All" generation; blank takes every block. |
 
 ## What these tables do not say
 

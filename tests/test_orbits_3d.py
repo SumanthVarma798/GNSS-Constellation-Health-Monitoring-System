@@ -175,3 +175,10 @@ def test_an_igso_slot_is_its_daily_figure_eight_centred_on_the_slot():
     rows = [{"name": "I", "slot_lon": 55.0, "state": "in slot"}, {"name": "G", "slot_lon": 83.0, "state": "in slot"}]
     scene = orbit_scene(rows, {"I": igso, "G": geo})
     assert scene["satellites"][0]["slot_path"] is not None and scene["satellites"][1]["slot_path"] is None
+
+
+def test_when_every_satellite_launched_is_in_service_the_switch_is_greyed_out_and_says_so():
+    page = orbit_view_html([], None, None)
+
+    assert "satellites launched are in service" in page and 'classList.add("same")' in page
+    assert "b.disabled = true" in page   # a choice that changes nothing is not offered

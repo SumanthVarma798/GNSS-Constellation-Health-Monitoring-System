@@ -86,13 +86,13 @@ _NAMES = ["af0", "af1", "af2",
           "sent", "fit"]
 
 
-def _toc(first):
+def toc(first):
     """The satellite's own time (a naive datetime) from a record's first line."""
     year, month, day, hour, minute, second = (int(x) for x in first[4:23].split())
     return datetime(year, month, day, hour, minute, second)
 
 
-def _known(field):
+def known(field):
     """A field's number, or None when it is blank (RINEX's "not known")."""
     return _number(field) if field.strip() else None
 
@@ -107,19 +107,19 @@ def _records_from_lines(lines):
         if first[0] not in "GECJIR":
             continue
         signal_id = first[:3]
-        toc = _toc(first)
+        at = toc(first)
         if first[0] == "R":
-            health = _known(body[start + 1][61:80])
+            health = known(body[start + 1][61:80])
             records.setdefault(signal_id, []).append(
-                {"toc": toc, "health": None if health is None else int(health), "accuracy": None, "iode": None})
+                {"toc": at, "health": None if health is None else int(health), "accuracy": None, "iode": None})
             continue
         fields = [first[c:c + 19] for c in (23, 42, 61)]
         for line in body[start + 1:end]:
             fields += [line[c:c + 19] for c in (4, 23, 42, 61)]
-        record = {name: _known(field) for name, field in zip(_NAMES, fields)}
+        record = {name: known(field) for name, field in zip(_NAMES, fields)}
         health, accuracy, iode = record.get("health"), record.get("accuracy"), record.get("iode")
         records.setdefault(signal_id, []).append(
-            {"toc": toc, "health": None if health is None else int(health),
+            {"toc": at, "health": None if health is None else int(health),
              # Galileo sends -1 for "no accuracy prediction available"
              "accuracy": accuracy if accuracy is not None and accuracy >= 0 else None,
              "iode": None if iode is None else int(iode)})

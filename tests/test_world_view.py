@@ -56,3 +56,31 @@ def test_a_service_area_is_drawn_only_while_its_system_is_the_only_one_shown():
               f"console.log(JSON.stringify({json.dumps(cases)}.map(c => areaFor(c) && areaFor(c).label)));")
     labels = json.loads(subprocess.run(["node", "-e", script], capture_output=True, text=True, check=True).stdout)
     assert labels == [world_settings.SERVICE_AREAS["NavIC"]["label"], None, None, None]
+
+
+def test_the_map_is_flat_only_and_the_chips_say_they_can_be_clicked():
+    from ui.components.world_view import world_view_html
+
+    page = world_view_html([])
+
+    # one flat map: each satellite is drawn where it is over the ground, which a globe would only repeat
+    assert "Globe" not in page and "projectGlobe" not in page and 'id="viewseg"' not in page
+    assert "Click a constellation to hide or show it" in page and "Click to hide it." in page
+    # and the flat map is still all there: its canvas, its projection, the land outlines and the satellites' marks
+    for part in ('<canvas id="map"', "const project = projectFlat;", "function strokeLand()", "function drawMarks()",
+                 "const LAND = [["):
+        assert part in page, part
+
+
+def test_the_parts_of_one_constellation_are_one_entry_on_the_map():
+    from ui.world_data import by_constellation
+
+    parts = [{"name": "BeiDou-3", "satellites": [{"name": "G1"}], "tracks": {"G1": {}}},
+             {"name": "GPS", "satellites": [{"name": "NAVSTAR 1"}], "tracks": {}},
+             {"name": "BeiDou-3 MEO", "satellites": [{"name": "M1"}], "tracks": {"M1": {}}}]
+
+    joined = by_constellation(parts)
+
+    assert [entry["name"] for entry in joined] == ["BeiDou-3", "GPS"]
+    assert [sat["name"] for sat in joined[0]["satellites"]] == ["G1", "M1"] and set(joined[0]["tracks"]) == {"G1", "M1"}
+    assert len(parts[0]["satellites"]) == 1   # the cached entries are not changed

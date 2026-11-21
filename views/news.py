@@ -11,7 +11,7 @@ st.html(f"<style>{news.CSS}</style>")
 data, problem = news.load_news()
 if problem:
     surfaces.show(surfaces.notice(f"No news to show just now: {problem}. The rest of the dashboard works as usual; "
-                                  f"news collection runs every {news.NEWS_CYCLE_HOURS} hours.", "warn", inline=True))
+                                  f"we collect news every {news.NEWS_CYCLE_HOURS} hours.", "warn", inline=True))
 else:
     now = datetime.now(timezone.utc)
     scope = st.session_state.get("scope", shell.CONSTELLATIONS[0])
@@ -20,7 +20,7 @@ else:
     surfaces.show(as_of)
     if data.get("invalid_items", 0):
         surfaces.show(surfaces.notice(
-            f'{data["invalid_items"]} news items in the file were not in the expected shape and are not shown', "idle"))
+            f'{data["invalid_items"]} news items in the news file (latest_news.json) were not in the expected shape and are not shown', "idle"))
 
     def keep(key, default):
         """A single-choice filter always keeps one choice: clicking the chosen pill puts it back."""
@@ -28,16 +28,15 @@ else:
             st.session_state[key] = st.session_state.get(f"_{key}_was", default)
         st.session_state[f"_{key}_was"] = st.session_state[key]
 
-    categories = list(news.NEWS_CATEGORIES)
+    impacts = list(news.NEWS_IMPACTS)
     seen_at = news.cookie_seen()
     for key, default in (("news_date", "90 days"), ("news_show", "all")):
         st.session_state.setdefault(key, st.session_state.get(f"_{key}_was", default))
         st.session_state[f"_{key}_was"] = st.session_state[key]
     # One band: each filter's heading on the same line as its choices, the groups side by side (ui/news.py CSS).
     with st.container(key="news_filters"):
-        news.screen_reader_heading("Category")
-        picked_categories = st.pills("Category", categories, default=categories, selection_mode="multi",
-                                     key="news_category")
+        news.screen_reader_heading("Impact")
+        picked_impacts = st.pills("Impact", impacts, default=impacts, selection_mode="multi", key="news_impact")
         news.screen_reader_heading("Source grade")
         standings = st.pills("Source grade", news.GRADE_STANDINGS, default=news.GRADE_STANDINGS,
                              selection_mode="multi", key="news_grade")
@@ -49,35 +48,40 @@ else:
                         on_change=keep, args=("news_show", "all"))
     only_new = show == "new only"
 
-    category_filter, grade_filter = set(picked_categories or []), set(standings or [])
-    if not category_filter:
-        surfaces.show(surfaces.notice("Choose at least one category", "idle", inline=True))
+    impact_filter, grade_filter = set(picked_impacts or []), set(standings or [])
+    if not impact_filter:
+        surfaces.show(surfaces.notice("Choose at least one impact", "idle", inline=True))
     if not grade_filter:
         surfaces.show(surfaces.notice("Choose at least one grade", "idle", inline=True))
-    filtered = news.filter_items(data["items"], scope, category_filter, grade_filter, window or "90 days",
+    filtered = news.filter_items(data["items"], scope, impact_filter, grade_filter, window or "90 days",
                                  only_new, seen_at, now)
     new_count = sum(1 for item in filtered if item["_new"])
     new_words = tooltip.tip_html(f'<span class="num">{new_count}</span> new', escape(news.seen_note(seen_at)))
-    told = news.news_stories.stories(filtered)   # grouped once, so each category's count adds up to the total
+    told = news.news_stories.stories(filtered)   # grouped once, so each impact's count adds up to the total
     told_all = len(told)
     surfaces.show(f'<p class="news-topline"><span class="num">{len(filtered)}</span> news items in '
                   f'<span class="num">{told_all}</span> {"story" if told_all == 1 else "stories"} for {escape(scope)} · '
                   f'{new_words}</p>')
-    surfaces.show(news.category_tiles_html(filtered))
+    surfaces.show(news.impact_tiles_html(told))
 
     opened = False
-    for category in categories:
-        rows = [item for item in filtered if item["category"] == category]
+    for impact in impacts:
+        rows = [item for item in filtered if item["_impact"] == impact]
         if not rows:
             continue
         new_rows = sum(1 for item in rows if item["_new"])
-        stories = [story for story in told if story["category"] == category]
-        reveal.section(f"news_{scope}_{category}", category,
+        stories = [story for story in told if story["impact"] == impact]
+        reveal.section(f"news_{scope}_{impact}", impact,
                        f"{len(stories)} {'story' if len(stories) == 1 else 'stories'} from {reveal.count(len(rows), 'item')}"
                        f" · {new_rows} new",
-                       news.category_body_html(rows, data.get("sources", {}), zone, stories), open=not opened)
+                       news.impact_body_html(rows, data.get("sources", {}), zone, stories), open=not opened)
         opened = True
-    reveal.section("news_rules", "How items are sorted", "categories, word rules, and grade standing",
+    ledger = news.news_stories.agency_ledger(data["items"])
+    quoted = [row for row in ledger if row["stories"]]
+    reveal.section("news_agencies", "State news agencies",
+                   f"{len(quoted)} of {len(ledger)} quoted in the news file · every constellation",
+                   news.ledger_html(ledger))
+    reveal.section("news_rules", "How items are sorted", "impact word rules, stories, and grade standing",
                    news.sorting_rules_html())
 
     stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")

@@ -10,18 +10,19 @@ import streamlit as st
 
 from evidence import news_stories
 from evidence.news import host_id
-from evidence.news_settings import (CATEGORY_RULE_WORDS, GRADE_BARS, GRADE_E_MIN_CLAIMS, NEWS_CATEGORIES, NEWS_CYCLE_HOURS,
+from evidence.news_settings import (CORROBORATING_GRADES, CORROBORATION_DAYS, GRADE_BARS, GRADE_E_MIN_CLAIMS,
+                                    IMPACT_CHECK_ORDER, IMPACT_OF_AN_ID, NEWS_CATEGORIES, NEWS_CYCLE_HOURS, NEWS_IMPACTS,
                                     NEWS_LATE_HOURS, NEWS_NEW_GRACE_HOURS, NEWS_URL, RECORD_WINDOW_DAYS, STORY_DAYS, STORY_SHARE,
                                     STORY_SHARED_WORDS)
 from evidence.settings import RELIABILITY_GRADES
-from ui import reveal, surfaces, tooltip
+from ui import marks, reveal, surfaces, tooltip
 
 DATE_FILTERS = ["7 days", "30 days", "90 days", "1 year", "all"]
 SHOW_FILTERS = ["all", "new only"]
 GRADE_STANDINGS = ["confirmed", "provisional", "not graded"]
 GRADE_TONES = {"confirmed": "ok", "provisional": "warn", "not graded": "idle"}
-CATEGORY_TONES = {"launch": "accent", "satellite status and outages": "warn", "signal and service": "ok",
-                  "programme and policy": "idle", "other": "idle"}
+IMPACT_TONES = {"affects service now": "warn", "changes the constellation": "accent", "plans and policy": "ok",
+                "background": "idle"}
 CSS = """
 .news-asof { margin: 6px 0 12px; font-size: var(--fs-small); color: var(--fc-small); }
 .news-topline { margin: 6px 0 14px; font-size: var(--fs-side); color: var(--ink); }
@@ -40,9 +41,21 @@ CSS = """
 .news-cat-tile { display: grid; place-items: center; gap: 4px; min-height: 104px; text-align: center; font-size: var(--fs-body);
   border-radius: var(--r); border: 1px solid var(--edge); background: var(--platform); box-shadow: var(--raised-sm); padding: 10px 12px; }
 .news-cat-tile b { font-size: var(--fs-num); font-weight: var(--fw-num); line-height: 1; }
+.news-cat-tile small { font-size: var(--fs-small); color: var(--fc-small); }
+.news-ledger { display: grid; grid-template-columns: minmax(0, 1.4fr) auto minmax(0, 2fr); gap: 8px 14px; align-items: center;
+  font-size: var(--fs-body); }
+.news-ledger > .h { font-size: var(--fs-small); color: var(--fc-small); font-weight: 600; }
+.news-ledger small { display: block; font-size: var(--fs-small); color: var(--fc-small); }
+.news-ledger .n { text-align: right; font-size: var(--fs-side); }
+.news-ledger .n.zero, .news-ledger .quiet { color: var(--fc-small); }
+.news-ledger > .h.n { font-size: var(--fs-small); }
+.news-ledger .share { display: grid; grid-template-columns: minmax(40px, 1fr) auto; gap: 8px; align-items: center; }
+.news-ledger .bar { height: 8px; border-radius: 999px; background: var(--well); box-shadow: var(--pressed); overflow: hidden; }
+.news-ledger .bar i { display: block; height: 100%; border-radius: 999px; background: var(--ok); }
 .news-cat-dot { width: 10px; height: 10px; border-radius: 999px; background: var(--idle); box-shadow: var(--pressed); }
 .news-cat-tile.ok .news-cat-dot { background: var(--ok); } .news-cat-tile.warn .news-cat-dot { background: var(--warn); }
 .news-cat-tile.idle .news-cat-dot { background: var(--idle); } .news-cat-tile.accent .news-cat-dot { background: var(--accent); }
+.news-cat-tile.ok b { color: var(--ok); } .news-cat-tile.warn b { color: var(--warn); } .news-cat-tile.accent b { color: var(--accent); }
 @media (max-width: 375px) { .news-cat-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .news-list { display: grid; gap: 8px; width: 100%; max-width: 100%; }
 .news-item { border-radius: 14px; border: 1px solid var(--edge); background: var(--well); box-shadow: var(--pressed); overflow: hidden; }
@@ -54,6 +67,7 @@ CSS = """
 .news-item.new .news-mark i { background: var(--accent); }
 .news-item .news-head { min-width: 0; word-break: break-word; color: var(--ink); }
 .news-item .news-meta { color: var(--fc-small); font-size: var(--fs-small); margin-top: 3px; display: block; }
+.news-about { display: inline-flex; flex-wrap: wrap; gap: 2px 12px; margin-right: 12px; color: var(--ink); }
 .news-item .news-new { font-size: var(--fs-small); color: var(--accent); text-transform: lowercase; align-self: center; }
 .news-item .news-body { padding: 0 12px 12px 30px; font-size: var(--fs-body); max-width: 100%; }
 .news-item .news-body p { margin: 0 0 8px; max-width: none; }
@@ -147,15 +161,16 @@ def is_new(item, seen_at, now):
     return fetched > since and published > since - timedelta(hours=NEWS_NEW_GRACE_HOURS)
 
 
-def filter_items(items, constellation, categories, standings, date_window, only_new, seen_at, now):
-    """Items for one constellation after category, grade, date and new-only filters."""
+def filter_items(items, constellation, impacts, standings, date_window, only_new, seen_at, now):
+    """Items for one constellation after impact, grade, date and new-only filters, each with its "_impact"."""
     days = {"7 days": 7, "30 days": 30, "90 days": 90, "1 year": 365, "all": None}[date_window]
     cutoff = now - timedelta(days=days) if days is not None else None
     kept = []
     for item in items:
         if constellation not in item.get("constellations", []):
             continue
-        if item.get("category") not in categories or item.get("grade_standing") not in standings:
+        impact = news_stories.impact(item)[0]
+        if impact not in impacts or item.get("grade_standing") not in standings:
             continue
         published = _time(item.get("published_at")) or _time(item.get("fetched_at"))
         if cutoff is not None and (published is None or published < cutoff):
@@ -163,7 +178,7 @@ def filter_items(items, constellation, categories, standings, date_window, only_
         fresh = is_new(item, seen_at, now)
         if only_new and not fresh:
             continue
-        kept.append({**item, "_new": fresh, "_published": published})
+        kept.append({**item, "_new": fresh, "_published": published, "_impact": impact})
     kept.sort(key=lambda row: row["_published"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
     return kept
 
@@ -174,30 +189,28 @@ def date_label(item, zone=timezone.utc):
     return f"{moment.astimezone(zone):%d %b %Y}" if moment else "date not given"
 
 
-def category_tiles_html(items):
-    """Raised category tiles from filtered items."""
-    counts = {category: 0 for category in NEWS_CATEGORIES}
-    for item in items:
-        counts[item["category"]] = counts.get(item["category"], 0) + 1
+def impact_tiles_html(stories):
+    """A raised tile per impact with its story count large and its item count small, coloured by impact."""
     tiles = []
-    for category in NEWS_CATEGORIES:
-        count = counts.get(category, 0)
-        if count:
-            tone = CATEGORY_TONES.get(category, "idle")
-            tiles.append(f'<div class="news-cat-tile {tone}"><span class="news-cat-dot"></span><b class="num">{count}</b>'
-                         f"<span>{escape(category)}</span></div>")
+    for impact in NEWS_IMPACTS:
+        told = [story for story in stories if story["impact"] == impact]
+        if told:
+            items = sum(len(story["items"]) for story in told)
+            tiles.append(f'<div class="news-cat-tile {IMPACT_TONES.get(impact, "idle")}"><span class="news-cat-dot"></span>'
+                         f'<b class="num">{len(told)}</b><span>{escape(impact)}</span>'
+                         f'<small>{"story" if len(told) == 1 else "stories"} · {reveal.count(items, "item")}</small></div>')
     return f'<div class="news-cat-tiles">{"".join(tiles)}</div>' if tiles else ""
 
 
 def marked_html(text, words, rule_word=""):
-    """text, escaped, with each word of the story (and the category word) marked."""
+    """text, escaped, with each word of the story (and the word that set its impact) marked."""
     parts, last = [], 0
     rule = (rule_word or "").casefold()
     for found in re.finditer(r"[A-Za-z0-9][A-Za-z0-9\-]*", text or ""):
         token = found.group(0)
         parts.append(escape(text[last:found.start()]))
-        stem = news_stories._stem(token.casefold())
-        hit = news_stories._aliases().get(stem, stem) in words or token.casefold() == rule   # IRNSS-1L marks as NVS-03
+        stem = news_stories.stem(token.casefold())
+        hit = news_stories.aliases().get(stem, stem) in words or token.casefold() == rule   # IRNSS-1L marks as NVS-03
         parts.append(f"<mark>{escape(token)}</mark>" if hit else escape(token))
         last = found.end()
     parts.append(escape((text or "")[last:]))
@@ -222,7 +235,7 @@ def item_html(item, source, is_new=False, zone=timezone.utc, words=frozenset()):
     if address:
         source_lines.append(
             f'<a href="{escape(address, quote=True)}" target="_blank" rel="noopener noreferrer">Read the article</a>')
-    rule = news_stories.rule_word(item)
+    rule = news_stories.impact(item)[1]
     said = f"<b>{marked_html(item.get('title', ''), words, rule)}</b>"
     if item.get("summary"):
         said += f"<br>{marked_html(item['summary'], words, rule)}"
@@ -247,6 +260,8 @@ def story_html(story, sources, zone=timezone.utc):
     named = ", ".join(outlets[:3]) + (f" and {len(outlets) - 3} more" if len(outlets) > 3 else "")
     newest = max(items, key=news_stories._when)
     meta = f"{reveal.count(len(items), 'source')} · {named} · latest {date_label(newest, zone)}"
+    about = list(dict.fromkeys(name for item in items for name in item.get("constellations", [])))   # which it names
+    about_html = "".join(marks.named(name) for name in about)
     if story["summary"]:
         summary = escape(story["summary"])
     else:
@@ -260,7 +275,8 @@ def story_html(story, sources, zone=timezone.utc):
     return (
         f'<details class="news-item{" new" if fresh else ""}"><summary><span class="news-mark"><i aria-hidden="true"></i></span>'
         f'<span><span class="news-head">{escape(story["headline"])}</span>'
-        f'<span class="news-meta">{escape(meta)}</span></span>{new_words}</summary>'
+        f'<span class="news-meta">{f"""<span class="news-about">{about_html}</span>""" if about else ""}'
+        f'{escape(meta)}</span></span>{new_words}</summary>'
         f'<div class="news-body"><p>{summary}</p><div class="news-story-sources"><b>Who reported it</b>{rows}</div>'
         f'</div></details>'
     )
@@ -284,7 +300,7 @@ def grade_legend_html():
         "C": f"at least {GRADE_BARS['C'][0]} checked claims and score at least {GRADE_BARS['C'][1]:.2f}",
         "D": f"at least {GRADE_BARS['D'][0]} checked claims and score at least {GRADE_BARS['D'][1]:.2f}",
         "E": f"at least {GRADE_E_MIN_CLAIMS} checked claims, but below the D bar",
-        "F": f"the start; fewer than {GRADE_E_MIN_CLAIMS} checked claims",
+        "F": f"1 to {GRADE_E_MIN_CLAIMS - 1} checked claims; with none checked, not graded",
     }
     rows = "".join(
         f"<tr><th>{grade}</th><td>{escape(RELIABILITY_GRADES.get(grade, ''))}</td><td>{escape(reached[grade])}</td></tr>"
@@ -299,31 +315,50 @@ def grade_legend_html():
     )
 
 
-def category_body_html(items, sources, zone=timezone.utc, stories=None):
-    """Markup for one category's list: its stories (or its items, grouped here), the newest story first."""
+def impact_body_html(items, sources, zone=timezone.utc, stories=None):
+    """Markup for one impact's list: its stories (or its items, grouped here), the newest story first."""
     rows = [story_html(story, sources, zone) for story in (news_stories.stories(items) if stories is None else stories)]
     return f'<div class="news-list">{"".join(rows)}</div>'
 
 
 def sorting_rules_html():
-    """The explanatory section shown at the end of the page."""
+    """The rules section at the end of the page: impact words, story grouping, grade standing, the grade legend."""
     rules = "".join(
-        f"<li><b>{escape(category)}:</b> {escape(', '.join(words) if words else 'fallback when no earlier rule matches')}</li>"
-        for category, words in NEWS_CATEGORIES.items()
-    )
+        f"<li><b>{escape(impact)}:</b> "
+        f"{escape(', '.join(rule['words'] + tuple(word for category in rule['categories'] for word in NEWS_CATEGORIES[category])))}"
+        f"</li>" for impact, rule in ((name, NEWS_IMPACTS[name]) for name in IMPACT_CHECK_ORDER))
     return (
-        f"<p>{escape(CATEGORY_RULE_WORDS)}</p><ul>{rules}</ul>"
-        "<p>These are plain word rules on the headline and feed text; a model may sort them later.</p>"
-        "<p>An item appears under every constellation its headline names.</p>"
-        "<p>Items in one category that tell the same story are shown once: their headlines name the same mission or "
-        f"satellite (NVS-03, GSLV-F18), or share at least {STORY_SHARED_WORDS} uncommon words making up "
-        f"{STORY_SHARE:.0%} of the shorter headline, and each came out within {STORY_DAYS} days of another in it. "
-        "Stories are rebuilt on every visit, so a source that reports later joins its story. Open a story for who "
-        "reported it, and a source for what it said and what the dashboard took from it.</p>"
-        "<p>Grade standing: confirmed means the source is in the team's source table; provisional means a grade is "
-        "proposed and waiting for the team's review; not graded means no grade is recorded yet.</p>"
+        f"<p>Impact, checked in this order on the headline, then on the feed text; the first whole word that matches "
+        f"decides: {escape(' → '.join(IMPACT_CHECK_ORDER))}.</p><ul>{rules}</ul>"
+        f"<p>No word matched: a headline naming one satellite in the registry (NVS-03, QZS-7) is "
+        f"{escape(IMPACT_OF_AN_ID)}; anything else is background. Word rules only, no model; an item appears under "
+        "every constellation its headline names.</p>"
+        f"<p>One story: reports with the same impact whose headlines name the same mission or satellite (NVS-03, "
+        f"GSLV-F18), or share at least {STORY_SHARED_WORDS} uncommon words making up {STORY_SHARE:.0%} of the shorter "
+        f"headline, each within {STORY_DAYS} days of another in it. Rebuilt on every visit.</p>"
+        "<p>Grade standing: confirmed, in the team's source table; provisional, proposed and waiting for the team's "
+        "review; not graded, no grade recorded and no checked claim yet.</p>"
         f"{grade_legend_html()}"
     )
+
+
+def ledger_html(rows):
+    """State news agencies: stories quoting each, and the share of those a confirmed A or B source reported too."""
+    tip = (f"A story quotes an agency when a report in it comes from the agency's site, as a feed pointed to it, or names "
+           f"it. Confirmed: a report in the same story from a source confirmed at grade {' or '.join(CORROBORATING_GRADES)} "
+           f"that quotes no state agency, published at or after the first report quoting it, within {CORROBORATION_DAYS} days. Only reports already in "
+           "the news file count; the agencies' sites are never opened.")
+    cells = ['<span class="h">Agency</span><span class="h n">Stories</span>',
+             f'<span class="h">{tooltip.tip_html("Confirmed by an A or B source", escape(tip), key="ledger")}</span>']
+    for row in rows:
+        told, held = row["stories"], row["confirmed"]
+        share = held / told if told else 0
+        cells.append(f'<span>{escape(row["agency"])}<small>{escape(row["country"])}</small></span>'
+                     f'<b class="n num{"" if told else " zero"}">{told}</b>')
+        cells.append(f'<span class="share" role="img" aria-label="{held} of {told} confirmed"><span class="bar">'
+                     f'<i style="width:{100 * share:.0f}%"></i></span>'
+                     f'<span class="num{"" if told else " quiet"}">{f"{held} of {told}" if told else "not quoted"}</span></span>')
+    return f'<div class="news-ledger">{"".join(cells)}</div>'
 
 
 def screen_reader_heading(label):
@@ -344,8 +379,8 @@ def as_of_line(generated_at, now, zone=timezone.utc):
     """A notice when news is late, else a quiet as-of line."""
     generated = _time(generated_at)
     if generated is None:
-        return surfaces.notice("News time is not in the file. Collection runs every 3 hours.", "warn")
+        return surfaces.notice(f"The news file (latest_news.json) gives no collection time. We collect news every {NEWS_CYCLE_HOURS} hours.", "warn")
     if now - generated > timedelta(hours=NEWS_LATE_HOURS):
-        return surfaces.notice(f"News was last seen {_time_words(generated, timezone.utc)}. Collection runs every "
+        return surfaces.notice(f"News was last seen {_time_words(generated, timezone.utc)}. We collect news every "
                                f"{NEWS_CYCLE_HOURS} hours.", "warn")
     return f'<p class="news-asof">News as of {escape(_time_words(generated, zone))}</p>'

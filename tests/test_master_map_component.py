@@ -6,15 +6,27 @@ import pytest
 
 from evidence.catalogue_check import disagreements
 from evidence.registry_tables import read_table
-from evidence.settings import (COUNTRY_NAMES, COUNTRY_NOT_GIVEN, MAP_WARN, REGISTRY_CATALOGUE_FILE,
-                               REGISTRY_SATELLITES_FILE, REGISTRY_SIGHTINGS_FILE, SCHEME_ORBIT_FEED)
+from evidence.settings import (
+    MAP_WARN,
+    SCHEME_ORBIT_FEED
+)
+from evidence.registry_settings import (
+    REGISTRY_CATALOGUE_FILE,
+    REGISTRY_SATELLITES_FILE,
+    REGISTRY_SIGHTINGS_FILE
+)
+from ui.country_settings import COUNTRY_NAMES, COUNTRY_NOT_GIVEN
 from ui import palette
 from ui.components.master_map import PAGE_FILE, master_map_html, master_map_records
 from ui.pages_data import DATA_DIR
 from evidence.master_map import orbit_feed_checked, orbit_feed_names
-from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_SIGNAL_IDS_FILE
-from evidence.settings import (MAP_IDLE, NOT_YET_KNOWN, SCHEME_COSPAR, SCHEME_NORAD, SCHEME_SIGNAL_ID, SIGHTING_NOTE,
-                               SOURCE_IGS, SOURCE_SIGHTING)
+from evidence.registry_settings import (
+    REGISTRY_DASHBOARD_SATELLITES_FILE,
+    REGISTRY_SIGNAL_IDS_FILE
+)
+from evidence.settings import (MAP_IDLE, NOT_YET_KNOWN, SCHEME_COSPAR, SCHEME_NORAD, SCHEME_SIGNAL_ID, SOURCE_IGS,
+                               SOURCE_SIGHTING)
+from ui.master_map_settings import IDENTITY_WORDS, SIGHTING_WORDS, SOURCE_NAMES
 
 HOSTILE = "</script><script>alert(1)</script>"
 
@@ -48,13 +60,13 @@ def test_a_sighting_reaches_the_map_marked_as_one(real):
                             "feed_names": {**real["feed_names"], 101228: "NVS-03 (IRNSS-1L)"}})
     payload = json.loads(re.search(r'id="map-data">(.*?)</script>', page, re.S).group(1))
     record = payload["records"][-1]
-    assert (record["svn"], record["name"], record["sighting"]) == ("I-101228", "NVS-03 (IRNSS-1L)", SIGHTING_NOTE)
+    assert (record["svn"], record["name"], record["sighting"]) == ("I-101228", "NVS-03 (IRNSS-1L)", SIGHTING_WORDS)
     said = {i["scheme"]: i for i in record["identifiers"]}
     assert said[SCHEME_NORAD]["value"] == "101228" and said[SCHEME_COSPAR]["value"] == "2026-245A"
     assert said[SCHEME_SIGNAL_ID]["value"] == NOT_YET_KNOWN == record["signal_id"] and said[SCHEME_SIGNAL_ID]["sources"] == []
     # Its numbers came from CelesTrak's GNSS group; the IGS file is never said to hold them.
     sources = [s["source"] for i in record["identifiers"] for s in i["sources"] if s["status"] != MAP_IDLE]
-    assert SOURCE_SIGHTING in sources and SOURCE_IGS not in sources
+    assert SOURCE_NAMES[SOURCE_SIGHTING] in sources and SOURCE_NAMES[SOURCE_IGS] not in sources
     assert all(r["sighting"] == "" for r in payload["records"][:-1])
 
 
@@ -69,8 +81,8 @@ def test_c217_carries_the_out_of_date_orbit_feed_name(records):
 
 def test_a_record_carries_what_the_far_hover_card_says(records):
     found = {r["svn"]: r for r in records}
-    assert (found["C217"]["signal_id"], found["C217"]["identity"]) == ("C04", "two sources agree")
-    assert found["J008"]["identity"] == "one source only"
+    assert (found["C217"]["signal_id"], found["C217"]["identity"]) == ("C04", IDENTITY_WORDS["two sources agree"])
+    assert found["J008"]["identity"] == IDENTITY_WORDS["one source only"]
 
 
 def test_countries_are_named_in_full(records, real):

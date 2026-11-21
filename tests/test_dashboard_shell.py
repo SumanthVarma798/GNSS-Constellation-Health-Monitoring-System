@@ -3,6 +3,7 @@
 These drive the real script without a browser, with the clock frozen as tests/test_dashboard_notices.py does.
 """
 import json
+import re
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -60,6 +61,12 @@ def run(setup=lambda at: None, now=FROZEN):
 
 def htmls(at):
     return [part.proto.body for part in at.get("html")]
+
+
+def wheel(at, key):
+    """What a ferris-wheel picker (ui/components/ferris.py) was drawn with, or None when it was not drawn."""
+    found = [json.loads(e.proto.json_args) for e in at.get("component_instance") if e.proto.component_name.endswith("ferris")]
+    return next((args for args in found if args["key"] == f"{key}__wheel"), None)
 
 
 def tiles(at):
@@ -145,9 +152,11 @@ def test_qzss_has_its_quasi_zenith_satellites_in_their_own_group():
 
 
 def test_the_overview_says_the_window_and_the_status_counts():
-    body = next(b for b in htmls(run()) if 'class="facts"' in b)
+    body = next(b for b in htmls(run()) if 'class="ovh"' in b)
 
-    assert "90 days: " in body and "orbit records" in body and "scores read" in body
+    # the window in a small chip, its dates and the year the scores read in its tooltip; the states as one bar
+    assert re.search(r"90 d · [\d,]+ records", body) and "90 days" in body and "Scores read" in body
+    assert 'aria-label="Satellite scores: ' in body
     assert all(word in body for word in ("healthy", "fair", "degraded", "critical"))
 
 
@@ -270,15 +279,16 @@ def test_rows_from_celestrak_make_the_chip_say_today_and_its_time(monkeypatch):
 def test_the_bar_says_how_long_to_the_next_automatic_refresh():
     chips = " ".join(htmls(run()))
 
-    assert '<span class="next">Next update in 2 h</span>' in chips   # tried at the frozen 12:00 UTC, every two hours
+    assert '<span class="next">Next check in 20 m</span>' in chips   # tried at the frozen 12:00 UTC, a look every 20 minutes
 
 
 def test_next_words_say_hours_and_minutes_rounded_up():
-    assert next_words(1 * 3600 + 41 * 60 + 5) == "Next update in 1 h 42 m"
-    assert next_words(7200) == "Next update in 2 h"
-    assert next_words(42 * 60) == "Next update in 42 m"
-    assert next_words(20) == "Next update in 1 m"
-    assert next_words(0) == "Next update due now"
+    assert next_words(1 * 3600 + 41 * 60 + 5) == "Next check in 1 h 42 m"
+    assert next_words(7200) == "Next check in 2 h"
+    assert next_words(0) == "Next check due now"
+    assert next_words(42 * 60) == "Next check in 42 m"
+    assert next_words(20) == "Next check in 1 m"
+    assert next_words(0) == "Next check due now"
 
 
 def test_the_clock_starts_at_utc_and_a_double_click_or_key_switches_to_local_12_hour_time():
@@ -305,17 +315,17 @@ def test_the_range_presets_and_custom_dates_are_bounded_by_the_records_held():
 def test_the_range_offers_every_preset_for_navics_year_and_a_custom_start_inside_it():
     at = run()
 
-    assert not any(at.button(key=f"window_{days}").disabled for days in time_range.PRESETS)
+    assert wheel(at, "window_days")["labels"] == ["30 days", "90 days", "6 months", "1 year"]
+    assert not any(wheel(at, "window_days")["disabled"]) and wheel(at, "window_days")["index"] == 1   # 90 days
     start = at.date_input(key="_window_from")
     assert (start.min, start.max) == (date(2025, 10, 4), date(2026, 9, 22))   # oldest record held; 14 days before today
     assert start.value == date(2026, 7, 8)                                     # the 90 days chosen
 
 
-def test_a_constellation_with_no_records_held_greys_every_preset_and_says_why():
+def test_a_constellation_with_no_records_held_offers_no_preset_and_says_why():
     at = run(lambda at: at.session_state.__setitem__("scope", "GPS"))
 
-    assert all(at.button(key=f"window_{days}").disabled for days in time_range.PRESETS)
-    assert at.button(key="window_30").help == "No orbit records are yet held for GPS."
+    assert wheel(at, "window_days") is None
     assert not at.get("date_input")
     assert any("No orbit records are held yet." in body for body in htmls(at))
 
@@ -324,21 +334,24 @@ def test_a_custom_start_sets_the_range_to_now_on_every_page():
     at = run(lambda at: at.date_input(key="_window_from").set_value(date(2026, 8, 20)))
 
     assert at.session_state["window_days"] == 47
-    assert any("47 days: 20 Aug 2026 to 6 Oct 2026" in body for body in htmls(at))
+    assert any("47 days" in body and "20 Aug 2026 to 6 Oct 2026" in body for body in htmls(at))
     at.session_state["page"] = "Station-keeping"
-    at.run()
+    with time_machine.travel(FROZEN, tick=False):   # the same frozen now as run(): the range ends at now
+        at.run()
     assert not at.exception and any("47 days" in body for body in htmls(at))
 
 
-def test_a_preset_button_sets_the_range():
-    at = run(lambda at: at.button(key="window_182").click())
+def test_a_preset_picked_on_the_wheel_sets_the_range():
+    at = run(lambda at: at.session_state.__setitem__("window_days", 182))   # as the wheel's pick does (tests/test_ferris.py)
 
-    assert at.session_state["window_days"] == 182
-    assert any("6 months: " in body for body in htmls(at))
+    assert wheel(at, "window_days")["index"] == 2
+    assert any("6 months" in body and "182 d · " in body for body in htmls(at))
 
 
-def test_the_pages_across_all_systems_are_set_apart_without_words():
-    assert not any("Across all systems" in body for body in htmls(run()))
+def test_the_constellations_are_set_apart_from_the_pages_across_all_of_them_by_one_word():
+    labels = [body for body in htmls(run()) if 'class="nav-label"' in body]
+
+    assert len(labels) == 1 and ">Constellations<" in labels[0]
 
 
 def test_a_failed_copy_read_keeps_the_archive_and_says_so(monkeypatch):
@@ -357,7 +370,7 @@ def test_while_the_archive_jobs_copy_stands_in_the_chip_says_so_not_failing(monk
     monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: ({}, set(), FROZEN - timedelta(hours=1)))
     chips = " ".join(htmls(run(lambda at: at.button(key="refresh_button").click())))
 
-    assert 'class="chip idle">Orbits from CelesTrak' in chips
+    assert "<b>Source</b> Orbits from " in chips   # in the data chip's tip, so the bar keeps one chip
     assert "CelesTrak failing" not in chips
     assert 'class="chip ok">Orbit data 6 Oct 11:00' in chips   # the copy's own age, not the bundled history's
 
@@ -366,7 +379,7 @@ def test_the_copy_chip_says_which_copy_and_when_the_next_orbital_run_is_due(monk
     monkeypatch.setattr(celestrak, "fetch_copy", lambda norads: ({}, set(), FROZEN - timedelta(hours=1)))
     chips = " ".join(htmls(run(lambda at: at.button(key="refresh_button").click())))
 
-    assert 'class="chip idle">Orbits from CelesTrak, fetched 11:00 · next fetch about 14:15' in chips
+    assert "<b>Source</b> Orbits from " in chips and ", newest copy from 11:00 · next fetch about 12:15" in chips   # the chip's tip
 
 
 def test_when_the_copy_read_fails_the_chip_says_the_archive_copy_is_failing(monkeypatch):
@@ -374,7 +387,7 @@ def test_when_the_copy_read_fails_the_chip_says_the_archive_copy_is_failing(monk
     chips = " ".join(htmls(run()))
 
     assert 'class="chip warn">Orbit fetch failing since 12:00' in chips
-    assert 'class="chip idle">Orbits from CelesTrak' not in chips and "CelesTrak failing" not in chips
+    assert "<b>Source</b>" not in chips and "CelesTrak failing" not in chips
 
 
 def test_a_state_saved_by_the_old_code_with_a_copy_in_use_is_not_shown_as_failing(monkeypatch):
@@ -382,7 +395,7 @@ def test_a_state_saved_by_the_old_code_with_a_copy_in_use_is_not_shown_as_failin
                            copy_at=FROZEN - timedelta(hours=1), fetched=FROZEN - timedelta(hours=1))
     chips = " ".join(htmls(run()))
 
-    assert 'class="chip idle">Orbits from CelesTrak' in chips
+    assert "<b>Source</b> Orbits from " in chips
     assert "failing since" not in chips
 
 
@@ -420,15 +433,15 @@ def test_copy_words_say_the_copy_time_and_the_next_orbital_run():
     now = FROZEN.replace(hour=9, minute=0)
 
     assert copy_words(now.replace(hour=5, minute=6), now) == \
-        "Orbits from CelesTrak, fetched 05:06 · next fetch about 14:15"
+        "Orbits from CelesTrak, newest copy from 05:06 · next fetch about 10:15"
     assert copy_words(now.replace(hour=5, minute=6), FROZEN.replace(hour=21, minute=0)) == \
-        "Orbits from CelesTrak, fetched 05:06 · next fetch about 7 Oct 01:15"
+        "Orbits from CelesTrak, newest copy from 05:06 · next fetch about 22:15"
 
 
 def test_copy_words_leaves_out_the_next_time_without_a_readable_schedule(monkeypatch, tmp_path):
     monkeypatch.setattr(shell, "WORKFLOWS_DIR", tmp_path)
 
-    assert copy_words(FROZEN - timedelta(hours=1), FROZEN) == "Orbits from CelesTrak, fetched 11:00"
+    assert copy_words(FROZEN - timedelta(hours=1), FROZEN) == "Orbits from CelesTrak, newest copy from 11:00"
 
 
 def _on(page):
@@ -457,14 +470,15 @@ def test_every_burn_is_grouped_under_its_satellite_in_the_timelines_order():
         assert group.count('<div class="bl-row">') == said
 
 
-def test_the_master_map_draws_its_canvas_and_hides_the_constellation_controls():
+def test_the_master_map_draws_its_canvas_and_shows_nothing_that_filters_one_systems_page():
     with time_machine.travel(FROZEN, tick=False):
         at = AppTest.from_file(str(ROOT / "dashboard.py"), default_timeout=600).run()
         at.switch_page("views/master_map.py").run()
     assert not at.exception, [e.value for e in at.exception]
 
     labels = [getattr(w, "label", None) for w in at.get("button_group")]
-    assert "Constellation" not in labels and "Page" in labels
+    assert "Across all constellations" in labels and "Choose a constellation" in labels   # the first row is always there
+    assert not [b for b in at.button if b.key == "compare_toggle"] and "Constellations" not in labels
 
 
 def test_under_compare_the_range_fits_the_constellation_with_least_history(monkeypatch):
@@ -472,3 +486,49 @@ def test_under_compare_the_range_fits_the_constellation_with_least_history(monke
     from ui import time_range
     monkeypatch.setattr(time_range, "firsts", lambda names, w, p: {"NavIC": date(2025, 10, 4), "GPS": date(2026, 9, 22)})
     assert time_range.oldest(["NavIC", "GPS"], 90, {}) == date(2026, 9, 22)
+
+
+# --- the gear's settings: what to know before moving one ---
+
+def test_every_setting_says_what_it_does_what_raising_and_lowering_does_and_when_to_change_it():
+    from config.config import DEFAULT_PARAMS
+    from ui import threshold_settings
+
+    for setting in threshold_settings.SETTINGS:
+        assert setting["key"] in DEFAULT_PARAMS and setting["group"] in threshold_settings.GROUPS
+        assert setting["low"] <= DEFAULT_PARAMS[setting["key"]] <= setting["high"]
+        for part in ("label", "also", "what", "raise", "lower", "when"):
+            assert setting[part].strip(), (setting["key"], part)
+
+    panel = [body for body in htmls(run()) if 'class="th-what"' in body]
+    assert len(panel) == len(threshold_settings.SETTINGS)   # NavIC, judged by slot, shows every setting
+    assert all("Raise it" in body and "Lower it" in body and "Change it when" in body and "Default " in body
+               for body in panel)
+
+
+def test_a_constellation_judged_by_plane_shows_only_the_settings_that_find_burns():
+    from ui import threshold_settings
+
+    at = run(lambda at: at.session_state.__setitem__("scope", "GPS"))
+
+    burns = [s["key"] for s in threshold_settings.SETTINGS if s["group"] == threshold_settings.BURNS]
+    assert [w.key for w in at.number_input if w.key.startswith("th_")] == [f"th_{key}_GPS" for key in burns]
+    assert any("GPS is judged by orbital plane" in body for body in htmls(at))
+
+
+def test_back_to_the_defaults_undoes_every_setting_moved():
+    def move_then_reset(at):
+        at.number_input(key="th_z_threshold_NavIC").set_value(5.0).run()
+        assert at.session_state["params"] == {"z_threshold": 5.0} and not at.button(key="th_reset_NavIC").disabled
+        at.button(key="th_reset_NavIC").click()
+
+    at = run(move_then_reset)
+
+    assert at.session_state["params"] == {} and at.number_input(key="th_z_threshold_NavIC").value == 3.5
+    assert at.button(key="th_reset_NavIC").disabled   # nothing left to undo
+
+
+def test_the_tab_icon_is_the_logo_on_the_dashboards_surface():
+    icon = ROOT / "ui" / "opengnss_tab_icon.png"
+    assert icon.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
+    assert 'page_icon=str(Path(__file__).parent / "ui" / "opengnss_tab_icon.png")' in (ROOT / "dashboard.py").read_text()

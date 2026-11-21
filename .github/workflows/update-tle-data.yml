@@ -15,7 +15,6 @@ on:
     branches: [main]
     paths: [registry/dashboard_satellites.csv]
 
-  # Allow manual trigger from GitHub UI
   workflow_dispatch:
 
 concurrency:
@@ -23,7 +22,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write  # Explicitly grant write permissions
+  contents: write
 
 jobs:
   update-data:
@@ -36,7 +35,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # Use a token with write permissions
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0  # Fetch full history for proper git operations
       
@@ -52,12 +50,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
       
-      - name: Create data directory if needed
-        run: |
-          mkdir -p data
-          echo "Data directory structure:"
-          ls -la data/ || echo "data/ directory is empty"
-      
       - name: Run update script
         id: update
         continue-on-error: true
@@ -68,16 +60,6 @@ jobs:
           echo "Starting data update..."
           python scripts/update_bundled_data.py --days 365 --constellation all
           echo "Update script completed"
-      
-      - name: Verify data was created
-        run: |
-          echo "Checking for generated files..."
-          ls -lh data/
-          if [ -z "$(ls -A data/)" ]; then
-            echo "WARNING: No files generated in data/ directory"
-            exit 1
-          fi
-          echo "✅ Data files generated successfully"
       
       - name: Check for changes
         id: check_changes

@@ -24,7 +24,7 @@ CSS = f"""
   background: var(--well, {palette.WELL}); box-shadow: var(--pressed, {_SHADOW_PRESSED}); }}
 .sparts-fill {{ position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--accent, {palette.ACCENT}); }}
 .sparts-seg.sparts-missing {{ box-shadow: none; border: 1px dashed var(--idle, {palette.IDLE});
-  background: repeating-linear-gradient(135deg, {palette.WELL} 0 5px, {palette.LIFT} 5px 10px); }}
+  background: repeating-linear-gradient(135deg, var(--well, {palette.WELL}) 0 5px, var(--lift, {palette.LIFT}) 5px 10px); }}
 .sparts-note {{ margin: 0; font-size: var(--fs-small, 14px); color: var(--muted, {palette.MUTED}); }}
 """
 

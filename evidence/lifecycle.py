@@ -12,12 +12,12 @@ from urllib.parse import quote
 from evidence.library_settings import (COMMONS_LARGE, COMMONS_PAGE, COMMONS_PICTURE, DAYS_PER_YEAR, DESIGN_LIFE_YEARS,
                                        END_STEP, FAILED, LIFECYCLE_SERIES, LIFECYCLE_STEPS, NOTE_STEP, REGISTRY_STEPS,
                                        SERIES_SYSTEM, SERVICE_STEP, SYSTEM_ORDER)
+from evidence.registry_tables import launch_date
 from evidence.settings import GCAT_CITATION
 from evidence.sources import IGS_SATELLITE_METADATA_URL
 
 IGS = {"name": "International GNSS Service (IGS) satellite metadata file", "link": IGS_SATELLITE_METADATA_URL}
 GCAT = {"name": GCAT_CITATION, "link": "https://planet4589.org/space/gcat/"}
-LAUNCHED = re.compile(r"\bLaunched (\d{4}-\d{2}-\d{2})\b")
 GCAT_DATE = re.compile(r"^(\d{4}) ([A-Z][a-z]{2})(?: +(\d{1,2}))?$")   # "2025 Jul 10", "2023 Feb"; "?" means unsure: unused
 
 DONE, IMPLIED, FAILED_STATE, MISSED, AHEAD = "done", "done, date not published", "failed", "not reached", "ahead"
@@ -93,20 +93,20 @@ def _when(iso):
 def registry_events(satellite, periods, catalogue_row):
     """A satellite's events from the registry tables: launch, signal IDs, and the end of regular operations."""
     events = []
-    if launched := LAUNCHED.search(satellite["note"]):
-        events.append(_made("launch", "Launch", f"{launched[1]}T00:00:00Z", "on", "IGS file",
+    if launched := launch_date(satellite.get("note", "")):
+        events.append(_made("launch", "Launch", f"{launched.isoformat()}T00:00:00Z", "on", "IGS file",
                             "The launch date the IGS satellite metadata file gives.", IGS))
     periods = sorted(periods, key=lambda row: row["valid_from"])
     for i, period in enumerate(periods):
         signal_id, start = period["signal_id"], period["valid_from"]
         if i == 0:
             events.append(_made(SERVICE_STEP, f"Signal ID {signal_id} assigned", start, _when(start), "IGS file",
-                                f"The IGS file assigns it signal ID {signal_id} from this time. An assignment is not "
+                                f"The IGS satellite metadata file assigns it signal ID {signal_id} from this time. An assignment is not "
                                 "proof it was broadcasting.", IGS))
         else:
             again = signal_id == periods[i - 1]["signal_id"]
             events.append(_made(NOTE_STEP, f"Signal ID {signal_id}{' again' if again else ''}", start, _when(start),
-                                "IGS file", f"The IGS file assigns it signal ID {signal_id} from this time.", IGS))
+                                "IGS file", f"The IGS satellite metadata file assigns it signal ID {signal_id} from this time.", IGS))
     ended = periods[-1]["valid_to"] if periods and periods[-1]["valid_to"] else ""
     row = catalogue_row or {}
     gcat_end = _gcat_date(row.get("operations_ended", ""))
@@ -119,7 +119,7 @@ def registry_events(satellite, periods, catalogue_row):
                             "The date GCAT gives for the end of regular operations.", GCAT))
     if ended:
         withdrawn = _made(NOTE_STEP, f"Signal ID {periods[-1]['signal_id']} withdrawn", ended, _when(ended), "IGS file",
-                          "The IGS file ends its last signal-ID period here and gives it no other.", IGS)
+                          "The IGS satellite metadata file ends its last signal-ID period here and gives it no other.", IGS)
         if not any(e["step"] == END_STEP for e in events):
             withdrawn.update(step=END_STEP, title="Signal ID withdrawn")
         events.append(withdrawn)

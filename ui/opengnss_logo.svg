@@ -1,0 +1,25 @@
+<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <title>OpenGNSS: Earth, a location pin on its surface, a satellite in orbit</title>
+  <!-- Drawn with Higgsfield (gpt_image_2_6, SVG) on 16 Nov 2026, one colour: the page draws it as a mask in the theme's
+       colour (ui/theme.css .brand-mark). The satellite is moved round its orbit to the side opposite the pin, enlarged (x1.35) and drawn without its antenna, to read at 34 px. -->
+  <defs>
+    <clipPath id="globe-clip">
+      <path clip-rule="evenodd" d="M0 0H1024V1024H0Z M102 643C120 758 356 737 572 623C718 546 832 447 878 361L918 384C862 487 740 590 594 667C357 792 92 813 57 657Z" />
+    </clipPath>
+  </defs>
+  <g fill="#000000">
+    <g clip-path="url(#globe-clip)">
+      <circle cx="470" cy="574" r="278" />
+    </g>
+    <path d="M176 398C105 476 57 567 68 635C81 719 219 734 392 675C581 611 781 468 862 347C890 305 898 272 879 254C857 232 810 234 764 244C826 219 883 216 909 244C942 280 912 345 871 401C773 534 586 665 400 727C213 790 66 770 49 672C35 593 92 481 176 398Z" />
+    <path d="M315 278C419 231 548 204 662 209C551 218 440 248 344 297Z" />
+    <g transform="translate(704 382) rotate(30) scale(1)">
+      <path fill-rule="evenodd" d="M0 0C-25-37-104-121-104-181A104 104 0 0 1 104-181C104-121 25-37 0 0ZM0-226A45 45 0 1 0 0-136A45 45 0 1 0 0-226Z" />
+    </g>
+    <g transform="translate(150 270) rotate(-38) scale(1.35)">
+      <rect x="-30" y="-33" width="60" height="66" rx="8" />
+      <path d="M-113-43H-46V43H-113ZM46-43H113V43H46Z" />
+      <rect x="-49" y="-8" width="98" height="16" />
+    </g>
+  </g>
+</svg>

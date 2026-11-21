@@ -1,5 +1,6 @@
 """Settings for the latest-news file the dashboard reads."""
 from collections import OrderedDict
+from pathlib import Path
 
 # The branch that holds the latest-news file for the dashboard.
 NEWS_BRANCH = "news-data"
@@ -62,10 +63,6 @@ DISAGREEMENT_MIN_CLAIMS = 5
 RECORD_GRADED_BY = "the source record (weekly job), approved on the Approvals page"
 # A rejected move is proposed again only after this many more checked claims for that source.
 REJECTED_WAIT_CLAIMS = 3
-# The weekly source-record proposal branch.
-SOURCE_RECORD_BRANCH = "source-record"
-# The decision label on source-record proposals.
-SOURCE_RECORD_LABEL = "decision: source grade"
 
 # Rules for category names by words in the headline, then the summary (first match wins).
 NEWS_CATEGORIES = OrderedDict([
@@ -84,10 +81,56 @@ NEWS_CATEGORIES = OrderedDict([
     ("other", ()),
 ])
 
+# Impact on health and service: how the News page groups items (evidence/news_stories.py impact()). Word rules, no model.
+# Each impact's words are its own below plus every word of the categories it names (NEWS_CATEGORIES). Checked in
+# IMPACT_CHECK_ORDER on the headline, then on the feed text; the first impact with a matching whole word wins. A
+# headline that matches nothing but names a satellite or mission (NVS-03, SV10, QZS-7; not a notice number) takes
+# IMPACT_OF_AN_ID. Anything else is background.
+NEWS_IMPACTS = OrderedDict([
+    ("affects service now", {
+        "categories": ("satellite status and outages", "signal and service"),
+        "words": ("NAGU", "NANU", "notice advisory", "advisory", "health", "healthy", "restore", "restores", "restored",
+                  "revive", "revives", "revived", "reviving", "revival", "slips", "setback", "blackout",
+                  "no longer working", "in-orbit upgrade", "in-orbit upgrades")}),
+    ("changes the constellation", {
+        "categories": ("launch",),
+        "words": ("in orbit", "to orbit", "reaches orbit", "intended orbit", "geosynchronous orbit", "orbit raising",
+                  "orbit-raising", "manoeuvre", "manoeuvres", "maneuver", "maneuvers", "enter service", "enters service",
+                  "join the fleet", "joins the fleet", "deploys", "deployed", "places", "activated", "commissioned",
+                  "decommissioned", "retired", "retires", "end of life", "slot", "spare", "spares", "refuel", "refuels",
+                  "refuelled", "refueled", "new satellites")}),
+    ("plans and policy", {
+        "categories": ("programme and policy",),
+        "words": ("order", "orders", "ordered", "procures", "contracted", "funds", "second generation",
+                  "second-generation", "G2", "next generation", "next-generation", "white paper", "summit", "ownership",
+                  "takes over", "spectrum", "FCC", "GAO", "talks", "replacement")}),
+    ("background", {"categories": ("other",), "words": ()}),
+])
+# A launch or a retirement changes the constellation before it changes the service, so it is checked first.
+IMPACT_CHECK_ORDER = ("changes the constellation", "affects service now", "plans and policy")
+IMPACT_OF_AN_ID = "changes the constellation"
+
+# State news agencies, graded only by how the stories already in the news file quote them (evidence/news_stories.py
+# agency_ledger()). Their sites are never opened or added as sources: a story quotes one when a report in it comes from
+# one of its hosts (as Google News or another feed already pointed to it) or names it in its headline, feed text or outlet.
+# {agency: (country, words named, hosts)}. Add a provincial outlet here when one appears.
+STATE_AGENCIES = OrderedDict([
+    ("Xinhua", ("China", ("Xinhua",), ("news.cn", "xinhuanet.com"))),
+    ("CGTN", ("China", ("CGTN",), ("cgtn.com",))),
+    ("China Daily", ("China", ("China Daily",), ("chinadaily.com.cn",))),
+    ("Global Times", ("China", ("Global Times",), ("globaltimes.cn",))),
+    ("People's Daily", ("China", ("People's Daily", "People’s Daily"), ("people.cn", "people.com.cn"))),
+    ("China News Service", ("China", ("China News Service", "ECNS"), ("ecns.cn", "chinanews.com.cn"))),
+    ("CCTV", ("China", ("CCTV",), ("cctv.com",))),
+    ("TASS", ("Russia", ("TASS",), ("tass.com", "tass.ru"))),
+    ("RIA Novosti", ("Russia", ("RIA Novosti",), ("ria.ru",))),
+    ("Roscosmos statements", ("Russia", ("Roscosmos",), ("roscosmos.ru",))),
+])
+
 # Stories on the News page: items that say the same thing are shown once, with every source that said it
 # (evidence/news_stories.py). Two headlines tell one story when they share a mission or satellite ID (NVS-03,
 # GSLV-F18, SV10), or share at least STORY_SHARED_WORDS words that are not common in that constellation's news,
-# making up at least STORY_SHARE of the shorter headline. Items in a story share a category, and each is
+# making up at least STORY_SHARE of the shorter headline. Items in a story share an impact, and each is
 # published within STORY_DAYS of one already in it.
 STORY_DAYS = 10
 STORY_SHARE = 0.5
@@ -104,10 +147,6 @@ STORY_STOP_WORDS = frozenset(
     "a an the and or of to in on for with by from at as is are be its it this that new into over after says say "
     "will has have how why what who more than up out about via amid".split())
 
-# Category rules: checked in order on the headline first; if none match there, checked in order on the summary.
-CATEGORY_RULE_WORDS = ('Categories are checked in order: first the headline is checked against every category; only when '
-                       'none matches, the feed text is checked in the same order; no match is "other".')
-
 # X accounts (kind "X account" in source_candidates.csv), read through twitterapi.io (key: TWITTERAPI_IO_KEY).
 X_API_URL = "https://api.twitterapi.io/twitter/tweet/advanced_search"
 # Only posts that name a navigation system (or an NVS satellite: "NVS-03") are read.
@@ -116,3 +155,42 @@ X_POST_WORDS = "(GPS OR BeiDou OR Galileo OR GLONASS OR NavIC OR IRNSS OR NVS OR
 X_READ_DAYS = 2
 # A post has no headline: its first words, cut here, stand in for one.
 X_TITLE_CHARACTERS = 120
+
+# A social post's own platform. A link to one of these is not a link to the post's source.
+SOCIAL_PLATFORM_HOSTS = ("reddit.com", "redd.it", "redditmedia.com", "redditstatic.com")
+# Links in a post that are not an article to check: countdown clocks, image hosts, videos. Skipped when
+# looking for the post's source (an r/ISRO launch thread's first link was a countdown clock, 19 Oct 2026).
+NOT_AN_ARTICLE_HOSTS = ("timeanddate.com", "imgur.com", "youtube.com", "youtu.be", "twitch.tv",
+                        # another social post is a pointer too, never the source (r/roscosmos, 19 Oct 2026)
+                        "x.com", "twitter.com", "facebook.com", "instagram.com", "linkedin.com", "t.me")
+
+# One collected news item (issue 13): a pointer to an article, read from a feed. Not a claim; nothing here decides.
+# source_id: who published the article (for a discovery or social feed, the linked page's host, decision 5);
+# via: the feed it was read from; fetched_at: when our archive first held it.
+NEWS_ITEM_COLUMNS = ["source_id", "address", "title", "published_at", "fetched_at", "via"]
+
+# One row per archived feed, measured from the archive (issue 13): how often a copy changed per run of its group
+# (to set cadence), and the share of its items that name a navigation system (a first signal-to-noise measure,
+# until the hand-labelled set gives a better one). Measurements only: no grade or cadence changes by itself.
+FEED_REPORT_COLUMNS = ["via", "group", "runs", "copies", "copies_per_run", "items", "items_naming_a_system",
+                       "share_naming_a_system"]
+
+# The hand-labelled set for choosing a claim-extraction model (issue 15, week 1). Kept here, beside the
+# source lists, until the extraction step decides where its test data lives.
+LABELLING_SHEET_FILE = Path(__file__).resolve().parent / "labelling_sheet.csv"
+LABELLING_SHEET_COLUMNS = ["system", "title", "source_id", "published_at", "address", "claims_in_this_item", "none"]
+LABELLING_SHEET_SIZE = 30
+# For a new-satellite finding, a news item in the launch window counts only when its title also names the satellite
+# or says it launched (whole words, any case): naming the system alone matched unrelated articles (R809, 26 Oct 2026).
+NEWS_LAUNCH_WORDS = ("launch", "launched", "launches", "liftoff", "lifts off", "lifted off")
+
+# Words that put an item under a system, for spreading the sheet across all six. Matched as whole words,
+# any case. A cheap pointer, not the relevance filter: an item may name several systems or none.
+SYSTEM_WORDS = {
+    "GPS": ("GPS", "Navstar"),
+    "GLONASS": ("GLONASS",),
+    "Galileo": ("Galileo",),
+    "BeiDou": ("BeiDou", "Compass navigation"),
+    "QZSS": ("QZSS", "Michibiki", "QZS"),
+    "NavIC": ("NavIC", "IRNSS", "NVS-01", "NVS-02", "NVS-03"),
+}

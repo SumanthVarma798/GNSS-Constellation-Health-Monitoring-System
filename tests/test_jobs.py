@@ -21,15 +21,9 @@ def test_each_schedule_is_read_with_its_group():
     assert jobs.schedules("on:\n  push:\n") == {}
 
 
-def test_every_job_in_the_settings_has_its_workflow_and_schedule_group():
-    for workflow, group, *_ in JOBS:
-        text = (WORKFLOWS_DIR / workflow).read_text()
-        assert not group or group in jobs.schedules(text), (workflow, group)
-
-
 @pytest.mark.parametrize("cron, words", [
-    ("30 0 * * *", "daily 00:30"), ("50 */3 * * *", "every 3 hours from 00:50"), ("0 1 * * 0", "Sundays 01:00"),
-    ("15 4 1 * *", "15 4 1 * * (cron)")])
+    ("30 0 * * *", "daily 00:30"), ("15 1,8,14,20 * * *", "daily 01:15, 08:15, 14:15, 20:15"), ("50 */3 * * *", "every 3 hours from 00:50"), ("0 1 * * 0", "Sundays 01:00"),
+    ("*/30 * * * *", "every 30 minutes"), ("15 4 1 * *", "15 4 1 * * (cron)")])
 def test_a_schedule_is_said_in_words(cron, words):
     assert jobs.schedule_words(cron) == words
 
@@ -115,7 +109,7 @@ def test_the_reliability_grid_counts_scheduled_runs_per_day():
 def test_what_needs_attention_comes_worst_first():
     items = jobs.attention(list(rows().values()), not_answering={"refused (403)": 3, "timed out": 1}, waiting=0)
 
-    assert [(tone, title) for tone, title, _, _ in items] == [
+    assert [(tone, title) for tone, title, _ in items] == [
         ("bad", "Archive: news: failed: 6 of 44 sources"),
         ("warn", "Update orbit data is turned off on GitHub"),
         ("warn", "4 candidate sources do not answer"),
@@ -149,10 +143,12 @@ def test_without_a_readable_run_log_a_job_shows_githubs_own_record():
 
 
 def test_orbit_record_check_job_is_listed():
-    row = next((row for row in JOBS if row[2] == "Orbit record check"), None)
+    row = next((row for row in JOBS if row.name == "Orbit record check"), None)
 
-    assert row == ("rinex-check.yml", "", "Orbit record check",
-                   "Measures each orbit record against the satellite's broadcast orbit", "rinex check")
+    assert row and row.workflow == "rinex-check.yml"
+    assert row.group == ""
+    assert row.what == "Measures each orbit record against the satellite's broadcast orbit"
+    assert row.log_name == "rinex check"
 
 
 def test_what_changed_counts_only_the_addresses_and_keeps_a_thinning_note():

@@ -57,7 +57,13 @@ FINDING_ACTIONS = {
     APPROVE: "records this finding as approved on the pull request",
     REJECT: "records this finding as rejected on the pull request",
 }
-DECISION_MARKER = "admin-decision"   # an HTML comment in each decision, so the outcomes can be counted from GitHub
+# A pull request's checks on the Approvals page, as (tone, words): its tests (decisions.tests_state), then whether
+# GitHub can merge it (the pull request's "mergeable": None while GitHub is still working it out).
+TESTS_WORDS = {"passed": ("ok", "tests passed"), "failed": ("bad", "tests failed"),
+               "running": ("info", "tests still running"), "not run": ("warn", "tests not run yet")}
+MERGE_WORDS = {True: ("ok", "no conflicts with main"), False: ("bad", "conflicts with main: it needs updating first"),
+               None: ("info", "GitHub is still checking for conflicts")}
+DECISION_MARKER ="admin-decision"   # an HTML comment in each decision, so the outcomes can be counted from GitHub
 REQUIRED_CHECK = "pytest"            # the Tests job (.github/workflows/tests.yml); it must pass on the commit merged
 MERGE_METHOD = "squash"
 READ_EVERY_SECONDS = 300    # how long one reading of GitHub is kept before the page reads again

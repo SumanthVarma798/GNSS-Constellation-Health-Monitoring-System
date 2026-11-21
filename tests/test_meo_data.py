@@ -10,7 +10,10 @@ from analysis.meo_run import assess_meo
 from config.config import BEIDOU3_SATS, MEO_SATS
 from data import celestrak
 from evidence.registry_tables import constellation_names, read_table
-from evidence.settings import REGISTRY_DASHBOARD_SATELLITES_FILE, REGISTRY_SATELLITES_FILE
+from evidence.registry_settings import (
+    REGISTRY_DASHBOARD_SATELLITES_FILE,
+    REGISTRY_SATELLITES_FILE
+)
 
 # Two rows of a real reply from gp.php?GROUP=galileo&FORMAT=json, taken 17 Oct 2026: neighbours in plane B.
 GSAT0101 = {"OBJECT_NAME": "GSAT0101 (GALILEO-PFM)", "OBJECT_ID": "2011-060A", "EPOCH": "2026-10-16T20:35:39.988608",

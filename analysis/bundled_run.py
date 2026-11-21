@@ -19,6 +19,8 @@ import pandas as pd
 from skyfield.api import EarthSatellite, load, wgs84
 
 from analysis import commissioning
+from analysis.burn_classes import classify
+from analysis import score_rules
 from analysis.dop_calculations import parse_tle_data
 from analysis.drift_analysis import calculate_longitudinal_drift
 from analysis.health_assessment import assess_satellite_health_with_drift
@@ -27,9 +29,8 @@ from config.config import (
     BEIDOU3_SATS, BEIDOU3_SERVICE_REQUIREMENTS, DEFAULT_PARAMS, GRAVEYARD_ORBIT_MIN,
     NAVIK_SATS, QZSS_SATS, QZSS_SERVICE_REQUIREMENTS, R_EARTH,
 )
-from data.tle_cache import bundle_key, get_gp_history_metadata, load_bundled_gp_history, load_bundled_tles
+from data.tle_cache import get_gp_history_metadata, load_bundled_gp_history, load_bundled_tles
 
-# constellation -> (satellites it tracks, service requirements), as app.py picks them.
 _CONSTELLATIONS = {
     "NavIC": (NAVIK_SATS, None),
     "QZSS": (QZSS_SATS, QZSS_SERVICE_REQUIREMENTS),
@@ -39,13 +40,13 @@ _CONSTELLATIONS = {
 _ts = load.timescale()
 
 
-def load_bundled_gp_as_dataframes(constellation_key: str, sat_dict: dict, fresh=None) -> list:
+def load_bundled_gp_as_dataframes(constellation: str, sat_dict: dict, fresh=None) -> list:
     """Copy of app.py's load_bundled_gp_as_dataframes (same behaviour); app.py cannot be
     imported without running its Streamlit script. `fresh` ({norad: [rows]}, from data.celestrak)
     is added to each satellite's bundled records, leaving out epochs already there. With no bundled
     file the fresh rows alone are used (the MEO systems have one only for satellites CelesTrak publishes no orbit for)."""
     all_dfs = []
-    sat_data = (load_bundled_gp_history(constellation_key) or {}).get('satellites') or {}
+    sat_data = (load_bundled_gp_history(constellation) or {}).get('satellites') or {}
     fresh = fresh or {}
 
     for sat_name, norad_id in sat_dict.items():
@@ -57,7 +58,6 @@ def load_bundled_gp_as_dataframes(constellation_key: str, sat_dict: dict, fresh=
 
         df = pd.DataFrame(records)
 
-        # Standardize column names
         rename_map = {
             'epoch': 'EPOCH',
             'inclination': 'INCLINATION',
@@ -78,22 +78,17 @@ def load_bundled_gp_as_dataframes(constellation_key: str, sat_dict: dict, fresh=
         df['EPOCH'] = pd.to_datetime(df['EPOCH'])
         df['INCLINATION'] = df['INCLINATION'].astype(float)
 
-        # Calculate longitudinal drift
         if 'MEAN_MOTION' in df.columns:
             df['MEAN_MOTION'] = df['MEAN_MOTION'].astype(float)
             df['LonDrift_deg_per_day'] = calculate_longitudinal_drift(df['MEAN_MOTION'])
 
-        # Classify satellite type
-        df['type'] = df['INCLINATION'].apply(
-            lambda x: 'GEO' if (x > 0.0 and x < 10.0) else ('IGSO' if x >= 10 else 'Unclassified')
-        )
+        df['type'] = df['INCLINATION'].apply(lambda x: score_rules.orbit_type(x, None))   # GEO or IGSO here; QZO is named in the health step
 
         mean_incl = df['INCLINATION'].mean()
         df['mean_inclination'] = mean_incl
         df['maintained'] = df['INCLINATION'].apply(lambda x: abs(x - mean_incl) <= 0.3)
         df['satellite'] = sat_name
 
-        # Calculate altitude
         if 'SEMIMAJOR_AXIS' in df.columns:
             df['SEMIMAJOR_AXIS'] = df['SEMIMAJOR_AXIS'].astype(float)
             df['altitude_km'] = df['SEMIMAJOR_AXIS'] - R_EARTH
@@ -114,14 +109,11 @@ def get_graveyard_satellites(df_all) -> set:
     for sat_name in df_all['satellite'].unique():
         sat_df = df_all[df_all['satellite'] == sat_name]
 
-        # Check if satellite has altitude data
         if 'altitude_km' not in sat_df.columns or sat_df['altitude_km'].isna().all():
             continue
 
-        # Get current altitude (most recent data point)
         current_altitude = sat_df['altitude_km'].iloc[-1]
 
-        # Check for graveyard orbit
         if current_altitude >= GRAVEYARD_ORBIT_MIN:
             graveyard_sats.add(sat_name)
 
@@ -140,40 +132,9 @@ def _detect(sat_df, p):
     )
 
 
-def _longitude_score(abs_dev, sat_type):
-    if sat_type == 'GEO':
-        if abs_dev <= 0.5:
-            return 100
-        if abs_dev <= 1.0:
-            return 90 - ((abs_dev - 0.5) / 0.5) * 20
-        if abs_dev <= 2.0:
-            return 70 - ((abs_dev - 1.0) / 1.0) * 30
-        return max(0, 40 - ((abs_dev - 2.0) / 2.0) * 40)
-    # IGSO
-    if abs_dev <= 5.0:
-        return 100
-    if abs_dev <= 10.0:
-        return 90 - ((abs_dev - 5.0) / 5.0) * 30
-    return max(0, 60 - ((abs_dev - 10.0) / 10.0) * 60)
-
-
-def _longitude_remark(abs_dev, deviation, sat_type, designated_lon):
-    where = f"({deviation:+.2f}° from {designated_lon}°)"
-    if sat_type == 'GEO':
-        if abs_dev <= 0.5:
-            return f"✅ Excellent longitude slot position {where}"
-        if abs_dev <= 1.0:
-            return f"✓ Good longitude position {where}"
-        return f"⚠️ Longitude deviation from designated slot {where}"
-    if abs_dev <= 5.0:
-        return f"✅ Within central longitude tolerance {where}"
-    return f"⚠️ Central longitude deviation {where}"
-
-
 def _add_longitude(health_df, satellites_dop, now, warnings):
     """app.py's longitude step: 24-hour mean longitude per satellite, its deviation from
     the designated slot, the longitude score, and the overall score recalculated with it."""
-    # "N/A" strings to NaN so float values can be assigned (as app.py does).
     for _col in ['Current Mean Lon (°)', 'Lon Slot Deviation (°)', 'Lon Deviation Score']:
         if _col in health_df.columns:
             health_df[_col] = pd.to_numeric(health_df[_col], errors='coerce')
@@ -186,14 +147,12 @@ def _add_longitude(health_df, satellites_dop, now, warnings):
         try:
             sat_obj = satellites_dop[sat_name]
 
-            # 96 steps of 15 minutes over the 24 hours before `now`
             longitudes = []
             for i in range(96):
                 dt = now - timedelta(hours=24) + timedelta(minutes=i * 15)
                 geocentric = sat_obj.at(_ts.from_datetime(dt))
                 longitudes.append(wgs84.subpoint(geocentric).longitude.degrees)
 
-            # circular mean longitude
             lons_rad = np.deg2rad(longitudes)
             current_mean_lon = np.rad2deg(np.arctan2(np.mean(np.sin(lons_rad)), np.mean(np.cos(lons_rad))))
 
@@ -209,13 +168,12 @@ def _add_longitude(health_df, satellites_dop, now, warnings):
 
             abs_dev = abs(longitude_deviation)
             sat_type = row['Type']
-            lon_score = _longitude_score(abs_dev, sat_type)
+            lon_score = score_rules.longitude_score(abs_dev, sat_type)
             health_df.at[idx, 'Lon Deviation Score'] = round(lon_score, 1)
 
             # Overall Score over all five parts. The health module's score used weights summing
             # to 0.85 (longitude left out); longitude (0.15) is folded back in here.
-            _weights = {'inc': 0.30, 'maintenance': 0.25, 'uniformity': 0.10,
-                        'drift': 0.20, 'longitude': 0.15}
+            _weights = dict(score_rules.WEIGHTS)
             _components = {}
             for _k, _col in [('inc', '_inc_score'), ('maintenance', '_maintenance_score'),
                              ('uniformity', '_uniformity_score'), ('drift', '_drift_score')]:
@@ -232,17 +190,10 @@ def _add_longitude(health_df, satellites_dop, now, warnings):
                 _new_score = _original_score * 0.85 + float(lon_score) * 0.15
 
             health_df.at[idx, 'Overall Score'] = round(_new_score, 1)
-            if _new_score >= 80:
-                _hs, _sc = "Healthy", "🟢"
-            elif _new_score >= 60:
-                _hs, _sc = "Fair", "🟡"
-            elif _new_score >= 40:
-                _hs, _sc = "Degraded", "🟠"
-            else:
-                _hs, _sc = "Critical", "🔴"
-            health_df.at[idx, 'Health Status'] = f"{_sc} {_hs}"
+            health_df.at[idx, 'Health Status'] = (f"{score_rules.status_emoji(_new_score)} "
+                                                  f"{score_rules.status_word(_new_score)}")
 
-            new_remark = _longitude_remark(abs_dev, longitude_deviation, sat_type, designated_lon)
+            new_remark = score_rules.longitude_remark(abs_dev, longitude_deviation, sat_type, designated_lon)
             current_remarks = health_df.at[idx, 'Remarks']
             health_df.at[idx, 'Remarks'] = f"{current_remarks} | {new_remark}" if current_remarks else new_remark
         except Exception as e:
@@ -250,8 +201,14 @@ def _add_longitude(health_df, satellites_dop, now, warnings):
             warnings.append(f"Longitude calculation failed for {sat_name}: {e}")
 
 
-def _burns(df_all_full, p, moving=()):
-    """One row per detected manoeuvre in each satellite's whole bundled history.
+BURN_COLUMNS = ['satellite', 'kind', 'window_start', 'window_end', 'd_sma_km', 'd_inc_deg']
+# What the classifier (analysis/burn_classes.py) also needs of the detector: the persistent change either side of the burn.
+BURN_DETAIL_COLUMNS = BURN_COLUMNS + ['pre_sma_med', 'post_sma_med', 'pre_inc_med', 'post_inc_med']
+
+
+def burns_detailed(df_all_full, p, moving=()):
+    """One row per detected manoeuvre in each satellite's whole bundled history, with the detector's before and after
+    medians of the semi-major axis and inclination (signed persistent change = post - pre).
 
     A satellite on its way to its slot has none yet, and one that has parked has none from before it parked:
     the burns that raised it are not station-keeping.
@@ -275,9 +232,22 @@ def _burns(df_all_full, p, moving=()):
                         'window_end': det.at[i, 'EPOCH'],
                         'd_sma_km': float(det.at[i, 'dSMA']),
                         'd_inc_deg': float(det.at[i, 'dINC']),
+                        'pre_sma_med': float(det.at[i, 'pre_sma_med']),
+                        'post_sma_med': float(det.at[i, 'post_sma_med']),
+                        'pre_inc_med': float(det.at[i, 'pre_inc_med']),
+                        'post_inc_med': float(det.at[i, 'post_inc_med']),
                     })
-    return pd.DataFrame(rows, columns=['satellite', 'kind', 'window_start', 'window_end',
-                                       'd_sma_km', 'd_inc_deg'])
+    return pd.DataFrame(rows, columns=BURN_DETAIL_COLUMNS)
+
+
+def burns(df_all_full, p, moving=()):
+    """burns_detailed without the before and after medians: the one list of burns every consumer reads."""
+    return burns_detailed(df_all_full, p, moving)[BURN_COLUMNS]
+
+
+def burn_classes_of(result, constellation):
+    """What kind each burn in assess_constellation's `result` was (analysis/burn_classes.classify). Read by the burn record in the constellation score (ui/burn_record.py), not by the per-satellite score."""
+    return classify(result['burns_detailed'], result['history'], constellation)
 
 
 def assess_constellation(constellation, now, window_days=90, params=None, fresh=None):
@@ -291,7 +261,9 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
     `fresh` ({norad: [history rows]}, from data.celestrak) is merged onto the bundled history, and
     the newest of those rows places the satellite for the longitude step.
 
-    Returns {'health', 'set_aside', 'moving', 'history', 'burns', 'data_time', 'warnings'}. `moving` is {satellite: day of
+    Returns {'health', 'set_aside', 'moving', 'history', 'burns', 'burns_detailed', 'data_time', 'warnings'};
+    `burns_detailed` is `burns` with the detector's before and after medians, for burn_classes_of (not run here: the pages that need
+    the kinds run it once and keep it, ui/burn_record.py). `moving` is {satellite: day of
     its first orbit record} for each new one still being moved to its slot (analysis/commissioning.py): left out of the scores.
     Raises ValueError for an unknown constellation, no bundled data, or no records in the window.
     """
@@ -301,20 +273,18 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
         raise ValueError("`now` must be timezone-aware")
     sat_dict, service_reqs = _CONSTELLATIONS[constellation]
     p = {**DEFAULT_PARAMS, **(params or {})}
-    if constellation == "QZSS" and "inclination_tolerance" not in (params or {}):
-        p["inclination_tolerance"] = 4.0
+    if "inclination_tolerance" not in (params or {}):
+        p["inclination_tolerance"] = score_rules.default_inclination_tolerance(constellation)
     warnings = []
 
-    key = bundle_key(constellation)
-    gp_meta = get_gp_history_metadata(key)
+    gp_meta = get_gp_history_metadata(constellation)
     if not gp_meta['available']:
         raise ValueError(f"No bundled data for {constellation}")
-    all_dfs = load_bundled_gp_as_dataframes(key, sat_dict, fresh)
+    all_dfs = load_bundled_gp_as_dataframes(constellation, sat_dict, fresh)
     if not all_dfs:
         raise ValueError(f"Bundled data for {constellation} could not be loaded")
     df_all_full = pd.concat(all_dfs, ignore_index=True, sort=False)
 
-    # Display range and satellites set aside (graveyard orbit), as app.py does
     now = now.astimezone(timezone.utc)
     end_date = now.date()
     start_date = end_date - timedelta(days=window_days)
@@ -328,7 +298,6 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
     moving = commissioning.moving_to_slot(df_all_full, now)   # new, and still being moved to its slot on purpose
     df_all = df_all[~df_all['satellite'].isin(graveyard_sats | set(moving))]
 
-    # Pattern analysis over the 365 days up to `now`, from the unfiltered bundled history
     pattern_start_ts = pd.Timestamp((now - timedelta(days=365)).strftime("%Y-%m-%d"))
     pattern_end_ts = pd.Timestamp(now.strftime("%Y-%m-%d"))
     pattern_data = {}
@@ -348,7 +317,6 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
         except Exception:
             pattern_data[sat_name] = None
 
-    # Days when at least 75% of the expected satellites have observations count as "deployed"
     date_counter = Counter()
     for pdata in pattern_data.values():
         if pdata is None:
@@ -358,8 +326,7 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
                 date_counter[d] += 1
         except Exception:
             continue
-    # Expected = the tracked satellites the data has observations of: one just added, with no history yet,
-    # would otherwise raise the bar and move every other satellite's score (QZS-7, 8 Nov 2026).
+    # QZS-7 (8 Nov 2026): satellites with no observations yet must not raise the expected-count bar.
     min_required = max(1, int(0.75 * sum(pdata is not None for pdata in pattern_data.values())))
     deployed_dates = {d for d, cnt in date_counter.items() if cnt >= min_required} or None
 
@@ -375,7 +342,6 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
             detected = _detect(sat_df, p)
             health_maneuvers = detected[detected['MANEUVER']].copy()
 
-        # Leave out days when the constellation was not fully deployed
         if deployed_dates is not None and not health_sat_df.empty:
             try:
                 health_sat_df['EPOCH_date'] = pd.to_datetime(health_sat_df['EPOCH']).dt.date
@@ -402,7 +368,7 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
         ))
     health_df = pd.DataFrame(health_assessments)
 
-    bundled_tles = load_bundled_tles(key)
+    bundled_tles = load_bundled_tles(constellation)
     satellites_dop = parse_tle_data(bundled_tles['tle_data'], sat_dict) if bundled_tles.get('tle_data') else {}
     for sat_name, norad_id in sat_dict.items():
         if (fresh or {}).get(norad_id):
@@ -420,7 +386,8 @@ def assess_constellation(constellation, now, window_days=90, params=None, fresh=
         'set_aside': sorted(graveyard_sats),
         'moving': {name: moving[name].strftime('%Y-%m-%d') for name in sorted(moving)},
         'history': df_all_full,
-        'burns': _burns(df_all_full, p, moving),
+        'burns_detailed': (detailed := burns_detailed(df_all_full, p, moving)),
+        'burns': detailed[BURN_COLUMNS],
         'data_time': gp_meta['timestamp'],
         'warnings': warnings,
     }

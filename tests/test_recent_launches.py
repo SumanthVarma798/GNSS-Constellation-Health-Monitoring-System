@@ -11,7 +11,11 @@ import requests
 
 from evidence import recent_launches
 from evidence.archive import FetchFailed, latest_version, object_path, record
-from evidence.settings import REGISTRY_DIR, REGISTRY_UNIDENTIFIED_COLUMNS, REGISTRY_UNIDENTIFIED_FILE
+from evidence.registry_settings import (
+    REGISTRY_DIR,
+    REGISTRY_UNIDENTIFIED_COLUMNS,
+    REGISTRY_UNIDENTIFIED_FILE
+)
 from evidence.sources import ARCHIVED_SOURCES, SPACE_TRACK_RECENT_LAUNCHES_URL
 from test_spacetrack import FakeSession, install_session
 

@@ -1,0 +1,295 @@
+"""The Library's shelves: the newest stories, a card for each dataset we make and offer (how to get it, use it
+and cite it), the others' data we use and where to go for it, and others who collect and share GNSS data. What is on
+each shelf is in ui/shelf_settings.py. Every builder returns an HTML string; only the file bytes are not markup.
+"""
+import csv
+import io
+import json
+import re
+from datetime import date, datetime, timezone
+from html import escape
+from pathlib import Path
+
+import streamlit as st
+
+from evidence import jobs
+from evidence.console_settings import JOBS, WORKFLOWS_DIR
+from ui import icons, marks, tooltip
+from ui.shelf_settings import CITATION_FORMATS, FITTED, JOB_NAMES, ORBIT_GAP, OUR_LICENCE, OURS, SHELVES
+
+ROOT = Path(__file__).resolve().parent.parent
+_DAY = re.compile(r"\d{4}-\d{2}-\d{2}")
+
+CSS = """<style>
+/* the shelves at a glance: one raised tile per shelf, a button that opens the shelf and goes to it */
+.st-key-shop_map { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin: 4px 0 18px; }
+.st-key-shop_map button { width: 100%; min-height: 112px; flex-direction: column; gap: 6px; padding: 14px 12px;
+  border-radius: var(--r); box-shadow: var(--raised); }
+.st-key-shop_map button::before { content: ""; width: 26px; height: 26px; background: var(--accent);
+  -webkit-mask: var(--tile-ic) center / contain no-repeat; mask: var(--tile-ic) center / contain no-repeat; }
+.st-key-shop_map button p { margin: 0; text-align: center; line-height: 1.3; }
+.st-key-shop_map button strong { display: block; font-size: var(--fs-num); font-weight: var(--fw-num); line-height: 1.1; }
+.st-key-tile_stories { --tile-ic: var(--ic-broadcast); } .st-key-tile_satellites { --tile-ic: var(--ic-rocket); }
+.st-key-tile_datasets { --tile-ic: var(--ic-database); } .st-key-tile_cite { --tile-ic: var(--ic-quote); }
+[class*="st-key-rv_library_"] { scroll-margin-top: 96px; }
+/* a picture: an icon resting on a pressed plinth */
+.plinth { display: grid; place-items: center; width: 56px; height: 56px; flex: 0 0 56px; border-radius: 50%; background: var(--well);
+  box-shadow: var(--pressed); color: var(--accent); }
+.plinth .ic { width: 26px; height: 26px; }
+.shelf-sign { display: flex; align-items: center; gap: 14px; margin: 26px 0 10px; }
+.shelf-sign h2 { margin: 0; padding: 0; }
+/* the objects on a shelf: cards in a grid that wraps to one column on a phone */
+.st-key-shelf_ours, .st-key-shelf_stories, .shelf-grid {
+  display: grid !important; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 16px; }
+[class*="st-key-item_"], .shelf-grid > .obj { background: var(--platform); border: 1px solid var(--edge); border-radius: var(--r);
+  box-shadow: var(--raised); padding: 16px 18px; gap: 10px; min-width: 0; height: 100%; }
+/* the download sits at the foot of its card, so a row of cards lines up */
+[class*="st-key-item_"] > [data-testid="stElementContainer"]:has([data-testid="stDownloadButton"]) { margin-top: auto; }
+.obj { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; align-items: start; align-content: start; }
+.obj .lbl { min-width: 0; }
+.obj .lbl > b { display: block; font-size: var(--fs-side); line-height: 1.25; }
+.obj .lbl p { margin: 4px 0 0; font-size: var(--fs-body); }
+.obj .facts { grid-column: 1 / -1; display: grid; gap: 6px; font-size: var(--fs-small); color: var(--fc-small); }
+.obj .facts > span { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 8px; align-items: baseline; }
+.obj .facts i { display: inline-flex; align-items: center; gap: 7px; font-style: normal; color: var(--muted); }
+.obj .facts .ic { width: 15px; height: 15px; flex: none; align-self: center; }
+.obj .facts .dot { width: 10px; height: 10px; margin: 0 2.5px; border-radius: 50%; flex: none; align-self: center; }
+.obj .facts .dot.warn { border-radius: 2px; transform: rotate(45deg) scale(.82); } .obj .facts .dot.bad { border-radius: 2px; }
+.obj a { color: var(--accent); overflow-wrap: anywhere; }
+.story-obj .lbl b { font-size: var(--fs-body); }
+.story-about { display: flex; flex-wrap: wrap; gap: 2px 12px; }
+.people h4 { margin: 14px 0 6px; }
+.people ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+[class*="st-key-item_"] [data-testid="stDownloadButton"] button { min-height: 44px; }
+/* a shelf drawn inside a section (ui/reveal.py hides only an HTML body or a frame): padded like one, and gone while
+   the section is closed */
+[class*="st-key-shelfbody_"] { padding: 0 20px 16px; }
+[class*="st-key-shelfbody_"] pre, [class*="st-key-shelfbody_"] pre code { white-space: pre-wrap; overflow-wrap: anywhere; }
+[class*="st-key-rv_"]:not(:has([class*="st-key-rvx_"] input:checked)) [class*="st-key-shelfbody_"] { display: none; }
+</style>"""
+
+
+def _day_words(text):
+    """'15 Nov 2026' from any text that starts with an ISO date; "" when it does not."""
+    found = _DAY.match(text or "")
+    if not found:
+        return ""
+    day = date.fromisoformat(found.group(0))
+    return f"{day.day} {day:%b %Y}"
+
+
+@st.cache_data(show_spinner=False)
+def job_words(job):
+    """'updated by us Sundays 01:00 UTC' from the workflow's own schedule, or 'updated by us regularly' without one."""
+    if job == "hand":
+        return "kept by hand; each change is a reviewed pull request"
+    workflow, group = job
+    name = next((row.name for row in JOBS if row.workflow == workflow and row.group == group), JOB_NAMES.get(workflow, workflow))
+    try:
+        crons = jobs.schedules((WORKFLOWS_DIR / workflow).read_text(encoding="utf-8")).get(group, [])
+    except OSError:
+        crons = []
+    when = ", ".join(jobs.schedule_words(cron) for cron in crons)
+    return f"updated by us {when} UTC" if when else f"updated by us regularly ({name})"
+
+
+def published():
+    """{name: (payload, problem)} for the project's files on the orbit-checks branch, and the news file, each read
+    once an hour at most (the loaders cache them). A file that cannot be read has the problem in words."""
+    from ui import data, news
+
+    gap, fitted = data.orbit_gap(), data.fitted_orbits()
+    return {ORBIT_GAP: (gap, "" if gap else "it cannot be read right now"),
+            FITTED: (fitted, "" if fitted else "it cannot be read right now"),
+            "news": news.load_news()}
+
+
+@st.cache_data(show_spinner=False, ttl=3600)
+def _repo_file(path):
+    try:
+        return (ROOT / path).read_bytes()
+    except OSError:
+        return None
+
+
+def item_state(key, files):
+    """(bytes or None, the date the file carries or None, problem) for one of OURS. files: published()."""
+    item = OURS[key]
+    kind, where = item["file"]
+    if kind == "repo":
+        content = _repo_file(where)
+        problem = "" if content is not None else "it cannot be read right now"
+    else:
+        payload, problem = files[where]
+        content = json.dumps(payload, indent=1).encode("utf-8") if payload else None
+    day = None
+    if item["date"] and content is not None:
+        how, name = item["date"]
+        if how == "column":
+            values = [row.get(name, "") for row in csv.DictReader(io.StringIO(content.decode("utf-8")))]
+            day = _as_iso_day(max((v for v in values if _DAY.match(v or "")), default=""))
+        else:
+            day = _as_iso_day(str(files[where][0].get(name, "")))
+    return content, (date.fromisoformat(day) if day else None), problem
+
+
+def cadence(job):
+    """How often a file changes, short: 'daily 06:00 UTC', or 'by hand, as reviewed pull requests'."""
+    return "by hand, as reviewed pull requests" if job == "hand" else job_words(job).removeprefix("updated by us ")
+
+
+def freshness(key, day, problem, today=None):
+    """(status, words) for one of OURS: how old the file is, and whether that is late for its fresh_days."""
+    if problem:
+        return "bad", f"cannot be read right now: {problem}"
+    if day is None:
+        return "idle", "the file carries no date"
+    item, age = OURS[key], ((today or datetime.now(timezone.utc).date()) - day).days
+    ago = "today" if age <= 0 else "1 day ago" if age == 1 else f"{age} days ago"
+    words = f"{'newest entry' if item['date'][0] == 'column' else 'made'} {day.day} {day:%b %Y} · {ago}"
+    if item["fresh_days"] is None:
+        return "idle", words
+    return ("ok", words + " · on time") if age <= item["fresh_days"] else ("warn", words + " · late")
+
+
+def size_words(size):
+    return f"{size / 1e6:.1f} MB" if size >= 1e6 else f"{max(1, round(size / 1e3))} kB"
+
+
+def file_name(key):
+    kind, where = OURS[key]["file"]
+    return Path(where).name if kind == "repo" else {ORBIT_GAP: "orbit_gap.json", FITTED: "fitted_orbits.json"}[where]
+
+
+def _link(address, words=""):
+    return (f'<a href="{escape(address, quote=True)}" target="_blank" rel="noopener noreferrer">'
+            f'{escape(words or address)}</a>')
+
+
+def _as_iso_day(text):
+    """'2026-11-15' from text that starts with an ISO day, or ''."""
+    found = _DAY.match(text or "")
+    return found.group(0) if found else ""
+
+
+def _dataset_version(key, content):
+    """The dataset's version/date in ISO day form where possible, else 'not known'."""
+    if content is None:
+        return "not known"
+    item = OURS[key]
+    if not item["date"]:
+        return "not known"
+    how, name = item["date"]
+    try:
+        if how == "column":
+            rows = csv.DictReader(io.StringIO(content.decode("utf-8")))
+            return max((_as_iso_day(row.get(name, "")) for row in rows), default="") or "not known"
+        data = json.loads(content.decode("utf-8"))
+        return _as_iso_day(str(data.get(name, ""))) or "not known"
+    except (OSError, ValueError, UnicodeDecodeError, json.JSONDecodeError):
+        return "not known"
+
+
+def _citation_year(version, now):
+    year = version[:4] if len(version) >= 4 and version[:4].isdigit() else str(now.year)
+    return year
+
+
+def _citation_accessed(now):
+    return now.strftime("%Y-%m-%d %H:%M")
+
+
+def dataset_citations(key, content, now=None, accessed=None):
+    """Short and long citation text for one dataset. `accessed` replaces the access time (the copy buttons pass
+    "{accessed}" so the browser writes the moment of the click)."""
+    when = now or datetime.now(timezone.utc)
+    item = OURS[key]
+    version = _dataset_version(key, content)
+    fields = {"organisation": "OpenGNSS", "title": item["name"], "url": item["address"],
+              "year": _citation_year(version, when), "version": version, "licence": OUR_LICENCE[0],
+              "accessed": accessed or _citation_accessed(when)}
+    return {"short": CITATION_FORMATS["short"].format(**fields), "long": CITATION_FORMATS["long"].format(**fields)}
+
+
+def _mark(icon):
+    """An icon in ui/icons.py MASKED, or "dot:<status>" for a dot in that status's colour."""
+    if icon.startswith("dot:"):
+        return f'<span class="dot {icon[4:]}" style="background: var(--{icon[4:]})"></span>'
+    return icons.mask(icon)
+
+
+def _facts(rows):
+    """Icon-and-label rows: (icon for _mark, label, value markup)."""
+    return ('<span class="facts">' + "".join(f"<span><i>{_mark(icon)}{label}</i><span>{value}</span></span>"
+                                             for icon, label, value in rows) + "</span>")
+
+
+def card_html(key, content, day, problem, today=None):
+    """One of our datasets, at a glance: its name (which opens what it is, each field, an example and what not to use
+    it for), one line of purpose, then source, update cadence, freshness, licence and format."""
+    item = OURS[key]
+    status, fresh = freshness(key, day, problem, today)
+    name = file_name(key)
+    size = f" · {size_words(len(content))}" if content is not None else ""
+    more = tooltip.glance(item["what"], [("", field, meaning) for field, meaning in item["fields"]]
+                          + [("", "Example", item["example"]), ("", "Not for", item["not_for"])], item["made"])
+    rows = [("database", "Source", escape(item["source"])), ("hourglass", "Updates", escape(cadence(item["job"]))),
+            (f"dot:{status}", "Fresh", escape(fresh)), ("quote", "Licence", _link(OUR_LICENCE[1], OUR_LICENCE[0])),
+            ("download", "Format", f"{name.rsplit('.', 1)[-1].upper()}{size} · {_link(item['address'], 'stable address')}")]
+    return (f'<div class="obj"><span class="plinth">{icons.mask(item["icon"])}</span>'
+            f'<span class="lbl"><b>{tooltip.tip_html(escape(item["name"]), more, key=key)}</b>'
+            f'<p>{escape(item["purpose"])}</p></span>{_facts(rows)}</div>')
+
+
+def others_html(others):
+    """The others' data we use: whose it is, what we use it for, how often we read it, and a link to its owner."""
+    cards = ""
+    for name, icon, link, used_for, job in others:
+        read = "a copy comes with the code" if job == "hand" else cadence(job)
+        go = _link(link, name) if link else "each publisher's own site, linked from the News page"
+        cards += (f'<div class="obj"><span class="plinth">{icons.mask(icon)}</span><span class="lbl"><b>{escape(name)}</b>'
+                  f'<p>{escape(used_for)}</p></span>'
+                  + _facts([("hourglass", "We read it", escape(read)), ("click", "Get it", go)]) + "</div>")
+    return f'<div class="shelf-grid">{cards}</div>'
+
+
+def colleagues_html(colleagues):
+    """Others who collect and share GNSS data, per constellation, each with a link."""
+    groups = "".join(f'<h4>{marks.named(where)}</h4><ul>' + "".join(
+        f'<li>{_link(link, who)}: {escape(what)}</li>' for who, what, link in people) + "</ul>"
+        for where, people in colleagues)
+    return f'<div class="people">{groups}</div>'
+
+
+def shelf_sign(key):
+    title, icon, _ = SHELVES[key]
+    return sign(title, icon)
+
+
+def sign(title, icon):
+    """A shelf's heading: its icon on a plinth, then its title."""
+    return f'<div class="shelf-sign"><span class="plinth">{icons.mask(icon)}</span><h2>{escape(title)}</h2></div>'
+
+
+def story_html(story):
+    """One story on the shelf: its headline, impact, how many sources told it, when, and the newest link."""
+    items = story["items"]
+    newest = max((item.get("published_at") or item.get("fetched_at") or "" for item in items), default="")
+    constellations = sorted({name for item in items for name in item.get("constellations", [])})
+    link = next((item["address"] for item in items if item["address"].startswith(("http://", "https://"))), "")
+    head = _link(link, story["headline"]) if link else escape(story["headline"])
+    told = f'{len(items)} source{"" if len(items) == 1 else "s"}'
+    return (f'<div class="obj story-obj"><span class="plinth">{icons.mask("broadcast")}</span>'
+            f'<span class="lbl"><b>{head}</b><p class="small story-about">{"".join(marks.named(name) for name in constellations)}</p></span>'
+            f'<span class="facts"><span><i>Impact</i>{escape(story["impact"])}</span><span><i>Told by</i>{told}</span>'
+            f'<span><i>Latest</i>{escape(_day_words(newest) or "date not given")}</span></span></div>')
+
+
+def scroll_script(section, nonce):
+    """A script for an empty component frame that brings a section into view in the page around it. Streamlit draws
+    the page after the frame loads, so it looks again for a few seconds; nonce makes each jump a new frame."""
+    target = json.dumps(f".st-key-rv_{section}")
+    return (f"<script>/* {nonce} */ const doc = window.parent.document; let tries = 0;"
+            f"(function go() {{ const el = doc.querySelector({target});"
+            f" if (el) {{ el.scrollIntoView({{block: 'start'}}); if (tries++ < 3) setTimeout(go, 400); }}"
+            f" else if (tries++ < 40) setTimeout(go, 150); }})();</script>")

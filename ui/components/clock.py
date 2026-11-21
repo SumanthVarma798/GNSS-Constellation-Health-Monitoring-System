@@ -7,6 +7,7 @@ next automatic refresh stays with the server (ui/shell.py).
 from pathlib import Path
 
 from ui import palette
+from ui.components.frame import fill
 from ui.theme import root_block
 
 PAGE_FILE = Path(__file__).with_name("clock.html")
@@ -15,10 +16,7 @@ HEIGHT_PX = 18   # one line of the small type
 
 def clock_html():
     """The finished page."""
-    page = PAGE_FILE.read_text(encoding="utf-8")
-    for placeholder, text in {"__ROOT__": root_block(), "__FONT_NUMBERS__": palette.FONT_NUMBERS}.items():
-        page = page.replace(placeholder, text)
-    return page
+    return fill(PAGE_FILE.read_text(encoding="utf-8"), __ROOT__=root_block(), __FONT_NUMBERS__=palette.FONT_NUMBERS)
 
 
 def clock_frame():

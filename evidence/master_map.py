@@ -14,6 +14,7 @@ import re
 from datetime import date
 from pathlib import Path
 
+from evidence.registry_settings import SIGNAL_ID_MOVE_DAYS, SIGNAL_ID_SWAP_DAYS
 from evidence.settings import (GCAT_MISSION_FAILED, GCAT_STILL_OPERATING, IDENTITY_AGREE, IDENTITY_DIFFER,
                                IDENTITY_ONE_SOURCE, MAP_ACCENT, MAP_IDLE, MAP_OK, MAP_WARN, NOT_RECORDED, NOT_YET_KNOWN,
                                ORBIT_FEED_FILES, SCHEME_COSPAR, SCHEME_DASHBOARD, SCHEME_GCAT, SCHEME_ISSUERS,
@@ -23,7 +24,9 @@ from evidence.settings import (GCAT_MISSION_FAILED, GCAT_STILL_OPERATING, IDENTI
                                SOURCE_SIGHTING, SOURCE_SILENT)
 
 NUMBER_WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
-SIGNAL_ID_IN_BRACKETS = re.compile(r"\(([^()\s]+)\)\s*$")  # "BEIDOU-3 G1 (C59)" -> "C59"
+# "BEIDOU-3 G1 (C59)" -> "C59": a system letter and two digits. Other brackets in CelesTrak's names are other names
+# ("COSMOS 2433 (720)", "GSAT0101 (GALILEO-PFM)", "NVS-01 (IRNSS-1J)"), never a signal ID to compare.
+SIGNAL_ID_IN_BRACKETS = re.compile(r"\(([A-Z]\d{2})\)\s*$")
 
 
 def _by_svn(rows):
@@ -88,6 +91,56 @@ def holders_of(signal_id, signal_ids, satellites, catalogue, tracked):
     return holders
 
 
+def _days(earlier, later):
+    return (date.fromisoformat(later) - date.fromisoformat(earlier)).days
+
+
+def _change_kind(old, new, periods):
+    """("swap" | "replaced" | "reassigned" | "unknown", the signal ID the old holder took next or "") for one signal ID
+    passing from period `old` to period `new`; periods is {svn: signal_ids_of(svn)}. Only what the table shows."""
+    if not old["end"]:
+        return "unknown", ""   # the table never ends the old holder's stretch: nothing to read
+    after = [p for p in periods[old["svn"]] if p["start"] >= old["end"]]
+    before = [p for p in periods[new["svn"]] if p["end"] and p["end"] <= new["start"]]
+    then = after[0] if after else None
+    # the old holder took the new one's last ID, and that ID is another one (not this ID handed back and forth)
+    traded = then and before and then["label"] == before[-1]["label"] != new["label"]
+    if traded and abs(_days(then["start"], new["start"])) <= SIGNAL_ID_SWAP_DAYS \
+            and _days(before[-1]["end"], new["start"]) <= SIGNAL_ID_SWAP_DAYS:
+        return "swap", then["label"]
+    if not after:
+        return "replaced", ""
+    if _days(old["end"], then["start"]) <= SIGNAL_ID_MOVE_DAYS and then["label"] != new["label"]:
+        return "reassigned", then["label"]
+    return "unknown", then["label"]
+
+
+def signal_id_changes(signal_ids):
+    """Every signal ID more than one spacecraft has held, ordered by the ID, each as {"signal_id", "periods", "changes"}.
+
+    periods: each stretch, oldest first, as {"svn", "label", "start", "end", "current", "note"} (the note is the table's own).
+    changes: each time the ID passed to another spacecraft, as {"on", "from", "to", "ended", "kind", "then"} ("ended":
+    the day the old holder's stretch ended, "" when the table leaves it open): kind is what
+    _change_kind reads from the table, "then" the signal ID the old holder took next ("" when none).
+    """
+    rows = sorted(signal_ids, key=lambda row: row["valid_from"])
+    periods = {svn: signal_ids_of(svn, signal_ids) for svn in {row["svn"] for row in rows}}
+    found = []
+    for signal_id in sorted({row["signal_id"] for row in rows}):
+        held = [{"svn": row["svn"], "label": signal_id, "start": _day(row["valid_from"]), "end": _day(row["valid_to"]),
+                 "current": not row["valid_to"], "note": row["note"]} for row in rows if row["signal_id"] == signal_id]
+        if len({p["svn"] for p in held}) < 2:
+            continue
+        changes = []
+        for old, new in zip(held, held[1:]):
+            if old["svn"] != new["svn"]:
+                kind, then = _change_kind(old, new, periods)
+                changes.append({"on": new["start"], "from": old["svn"], "to": new["svn"], "ended": old["end"],
+                                "kind": kind, "then": then})
+        found.append({"signal_id": signal_id, "periods": held, "changes": changes})
+    return found
+
+
 def _feed_remark(feed_name, periods):
     """(status, remark) for an orbit feed name, judged by the signal ID in its brackets.
 
@@ -96,29 +149,30 @@ def _feed_remark(feed_name, periods):
     """
     found = SIGNAL_ID_IN_BRACKETS.search(feed_name)
     if not found:
-        return MAP_IDLE, "the name carries no signal ID to compare"
+        return MAP_IDLE, "CelesTrak's name carries no signal ID to compare with the IGS satellite metadata file"
     shown = found.group(1)
     history = [period["label"] for period in periods]
     if not (periods and periods[-1]["current"]):
         history.append("none")
     if shown not in history:
-        return MAP_WARN, "the signal ID in the name is not in this spacecraft's history"
+        return MAP_WARN, "the signal ID in CelesTrak's name is not one the IGS satellite metadata file ever gave it"
     behind = len(history) - 1 - max(i for i, label in enumerate(history) if label == shown)
     if behind == 0:
-        return MAP_OK, "current"
-    return MAP_WARN, f"{_words(behind)} signal ID{'' if behind == 1 else 's'} out of date"
+        return MAP_OK, "matches the signal ID the IGS satellite metadata file gives today"
+    return MAP_WARN, (f"{_words(behind)} signal ID{'' if behind == 1 else 's'} behind the IGS satellite metadata "
+                      "file")
 
 
 def _catalogue_identifier(satellite, entry):
     """The catalogue's name for the spacecraft, and whether its launch designator agrees."""
     if not _in_catalogue(entry):
-        return {"scheme": SCHEME_GCAT, "value": "none", "status": MAP_IDLE, "remark": "not in the catalogue yet"}
+        return {"scheme": SCHEME_GCAT, "value": "none", "status": MAP_IDLE, "remark": "GCAT does not list it yet"}
     value = entry["name"] or "no name given"
     if not satellite["cospar_id"]:
-        return {"scheme": SCHEME_GCAT, "value": value, "status": MAP_OK, "remark": "nothing to compare with"}
+        return {"scheme": SCHEME_GCAT, "value": value, "status": MAP_OK, "remark": "the IGS satellite metadata file gives no launch designator to compare"}
     if entry["cospar_id"] == satellite["cospar_id"]:
-        return {"scheme": SCHEME_GCAT, "value": value, "status": MAP_OK, "remark": "agrees"}
-    return {"scheme": SCHEME_GCAT, "value": value, "status": MAP_WARN, "remark": "launch designator differs"}
+        return {"scheme": SCHEME_GCAT, "value": value, "status": MAP_OK, "remark": "launch designator matches the IGS satellite metadata file"}
+    return {"scheme": SCHEME_GCAT, "value": value, "status": MAP_WARN, "remark": "launch designator differs from the IGS satellite metadata file"}
 
 
 def _signal_id_identifier(satellite, periods, sighting):
@@ -197,10 +251,10 @@ def identifiers(svn, satellites, catalogue, tracked, signal_ids, feed_names=None
 def _identity(satellite, entry):
     """(how the two sources stand on who this is, a remark)."""
     if not _in_catalogue(entry):
-        return IDENTITY_ONE_SOURCE, "not in the catalogue yet"
+        return IDENTITY_ONE_SOURCE, "GCAT does not list it yet"
     if entry["cospar_id"] != satellite["cospar_id"]:
-        return IDENTITY_DIFFER, (f"the IGS file says {satellite['cospar_id'] or 'nothing'}, "
-                                 f"the catalogue says {entry['cospar_id']}")
+        return IDENTITY_DIFFER, (f"launch designator: the IGS satellite metadata file says "
+                                 f"{satellite['cospar_id'] or 'nothing'}, GCAT says {entry['cospar_id']}")
     return IDENTITY_AGREE, ""
 
 
@@ -214,10 +268,11 @@ def _service(satellite, entry):
     if igs_says_in_service == catalogue_says_operating:
         return (SERVICE_AGREE_OPERATING if igs_says_in_service else SERVICE_AGREE_NOT_IN_SERVICE), ""
     if not igs_says_in_service:
-        return SERVICE_DISAGREE, "the catalogue believes it is still operating"
+        return SERVICE_DISAGREE, "GCAT believes it is still operating; the IGS satellite metadata file gives it no signal ID today"
     if failed:
-        return SERVICE_DISAGREE, "the catalogue records the mission as failed"
-    return SERVICE_DISAGREE, f"the catalogue says regular operations ended {ended or 'at a date it does not give'}"
+        return SERVICE_DISAGREE, "GCAT records the mission as failed; the IGS satellite metadata file gives it a signal ID today"
+    return SERVICE_DISAGREE, (f"GCAT says regular operations ended {ended or 'at a date it does not give'}; "
+                             "the IGS satellite metadata file gives it a signal ID today")
 
 
 def agreement(satellites, catalogue):
