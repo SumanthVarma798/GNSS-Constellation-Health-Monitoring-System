@@ -64,7 +64,7 @@ Credentials only ever go in a git-ignored `.env` (copy [.env.example](.env.examp
 python -m pytest -q
 ```
 
-The same command runs on every pull request that changes more than the README files ([.github/workflows/tests.yml](.github/workflows/tests.yml)).
+The same command runs on every pull request, except one that changes only `README.md`, `registry/README.md`, `CLAUDE.md`, `.lavish/` or `.claude/` ([.github/workflows/tests.yml](.github/workflows/tests.yml)).
 One test is marked `coverage_gate` (every broadcasting satellite is tracked or explained): the weekly registry job
 skips it so its proposal can show a new satellite, and merging that proposal still needs it ([pytest.ini](pytest.ini)).
 The world-map script test is skipped when Node.js is not installed.
@@ -142,7 +142,7 @@ All six are JSON. Times are UTC, as ISO 8601; a time with no zone mark (`EPOCH` 
 | `latest_gnss.json` | `fetched_at`, `source` (the CelesTrak address), `rows`, `outside_group` | One CelesTrak GP record in its own field names (`OBJECT_NAME`, `NORAD_CAT_ID`, `EPOCH`, `MEAN_MOTION`, `ECCENTRICITY`, `INCLINATION`, ...). `outside_group` holds tracked satellites that CelesTrak's GNSS group leaves out, asked for one by one, kept apart so `rows` is the group as published |
 | `latest_news.json` | `generated_at`, `items`, `rules` (the words that put an item in each category), `sources` (each outlet's grade and why) | `title`, `summary`, `outlet`, `address`, `published_at`, `fetched_at`, `constellations`, `category`, `grade`, `grade_standing`, `source_id`, `via` (the feed it came through) |
 | `home_snapshot.json` | `made`, `window_days`, `parts` (the counts per constellation), `next_steps`, `next_figures` | (one object; `ui/home_data.py` reads it) |
-| `orbit_gap.json` | `day`, `checked`, `satellites`, `broadcast_from` (`BKG` or `ESA GSSC`), `leap_seconds`, `time_corrections` (from the navigation file's header) | Per satellite: `satellite`, `signal_id`, `record_epoch`, `typical_km` and `largest_km` (gap between its orbit record and its broadcast orbit over the day), `mostly` (which way the record is off: ahead of or behind the satellite on its path, off its orbit plane, higher or lower), `fitted_km`, broadcast `health`, `accuracy_m` and `broadcast_newest`, `clock` (how steadily its clock ran), `note` |
+| `orbit_gap.json` | `day`, `checked`, `satellites`, `broadcast_from` (`BKG` or `ESA GSSC`), `leap_seconds`, `time_corrections` (from the navigation file's header) | Per satellite: `satellite`, `signal_id`, `record_epoch`, `typical_km` and `largest_km` (gap between its orbit record and its broadcast orbit over the day), `mostly` (where the satellite mostly is against its record: ahead on its path or behind, off the record's orbit plane, higher or lower), `fitted_km`, broadcast `health`, `accuracy_m` and `broadcast_newest`, `clock` (how steadily its clock ran), `note` |
 | `fitted_orbits.json` | `day`, `checked`, `satellites` | `satellite`, `signal_id`, `norad`, `fit_km` (how closely the fit matches), `row` (the fitted record, in the same fields as a CelesTrak GP record) |
 | `signals_heard.json` | `day`, `checked`, `folder`, `sample_every`, `stations` (each: `code`, `name`, `place`, `read`, `megabytes`, `from`) | `satellite`, `signal_id`, `signals` (each signal heard, with the stations that heard it) |
 
