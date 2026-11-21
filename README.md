@@ -65,18 +65,22 @@ python -m pytest -q
 ```
 
 The same command runs on every pull request ([.github/workflows/tests.yml](.github/workflows/tests.yml)).
-Three older scripts in `tests/` are skipped on purpose ([pytest.ini](pytest.ini) says why).
+One test is marked `coverage_gate` (every broadcasting satellite is tracked or explained): the weekly registry job
+skips it so its proposal can show a new satellite, and merging that proposal still needs it ([pytest.ini](pytest.ini)).
+The world-map script test is skipped when Node.js is not installed.
 
 ### Where the main parts live
 
 | Folder or file | What is in it |
 |---|---|
-| `dashboard.py`, `views/`, `ui/` | The dashboard: one file per page in `views/` (Overview, Station-keeping, Geometry, News, Master map, World map, Library), shared parts, theme and colours in `ui/` |
-| `admin.py`, `console/` | The administration console: Summary, Jobs, Approvals, Alerts, Sources, open work, system design, Ask |
+| `dashboard.py`, `views/`, `ui/` | The dashboard: one file per page in `views/` (Home, Overview, Station-keeping, Geometry, News, Master map, World map, Library; the list is `PAGES` in `ui/shell.py`), shared parts, theme and colours in `ui/` |
+| `admin.py`, `console/` | The administration console: Summary, System design, Ask, Sources, Jobs, Live pipeline, Alerts, Issues and pull requests, Approvals, Contact inbox (the list is in `console/pages.py`) |
 | `analysis/` | The orbit analysis: drift, manoeuvre detection, health scoring, DOP, broadcast orbits, fitted orbits, MEO geometry |
 | `config/` | Satellite lists (built from `registry/dashboard_satellites.csv`), slots and the MEO systems' nominal orbits |
+| `app.py`, `visualizations/` | The team's earlier app and its plots |
 | `api/`, `data/` | Clients for Space-Track.org and CelesTrak, and the bundled orbit history the dashboard starts from |
-| `evidence/` | The evidence pipeline: archive, registry tables, news, source grades, confidence labels, alerts. Every setting is in a `*_settings.py` file |
+| `evidence/` | The evidence pipeline: archive, registry tables, news, source grades, confidence labels, alerts |
+| `evidence/*_settings.py`, `ui/*_settings.py` | Every setting, each in the file named for who reads it: `evidence/settings.py` for the jobs and the pipeline, the `ui/` ones for the pages |
 | `registry/` | Which satellite is which, as plain-text tables ([registry/README.md](registry/README.md)) |
 | `scripts/` | What the scheduled jobs run, and tools for building the tables |
 | `.github/workflows/` | The scheduled jobs (below) and the test job |
@@ -91,13 +95,14 @@ clock is UTC, and GitHub often starts scheduled runs hours late: 4 to 6½ hours 
 
 | Job | When (UTC) | What it writes |
 |---|---|---|
-| `archive.yml` | Per group: documents daily 00:30, catalogues daily 00:45, orbit records 01:15/08:15/14:15/20:15, news every 3 hours from 00:50, social daily 01:40, X every 6 hours from 00:55, Space-Track launches daily 02:20 | Raw copies to the private archive repository; `news-data` and `orbit-data` branches |
-| `rinex-check.yml` | Daily, 06:00 | `orbit-checks` branch, and the private archive |
+| `archive.yml` | Per group: documents daily 00:30, catalogues daily 00:45, orbit records every 2 hours from 00:15, news every 3 hours from 00:50, social daily 01:40, X every 6 hours from 00:55, Space-Track launches daily 02:20 | Raw copies to the private archive repository; the `news-data` and `orbit-data` branches |
+| `rinex-check.yml` | Daily, 06:00 | The `orbit-checks` branch, and the private archive |
 | `update-tle-data.yml` | Sundays 00:00, and whenever `registry/dashboard_satellites.csv` changes on `main` | `data/*.json` on `main`, after the tests pass |
 | `registry-update.yml` | Sundays 01:00 | A pull request when the IGS file or GCAT changed the registry tables |
 | `source-record.yml` | Sundays 02:00 | A pull request when the source record or grades changed |
 | `orbit-ages.yml` | Daily, 03:30 | The private archive only |
 | `drills.yml` | By hand only | Nothing real: failure drills on a stand-in site |
+| `contact-scan.yml` | No schedule: the console starts it when the contact inbox has an attachment waiting, or by hand | Scans attachments for viruses; an infected one is deleted and its record kept |
 
 Each scheduled run reports to Healthchecks.io, which emails when a run fails or does not arrive.
 
@@ -105,7 +110,7 @@ Each scheduled run reports to Healthchecks.io, which emails when a run fails or 
 
 ### Published files on the data branches
 
-Each data branch holds only the files below. The branches are written by the jobs and are never merged
+Each data branch holds only the files below (`news-data` also has a short `README.md`). The branches are written by the jobs and are never merged
 into `main` or deleted. A run that changes nothing makes no commit, so the commit history of each
 branch is its record of changes. Read a file directly at:
 
@@ -115,21 +120,29 @@ https://raw.githubusercontent.com/SumanthVarma798/GNSS-Constellation-Health-Moni
 
 | Branch | File | Written by | How often | Whose data |
 |---|---|---|---|---|
-| `orbit-data` | `latest_gnss.json` | `archive.yml`, job `publish-orbits` ([scripts/latest_orbits.py](scripts/latest_orbits.py)) | After each orbit-records run, four times a day | CelesTrak's |
+| `orbit-data` | `latest_gnss.json` | `archive.yml`, job `publish-orbits` ([scripts/latest_orbits.py](scripts/latest_orbits.py)) | After each orbit-records run (every 2 hours) that found a change | CelesTrak's |
+| `orbit-data` | `home_snapshot.json` | `archive.yml`, job `publish-home` ([scripts/home_snapshot.py](scripts/home_snapshot.py)) | After the orbit copy changes, and otherwise every 8 hours | Ours: Home's counts, made with the dashboard's own code |
 | `news-data` | `latest_news.json` | `archive.yml`, job `publish-news` ([scripts/news_items.py](scripts/news_items.py)) | After each news run (every 3 hours) and each X run (every 6 hours) | Headlines and excerpts: their publishers'. Categories and grades: ours |
 | `orbit-checks` | `orbit_gap.json` | `rinex-check.yml` ([scripts/orbit_record_gap.py](scripts/orbit_record_gap.py)) | Daily, for the day before | Ours, measured against IGS broadcast orbits |
 | `orbit-checks` | `fitted_orbits.json` | `rinex-check.yml` | Daily, for the day before | Ours: our own fit to IGS broadcast positions, not CelesTrak or Space-Track data |
+| `orbit-checks` | `signals_heard.json` | `rinex-check.yml` ([scripts/signals_heard.py](scripts/signals_heard.py)) | Daily, for the day before | Ours, measured from six IGS stations' observation files |
+
+The IGS files behind `orbit-checks` come from BKG. When BKG does not give a day's file (it was unreachable on
+17 and 18 Nov 2026, and posts the broadcast file about a day late), they come from ESA GSSC's copy of the
+same file. Each output records which source served it.
 
 ### Formats
 
-All four are JSON. Times are ISO 8601 in UTC. The script that writes each file is the full reference.
+All six are JSON. Times are ISO 8601 in UTC. The script that writes each file is the full reference.
 
 | File | Top level | One item |
 |---|---|---|
 | `latest_gnss.json` | `fetched_at`, `source` (the CelesTrak address), `rows`, `outside_group` | One CelesTrak GP record in its own field names (`OBJECT_NAME`, `NORAD_CAT_ID`, `EPOCH`, `MEAN_MOTION`, `ECCENTRICITY`, `INCLINATION`, ...). `outside_group` holds tracked satellites that CelesTrak's GNSS group leaves out, asked for one by one, kept apart so `rows` is the group as published |
-| `latest_news.json` | `generated_at`, `items`, `rules` (the words that put an item in each category), `sources` (each outlet's grade and why) | `title`, `summary`, `outlet`, `address`, `published_at`, `fetched_at`, `constellations`, `category`, `grade`, `grade_standing`, `via` (the feed it came through) |
-| `orbit_gap.json` | `day`, `checked`, `satellites`, `leap_seconds`, `time_corrections` (from the navigation file's header) | Per satellite: `satellite`, `signal_id`, `record_epoch`, `typical_km` and `largest_km` (gap between its orbit record and its broadcast orbit over the day), `mostly` (along its path or off its plane), `fitted_km`, broadcast `health` and `accuracy_m`, `note` |
+| `latest_news.json` | `generated_at`, `items`, `rules` (the words that put an item in each category), `sources` (each outlet's grade and why) | `title`, `summary`, `outlet`, `address`, `published_at`, `fetched_at`, `constellations`, `category`, `grade`, `grade_standing`, `source_id`, `via` (the feed it came through) |
+| `home_snapshot.json` | `made`, `window_days`, `parts` (the counts per constellation), `next_steps`, `next_figures` | (one object; `ui/home_data.py` reads it) |
+| `orbit_gap.json` | `day`, `checked`, `satellites`, `broadcast_from` (`BKG` or `ESA GSSC`), `leap_seconds`, `time_corrections` (from the navigation file's header) | Per satellite: `satellite`, `signal_id`, `record_epoch`, `typical_km` and `largest_km` (gap between its orbit record and its broadcast orbit over the day), `mostly` (along its path or off its plane), `fitted_km`, broadcast `health`, `accuracy_m` and `broadcast_newest`, `clock` (how steadily its clock ran), `note` |
 | `fitted_orbits.json` | `day`, `checked`, `satellites` | `satellite`, `signal_id`, `norad`, `fit_km` (how closely the fit matches), `row` (the fitted record, in the same fields as a CelesTrak GP record) |
+| `signals_heard.json` | `day`, `checked`, `folder`, `sample_every`, `stations` (each: `code`, `name`, `place`, `read`, `megabytes`, `from`) | `satellite`, `signal_id`, `signals` (each signal heard, with the stations that heard it) |
 
 ### Data kept in the repository
 
@@ -167,8 +180,9 @@ the wording is an open question for the team.
 |---|---|---|---|
 | [Space-Track.org](https://www.space-track.org/documentation#/user_agree) (US Space Command) | Orbit history in `data/*_gp_history.json`; recent launches | Its user agreement bars passing on data received from the site, including analysis of it, without prior express approval. A later section gives blanket approval to redistribute basic data (TLE and OMM orbit records, the satellite catalogue, decay data) on condition of "appropriate citation", and says published analysis also needs citation. It gives no citation wording. | "Orbits from CelesTrak and Space-Track" |
 | [CelesTrak](https://celestrak.org/usage-policy.php) | Orbit records: `latest_gnss.json`, `data/*_tles.json` | Its pages make the data freely available. Its usage policy limits how often to download. It states no licence, redistribution limit or credit requirement. | "Orbits from CelesTrak and Space-Track"; on the dashboard, "Orbits from CelesTrak, fetched (time)" |
-| [International GNSS Service (IGS)](https://igs.org/wp-content/uploads/2020/09/IGS-Data-and-Product-Disclaimer-and-Terms-of-Use-200805.pdf) | The satellite metadata file behind `registry/satellites.csv` and `signal_ids.csv`; the daily broadcast navigation files | Its Data and Product Disclaimer and Terms of Use (5 Aug 2020) says users agree to cite and attribute IGS resources to their providers and sponsors and acknowledge the IGS and its contributing organisations. It also says IGS data and products should not be used for life-critical functions. The metadata file cites its own format description: Steigenberger P, Montenbruck O (2024), IGS Satellite Metadata File Description, version 1.10, doi:[10.57677/metadata-sinex](https://doi.org/10.57677/metadata-sinex). | "Navigation messages from the IGS, via BKG" |
-| [BKG GNSS Data Center](https://igs.bkg.bund.de/) | Where the broadcast navigation files are downloaded from | Its site states no licence or credit request of its own. It serves the files as an IGS data centre. | Named in "via BKG" |
+| [International GNSS Service (IGS)](https://igs.org/wp-content/uploads/2020/09/IGS-Data-and-Product-Disclaimer-and-Terms-of-Use-200805.pdf) | The satellite metadata file behind `registry/satellites.csv` and `signal_ids.csv`; the daily broadcast navigation files; six stations' daily observation files | Its Data and Product Disclaimer and Terms of Use (5 Aug 2020) says users agree to cite and attribute IGS resources to their providers and sponsors and acknowledge the IGS and its contributing organisations. It also says IGS data and products should not be used for life-critical functions. The metadata file cites its own format description: Steigenberger P, Montenbruck O (2024), IGS Satellite Metadata File Description, version 1.10, doi:[10.57677/metadata-sinex](https://doi.org/10.57677/metadata-sinex). | "Navigation messages from the IGS, via BKG" |
+| [BKG GNSS Data Center](https://igs.bkg.bund.de/) | Where the broadcast navigation and station observation files are downloaded from | Its site states no licence or credit request of its own. It serves the files as an IGS data centre. | Named in "via BKG" |
+| [ESA GSSC](https://gssc.esa.int/) (GNSS Science Support Centre) | The same IGS files, on a day BKG does not give them | It serves the IGS files as a data centre, by anonymous FTP. Its terms of use were not read for this README. | Named in `broadcast_from` and each station's `from` in the published files; not in the footer |
 | [GCAT](https://planet4589.org/space/gcat/), Jonathan McDowell | `registry/catalogue.csv` and the library tables | Released under CC BY 4.0, free to reproduce as long as it is cited. Short form: "data from GCAT (J. McDowell, planet4589.org/space/gcat)". Full form: McDowell, Jonathan C., 2020. General Catalog of Artificial Space Objects, Release (the release used), https://planet4589.org/space/gcat | "Catalogue from GCAT (J. McDowell, planet4589.org/space/gcat)" |
 | [Natural Earth](https://www.naturalearthdata.com/about/terms-of-use/) | Land outlines on the maps | Public domain. No permission needed and crediting is unnecessary. It offers "Made with Natural Earth." for anyone who wants to credit it. | "Land from Natural Earth" |
 | Wikimedia Commons (ISRO pictures) | Pictures on the satellite lifecycle timelines | Shown from Wikimedia Commons, not stored here. Each row of `registry/lifecycle_events.csv` names its picture's credit and licence: five say GODL-India, two say "licence review pending". | The credit in that row, under each picture |
@@ -181,7 +195,7 @@ the wording is an open question for the team.
 | What | Licence | File |
 |---|---|---|
 | The source code | Apache License 2.0 | [LICENSE](LICENSE) |
-| The data the project makes itself: `registry/*.csv` except `registry/catalogue.csv` (the two library tables, counted from GCAT, also carry GCAT's credit), `evidence/*.csv`, and the files our own jobs publish (`orbit_gap.json`, `fitted_orbits.json`) | Creative Commons Attribution 4.0 International (CC BY 4.0) | [LICENSE-DATA](LICENSE-DATA) |
+| The data the project makes itself: `registry/*.csv` except `registry/catalogue.csv` (the two library tables, counted from GCAT, also carry GCAT's credit), `evidence/*.csv`, and the files our own jobs publish (`orbit_gap.json`, `fitted_orbits.json`, `signals_heard.json`, `home_snapshot.json`) | Creative Commons Attribution 4.0 International (CC BY 4.0) | [LICENSE-DATA](LICENSE-DATA) |
 | Everything from others (the table above) | Its owner's terms. Neither licence above applies to it | [NOTICE](NOTICE) lists which files are which |
 
 Copyright 2026 Adithya Kothandhapani, Aditya Jhunjhunwala, Krishi Tiwari, Sumanth Varma Vitrouthu and
@@ -206,7 +220,7 @@ finding out (section 6). The data comes with no warranty (section 5). It grants 
 rights (section 2(b)).
 
 Neither licence lets anyone pass off others' data as ours, or as covered by our terms: Space-Track,
-CelesTrak, IGS, BKG, GCAT, Natural Earth and news data keep their owners' terms.
+CelesTrak, IGS, BKG, ESA GSSC, GCAT, Natural Earth and news data keep their owners' terms.
 
 ## Open questions for the team
 
@@ -219,7 +233,7 @@ to decide together. The licence question itself is in
 | Space-Track | Its user agreement bars passing on data without prior express approval, but its section on basic data gives blanket approval for orbit records on condition of appropriate citation. Does that approval cover keeping Space-Track orbit history in this public repository (`data/*_gp_history.json`)? |
 | Space-Track | It asks for "appropriate citation" but gives no wording. What wording do we use, and where do we show it? |
 | CelesTrak | It states no credit terms. Is "CelesTrak" enough, or should the credit also name where CelesTrak's records come from? |
-| IGS | Its terms ask users to cite and attribute to providers and sponsors, but give no wording in the parts we could read. Its documents page has a Citation tab we could not read. Which wording do we use? Should it name BKG as the data centre? |
+| IGS | Its terms ask users to cite and attribute to providers and sponsors, but give no wording in the parts we could read. Its documents page has a Citation tab we could not read. Which wording do we use? Should it name the data centre (BKG, or ESA GSSC on the days it serves the files)? |
 | News | `latest_news.json` is public and carries each item's headline and an excerpt of up to about 300 characters. Is that the right amount to publish? |
 | Pictures | `NOTICE` lists neither the lifecycle pictures nor the console's sign-in picture. Should it? And may the two lifecycle pictures marked "licence review pending" be shown before Commons settles their licence? |
 | Citing the project | Which author order, and which address: the team's repository, this copy or `opengnss.org`? Once the licences are agreed, should we add a `CITATION.cff` (so GitHub shows "Cite this repository") and a DOI, for example from Zenodo? |

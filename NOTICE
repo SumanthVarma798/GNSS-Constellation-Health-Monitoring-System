@@ -31,8 +31,9 @@ These keep their owners' terms. Neither licence above applies to them.
     counted from GCAT, so they carry the same credit as well as ours.
   - registry/satellites.csv and registry/signal_ids.csv are built from the
     International GNSS Service (IGS) satellite metadata file, and IGS
-    broadcast navigation files are read from BKG. Acknowledge the IGS when
-    using them.
+    broadcast navigation and station observation files are read from BKG,
+    or from ESA GSSC on a day BKG does not give them. Acknowledge the IGS
+    when using them.
   - ui/figures/land.json: Natural Earth 110 m land, public domain (CC0).
   - latest_news.json on the news-data branch: headlines and excerpts belong
     to the publishers they came from.
