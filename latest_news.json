@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-21T19:51:47Z",
+ "generated_at": "2026-11-22T01:40:29Z",
  "items": [
   {
    "address": "https://x.com/Stellarixorine/status/2123821554115252555",
@@ -2560,6 +2560,22 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMizgFBVV95cUxQb2IxZU9fQ0h1Ukpydno5bXhWYmNGRndlMGg4YXd6Q2tUM0lIaUFXT2VnRTFtWi1GMzlTTHRRZXJMRGFZUUlSOFlOMFVzRmRucVRPZ2dkdm9nNUVaQll2ME4xTFBHNHkyT0xQRnlleUY1YW1UUTZtMW9rb1VKM2hRZUpFNlpodUd0a2MyRWk4cWhmM2tjaW1zNzRNY1Qybm1ObHhlQnFGU1BMaXlDVjdYYTNjdmZPQ0ZyOGFoYTlGSDQ4QXZ6WHFhU3V3Y2dLZ9IB2wFBVV95cUxQNFZKVHQxdkZzSkV6aVlBOWN4T1IxNVAxT2lkZWRXcUN6NnJFRUJJY1laY1BfczdQYzVISW56NGY0OFY2LUhJZGhoVTY2bWd0Xzgxb2x1ZDBfVWV1Z3R3NWplVjBwM0t3RW0tNW5Bb0pKYXJ1bjh6dkNXMktvQ0E4dVBXUDVQUDY5bHhiaGR2Uy1CLTRUUUFIR205WXNaS0hUcjE2ZWZHSVAwVUlNLVdlRnUzcl9SdHYtNVB3UVV3RnJRT0RiYXFfN194aWF3WkdhbHFjQjlSZms5QTg?oc=5",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-22T01:39:17Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Deccan Herald",
+   "published_at": "2026-10-31T07:00:00Z",
+   "source_id": "deccanherald.com",
+   "summary": "",
+   "title": "To overcome technical hurdles, ISRO flew NVS-03 satellite with pyro valves open: V Narayanan",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMijwFBVV95cUxNOV9MOWhweTd1clh4STRlZDJ5ZHJoQnRBZnlDN3ZCR3JEVS1tTTF0UEs1QnhlbGlTdHh3aGxKNUtrdkljaUlCX19nQlRkRkFxVlN6SGFpQXdmRVBWMXNkRS10cWdMUlNaeTgtY3oxcDVkd1c4amR4THhqU1l3dTNPQkFjMzJ6UjZGZ1FBNE5VMA?oc=5",
    "category": "launch",
    "constellations": [
@@ -2703,22 +2719,6 @@
    "source_id": "m.economictimes.com",
    "summary": "",
    "title": "'Outstanding accomplishment': ISRO chief hails NVS-03 launch success, NavIC boost",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMizgFBVV95cUxQb2IxZU9fQ0h1Ukpydno5bXhWYmNGRndlMGg4YXd6Q2tUM0lIaUFXT2VnRTFtWi1GMzlTTHRRZXJMRGFZUUlSOFlOMFVzRmRucVRPZ2dkdm9nNUVaQll2ME4xTFBHNHkyT0xQRnlleUY1YW1UUTZtMW9rb1VKM2hRZUpFNlpodUd0a2MyRWk4cWhmM2tjaW1zNzRNY1Qybm1ObHhlQnFGU1BMaXlDVjdYYTNjdmZPQ0ZyOGFoYTlGSDQ4QXZ6WHFhU3V3Y2dLZw?oc=5",
-   "category": "other",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-11-07T22:20:52Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Deccan Herald",
-   "published_at": "2026-10-31T05:34:15Z",
-   "source_id": "deccanherald.com",
-   "summary": "",
-   "title": "To overcome technical hurdles, ISRO flew NVS-03 satellite with pyro valves open: V Narayanan",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
