@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-22T01:40:29Z",
+ "generated_at": "2026-11-22T12:05:38Z",
  "items": [
   {
    "address": "https://x.com/Stellarixorine/status/2123821554115252555",
@@ -5506,6 +5506,22 @@
    "via": "https://news.google.com/rss/search?q=QZSS+OR+Michibiki+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMi8AFBVV95cUxPRkJONnBLMVEwMFlhUUZnNFJIblZnbkZpdFR3M1Q3QkpsR09ic3o4Tl9pcW5ybmViWHFDQnZRZU5jaUtjakp4MUJSMGpSRmJ6M0tJbzZlemZ2ckRDTEQ1dVc3ckhXcUVMeW9Wb0VubUVhbEpmU2tVcUc3enZGelVqalBGbGVXMnhoX2FKM3dzeTR2S1NrTzVkRlZ3Z25Bd3ZnSnBEdlJqN3NmYWNMWFlzYXJsNkYyZy1IVkYzNGROZ2p1ZW1UMHY1N2hIeDkwMHZaRk00SFhrRlpGazItODRtMjJydUpJS09YOXV4SzdleWY?oc=5",
+   "category": "launch",
+   "constellations": [
+    "QZSS"
+   ],
+   "fetched_at": "2026-11-22T12:04:46Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Defence Industry Europe",
+   "published_at": "2026-08-16T07:00:00Z",
+   "source_id": "defence-industry.eu",
+   "summary": "",
+   "title": "U.S. Space Force and Japan complete QZSS hosted-payload launches to strengthen monitoring of geosynchronous orbit over Indo-Pacific",
+   "via": "https://news.google.com/rss/search?q=QZSS+OR+Michibiki+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMipwFBVV95cUxNMGx6UDBlaW9sTEd0TzRmN2FYNFZqY2h0cHY2UlZIZDQyUVpuQUxEZ2RJNkNrZnhfenFqaXlldTFpR0RZLXBaZHVNa2dYeXlaTG0wWGNiUkxVX0I5VjNmNFh6QWg5ODN4WmZNbGEtcE0wZnNYOHJhTnQtZWo0bkxVdk54ajhSQ2tzU0tsUGtscTRKRGRodjhIUUFGSGFMRm00VzR1ZUUwaw?oc=5",
    "category": "launch",
    "constellations": [
@@ -7226,6 +7242,22 @@
    "summary": "",
    "title": "From a Rocket to Your Pocket: Behind the GPS III Evolution",
    "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiX0FVX3lxTE1nS05USjlKNVRxMzY1OUdmQU5ya2gwS21DVHBpZkZFN2hYdDFHR2JicC01cnBhR2dfYXZfbWdweDBKY0otM3dpaWVOUkJDRTlRNGNlaGJWdWoxOXRfWEdn?oc=5",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-22T12:05:17Z",
+   "grade": "C",
+   "grade_standing": "confirmed",
+   "outlet": "GPS World",
+   "published_at": "2026-04-07T07:00:00Z",
+   "source_id": "gpsworld.com",
+   "summary": "",
+   "title": "Galileo’s LuGRE proven for Moon navigation",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMiswFBVV95cUxQY216cDRwZVd6UkNSTnpuMTVwdG1mNXoyNXZBQkpUdmI4UkJpX0RxbWx0aTQzbWZjMTZIa3dNaTc2b1hJdy1rcGRHXzRqNHBPODNOa3RzVWFubEJybVM3OWxhNHBJMGRSam9WR1B4TmltMWhKY09VZmFzUDF4bGY4WjhNb0prZi04Uk1BNC14aGZnUkFFVW53SVMtSm9FQzBBN0lkZzV0djIxd0laSjlrM043UdIBswFBVV95cUxPM2VrZUZoSzJYdnJfLVRDTGZFX0dOcjhzb3FiQ0dsbkFpTEhuVXFLVjJjeGJ3akoyQzZZa0h4blRLQ0g4c0ZIeXA4eDhKWFpSczFCbE4tMWp3cFNzdFFKN2NrXzE5MDFJYU9BaUt2b3d5OUhFUHpCMF84WjRrUUZFaTFaUlpqa3dkck9iLWxrd2VPcXJjZ2NHMGJCT1FzaWMta3FzTEd5TjdiMl9vTV8tMFpBZw?oc=5",
