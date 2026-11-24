@@ -1,6 +1,54 @@
 {
- "generated_at": "2026-11-23T13:44:22Z",
+ "generated_at": "2026-11-24T02:43:37Z",
  "items": [
+  {
+   "address": "https://news.google.com/rss/articles/CBMic0FVX3lxTE5hcUI4SG1zM2Q1blhLcmw0bHVHLXQ1TTR3RmZlRTZfMkxxZVQ4MXRYRk84ZXRGWGl4aU1pLVk5LUFhZTF4ak85bXNrR2haVk9LNlM4U3N6TUpzX3dRWmhwVVlVX1JqVXg0VnFnS1lybmJxeFE?oc=5",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-24T02:37:02Z",
+   "grade": "C",
+   "grade_standing": "confirmed",
+   "outlet": "GPS World",
+   "published_at": "2026-11-23T23:20:12Z",
+   "source_id": "gpsworld.com",
+   "summary": "",
+   "title": "Galileo Achieves First SAS Position Fix",
+   "via": "https://news.google.com/rss/search?q=site%3Agpsworld.com&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMikAFBVV95cUxNeE1PZTk3RTdVaW9uWHJLWDRWejVJUTNiUlVNc0NYNElyUWpHZnhPa2QwZ1ZuSTR6OVREcUZFTTdUU1V2ZXlHbktTU0lIa1FaSFFvZ3UwWTZLTGN0V2R2ZUk2OTFMazBKNFFGUVp5ZVc1MlZQUWNmdV9Ud3REQTY4WUVnb2VxNFprZjlwblFZa0o?oc=5",
+   "category": "signal and service",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-24T02:37:02Z",
+   "grade": "C",
+   "grade_standing": "confirmed",
+   "outlet": "GPS World",
+   "published_at": "2026-11-23T20:56:28Z",
+   "source_id": "gpsworld.com",
+   "summary": "",
+   "title": "OrbFIX Validates the Use of Galileo High Accuracy Service (HAS)",
+   "via": "https://news.google.com/rss/search?q=site%3Agpsworld.com&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiowFBVV95cUxObzE3R2IyZjFia1pLS01kdmdsT0VYMlJPZ2ZzX3hCbk5Mc3pwb2tBRGxZOUtuQnNBd0UtdzBOMDZOU0YyOW1DVHRLZ2d6b2p2b01UbHViNC1DdXAwOXIybm5kbko4dkN2QWJXSThaNFVTaU85eUc5LWpVSXJWRUxGRG04VXN2VVJDb3JJSnY3SFRON1V4d2Z1dUsxdmhaQkNSb3pZ?oc=5",
+   "category": "launch",
+   "constellations": [
+    "BeiDou-3"
+   ],
+   "fetched_at": "2026-11-24T02:42:55Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Yeni Safak English",
+   "published_at": "2026-11-22T10:13:53Z",
+   "source_id": "en.yenisafak.com",
+   "summary": "",
+   "title": "China postpones Beidou satellite launch over technical problem",
+   "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
   {
    "address": "https://x.com/Stellarixorine/status/2123821554115252555",
    "category": "other",
@@ -9085,6 +9133,15 @@
    "graded_by": "",
    "kind": "",
    "name": "en.sedaily.com",
+   "note": "",
+   "reason": ""
+  },
+  "en.yenisafak.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "en.yenisafak.com",
    "note": "",
    "reason": ""
   },
