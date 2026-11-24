@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-24T02:43:37Z",
+ "generated_at": "2026-11-24T14:20:56Z",
  "items": [
   {
    "address": "https://news.google.com/rss/articles/CBMic0FVX3lxTE5hcUI4SG1zM2Q1blhLcmw0bHVHLXQ1TTR3RmZlRTZfMkxxZVQ4MXRYRk84ZXRGWGl4aU1pLVk5LUFhZTF4ak85bXNrR2haVk9LNlM4U3N6TUpzX3dRWmhwVVlVX1JqVXg0VnFnS1lybmJxeFE?oc=5",
@@ -5707,6 +5707,22 @@
    "via": "https://news.google.com/rss/search?q=QZSS+OR+Michibiki+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMiVEFVX3lxTFBKNVlJTWJOU1NwaWpEekNVWGJDOE5UdnJXSktLMW5tc3RDbTQxNG9uVWlhNTF4aWhpa3FLakRhbkFNU3ZjYU5ZSHdZcFlCVW5tUDhkZQ?oc=5",
+   "category": "launch",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-11-24T14:20:14Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "News On Japan",
+   "published_at": "2026-08-11T07:00:00Z",
+   "source_id": "newsonjapan.com",
+   "summary": "",
+   "title": "H3 Rocket No. 9 Successfully Launches Japan GPS Satellite",
+   "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMirAFBVV95cUxPR0RRU21wWF8zTlhzQVZybzVfNnNBVzVPZE1WMmNheVdnNTlpWXJRYXpDd1ZNLTR4WVAtYlhjZGphb3VRM2ozVk9MSTBXbWx2WU9oUEpDODFsZDQyZ3JBTXFlYldfZ0ZFUG9tM1RXM0Vlc1o4WjNybEhlWnVNRXI1LS1HNk05dXoxRXotekN6THZzVnBFTlNjdkIydlRXVWFJNEhTNEVLUnoyUkhu?oc=5",
    "category": "launch",
    "constellations": [
@@ -7662,22 +7678,6 @@
    "source_id": "business-standard.com",
    "summary": "",
    "title": "India’s ‘desi GPS’ in trouble? Why NavIC Is down to just 3 satellites | What is NavIC? | Isro",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMiekFVX3lxTE5jbEpoaVd4bXlQRnFjS19xVjlqZ1Bwb1VQVjFRci13V2xxQnBsRDJEdTRBYW9sMERZeXY1bXFGT2VCcnhLNUpqN181N0lsbGNmRGNJSHo2SHpSNk54ZERmdE9fRDFXVlE2ekFKWUJQVXRuNnZ2M3drZkFR?oc=5",
-   "category": "satellite status and outages",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "Vajiram & Ravi",
-   "published_at": "2026-03-17T07:00:00Z",
-   "source_id": "vajiramandravi.com",
-   "summary": "",
-   "title": "NavIC Atomic Clock Failure: Impact on India’s GPS Ambitions Explained",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -10123,6 +10123,15 @@
    "graded_by": "",
    "kind": "",
    "name": "newsmobile.in",
+   "note": "",
+   "reason": ""
+  },
+  "newsonjapan.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "newsonjapan.com",
    "note": "",
    "reason": ""
   },
