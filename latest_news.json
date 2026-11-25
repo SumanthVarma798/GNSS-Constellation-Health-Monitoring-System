@@ -1,6 +1,38 @@
 {
- "generated_at": "2026-11-24T22:48:22Z",
+ "generated_at": "2026-11-25T00:12:58Z",
  "items": [
+  {
+   "address": "https://rntfnd.org/2026/11/24/space-force-oneweb-contract-adds-gps-backup-tech-times/",
+   "category": "programme and policy",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-11-25T00:09:12Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "Resilient Navigation and Timing Foundation",
+   "published_at": "2026-11-24T20:55:21Z",
+   "source_id": "rntfnd.org",
+   "summary": "Image: Picryl.com What’s new: Space Force has contracted with OneWeb for PNT services. Why it’s important: PNT from LEO can be a great augment during local GNSS interference. This is the first we have heard of any Dept. of Defense entity contracting for such a service. What else to know: There are…",
+   "title": "Space Force OneWeb Contract Adds GPS Backup – Tech Times",
+   "via": "https://rntfnd.org/feed/"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiZEFVX3lxTFB4eHFLYVJRaXl1Rlh6MVNrY0s2SHpHdWo3ajlqc0tDcE1aZ2FjU1FkcDhyRkV5MmRUNVh0bjVTTUJpVm10bHdOY2JwTERKckNMdGEwX2tDRE43V1RQNXlGNVBSYUw?oc=5",
+   "category": "other",
+   "constellations": [
+    "BeiDou-3"
+   ],
+   "fetched_at": "2026-11-25T00:10:05Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Envanter Medya",
+   "published_at": "2026-11-24T19:37:00Z",
+   "source_id": "envantermedya.com",
+   "summary": "",
+   "title": "BeiDou Navigation System: History, Satellites, Use",
+   "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
   {
    "address": "https://x.com/Stellarixorine/status/2125270045404315887",
    "category": "other",
@@ -7665,22 +7697,6 @@
    "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMisgFBVV95cUxQZy1EQUR4N2NxTnNyM0haRjVVbzZaTm84YmxhdGpvd0JUZFRGSVpUY3JhUG1ELURZWmw5Q2d0MVlUZHpNZEU2cmdFaFNwZXRqcDFkemVWYTVselo1MmRwVDRDRHJSeEF5NHhTZXczYXpwc2ExeHpPRE9LRGZCYzRhYS15X1NiUVJKQmVpUHFTRzZFMUZTdFlNVTRNR1VfRUU5RXRtb1NkdlRMTUdqZGFRTXFB0gG3AUFVX3lxTE1aSW85RU1MU2dPaVZtOUJjNV9jSllFRnloSm4wQWRKblZmODFycHNpbUt6dHNDWFNqUUxCV254SHE4UVFlQXVJd200U1p5QUs3T0tlSVZCYkVSZHZpVHhHekF5eXVkRjhpZFktN0l0RzZERGpxUTNHczJaTWtCY3BaTDRRU2MtZVZUd0d5NTJRT3M5UGwxbXdrOWVpTnJTaEJ0UTVHQ1MyTGY0TW83eml3ZFQ4ZFozZw?oc=5",
-   "category": "other",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:39:58Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "WION",
-   "published_at": "2026-03-18T07:00:00Z",
-   "source_id": "wionews.com",
-   "summary": "",
-   "title": "What are India's options to revive desi-GPS NAVIC?",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMivAFBVV95cUxPZEd2RWZUa1NUNG54X2xrVXQ0UjVMcHVRMWxPbHVCbGdvdXZpdklhYldXcDBTbUFUdEEybHZYQnhyMzR2cVJVLUQ5YVlwWmJlR2RkZzhiZ0dUdk1WdFFfNG5lSVoxUGZQUXJuYlJDQjFqRmpNT2MyM3RoZS1BamhPcFNQcXJEaVhTU3pEcEVxckJ6R0RhdU5tUzVja2c3SFcwc3J3VHh5aGlyRFBVR2NHckRvTG5WQTZ4QXRWVA?oc=5",
    "category": "other",
    "constellations": [
@@ -9178,6 +9194,15 @@
    "graded_by": "",
    "kind": "",
    "name": "english.www.gov.cn",
+   "note": "",
+   "reason": ""
+  },
+  "envantermedya.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "envantermedya.com",
    "note": "",
    "reason": ""
   },
