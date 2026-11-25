@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-25T00:12:58Z",
+ "generated_at": "2026-11-25T09:16:34Z",
  "items": [
   {
    "address": "https://rntfnd.org/2026/11/24/space-force-oneweb-contract-adds-gps-backup-tech-times/",
@@ -2672,6 +2672,39 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMirwFBVV95cUxQcEh0b0QtejQ5SnFOeGZGRFotd0VMZlN3UC11cDgyOHVZZHVxV1p2Q3BpYmFpa0JhZ2R0Q3Vjak5OVmRqZ3ZHc2hrV3dkSXRnRnBlUmthbkVjRXZNZWw4VjkzUnBQdzV4cWdYaHdPR3QwdUdMRUo5c0RKYXd0eS1CMjJyVzlkZVhzaWpISkZEMnNlX0xRVGpLVlJQN3dsNm1hRDdKazdfWTlrdDB5T1VV?oc=5",
+   "category": "launch",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-11-25T09:15:21Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Daily Sun",
+   "published_at": "2026-10-31T07:00:00Z",
+   "source_id": "daily-sun.com",
+   "summary": "",
+   "title": "ISRO launches next-gen satellite to boost India's indigenous GPS system",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxPUHdVNGpJdmZ0SEdaNy1jQmV6R0xOS1Z0WVgxSGo2N0drUnROaGs2bUpXak1SRS1GS1UtRnZlYUVrN2drVTRSY0dwaV9xRzdOY0EyRVo2MFNaSEJmRGhOQ3h1ODBwS3FzSmNZd3ZkRnhaVEs4T3M4bVg5NVBHT0t4c0xNWkh5TUE1TmNlbEZreXFmaXFvM0czYW5Md2NmQTY1b3NxRVFLOTXSAb4BQVVfeXFMT2RSLWdlWVZoc0swYndnNzU3RnNKeGRRWjFFUnRfbFI4bWhlZElqN2lmM01QTzF0QUd2Y3E3QWZNNUJVUjNPdGNMV3kxYTFQak1sbW9iV3BDMkZqSmtvMW9weWh3anFhbm5pMldtUlI2bWQzU25rTUVRTHNfNE9rSm9LVHRsN3Z0TWR5VFlGSW8xWDRCMVpUMVdFWndvcEJkaUhnYllZNXNLZDNPMkhldlJkMnRtSk5fR0JPcTRCdw?oc=5",
+   "category": "launch",
+   "constellations": [
+    "GPS",
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-25T09:15:21Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Gulf News",
+   "published_at": "2026-10-31T07:00:00Z",
+   "source_id": "gulfnews.com",
+   "summary": "",
+   "title": "India launches NVS-03 to boost its homegrown GPS system",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMijwFBVV95cUxNOV9MOWhweTd1clh4STRlZDJ5ZHJoQnRBZnlDN3ZCR3JEVS1tTTF0UEs1QnhlbGlTdHh3aGxKNUtrdkljaUlCX19nQlRkRkFxVlN6SGFpQXdmRVBWMXNkRS10cWdMUlNaeTgtY3oxcDVkd1c4amR4THhqU1l3dTNPQkFjMzJ6UjZGZ1FBNE5VMA?oc=5",
    "category": "launch",
    "constellations": [
@@ -3074,22 +3107,6 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMivAFBVV95cUxQdUNmSFhBb3JFei15MFFCYmdJSjRKYklNcTRqUFhHNG1Fd0hYSnNVY0p4YUJRb1VDNlpRaHpZczFCblUzMDR2YVBXT3J1NmZNR3VSYVowSlhraUFzemozaWdzREV2eUdzamFTWDNWVVNld0JBc2Z3TU1jcXplMURuZnBvdG8xd1JnUjZfazh0Z09ybnRRNzd2ZVo1SjJnOFd5WWFXcTBSOTk2UmRtbWNEX1NRNTBLVXl6TWQtag?oc=5",
-   "category": "launch",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-31T17:24:13Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "www.daily-sun.com",
-   "published_at": "2026-10-31T04:03:32Z",
-   "source_id": "daily-sun.com",
-   "summary": "",
-   "title": "ISRO launches next-gen satellite to boost India's indigenous GPS system",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxPdWI4dktCLXdxTjJVczZldnBxaGVpdkJHUGVHQzRVb2JTWWRLek1KTlpDdDhNeGk4S0VTTzcxajB0elV4eFYtR3hva0VxTUNTMVh0QzhPQmtrWTEzbGZQNE1hMW5SbUp5YzBZVU93amZnZjE0WGotaGdxYVgzVTBvVFc1Q214Wnd2MDM0S2hsV3FfdEFHd1g5SXBrbWpCeHpjdmtZY0NhcExicUcxYmptV1cxbHFta1Y5cUtUbGt6N0xKTXNFb1hkVtIByAFBVV95cUxPdWI4dktCLXdxTjJVczZldnBxaGVpdkJHUGVHQzRVb2JTWWRLek1KTlpDdDhNeGk4S0VTTzcxajB0elV4eFYtR3hva0VxTUNTMVh0QzhPQmtrWTEzbGZQNE1hMW5SbUp5YzBZVU93amZnZjE0WGotaGdxYVgzVTBvVFc1Q214Wnd2MDM0S2hsV3FfdEFHd1g5SXBrbWpCeHpjdmtZY0NhcExicUcxYmptV1cxbHFta1Y5cUtUbGt6N0xKTXNFb1hkVg?oc=5",
    "category": "launch",
    "constellations": [
@@ -3443,22 +3460,6 @@
    "summary": "",
    "title": "ISRO Launches GSLV-F18 with NVS-03 Navigation Satellite",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://x.com/isro/status/2116354957180019079",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-31T06:23:14Z",
-   "grade": "A",
-   "grade_standing": "confirmed",
-   "outlet": "ISRO (@isro)",
-   "published_at": "2026-10-31T02:21:56Z",
-   "source_id": "x.com/isro",
-   "summary": "GSLV-F18/NVS-03 Mission: Watch highlights of the journey from lift-off to spacecraft separation. Mission details: https://t.co/wtZ6TmjUhc #GSLVF18 #NVS03 #ISRO #NavIC https://t.co/wstykeeMK9",
-   "title": "GSLV-F18/NVS-03 Mission: Watch highlights of the journey from lift-off to spacecraft separation. Mission details:…",
-   "via": "https://x.com/isro"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMi2wFBVV95cUxNV1RlMHIxWnVRU3NYN1hJOS1heC1OTGwta3FxVVIwYjZlZktwUlBJaGJwUkZTWGRmcnJJRGJ1d2VvLUpzSF9jYjZXa1RHVDJGTmtlZ3NEQ1VheGd0Ri1OcUlSeUlqZnRXRzdnVTZkaERKeldRQzVYcTRMM25lWk5oZTQ5NnRfdHRYSVBsU1pNQ2FFeWxNSnpZYW5GQThmR3hpcWpPdURFUk55M1RkWG5KS1p5aXdlTU5oajdHTEF5aF9Yc1R2YWFYY1FOTENLMlNtRlFDZFBNUVQ1MGvSAeABQVVfeXFMTnJPRElZSzFicHdBVUxnRmpDdlZRVlhpYU1hS0VrbTJDc3AzSHF4YWdCeTJ4WVI3d00xQ3AwakhjODBMajNWNENsRnFway0tNWpqVGpEeGtBTXZIZnN5V2VjTE1JdkNxaVk4RjNqZkNESTVFY1N0VnlTQWxEMVN2V0h0elFaSk9LbG1KeUhqSm5yd3R3MjRCcnFETjhwN21wX045S2JzdGJPaS1vMkJ5cGhIZ3psaGNnNWc5RUNsS3kwMGZERGxtYzNkOHFLNno3RkpPZ1hzT29EQlNadEwyY0c?oc=5",
@@ -7681,22 +7682,6 @@
    "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMiwAFBVV95cUxPZDEyMXBhYnFPRi1tV2pqT1p3Umt2QV9VNS0waGg5MWRGQlpfMHBROUFDQU1WT214b1FkclhhSVVOMy1kRFJ4ZnRSMmh3ZUZJM3NnWUJfZ19lXzItYmItTEUxV1hmY1Zvb21ja2ZOVXl3QTVQVXZfZXN6VElCaTBmNzNHbzV5bExlOFZEeEFjZ19wVnVNTFU3OUFUajZTUm05Tk8zLUs1c2tUSGVTWXlvRDhjZmVwbzFsanlsaFk2Q00?oc=5",
-   "category": "other",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "NASA Science (.gov)",
-   "published_at": "2026-03-19T07:00:00Z",
-   "source_id": "science.nasa.gov",
-   "summary": "",
-   "title": "NASA Laser Reflecting Instrument Makes GPS Satellite More Accurate",
-   "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMivAFBVV95cUxPZEd2RWZUa1NUNG54X2xrVXQ0UjVMcHVRMWxPbHVCbGdvdXZpdklhYldXcDBTbUFUdEEybHZYQnhyMzR2cVJVLUQ5YVlwWmJlR2RkZzhiZ0dUdk1WdFFfNG5lSVoxUGZQUXJuYlJDQjFqRmpNT2MyM3RoZS1BamhPcFNQcXJEaVhTU3pEcEVxckJ6R0RhdU5tUzVja2c3SFcwc3J3VHh5aGlyRFBVR2NHckRvTG5WQTZ4QXRWVA?oc=5",
    "category": "other",
    "constellations": [
@@ -9489,6 +9474,15 @@
    "note": "Page, not a feed; snapshot and compare",
    "reason": "Shortlisted to drop from A: gsc-europa.eu is below the B bar (0 claims, score 0.50; B needs 10 and 0.90)."
   },
+  "gulfnews.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "gulfnews.com",
+   "note": "",
+   "reason": ""
+  },
   "hackaday.com": {
    "grade": "",
    "grade_standing": "not graded",
@@ -10382,15 +10376,6 @@
    "note": "",
    "reason": ""
   },
-  "science.nasa.gov": {
-   "grade": "",
-   "grade_standing": "not graded",
-   "graded_by": "",
-   "kind": "",
-   "name": "science.nasa.gov",
-   "note": "",
-   "reason": ""
-  },
   "sciencefocus.com": {
    "grade": "",
    "grade_standing": "not graded",
@@ -11025,15 +11010,6 @@
    "name": "indianspaceflight.in (@iSpaceFlight_in)",
    "note": "About 2,950 followers; about 1.7 posts a day",
    "reason": "As indianspaceflight.in: the site's own account"
-  },
-  "x.com/isro": {
-   "grade": "A",
-   "grade_standing": "confirmed",
-   "graded_by": "Sumanth Varma (until the source record settles it)",
-   "kind": "X account",
-   "name": "ISRO (@isro)",
-   "note": "",
-   "reason": "The operator of NavIC, as isro.gov.in"
   },
   "x.com/planet4589": {
    "grade": "D",
