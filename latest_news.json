@@ -1,6 +1,54 @@
 {
- "generated_at": "2026-11-25T09:16:34Z",
+ "generated_at": "2026-11-25T19:38:45Z",
  "items": [
+  {
+   "address": "https://rntfnd.org/2026/11/25/caught-in-the-act-russia-jamming-gps-from-space-an-evening-with-prof-humphreys/",
+   "category": "signal and service",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-11-25T19:37:14Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "Resilient Navigation and Timing Foundation",
+   "published_at": "2026-11-25T13:36:16Z",
+   "source_id": "rntfnd.org",
+   "summary": "Image: Veritasium What’s new: The Institute of Navigation (ION) and the RNT Foundation (RNTF) hosted Prof. Todd Humphreys for a reception and presentation at the Ford House Office Building on Capitol Hill. Prof. Humphreys discussed how he became aware GPS was being disrupted from space, and how he…",
+   "title": "Caught in the Act; Russia Jamming GPS from Space – An evening with Prof Humphreys",
+   "via": "https://rntfnd.org/feed/"
+  },
+  {
+   "address": "https://www.gsc-europa.eu/notice-advisory-to-galileo-users-nagu-2026052",
+   "category": "signal and service",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-25T19:37:02Z",
+   "grade": "B",
+   "grade_standing": "confirmed",
+   "outlet": "European GNSS Service Centre: news",
+   "published_at": "2026-11-25T13:22:07Z",
+   "source_id": "gsc-europa.eu",
+   "summary": "NOTICE ADVISORY TO GALILEO USERS (NAGU) 2026052 navaral 25 November 2026 Wed, 11/25/2026 - 13:22 DATE GENERATED (UTC): 2026-11-25 13:25 NAGU TYPE: HAS USABLE NAGU NUMBER: 2026052 NAGU SUBJECT: HAS SERVICE AVAILABLE AS FROM 2026-11-24 NAGU REFERENCED TO: 2026050 START DATE EVENT (UTC): 2026-11-24…",
+   "title": "NOTICE ADVISORY TO GALILEO USERS (NAGU) 2026052",
+   "via": "https://www.gsc-europa.eu/rss.xml"
+  },
+  {
+   "address": "https://www.gsc-europa.eu/notice-advisory-to-galileo-users-nagu-2026051",
+   "category": "other",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-25T19:37:02Z",
+   "grade": "B",
+   "grade_standing": "confirmed",
+   "outlet": "European GNSS Service Centre: news",
+   "published_at": "2026-11-25T13:05:07Z",
+   "source_id": "gsc-europa.eu",
+   "summary": "NOTICE ADVISORY TO GALILEO USERS (NAGU) 2026051 navaral 25 November 2026 Wed, 11/25/2026 - 13:05 DATE GENERATED (UTC): 2026-11-25 13:15 NAGU TYPE: OSNMA USABLE NAGU NUMBER: 2026051 NAGU SUBJECT: OSNMA SiS USABLE FROM 2026-11-24 NAGU REFERENCED TO: 2026049 START DATE EVENT (UTC): 2026-11-24 15:25 END…",
+   "title": "NOTICE ADVISORY TO GALILEO USERS (NAGU) 2026051",
+   "via": "https://www.gsc-europa.eu/rss.xml"
+  },
   {
    "address": "https://rntfnd.org/2026/11/24/space-force-oneweb-contract-adds-gps-backup-tech-times/",
    "category": "programme and policy",
@@ -50,6 +98,22 @@
    "via": "https://x.com/Stellarixorine"
   },
   {
+   "address": "https://www.euspa.europa.eu/newsroom-events/news/galileo-high-accuracy-service-demonstrated-orbit-rises-orbfix-receiver",
+   "category": "signal and service",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-25T19:37:03Z",
+   "grade": "A",
+   "grade_standing": "confirmed",
+   "outlet": "EU Agency for the Space Programme (EUSPA): news",
+   "published_at": "2026-11-24T09:12:14Z",
+   "source_id": "euspa.europa.eu",
+   "summary": "Galileo HAS achieves sub-metre positioning in orbit through this dedicated receiver, enabling autonomous LEO missions, formation flying and advanced space operations.",
+   "title": "Galileo High Accuracy Service Demonstrated in Orbit by RISE's OrbFIX Receiver",
+   "via": "https://www.euspa.europa.eu/rss.xml"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMic0FVX3lxTE5hcUI4SG1zM2Q1blhLcmw0bHVHLXQ1TTR3RmZlRTZfMkxxZVQ4MXRYRk84ZXRGWGl4aU1pLVk5LUFhZTF4ak85bXNrR2haVk9LNlM4U3N6TUpzX3dRWmhwVVlVX1JqVXg0VnFnS1lybmJxeFE?oc=5",
    "category": "other",
    "constellations": [
@@ -80,6 +144,22 @@
    "summary": "",
    "title": "OrbFIX Validates the Use of Galileo High Accuracy Service (HAS)",
    "via": "https://news.google.com/rss/search?q=site%3Agpsworld.com&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMifEFVX3lxTFBCLW5lM1VnQXZJZGxiZTZzYTFHdWxCTHg0TTZiZERrS0NXUldYakFSR01aUlVHNzMxVWFMQ29JaVM5NExBVW5OdHJhQlMtOXYtOGtXZnRUa1RjUTZBSHRfU2psNFB5WVNkWUluaWloMVZ1dzdUQndKSFgzQ0I?oc=5",
+   "category": "signal and service",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-25T19:38:24Z",
+   "grade": "B",
+   "grade_standing": "confirmed",
+   "outlet": "ESA",
+   "published_at": "2026-11-22T13:02:15Z",
+   "source_id": "esa.int",
+   "summary": "",
+   "title": "Two new Galileo satellites enter service",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMiowFBVV95cUxObzE3R2IyZjFia1pLS01kdmdsT0VYMlJPZ2ZzX3hCbk5Mc3pwb2tBRGxZOUtuQnNBd0UtdzBOMDZOU0YyOW1DVHRLZ2d6b2p2b01UbHViNC1DdXAwOXIybm5kbko4dkN2QWJXSThaNFVTaU85eUc5LWpVSXJWRUxGRG04VXN2VVJDb3JJSnY3SFRON1V4d2Z1dUsxdmhaQkNSb3pZ?oc=5",
@@ -2705,6 +2785,22 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMiekFVX3lxTE1QblMtRkw1Ml91OHVwMXlkYWlvcG05bklEazhfZDVWV2JRVFNHS3RZNXFES21IWFRqRTV2TllXNVMxeG9mY05oRFVNa3pOWTVmb0l3aHk3VnJVcGt6Z3hhMkNSSW1henhKYjlBOURUYnhRRUR6bW1ybXdR?oc=5",
+   "category": "launch",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-25T19:38:45Z",
+   "grade": "B",
+   "grade_standing": "confirmed",
+   "outlet": "www.pib.gov.in",
+   "published_at": "2026-10-31T07:00:00Z",
+   "source_id": "pib.gov.in",
+   "summary": "",
+   "title": "PM congratulates ISRO scientists and engineers on successful launch of GSLV-F18 carrying NVS-03",
+   "via": "https://news.google.com/rss/search?q=site%3Apib.gov.in+ISRO+OR+NavIC+OR+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMijwFBVV95cUxNOV9MOWhweTd1clh4STRlZDJ5ZHJoQnRBZnlDN3ZCR3JEVS1tTTF0UEs1QnhlbGlTdHh3aGxKNUtrdkljaUlCX19nQlRkRkFxVlN6SGFpQXdmRVBWMXNkRS10cWdMUlNaeTgtY3oxcDVkd1c4amR4THhqU1l3dTNPQkFjMzJ6UjZGZ1FBNE5VMA?oc=5",
    "category": "launch",
    "constellations": [
@@ -2945,22 +3041,6 @@
    "summary": "",
    "title": "Isro successfully launches NVS-03 satellite, restores NavIC constellation to four satellites",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMia0FVX3lxTE9ja2FwWER3bDhWdnl6ZGh2dDRtUmczay02ZFJyMUQ4UldjV3VJQnhrU3EzZUxlQ1RPN3pyTThKQXBaRVZ6eTVybTNBcUdKQXEwT2Z4VnRoY1ZMRWVqdEdyT3I2eWdQMTNnME4w?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-31T10:00:36Z",
-   "grade": "B",
-   "grade_standing": "confirmed",
-   "outlet": "pib.gov.in",
-   "published_at": "2026-10-31T05:17:00Z",
-   "source_id": "pib.gov.in",
-   "summary": "",
-   "title": "PM congratulates ISRO scientists and engineers on successful launch of GSLV-F18 carrying NVS-03",
-   "via": "https://news.google.com/rss/search?q=site%3Apib.gov.in+ISRO+OR+NavIC+OR+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMikAFBVV95cUxNSWFlVW15NWpadkljbUNZWjFWS2x1SGNud0c1amV4YmJMNG51UkhOZi1fd1lDQmY4dUhlQkFkMWprM3Qwcnpfc1M4aFhyUUV2MlZQZkI5QkM5Wng4X3ZDRC1xbUZTUjBHZmVSMS1jdzhwY0JHMzdOVjdJQTV0dlJmcUFVRUJQLS1WUlZhSkhNc3k?oc=5",
@@ -3861,6 +3941,22 @@
    "summary": "",
    "title": "BeiDou and Tiantong Satcom: Is Huawei leading the field of Direct-to-Smartphone communications?",
    "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMingFBVV95cUxQZ2I5RElTaGt1aGcxMnJLTllOZXdrVktIQzN2Z0NaeC1rd1B1MXN3cS1taFVrYUJhbFMwLXQ0MkpTcHpCX0pmSFp3R3pndUJXUFVieFlfQ19FeUhyQUpGRWtoNkVBc1pkenRBeU4tRG9vR3RESkhwSExsOXdCSnFETnV2V290TFA5N25JeHU1RnctUjUwWE4xQ0F3eERVdw?oc=5",
+   "category": "programme and policy",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-25T19:38:24Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "SatellitePro ME",
+   "published_at": "2026-10-28T17:35:12Z",
+   "source_id": "satelliteprome.com",
+   "summary": "",
+   "title": "ESA awards Airbus contract for two additional Galileo satellites",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMitAFBVV95cUxPOFJpZGVtYm43RTZWanJsNXluVF8zSDhIMzE4bnI0VHpzNXBHQVhiMUxET1RKQjU5QVlDY1Y0Szg1OHE0UTBwcXJ1RHZMRnM0YUN4Sl81ZEUtT2s3ZlBUT1R0T3YwV3hMNjdNclJ3YzBDbkVGcDVWWTUySDZIT1VDWmsxNFlVRGhNWlAzNTlINVYzNVI4NHllNHhuWU5VWm9ublQtd01ONHJyclBBWU1LV1EyQk0?oc=5",
@@ -4976,22 +5072,6 @@
    "via": "https://news.google.com/rss/search?q=GLONASS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMivAFBVV95cUxOa2xFZ285WERidlV5OEwySFh1ODZHbmhLRVhFcTZFQ1duWnRBSVdiS2NyMjg3eVdFMWNaaUZrY0huQWRRQ2wzZFJUTEc5TFo0QlFVYldvak1CaTcwdVBjOTRkV2JfdzdKSVRoZnpuZVBEWWdJaVM0MWpMUkh5elNqSVlfdzJhQ2RvTUIxTDJ4WEU0ajdfM1ZMZmpKVGpBbkF2aEYzV2Rid0YtbmxaRUR3OXNkY2UyWHdvaTB0NA?oc=5",
-   "category": "signal and service",
-   "constellations": [
-    "Galileo"
-   ],
-   "fetched_at": "2026-10-19T22:40:40Z",
-   "grade": "B",
-   "grade_standing": "confirmed",
-   "outlet": "European Space Agency (ESA)",
-   "published_at": "2026-09-19T10:27:58Z",
-   "source_id": "esa.int",
-   "summary": "",
-   "title": "Two new Galileo satellites enter service",
-   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMinwFBVV95cUxQd1k0cDdHX2RwVVI2aGVIZUQzX1hITEZqWml3eXg4OG9SUmRLODNvak9hZllxTFowX1VnV1prMFYwX3JPYTY0Wk0zUzh6TnFBbU1KQWgtRXBBRFpvMUhrRlFwM2NJR0VaSVI3TllMUFJOTHI3Zl9UTXFnUnlQdFNPRUNEOGVLM0JPdUo3SUNXRU1mMnpaTExjYkRvRVNNa1E?oc=5",
    "category": "signal and service",
    "constellations": [
@@ -5376,6 +5456,22 @@
    "summary": "NOTICE ADVISORY TO GALILEO USERS (NAGU) 2026042 penacel 18 October 2026 Wed, 09/02/2026 - 08:29 DATE GENERATED (UTC): 2026-09-02 08:45 NAGU TYPE: UNP_UNUFN NAGU NUMBER: 2026042 NAGU SUBJECT: UNAVAILABLE FROM 2026-09-02 UNTIL FURTHER NOTICE NAGU REFERENCED TO: N/A START DATE EVENT (UTC): 2026-09-02…",
    "title": "NOTICE ADVISORY TO GALILEO USERS (NAGU) 2026042",
    "via": "https://www.gsc-europa.eu/rss.xml"
+  },
+  {
+   "address": "https://news.google.com/rss/articles/CBMitwFBVV95cUxQMTJOdi1SVzVLS2VwUVZxWGxtc1NLcHItendKX01VRGR4bjl5VHZUNHdxZmt2aFhwYzhVaS1qZjdQT2FMaXlZQWZuSWFXU1lBMDNvTjAwTnBSdDhMQ2VUbnpfRUtuTmwyRmpYQUgtZ0p4cDhMTTlWQUNUUzdhMEszLUNFNDcyclJzcEtzNEp4bWNyaDBOWGZTLTU1TWxWYkJranZOYThvTGtRcTJyQUMybW9yTEJRWDg?oc=5",
+   "category": "other",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-11-25T19:38:24Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Universe Space Tech",
+   "published_at": "2026-09-02T07:00:00Z",
+   "source_id": "universemagazine.com",
+   "summary": "",
+   "title": "A significant solar storm disrupted GPS operations on Earth",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMizgFBVV95cUxQd09iS3FiZE14MmdEWmVoZGV4NU00d0RndWgyWXREaGl2dDBlQkxyTV9jVS16dUtzNE04SmR0WUc2VGxBdVVQenE5VU9BVlhXLUlFbjJnejd4Z082WmMtY2RXYnhvaFhKdzJ3ZUV2eUhqWFFyLVF0dGoxXzkyc2ktYXpVbEdJaE44anlwTXQwVnNPX2JRaWYxX1F2cEVieWg1c3pLaWxIWXRwMldRZ3djTTYyZFlnYkZLTTkxNC1tWGE3UFF1OWhBZXlXTFMxd9IB0wFBVV95cUxNRDdjUWlyR0o3Tl9lRnFoV1p0dE9tWjZuOE5PVG90cGZvU3I0ZF9obFpudUNqRUl0d25xX3p4bnNNWmQtMlNybTlXVF9oNXJPZUNlRzRDQlB5ekp6dklRd2tYMEpZTkhlNHNCcFBNUUFhMUdjMlZKdS1vMzN2b2F5RExtRW9lRFA4RV9zRnFIVmR3QUZzRFY2OXdpTG5ydE0yWU9NV04wTEdaQUFsTmtDUnpteFctNWRkb1djck9DMGVqV1RCUTZvc3l5VWJRWHVRM1dJ?oc=5",
@@ -7633,39 +7729,6 @@
    "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
-   "address": "https://news.google.com/rss/articles/CBMijAFBVV95cUxPZGtPdXQtSTl6UUJGZk4zOGdWSDBQdi1nYTN0eWhscmdpNVg3dU12UmtERGd1dkVqakllcEs3bHdYcVdiUXBzMkJPYTB6LS1YV011Y0hISDZJT3F6RFRWSS04TnRXTjJIekdTWS1QeHZmWmk2clJ4c2lya1c4ZTVuRkt2MEdJS3dZMjQzZw?oc=5",
-   "category": "launch",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "C",
-   "grade_standing": "confirmed",
-   "outlet": "Air & Space Forces Magazine",
-   "published_at": "2026-03-20T07:00:00Z",
-   "source_id": "airandspaceforces.com",
-   "summary": "",
-   "title": "Space Force Switches From ULA to SpaceX Rocket for Upcoming GPS Launch",
-   "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxPcEZWLXYtTVNnWXlKdTVBN2FQNmlQSWRpM3NYLUdRMXNVVlk5UkY5SXdFVEk3TmR1aWlXenpsVVh6aXJ3V29CazdGazgwam9SbjltNlREQmRWaGU1S0ZqSTN0TDVXZFBBMXdQMDZfeWtNNUJUQmFfbHFRMEdhU21TdE9HS3NZdENWQWdqeHBaQmk5NTMtZW0yMDQ0ejJ2Sk50c3NxUWI3bVg?oc=5",
-   "category": "launch",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "F",
-   "grade_from": "record",
-   "grade_standing": "provisional",
-   "outlet": "BASENOR - Tesla Accessories",
-   "published_at": "2026-03-20T07:00:00Z",
-   "source_id": "basenor.com",
-   "summary": "",
-   "title": "SpaceX Wins GPS III-8 Launch After Space Force Pulls Contract From ULA",
-   "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
    "address": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxOX3RGME05MDF5TEE2UXltU2F6d0Z5YmpKeXZSdmZzNW45ZW1DNlNoVGxET3JMeF9ER2ZOSC1OZTVkLTBEY2pJdnZRY2pqeUgtcHFwZE5nMFB0NUdQUlhybkZsT1RwMXV0WW1sM2FsU1p6ZVFISTJRVUFqdUxQSTNVcGxMd3ctaFROTk1odEdaTmRzZ21aTFQySjBnWWtiX3Q2Nm1GajBQSjhGa3dlLV9qYWNoN1NHVy05?oc=5",
    "category": "other",
    "constellations": [
@@ -8618,15 +8681,6 @@
    "note": "",
    "reason": "From the checked-claims record, waiting for approval.",
    "record_line": "F · cannot be judged yet: 1 of 3 claims checked"
-  },
-  "airandspaceforces.com": {
-   "grade": "C",
-   "grade_standing": "confirmed",
-   "graded_by": "the team, decided in the administration console",
-   "kind": "press feed",
-   "name": "Air & Space Forces Magazine",
-   "note": "Published by an association that advocates for the US Air and Space Forces",
-   "reason": "Specialist defence press; covers GPS and the Space Force"
   },
   "airbus.com": {
    "grade": "",
@@ -10356,6 +10410,15 @@
    "note": "",
    "reason": ""
   },
+  "satelliteprome.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "satelliteprome.com",
+   "note": "",
+   "reason": ""
+  },
   "satellitetoday.com": {
    "grade": "F",
    "grade_from": "record",
@@ -10853,6 +10916,15 @@
    "graded_by": "",
    "kind": "",
    "name": "ukrmedia.news",
+   "note": "",
+   "reason": ""
+  },
+  "universemagazine.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "universemagazine.com",
    "note": "",
    "reason": ""
   },
