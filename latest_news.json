@@ -1,6 +1,22 @@
 {
- "generated_at": "2026-11-26T13:16:10Z",
+ "generated_at": "2026-11-26T21:59:14Z",
  "items": [
+  {
+   "address": "https://x.com/Stellarixorine/status/2125994971073585309",
+   "category": "other",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-11-26T21:59:14Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "Stellarix (@Stellarixorine)",
+   "published_at": "2026-11-26T16:47:54Z",
+   "source_id": "x.com/Stellarixorine",
+   "summary": "🚀 Ever wondered what’s inside SpaceX’s Crew Dragon? Here is a complete breakdown of the spacecraft taking astronauts to orbit. 🛰️✨ 🔹 Pressurized Crew Cabin: Features sleek touchscreen flight controls, life-support systems (ECS), and ~9.3 m³ of habitable space for astronauts. 🔹 Unpressurized Cargo…",
+   "title": "🚀 Ever wondered what’s inside SpaceX’s Crew Dragon? Here is a complete breakdown of the spacecraft taking astronauts to…",
+   "via": "https://x.com/Stellarixorine"
+  },
   {
    "address": "https://x.com/Stellarixorine/status/2125631960626381090",
    "category": "launch",
@@ -7726,22 +7742,6 @@
    "source_id": "spacenews.com",
    "summary": "",
    "title": "Another GPS launch shifts from ULA to SpaceX as Vulcan investigation continues",
-   "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMikwFBVV95cUxNVzVBOUdWZWlwaGlXTlBQMWJqV0RRQ0gxZmt3UmNXWk9oR2Z2RjVvQzNOWTA5M3BTb2ltVVQ1OU1rclNGMkVoXzVWSURZQjlBRWs0bWRGMHRuZW1CTUNRY3lMR0RCX05zd1RTbTBfel91MDF4RzNGOGJLQjNfZ21WdmFjYjVDeTdTenBoUEVTaTlhMGs?oc=5",
-   "category": "launch",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "C",
-   "grade_standing": "confirmed",
-   "outlet": "Breaking Defense",
-   "published_at": "2026-03-20T07:00:00Z",
-   "source_id": "breakingdefense.com",
-   "summary": "",
-   "title": "Space Force shifts GPS III launch from ULA to SpaceX",
    "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
