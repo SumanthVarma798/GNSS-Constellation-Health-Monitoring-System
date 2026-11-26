@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-25T22:01:13Z",
+ "generated_at": "2026-11-26T03:51:08Z",
  "items": [
   {
    "address": "https://x.com/Stellarixorine/status/2125631960626381090",
@@ -2817,6 +2817,22 @@
    "via": "https://news.google.com/rss/search?q=site%3Apib.gov.in+ISRO+OR+NavIC+OR+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMi-AFBVV95cUxNdExsOW51TV9DbW1jVWlPRDJVazZQVGlhWGM3VWo3N1Y1T0hld1RpQW0wTU5nYWNWOFRUMVlodVlnX2ZFc21zUlhTMTh2REFlRjM1bVVueTJyS2JVSHdfOXZrOFdvTW1fQXNQQTc2OE5fQU1zaUZ2aEVEMGVidUI1a3VUQkNfeDNfVDhXUkdFRlFkNHIwZWlGN2k3Z3VWdHR5TnRvLWY2dmNOMEpfX01WTDRib19nUEpRMExxUWl3ZU5uVTRYc2NLX1oyTlZDM3N3dDVfOG0yWXFERjFqTENHeEFSQzB2X2ZlQ19WaU04YmVPNWdUMzV2N9IB_gFBVV95cUxQWUpqcUxMSUhYUDZfc1FmRWFFcElTbUVpLW9ETGktS0xJZ3R5NTRZNG5veUFzZFVVcktQRUZrU1dkaXFtRWZ4UDJZY3NJdHVPNXBKbV95dW1aVGNZWTlWRVR5b3BPNkRZTXJBWXpsX19xVk13VDlBU0c2ZzJwdWl2OC1ETWtWall4TnlWYi1jSXF0N3JBVTd1ZElldTJha19EYzNUeHFOTVEtc3E3dFc2MlZqRDhucDVGc2gzNjBBQ3cwNXZZQzZSWGVBVkFQRTVndFhEVU9DX3B1ZkdWajN4dVVobVl5RUxGMEdlS2dYZUhhWTdDdHhRenQwcEFXdw?oc=5",
+   "category": "other",
+   "constellations": [
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-26T03:50:05Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "ET Government",
+   "published_at": "2026-10-31T07:00:00Z",
+   "source_id": "government.economictimes.indiatimes.com",
+   "summary": "",
+   "title": "NavIC is not just about navigation: Why India needs sovereign PNT in a world that weaponises technology",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMijwFBVV95cUxNOV9MOWhweTd1clh4STRlZDJ5ZHJoQnRBZnlDN3ZCR3JEVS1tTTF0UEs1QnhlbGlTdHh3aGxKNUtrdkljaUlCX19nQlRkRkFxVlN6SGFpQXdmRVBWMXNkRS10cWdMUlNaeTgtY3oxcDVkd1c4amR4THhqU1l3dTNPQkFjMzJ6UjZGZ1FBNE5VMA?oc=5",
    "category": "launch",
    "constellations": [
@@ -3539,22 +3555,6 @@
    "source_id": "firstpost.com",
    "summary": "",
    "title": "PM Modi congratulates ISRO on successful GSLV-F18 launch carrying NVS-03 satellite",
-   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMihgFBVV95cUxQOXdyR01aWGs3ZzZfSUUxQjlhNzI1Qm9ra1VtY2FzWG9SeGJYcjBlSkZYOFcwMmtQeWFXRmUzRGtpMlZJX1BJazZDNVY2b1FqdWRTSXE0aTc3SlRTMm1ZQlN1WUlUY3lCa3gxNHI0MFBhQzZXZVQ5eWdDbnVDMXkwa3FkTzBaQQ?oc=5",
-   "category": "launch",
-   "constellations": [
-    "NavIC"
-   ],
-   "fetched_at": "2026-10-31T09:59:34Z",
-   "grade": "",
-   "grade_standing": "not graded",
-   "outlet": "GK Today",
-   "published_at": "2026-10-31T02:27:53Z",
-   "source_id": "gktoday.in",
-   "summary": "",
-   "title": "ISRO Launches GSLV-F18 with NVS-03 Navigation Satellite",
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -9481,15 +9481,6 @@
    "note": "",
    "reason": ""
   },
-  "gktoday.in": {
-   "grade": "",
-   "grade_standing": "not graded",
-   "graded_by": "",
-   "kind": "",
-   "name": "gktoday.in",
-   "note": "",
-   "reason": ""
-  },
   "global.chinadaily.com.cn": {
    "grade": "",
    "grade_standing": "not graded",
@@ -9514,6 +9505,15 @@
    "graded_by": "",
    "kind": "",
    "name": "globaltimes.cn",
+   "note": "",
+   "reason": ""
+  },
+  "government.economictimes.indiatimes.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "government.economictimes.indiatimes.com",
    "note": "",
    "reason": ""
   },
