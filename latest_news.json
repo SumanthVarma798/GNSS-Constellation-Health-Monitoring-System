@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-27T09:09:52Z",
+ "generated_at": "2026-11-27T19:13:48Z",
  "items": [
   {
    "address": "https://x.com/Stellarixorine/status/2125994971073585309",
@@ -8458,6 +8458,22 @@
    "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMitgFBVV95cUxPYm1KOFF6Q2wydEctM3hUNFR5TVFJRkZhN2JFcFhmaGluaHg5X3QxOXU4MXp0OWF4eHpnc3F2RXFfMXVhVWo0TXRoTVl4RDVvTzlJbC1uSVFiMVRPTDJKWG5xY2licTYyX1phMmR2cFFLVGhVUE83d0I4c2o2WkJvdjk3NnotaXFvYm4xWmZhUGNFRjNELURLSVJhRkM2dGxOcThhRm05VVdrX2w1dmxqdU5QZDhVQQ?oc=5",
+   "category": "launch",
+   "constellations": [
+    "Galileo"
+   ],
+   "fetched_at": "2026-11-27T19:13:28Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "Electronics Media",
+   "published_at": "2025-12-17T08:00:00Z",
+   "source_id": "electronicsmedia.info",
+   "summary": "",
+   "title": "Galileo adds two new satellites in launch supported by GMV technology",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMitgFBVV95cUxPUXdXR2FKR0hXNUUxNHVmT25TZy01Y2dRMGxXUUdhdXJPb2VPdm5ZZmR1bGdBNy1UeEx4dFZtSlFXbVZmOGRkWkNXaWpLMUd0ZmEtMnVScWcxTFlqOWxUa1Y5b215b2J3aGdlOEdCeE1YYjVsNmxybl9EeXA2ZmJNUHRPYnZ0RGMwdHNOWVZ4d2lFTlZlS1lDdFdjbEVoWEhmVzloTWxNcGdLdTJNX0FFUUhvamFxQQ?oc=5",
    "category": "launch",
    "constellations": [
@@ -9141,6 +9157,15 @@
    "graded_by": "",
    "kind": "",
    "name": "edexlive.com",
+   "note": "",
+   "reason": ""
+  },
+  "electronicsmedia.info": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "electronicsmedia.info",
    "note": "",
    "reason": ""
   },
