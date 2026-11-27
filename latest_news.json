@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-26T21:59:14Z",
+ "generated_at": "2026-11-27T00:04:14Z",
  "items": [
   {
    "address": "https://x.com/Stellarixorine/status/2125994971073585309",
@@ -6293,6 +6293,22 @@
    "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE1qbW5DU0dsYUJWQkwxTG9zc2lEUDVUYi1QWkkwdFlRYjRYdmYwWFRqaWcxdVcwd0VtV0xfbnRrQlBMMjBUd1RlZWJyYkZvdS1jQ2RkMkpYWnZBc3lKdUtMaQ?oc=5",
+   "category": "signal and service",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-11-27T00:03:54Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "XenoSpectrum",
+   "published_at": "2026-07-18T07:00:00Z",
+   "source_id": "xenospectrum.com",
+   "summary": "",
+   "title": "Signals Up to 100x Stronger Than GPS: Xona's LEO Positioning Network to Begin Deployment in Late 2026",
+   "via": "https://news.google.com/rss/search?q=Galileo+satellite+navigation&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://news.google.com/rss/articles/CBMiggFBVV95cUxPQ2Z5ZE9MM3UtLU92cnhXN1lONmdzdzR1b3A4dFkzcl9vNnA1ams5M0Vhc1A1TGo1U1pwTXc0T0hSeFp2QjVUcFl5em0zc0ZEdjhuQW11aGFhd0NFQlNzbWF6NWl2RWxVcFlaTy1XZ2I4eXF1dzBzLXIxbnE0cHdJMlFn?oc=5",
    "category": "signal and service",
    "constellations": [
@@ -7726,22 +7742,6 @@
    "source_id": "aviationweek.com",
    "summary": "",
    "title": "USSF Reassigns Fourth GPS III Launch From ULA To SpaceX",
-   "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMiowFBVV95cUxPelZCNVl4SU0yYjNQbXVScWRDbm1sbFVtdkJTU2RndGFzMV9TMzBxM2YtN18yNk9VSkdPQjI5SS1qVlBkbDI4T21zdk1lVF85SmYzbWZkMFFYZlc0RUhvVm16VklUVmNaSzFKM2xyazlqSkZ5aXJLZ2tzTU1aUDR4RlNXTzJJVmhLby1aeTBRcDN1NUhEdmRKcURwN3hsT3FiR1Zv?oc=5",
-   "category": "launch",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "C",
-   "grade_standing": "confirmed",
-   "outlet": "SpaceNews",
-   "published_at": "2026-03-20T07:00:00Z",
-   "source_id": "spacenews.com",
-   "summary": "",
-   "title": "Another GPS launch shifts from ULA to SpaceX as Vulcan investigation continues",
    "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
@@ -11107,6 +11107,15 @@
    "name": "Jonathan McDowell (@planet4589)",
    "note": "",
    "reason": "3 of 3 checked launch posts held; Jonathan McDowell, author of GCAT (planet4589.org, C)"
+  },
+  "xenospectrum.com": {
+   "grade": "",
+   "grade_standing": "not graded",
+   "graded_by": "",
+   "kind": "",
+   "name": "xenospectrum.com",
+   "note": "",
+   "reason": ""
   },
   "yacht.de": {
    "grade": "",
