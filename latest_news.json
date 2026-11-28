@@ -1,6 +1,22 @@
 {
- "generated_at": "2026-11-27T19:13:48Z",
+ "generated_at": "2026-11-28T03:35:56Z",
  "items": [
+  {
+   "address": "https://news.google.com/rss/articles/CBMigwJBVV95cUxOcURkQUxFMjRGWnhjd3B2WHZJMGVBSlVZcnRmTTh5QnVRODJUN09wQnE4NDNNVzFuQ1FvaFJFSmJlWkY5dWxCVXdhNWxqSE04NWU0Z3hueGdfZTlreDhHaFJxdUxEbzVfcm4xRUVVLXdlUkh6enVjbVZEQUdSTTk0Rm9VYmVYLW41YVhSLUJyUW9RRk15dFdKWVpvMzRQV2o0OUR0Qnd1UHpISHFDeEdoV1R2MVBGNzlQRV9NS2JHOXZyQ3l5T0ViOXRlQ0Z0TlF4VTUxQ3U0aUZ4QndJckJTcmhwUjJJVUE5TWJna3VsRFFXZEl1Zll6MUxYZUZSY3VYQy1V?oc=5",
+   "category": "other",
+   "constellations": [
+    "GPS"
+   ],
+   "fetched_at": "2026-11-28T03:35:14Z",
+   "grade": "",
+   "grade_standing": "not graded",
+   "outlet": "巴士的報",
+   "published_at": "2026-11-28T02:35:00Z",
+   "source_id": "bastillepost.com",
+   "summary": "",
+   "title": "300 Billion Positioning Requests a Day, 30% Ahead of GPS: How China's Satellites Quietly Became the World's New Infrastructure",
+   "via": "https://news.google.com/rss/search?q=BeiDou+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
   {
    "address": "https://x.com/Stellarixorine/status/2125994971073585309",
    "category": "other",
@@ -1403,6 +1419,23 @@
    "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
+   "address": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxOaXNsOUxNQUVMamVkancyQ1NFNW5kV1pYZFZhcnk2MmwyS0o3WkV3Z01ndTBFbGM4UGJzZG0xSlVWTVdnaXBhRXBrWU02ellwdWpyMTAzVlBvZS1weGR4UEctR011ckZJazhhcld0eGhFajlfSUx2OHVzN0hXZ3Z5XzhqejRPNy16NnJGZVpVTFhidUFkSmwzUS1LajFOdzFwd0QtYUFzM2pKZw?oc=5",
+   "category": "other",
+   "constellations": [
+    "GPS",
+    "NavIC"
+   ],
+   "fetched_at": "2026-11-28T03:34:53Z",
+   "grade": "D",
+   "grade_standing": "confirmed",
+   "outlet": "The Hindu",
+   "published_at": "2026-11-04T08:00:00Z",
+   "source_id": "thehindu.com",
+   "summary": "",
+   "title": "What is the debate on NavIC vs GPS | Explained",
+   "via": "https://news.google.com/rss/search?q=NavIC+OR+IRNSS+satellite&hl=en-IN&gl=IN&ceid=IN:en"
+  },
+  {
    "address": "https://x.com/ispaceflight_in/status/2117883989105222122",
    "category": "signal and service",
    "constellations": [
@@ -1465,23 +1498,6 @@
    "summary": "Since March 2026, NavIC has had only 3 working navigation satellites, one short of the 4 needed for a position fix. Once NVS-03 is operational, NavIC's base layer is back to 4, bringing back standalone 3D positioning over India. Since the launch, interest in NavIC has shot up. People want to know…",
    "title": "Since March 2026, NavIC has had only 3 working navigation satellites, one short of the 4 needed for a position fix.…",
    "via": "https://x.com/iSpaceFlight_in"
-  },
-  {
-   "address": "https://www.thehindu.com/sci-tech/science/what-is-the-debate-on-navic-vs-gps-explained/article71663982.ece",
-   "category": "signal and service",
-   "constellations": [
-    "GPS",
-    "NavIC"
-   ],
-   "fetched_at": "2026-11-04T11:37:21Z",
-   "grade": "D",
-   "grade_standing": "confirmed",
-   "outlet": "The Hindu: science",
-   "published_at": "2026-11-04T04:38:37Z",
-   "source_id": "thehindu.com",
-   "summary": "From a strategic perspective, the argument is quite straightforward given the origins of the IRNSS concept in the aftermath of the U.S.’s denial of its Global Positioning Service (GPS) during the 1999 Kargil conflict",
-   "title": "What is the debate on NavIC vs GPS | Explained",
-   "via": "https://www.thehindu.com/sci-tech/science/feeder/default.rss"
   },
   {
    "address": "https://news.google.com/rss/articles/CBMinwFBVV95cUxNbVRJRll3TEVqVTlJLUdCZXRwMGFkcWNaajZmNndHZEpfUnZaWTZaUm8xS05BaWRDSkNzR2w0bU1rck1IQmZoSWJveF9lTGxSUWhSY0JKb1pfelVFLTVkdVNvdEozUkZXRDdKQ0xacGZ3WmMzSEJmUF9wMzNxenhBSVlyR2p2TW55SUxvTUZOMEJHeWtJRGdpaWhZU2dnMU0?oc=5",
@@ -7725,23 +7741,6 @@
    "source_id": "ssc.spaceforce.mil",
    "summary": "",
    "title": "USSF prioritizes GPS III capability delivery timeline, executes launch provider exchange f",
-   "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
-  },
-  {
-   "address": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxQTHNVUVVvX0dPeVNiZ0hnU01ydXJ6X0VIeUJGeTVyOEw5dUFhZFFZMUg1UkVyNlcxdUtDTVpCMW1KWm8wMmhoekFyVnZScjRxYWtBczFmbG1PcDVUT2ladGJJbFpXX0RNMllGMFFyeG1MLVRRWENtc3R0SHNIVE53MDlKYkd1WEx4VDVKcGhLZ0ZOLXRYNjVVcFdEckg4M3BBdEk4c2VGbV8?oc=5",
-   "category": "launch",
-   "constellations": [
-    "GPS"
-   ],
-   "fetched_at": "2026-10-19T22:40:29Z",
-   "grade": "F",
-   "grade_from": "record",
-   "grade_standing": "provisional",
-   "outlet": "Aviation Week",
-   "published_at": "2026-03-20T07:00:00Z",
-   "source_id": "aviationweek.com",
-   "summary": "",
-   "title": "USSF Reassigns Fourth GPS III Launch From ULA To SpaceX",
    "via": "https://news.google.com/rss/search?q=%22GPS+III%22+OR+%22GPS+satellite%22+launch&hl=en-IN&gl=IN&ceid=IN:en"
   },
   {
